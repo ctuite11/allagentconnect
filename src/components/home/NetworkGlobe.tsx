@@ -65,7 +65,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            opacity: DEBUG_VISIBLE ? 0.5 : 0.55 + (1 - dist / 100) * 0.45
+            opacity: 1
           });
         }
       }
@@ -112,16 +112,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return () => clearInterval(intervalId);
   }, [nodes.length, isAmbient, isStatic]);
 
-  // Debug vs production styles - strengthened stroke weight for authority
-  const svgOpacity = DEBUG_VISIBLE ? 0.55 : 1;
-  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 2.5;  // +25% stroke weight
-  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 2;       // +33% stroke weight
-  const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 4.5, small: 4 };
+  // Structural stroke weights - no decoration, pure form
+  const lineStrokeWidth = 3;
+  const ringStrokeWidth = 2.5;
+  const nodeRadius = { large: 5, small: 4.5 };
 
-  // Ambient mode: slower rotation, desaturated
+  // Ambient mode: slower rotation only
   const rotationSpeed = isAmbient ? '14s' : '90s';
-  const ambientFilter = isAmbient ? 'saturate(0.6)' : 'none';
-  const ambientOpacity = isAmbient ? 0.65 : svgOpacity;
 
   // Static mode: no animation, supports color inheritance via strokeColor prop
   if (isStatic) {
@@ -158,7 +155,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 cy={node.y}
                 r={radius}
                 fill={strokeColor ? 'currentColor' : dotColor}
-                opacity={0.6}
+                opacity={1}
               />
             );
           })}
@@ -172,7 +169,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={strokeColor ? 'currentColor' : lineColor}
             strokeWidth={ringStrokeWidth}
-            opacity={0.7}
+            opacity={1}
           />
           <ellipse
             cx="150"
@@ -182,7 +179,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={strokeColor ? 'currentColor' : lineColor}
             strokeWidth={ringStrokeWidth}
-            opacity={0.6}
+            opacity={1}
           />
         </svg>
       </div>
@@ -196,14 +193,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       <div 
         className="w-full h-full pointer-events-none"
         aria-hidden="true"
-        style={{ filter: ambientFilter }}
       >
         <svg 
           viewBox="0 0 300 300" 
           className="w-full h-full"
           style={{
             animation: `networkSpin ${rotationSpeed} linear infinite`,
-            opacity: ambientOpacity
+            opacity: 1
           }}
         >
           {/* Connection lines */}
@@ -230,7 +226,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 cy={node.y}
                 r={radius}
                 fill={DOT_COLOR}
-                opacity={0.3}
+                opacity={1}
               />
             );
           })}
@@ -244,7 +240,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={0.8}
+            opacity={1}
           />
           <ellipse
             cx="150"
@@ -254,7 +250,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={0.7}
+            opacity={1}
           />
         </svg>
         
@@ -290,7 +286,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           className="w-full h-full"
           style={{
             animation: 'networkSpin 90s linear infinite',
-            opacity: svgOpacity
+            opacity: 1
           }}
         >
           {/* Connection lines */}
@@ -319,7 +315,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 cy={node.y}
                 r={isPulsing ? radius * 1.2 : radius}
                 fill={isPulsing ? '#FFFFFF' : DOT_COLOR}
-                opacity={isPulsing ? 0.95 : 0.6}
+                opacity={1}
                 style={{
                   transition: 'r 80ms ease-out, fill 80ms ease-out, opacity 80ms ease-out'
                 }}
@@ -336,7 +332,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.5 : 0.9}
+            opacity={1}
           />
           <ellipse
             cx="150"
@@ -346,7 +342,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={DEBUG_VISIBLE ? 0.4 : 0.85}
+            opacity={1}
           />
         </svg>
       </div>
