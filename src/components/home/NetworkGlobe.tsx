@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react';
 const DEBUG_VISIBLE = false;
 
 // Brand colors - LOCKED
-const LINE_COLOR = '#0E56F5'; // Royal Blue (HSL 221 92% 51%)
+const LINE_COLOR = '#3B6CFF'; // Hero Blue (HSL 221 100% 60%) - brighter for energy
 const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
 
 interface NetworkGlobeProps {
@@ -112,11 +112,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return () => clearInterval(intervalId);
   }, [nodes.length, isAmbient, isStatic]);
 
-  // Debug vs production styles
+  // Debug vs production styles - strengthened stroke weight for authority
   const svgOpacity = DEBUG_VISIBLE ? 0.55 : 1;
-  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 2;
-  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 1.5;
-  const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 4, small: 3.5 };
+  const lineStrokeWidth = DEBUG_VISIBLE ? 1.5 : 2.5;  // +25% stroke weight
+  const ringStrokeWidth = DEBUG_VISIBLE ? 1 : 2;       // +33% stroke weight
+  const nodeRadius = DEBUG_VISIBLE ? { large: 4, small: 3 } : { large: 4.5, small: 4 };
 
   // Ambient mode: slower rotation, desaturated
   const rotationSpeed = isAmbient ? '14s' : '90s';

@@ -2,13 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AAC Brand Tokens - Royal Blue (#0E56F5) - LOCKED */
+/* AAC Brand Tokens - Royal Blue - LOCKED */
 :root {
-  --aac: 221 92% 51%;           /* #0E56F5 - Royal Blue */
-  --aac-hover: 221 92% 45%;     /* Darker hover state */
-  --aac-active: 221 92% 38%;    /* Active/pressed state */
+  --aac: 221 92% 51%;              /* #0E56F5 - System Royal Blue */
+  --aac-hover: 221 92% 45%;        /* Darker hover state */
+  --aac-active: 221 92% 38%;       /* Active/pressed state */
   --aac-ring: 221 92% 51% / 0.25;
   --aac-soft: 221 92% 51% / 0.08;
+  --aac-hero: 221 100% 60%;        /* #3B6CFF - Hero/Globe energy blue */
 }
 
 /* iOS Safari tap highlight (blue/gray overlay) */
