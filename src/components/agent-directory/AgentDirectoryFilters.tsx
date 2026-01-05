@@ -13,6 +13,9 @@ interface AgentDirectoryFiltersProps {
   setIsAgentMode: (value: boolean) => void;
   showAgentModeToggle: boolean;
   hasActiveFilters: boolean;
+  companies: string[];
+  selectedCompany: string;
+  setSelectedCompany: (value: string) => void;
 }
 
 const AgentDirectoryFilters = ({
@@ -24,6 +27,9 @@ const AgentDirectoryFilters = ({
   setIsAgentMode,
   showAgentModeToggle,
   hasActiveFilters,
+  companies,
+  selectedCompany,
+  setSelectedCompany,
 }: AgentDirectoryFiltersProps) => {
   return (
     <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border py-3">
@@ -39,6 +45,24 @@ const AgentDirectoryFilters = ({
               <SelectContent>
                 <SelectItem value="a-z">Name A-Z</SelectItem>
                 <SelectItem value="z-a">Name Z-A</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Company Filter */}
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">Company:</Label>
+            <Select value={selectedCompany || "all"} onValueChange={(value) => setSelectedCompany(value === "all" ? "" : value)}>
+              <SelectTrigger className="w-44 h-9">
+                <SelectValue placeholder="All Companies" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Companies</SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
