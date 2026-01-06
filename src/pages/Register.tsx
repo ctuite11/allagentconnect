@@ -210,15 +210,12 @@ const Register = () => {
               ) : (
                 <>
                   <h1 className="text-3xl font-semibold text-zinc-900 mb-4">
-                    You're In. Early Access Requested.
+                    Request Received
                   </h1>
-                  <p className="text-zinc-500 leading-relaxed mb-6">
-                    Thanks — we've received your information and added you to
-                    the All Agent Connect early access list.
-                  </p>
                   <p className="text-zinc-500 leading-relaxed mb-8">
-                    We're onboarding verified agents in priority order as access
-                    opens. You'll hear from us shortly with next steps.
+                    Thanks — we've added you to the All Agent Connect early access list.
+                    <br />
+                    We'll reach out directly with next steps.
                   </p>
                   <p className="text-xs text-zinc-400">
                     License details are used to confirm verified agent access.
