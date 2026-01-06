@@ -61,6 +61,7 @@ import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
 import ShareLinkHandler from "./pages/ShareLinkHandler";
+import LandingPage from "./pages/LandingPage";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
@@ -90,7 +91,7 @@ const App = () => (
               <Navigation />
               <Routes>
                 <Route path="/" element={<Index />} />
-                
+                <Route path="/landing" element={<LandingPage />} />
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
