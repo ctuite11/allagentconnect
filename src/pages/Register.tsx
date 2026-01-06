@@ -164,7 +164,7 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Minimal header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-none shadow-none">
         <div className="mx-auto max-w-6xl px-5 py-3 flex items-center">
           <Logo size="lg" />
         </div>
