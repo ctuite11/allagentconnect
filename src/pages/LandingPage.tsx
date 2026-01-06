@@ -67,7 +67,7 @@ const LandingPage = () => {
             <Button
               size="lg"
               onClick={() => navigate('/auth?mode=register')}
-              className="bg-zinc-900 hover:bg-zinc-800 text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
+              className="bg-[#0E56F5] hover:bg-[#0D4AD9] text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
             >
               Register Early
               <ArrowRight className="ml-2 h-4 w-4" />
