@@ -11,9 +11,9 @@ import React, { useEffect, useState } from 'react';
 // Toggle this to true for placement/sizing assessment
 const DEBUG_VISIBLE = false;
 
-// Brand colors - LOCKED
-const LINE_COLOR = '#3B6CFF'; // Hero Blue (HSL 221 100% 60%) - brighter for energy
-const DOT_COLOR = '#94A3B8';  // slate-400 (matches "Connect" in logo)
+// Brand colors - LOCKED to single ACC Blue
+const LINE_COLOR = '#0E56F5'; // ACC Blue (HSL 221 92% 51%)
+const DOT_COLOR = '#94A3B8';  // slate-400 (silvery nodes)
 
 interface NetworkGlobeProps {
   variant?: 'hero' | 'ambient' | 'static';
@@ -49,6 +49,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   }, []);
 
   // Generate connections between nearby nodes with z-based depth opacity
+  // Atmospheric mode: very low opacity for hero backplate effect
   const connections = React.useMemo(() => {
     const lines: { x1: number; y1: number; x2: number; y2: number; opacity: number }[] = [];
     
@@ -60,10 +61,10 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         );
         
         if (dist < 100) {
-          // Z-based depth: avgZ in [-1, 1] → opacity 0.58..0.98
+          // Z-based depth: avgZ in [-1, 1] → opacity 0.06..0.14 (atmospheric)
           const avgZ = (nodes[i].z + nodes[j].z) / 2;
           const t = (avgZ + 1) / 2; // normalize to 0..1
-          const depthOpacity = 0.58 + t * 0.40; // tight institutional range
+          const depthOpacity = 0.06 + t * 0.08; // back ~0.06, front ~0.14
           
           lines.push({
             x1: nodes[i].x,
@@ -77,6 +78,12 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     }
     return lines;
   }, [nodes]);
+  
+  // Node opacity: slightly stronger than lines for structure (0.14-0.20)
+  const getNodeOpacity = (z: number) => {
+    const t = (z + 1) / 2; // normalize to 0..1
+    return 0.14 + t * 0.06; // range 0.14 to 0.20
+  };
 
   // White twinkle pulse effect - visible and alive (hero mode only)
   useEffect(() => {
@@ -269,17 +276,24 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     );
   }
 
-  // Hero mode - original positioning and behavior
+  // Hero mode - atmospheric backplate behind content
   return (
     <div 
       className="absolute inset-0 hidden md:block overflow-visible pointer-events-none"
       aria-hidden="true"
-      style={DEBUG_VISIBLE ? { zIndex: 20 } : { zIndex: 2 }}
+      style={{ 
+        zIndex: DEBUG_VISIBLE ? 20 : 1,
+        // Mask fade: dissolve on left and bottom edges
+        maskImage: 'linear-gradient(to right, transparent 0%, black 20%, black 70%, transparent 100%), linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+        maskComposite: 'intersect',
+        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 20%, black 70%, transparent 100%)',
+        WebkitMaskComposite: 'source-in'
+      }}
     >
       
-      {/* Network sphere */}
+      {/* Network sphere - large atmospheric backplate */}
       <div 
-        className="pt-6 absolute right-0 lg:right-4 top-[48%] -translate-y-1/2 w-[500px] h-[500px] lg:w-[620px] lg:h-[620px] max-w-[80vh] max-h-[80vh]"
+        className="absolute -right-20 lg:-right-10 top-[40%] -translate-y-1/2 w-[700px] h-[700px] lg:w-[900px] lg:h-[900px]"
         style={{
           transform: 'translateY(-50%) rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
@@ -290,11 +304,10 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           viewBox="0 0 300 300" 
           className="w-full h-full"
           style={{
-            animation: 'networkSpin 90s linear infinite',
-            opacity: 1
+            animation: 'networkSpin 60s linear infinite'
           }}
         >
-          {/* Connection lines */}
+          {/* Connection lines - low opacity atmospheric */}
           {connections.map((line, i) => (
             <line
               key={`line-${i}`}
@@ -308,10 +321,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             />
           ))}
           
-          {/* Nodes with white twinkle pulse effect */}
+          {/* Nodes with depth-aware opacity */}
           {nodes.map((node, i) => {
             const isPulsing = pulsingNodes.has(i);
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
+            const nodeOpacity = getNodeOpacity(node.z);
             
             return (
               <circle
@@ -320,7 +334,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 cy={node.y}
                 r={isPulsing ? radius * 1.2 : radius}
                 fill={isPulsing ? '#FFFFFF' : DOT_COLOR}
-                opacity={1}
+                opacity={isPulsing ? 0.4 : nodeOpacity}
                 style={{
                   transition: 'r 80ms ease-out, fill 80ms ease-out, opacity 80ms ease-out'
                 }}
@@ -328,7 +342,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             );
           })}
           
-          {/* Subtle orbital rings */}
+          {/* Subtle orbital rings - atmospheric opacity */}
           <ellipse
             cx="150"
             cy="150"
@@ -337,7 +351,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={1}
+            opacity={0.10}
           />
           <ellipse
             cx="150"
@@ -347,7 +361,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             fill="none"
             stroke={LINE_COLOR}
             strokeWidth={ringStrokeWidth}
-            opacity={1}
+            opacity={0.10}
           />
         </svg>
       </div>
