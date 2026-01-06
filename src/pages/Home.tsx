@@ -70,15 +70,15 @@ export default function Home() {
         <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm" style={{ color: '#1D1D1F' }}>
             <span className="inline-flex items-center gap-2 font-medium">
-              <ShieldCheck className="h-5 w-5 text-zinc-400" />
+              <ShieldCheck className="h-5 w-5 text-[#0E56F5]" />
               Operating since 2016
             </span>
             <span className="inline-flex items-center gap-2 font-medium">
-              <Users className="h-5 w-5 text-zinc-400" />
+              <Users className="h-5 w-5 text-[#0E56F5]" />
               Thousands of agents nationwide
             </span>
             <span className="inline-flex items-center gap-2 font-medium">
-              <Handshake className="h-5 w-5 text-zinc-400" />
+              <Handshake className="h-5 w-5 text-[#0E56F5]" />
               Off-market deals closed
             </span>
           </div>
@@ -258,9 +258,7 @@ export default function Home() {
 function BulletItem({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-5 w-5 rounded-full bg-zinc-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <Check className="h-3 w-3 text-zinc-400" />
-      </div>
+      <Check className="h-4 w-4 text-[#0E56F5] flex-shrink-0 mt-1" />
       <span className="text-base text-zinc-600 leading-relaxed">{children}</span>
     </div>
   );
@@ -279,9 +277,7 @@ function ClientBenefitCard({
       <div className="space-y-3">
         {benefits.map((benefit, index) => (
           <div key={index} className="flex items-start gap-3">
-            <div className="h-5 w-5 rounded-full bg-zinc-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Check className="h-3 w-3 text-zinc-400" />
-            </div>
+            <Check className="h-4 w-4 text-[#0E56F5] flex-shrink-0 mt-0.5" />
             <span className="text-sm text-zinc-600 leading-relaxed">{benefit}</span>
           </div>
         ))}
@@ -303,9 +299,7 @@ function FeatureCard({
     <div 
       className="rounded-2xl bg-white border border-zinc-100 hover:border-zinc-200 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200"
     >
-      <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
-        <Icon className="h-5 w-5 text-zinc-400" />
-      </div>
+      <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
       <div className="text-base font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>{title}</div>
       <p className="mt-2 text-sm leading-relaxed" style={{ color: '#86868B' }}>{body}</p>
     </div>
