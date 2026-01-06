@@ -79,7 +79,6 @@ const formSchema = z.object({
   brokerage: z.string().min(1, "Brokerage is required").max(200),
   state: z.string().min(1, "State is required"),
   license_number: z.string().min(1, "License number is required").max(50),
-  markets: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -105,7 +104,6 @@ const Register = () => {
       brokerage: "",
       state: "",
       license_number: "",
-      markets: "",
     },
   });
 
@@ -135,7 +133,6 @@ const Register = () => {
             brokerage: data.brokerage,
             state: data.state,
             license_number: data.license_number,
-            markets: data.markets || undefined,
           },
         }
       );
@@ -397,21 +394,6 @@ const Register = () => {
                     </div>
                   </div>
 
-                  {/* Markets (optional) */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="markets" className="text-zinc-700">
-                      Primary Markets{" "}
-                      <span className="text-zinc-400 font-normal">
-                        (optional)
-                      </span>
-                    </Label>
-                    <Input
-                      id="markets"
-                      {...register("markets")}
-                      className="h-11 rounded-[10px]"
-                      placeholder="e.g., Boston Metro, North Shore"
-                    />
-                  </div>
 
                   {/* Submit */}
                   <Button
