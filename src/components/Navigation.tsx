@@ -156,8 +156,9 @@ const Navigation = () => {
     return null;
   }
 
-  // Hide global navigation on auth page
+  // Hide global navigation on auth + early access capture pages
   if (location.pathname === "/auth") return null;
+  if (location.pathname === "/register") return null;
 
   // HARD LOCKDOWN: Hide navigation on /pending-verification regardless of role
   if (location.pathname === "/pending-verification") return null;
