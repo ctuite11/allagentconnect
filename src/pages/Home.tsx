@@ -20,8 +20,12 @@ export default function Home() {
       <main className="pt-20 pb-12">
         {/* Hero */}
         <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[60vh] flex items-center overflow-visible">
-          {/* Network globe - desktop only, behind content */}
-          <NetworkGlobe />
+          {/* Background globe layer - unclipped, guaranteed bleed */}
+          <div className="pointer-events-none absolute inset-x-0 -top-32 -bottom-32 overflow-visible">
+            <NetworkGlobe />
+          </div>
+          
+          {/* Foreground content */}
           <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
             {/* Copy */}
             <div className="max-w-xl">
