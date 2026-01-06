@@ -306,6 +306,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         transform: 'rotateX(15deg) rotateY(-10deg)',
         transformStyle: 'preserve-3d',
         perspective: '1000px',
+        willChange: 'transform',
         // Ultra-gentle mask: prevents harsh edge without "cut off" feel
         maskImage:
           'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)',
@@ -319,7 +320,9 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           viewBox="0 0 300 300" 
           className="w-full h-full"
           style={{
-            animation: 'networkSpin 60s linear infinite'
+            animation: 'networkSpin 60s linear infinite',
+            transformOrigin: 'center',
+            transformBox: 'fill-box'
           }}
         >
           {/* Connection lines - crisp depth contrast with front-line boost */}
