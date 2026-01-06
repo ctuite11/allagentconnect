@@ -25,12 +25,18 @@ export default function Home() {
           <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
             {/* Copy */}
             <div className="max-w-xl">
+              {/* Badge - anchor for the eye */}
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-200 bg-white/70 text-xs font-medium tracking-wide uppercase text-zinc-700 mb-5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#0E56F5]" />
+                ACC Private Network
+              </span>
+
               <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-normal" style={{ color: '#1D1D1F' }}>
                 Where Real Deals Get Done
               </h1>
 
-              {/* Tension line - creates FOMO */}
-              <p className="mt-4 text-lg font-medium" style={{ color: '#1D1D1F' }}>
+              {/* Tension line - softer/smaller to create hierarchy */}
+              <p className="mt-4 text-base font-medium text-zinc-600">
                 The deals you don't see are the ones that change your year.
               </p>
 
@@ -57,12 +63,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Globe context - makes it feel alive */}
-            <div className="hidden lg:flex flex-col items-center justify-center" aria-hidden="true">
-              <p className="text-sm font-medium tracking-wide text-zinc-400 text-center">
-                Live buyer needs. Quiet listings. Active conversations.
-              </p>
-            </div>
+            {/* Globe context removed - globe is now atmospheric backplate only */}
           </div>
         </section>
 

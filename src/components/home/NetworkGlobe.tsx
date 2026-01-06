@@ -49,9 +49,9 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   }, []);
 
   // Generate connections between nearby nodes with z-based depth opacity
-  // Atmospheric mode: very low opacity for hero backplate effect
+  // Crisp depth contrast: back ~0.05, front ~0.18
   const connections = React.useMemo(() => {
-    const lines: { x1: number; y1: number; x2: number; y2: number; opacity: number }[] = [];
+    const lines: { x1: number; y1: number; x2: number; y2: number; opacity: number; avgZ: number }[] = [];
     
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
@@ -61,17 +61,18 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         );
         
         if (dist < 100) {
-          // Z-based depth: avgZ in [-1, 1] → opacity 0.06..0.14 (atmospheric)
+          // Z-based depth: avgZ in [-1, 1] → opacity 0.05..0.18 (crisp contrast)
           const avgZ = (nodes[i].z + nodes[j].z) / 2;
           const t = (avgZ + 1) / 2; // normalize to 0..1
-          const depthOpacity = 0.06 + t * 0.08; // back ~0.06, front ~0.14
+          const depthOpacity = 0.05 + t * 0.13; // back ~0.05, front ~0.18
           
           lines.push({
             x1: nodes[i].x,
             y1: nodes[i].y,
             x2: nodes[j].x,
             y2: nodes[j].y,
-            opacity: depthOpacity
+            opacity: depthOpacity,
+            avgZ: avgZ
           });
         }
       }
@@ -79,10 +80,29 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return lines;
   }, [nodes]);
   
-  // Node opacity: slightly stronger than lines for structure (0.14-0.20)
+  // Node opacity: slightly stronger than lines for structure (0.16-0.22)
   const getNodeOpacity = (z: number) => {
     const t = (z + 1) / 2; // normalize to 0..1
-    return 0.14 + t * 0.06; // range 0.14 to 0.20
+    return 0.16 + t * 0.06; // range 0.16 to 0.22
+  };
+
+  // Front-line boost: top 10-14% of connections get +0.06 opacity for "wow"
+  const sortedByZ = [...connections].sort((a, b) => b.avgZ - a.avgZ);
+  const frontLineCount = Math.ceil(connections.length * 0.12); // ~12%
+  const frontLineSet = new Set(sortedByZ.slice(0, frontLineCount));
+  
+  const getLineOpacity = (line: typeof connections[0]) => {
+    if (frontLineSet.has(line)) {
+      return Math.min(line.opacity + 0.06, 0.22); // boost, cap at 0.22
+    }
+    return line.opacity;
+  };
+  
+  const getLineStrokeWidth = (line: typeof connections[0], baseWidth: number) => {
+    if (frontLineSet.has(line)) {
+      return Math.min(baseWidth + 0.25, 2.0); // boost, cap at 2.0
+    }
+    return baseWidth;
   };
 
   // White twinkle pulse effect - visible and alive (hero mode only)
@@ -124,9 +144,9 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return () => clearInterval(intervalId);
   }, [nodes.length, isAmbient, isStatic]);
 
-  // Structural stroke weights - no decoration, pure form
-  const lineStrokeWidth = 3;
-  const ringStrokeWidth = 2.5;
+  // Crisp structural stroke weights
+  const lineStrokeWidth = 1.75;
+  const ringStrokeWidth = 1.5;
   const nodeRadius = { large: 3.5, small: 3 };
 
   // Ambient mode: slower rotation only
@@ -283,11 +303,9 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       aria-hidden="true"
       style={{ 
         zIndex: DEBUG_VISIBLE ? 20 : 1,
-        // Mask fade: dissolve on left and bottom edges
-        maskImage: 'linear-gradient(to right, transparent 0%, black 20%, black 70%, transparent 100%), linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
-        maskComposite: 'intersect',
-        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 20%, black 70%, transparent 100%)',
-        WebkitMaskComposite: 'source-in'
+        // Radial mask: strongest at right/center (70% 45%), fades to transparent at edges
+        maskImage: 'radial-gradient(circle at 70% 45%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0) 78%)',
+        WebkitMaskImage: 'radial-gradient(circle at 70% 45%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0) 78%)'
       }}
     >
       
@@ -307,7 +325,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             animation: 'networkSpin 60s linear infinite'
           }}
         >
-          {/* Connection lines - low opacity atmospheric */}
+          {/* Connection lines - crisp depth contrast with front-line boost */}
           {connections.map((line, i) => (
             <line
               key={`line-${i}`}
@@ -316,8 +334,8 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
               x2={line.x2}
               y2={line.y2}
               stroke={LINE_COLOR}
-              strokeWidth={lineStrokeWidth}
-              opacity={line.opacity}
+              strokeWidth={getLineStrokeWidth(line, lineStrokeWidth)}
+              opacity={getLineOpacity(line)}
             />
           ))}
           
