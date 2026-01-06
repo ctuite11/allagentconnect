@@ -41,17 +41,17 @@ export default function Home() {
                 Where Real Deals Get Done
               </h1>
 
-              {/* Tension line - client impact, not agent FOMO */}
+              {/* Tension line */}
               <p className="mt-4 text-base font-medium text-zinc-600">
-                The deals you don't see are the ones that can change a client's life.
+                The deals you don't see are the ones that can change a client's life — and your bottom line.
               </p>
 
-              {/* Identity line - standalone emphasis */}
+              {/* Identity line */}
               <p className="mt-5 text-base font-semibold tracking-wide text-zinc-700 uppercase">
-                Built by Agents. For Agents. ALL AGENTS.
+                By Agents. For Agents. All Agents.
               </p>
 
-              {/* Capability signals - keywords, not sentences */}
+              {/* Capability signals */}
               <div className="mt-6 flex flex-wrap gap-3">
                 <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Off-market</span>
                 <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Coming soon</span>
@@ -60,7 +60,7 @@ export default function Home() {
 
               <div className="mt-8">
                 <button
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/register")}
                   className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
                 >
                   Request Access <ArrowRight className="ml-2 h-5 w-5" />
@@ -225,7 +225,7 @@ export default function Home() {
 
             <div className="mt-8">
               <button
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/register")}
                 className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
               >
                 Request Access <ArrowRight className="ml-2 h-5 w-5" />
@@ -251,7 +251,7 @@ export default function Home() {
               Terms
             </a>
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/register")}
               className="inline-flex items-center justify-center rounded-xl bg-[#0E56F5] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
             >
               Get Access
