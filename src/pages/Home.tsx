@@ -20,9 +20,11 @@ export default function Home() {
       <main className="pt-20 pb-12">
         {/* Hero */}
         <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[620px] lg:min-h-[680px] flex items-center overflow-visible">
-          {/* Background globe layer - deterministic positioning, no fluid containers */}
-          <div className="pointer-events-none absolute right-0 lg:right-6 top-[-40px] overflow-visible">
-            <NetworkGlobe />
+          {/* Background globe layer - two-layer absolute for zero layout impact */}
+          <div className="pointer-events-none absolute inset-0 overflow-visible">
+            <div className="absolute right-0 lg:right-6 top-[-40px]">
+              <NetworkGlobe />
+            </div>
           </div>
           
           {/* Foreground content */}
