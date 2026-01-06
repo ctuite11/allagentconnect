@@ -164,16 +164,13 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Minimal header */}
-      <header
-        className="fixed top-0 left-0 right-0 z-50 bg-white"
-        style={{ borderBottom: "1px solid #E5E5EA" }}
-      >
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white">
         <div className="mx-auto max-w-6xl px-5 py-3 flex items-center">
           <Logo size="lg" />
         </div>
       </header>
 
-      <main className="pt-20 pb-12 relative min-h-screen">
+      <main className="pt-16 pb-8 relative min-h-screen">
         {/* Background globe */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute right-0 lg:right-6 top-0">
@@ -182,7 +179,7 @@ const Register = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 max-w-md mx-auto px-6 pt-14">
+        <div className="relative z-10 max-w-md mx-auto px-6 pt-4">
           {isSuccess ? (
             /* Success State */
             <div className="text-center">
