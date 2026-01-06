@@ -116,7 +116,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       .map(n => n.index);
   }, [nodes]);
   
-  // Rare "thought spark" effect - fires 1 node every 8-15s (hero mode only)
+  // "Thought spark" effect - fires every 3-6s, irregular rhythm (hero mode only)
   React.useEffect(() => {
     if (isAmbient || isStatic || frontNodeIndices.length === 0) return;
     
@@ -125,18 +125,18 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       const chosen = frontNodeIndices[Math.floor(Math.random() * frontNodeIndices.length)];
       setSparkingNode(chosen);
       
-      // Clear spark after 240ms
+      // Clear spark after 200ms (sharp pop)
       clearSparkRef.current = setTimeout(() => {
         setSparkingNode(null);
-      }, 240);
+      }, 200);
       
-      // Schedule next spark (8-15 seconds, irregular)
-      const nextDelay = 8000 + Math.random() * 7000;
+      // Schedule next spark (3-6 seconds, irregular)
+      const nextDelay = 3000 + Math.random() * 3000;
       sparkTimeoutRef.current = setTimeout(triggerSpark, nextDelay);
     };
     
-    // Initial delay before first spark (3s)
-    sparkTimeoutRef.current = setTimeout(triggerSpark, 3000);
+    // Initial delay before first spark (1.5s)
+    sparkTimeoutRef.current = setTimeout(triggerSpark, 1500);
     
     // Cleanup all timers on unmount
     return () => {
@@ -339,34 +339,33 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             />
           ))}
           
-          {/* Nodes with depth-aware opacity + spark effect + micro-halos */}
+          {/* Nodes with depth-aware opacity + bright spark effect */}
           {nodes.map((node, i) => {
             const isSparking = sparkingNode === i;
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
             const nodeOpacity = getNodeOpacity(node.z);
-            // Micro-halo for front-most nodes (z > 0.65) OR during spark
-            const showHalo = node.z > 0.65 || isSparking;
+            // Micro-halo only for front-most nodes (z > 0.65), not sparking
+            const showHalo = node.z > 0.65;
             
             return (
               <g key={`node-${i}`}>
-                {/* Micro-halo behind front-most nodes / sparking nodes */}
-                {showHalo && (
+                {/* Micro-halo behind front-most nodes */}
+                {showHalo && !isSparking && (
                   <circle
                     cx={node.x}
                     cy={node.y}
                     r={radius + 3}
                     fill={LINE_COLOR}
-                    opacity={isSparking ? 0.12 : 0.07}
-                    style={{ transition: 'opacity 0.24s ease-out' }}
+                    opacity={0.07}
                   />
                 )}
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={isSparking ? radius * 1.08 : radius}
-                  fill={NODE_COLOR}
-                  opacity={isSparking ? Math.min(nodeOpacity + 0.10, 0.36) : nodeOpacity}
-                  style={{ transition: 'r 0.24s ease-out, opacity 0.24s ease-out' }}
+                  r={isSparking ? radius * 1.4 : radius}
+                  fill={isSparking ? LINE_COLOR : NODE_COLOR}
+                  opacity={isSparking ? 0.9 : nodeOpacity}
+                  style={{ transition: 'r 180ms ease-out, opacity 180ms ease-out, fill 180ms ease-out' }}
                 />
               </g>
             );
