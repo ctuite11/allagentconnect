@@ -4,7 +4,7 @@ import React from 'react';
  * Subtle network sphere animation for homepage hero
  * Calm, ambient, infrastructure feel
  * Supports two variants:
- * - "hero" (default): Home page positioning, full effects
+ * - "hero" (default): Home page positioning, full effects + rare sparks
  * - "ambient": Centered, smaller, no pulse, slower rotation, desaturated
  */
 
@@ -28,8 +28,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   const lineColor = strokeColor || LINE_COLOR;
   const nodeColor = strokeColor || NODE_COLOR;
   
-  // Track which nodes have slow breathing animation (hero mode only)
-  // We select the front-most 5 nodes by z-value for subtle activity
+  // State for rare "thought spark" effect (hero mode only)
+  const [sparkingNode, setSparkingNode] = React.useState<number | null>(null);
+  const sparkTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const clearSparkRef = React.useRef<NodeJS.Timeout | null>(null);
+  
   // Generate network nodes in a spherical distribution
   const nodes = React.useMemo(() => {
     const points: { x: number; y: number; z: number }[] = [];
@@ -105,14 +108,42 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return baseWidth;
   };
 
-  // Identify front-most nodes for slow breathing effect (hero mode only)
-  // Pick top 5 nodes by z-value (roughly top 20%)
-  const breathingNodeIndices = React.useMemo(() => {
-    if (isAmbient || isStatic) return new Set<number>();
-    const indexed = nodes.map((n, i) => ({ z: n.z, index: i }));
-    indexed.sort((a, b) => b.z - a.z);
-    return new Set(indexed.slice(0, 5).map(n => n.index));
-  }, [nodes, isAmbient, isStatic]);
+  // Front-most nodes eligible for sparking (z > 0.45)
+  const frontNodeIndices = React.useMemo(() => {
+    return nodes
+      .map((n, i) => ({ z: n.z, index: i }))
+      .filter(n => n.z > 0.45)
+      .map(n => n.index);
+  }, [nodes]);
+  
+  // Rare "thought spark" effect - fires 1 node every 8-15s (hero mode only)
+  React.useEffect(() => {
+    if (isAmbient || isStatic || frontNodeIndices.length === 0) return;
+    
+    const triggerSpark = () => {
+      // Pick random front-most node
+      const chosen = frontNodeIndices[Math.floor(Math.random() * frontNodeIndices.length)];
+      setSparkingNode(chosen);
+      
+      // Clear spark after 240ms
+      clearSparkRef.current = setTimeout(() => {
+        setSparkingNode(null);
+      }, 240);
+      
+      // Schedule next spark (8-15 seconds, irregular)
+      const nextDelay = 8000 + Math.random() * 7000;
+      sparkTimeoutRef.current = setTimeout(triggerSpark, nextDelay);
+    };
+    
+    // Initial delay before first spark (3s)
+    sparkTimeoutRef.current = setTimeout(triggerSpark, 3000);
+    
+    // Cleanup all timers on unmount
+    return () => {
+      if (sparkTimeoutRef.current) clearTimeout(sparkTimeoutRef.current);
+      if (clearSparkRef.current) clearTimeout(clearSparkRef.current);
+    };
+  }, [isAmbient, isStatic, frontNodeIndices]);
 
   // Crisp structural stroke weights
   const lineStrokeWidth = 1.75;
@@ -269,13 +300,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   // Hero mode - atmospheric backplate behind content
   return (
     <div 
-      className="absolute -inset-x-0 -top-20 -bottom-20 hidden md:block overflow-visible pointer-events-none"
+      className="absolute inset-0 hidden md:block overflow-visible pointer-events-none"
       aria-hidden="true"
       style={{ 
         zIndex: DEBUG_VISIBLE ? 20 : 1,
-        // Radial mask: strongest at right/center (70% 45%), fades to transparent at edges
-        maskImage: 'radial-gradient(circle at 70% 45%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0) 78%)',
-        WebkitMaskImage: 'radial-gradient(circle at 70% 45%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0) 78%)'
+        // Lower-centered radial mask: fades left/bottom but preserves top
+        maskImage: 'radial-gradient(circle at 72% 62%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0.75) 70%, rgba(0,0,0,0) 88%)',
+        WebkitMaskImage: 'radial-gradient(circle at 72% 62%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0.75) 70%, rgba(0,0,0,0) 88%)'
       }}
     >
       
@@ -309,36 +340,34 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             />
           ))}
           
-          {/* Nodes with depth-aware opacity + micro-halos on front-most */}
+          {/* Nodes with depth-aware opacity + spark effect + micro-halos */}
           {nodes.map((node, i) => {
-            const isBreathing = breathingNodeIndices.has(i);
+            const isSparking = sparkingNode === i;
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
             const nodeOpacity = getNodeOpacity(node.z);
-            // Micro-halo for front-most nodes (z > 0.65, roughly top 8%)
-            const showHalo = node.z > 0.65;
+            // Micro-halo for front-most nodes (z > 0.65) OR during spark
+            const showHalo = node.z > 0.65 || isSparking;
             
             return (
               <g key={`node-${i}`}>
-                {/* Micro-halo behind front-most nodes */}
+                {/* Micro-halo behind front-most nodes / sparking nodes */}
                 {showHalo && (
                   <circle
                     cx={node.x}
                     cy={node.y}
                     r={radius + 3}
                     fill={LINE_COLOR}
-                    opacity={0.07}
+                    opacity={isSparking ? 0.12 : 0.07}
+                    style={{ transition: 'opacity 0.24s ease-out' }}
                   />
                 )}
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={radius}
+                  r={isSparking ? radius * 1.08 : radius}
                   fill={NODE_COLOR}
-                  opacity={nodeOpacity}
-                  style={isBreathing ? {
-                    animation: 'nodeBreathe 9s ease-in-out infinite',
-                    animationDelay: `${i * 0.5}s`
-                  } : undefined}
+                  opacity={isSparking ? Math.min(nodeOpacity + 0.10, 0.36) : nodeOpacity}
+                  style={{ transition: 'r 0.24s ease-out, opacity 0.24s ease-out' }}
                 />
               </g>
             );
@@ -368,15 +397,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         </svg>
       </div>
       
-      {/* CSS for rotation + breathing animations */}
+      {/* CSS for rotation animation */}
       <style>{`
         @keyframes networkSpin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
-        }
-        @keyframes nodeBreathe {
-          0%, 100% { opacity: 0.22; }
-          50% { opacity: 0.28; }
         }
       `}</style>
     </div>
