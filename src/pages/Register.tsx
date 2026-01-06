@@ -204,15 +204,12 @@ const Register = () => {
               ) : (
                 <>
                   <h1 className="text-3xl font-semibold text-zinc-900 mb-4">
-                    Request Received
+                    You're in.
                   </h1>
                   <p className="text-zinc-500 leading-relaxed mb-8">
-                    Thanks — we've added you to the All Agent Connect early access list.
-                    <br />
-                    We'll reach out directly with next steps.
-                  </p>
-                  <p className="text-xs text-zinc-400">
-                    License details are used to confirm verified agent access.
+                    Thanks — we've received your information and added you to the All Agent Connect early access list.
+                    <br /><br />
+                    We'll be in touch shortly as access opens.
                   </p>
                 </>
               )}
@@ -225,12 +222,12 @@ const Register = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 mb-6">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#0E56F5]" />
                   <span className="text-xs font-medium tracking-wide text-zinc-600 uppercase">
-                    AAC Private Network
+                    Early Access
                   </span>
                 </div>
 
                 <h1 className="text-3xl font-semibold text-zinc-900 mb-6">
-                  Request Early Access
+                  Request Early Access to All Agent Connect
                 </h1>
 
                 {/* Capability pills */}
@@ -287,6 +284,24 @@ const Register = () => {
                     </div>
                   </div>
 
+                  {/* Brokerage */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="brokerage" className="text-zinc-700">
+                      Brokerage
+                    </Label>
+                    <Input
+                      id="brokerage"
+                      {...register("brokerage")}
+                      className="h-11 rounded-[10px]"
+                      placeholder="Your brokerage name"
+                    />
+                    {errors.brokerage && (
+                      <p className="text-xs text-red-500">
+                        {errors.brokerage.message}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Email */}
                   <div className="space-y-1.5">
                     <Label htmlFor="email" className="text-zinc-700">
@@ -322,24 +337,6 @@ const Register = () => {
                       className="h-11 rounded-[10px]"
                       placeholder="(555) 123-4567"
                     />
-                  </div>
-
-                  {/* Brokerage */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="brokerage" className="text-zinc-700">
-                      Brokerage
-                    </Label>
-                    <Input
-                      id="brokerage"
-                      {...register("brokerage")}
-                      className="h-11 rounded-[10px]"
-                      placeholder="Your brokerage name"
-                    />
-                    {errors.brokerage && (
-                      <p className="text-xs text-red-500">
-                        {errors.brokerage.message}
-                      </p>
-                    )}
                   </div>
 
                   {/* State + License row */}
