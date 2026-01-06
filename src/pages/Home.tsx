@@ -35,23 +35,22 @@ export default function Home() {
                 Where Real Deals Get Done
               </h1>
 
-              {/* Tension line - softer/smaller to create hierarchy */}
+              {/* Tension line - client impact, not agent FOMO */}
               <p className="mt-4 text-base font-medium text-zinc-600">
-                The deals you don't see are the ones that change your year.
+                The deals you don't see are the ones that can change a client's life.
               </p>
 
-              <p className="mt-5 text-lg sm:text-xl leading-relaxed text-zinc-600">
-                A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
+              {/* Identity line - standalone emphasis */}
+              <p className="mt-5 text-base font-semibold tracking-wide text-zinc-700 uppercase">
+                Built by Agents. For Agents. ALL AGENTS.
               </p>
 
-              <p className="mt-4 text-base text-zinc-500">
-                Built by Agents. For Agents. <span className="font-bold text-zinc-700">ALL AGENTS.</span>
-              </p>
-
-              {/* Value line - production advantage */}
-              <p className="mt-4 text-sm font-medium text-zinc-600">
-                More deal flow. Better matches. Fewer missed opportunities.
-              </p>
+              {/* Capability signals - keywords, not sentences */}
+              <div className="mt-6 flex flex-wrap gap-3">
+                <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Off-market</span>
+                <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Coming soon</span>
+                <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Agent-to-agent</span>
+              </div>
 
               <div className="mt-8">
                 <button
@@ -91,9 +90,13 @@ export default function Home() {
             Built to Increase Production
           </h2>
           
-          {/* Punch line - reframes as advantage vs disadvantage */}
-          <p className="mt-4 text-center text-base font-medium text-zinc-600">
-            Most agents rely on what's public. AAC members don't.
+          {/* Explanation moved from hero - now user has opted in mentally */}
+          <p className="mt-4 text-center text-lg leading-relaxed text-zinc-600 max-w-2xl mx-auto">
+            A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
+          </p>
+          
+          <p className="mt-6 text-center text-base font-medium text-zinc-700">
+            More deal flow. Better matches. Fewer missed opportunities.
           </p>
           
           <div className="mt-8 max-w-2xl mx-auto space-y-4">
@@ -273,7 +276,7 @@ function ClientBenefitCard({
   benefits: string[];
 }) {
   return (
-    <div className="rounded-2xl bg-white border border-zinc-100 hover:border-zinc-200 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
+    <div className="rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200">
       <h3 className="text-lg font-semibold mb-4" style={{ color: '#1D1D1F' }}>{title}</h3>
       <div className="space-y-3">
         {benefits.map((benefit, index) => (
@@ -298,7 +301,7 @@ function FeatureCard({
 }) {
   return (
     <div 
-      className="rounded-2xl bg-white border border-zinc-100 hover:border-zinc-200 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200"
+      className="rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200"
     >
       <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
       <div className="text-base font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>{title}</div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 /**
  * Subtle network sphere animation for homepage hero
@@ -28,8 +28,8 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   const lineColor = strokeColor || LINE_COLOR;
   const nodeColor = strokeColor || NODE_COLOR;
   
-  // Track which nodes are currently pulsing (for white blink) - hero mode only
-  const [pulsingNodes, setPulsingNodes] = useState<Set<number>>(new Set());
+  // Track which nodes have slow breathing animation (hero mode only)
+  // We select the front-most 5 nodes by z-value for subtle activity
   // Generate network nodes in a spherical distribution
   const nodes = React.useMemo(() => {
     const points: { x: number; y: number; z: number }[] = [];
@@ -105,44 +105,14 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return baseWidth;
   };
 
-  // White twinkle pulse effect - visible and alive (hero mode only)
-  useEffect(() => {
-    // Skip pulse animation in ambient/static mode
-    if (isAmbient || isStatic) return;
-    
-    const triggerPulse = () => {
-      // Pick 1 random node to pulse
-      const nodeIndex = Math.floor(Math.random() * nodes.length);
-      
-      // Duration: 120-180ms per pulse
-      const duration = 120 + Math.random() * 60;
-      
-      setPulsingNodes(prev => {
-        const next = new Set(prev);
-        next.add(nodeIndex);
-        return next;
-      });
-      
-      // Remove pulse after duration
-      setTimeout(() => {
-        setPulsingNodes(prev => {
-          const next = new Set(prev);
-          next.delete(nodeIndex);
-          return next;
-        });
-      }, duration);
-    };
-
-    // Slower cadence: trigger every 800-1200ms
-    const intervalId = setInterval(() => {
-      triggerPulse();
-    }, 800 + Math.random() * 400); // ~1000ms average
-
-    // Initial trigger
-    triggerPulse();
-
-    return () => clearInterval(intervalId);
-  }, [nodes.length, isAmbient, isStatic]);
+  // Identify front-most nodes for slow breathing effect (hero mode only)
+  // Pick top 5 nodes by z-value (roughly top 20%)
+  const breathingNodeIndices = React.useMemo(() => {
+    if (isAmbient || isStatic) return new Set<number>();
+    const indexed = nodes.map((n, i) => ({ z: n.z, index: i }));
+    indexed.sort((a, b) => b.z - a.z);
+    return new Set(indexed.slice(0, 5).map(n => n.index));
+  }, [nodes, isAmbient, isStatic]);
 
   // Crisp structural stroke weights
   const lineStrokeWidth = 1.75;
@@ -341,7 +311,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           
           {/* Nodes with depth-aware opacity + micro-halos on front-most */}
           {nodes.map((node, i) => {
-            const isPulsing = pulsingNodes.has(i);
+            const isBreathing = breathingNodeIndices.has(i);
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
             const nodeOpacity = getNodeOpacity(node.z);
             // Micro-halo for front-most nodes (z > 0.65, roughly top 8%)
@@ -362,12 +332,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={isPulsing ? radius * 1.2 : radius}
-                  fill={isPulsing ? '#FFFFFF' : NODE_COLOR}
-                  opacity={isPulsing ? 0.4 : nodeOpacity}
-                  style={{
-                    transition: 'r 80ms ease-out, fill 80ms ease-out, opacity 80ms ease-out'
-                  }}
+                  r={radius}
+                  fill={NODE_COLOR}
+                  opacity={nodeOpacity}
+                  style={isBreathing ? {
+                    animation: 'nodeBreathe 9s ease-in-out infinite',
+                    animationDelay: `${i * 0.5}s`
+                  } : undefined}
                 />
               </g>
             );
@@ -397,11 +368,15 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         </svg>
       </div>
       
-      {/* CSS for rotation animation */}
+      {/* CSS for rotation + breathing animations */}
       <style>{`
         @keyframes networkSpin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes nodeBreathe {
+          0%, 100% { opacity: 0.22; }
+          50% { opacity: 0.28; }
         }
       `}</style>
     </div>
