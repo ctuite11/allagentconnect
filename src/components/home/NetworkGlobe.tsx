@@ -311,7 +311,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       
       {/* Network sphere - large atmospheric backplate */}
       <div 
-        className="absolute right-0 lg:right-6 top-[34%] -translate-y-1/2 w-[700px] h-[700px] lg:w-[900px] lg:h-[900px]"
+        className="absolute right-0 lg:right-6 top-[46%] sm:top-[44%] lg:top-[42%] xl:top-[40%] -translate-y-1/2 w-[700px] h-[700px] lg:w-[900px] lg:h-[900px]"
         style={{
           transform: 'translateY(-50%) rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
