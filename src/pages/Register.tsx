@@ -232,13 +232,9 @@ const Register = () => {
                   </span>
                 </div>
 
-                <h1 className="text-3xl font-semibold text-zinc-900 mb-3">
+                <h1 className="text-3xl font-semibold text-zinc-900 mb-6">
                   Request Early Access
                 </h1>
-                <p className="text-zinc-500 mb-6">
-                  A private, verified agent network for off-market and
-                  coming-soon opportunities.
-                </p>
 
                 {/* Capability pills */}
                 <div className="flex flex-wrap justify-center gap-2 mb-8">
