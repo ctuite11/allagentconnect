@@ -28,7 +28,7 @@ export default function Home() {
               {/* Badge - anchor for the eye */}
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-200 bg-white/70 text-xs font-medium tracking-wide uppercase text-zinc-700 mb-5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#0E56F5]" />
-                ACC Private Network
+                AAC Private Network
               </span>
 
               <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-normal" style={{ color: '#1D1D1F' }}>
@@ -48,9 +48,9 @@ export default function Home() {
                 Built by Agents. For Agents. <span className="font-bold text-zinc-700">ALL AGENTS.</span>
               </p>
 
-              {/* Client pitch callout */}
-              <p className="mt-4 text-sm italic text-zinc-500">
-                ACC membership is something clients immediately understand — and ask for.
+              {/* Value line - production advantage */}
+              <p className="mt-4 text-sm font-medium text-zinc-600">
+                More deal flow. Better matches. Fewer missed opportunities.
               </p>
 
               <div className="mt-8">
@@ -93,7 +93,7 @@ export default function Home() {
           
           {/* Punch line - reframes as advantage vs disadvantage */}
           <p className="mt-4 text-center text-base font-medium text-zinc-600">
-            Most agents rely on what's public. ACC members don't.
+            Most agents rely on what's public. AAC members don't.
           </p>
           
           <div className="mt-8 max-w-2xl mx-auto space-y-4">
@@ -107,7 +107,7 @@ export default function Home() {
         {/* Why Clients Love It */}
         <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            Why Clients Love When Their Agent Is in ACC
+            Why Clients Love When Their Agent Is in AAC
           </h2>
           
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -133,18 +133,18 @@ export default function Home() {
         {/* The ACC Advantage */}
         <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            The ACC Advantage
+            The AAC Advantage
           </h2>
           
           <div className="mt-10 max-w-2xl mx-auto space-y-4">
-            <BulletItem>ACC members collaborate privately instead of competing publicly</BulletItem>
+            <BulletItem>AAC members collaborate privately instead of competing publicly</BulletItem>
             <BulletItem>Opportunities circulate inside the network before hitting the market</BulletItem>
             <BulletItem>Members see deals non-members never do</BulletItem>
             <BulletItem>Built by working agents who actually close transactions</BulletItem>
           </div>
 
           <p className="mt-10 text-center text-lg font-medium text-zinc-700 max-w-2xl mx-auto">
-            ACC members don't wait for the market. They operate ahead of it.
+            AAC members don't wait for the market. They operate ahead of it.
           </p>
         </section>
 
@@ -231,7 +231,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="text-sm text-neutral-600">
             <span className="font-semibold text-neutral-900">All Agent Connect</span> — where real deals get done.
-            <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • ACC Member Network</div>
+            <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • AAC Member Network</div>
           </div>
 
           <div className="flex items-center gap-4 text-sm">

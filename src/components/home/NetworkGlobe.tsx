@@ -11,9 +11,9 @@ import React, { useEffect, useState } from 'react';
 // Toggle this to true for placement/sizing assessment
 const DEBUG_VISIBLE = false;
 
-// Brand colors - LOCKED to single ACC Blue
-const LINE_COLOR = '#0E56F5'; // ACC Blue (HSL 221 92% 51%)
-const DOT_COLOR = '#94A3B8';  // slate-400 (silvery nodes)
+// Brand colors - LOCKED to single AAC Blue
+const LINE_COLOR = '#0E56F5'; // AAC Blue (HSL 221 92% 51%)
+const NODE_COLOR = '#CBD5E1';  // slate-300 (true silver, more luminance)
 
 interface NetworkGlobeProps {
   variant?: 'hero' | 'ambient' | 'static';
@@ -26,7 +26,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   
   // Use provided strokeColor or default brand colors
   const lineColor = strokeColor || LINE_COLOR;
-  const dotColor = strokeColor || DOT_COLOR;
+  const nodeColor = strokeColor || NODE_COLOR;
   
   // Track which nodes are currently pulsing (for white blink) - hero mode only
   const [pulsingNodes, setPulsingNodes] = useState<Set<number>>(new Set());
@@ -61,10 +61,10 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         );
         
         if (dist < 100) {
-          // Z-based depth: avgZ in [-1, 1] → opacity 0.05..0.18 (crisp contrast)
+          // Z-based depth: avgZ in [-1, 1] → opacity 0.04..0.18 (crisp contrast)
           const avgZ = (nodes[i].z + nodes[j].z) / 2;
           const t = (avgZ + 1) / 2; // normalize to 0..1
-          const depthOpacity = 0.05 + t * 0.13; // back ~0.05, front ~0.18
+          const depthOpacity = 0.04 + t * 0.14; // back ~0.04, front ~0.18
           
           lines.push({
             x1: nodes[i].x,
@@ -80,10 +80,10 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return lines;
   }, [nodes]);
   
-  // Node opacity: slightly stronger than lines for structure (0.16-0.22)
+  // Node opacity: silvery and present for structure (0.22-0.28)
   const getNodeOpacity = (z: number) => {
     const t = (z + 1) / 2; // normalize to 0..1
-    return 0.16 + t * 0.06; // range 0.16 to 0.22
+    return 0.22 + t * 0.06; // range 0.22 to 0.28
   };
 
   // Front-line boost: top 10-14% of connections get +0.06 opacity for "wow"
@@ -93,7 +93,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   
   const getLineOpacity = (line: typeof connections[0]) => {
     if (frontLineSet.has(line)) {
-      return Math.min(line.opacity + 0.06, 0.22); // boost, cap at 0.22
+      return Math.min(line.opacity + 0.06, 0.24); // boost, cap at 0.24
     }
     return line.opacity;
   };
@@ -186,7 +186,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 cx={node.x}
                 cy={node.y}
                 r={radius}
-                fill={strokeColor ? 'currentColor' : dotColor}
+                fill={strokeColor ? 'currentColor' : nodeColor}
                 opacity={1}
               />
             );
@@ -257,7 +257,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
                 cx={node.x}
                 cy={node.y}
                 r={radius}
-                fill={DOT_COLOR}
+                fill={NODE_COLOR}
                 opacity={1}
               />
             );
@@ -311,7 +311,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       
       {/* Network sphere - large atmospheric backplate */}
       <div 
-        className="absolute -right-20 lg:-right-10 top-[40%] -translate-y-1/2 w-[700px] h-[700px] lg:w-[900px] lg:h-[900px]"
+        className="absolute right-0 lg:right-6 top-[34%] -translate-y-1/2 w-[700px] h-[700px] lg:w-[900px] lg:h-[900px]"
         style={{
           transform: 'translateY(-50%) rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
@@ -339,24 +339,37 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             />
           ))}
           
-          {/* Nodes with depth-aware opacity */}
+          {/* Nodes with depth-aware opacity + micro-halos on front-most */}
           {nodes.map((node, i) => {
             const isPulsing = pulsingNodes.has(i);
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
             const nodeOpacity = getNodeOpacity(node.z);
+            // Micro-halo for front-most nodes (z > 0.65, roughly top 8%)
+            const showHalo = node.z > 0.65;
             
             return (
-              <circle
-                key={`node-${i}`}
-                cx={node.x}
-                cy={node.y}
-                r={isPulsing ? radius * 1.2 : radius}
-                fill={isPulsing ? '#FFFFFF' : DOT_COLOR}
-                opacity={isPulsing ? 0.4 : nodeOpacity}
-                style={{
-                  transition: 'r 80ms ease-out, fill 80ms ease-out, opacity 80ms ease-out'
-                }}
-              />
+              <g key={`node-${i}`}>
+                {/* Micro-halo behind front-most nodes */}
+                {showHalo && (
+                  <circle
+                    cx={node.x}
+                    cy={node.y}
+                    r={radius + 3}
+                    fill={LINE_COLOR}
+                    opacity={0.07}
+                  />
+                )}
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={isPulsing ? radius * 1.2 : radius}
+                  fill={isPulsing ? '#FFFFFF' : NODE_COLOR}
+                  opacity={isPulsing ? 0.4 : nodeOpacity}
+                  style={{
+                    transition: 'r 80ms ease-out, fill 80ms ease-out, opacity 80ms ease-out'
+                  }}
+                />
+              </g>
             );
           })}
           
