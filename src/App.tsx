@@ -90,8 +90,8 @@ const App = () => (
               <ActiveAgentBanner />
               <Navigation />
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/landing" element={<LandingPage />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/home" element={<Index />} />
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
