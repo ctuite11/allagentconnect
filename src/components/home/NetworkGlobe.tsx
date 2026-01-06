@@ -269,7 +269,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   // Hero mode - atmospheric backplate behind content
   return (
     <div 
-      className="absolute inset-0 hidden md:block overflow-visible pointer-events-none"
+      className="absolute -inset-x-0 -top-20 -bottom-20 hidden md:block overflow-visible pointer-events-none"
       aria-hidden="true"
       style={{ 
         zIndex: DEBUG_VISIBLE ? 20 : 1,
