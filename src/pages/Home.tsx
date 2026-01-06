@@ -11,24 +11,12 @@ import {
   X,
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
-import aacLogoBlueSilver from "@/assets/aac-logo-blue-silver.png";
 
 export default function Home() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white text-neutral-900">
-      {/* Logo Preview Banner - TEMPORARY */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white border border-zinc-200 rounded-2xl shadow-lg p-6 flex flex-col items-center gap-4">
-        <div className="flex items-center justify-between w-full">
-          <span className="text-sm font-medium text-zinc-500">Logo Preview</span>
-        </div>
-        <div className="bg-zinc-50 rounded-xl p-6">
-          <img src={aacLogoBlueSilver} alt="AAC Logo Blue Silver" className="h-24 w-auto" />
-        </div>
-        <p className="text-xs text-zinc-400">src/assets/aac-logo-blue-silver.png</p>
-      </div>
-
       <main className="pt-20 pb-12">
         {/* Hero */}
         <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[60vh] flex items-center overflow-visible">
