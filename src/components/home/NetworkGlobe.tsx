@@ -303,20 +303,20 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       className="absolute inset-0 hidden md:block overflow-visible pointer-events-none"
       aria-hidden="true"
       style={{ 
-        zIndex: DEBUG_VISIBLE ? 20 : 1,
-        // Lower-centered radial mask: fades left/bottom but preserves top
-        maskImage: 'radial-gradient(circle at 72% 62%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0.75) 70%, rgba(0,0,0,0) 88%)',
-        WebkitMaskImage: 'radial-gradient(circle at 72% 62%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0.75) 70%, rgba(0,0,0,0) 88%)'
+        zIndex: DEBUG_VISIBLE ? 20 : 1
       }}
     >
       
-      {/* Network sphere - large atmospheric backplate */}
+      {/* Network sphere - large atmospheric backplate with mask on fixed-size box */}
       <div 
         className="absolute right-0 lg:right-6 top-[-40px] w-[700px] h-[700px] lg:w-[900px] lg:h-[900px]"
         style={{
           transform: 'rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
-          perspective: '1000px'
+          perspective: '1000px',
+          // Mask on fixed-size box: coordinate system is now 700/900px, never changes
+          maskImage: 'radial-gradient(circle at 72% 62%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 58%, rgba(0,0,0,0.75) 72%, rgba(0,0,0,0) 90%)',
+          WebkitMaskImage: 'radial-gradient(circle at 72% 62%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 58%, rgba(0,0,0,0.75) 72%, rgba(0,0,0,0) 90%)'
         }}
       >
         <svg 
