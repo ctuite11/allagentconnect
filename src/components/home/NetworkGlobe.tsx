@@ -314,9 +314,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           transform: 'rotateX(15deg) rotateY(-10deg)',
           transformStyle: 'preserve-3d',
           perspective: '1000px',
-          // Gentle mask: solid to 76%, soft fade at perimeter only
-          maskImage: 'radial-gradient(circle at 88% 44%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 76%, rgba(0,0,0,0.92) 84%, rgba(0,0,0,0.55) 92%, rgba(0,0,0,0) 100%)',
-          WebkitMaskImage: 'radial-gradient(circle at 88% 44%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 76%, rgba(0,0,0,0.92) 84%, rgba(0,0,0,0.55) 92%, rgba(0,0,0,0) 100%)'
+          // Ultra-gentle mask: prevents harsh edge without "cut off" feel
+          maskImage:
+            'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage:
+            'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)'
         }}
       >
         <svg 
