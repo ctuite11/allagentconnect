@@ -297,30 +297,24 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     );
   }
 
-  // Hero mode - atmospheric backplate behind content
+  // Hero mode - fixed-size artifact; positioning handled by parent in Home.tsx
   return (
     <div 
-      className="absolute inset-0 hidden md:block overflow-visible pointer-events-none"
+      className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none"
       aria-hidden="true"
-      style={{ 
-        zIndex: DEBUG_VISIBLE ? 20 : 1
+      style={{
+        transform: 'rotateX(15deg) rotateY(-10deg)',
+        transformStyle: 'preserve-3d',
+        perspective: '1000px',
+        // Ultra-gentle mask: prevents harsh edge without "cut off" feel
+        maskImage:
+          'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)',
+        WebkitMaskImage:
+          'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)',
+        maskRepeat: 'no-repeat',
+        WebkitMaskRepeat: 'no-repeat'
       }}
     >
-      
-      {/* Network sphere - large atmospheric backplate with mask on fixed-size box */}
-      <div 
-        className="absolute right-0 lg:right-6 top-[-40px] w-[700px] h-[700px] lg:w-[900px] lg:h-[900px]"
-        style={{
-          transform: 'rotateX(15deg) rotateY(-10deg)',
-          transformStyle: 'preserve-3d',
-          perspective: '1000px',
-          // Ultra-gentle mask: prevents harsh edge without "cut off" feel
-          maskImage:
-            'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)',
-          WebkitMaskImage:
-            'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)'
-        }}
-      >
         <svg 
           viewBox="0 0 300 300" 
           className="w-full h-full"
@@ -397,8 +391,6 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             opacity={0.10}
           />
         </svg>
-      </div>
-      
       {/* CSS for rotation animation */}
       <style>{`
         @keyframes networkSpin {
