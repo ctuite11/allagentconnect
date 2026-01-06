@@ -66,10 +66,10 @@ const LandingPage = () => {
             {/* CTA */}
             <Button
               size="lg"
-              onClick={() => navigate('/auth?mode=register')}
+              onClick={() => navigate('/register')}
               className="bg-[#0E56F5] hover:bg-[#0D4AD9] text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
             >
-              Register Early
+              Request Early Access
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
