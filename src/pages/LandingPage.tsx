@@ -11,17 +11,17 @@ const LandingPage = () => {
     <div className="min-h-screen bg-white">
       {/* Minimal header - logo only, no nav */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white" style={{ borderBottom: '1px solid #E5E5EA' }}>
-        <div className="mx-auto max-w-6xl px-5 py-3 flex items-center">
+        <div className="w-full px-6 sm:px-10 lg:px-20 h-16 flex items-center">
           <Logo size="lg" />
         </div>
       </header>
 
-      <main className="pt-20 pb-12">
+      <main className="pt-16 pb-12">
         {/* Hero */}
-        <section className="w-full px-6 sm:px-10 lg:px-20 pt-14 pb-10 relative min-h-[620px] lg:min-h-[680px] flex items-center overflow-visible">
+        <section className="w-full px-6 sm:px-10 lg:px-20 pt-10 pb-10 relative min-h-[560px] lg:min-h-[620px] flex items-center overflow-visible">
           {/* Background globe layer */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-0 lg:right-6 top-[-40px]">
+            <div className="absolute right-0 lg:right-6 top-[-60px]">
               <NetworkGlobe />
             </div>
           </div>
