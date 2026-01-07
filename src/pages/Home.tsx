@@ -22,7 +22,7 @@ export default function Home() {
         <section className="w-full px-6 sm:px-10 lg:px-20 pt-8 pb-10 relative min-h-[620px] lg:min-h-[680px] flex items-center overflow-visible">
           {/* Background globe layer - two-layer absolute for zero layout impact */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-[-60px] top-[-56px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
+            <div className="absolute right-[-60px] top-[-92px] md:top-[-110px] lg:top-[-128px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
               <NetworkGlobe />
             </div>
           </div>
@@ -30,7 +30,7 @@ export default function Home() {
           {/* Foreground content */}
           <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
             {/* Copy */}
-            <div className="max-w-xl">
+            <div className="max-w-xl pt-10 md:pt-14 lg:pt-16">
               {/* Badge - anchor for the eye */}
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-200 bg-white/70 text-xs font-medium tracking-wide uppercase text-zinc-700 mb-5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#0E56F5]" />

@@ -28,14 +28,14 @@ const LandingPage = () => {
         <section className="relative flex items-center overflow-visible">
           {/* Background globe layer */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-[-60px] top-[-56px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
+            <div className="absolute right-[-60px] top-[-92px] md:top-[-110px] lg:top-[-128px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
               <NetworkGlobe />
             </div>
           </div>
           
           {/* Foreground content */}
           <div 
-            className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-12"
+            className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-10 md:pt-14 lg:pt-16 pb-12"
             style={{ animation: 'fadeUp 0.55s ease-out both' }}
           >
             <div className="relative z-10 max-w-2xl">
