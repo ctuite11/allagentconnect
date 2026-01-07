@@ -6,9 +6,9 @@ import React from 'react';
  * NOT a tech feature - must recede behind content
  */
 
-// Neutral gray colors - darker for visibility on white
-const LINE_COLOR = '#A1A1AA'; // zinc-400
-const NODE_COLOR = '#D4D4D8'; // zinc-300
+// Neutral gray colors - warmer/darker to align with logo gray family
+const LINE_COLOR = '#8A8A8F'; // between zinc-400/500, warmer
+const NODE_COLOR = '#A8A8AD'; // darker than zinc-300, warmer
 
 interface NetworkGlobeProps {
   variant?: 'hero' | 'ambient' | 'static';
@@ -219,7 +219,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   // Hero mode - fixed-size, subtle architectural background
   return (
     <div 
-      className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none relative"
+      className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none relative -mt-8"
       aria-hidden="true"
     >
       {/* Globe container - neutral architectural watermark, no blue tinting */}
