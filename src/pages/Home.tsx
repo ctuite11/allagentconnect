@@ -22,7 +22,7 @@ export default function Home() {
         <section className="w-full px-6 sm:px-10 lg:px-20 pt-8 pb-10 relative min-h-[620px] lg:min-h-[680px] flex items-center overflow-visible">
           {/* Background globe layer - two-layer absolute for zero layout impact */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-[-120px] xl:right-[-80px] 2xl:right-[-40px] top-[-40px] md:top-[-60px] lg:top-[-80px]">
+            <div className="absolute right-[-60px] top-[-56px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
               <NetworkGlobe />
             </div>
           </div>
