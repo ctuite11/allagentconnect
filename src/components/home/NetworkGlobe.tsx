@@ -6,9 +6,9 @@ import React from 'react';
  * NOT a tech feature - must recede behind content
  */
 
-// Neutral gray colors - slightly darker for visibility on white
-const LINE_COLOR = '#D4D4D8'; // zinc-300
-const NODE_COLOR = '#E4E4E7'; // zinc-200
+// Neutral gray colors - darker for visibility on white
+const LINE_COLOR = '#A1A1AA'; // zinc-400
+const NODE_COLOR = '#D4D4D8'; // zinc-300
 
 interface NetworkGlobeProps {
   variant?: 'hero' | 'ambient' | 'static';
@@ -222,7 +222,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none"
       aria-hidden="true"
       style={{
-        opacity: 0.18,
+        opacity: 0.28,
         transform: 'rotateX(8deg)', // subtle tilt for realism
         willChange: 'transform',
         maskImage:
