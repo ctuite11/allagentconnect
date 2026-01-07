@@ -170,7 +170,7 @@ const Navigation = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
-    <header className="bg-white relative" style={{ borderBottom: '1px solid #E5E5EA' }}>
+    <header className="bg-transparent relative">
       <div className="mx-auto max-w-6xl px-5 py-3 flex items-center justify-between">
         <div onClick={() => navigate("/")} className="cursor-pointer">
           <Logo size="lg" />

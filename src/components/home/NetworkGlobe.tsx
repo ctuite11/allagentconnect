@@ -219,7 +219,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   // Hero mode - fixed-size, subtle architectural background
   return (
     <div 
-      className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none"
+      className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none relative"
       aria-hidden="true"
       style={{
         opacity: 0.28,
@@ -233,6 +233,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         WebkitMaskRepeat: 'no-repeat'
       }}
     >
+      {/* Static blue wash overlay - right to left fade catching ~half the globe */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to left, rgba(14,86,245,0.10) 0%, rgba(14,86,245,0.05) 35%, transparent 60%)',
+        }}
+      />
       <svg 
         viewBox="0 0 300 300" 
         className="w-full h-full"
