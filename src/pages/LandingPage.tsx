@@ -28,7 +28,7 @@ const LandingPage = () => {
         <section className="relative flex items-center overflow-visible">
           {/* Background globe layer */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-[-120px] xl:right-[-80px] 2xl:right-[-40px] top-[-40px] md:top-[-60px] lg:top-[-80px]">
+            <div className="absolute right-[-60px] top-[-56px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
               <NetworkGlobe />
             </div>
           </div>
