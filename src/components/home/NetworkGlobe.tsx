@@ -219,7 +219,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
   // Hero mode - fixed-size, subtle architectural background
   return (
     <div 
-      className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none relative -mt-8"
+      className="hidden md:block w-[640px] h-[640px] lg:w-[760px] lg:h-[760px] xl:w-[820px] xl:h-[820px] 2xl:w-[860px] 2xl:h-[860px] overflow-visible pointer-events-none relative"
       aria-hidden="true"
     >
       {/* Globe container - neutral architectural watermark, no blue tinting */}
