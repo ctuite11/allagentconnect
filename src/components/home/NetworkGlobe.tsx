@@ -222,21 +222,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none relative"
       aria-hidden="true"
     >
-      {/* Radial blue glow - emanates from globe center, not a side gradient */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-10"
-        style={{
-          background: `
-            radial-gradient(circle at 75% 50%,
-              rgba(14,86,245,0.40) 0%,
-              rgba(14,86,245,0.22) 8%,
-              rgba(14,86,245,0.10) 14%,
-              rgba(14,86,245,0.00) 22%)
-          `,
-          mixBlendMode: 'multiply',
-        }}
-      />
-      {/* Globe container with reduced opacity */}
+      {/* Globe container - neutral architectural watermark, no blue tinting */}
       <div
         className="absolute inset-0"
         style={{
