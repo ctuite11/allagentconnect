@@ -60,7 +60,7 @@ export default function Home() {
 
               <div className="mt-8">
                 <button
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/auth?mode=register&source=home")}
                   className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
                 >
                   Request Access <ArrowRight className="ml-2 h-5 w-5" />
@@ -165,7 +165,7 @@ export default function Home() {
               Ready to operate ahead of the market?
             </h3>
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/auth?mode=register&source=home")}
               className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
             >
               Request Access <ArrowRight className="ml-2 h-5 w-5" />
@@ -268,7 +268,7 @@ export default function Home() {
 
               <div className="mt-8">
                 <button
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/auth?mode=register&source=home")}
                   className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
                 >
                   Request Access <ArrowRight className="ml-2 h-5 w-5" />
@@ -295,7 +295,7 @@ export default function Home() {
               Terms
             </a>
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/auth?mode=register&source=home")}
               className="inline-flex items-center justify-center rounded-xl bg-[#0E56F5] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
             >
               Get Access
