@@ -221,26 +221,30 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     <div 
       className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none relative"
       aria-hidden="true"
-      style={{
-        opacity: 0.28,
-        transform: 'rotateX(8deg)', // subtle tilt for realism
-        willChange: 'transform',
-        maskImage:
-          'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
-        WebkitMaskImage:
-          'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
-        maskRepeat: 'no-repeat',
-        WebkitMaskRepeat: 'no-repeat'
-      }}
     >
-      {/* Static blue wash overlay - right to left fade catching ~half the globe */}
+      {/* Blue wash overlay - OUTSIDE opacity container so it renders at full strength */}
       <div 
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-10"
         style={{
-          background: 'linear-gradient(to left, rgba(14,86,245,0.25) 0%, rgba(14,86,245,0.12) 40%, transparent 65%)',
+          background: 'linear-gradient(to left, rgba(14,86,245,0.18) 0%, rgba(14,86,245,0.08) 45%, transparent 70%)',
+          maskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
         }}
       />
-      <svg 
+      {/* Globe container with reduced opacity */}
+      <div
+        className="absolute inset-0"
+        style={{
+          opacity: 0.28,
+          transform: 'rotateX(8deg)',
+          willChange: 'transform',
+          maskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
+          maskRepeat: 'no-repeat',
+          WebkitMaskRepeat: 'no-repeat'
+        }}
+      >
+        <svg
         viewBox="0 0 300 300" 
         className="w-full h-full"
         style={{
@@ -289,14 +293,15 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           fill="none" stroke={LINE_COLOR}
           strokeWidth={ringStrokeWidth} opacity={0.4}
         />
-      </svg>
-      
-      <style>{`
-        @keyframes networkSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+        </svg>
+        
+        <style>{`
+          @keyframes networkSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
     </div>
   );
 };
