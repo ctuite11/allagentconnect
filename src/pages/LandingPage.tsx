@@ -11,18 +11,21 @@ const LandingPage = () => {
     <div className="min-h-screen bg-white">
       {/* Minimal header - logo only, no nav */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center justify-between">
+            <div className="flex items-center gap-3 -ml-1">
               <Logo size="lg" />
             </div>
+            <a href="/auth" className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors">
+              Log in
+            </a>
           </div>
         </div>
       </header>
 
-      <main className="pt-16 pb-12">
+      <main className="pt-14 pb-12">
         {/* Hero */}
-        <section className="relative min-h-[520px] lg:min-h-[580px] flex items-center overflow-visible">
+        <section className="relative flex items-center overflow-visible">
           {/* Background globe layer */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
             <div className="absolute right-0 lg:right-6 top-[-60px]">
@@ -31,10 +34,13 @@ const LandingPage = () => {
           </div>
           
           {/* Foreground content */}
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-10 pb-14 w-full">
+          <div 
+            className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-12"
+            style={{ animation: 'fadeUp 0.55s ease-out both' }}
+          >
             <div className="relative z-10 max-w-2xl">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 mb-4">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#0E56F5]" />
                 <span className="text-xs font-medium tracking-wide text-zinc-600 uppercase">
                   AAC Private Network
@@ -79,6 +85,12 @@ const LandingPage = () => {
               </Button>
             </div>
           </div>
+          <style>{`
+            @keyframes fadeUp {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
         </section>
 
         {/* What You Can Do - 3 Feature Cards */}
