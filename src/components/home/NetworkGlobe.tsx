@@ -344,28 +344,31 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             const isSparking = sparkingNode === i;
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
             const nodeOpacity = getNodeOpacity(node.z);
-            // Micro-halo only for front-most nodes (z > 0.65), not sparking
-            const showHalo = node.z > 0.65;
             
             return (
               <g key={`node-${i}`}>
-                {/* Micro-halo behind front-most nodes */}
-                {showHalo && !isSparking && (
+                {/* Bright halo behind sparking node */}
+                {isSparking && (
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r={radius + 3}
+                    r={radius * 2.2}
                     fill={LINE_COLOR}
-                    opacity={0.07}
+                    opacity={0.35}
+                    style={{ filter: 'blur(6px)' }}
                   />
                 )}
+                {/* Core node */}
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={isSparking ? radius * 1.4 : radius}
-                  fill={isSparking ? LINE_COLOR : NODE_COLOR}
-                  opacity={isSparking ? 0.9 : nodeOpacity}
-                  style={{ transition: 'r 180ms ease-out, opacity 180ms ease-out, fill 180ms ease-out' }}
+                  r={isSparking ? radius * 1.35 : radius}
+                  fill={isSparking ? '#FFFFFF' : NODE_COLOR}
+                  opacity={isSparking ? 0.95 : nodeOpacity}
+                  style={{ 
+                    transition: 'r 180ms ease-out, opacity 180ms ease-out, fill 180ms ease-out',
+                    filter: isSparking ? 'drop-shadow(0 0 10px rgba(14, 86, 245, 0.55))' : 'none'
+                  }}
                 />
               </g>
             );
