@@ -105,7 +105,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         style={{ opacity: 0.08 }}
       >
         <svg viewBox="0 0 300 300" className="w-full h-full">
-          {/* Connection lines */}
+          {/* Connection lines only - no nodes for cleaner architectural look */}
           {connections.map((line, i) => (
             <line
               key={`line-${i}`}
@@ -118,21 +118,6 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
               opacity={getLineOpacity(line.avgZ)}
             />
           ))}
-          
-          {/* Nodes */}
-          {nodes.map((node, i) => {
-            const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
-            return (
-              <circle
-                key={`node-${i}`}
-                cx={node.x}
-                cy={node.y}
-                r={radius}
-                fill={strokeColor ? 'currentColor' : nodeColor}
-                opacity={getNodeOpacity(node.z)}
-              />
-            );
-          })}
           
           {/* Subtle orbital rings */}
           <ellipse
@@ -179,20 +164,6 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
               opacity={getLineOpacity(line.avgZ)}
             />
           ))}
-          
-          {nodes.map((node, i) => {
-            const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
-            return (
-              <circle
-                key={`node-${i}`}
-                cx={node.x}
-                cy={node.y}
-                r={radius}
-                fill={NODE_COLOR}
-                opacity={getNodeOpacity(node.z)}
-              />
-            );
-          })}
           
           <ellipse
             cx="150" cy="150" rx="120" ry="40"
@@ -244,7 +215,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           transformBox: 'fill-box'
         }}
       >
-        {/* Connection lines with simple depth fade */}
+        {/* Connection lines only - no nodes for cleaner architectural look */}
         {connections.map((line, i) => (
           <line
             key={`line-${i}`}
@@ -257,21 +228,6 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             opacity={getLineOpacity(line.avgZ)}
           />
         ))}
-        
-        {/* Nodes with simple depth fade */}
-        {nodes.map((node, i) => {
-          const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
-          return (
-            <circle
-              key={`node-${i}`}
-              cx={node.x}
-              cy={node.y}
-              r={radius}
-              fill={NODE_COLOR}
-              opacity={getNodeOpacity(node.z)}
-            />
-          );
-        })}
         
         {/* Subtle orbital rings */}
         <ellipse
