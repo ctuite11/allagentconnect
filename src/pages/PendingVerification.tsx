@@ -284,28 +284,34 @@ const PendingVerification = () => {
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md text-center">
           {/* Globe + AAC blue energy core */}
-          <div className="relative mx-auto mb-8 w-[180px] h-[180px]">
-            {/* Blue energy core burst */}
+          <div className="relative mx-auto mb-4 w-[150px] h-[150px]">
+            {/* Blue energy core burst - tighter, stronger */}
             <div 
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              className="pointer-events-none absolute inset-[-22px] rounded-full"
               style={{
-                background: 'radial-gradient(circle at center, rgba(14, 86, 245, 0.15) 0%, rgba(14, 86, 245, 0.05) 40%, transparent 70%)',
+                background: `radial-gradient(circle at 50% 55%,
+                  rgba(14,86,245,0.32) 0%,
+                  rgba(14,86,245,0.18) 16%,
+                  rgba(14,86,245,0.08) 32%,
+                  rgba(14,86,245,0.00) 52%
+                )`,
+                filter: 'blur(8px)',
               }}
             />
-            {/* Globe watermark */}
-            <div className="absolute inset-0">
+            {/* Globe watermark - slightly more visible */}
+            <div className="absolute inset-0" style={{ opacity: 0.28 }}>
               <NetworkGlobe variant="static" strokeColor="#0E56F5" />
             </div>
           </div>
           
           {/* Headline - strongest element */}
-          <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-3">
+          <h1 className="mt-2 text-2xl md:text-3xl font-semibold text-zinc-900 mb-2">
             Almost there.
           </h1>
           
           {/* Single email line */}
           {userEmail && (
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-zinc-600 mb-1">
               You'll receive a confirmation email at{" "}
               <span className="text-zinc-700">{userEmail}</span>{" "}
               once verification is complete.
@@ -317,7 +323,7 @@ const PendingVerification = () => {
             type="button"
             disabled
             aria-disabled="true"
-            className="mt-6 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default"
+            className="mt-5 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default"
           >
             Verification in progress
           </button>
