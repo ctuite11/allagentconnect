@@ -156,7 +156,8 @@ const Navigation = () => {
     return null;
   }
 
-  // Hide global navigation on auth + early access capture pages
+  // Hide global navigation on minimal pages
+  if (location.pathname === "/") return null;
   if (location.pathname === "/auth") return null;
   if (location.pathname === "/register") return null;
 
