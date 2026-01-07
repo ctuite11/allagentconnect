@@ -143,6 +143,21 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Mid-Page CTA Band */}
+        <section className="border-y border-zinc-200 bg-white py-10 md:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 className="text-lg font-semibold mb-4" style={{ color: '#1D1D1F' }}>
+              Ready to operate ahead of the market?
+            </h3>
+            <button
+              onClick={() => navigate("/register")}
+              className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+            >
+              Request Access <ArrowRight className="ml-2 h-5 w-5" />
+            </button>
+          </div>
+        </section>
+
         {/* How It Works */}
         <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
