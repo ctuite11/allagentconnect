@@ -226,7 +226,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       <div 
         className="absolute inset-0 pointer-events-none z-10"
         style={{
-          background: 'radial-gradient(circle at 72% 50%, rgba(14,86,245,0.18) 0%, rgba(14,86,245,0.10) 30%, rgba(14,86,245,0.04) 45%, rgba(14,86,245,0) 60%)',
+          background: 'radial-gradient(circle at 68% 52%, rgba(14,86,245,0.26) 0%, rgba(14,86,245,0.16) 28%, rgba(14,86,245,0.08) 42%, rgba(14,86,245,0) 60%)',
         }}
       />
       {/* Globe container with reduced opacity */}
