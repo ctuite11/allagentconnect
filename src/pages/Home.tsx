@@ -116,28 +116,36 @@ export default function Home() {
           </div>
         </section>
 
-        {/* What You Can Do */}
+        {/* How Agents Actually Use AAC */}
         <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
-              What You Can Do
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-2" style={{ color: '#1D1D1F' }}>
+              How Agents Actually Use AAC
             </h2>
+            <p className="text-center text-lg text-zinc-600 mb-8">
+              Quiet collaboration for sales, rentals, and everything in between.
+            </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <FeatureCard
                 icon={Share2}
                 title="Share off-market listings"
-                body="Post quietly with enough context for agents to act. Control visibility and timing."
+                body="Post listings discreetly — for-sale or for-rent — with control over who sees them and when."
               />
               <FeatureCard
                 icon={Megaphone}
-                title="Post buyer needs"
-                body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
+                title="Post buyer and renter needs"
+                body="Surface real demand quietly, without advertising or public competition."
+              />
+              <FeatureCard
+                icon={Users}
+                title="Match before the market"
+                body="Connect buyers, renters, and listings before they go public — or instead of going public at all."
               />
               <FeatureCard
                 icon={MessageCircle}
-                title="Collaborate privately with verified agents"
-                body="Direct agent-to-agent communication. Get to a showing, an offer, or a solution fast."
+                title="Work agent-to-agent, directly"
+                body="No feeds. No noise. Just verified agents solving deals together — sales and rentals alike."
               />
             </div>
           </div>
