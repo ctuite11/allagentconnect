@@ -273,19 +273,29 @@ const PendingVerification = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-white">
-      {/* Near-invisible background wash */}
+      {/* Subtle radial background lift */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundColor: 'hsl(93 50% 96% / 0.3)',
+          background: 'radial-gradient(ellipse 80% 60% at center 40%, rgba(14, 86, 245, 0.03) 0%, transparent 100%)',
         }}
       />
       
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md text-center">
-          {/* Centered ambient globe - above headline */}
-          <div className="mx-auto mb-8 w-[160px] h-[160px]">
-            <NetworkGlobe variant="ambient" />
+          {/* Globe + AAC blue energy core */}
+          <div className="relative mx-auto mb-8 w-[180px] h-[180px]">
+            {/* Blue energy core burst */}
+            <div 
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle at center, rgba(14, 86, 245, 0.15) 0%, rgba(14, 86, 245, 0.05) 40%, transparent 70%)',
+              }}
+            />
+            {/* Globe watermark */}
+            <div className="absolute inset-0">
+              <NetworkGlobe variant="static" strokeColor="#0E56F5" />
+            </div>
           </div>
           
           {/* Headline - strongest element */}
