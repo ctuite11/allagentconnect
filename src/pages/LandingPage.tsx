@@ -1,16 +1,45 @@
-import { ArrowRight, Share2, Users, Shield } from "lucide-react";
+import { ArrowRight, Share2, Users, Megaphone, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
+
+function ModuleCard({
+  icon: Icon,
+  title,
+  body,
+  tier,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+  tier: "hub" | "premium";
+}) {
+  return (
+    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200">
+      <span
+        className={`absolute top-4 right-4 text-xs font-medium tracking-wide px-2.5 py-1 rounded-full border ${
+          tier === "hub"
+            ? "bg-zinc-100 text-zinc-700 border-zinc-200"
+            : "bg-blue-50 text-blue-700 border-blue-200"
+        }`}
+      >
+        {tier === "hub" ? "Success Hub" : "AAC Premium"}
+      </span>
+      <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
+      <div className="text-base font-semibold tracking-tight text-zinc-900">{title}</div>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
+    </div>
+  );
+}
 
 const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Minimal header - logo only, no nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
+      {/* Minimal header - NOT sticky, part of page flow */}
+      <header className="relative bg-transparent">
         <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between">
             <div className="flex items-center gap-3 -ml-1">
@@ -23,7 +52,7 @@ const LandingPage = () => {
         </div>
       </header>
 
-      <main className="pt-10 pb-12">
+      <main className="pb-12">
         {/* Hero */}
         <section className="relative flex items-center overflow-visible">
           {/* Background globe layer */}
@@ -93,55 +122,44 @@ const LandingPage = () => {
           `}</style>
         </section>
 
-        {/* What You Can Do - 3 Feature Cards */}
-        <section className="w-full px-6 sm:px-10 lg:px-20 py-20">
+        {/* Success Hub — How AAC Gets Used */}
+        <section className="w-full px-6 sm:px-10 lg:px-20 py-12 md:py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-semibold text-zinc-900 mb-4 text-center">
-              What You Can Do
+            <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-900 mb-2 text-center">
+              Success Hub — How AAC Gets Used
             </h2>
-            <p className="text-zinc-500 text-center mb-12 max-w-xl mx-auto">
-              A private network built for how agents actually work together.
+            <p className="text-center text-lg text-zinc-600 mb-2">
+              Core workflows inside AAC, used daily by working agents across sales and rentals.
+            </p>
+            <p className="text-center text-sm text-zinc-500 mb-10">
+              Supports residential sales, rentals, and agent-only opportunities across markets.
             </p>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Card 1 */}
-              <div className="group bg-white rounded-2xl p-6 border border-zinc-100 hover:border-zinc-200 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5">
-                <div className="flex justify-end mb-6">
-                  <Share2 className="h-6 w-6 text-[#0E56F5]" />
-                </div>
-                <h3 className="text-lg font-semibold text-zinc-900 mb-2">
-                  Share Off-Market Listings
-                </h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">
-                  Post coming-soon and pocket listings to a verified agent network before they hit the MLS.
-                </p>
-              </div>
-
-              {/* Card 2 */}
-              <div className="group bg-white rounded-2xl p-6 border border-zinc-100 hover:border-zinc-200 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5">
-                <div className="flex justify-end mb-6">
-                  <Users className="h-6 w-6 text-[#0E56F5]" />
-                </div>
-                <h3 className="text-lg font-semibold text-zinc-900 mb-2">
-                  Post Buyer Needs
-                </h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">
-                  Broadcast what your buyers are looking for and get matched with listing agents who have it.
-                </p>
-              </div>
-
-              {/* Card 3 */}
-              <div className="group bg-white rounded-2xl p-6 border border-zinc-100 hover:border-zinc-200 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5">
-                <div className="flex justify-end mb-6">
-                  <Shield className="h-6 w-6 text-[#0E56F5]" />
-                </div>
-                <h3 className="text-lg font-semibold text-zinc-900 mb-2">
-                  Collaborate Privately
-                </h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">
-                  Work with verified agents in a professional, members-only environment.
-                </p>
-              </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <ModuleCard
+                icon={Share2}
+                tier="hub"
+                title="Listings Exchange"
+                body="Quietly share off-market sales and rental listings with verified agents — with full control over visibility and timing."
+              />
+              <ModuleCard
+                icon={Megaphone}
+                tier="hub"
+                title="Buyer & Renter Needs"
+                body="Post active buyer and renter demand privately, so opportunities surface without public exposure."
+              />
+              <ModuleCard
+                icon={Users}
+                tier="premium"
+                title="Private Matching"
+                body="Match listings, buyers, and renters before they hit the open market — or without going public at all."
+              />
+              <ModuleCard
+                icon={MessageCircle}
+                tier="premium"
+                title="Agent-to-Agent Workspace"
+                body="Direct, verified agent collaboration — sales and rentals — without feeds, noise, or outside interference."
+              />
             </div>
           </div>
         </section>
