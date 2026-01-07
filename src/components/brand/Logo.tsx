@@ -1,4 +1,5 @@
 import React from "react";
+import logoHouseLeaf from "@/assets/aac-logo-house-leaf.png";
 
 interface LogoProps {
   variant?: "primary" | "reversed" | "icon" | "email";
@@ -9,14 +10,12 @@ interface LogoProps {
 const sizeClasses = {
   sm: "h-8",
   md: "h-10",
-  lg: "h-12",
-  xl: "h-14",
+  lg: "h-10",
+  xl: "h-12",
 };
 
 // Primary colors - LOGO ASSET COLORS
-const SLATE_900 = "#0F172A";
 const ACC_BLUE = "#0E56F5"; // Royal Blue - Brand primary
-const WHITE = "#FFFFFF";
 const SLATE_400 = "#94A3B8"; // Matches "Connect" text color
 
 export const Logo: React.FC<LogoProps> = ({ 
@@ -24,131 +23,50 @@ export const Logo: React.FC<LogoProps> = ({
   className = "",
   size = "md"
 }) => {
-  const isReversed = variant === "reversed";
   const isIcon = variant === "icon";
-  const primaryColor = isReversed ? WHITE : SLATE_900;
-  const accentColor = ACC_BLUE; // Logo uses brand Royal Blue
 
   if (isIcon) {
-    // Icon-only mark - stylized "AAC" monogram
     return (
-      <svg
-        viewBox="0 0 48 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={`${sizeClasses[size]} ${className}`}
-        aria-label="All Agent Connect"
-      >
-        {/* Outer ring */}
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          stroke={SLATE_900}
-          strokeWidth="2"
-          fill="none"
-        />
-        {/* Inner connection nodes */}
-        <circle cx="24" cy="12" r="3" fill={accentColor} />
-        <circle cx="12" cy="32" r="3" fill={accentColor} />
-        <circle cx="36" cy="32" r="3" fill={accentColor} />
-        {/* Connection lines */}
-        <path
-          d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-          stroke={accentColor}
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        {/* Center accent dot */}
-        <circle cx="24" cy="26" r="2" fill={accentColor} />
-      </svg>
+      <img
+        src={logoHouseLeaf}
+        alt="All Agent Connect"
+        className={`${sizeClasses[size]} w-auto ${className}`}
+      />
     );
   }
 
-  // Full wordmark logo
+  // Full wordmark logo (icon + text)
   return (
-    <svg
-      viewBox="0 0 280 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`${sizeClasses[size]} w-auto ${className}`}
-      aria-label="All Agent Connect"
-    >
-      {/* Icon mark - green to match accent */}
-      <g>
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          stroke={SLATE_900}
-          strokeWidth="2"
-          fill="none"
-        />
-        <circle cx="24" cy="12" r="3" fill={accentColor} />
-        <circle cx="12" cy="32" r="3" fill={accentColor} />
-        <circle cx="36" cy="32" r="3" fill={accentColor} />
-        <path
-          d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-          stroke={accentColor}
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <circle cx="24" cy="26" r="2" fill={accentColor} />
-      </g>
-      
-      {/* Wordmark - "All Agent Connect" */}
-      <text
-        x="56"
-        y="32"
-        fontFamily="Inter, system-ui, sans-serif"
-        fontSize="22"
-        fontWeight="600"
-        letterSpacing="-0.01em"
-      >
-        <tspan fill={accentColor}>All </tspan>
-        <tspan fill={accentColor}>Agent </tspan>
-        <tspan fill="#94A3B8">Connect</tspan>
-      </text>
-    </svg>
+    <div className={`flex items-center gap-2.5 ${className}`} aria-label="All Agent Connect">
+      <img
+        src={logoHouseLeaf}
+        alt=""
+        className={sizeClasses[size]}
+      />
+      <span className="font-semibold text-lg tracking-tight whitespace-nowrap">
+        <span style={{ color: ACC_BLUE }}>All Agent </span>
+        <span style={{ color: SLATE_400 }}>Connect</span>
+      </span>
+    </div>
   );
 };
 
 // Email-safe version using inline styles (no external fonts required)
 export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = false }) => {
-  const accentColor = ACC_BLUE; // Logo uses brand Royal Blue
+  const accentColor = ACC_BLUE;
   
   return (
     <table cellPadding="0" cellSpacing="0" border={0} style={{ borderCollapse: 'collapse' }}>
       <tbody>
         <tr>
           <td style={{ verticalAlign: 'middle', paddingRight: '12px' }}>
-            {/* Simple icon for email - using basic shapes - green */}
-            <svg
+            <img
+              src="https://allagentconnect.com/brand/aac-logo-house-leaf.png"
+              alt="All Agent Connect"
               width="32"
               height="32"
-              viewBox="0 0 48 48"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="24"
-                cy="24"
-                r="22"
-                stroke={accentColor}
-                strokeWidth="2"
-                fill="none"
-              />
-              <circle cx="24" cy="12" r="3" fill={accentColor} />
-              <circle cx="12" cy="32" r="3" fill={accentColor} />
-              <circle cx="36" cy="32" r="3" fill={accentColor} />
-              <path
-                d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-                stroke={accentColor}
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <circle cx="24" cy="26" r="2" fill={accentColor} />
-            </svg>
+              style={{ display: 'block' }}
+            />
           </td>
           <td style={{ 
             verticalAlign: 'middle',
@@ -157,8 +75,7 @@ export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = fal
             fontWeight: 700,
             letterSpacing: '-0.01em'
           }}>
-            <span style={{ color: accentColor }}>All </span>
-            <span style={{ color: accentColor }}>Agent </span>
+            <span style={{ color: accentColor }}>All Agent </span>
             <span style={{ color: '#94A3B8' }}>Connect</span>
           </td>
         </tr>
