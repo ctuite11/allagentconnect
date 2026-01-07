@@ -283,24 +283,10 @@ const PendingVerification = () => {
       
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md text-center">
-          {/* Globe + AAC blue energy core */}
+          {/* Globe with filled triangles */}
           <div className="relative mx-auto mb-4 w-[150px] h-[150px]">
-            {/* Blue energy core burst - tighter, stronger */}
-            <div 
-              className="pointer-events-none absolute inset-[-22px] rounded-full"
-              style={{
-                background: `radial-gradient(circle at 50% 55%,
-                  rgba(14,86,245,0.32) 0%,
-                  rgba(14,86,245,0.18) 16%,
-                  rgba(14,86,245,0.08) 32%,
-                  rgba(14,86,245,0.00) 52%
-                )`,
-                filter: 'blur(8px)',
-              }}
-            />
-            {/* Globe watermark - slightly more visible */}
-            <div className="absolute inset-0" style={{ opacity: 0.28 }}>
-              <NetworkGlobe variant="static" strokeColor="#0E56F5" />
+            <div className="absolute inset-0" style={{ opacity: 0.85 }}>
+              <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
             </div>
           </div>
           
