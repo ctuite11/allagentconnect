@@ -237,7 +237,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(to left, rgba(14,86,245,0.10) 0%, rgba(14,86,245,0.05) 35%, transparent 60%)',
+          background: 'linear-gradient(to left, rgba(14,86,245,0.25) 0%, rgba(14,86,245,0.12) 40%, transparent 65%)',
         }}
       />
       <svg 
