@@ -6,9 +6,9 @@ import React from 'react';
  * NOT a tech feature - must recede behind content
  */
 
-// Neutral gray colors - no blue/accent
-const LINE_COLOR = '#E5E7EB'; // zinc-200
-const NODE_COLOR = '#F4F4F5'; // zinc-100
+// Neutral gray colors - slightly darker for visibility on white
+const LINE_COLOR = '#D4D4D8'; // zinc-300
+const NODE_COLOR = '#E4E4E7'; // zinc-200
 
 interface NetworkGlobeProps {
   variant?: 'hero' | 'ambient' | 'static';
@@ -222,13 +222,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       className="hidden md:block w-[700px] h-[700px] lg:w-[900px] lg:h-[900px] overflow-visible pointer-events-none"
       aria-hidden="true"
       style={{
-        opacity: 0.08,
+        opacity: 0.18,
         transform: 'rotateX(8deg)', // subtle tilt for realism
         willChange: 'transform',
         maskImage:
-          'radial-gradient(circle at 88% 44%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0) 100%)',
+          'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
         WebkitMaskImage:
-          'radial-gradient(circle at 88% 44%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0) 100%)',
+          'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
         maskRepeat: 'no-repeat',
         WebkitMaskRepeat: 'no-repeat'
       }}
