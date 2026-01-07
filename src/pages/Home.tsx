@@ -73,163 +73,177 @@ export default function Home() {
         </section>
 
         {/* Proof Strip */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10">
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm" style={{ color: '#1D1D1F' }}>
-            <span className="inline-flex items-center gap-2 font-medium">
-              <ShieldCheck className="h-5 w-5 text-[#0E56F5]" />
-              Operating since 2016
-            </span>
-            <span className="inline-flex items-center gap-2 font-medium">
-              <Users className="h-5 w-5 text-[#0E56F5]" />
-              Thousands of agents nationwide
-            </span>
-            <span className="inline-flex items-center gap-2 font-medium">
-              <Handshake className="h-5 w-5 text-[#0E56F5]" />
-              Off-market deals closed
-            </span>
+        <section className="py-8 md:py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm" style={{ color: '#1D1D1F' }}>
+              <span className="inline-flex items-center gap-2 font-medium">
+                <ShieldCheck className="h-5 w-5 text-[#0E56F5]" />
+                Operating since 2016
+              </span>
+              <span className="inline-flex items-center gap-2 font-medium">
+                <Users className="h-5 w-5 text-[#0E56F5]" />
+                Thousands of agents nationwide
+              </span>
+              <span className="inline-flex items-center gap-2 font-medium">
+                <Handshake className="h-5 w-5 text-[#0E56F5]" />
+                Off-market deals closed
+              </span>
+            </div>
           </div>
         </section>
 
         {/* Built to Increase Production */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            Built to Increase Production
-          </h2>
-          
-          {/* Explanation moved from hero - now user has opted in mentally */}
-          <p className="mt-4 text-center text-lg leading-relaxed text-zinc-600 max-w-2xl mx-auto">
-            A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
-          </p>
-          
-          <p className="mt-6 text-center text-base font-medium text-zinc-700">
-            More deal flow. Better matches. Fewer missed opportunities.
-          </p>
-          
-          <div className="mt-8 max-w-2xl mx-auto space-y-4">
-            <BulletItem>See off-market and pre-market opportunities before others do</BulletItem>
-            <BulletItem>Match active buyers quietly, without public competition</BulletItem>
-            <BulletItem>Close more deals through direct agent-to-agent collaboration</BulletItem>
-            <BulletItem>Increase GCI by operating ahead of the open market</BulletItem>
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+              Built to Increase Production
+            </h2>
+            
+            <p className="text-center text-lg leading-relaxed text-zinc-600 max-w-2xl mx-auto">
+              A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
+            </p>
+            
+            <p className="mt-6 text-center text-base font-medium text-zinc-700">
+              More deal flow. Better matches. Fewer missed opportunities.
+            </p>
+            
+            <div className="mt-8 max-w-2xl mx-auto space-y-4">
+              <BulletItem>See off-market and pre-market opportunities before others do</BulletItem>
+              <BulletItem>Match active buyers quietly, without public competition</BulletItem>
+              <BulletItem>Close more deals through direct agent-to-agent collaboration</BulletItem>
+              <BulletItem>Increase GCI by operating ahead of the open market</BulletItem>
+            </div>
           </div>
-        </section>
-
-        {/* Why Clients Love It */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            Why Clients Love When Their Agent Is in AAC
-          </h2>
-          
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <ClientBenefitCard
-              title="For Sellers"
-              benefits={[
-                "Discreet exposure to serious buyers before going public",
-                "Faster, higher-quality feedback from active agents",
-                "A smarter launch strategy, not an all-or-nothing gamble",
-              ]}
-            />
-            <ClientBenefitCard
-              title="For Buyers"
-              benefits={[
-                "Early access to opportunities they'll never see online",
-                "Less competition and fewer bidding wars",
-                "Better outcomes through agent collaboration",
-              ]}
-            />
-          </div>
-        </section>
-
-        {/* The ACC Advantage */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            The AAC Advantage
-          </h2>
-          
-          <div className="mt-10 max-w-2xl mx-auto space-y-4">
-            <BulletItem>AAC members collaborate privately instead of competing publicly</BulletItem>
-            <BulletItem>Opportunities circulate inside the network before hitting the market</BulletItem>
-            <BulletItem>Members see deals non-members never do</BulletItem>
-            <BulletItem>Built by working agents who actually close transactions</BulletItem>
-          </div>
-
-          <p className="mt-10 text-center text-lg font-medium text-zinc-700 max-w-2xl mx-auto">
-            AAC members don't wait for the market. They operate ahead of it.
-          </p>
         </section>
 
         {/* What You Can Do */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            What You Can Do
-          </h2>
-          
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FeatureCard
-              icon={Share2}
-              title="Share off-market listings"
-              body="Post quietly with enough context for agents to act. Control visibility and timing."
-            />
-            <FeatureCard
-              icon={Megaphone}
-              title="Post buyer needs"
-              body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
-            />
-            <FeatureCard
-              icon={MessageCircle}
-              title="Collaborate privately with verified agents"
-              body="Direct agent-to-agent communication. Get to a showing, an offer, or a solution fast."
-            />
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+              What You Can Do
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FeatureCard
+                icon={Share2}
+                title="Share off-market listings"
+                body="Post quietly with enough context for agents to act. Control visibility and timing."
+              />
+              <FeatureCard
+                icon={Megaphone}
+                title="Post buyer needs"
+                body="Buyer needs get surfaced to the right agents — quickly, without public exposure."
+              />
+              <FeatureCard
+                icon={MessageCircle}
+                title="Collaborate privately with verified agents"
+                body="Direct agent-to-agent communication. Get to a showing, an offer, or a solution fast."
+              />
+            </div>
           </div>
         </section>
 
         {/* How It Works */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            How It Works
-          </h2>
-          
-          <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
-            <StepItem number={1} label="Verify" />
-            <StepItem number={2} label="Connect" />
-            <StepItem number={3} label="Close" />
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+              How It Works
+            </h2>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
+              <StepItem number={1} label="Verify" />
+              <StepItem number={2} label="Connect" />
+              <StepItem number={3} label="Close" />
+            </div>
+          </div>
+        </section>
+
+        {/* Why Clients Love It */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+              Why Clients Love When Their Agent Is in AAC
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <ClientBenefitCard
+                title="For Sellers"
+                benefits={[
+                  "Discreet exposure to serious buyers before going public",
+                  "Faster, higher-quality feedback from active agents",
+                  "A smarter launch strategy, not an all-or-nothing gamble",
+                ]}
+              />
+              <ClientBenefitCard
+                title="For Buyers"
+                benefits={[
+                  "Early access to opportunities they'll never see online",
+                  "Less competition and fewer bidding wars",
+                  "Better outcomes through agent collaboration",
+                ]}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* The AAC Advantage */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+              The AAC Advantage
+            </h2>
+            
+            <div className="max-w-2xl mx-auto space-y-4">
+              <BulletItem>AAC members collaborate privately instead of competing publicly</BulletItem>
+              <BulletItem>Opportunities circulate inside the network before hitting the market</BulletItem>
+              <BulletItem>Members see deals non-members never do</BulletItem>
+              <BulletItem>Built by working agents who actually close transactions</BulletItem>
+            </div>
+
+            <p className="mt-10 text-center text-lg font-medium text-zinc-700 max-w-2xl mx-auto">
+              AAC members don't wait for the market. They operate ahead of it.
+            </p>
           </div>
         </section>
 
         {/* Coming Soon */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center" style={{ color: '#1D1D1F' }}>
-            Coming Soon
-          </h2>
-          
-          <div className="mt-10 max-w-2xl mx-auto space-y-4">
-            <BulletItem>Expanded markets and regional growth</BulletItem>
-            <BulletItem>Enhanced buyer-needs matching</BulletItem>
-            <BulletItem>New tools for listing presentations</BulletItem>
-            <BulletItem>Additional member-only collaboration features</BulletItem>
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+              Coming Soon
+            </h2>
+            
+            <div className="max-w-2xl mx-auto space-y-4">
+              <BulletItem>Expanded markets and regional growth</BulletItem>
+              <BulletItem>Enhanced buyer-needs matching</BulletItem>
+              <BulletItem>New tools for listing presentations</BulletItem>
+              <BulletItem>Additional member-only collaboration features</BulletItem>
+            </div>
           </div>
         </section>
 
         {/* Final CTA */}
-        <section className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-16">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>
-              Request Access
-            </h2>
-            
-            {/* Proof + Patent text */}
-            <div className="mt-6 space-y-1 text-sm text-zinc-500">
-              <p>Operating since 2016</p>
-              <p>Built on proprietary, patented collaboration technology</p>
-              <p>Designed to protect agent relationships and deal integrity</p>
-            </div>
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-8" style={{ color: '#1D1D1F' }}>
+                Request Access
+              </h2>
+              
+              <div className="space-y-1 text-sm text-zinc-500">
+                <p>Operating since 2016</p>
+                <p>Built on proprietary, patented collaboration technology</p>
+                <p>Designed to protect agent relationships and deal integrity</p>
+              </div>
 
-            <div className="mt-8">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
-              >
-                Request Access <ArrowRight className="ml-2 h-5 w-5" />
-              </button>
+              <div className="mt-8">
+                <button
+                  onClick={() => navigate("/register")}
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+                >
+                  Request Access <ArrowRight className="ml-2 h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </section>
