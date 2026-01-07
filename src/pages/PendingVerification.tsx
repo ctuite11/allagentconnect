@@ -295,12 +295,25 @@ const PendingVerification = () => {
       
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md text-center">
-          {/* Globe with filled triangles */}
+          {/* Globe with filled triangles - slow Y rotation */}
           <div className="relative mx-auto mb-4 w-[150px] h-[150px]">
-            <div className="absolute inset-0" style={{ opacity: 0.85 }}>
+            <div 
+              className="absolute inset-0" 
+              style={{ 
+                opacity: 0.85,
+                animation: 'spinY 60s linear infinite',
+              }}
+            >
               <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
             </div>
           </div>
+          
+          <style>{`
+            @keyframes spinY {
+              from { transform: rotateY(0deg); }
+              to { transform: rotateY(360deg); }
+            }
+          `}</style>
           
           {/* Headline - strongest element */}
           <h1 className="mt-2 text-2xl md:text-3xl font-semibold text-zinc-900 mb-2">
