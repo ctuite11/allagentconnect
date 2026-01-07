@@ -116,36 +116,43 @@ export default function Home() {
           </div>
         </section>
 
-        {/* How Agents Actually Use AAC */}
+        {/* Success Hub — How AAC Gets Used */}
         <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-2" style={{ color: '#1D1D1F' }}>
-              How Agents Actually Use AAC
+              Success Hub — How AAC Gets Used
             </h2>
-            <p className="text-center text-lg text-zinc-600 mb-8">
-              Quiet collaboration for sales, rentals, and everything in between.
+            <p className="text-center text-lg text-zinc-600 mb-2">
+              Core workflows inside AAC, used daily by working agents across sales and rentals.
+            </p>
+            <p className="text-center text-sm text-zinc-500 mb-10">
+              Supports residential sales, rentals, and agent-only opportunities across markets.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <FeatureCard
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ModuleCard
                 icon={Share2}
-                title="Share off-market listings"
-                body="Post listings discreetly — for-sale or for-rent — with control over who sees them and when."
+                tier="hub"
+                title="Listings Exchange"
+                body="Quietly share off-market sales and rental listings with verified agents — with full control over visibility and timing."
               />
-              <FeatureCard
+              <ModuleCard
                 icon={Megaphone}
-                title="Post buyer and renter needs"
-                body="Surface real demand quietly, without advertising or public competition."
+                tier="hub"
+                title="Buyer & Renter Needs"
+                body="Post active buyer and renter demand privately, so opportunities surface without public exposure."
               />
-              <FeatureCard
+              <ModuleCard
                 icon={Users}
-                title="Match before the market"
-                body="Connect buyers, renters, and listings before they go public — or instead of going public at all."
+                tier="premium"
+                title="Private Matching"
+                body="Match listings, buyers, and renters before they hit the open market — or without going public at all."
               />
-              <FeatureCard
+              <ModuleCard
                 icon={MessageCircle}
-                title="Work agent-to-agent, directly"
-                body="No feeds. No noise. Just verified agents solving deals together — sales and rentals alike."
+                tier="premium"
+                title="Agent-to-Agent Workspace"
+                body="Direct, verified agent collaboration — sales and rentals — without feeds, noise, or outside interference."
               />
             </div>
           </div>
@@ -349,6 +356,37 @@ function FeatureCard({
       <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
       <div className="text-base font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>{title}</div>
       <p className="mt-2 text-sm leading-relaxed" style={{ color: '#86868B' }}>{body}</p>
+    </div>
+  );
+}
+
+function ModuleCard({
+  icon: Icon,
+  title,
+  body,
+  tier,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+  tier: "hub" | "premium";
+}) {
+  return (
+    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200">
+      {/* Tier pill - top right */}
+      <span
+        className={`absolute top-4 right-4 text-xs font-medium tracking-wide px-2.5 py-1 rounded-full border ${
+          tier === "hub"
+            ? "bg-zinc-100 text-zinc-700 border-zinc-200"
+            : "bg-blue-50 text-blue-700 border-blue-200"
+        }`}
+      >
+        {tier === "hub" ? "Success Hub" : "AAC Premium"}
+      </span>
+
+      <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
+      <div className="text-base font-semibold tracking-tight text-zinc-900">{title}</div>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
     </div>
   );
 }
