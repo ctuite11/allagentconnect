@@ -10,15 +10,19 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Minimal header - logo only, no nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white" style={{ borderBottom: '1px solid #E5E5EA' }}>
-        <div className="w-full px-6 sm:px-10 lg:px-20 h-16 flex items-center">
-          <Logo size="lg" />
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Logo size="lg" />
+            </div>
+          </div>
         </div>
       </header>
 
       <main className="pt-16 pb-12">
         {/* Hero */}
-        <section className="w-full px-6 sm:px-10 lg:px-20 pt-10 pb-10 relative min-h-[560px] lg:min-h-[620px] flex items-center overflow-visible">
+        <section className="relative min-h-[520px] lg:min-h-[580px] flex items-center overflow-visible">
           {/* Background globe layer */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
             <div className="absolute right-0 lg:right-6 top-[-60px]">
@@ -27,51 +31,53 @@ const LandingPage = () => {
           </div>
           
           {/* Foreground content */}
-          <div className="relative z-10 max-w-2xl">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 mb-6">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#0E56F5]" />
-              <span className="text-xs font-medium tracking-wide text-zinc-600 uppercase">
-                AAC Private Network
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-zinc-900 leading-[1.08] mb-5">
-              Where Real Deals<br />Get Done
-            </h1>
-
-            {/* Tension line */}
-            <p className="text-lg text-zinc-500 max-w-md mb-4 leading-relaxed">
-              The deals you don't see are the ones that can change a client's life — and your bottom line.
-            </p>
-
-            {/* Identity */}
-            <p className="text-base font-medium text-zinc-700 mb-6">
-              By agents. For agents. All agents.
-            </p>
-
-            {/* Capability pills */}
-            <div className="flex flex-wrap gap-2 mb-8">
-              {['Off-market', 'Coming soon', 'Agent-to-agent'].map((pill) => (
-                <span
-                  key={pill}
-                  className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-full"
-                >
-                  {pill}
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-10 pb-14 w-full">
+            <div className="relative z-10 max-w-2xl">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 mb-6">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#0E56F5]" />
+                <span className="text-xs font-medium tracking-wide text-zinc-600 uppercase">
+                  AAC Private Network
                 </span>
-              ))}
-            </div>
+              </div>
 
-            {/* CTA */}
-            <Button
-              size="lg"
-              onClick={() => navigate('/register')}
-              className="bg-[#0E56F5] hover:bg-[#0D4AD9] text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
-            >
-              Request Early Access
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+              {/* Headline */}
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-zinc-900 leading-[1.08] mb-5">
+                Where Real Deals<br />Get Done
+              </h1>
+
+              {/* Tension line */}
+              <p className="text-lg text-zinc-500 max-w-md mb-4 leading-relaxed">
+                The deals you don't see are the ones that can change a client's life — and your bottom line.
+              </p>
+
+              {/* Identity */}
+              <p className="text-base font-medium text-zinc-700 mb-6">
+                By agents. For agents. All agents.
+              </p>
+
+              {/* Capability pills */}
+              <div className="flex flex-wrap gap-2 mb-8">
+                {['Off-market', 'Coming soon', 'Agent-to-agent'].map((pill) => (
+                  <span
+                    key={pill}
+                    className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-full"
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <Button
+                size="lg"
+                onClick={() => navigate('/register')}
+                className="bg-[#0E56F5] hover:bg-[#0D4AD9] text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
+              >
+                Request Early Access
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </section>
 

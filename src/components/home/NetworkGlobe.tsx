@@ -116,32 +116,37 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       .map(n => n.index);
   }, [nodes]);
   
-  // "Thought spark" effect - fires every 3-6s, irregular rhythm (hero mode only)
+  // "Thought spark" effect - fires every 2.8-6s, more frequent + brighter (hero mode only)
   React.useEffect(() => {
     if (isAmbient || isStatic || frontNodeIndices.length === 0) return;
     
+    let cancelled = false;
+    const timers: number[] = [];
+    
     const triggerSpark = () => {
+      if (cancelled) return;
+      
       // Pick random front-most node
       const chosen = frontNodeIndices[Math.floor(Math.random() * frontNodeIndices.length)];
       setSparkingNode(chosen);
       
-      // Clear spark after 200ms (sharp pop)
-      clearSparkRef.current = setTimeout(() => {
-        setSparkingNode(null);
-      }, 200);
+      // Clear spark after 220ms (sharp pop)
+      timers.push(window.setTimeout(() => {
+        if (!cancelled) setSparkingNode(null);
+      }, 220));
       
-      // Schedule next spark (3-6 seconds, irregular)
-      const nextDelay = 3000 + Math.random() * 3000;
-      sparkTimeoutRef.current = setTimeout(triggerSpark, nextDelay);
+      // More frequent: every ~2.8-6s
+      const nextDelay = 2800 + Math.random() * 3200;
+      timers.push(window.setTimeout(triggerSpark, nextDelay));
     };
     
-    // Initial delay before first spark (1.5s)
-    sparkTimeoutRef.current = setTimeout(triggerSpark, 1500);
+    // First spark sooner (1.2s)
+    timers.push(window.setTimeout(triggerSpark, 1200));
     
     // Cleanup all timers on unmount
     return () => {
-      if (sparkTimeoutRef.current) clearTimeout(sparkTimeoutRef.current);
-      if (clearSparkRef.current) clearTimeout(clearSparkRef.current);
+      cancelled = true;
+      timers.forEach(t => clearTimeout(t));
     };
   }, [isAmbient, isStatic, frontNodeIndices]);
 
@@ -343,31 +348,32 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
           {nodes.map((node, i) => {
             const isSparking = sparkingNode === i;
             const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
-            const nodeOpacity = getNodeOpacity(node.z);
+            const baseOpacity = getNodeOpacity(node.z);
             
             return (
               <g key={`node-${i}`}>
-                {/* Bright halo behind sparking node */}
+                {/* Halo bloom (blurred) */}
                 {isSparking && (
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r={radius * 2.2}
+                    r={radius * 2.3}
                     fill={LINE_COLOR}
                     opacity={0.35}
-                    style={{ filter: 'blur(6px)' }}
+                    style={{ filter: 'blur(7px)' }}
                   />
                 )}
-                {/* Core node */}
+                {/* Spark core: white flash + blue glow */}
                 <circle
                   cx={node.x}
                   cy={node.y}
                   r={isSparking ? radius * 1.35 : radius}
                   fill={isSparking ? '#FFFFFF' : NODE_COLOR}
-                  opacity={isSparking ? 0.95 : nodeOpacity}
-                  style={{ 
-                    transition: 'r 180ms ease-out, opacity 180ms ease-out, fill 180ms ease-out',
-                    filter: isSparking ? 'drop-shadow(0 0 10px rgba(14, 86, 245, 0.55))' : 'none'
+                  opacity={isSparking ? 0.98 : baseOpacity}
+                  style={{
+                    filter: isSparking
+                      ? 'drop-shadow(0 0 10px rgba(14,86,245,0.6)) drop-shadow(0 0 18px rgba(14,86,245,0.35))'
+                      : 'none'
                   }}
                 />
               </g>
