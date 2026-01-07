@@ -227,11 +227,29 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         className="absolute inset-0 pointer-events-none z-10"
         style={{
           background: `
-            radial-gradient(circle at 60% 52%, rgba(14,86,245,0.42) 0%, rgba(14,86,245,0.22) 12%, rgba(14,86,245,0.10) 22%, rgba(14,86,245,0) 38%),
-            radial-gradient(circle at 60% 52%, rgba(14,86,245,0.16) 0%, rgba(14,86,245,0.08) 28%, rgba(14,86,245,0.03) 44%, rgba(14,86,245,0) 62%)
+            radial-gradient(circle at 60% 52%,
+              rgba(14,86,245,0.38) 0%,
+              rgba(14,86,245,0.18) 10%,
+              rgba(14,86,245,0.08) 18%,
+              rgba(14,86,245,0.00) 30%),
+            radial-gradient(circle at 60% 52%,
+              rgba(14,86,245,0.10) 0%,
+              rgba(14,86,245,0.05) 22%,
+              rgba(14,86,245,0.00) 48%)
           `,
-          WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,1) 92%, rgba(0,0,0,0) 100%)',
-          maskImage: 'linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,1) 92%, rgba(0,0,0,0) 100%)',
+          mixBlendMode: 'multiply',
+          WebkitMaskImage: `
+            radial-gradient(circle at 60% 52%,
+              rgba(0,0,0,1) 0%,
+              rgba(0,0,0,1) 52%,
+              rgba(0,0,0,0) 60%)
+          `,
+          maskImage: `
+            radial-gradient(circle at 60% 52%,
+              rgba(0,0,0,1) 0%,
+              rgba(0,0,0,1) 52%,
+              rgba(0,0,0,0) 60%)
+          `,
         }}
       />
       {/* Globe container with reduced opacity */}
