@@ -10,7 +10,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Minimal header - logo only, no nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-100">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
         <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between">
             <div className="flex items-center gap-3 -ml-1">
@@ -23,7 +23,7 @@ const LandingPage = () => {
         </div>
       </header>
 
-      <main className="pt-14 pb-12">
+      <main className="pt-10 pb-12">
         {/* Hero */}
         <section className="relative flex items-center overflow-visible">
           {/* Background globe layer */}
