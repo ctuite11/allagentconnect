@@ -227,29 +227,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         className="absolute inset-0 pointer-events-none z-10"
         style={{
           background: `
-            radial-gradient(circle at 60% 52%,
-              rgba(14,86,245,0.38) 0%,
-              rgba(14,86,245,0.18) 10%,
-              rgba(14,86,245,0.08) 18%,
-              rgba(14,86,245,0.00) 30%),
-            radial-gradient(circle at 60% 52%,
-              rgba(14,86,245,0.10) 0%,
-              rgba(14,86,245,0.05) 22%,
-              rgba(14,86,245,0.00) 48%)
+            radial-gradient(circle at 75% 50%,
+              rgba(14,86,245,0.40) 0%,
+              rgba(14,86,245,0.22) 8%,
+              rgba(14,86,245,0.10) 14%,
+              rgba(14,86,245,0.00) 22%)
           `,
           mixBlendMode: 'multiply',
-          WebkitMaskImage: `
-            radial-gradient(circle at 60% 52%,
-              rgba(0,0,0,1) 0%,
-              rgba(0,0,0,1) 52%,
-              rgba(0,0,0,0) 60%)
-          `,
-          maskImage: `
-            radial-gradient(circle at 60% 52%,
-              rgba(0,0,0,1) 0%,
-              rgba(0,0,0,1) 52%,
-              rgba(0,0,0,0) 60%)
-          `,
         }}
       />
       {/* Globe container with reduced opacity */}
