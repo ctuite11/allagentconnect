@@ -108,15 +108,20 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
     return baseWidth;
   };
 
-  // Front-most nodes eligible for sparking (z > 0.45)
+  // Spark timing constants - more frequent + crisp
+  const SPARK_MIN_MS = 2800;
+  const SPARK_MAX_MS = 5500;
+  const SPARK_DURATION_MS = 190;
+
+  // Front-most nodes eligible for sparking (z > 0.35 for more coverage)
   const frontNodeIndices = React.useMemo(() => {
     return nodes
       .map((n, i) => ({ z: n.z, index: i }))
-      .filter(n => n.z > 0.45)
+      .filter(n => n.z > 0.35)
       .map(n => n.index);
   }, [nodes]);
   
-  // "Thought spark" effect - fires every 2.8-6s, more frequent + brighter (hero mode only)
+  // "Thought spark" effect - fires every 2.8-5.5s, bright halo (hero mode only)
   React.useEffect(() => {
     if (isAmbient || isStatic || frontNodeIndices.length === 0) return;
     
@@ -130,25 +135,25 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
       const chosen = frontNodeIndices[Math.floor(Math.random() * frontNodeIndices.length)];
       setSparkingNode(chosen);
       
-      // Clear spark after 220ms (sharp pop)
+      // Clear spark after duration (sharp pop)
       timers.push(window.setTimeout(() => {
         if (!cancelled) setSparkingNode(null);
-      }, 220));
+      }, SPARK_DURATION_MS));
       
-      // More frequent: every ~2.8-6s
-      const nextDelay = 2800 + Math.random() * 3200;
+      // Schedule next spark
+      const nextDelay = SPARK_MIN_MS + Math.random() * (SPARK_MAX_MS - SPARK_MIN_MS);
       timers.push(window.setTimeout(triggerSpark, nextDelay));
     };
     
-    // First spark sooner (1.2s)
-    timers.push(window.setTimeout(triggerSpark, 1200));
+    // First spark after short delay
+    timers.push(window.setTimeout(triggerSpark, 900 + Math.random() * 900));
     
     // Cleanup all timers on unmount
     return () => {
       cancelled = true;
       timers.forEach(t => clearTimeout(t));
     };
-  }, [isAmbient, isStatic, frontNodeIndices]);
+  }, [isAmbient, isStatic, frontNodeIndices, SPARK_DURATION_MS, SPARK_MIN_MS, SPARK_MAX_MS]);
 
   // Crisp structural stroke weights
   const lineStrokeWidth = 1.75;
@@ -312,11 +317,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
         transformStyle: 'preserve-3d',
         perspective: '1000px',
         willChange: 'transform',
-        // Ultra-gentle mask: prevents harsh edge without "cut off" feel
+        // Gentle mask: keeps most geometry visible
         maskImage:
-          'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)',
+          'radial-gradient(circle at 88% 44%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 76%, rgba(0,0,0,0.92) 84%, rgba(0,0,0,0.55) 92%, rgba(0,0,0,0) 100%)',
         WebkitMaskImage:
-          'radial-gradient(circle at 92% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 88%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0) 100%)',
+          'radial-gradient(circle at 88% 44%, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 76%, rgba(0,0,0,0.92) 84%, rgba(0,0,0,0.55) 92%, rgba(0,0,0,0) 100%)',
         maskRepeat: 'no-repeat',
         WebkitMaskRepeat: 'no-repeat'
       }}
@@ -344,38 +349,59 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor }: NetworkGlobeProps) => {
             />
           ))}
           
-          {/* Nodes with depth-aware opacity + bright spark effect */}
+          {/* Nodes with depth-aware opacity + dual-halo spark effect */}
           {nodes.map((node, i) => {
             const isSparking = sparkingNode === i;
-            const radius = node.z > 0 ? nodeRadius.large : nodeRadius.small;
-            const baseOpacity = getNodeOpacity(node.z);
+            const baseR = node.z > 0 ? nodeRadius.large : nodeRadius.small;
+            const r = isSparking ? baseR * 1.35 : baseR;
+            const nodeOpacity = getNodeOpacity(node.z);
+            const sparkOpacity = 0.92;
             
             return (
               <g key={`node-${i}`}>
-                {/* Halo bloom (blurred) */}
+                {/* Spark halo (dual glow for brightness) */}
+                {isSparking && (
+                  <>
+                    {/* Outer glow */}
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r={baseR * 3.8}
+                      fill={LINE_COLOR}
+                      opacity={0.22}
+                      style={{ filter: 'blur(12px)' }}
+                    />
+                    {/* Inner glow */}
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r={baseR * 2}
+                      fill={LINE_COLOR}
+                      opacity={0.38}
+                      style={{ filter: 'blur(5px)' }}
+                    />
+                  </>
+                )}
+                
+                {/* Node core (stays silvery) */}
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={r}
+                  fill={NODE_COLOR}
+                  opacity={isSparking ? sparkOpacity : nodeOpacity}
+                />
+                
+                {/* Tiny blue "pin" only while sparking */}
                 {isSparking && (
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r={radius * 2.3}
+                    r={baseR * 0.55}
                     fill={LINE_COLOR}
-                    opacity={0.35}
-                    style={{ filter: 'blur(7px)' }}
+                    opacity={0.95}
                   />
                 )}
-                {/* Spark core: white flash + blue glow */}
-                <circle
-                  cx={node.x}
-                  cy={node.y}
-                  r={isSparking ? radius * 1.35 : radius}
-                  fill={isSparking ? '#FFFFFF' : NODE_COLOR}
-                  opacity={isSparking ? 0.98 : baseOpacity}
-                  style={{
-                    filter: isSparking
-                      ? 'drop-shadow(0 0 10px rgba(14,86,245,0.6)) drop-shadow(0 0 18px rgba(14,86,245,0.35))'
-                      : 'none'
-                  }}
-                />
               </g>
             );
           })}
