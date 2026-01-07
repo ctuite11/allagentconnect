@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { authDebug, getAgentStatus } from "@/lib/authDebug";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
+import { Logo } from "@/components/brand";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -273,6 +274,17 @@ const PendingVerification = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-white">
+      {/* Logo header - no line */}
+      <header className="relative z-10 bg-transparent">
+        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center">
+            <div className="flex items-center gap-3 -ml-1">
+              <Logo size="lg" />
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Subtle radial background lift */}
       <div 
         className="absolute inset-0 pointer-events-none"
