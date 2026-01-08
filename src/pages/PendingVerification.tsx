@@ -274,13 +274,13 @@ const PendingVerification = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-white">
-      {/* Logo header - no line */}
+      {/* Header - wordmark only, no icon */}
       <header className="relative z-10 bg-transparent">
         <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center">
-            <div className="flex items-center gap-3 -ml-1">
-              <Logo size="lg" />
-            </div>
+            <span className="text-[15px] font-semibold text-zinc-900 tracking-tight">
+              All Agent Connect
+            </span>
           </div>
         </div>
       </header>
@@ -293,14 +293,14 @@ const PendingVerification = () => {
         }}
       />
       
-      {/* Centered main content - pulled up slightly */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 -mt-20">
+      {/* Centered main content */}
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 -mt-16">
         <div className="w-full max-w-md text-center">
-          {/* Globe with blue energy halo */}
-          <div className="relative mx-auto mb-3 w-[150px] h-[150px]">
+          {/* Globe as system avatar - centered above message */}
+          <div className="relative mx-auto mb-6 w-[130px] h-[130px]">
             {/* Blue energy halo - quiet power */}
             <div 
-              className="absolute inset-[-20px] rounded-full"
+              className="absolute inset-[-24px] rounded-full"
               style={{ 
                 background: 'radial-gradient(circle, rgba(14, 86, 245, 0.07) 0%, rgba(14, 86, 245, 0.02) 50%, transparent 70%)',
               }}
@@ -311,37 +311,37 @@ const PendingVerification = () => {
           </div>
           
           {/* Headline - strongest element */}
-          <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-2">
             Almost there.
           </h1>
           
-          {/* Confirmation copy - more authoritative */}
+          {/* Confirmation copy - authoritative */}
           {userEmail && (
-            <p className="text-sm text-zinc-600 mb-1">
+            <p className="text-sm text-zinc-600 mb-4">
               We're verifying your account now. You'll receive a confirmation email at{" "}
               <span className="text-zinc-700">{userEmail}</span>{" "}
               shortly.
             </p>
           )}
 
-          {/* Disabled status button with pulsing green dot */}
+          {/* Disabled status button with solid green dot */}
           <button
             type="button"
             disabled
             aria-disabled="true"
-            className="mt-4 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default flex items-center justify-center gap-2"
+            className="w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default flex items-center justify-center gap-2"
           >
-            <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess animate-[pulse-dot_2.5s_ease-in-out_infinite]" />
+            <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess" />
             Verification in progress
           </button>
 
-          {/* Brand signature */}
-          <p className="text-zinc-400 text-[11px] mt-4 tracking-wide">
+          {/* Brand signature - slightly darker */}
+          <p className="text-zinc-500 text-[11px] mt-5 tracking-wide">
             Private by design. Agent-verified.
           </p>
 
-          {/* Support email with hover state */}
-          <p className="text-zinc-400 text-xs mt-4">
+          {/* Support email */}
+          <p className="text-zinc-400 text-xs mt-3">
             Questions? Reach us at{" "}
             <a href="mailto:hello@allagentconnect.com" className="hover:text-aacSuccess transition-colors">
               hello@allagentconnect.com
@@ -349,14 +349,6 @@ const PendingVerification = () => {
           </p>
         </div>
       </main>
-      
-      {/* Pulse animation for status dot */}
-      <style>{`
-        @keyframes pulse-dot {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.15); }
-        }
-      `}</style>
     </div>
   );
 };
