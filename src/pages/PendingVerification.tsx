@@ -273,82 +273,63 @@ const PendingVerification = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-white">
-      {/* Header - wordmark only, no icon */}
-      <header className="relative z-10 bg-transparent">
-        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center">
-            <span className="text-[15px] font-semibold text-zinc-900 tracking-tight">
-              All Agent Connect
-            </span>
-          </div>
-        </div>
-      </header>
-
-      {/* Subtle radial background lift */}
+    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      {/* Soft green halo behind globe - very subtle */}
       <div 
-        className="absolute inset-0 pointer-events-none"
+        className="fixed pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 80% 60% at center 40%, rgba(14, 86, 245, 0.03) 0%, transparent 100%)',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -60%)',
+          width: '280px',
+          height: '280px',
+          background: 'radial-gradient(circle, rgba(5, 150, 105, 0.08) 0%, transparent 60%)',
         }}
       />
       
-      {/* Centered main content */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 -mt-16">
-        <div className="w-full max-w-md text-center">
-          {/* Globe as system avatar - centered above message */}
-          <div className="relative mx-auto mb-6 w-[130px] h-[130px]">
-            {/* Blue energy halo - quiet power */}
-            <div 
-              className="absolute inset-[-24px] rounded-full"
-              style={{ 
-                background: 'radial-gradient(circle, rgba(14, 86, 245, 0.07) 0%, rgba(14, 86, 245, 0.02) 50%, transparent 70%)',
-              }}
-            />
-            <div className="absolute inset-0" style={{ opacity: 0.85 }}>
-              <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
-            </div>
-          </div>
-          
-          {/* Headline - strongest element */}
-          <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-2">
-            Almost there.
-          </h1>
-          
-          {/* Confirmation copy - authoritative */}
-          {userEmail && (
-            <p className="text-sm text-zinc-600 mb-4">
-              We're verifying your account now. You'll receive a confirmation email at{" "}
-              <span className="text-zinc-700">{userEmail}</span>{" "}
-              shortly.
-            </p>
-          )}
-
-          {/* Disabled status button with solid green dot */}
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default flex items-center justify-center gap-2"
-          >
-            <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess" />
-            Verification in progress
-          </button>
-
-          {/* Brand signature - slightly darker */}
-          <p className="text-zinc-500 text-[11px] mt-5 tracking-wide">
-            Private by design. Agent-verified.
-          </p>
-
-          {/* Support email */}
-          <p className="text-zinc-400 text-xs mt-3">
-            Questions? Reach us at{" "}
-            <a href="mailto:hello@allagentconnect.com" className="hover:text-aacSuccess transition-colors">
-              hello@allagentconnect.com
-            </a>
-          </p>
+      {/* All content centered - no header */}
+      <div className="relative z-10 w-full max-w-md text-center">
+        {/* Globe - original AAC blue, NO circle, NO container */}
+        <div className="mx-auto mb-8 w-[130px] h-[130px]">
+          <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
         </div>
-      </main>
+        
+        {/* Headline */}
+        <h1 className="text-4xl font-semibold text-zinc-900 mb-3">
+          Almost there.
+        </h1>
+        
+        {/* Confirmation copy */}
+        {userEmail && (
+          <p className="text-sm text-zinc-600 mb-6">
+            We're verifying your account now. You'll receive a confirmation email shortly.
+          </p>
+        )}
+
+        {/* Status button with green dot */}
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          className="w-full rounded-full bg-zinc-900 text-white py-3.5 text-sm font-medium cursor-default flex items-center justify-center gap-2"
+        >
+          <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess" />
+          Verification in progress
+        </button>
+
+        {/* Brand signature */}
+        <p className="text-zinc-500 text-[11px] mt-6 tracking-wide">
+          Private by design. Agent-verified.
+        </p>
+
+        {/* Support email */}
+        <p className="text-zinc-400 text-xs mt-4">
+          Questions? Reach us at{" "}
+          <a href="mailto:hello@allagentconnect.com" className="hover:text-aacSuccess transition-colors">
+            hello@allagentconnect.com
+          </a>
+        </p>
+      </div>
     </div>
   );
 };
