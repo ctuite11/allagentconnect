@@ -53,10 +53,12 @@ export default function Home() {
               <span className="text-zinc-400"> Connect</span>
             </h1>
 
-            {/* Globe - subtle motion, centered, blue energy */}
-            <div className="mx-auto mb-8 w-[160px] h-[160px] animate-aac-float">
-              <div className="animate-aac-drift animate-aac-glow">
-                <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
+            {/* Globe - slow rotation, breathing, soft glow */}
+            <div className="mx-auto mb-8 w-[160px] h-[160px] animate-aac-glow">
+              <div className="animate-aac-breathe">
+                <div className="animate-aac-globe">
+                  <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
+                </div>
               </div>
             </div>
 
