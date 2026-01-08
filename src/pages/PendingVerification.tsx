@@ -294,15 +294,15 @@ const PendingVerification = () => {
       />
       
       {/* Centered main content - pulled up slightly */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 -mt-16">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 -mt-20">
         <div className="w-full max-w-md text-center">
-          {/* Globe with filled triangles + subtle green halo */}
-          <div className="relative mx-auto mb-4 w-[150px] h-[150px]">
-            {/* Green success halo - very subtle */}
+          {/* Globe with blue energy halo */}
+          <div className="relative mx-auto mb-3 w-[150px] h-[150px]">
+            {/* Blue energy halo - quiet power */}
             <div 
-              className="absolute inset-0 rounded-full"
+              className="absolute inset-[-20px] rounded-full"
               style={{ 
-                background: 'radial-gradient(circle, rgba(5, 150, 105, 0.08) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(14, 86, 245, 0.07) 0%, rgba(14, 86, 245, 0.02) 50%, transparent 70%)',
               }}
             />
             <div className="absolute inset-0" style={{ opacity: 0.85 }}>
@@ -311,39 +311,52 @@ const PendingVerification = () => {
           </div>
           
           {/* Headline - strongest element */}
-          <h1 className="mt-2 text-2xl md:text-3xl font-semibold text-zinc-900 mb-2">
+          <h1 className="text-2xl md:text-3xl font-semibold text-zinc-900 mb-1">
             Almost there.
           </h1>
           
-          {/* Single email line */}
+          {/* Confirmation copy - more authoritative */}
           {userEmail && (
             <p className="text-sm text-zinc-600 mb-1">
-              You'll receive a confirmation email at{" "}
+              We're verifying your account now. You'll receive a confirmation email at{" "}
               <span className="text-zinc-700">{userEmail}</span>{" "}
-              once verification is complete.
+              shortly.
             </p>
           )}
 
-          {/* Disabled status button with green dot */}
+          {/* Disabled status button with pulsing green dot */}
           <button
             type="button"
             disabled
             aria-disabled="true"
-            className="mt-5 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default flex items-center justify-center gap-2"
+            className="mt-4 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default flex items-center justify-center gap-2"
           >
-            <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess" />
+            <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess animate-[pulse-dot_2.5s_ease-in-out_infinite]" />
             Verification in progress
           </button>
 
+          {/* Brand signature */}
+          <p className="text-zinc-400 text-[11px] mt-4 tracking-wide">
+            Private by design. Agent-verified.
+          </p>
+
           {/* Support email with hover state */}
-          <p className="text-zinc-400 text-xs mt-6">
-            Questions? Reach us anytime at{" "}
+          <p className="text-zinc-400 text-xs mt-4">
+            Questions? Reach us at{" "}
             <a href="mailto:hello@allagentconnect.com" className="hover:text-aacSuccess transition-colors">
               hello@allagentconnect.com
             </a>
           </p>
         </div>
       </main>
+      
+      {/* Pulse animation for status dot */}
+      <style>{`
+        @keyframes pulse-dot {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+        }
+      `}</style>
     </div>
   );
 };
