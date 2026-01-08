@@ -112,11 +112,17 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     });
   }, [baseNodes, rotationAngle]);
 
+  // Nodes sorted for depth rendering
+  const drawNodes = React.useMemo(
+    () => nodes.slice().sort((a, b) => a.z - b.z),
+    [nodes]
+  );
+
   // Precompute index-pairs for edges (once, using 3D chord distance)
   const edgePairs = React.useMemo(() => {
     const pairs: Array<[number, number]> = [];
     const maxDist = 100;
-    const chordThresh = maxDist / 120; // since r = 120
+    const chordThresh = maxDist / 120;
 
     for (let i = 0; i < baseNodes.length; i++) {
       for (let j = i + 1; j < baseNodes.length; j++) {
@@ -202,34 +208,69 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
   // Depth helpers
   const depth01 = (z: number) => (z + 1) / 2;
 
+  // Hero-safe triangle fill (visible on white background)
   const triFill = (seed: number, avgZ: number) => {
     const d = depth01(avgZ);
     const wave = Math.sin(rotationAngle * 0.9 + seed);
 
     const hue = 224 + wave * 3;
-    const sat = 84 + wave * 6;
-    const lit = 48 + wave * 5 + d * 8;
+    const sat = 90 + wave * 4;
+    const lit = 52 + wave * 6 + d * 8;
 
     return {
       fill: `hsl(${hue} ${sat}% ${lit}%)`,
-      alpha: 0.07 + d * 0.18,
+      alpha: 0.14 + d * 0.26, // back 0.14, front 0.40
     };
   };
   
-  // Simple depth fade for lines: back ~0.06, front ~0.28
+  // Hero-safe line opacity (visible on white background)
   const getLineOpacity = (z: number) => {
     const t = depth01(z);
-    return 0.06 + t * 0.22;
+    return 0.12 + t * 0.34; // back 0.12, front 0.46
   };
   
   // Line width varies with depth
   const getLineWidth = (z: number) => {
     const t = depth01(z);
-    return 0.6 + t * 0.5;
+    return 0.8 + t * 0.8; // back 0.8, front 1.6
+  };
+
+  // Node opacity and radius for depth effect
+  const getNodeOpacity = (z: number) => {
+    const t = depth01(z);
+    return 0.30 + t * 0.60; // back 0.30, front 0.90
+  };
+
+  const getNodeRadius = (z: number) => {
+    const t = depth01(z);
+    return 1.2 + t * 2.2; // back ~1.2, front ~3.4
   };
 
   // Thinner stroke weights for subtlety
   const ringStrokeWidth = 0.75;
+
+  // SVG glow filter definition
+  const GlowFilter = () => (
+    <defs>
+      <filter id="aacGlow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="2.2" result="blur" />
+        <feColorMatrix
+          in="blur"
+          type="matrix"
+          values="
+            1 0 0 0 0
+            0 1 0 0 0
+            0 0 1 0 0
+            0 0 0 0.7 0"
+          result="glow"
+        />
+        <feMerge>
+          <feMergeNode in="glow" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+  );
 
   // Mark variant: 130x130px, blue-filled triangles, no nodes
   if (isMark) {
@@ -239,29 +280,44 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
         aria-hidden="true"
       >
         <svg viewBox="0 0 300 300" className="w-full h-full">
-          {/* Filled triangles */}
-          {[...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => (
-            <polygon
-              key={`tri-${i}`}
-              points={tri.points}
-              fill="#0E56F5"
-              fillOpacity={0.08 + depth01(tri.avgZ) * 0.17}
-            />
-          ))}
-          
-          {/* Connection lines */}
-          {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
-            <line
-              key={`line-${i}`}
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-              stroke="#0E56F5"
-              strokeOpacity={getLineOpacity(line.avgZ) * 1.2}
-              strokeWidth={getLineWidth(line.avgZ)}
-            />
-          ))}
+          <GlowFilter />
+          <g filter="url(#aacGlow)">
+            {/* Filled triangles */}
+            {[...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => (
+              <polygon
+                key={`tri-${i}`}
+                points={tri.points}
+                fill="#0E56F5"
+                fillOpacity={0.14 + depth01(tri.avgZ) * 0.26}
+              />
+            ))}
+            
+            {/* Connection lines */}
+            {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
+              <line
+                key={`line-${i}`}
+                x1={line.x1}
+                y1={line.y1}
+                x2={line.x2}
+                y2={line.y2}
+                stroke="#0E56F5"
+                strokeOpacity={getLineOpacity(line.avgZ)}
+                strokeWidth={getLineWidth(line.avgZ)}
+              />
+            ))}
+
+            {/* Nodes */}
+            {drawNodes.map((n, i) => (
+              <circle
+                key={`node-${i}`}
+                cx={n.x}
+                cy={n.y}
+                r={getNodeRadius(n.z)}
+                fill="#0E56F5"
+                opacity={getNodeOpacity(n.z)}
+              />
+            ))}
+          </g>
         </svg>
       </div>
     );
@@ -273,55 +329,69 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
       <div 
         className="w-full h-full pointer-events-none flex items-center justify-center"
         aria-hidden="true"
-        style={{ opacity: fillTriangles ? 1 : 0.08 }}
       >
         <svg viewBox="0 0 300 300" className="w-full h-full" style={strokeColor ? { color: strokeColor } : undefined}>
-          {/* Filled triangles when enabled - sorted back to front */}
-          {fillTriangles && [...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => {
-            const { fill, alpha } = triFill(tri.seed, tri.avgZ);
-            return (
-              <polygon
-                key={`tri-${i}`}
-                points={tri.points}
-                fill={fill}
-                fillOpacity={alpha}
+          <GlowFilter />
+          <g filter="url(#aacGlow)">
+            {/* Filled triangles when enabled - sorted back to front */}
+            {fillTriangles && [...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => {
+              const { fill, alpha } = triFill(tri.seed, tri.avgZ);
+              return (
+                <polygon
+                  key={`tri-${i}`}
+                  points={tri.points}
+                  fill={fill}
+                  fillOpacity={alpha}
+                />
+              );
+            })}
+            
+            {/* Connection lines - sorted back to front */}
+            {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
+              <line
+                key={`line-${i}`}
+                x1={line.x1}
+                y1={line.y1}
+                x2={line.x2}
+                y2={line.y2}
+                stroke={strokeColor || lineColor}
+                strokeWidth={getLineWidth(line.avgZ)}
+                strokeOpacity={getLineOpacity(line.avgZ)}
               />
-            );
-          })}
-          
-          {/* Connection lines - sorted back to front */}
-          {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
-            <line
-              key={`line-${i}`}
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-              stroke="currentColor"
-              strokeWidth={fillTriangles ? getLineWidth(line.avgZ) : 1.0}
-              strokeOpacity={fillTriangles ? getLineOpacity(line.avgZ) * 1.2 : getLineOpacity(line.avgZ)}
-            />
-          ))}
-          
-          {/* Subtle orbital rings - hide when filling triangles */}
-          {!fillTriangles && (
-            <>
-              <ellipse
-                cx="150" cy="150" rx="120" ry="40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={ringStrokeWidth}
-                opacity={0.4}
+            ))}
+
+            {/* Nodes - sorted back to front */}
+            {drawNodes.map((n, i) => (
+              <circle
+                key={`node-${i}`}
+                cx={n.x}
+                cy={n.y}
+                r={getNodeRadius(n.z)}
+                fill={nodeColor}
+                opacity={getNodeOpacity(n.z)}
               />
-              <ellipse
-                cx="150" cy="150" rx="100" ry="100"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={ringStrokeWidth}
-                opacity={0.4}
-              />
-            </>
-          )}
+            ))}
+            
+            {/* Subtle orbital rings - hide when filling triangles */}
+            {!fillTriangles && (
+              <>
+                <ellipse
+                  cx="150" cy="150" rx="120" ry="40"
+                  fill="none"
+                  stroke={strokeColor || lineColor}
+                  strokeWidth={ringStrokeWidth}
+                  opacity={0.4}
+                />
+                <ellipse
+                  cx="150" cy="150" rx="100" ry="100"
+                  fill="none"
+                  stroke={strokeColor || lineColor}
+                  strokeWidth={ringStrokeWidth}
+                  opacity={0.4}
+                />
+              </>
+            )}
+          </g>
         </svg>
       </div>
     );
@@ -334,52 +404,67 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
       aria-hidden="true"
     >
       <svg viewBox="0 0 300 300" className="w-full h-full" style={strokeColor ? { color: strokeColor } : undefined}>
-        {/* Filled triangles - sorted back to front, with shimmer */}
-        {fillTriangles && [...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => {
-          const { fill, alpha } = triFill(tri.seed, tri.avgZ);
-          return (
-            <polygon
-              key={`tri-${i}`}
-              points={tri.points}
-              fill={fill}
-              fillOpacity={alpha}
-            />
-          );
-        })}
-        
-        {/* Connection lines - sorted back to front, depth-based opacity */}
-        {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
-          <line
-            key={`line-${i}`}
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-            stroke={strokeColor || lineColor}
-            strokeOpacity={getLineOpacity(line.avgZ)}
-            strokeWidth={getLineWidth(line.avgZ)}
-          />
-        ))}
-        
-        {/* Subtle orbital rings - hide when filling triangles */}
-        {!fillTriangles && (
-          <>
-            <ellipse
-              cx="150" cy="150" rx="120" ry="40"
-              fill="none"
+        <GlowFilter />
+        <g filter="url(#aacGlow)">
+          {/* Filled triangles - sorted back to front, with shimmer */}
+          {fillTriangles && [...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => {
+            const { fill, alpha } = triFill(tri.seed, tri.avgZ);
+            return (
+              <polygon
+                key={`tri-${i}`}
+                points={tri.points}
+                fill={fill}
+                fillOpacity={alpha}
+              />
+            );
+          })}
+          
+          {/* Connection lines - sorted back to front, depth-based opacity */}
+          {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
+            <line
+              key={`line-${i}`}
+              x1={line.x1}
+              y1={line.y1}
+              x2={line.x2}
+              y2={line.y2}
               stroke={strokeColor || lineColor}
-              strokeWidth={ringStrokeWidth}
-              opacity={0.4}
+              strokeOpacity={getLineOpacity(line.avgZ)}
+              strokeWidth={getLineWidth(line.avgZ)}
             />
-            <ellipse
-              cx="150" cy="150" rx="100" ry="100"
-              fill="none"
-              stroke={strokeColor || lineColor}
-              strokeWidth={ringStrokeWidth}
-              opacity={0.4}
+          ))}
+
+          {/* Nodes - back to front for depth */}
+          {drawNodes.map((n, i) => (
+            <circle
+              key={`node-${i}`}
+              cx={n.x}
+              cy={n.y}
+              r={getNodeRadius(n.z)}
+              fill={nodeColor}
+              opacity={getNodeOpacity(n.z)}
             />
-          </>
-        )}
+          ))}
+          
+          {/* Subtle orbital rings - hide when filling triangles */}
+          {!fillTriangles && (
+            <>
+              <ellipse
+                cx="150" cy="150" rx="120" ry="40"
+                fill="none"
+                stroke={strokeColor || lineColor}
+                strokeWidth={ringStrokeWidth}
+                opacity={0.4}
+              />
+              <ellipse
+                cx="150" cy="150" rx="100" ry="100"
+                fill="none"
+                stroke={strokeColor || lineColor}
+                strokeWidth={ringStrokeWidth}
+                opacity={0.4}
+              />
+            </>
+          )}
+        </g>
       </svg>
     </div>
   );
