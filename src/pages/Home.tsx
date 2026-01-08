@@ -18,57 +18,49 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-neutral-900">
       <main className="pt-14 pb-12">
-        {/* Hero */}
-        <section className="w-full px-6 sm:px-10 lg:px-20 pt-8 pb-10 relative min-h-[620px] lg:min-h-[680px] flex items-center overflow-visible">
-          {/* Background globe layer - two-layer absolute for zero layout impact */}
-          <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-[-60px] top-[-92px] md:top-[-110px] lg:top-[-128px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
-              <NetworkGlobe />
-            </div>
-          </div>
-          
-          {/* Foreground content */}
-          <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10">
-            {/* Copy */}
-            <div className="max-w-xl pt-10 md:pt-14 lg:pt-16">
-              {/* Badge - anchor for the eye */}
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-200 bg-white/70 text-xs font-medium tracking-wide uppercase text-zinc-700 mb-5">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#0E56F5]" />
-                AAC Private Network
-              </span>
+        {/* Hero - calm, centered, confident */}
+        <section className="w-full px-6 sm:px-10 lg:px-20 pt-16 pb-16 md:pt-24 md:pb-20">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Brand anchor */}
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
+              <span className="text-[#0E56F5]">All Agent</span>
+              <span className="text-zinc-400"> Connect</span>
+            </h1>
 
-              <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-normal" style={{ color: '#1D1D1F' }}>
-                Where Real Deals Get Done
-              </h1>
-
-              {/* Tension line */}
-              <p className="mt-4 text-base font-medium text-zinc-600">
-                The deals you don't see are the ones that can change a client's life — and your bottom line.
-              </p>
-
-              {/* Identity line */}
-              <p className="mt-5 text-base font-semibold tracking-wide text-zinc-700 uppercase">
-                By Agents. For Agents. All Agents.
-              </p>
-
-              {/* Capability signals */}
-              <div className="mt-6 flex flex-wrap gap-3">
-                <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Off-market</span>
-                <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Coming soon</span>
-                <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Agent-to-agent</span>
-              </div>
-
-              <div className="mt-8">
-                <button
-                  onClick={() => navigate("/auth?mode=register&source=home")}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
-                >
-                  Request Access <ArrowRight className="ml-2 h-5 w-5" />
-                </button>
-              </div>
+            {/* Globe - subtle, centered, not dominant */}
+            <div className="mx-auto mb-8 w-[140px] h-[140px]">
+              <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
             </div>
 
-            {/* Globe context removed - globe is now atmospheric backplate only */}
+            {/* Headline */}
+            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight mb-4" style={{ color: '#1D1D1F' }}>
+              Where Real Deals Get Done
+            </h2>
+
+            {/* Tension line */}
+            <p className="text-lg text-zinc-600 max-w-xl mx-auto mb-6">
+              The deals you don't see are the ones that can change a client's life — and your bottom line.
+            </p>
+
+            {/* Capability signals */}
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Off-market</span>
+              <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Coming soon</span>
+              <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Agent-to-agent</span>
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={() => navigate("/auth?mode=register&source=home")}
+              className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+            >
+              Request Access <ArrowRight className="ml-2 h-5 w-5" />
+            </button>
+
+            {/* Identity line */}
+            <p className="mt-8 text-sm font-medium tracking-wide text-zinc-500 uppercase">
+              By Agents. For Agents. All Agents.
+            </p>
           </div>
         </section>
 
