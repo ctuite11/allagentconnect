@@ -63,10 +63,26 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
   const cosTilt = Math.cos(tiltAngle);
   const sinTilt = Math.sin(tiltAngle);
   
-  // Generate network nodes with Y-axis rotation applied
-  const nodes = React.useMemo(() => {
-    const points: { x: number; y: number; z: number }[] = [];
+  // Base nodes - fixed 3D positions on unit sphere (for stable connections)
+  const baseNodes = React.useMemo(() => {
+    const points: { x3d: number; y3d: number; z3d: number }[] = [];
     const count = 24;
+    
+    for (let i = 0; i < count; i++) {
+      const phi = Math.acos(-1 + (2 * i) / count);
+      const theta = Math.sqrt(count * Math.PI) * phi;
+      
+      points.push({
+        x3d: Math.cos(theta) * Math.sin(phi),
+        y3d: Math.sin(theta) * Math.sin(phi),
+        z3d: Math.cos(phi)
+      });
+    }
+    return points;
+  }, []);
+  
+  // Generate network nodes with Y-axis rotation applied (for rendering)
+  const nodes = React.useMemo(() => {
     const radius = 120;
     const centerX = 150;
     const centerY = 150;
@@ -76,95 +92,102 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     const cosR = Math.cos(angle);
     const sinR = Math.sin(angle);
     
-    for (let i = 0; i < count; i++) {
-      const phi = Math.acos(-1 + (2 * i) / count);
-      const theta = Math.sqrt(count * Math.PI) * phi;
-      
-      // Original 3D position on unit sphere
-      const x3d = Math.cos(theta) * Math.sin(phi);
-      const y3d = Math.sin(theta) * Math.sin(phi);
-      const z3d = Math.cos(phi);
-      
+    return baseNodes.map(node => {
       // Apply Y-axis rotation
-      const rotatedX = x3d * cosR - z3d * sinR;
-      const rotatedZ = x3d * sinR + z3d * cosR;
+      const rotatedX = node.x3d * cosR - node.z3d * sinR;
+      const rotatedZ = node.x3d * sinR + node.z3d * cosR;
       
       // Apply tilt (rotateX)
-      const tiltedY = y3d * cosTilt - rotatedZ * sinTilt;
-      const tiltedZ = y3d * sinTilt + rotatedZ * cosTilt;
+      const tiltedY = node.y3d * cosTilt - rotatedZ * sinTilt;
+      const tiltedZ = node.y3d * sinTilt + rotatedZ * cosTilt;
       
-      points.push({
+      return {
         x: centerX + radius * rotatedX,
         y: centerY + radius * tiltedY,
         z: tiltedZ // Use for depth-based opacity
-      });
-    }
-    return points;
-  }, [rotationAngle, isStatic, prefersReducedMotion, cosTilt, sinTilt]);
+      };
+    });
+  }, [baseNodes, rotationAngle, isStatic, prefersReducedMotion, cosTilt, sinTilt]);
 
-  // Generate connections between nearby nodes
-  const connections = React.useMemo(() => {
-    const lines: { x1: number; y1: number; x2: number; y2: number; avgZ: number }[] = [];
+  // Generate connections using fixed base node distances (stable topology)
+  const connectionIndices = React.useMemo(() => {
+    const pairs: { i: number; j: number }[] = [];
     
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dist = Math.sqrt(
-          Math.pow(nodes[i].x - nodes[j].x, 2) + 
-          Math.pow(nodes[i].y - nodes[j].y, 2)
-        );
+    for (let i = 0; i < baseNodes.length; i++) {
+      for (let j = i + 1; j < baseNodes.length; j++) {
+        // Calculate 3D distance on unit sphere
+        const dx = baseNodes[i].x3d - baseNodes[j].x3d;
+        const dy = baseNodes[i].y3d - baseNodes[j].y3d;
+        const dz = baseNodes[i].z3d - baseNodes[j].z3d;
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
         
-        if (dist < 100) {
-          const avgZ = (nodes[i].z + nodes[j].z) / 2;
-          lines.push({
-            x1: nodes[i].x,
-            y1: nodes[i].y,
-            x2: nodes[j].x,
-            y2: nodes[j].y,
-            avgZ
-          });
+        // Connect nodes within threshold (on unit sphere, ~0.8 = nearby)
+        if (dist < 0.8) {
+          pairs.push({ i, j });
         }
       }
     }
-    return lines;
-  }, [nodes]);
+    return pairs;
+  }, [baseNodes]);
 
-  // Generate triangles from connected node triplets
-  const triangles = React.useMemo(() => {
+  // Map connection indices to rendered positions
+  const connections = React.useMemo(() => {
+    return connectionIndices.map(({ i, j }) => ({
+      x1: nodes[i].x,
+      y1: nodes[i].y,
+      x2: nodes[j].x,
+      y2: nodes[j].y,
+      avgZ: (nodes[i].z + nodes[j].z) / 2
+    }));
+  }, [connectionIndices, nodes]);
+
+  // Generate triangle indices using fixed base node distances (stable topology)
+  const triangleIndices = React.useMemo(() => {
     if (!fillTriangles) return [];
     
-    const tris: { points: string; avgZ: number }[] = [];
-    const maxDist = 100;
+    const tris: { i: number; j: number; k: number }[] = [];
+    const maxDist = 0.8; // Same threshold as connections
     
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const distIJ = Math.sqrt(
-          Math.pow(nodes[i].x - nodes[j].x, 2) + 
-          Math.pow(nodes[i].y - nodes[j].y, 2)
-        );
+    for (let i = 0; i < baseNodes.length; i++) {
+      for (let j = i + 1; j < baseNodes.length; j++) {
+        const dxIJ = baseNodes[i].x3d - baseNodes[j].x3d;
+        const dyIJ = baseNodes[i].y3d - baseNodes[j].y3d;
+        const dzIJ = baseNodes[i].z3d - baseNodes[j].z3d;
+        const distIJ = Math.sqrt(dxIJ * dxIJ + dyIJ * dyIJ + dzIJ * dzIJ);
         if (distIJ > maxDist) continue;
         
-        for (let k = j + 1; k < nodes.length; k++) {
-          const distIK = Math.sqrt(
-            Math.pow(nodes[i].x - nodes[k].x, 2) + 
-            Math.pow(nodes[i].y - nodes[k].y, 2)
-          );
-          const distJK = Math.sqrt(
-            Math.pow(nodes[j].x - nodes[k].x, 2) + 
-            Math.pow(nodes[j].y - nodes[k].y, 2)
-          );
+        for (let k = j + 1; k < baseNodes.length; k++) {
+          const dxIK = baseNodes[i].x3d - baseNodes[k].x3d;
+          const dyIK = baseNodes[i].y3d - baseNodes[k].y3d;
+          const dzIK = baseNodes[i].z3d - baseNodes[k].z3d;
+          const distIK = Math.sqrt(dxIK * dxIK + dyIK * dyIK + dzIK * dzIK);
+          
+          const dxJK = baseNodes[j].x3d - baseNodes[k].x3d;
+          const dyJK = baseNodes[j].y3d - baseNodes[k].y3d;
+          const dzJK = baseNodes[j].z3d - baseNodes[k].z3d;
+          const distJK = Math.sqrt(dxJK * dxJK + dyJK * dyJK + dzJK * dzJK);
           
           if (distIK < maxDist && distJK < maxDist) {
-            const avgZ = (nodes[i].z + nodes[j].z + nodes[k].z) / 3;
-            tris.push({
-              points: `${nodes[i].x},${nodes[i].y} ${nodes[j].x},${nodes[j].y} ${nodes[k].x},${nodes[k].y}`,
-              avgZ
-            });
+            tris.push({ i, j, k });
           }
         }
       }
     }
     return tris;
-  }, [nodes, fillTriangles]);
+  }, [baseNodes, fillTriangles]);
+
+  // Map triangle indices to rendered positions, filter back-facing
+  const triangles = React.useMemo(() => {
+    return triangleIndices
+      .map(({ i, j, k }) => {
+        const avgZ = (nodes[i].z + nodes[j].z + nodes[k].z) / 3;
+        return {
+          points: `${nodes[i].x},${nodes[i].y} ${nodes[j].x},${nodes[j].y} ${nodes[k].x},${nodes[k].y}`,
+          avgZ
+        };
+      })
+      .filter(tri => tri.avgZ > -0.3); // Hide back-facing triangles
+  }, [triangleIndices, nodes]);
   
   // Simple depth fade for lines: back ~0.35, front ~0.65
   const getLineOpacity = (z: number) => {
@@ -172,10 +195,10 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     return 0.35 + t * 0.30;
   };
   
-  // Depth fade for triangles: back ~0.08, front ~0.25
+  // Depth fade for triangles: stronger minimum, no whitish ones
   const getTriangleOpacity = (z: number) => {
     const t = (z + 1) / 2;
-    return 0.08 + t * 0.17;
+    return 0.15 + t * 0.20; // Range: 0.15 to 0.35
   };
   
   // Simple depth fade for nodes: back ~0.45, front ~0.80
