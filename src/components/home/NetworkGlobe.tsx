@@ -1,8 +1,9 @@
 import React from 'react';
 
 /**
- * Network globe with true 3D rotation
- * Nodes and connections rotate around Y-axis for genuine depth effect
+ * Neutral architectural network globe for homepage hero
+ * Reads as subtle infrastructure / watermark background
+ * NOT a tech feature - must recede behind content
  */
 
 // Neutral gray colors - warmer/darker to align with logo gray family
@@ -31,76 +32,27 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     return () => mq.removeEventListener('change', handler);
   }, []);
   
-  // Rotation angle for 3D effect (in radians)
-  const [rotationAngle, setRotationAngle] = React.useState(0);
-
-  // Animate rotation - 1 full rotation every 120 seconds
-  React.useEffect(() => {
-    if (prefersReducedMotion || isStatic) return;
-    
-    let animationId: number;
-    let lastTime = performance.now();
-    
-    const animate = (currentTime: number) => {
-      const delta = (currentTime - lastTime) / 1000; // seconds
-      lastTime = currentTime;
-      
-      // 120 seconds per full rotation = 2π / 120 radians per second
-      setRotationAngle(prev => (prev + delta * (Math.PI * 2) / 120) % (Math.PI * 2));
-      animationId = requestAnimationFrame(animate);
-    };
-    
-    animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
-  }, [prefersReducedMotion, isStatic]);
-  
   // Use provided strokeColor or default neutral colors
   const lineColor = strokeColor || LINE_COLOR;
   const nodeColor = strokeColor || NODE_COLOR;
   
-  // Tilt angle for Earth-like perspective (-18 degrees)
-  const tiltAngle = -18 * (Math.PI / 180);
-  const cosTilt = Math.cos(tiltAngle);
-  const sinTilt = Math.sin(tiltAngle);
-  
-  // Generate network nodes with Y-axis rotation applied
+  // Generate network nodes in a spherical distribution
   const nodes = React.useMemo(() => {
     const points: { x: number; y: number; z: number }[] = [];
     const count = 24;
-    const radius = 120;
-    const centerX = 150;
-    const centerY = 150;
-    
-    // Use rotation angle for animated mode, 0 for static
-    const angle = (isStatic || prefersReducedMotion) ? 0 : rotationAngle;
-    const cosR = Math.cos(angle);
-    const sinR = Math.sin(angle);
     
     for (let i = 0; i < count; i++) {
       const phi = Math.acos(-1 + (2 * i) / count);
       const theta = Math.sqrt(count * Math.PI) * phi;
       
-      // Original 3D position on unit sphere
-      const x3d = Math.cos(theta) * Math.sin(phi);
-      const y3d = Math.sin(theta) * Math.sin(phi);
-      const z3d = Math.cos(phi);
-      
-      // Apply Y-axis rotation
-      const rotatedX = x3d * cosR - z3d * sinR;
-      const rotatedZ = x3d * sinR + z3d * cosR;
-      
-      // Apply tilt (rotateX)
-      const tiltedY = y3d * cosTilt - rotatedZ * sinTilt;
-      const tiltedZ = y3d * sinTilt + rotatedZ * cosTilt;
-      
       points.push({
-        x: centerX + radius * rotatedX,
-        y: centerY + radius * tiltedY,
-        z: tiltedZ // Use for depth-based opacity
+        x: 150 + 120 * Math.cos(theta) * Math.sin(phi),
+        y: 150 + 120 * Math.sin(theta) * Math.sin(phi),
+        z: Math.cos(phi)
       });
     }
     return points;
-  }, [rotationAngle, isStatic, prefersReducedMotion, cosTilt, sinTilt]);
+  }, []);
 
   // Generate connections between nearby nodes
   const connections = React.useMemo(() => {
@@ -246,25 +198,83 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     );
   }
 
-  // Animated mode (hero or ambient) - true 3D rotation via node position updates
+  // Ambient mode: centered, all breakpoints
+  if (isAmbient) {
+    return (
+      <div 
+        className="w-full h-full pointer-events-none"
+        aria-hidden="true"
+        style={{ opacity: 0.08 }}
+      >
+        <svg 
+          viewBox="0 0 300 300" 
+          className="w-full h-full"
+          style={{ animation: 'networkSpin 60s linear infinite' }}
+        >
+          {connections.map((line, i) => (
+            <line
+              key={`line-${i}`}
+              x1={line.x1}
+              y1={line.y1}
+              x2={line.x2}
+              y2={line.y2}
+              stroke={LINE_COLOR}
+              strokeWidth={lineStrokeWidth}
+              opacity={getLineOpacity(line.avgZ)}
+            />
+          ))}
+          
+          <ellipse
+            cx="150" cy="150" rx="120" ry="40"
+            fill="none" stroke={LINE_COLOR}
+            strokeWidth={ringStrokeWidth} opacity={0.4}
+          />
+          <ellipse
+            cx="150" cy="150" rx="100" ry="100"
+            fill="none" stroke={LINE_COLOR}
+            strokeWidth={ringStrokeWidth} opacity={0.4}
+          />
+        </svg>
+        
+        <style>{`
+          @keyframes networkSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Hero mode - fixed-size, subtle architectural background
   return (
     <div 
-      className="w-full h-full pointer-events-none flex items-center justify-center"
+      className="hidden md:block w-[640px] h-[640px] lg:w-[760px] lg:h-[760px] xl:w-[820px] xl:h-[820px] 2xl:w-[860px] 2xl:h-[860px] overflow-visible pointer-events-none relative"
       aria-hidden="true"
-      style={{ opacity: fillTriangles ? 1 : 0.08 }}
     >
-      <svg viewBox="0 0 300 300" className="w-full h-full" style={strokeColor ? { color: strokeColor } : undefined}>
-        {/* Filled triangles when enabled */}
-        {fillTriangles && triangles.map((tri, i) => (
-          <polygon
-            key={`tri-${i}`}
-            points={tri.points}
-            fill="currentColor"
-            opacity={getTriangleOpacity(tri.avgZ)}
-          />
-        ))}
-        
-        {/* Connection lines */}
+      {/* Globe container - neutral architectural watermark, no blue tinting */}
+      <div
+        className="absolute inset-0"
+        style={{
+          opacity: 0.28,
+          transform: 'rotateX(8deg)',
+          willChange: 'transform',
+          maskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
+          maskRepeat: 'no-repeat',
+          WebkitMaskRepeat: 'no-repeat'
+        }}
+      >
+        <svg
+        viewBox="0 0 300 300" 
+        className="w-full h-full"
+        style={{
+          animation: 'networkSpin 60s linear infinite',
+          transformOrigin: 'center',
+          transformBox: 'fill-box'
+        }}
+      >
+        {/* Connection lines only - no nodes for cleaner architectural look */}
         {connections.map((line, i) => (
           <line
             key={`line-${i}`}
@@ -272,32 +282,32 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
             y1={line.y1}
             x2={line.x2}
             y2={line.y2}
-            stroke="currentColor"
-            strokeWidth={fillTriangles ? 1.5 : lineStrokeWidth}
-            opacity={fillTriangles ? getLineOpacity(line.avgZ) * 1.2 : getLineOpacity(line.avgZ)}
+            stroke={LINE_COLOR}
+            strokeWidth={lineStrokeWidth}
+            opacity={getLineOpacity(line.avgZ)}
           />
         ))}
         
-        {/* Subtle orbital rings - hide when filling triangles */}
-        {!fillTriangles && (
-          <>
-            <ellipse
-              cx="150" cy="150" rx="120" ry="40"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={ringStrokeWidth}
-              opacity={0.4}
-            />
-            <ellipse
-              cx="150" cy="150" rx="100" ry="100"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={ringStrokeWidth}
-              opacity={0.4}
-            />
-          </>
-        )}
-      </svg>
+        {/* Subtle orbital rings */}
+        <ellipse
+          cx="150" cy="150" rx="120" ry="40"
+          fill="none" stroke={LINE_COLOR}
+          strokeWidth={ringStrokeWidth} opacity={0.4}
+        />
+        <ellipse
+          cx="150" cy="150" rx="100" ry="100"
+          fill="none" stroke={LINE_COLOR}
+          strokeWidth={ringStrokeWidth} opacity={0.4}
+        />
+        </svg>
+        
+        <style>{`
+          @keyframes networkSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
     </div>
   );
 };
