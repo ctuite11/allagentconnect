@@ -289,21 +289,21 @@ const PendingVerification = () => {
       
       {/* All content centered - no header */}
       <div className="relative z-10 w-full max-w-md text-center">
-        {/* Wordmark - brand moment */}
-        <h2 className="text-2xl md:text-3xl font-semibold tracking-wide mb-6">
+        {/* Wordmark - brand authority, largest element */}
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
           <span className="text-[#0E56F5]">All Agent</span>
           <span className="text-zinc-400"> Connect</span>
-        </h2>
+        </h1>
         
         {/* Globe - original AAC blue, NO circle, NO container */}
         <div className="mx-auto mb-8 w-[130px] h-[130px]">
           <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
         </div>
         
-        {/* Headline */}
-        <h1 className="text-4xl font-semibold text-zinc-900 mb-3">
+        {/* State message - secondary to brand */}
+        <h2 className="text-2xl md:text-3xl font-medium text-zinc-900 mb-3">
           Almost there.
-        </h1>
+        </h2>
         
         {/* Confirmation copy */}
         {userEmail && (
