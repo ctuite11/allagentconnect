@@ -316,6 +316,34 @@ All colors MUST be HSL.
       stroke-dashoffset: -200; 
     }
   }
+
+  /* AAC Globe Animations - subtle, premium motion */
+  @keyframes aac-float {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -10px, 0); }
+  }
+
+  @keyframes aac-drift {
+    0%, 100% { transform: rotate(-1deg) scale(1); }
+    50% { transform: rotate(1deg) scale(1.015); }
+  }
+
+  @keyframes aac-glow {
+    0%, 100% { filter: drop-shadow(0 10px 24px rgba(14,86,245,0.10)); }
+    50% { filter: drop-shadow(0 14px 34px rgba(14,86,245,0.18)); }
+  }
+
+  .animate-aac-float {
+    animation: aac-float 6s ease-in-out infinite;
+  }
+
+  .animate-aac-drift {
+    animation: aac-drift 8s ease-in-out infinite;
+  }
+
+  .animate-aac-glow {
+    animation: aac-glow 4s ease-in-out infinite;
+  }
 }
 
 @layer utilities {
