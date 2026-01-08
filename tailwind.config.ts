@@ -92,6 +92,11 @@ export default {
             borderHover: "hsl(var(--aac-card-border-hover))",
           },
         },
+        aacSuccess: {
+          DEFAULT: "hsl(var(--aac-success))",
+          soft: "hsl(var(--aac-success) / 0.10)",
+          ring: "hsl(var(--aac-success) / 0.25)",
+        },
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',

@@ -293,10 +293,18 @@ const PendingVerification = () => {
         }}
       />
       
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
+      {/* Centered main content - pulled up slightly */}
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 -mt-16">
         <div className="w-full max-w-md text-center">
-          {/* Globe with filled triangles */}
+          {/* Globe with filled triangles + subtle green halo */}
           <div className="relative mx-auto mb-4 w-[150px] h-[150px]">
+            {/* Green success halo - very subtle */}
+            <div 
+              className="absolute inset-0 rounded-full"
+              style={{ 
+                background: 'radial-gradient(circle, rgba(5, 150, 105, 0.08) 0%, transparent 70%)',
+              }}
+            />
             <div className="absolute inset-0" style={{ opacity: 0.85 }}>
               <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
             </div>
@@ -316,20 +324,21 @@ const PendingVerification = () => {
             </p>
           )}
 
-          {/* Disabled status button */}
+          {/* Disabled status button with green dot */}
           <button
             type="button"
             disabled
             aria-disabled="true"
-            className="mt-5 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default"
+            className="mt-5 w-full max-w-md rounded-full bg-zinc-900 text-white py-3 text-sm font-medium opacity-90 cursor-default flex items-center justify-center gap-2"
           >
+            <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess" />
             Verification in progress
           </button>
 
-          {/* Support email */}
+          {/* Support email with hover state */}
           <p className="text-zinc-400 text-xs mt-6">
             Questions? Reach us anytime at{" "}
-            <a href="mailto:hello@allagentconnect.com" className="hover:text-zinc-500 transition-colors">
+            <a href="mailto:hello@allagentconnect.com" className="hover:text-aacSuccess transition-colors">
               hello@allagentconnect.com
             </a>
           </p>
