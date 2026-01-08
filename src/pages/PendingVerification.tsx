@@ -289,6 +289,12 @@ const PendingVerification = () => {
       
       {/* All content centered - no header */}
       <div className="relative z-10 w-full max-w-md text-center">
+        {/* Wordmark above globe */}
+        <h2 className="text-xl tracking-tight mb-6">
+          <span className="text-[#0E56F5] font-medium">All Agent</span>
+          <span className="text-zinc-400 font-normal"> Connect</span>
+        </h2>
+        
         {/* Globe - original AAC blue, NO circle, NO container */}
         <div className="mx-auto mb-8 w-[130px] h-[130px]">
           <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
