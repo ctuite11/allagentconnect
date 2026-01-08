@@ -176,7 +176,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     return tris;
   }, [baseNodes, fillTriangles]);
 
-  // Map triangle indices to rendered positions, filter back-facing
+  // Map triangle indices to rendered positions, sort back-to-front
   const triangles = React.useMemo(() => {
     return triangleIndices
       .map(({ i, j, k }) => {
@@ -186,7 +186,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
           avgZ
         };
       })
-      .filter(tri => tri.avgZ > -0.3); // Hide back-facing triangles
+      .sort((a, b) => a.avgZ - b.avgZ); // Back-to-front rendering
   }, [triangleIndices, nodes]);
   
   // Simple depth fade for lines: back ~0.35, front ~0.65
@@ -195,10 +195,10 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     return 0.35 + t * 0.30;
   };
   
-  // Depth fade for triangles: stronger minimum, no whitish ones
+  // Depth fade for triangles: stronger range to always read as blue
   const getTriangleOpacity = (z: number) => {
     const t = (z + 1) / 2;
-    return 0.15 + t * 0.20; // Range: 0.15 to 0.35
+    return 0.28 + t * 0.32; // Range: 0.28 to 0.60
   };
   
   // Simple depth fade for nodes: back ~0.45, front ~0.80
@@ -221,29 +221,39 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
         style={{ opacity: fillTriangles ? 1 : 0.08 }}
       >
         <svg viewBox="0 0 300 300" className="w-full h-full" style={strokeColor ? { color: strokeColor } : undefined}>
-          {/* Filled triangles when enabled */}
-          {fillTriangles && triangles.map((tri, i) => (
-            <polygon
-              key={`tri-${i}`}
-              points={tri.points}
-              fill="currentColor"
-              opacity={getTriangleOpacity(tri.avgZ)}
-            />
-          ))}
+          {/* Clip path for perfect round silhouette */}
+          <defs>
+            <clipPath id="globe-clip-static">
+              <circle cx="150" cy="150" r="120" />
+            </clipPath>
+          </defs>
           
-          {/* Connection lines */}
-          {connections.map((line, i) => (
-            <line
-              key={`line-${i}`}
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-              stroke="currentColor"
-              strokeWidth={fillTriangles ? 1.5 : lineStrokeWidth}
-              opacity={fillTriangles ? getLineOpacity(line.avgZ) * 1.2 : getLineOpacity(line.avgZ)}
-            />
-          ))}
+          {/* Clipped content for round globe */}
+          <g clipPath="url(#globe-clip-static)">
+            {/* Filled triangles when enabled */}
+            {fillTriangles && triangles.map((tri, i) => (
+              <polygon
+                key={`tri-${i}`}
+                points={tri.points}
+                fill="currentColor"
+                opacity={getTriangleOpacity(tri.avgZ)}
+              />
+            ))}
+            
+            {/* Connection lines */}
+            {connections.map((line, i) => (
+              <line
+                key={`line-${i}`}
+                x1={line.x1}
+                y1={line.y1}
+                x2={line.x2}
+                y2={line.y2}
+                stroke="currentColor"
+                strokeWidth={fillTriangles ? 1.5 : lineStrokeWidth}
+                opacity={fillTriangles ? getLineOpacity(line.avgZ) * 1.2 : getLineOpacity(line.avgZ)}
+              />
+            ))}
+          </g>
           
           {/* Subtle orbital rings - hide when filling triangles */}
           {!fillTriangles && (
@@ -277,29 +287,39 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
       style={{ opacity: fillTriangles ? 1 : 0.08 }}
     >
       <svg viewBox="0 0 300 300" className="w-full h-full" style={strokeColor ? { color: strokeColor } : undefined}>
-        {/* Filled triangles when enabled */}
-        {fillTriangles && triangles.map((tri, i) => (
-          <polygon
-            key={`tri-${i}`}
-            points={tri.points}
-            fill="currentColor"
-            opacity={getTriangleOpacity(tri.avgZ)}
-          />
-        ))}
+        {/* Clip path for perfect round silhouette */}
+        <defs>
+          <clipPath id="globe-clip-animated">
+            <circle cx="150" cy="150" r="120" />
+          </clipPath>
+        </defs>
         
-        {/* Connection lines */}
-        {connections.map((line, i) => (
-          <line
-            key={`line-${i}`}
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-            stroke="currentColor"
-            strokeWidth={fillTriangles ? 1.5 : lineStrokeWidth}
-            opacity={fillTriangles ? getLineOpacity(line.avgZ) * 1.2 : getLineOpacity(line.avgZ)}
-          />
-        ))}
+        {/* Clipped content for round globe */}
+        <g clipPath="url(#globe-clip-animated)">
+          {/* Filled triangles when enabled */}
+          {fillTriangles && triangles.map((tri, i) => (
+            <polygon
+              key={`tri-${i}`}
+              points={tri.points}
+              fill="currentColor"
+              opacity={getTriangleOpacity(tri.avgZ)}
+            />
+          ))}
+          
+          {/* Connection lines */}
+          {connections.map((line, i) => (
+            <line
+              key={`line-${i}`}
+              x1={line.x1}
+              y1={line.y1}
+              x2={line.x2}
+              y2={line.y2}
+              stroke="currentColor"
+              strokeWidth={fillTriangles ? 1.5 : lineStrokeWidth}
+              opacity={fillTriangles ? getLineOpacity(line.avgZ) * 1.2 : getLineOpacity(line.avgZ)}
+            />
+          ))}
+        </g>
         
         {/* Subtle orbital rings - hide when filling triangles */}
         {!fillTriangles && (
