@@ -158,6 +158,7 @@ const Navigation = () => {
 
   // Hide global navigation on minimal pages
   if (location.pathname === "/") return null;
+  if (location.pathname === "/home") return null;
   if (location.pathname === "/auth") return null;
   if (location.pathname === "/register") return null;
 

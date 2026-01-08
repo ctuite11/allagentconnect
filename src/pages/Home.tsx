@@ -16,10 +16,42 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900">
-      <main className="pt-14 pb-12">
+    <div className="relative min-h-screen bg-white text-neutral-900">
+      {/* Floating utility bar (NOT a header, NOT sticky) */}
+      <div className="pointer-events-none absolute left-0 right-0 top-6 z-20">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6">
+          {/* Left: small brand text only */}
+          <div className="pointer-events-auto text-sm font-semibold tracking-tight">
+            <span className="text-[#0E56F5]">All Agent</span>{" "}
+            <span className="text-zinc-400">Connect</span>
+          </div>
+
+          {/* Right: actions only */}
+          <div className="pointer-events-auto flex items-center gap-5">
+            <button
+              onClick={() => navigate("/auth")}
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+            >
+              Log in
+            </button>
+
+            <button
+              onClick={() => navigate("/auth?mode=register&source=home")}
+              className="group inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all"
+            >
+              Get Access
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-400">→</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <main className="pb-12">
         {/* Hero - calm, centered, confident */}
-        <section className="w-full px-6 sm:px-10 lg:px-20 pt-16 pb-16 md:pt-24 md:pb-20">
+        <section className="relative w-full px-6 sm:px-10 lg:px-20 pt-24 md:pt-28 lg:pt-32 pb-16 md:pb-20">
           <div className="max-w-3xl mx-auto text-center">
             {/* Brand anchor */}
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
@@ -49,12 +81,16 @@ export default function Home() {
               <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Agent-to-agent</span>
             </div>
 
-            {/* CTA */}
+            {/* CTA - black with emerald accent */}
             <button
               onClick={() => navigate("/auth?mode=register&source=home")}
-              className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
             >
-              Request Access <ArrowRight className="ml-2 h-5 w-5" />
+              Request Access
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-400">→</span>
+              </span>
             </button>
 
             {/* Identity line */}
@@ -158,9 +194,13 @@ export default function Home() {
             </h3>
             <button
               onClick={() => navigate("/auth?mode=register&source=home")}
-              className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
             >
-              Request Access <ArrowRight className="ml-2 h-5 w-5" />
+              Request Access
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-400">→</span>
+              </span>
             </button>
           </div>
         </section>
@@ -261,9 +301,13 @@ export default function Home() {
               <div className="mt-8">
                 <button
                   onClick={() => navigate("/auth?mode=register&source=home")}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#0E56F5] px-8 py-4 text-base font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+                  className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
                 >
-                  Request Access <ArrowRight className="ml-2 h-5 w-5" />
+                  Request Access
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-emerald-400">→</span>
+                  </span>
                 </button>
               </div>
             </div>
@@ -288,9 +332,10 @@ export default function Home() {
             </a>
             <button
               onClick={() => navigate("/auth?mode=register&source=home")}
-              className="inline-flex items-center justify-center rounded-xl bg-[#0E56F5] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B45C4] hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+              className="group inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-900 hover:-translate-y-0.5 transition-all"
             >
               Get Access
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </button>
           </div>
         </div>
