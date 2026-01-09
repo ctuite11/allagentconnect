@@ -462,10 +462,10 @@ export default function AgentSuccessHub() {
             subtitle="Your command center for client success"
           />
           <span 
-            className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-[11px] font-medium text-zinc-500"
+            className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] font-medium text-zinc-700"
             title={`Build: ${BUILD_ID}`}
           >
-            <span className="h-1 w-1 rounded-full bg-emerald-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             HUB v2
           </span>
         </div>
