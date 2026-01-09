@@ -454,7 +454,7 @@ export default function AgentSuccessHub() {
   return (
     <div className="min-h-screen bg-white text-zinc-900" style={{ backgroundColor: '#FFFFFF' }}>
       <Navigation />
-      <div className="mx-auto max-w-6xl px-5 py-8 pt-20 space-y-10">
+      <div className="mx-auto max-w-6xl px-5 py-8 space-y-10">
         {/* Header */}
         <div className="flex items-center gap-3">
           <PageHeader
@@ -487,7 +487,7 @@ export default function AgentSuccessHub() {
         {/* Two Columns - Buyers & Hotsheets */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Your Buyers Card */}
-          <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
             <div className="mb-6">
               <h3 className="text-xl font-semibold tracking-tight text-zinc-900">Your Buyers</h3>
               <p className="text-sm text-zinc-600 mt-1">{buyers.length} active buyer{buyers.length !== 1 ? 's' : ''}</p>
@@ -525,7 +525,7 @@ export default function AgentSuccessHub() {
           </div>
 
           {/* Your Hotsheets Card */}
-          <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
             <div className="mb-6">
               <h3 className="text-xl font-semibold tracking-tight text-zinc-900">Your Hotsheets</h3>
               <p className="text-sm text-zinc-600 mt-1">{hotsheets.length} hotsheet{hotsheets.length !== 1 ? 's' : ''}</p>
@@ -563,7 +563,7 @@ export default function AgentSuccessHub() {
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
           <div className="mb-6">
             <h3 className="text-xl font-semibold tracking-tight text-zinc-900">Recent Activity</h3>
             <p className="text-sm text-zinc-600 mt-1">Last 30 days of client engagement</p>

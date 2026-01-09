@@ -170,18 +170,17 @@ const Navigation = () => {
   if (isPending) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50">
-    <header className="bg-transparent relative">
+    <header className="w-full bg-white border-b border-zinc-200">
       <div className="mx-auto max-w-6xl px-5 py-3 flex items-center justify-between">
         <div onClick={() => navigate("/")} className="cursor-pointer">
           <Logo size="lg" />
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-7 text-sm text-slate-600 relative top-[1px]">
+        <nav className="hidden md:flex items-center gap-7 text-sm text-zinc-600 relative top-[1px]">
           <button
             onClick={() => navigate("/")}
-            className="hover:text-emerald-600 transition-colors"
+            className="hover:text-zinc-900 transition-colors"
           >
             Home
           </button>
@@ -189,7 +188,7 @@ const Navigation = () => {
           {/* All Pages Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 hover:text-emerald-600 transition-colors">
+              <button className="flex items-center gap-1.5 hover:text-zinc-900 transition-colors">
                 All Pages
                 <ChevronDown className="w-3 h-3" />
               </button>
@@ -658,7 +657,6 @@ const Navigation = () => {
       {/* Bottom fade overlay - positioned to overlap content below */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full h-3 bg-gradient-to-b from-white/60 to-transparent" />
     </header>
-    </div>
   );
 };
 
