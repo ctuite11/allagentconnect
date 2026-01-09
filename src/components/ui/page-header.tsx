@@ -67,14 +67,14 @@ export function PageHeader({
         
         <div className="flex flex-col">
           <h1 className={cn(
-            "text-2xl font-semibold text-slate-700 font-display tracking-tight",
+            "text-3xl font-semibold text-zinc-900 font-display tracking-tight",
             icon && "flex items-center gap-3"
           )}>
             {icon}
             {title}
           </h1>
           {subtitle && (
-            <p className="text-slate-500 text-sm mt-0.5">{subtitle}</p>
+            <p className="text-zinc-500 text-sm mt-0.5">{subtitle}</p>
           )}
         </div>
       </div>
