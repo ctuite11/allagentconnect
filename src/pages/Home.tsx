@@ -74,11 +74,20 @@ export default function Home() {
               The deals you don't see are the ones that can change a client's life — and your bottom line.
             </p>
 
-            {/* Capability signals */}
+            {/* Capability signals - silvery pills with colored dots */}
             <div className="flex flex-wrap justify-center gap-3 mb-8">
-              <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Off-market</span>
-              <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Coming soon</span>
-              <span className="text-sm font-medium text-zinc-500 px-3 py-1.5 rounded-full border border-zinc-200">Agent-to-agent</span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-medium shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Off-market
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-medium shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                Coming soon
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-medium shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-slate-400" />
+                Agent-to-agent
+              </span>
             </div>
 
             {/* CTA - black with emerald accent */}
@@ -100,20 +109,26 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Proof Strip */}
+        {/* Proof Strip - icons in soft blue badges */}
         <section className="py-8 md:py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm" style={{ color: '#1D1D1F' }}>
-              <span className="inline-flex items-center gap-2 font-medium">
-                <ShieldCheck className="h-5 w-5 text-[#0E56F5]" />
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 text-sm text-slate-950">
+              <span className="inline-flex items-center gap-3 font-medium">
+                <div className="h-10 w-10 rounded-xl bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center">
+                  <ShieldCheck className="h-5 w-5 text-blue-600" />
+                </div>
                 Operating since 2016
               </span>
-              <span className="inline-flex items-center gap-2 font-medium">
-                <Users className="h-5 w-5 text-[#0E56F5]" />
+              <span className="inline-flex items-center gap-3 font-medium">
+                <div className="h-10 w-10 rounded-xl bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
                 Thousands of agents nationwide
               </span>
-              <span className="inline-flex items-center gap-2 font-medium">
-                <Handshake className="h-5 w-5 text-[#0E56F5]" />
+              <span className="inline-flex items-center gap-3 font-medium">
+                <div className="h-10 w-10 rounded-xl bg-emerald-50 ring-1 ring-emerald-200/60 flex items-center justify-center">
+                  <Handshake className="h-5 w-5 text-emerald-600" />
+                </div>
                 Off-market deals closed
               </span>
             </div>
@@ -123,9 +138,10 @@ export default function Home() {
         {/* Built to Increase Production */}
         <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Built to Increase Production
             </h2>
+            <div className="mx-auto mt-4 mb-8 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
             
             <p className="text-center text-lg leading-relaxed text-zinc-600 max-w-2xl mx-auto">
               A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
@@ -145,15 +161,16 @@ export default function Home() {
         </section>
 
         {/* Success Hub — How AAC Gets Used */}
-        <section className="py-12 md:py-16">
+        <section className="py-12 md:py-16 bg-slate-50/60">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-2" style={{ color: '#1D1D1F' }}>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Success Hub — How AAC Gets Used
             </h2>
-            <p className="text-center text-lg text-zinc-600 mb-2">
+            <div className="mx-auto mt-4 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
+            <p className="mt-4 text-center text-lg text-slate-600 max-w-2xl mx-auto">
               Core workflows inside AAC, used daily by working agents across sales and rentals.
             </p>
-            <p className="text-center text-sm text-zinc-500 mb-10">
+            <p className="text-center text-sm text-slate-500 mb-10">
               Supports residential sales, rentals, and agent-only opportunities across markets.
             </p>
             
@@ -208,9 +225,10 @@ export default function Home() {
         {/* How It Works */}
         <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               How It Works
             </h2>
+            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
             
             <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
               <StepItem number={1} label="Verify" />
@@ -223,9 +241,10 @@ export default function Home() {
         {/* Why Clients Love It */}
         <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Why Clients Love When Their Agent Is in AAC
             </h2>
+            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               <ClientBenefitCard
@@ -251,9 +270,10 @@ export default function Home() {
         {/* The AAC Advantage */}
         <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               The AAC Advantage
             </h2>
+            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
             
             <div className="max-w-2xl mx-auto space-y-4">
               <BulletItem>AAC members collaborate privately instead of competing publicly</BulletItem>
@@ -269,11 +289,12 @@ export default function Home() {
         </section>
 
         {/* Coming Soon */}
-        <section className="py-12 md:py-16">
+        <section className="py-12 md:py-16 bg-slate-50/60">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center mb-8" style={{ color: '#1D1D1F' }}>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Coming Soon
             </h2>
+            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
             
             <div className="max-w-2xl mx-auto space-y-4">
               <BulletItem>Expanded markets and regional growth</BulletItem>
@@ -349,8 +370,10 @@ export default function Home() {
 function BulletItem({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3">
-      <Check className="h-4 w-4 text-[#0E56F5] flex-shrink-0 mt-1" />
-      <span className="text-base text-zinc-600 leading-relaxed">{children}</span>
+      <div className="h-5 w-5 rounded-md bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Check className="h-3 w-3 text-blue-600" />
+      </div>
+      <span className="text-base text-slate-600 leading-relaxed">{children}</span>
     </div>
   );
 }
@@ -363,13 +386,15 @@ function ClientBenefitCard({
   benefits: string[];
 }) {
   return (
-    <div className="rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200">
-      <h3 className="text-lg font-semibold mb-4" style={{ color: '#1D1D1F' }}>{title}</h3>
+    <div className="rounded-2xl bg-white border border-slate-200/70 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[2px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
+      <h3 className="text-lg font-semibold mb-4 text-slate-950">{title}</h3>
       <div className="space-y-3">
         {benefits.map((benefit, index) => (
           <div key={index} className="flex items-start gap-3">
-            <Check className="h-4 w-4 text-[#0E56F5] flex-shrink-0 mt-0.5" />
-            <span className="text-sm text-zinc-600 leading-relaxed">{benefit}</span>
+            <div className="h-5 w-5 rounded-md bg-emerald-50 ring-1 ring-emerald-200/60 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Check className="h-3 w-3 text-emerald-600" />
+            </div>
+            <span className="text-sm text-slate-600 leading-relaxed">{benefit}</span>
           </div>
         ))}
       </div>
@@ -409,21 +434,24 @@ function ModuleCard({
   tier: "hub" | "premium";
 }) {
   return (
-    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200">
+    <div className="relative h-full rounded-2xl bg-white border border-slate-200/70 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[2px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
       {/* Tier pill - top right */}
       <span
         className={`absolute top-4 right-4 text-xs font-medium tracking-wide px-2.5 py-1 rounded-full border ${
           tier === "hub"
-            ? "bg-zinc-100 text-zinc-700 border-zinc-200"
+            ? "bg-slate-100 text-slate-700 border-slate-200"
             : "bg-blue-50 text-blue-700 border-blue-200"
         }`}
       >
         {tier === "hub" ? "Success Hub" : "AAC Premium"}
       </span>
 
-      <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
-      <div className="text-base font-semibold tracking-tight text-zinc-900">{title}</div>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
+      {/* Icon in soft badge */}
+      <div className="h-10 w-10 rounded-xl bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center mb-4">
+        <Icon className="h-5 w-5 text-blue-600" />
+      </div>
+      <div className="text-base font-semibold tracking-tight text-slate-950">{title}</div>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">{body}</p>
     </div>
   );
 }
@@ -437,10 +465,10 @@ function StepItem({
 }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="h-12 w-12 rounded-full bg-[#0E56F5] flex items-center justify-center">
+      <div className="h-12 w-12 rounded-xl bg-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.12)] flex items-center justify-center">
         <span className="text-white font-semibold">{number}</span>
       </div>
-      <span className="text-base font-medium" style={{ color: '#1D1D1F' }}>{label}</span>
+      <span className="text-base font-medium text-slate-950">{label}</span>
     </div>
   );
 }
