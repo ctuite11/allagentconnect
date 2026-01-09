@@ -295,9 +295,9 @@ const PendingVerification = () => {
           <span className="text-zinc-400"> Connect</span>
         </h1>
         
-        {/* Diamond - static brand stamp */}
-        <div className="mx-auto mb-8 w-[140px] h-[140px]">
-          <NetworkGlobe variant="diamond" />
+        {/* Globe - original AAC blue, NO circle, NO container */}
+        <div className="mx-auto mb-8 w-[130px] h-[130px]">
+          <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
         </div>
         
         {/* State message - secondary to brand */}

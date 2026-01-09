@@ -316,40 +316,6 @@ All colors MUST be HSL.
       stroke-dashoffset: -200; 
     }
   }
-
-  /* AAC Globe Animations - classy, slow motion */
-  
-  /* Slow axial rotation - like Earth, 1 rotation every 180s */
-  @keyframes aac-globe-spin {
-    from { transform: rotateX(-18deg) rotateY(0deg); }
-    to { transform: rotateX(-18deg) rotateY(360deg); }
-  }
-  
-  /* Subtle breathing - alive, not spinning screensaver */
-  @keyframes aac-breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.015); }
-  }
-  
-  /* Soft blue glow pulse */
-  @keyframes aac-glow {
-    0%, 100% { filter: drop-shadow(0 8px 20px rgba(14,86,245,0.12)); }
-    50% { filter: drop-shadow(0 12px 30px rgba(14,86,245,0.20)); }
-  }
-
-  .animate-aac-globe {
-    transform-style: preserve-3d;
-    will-change: transform;
-    animation: aac-globe-spin 180s linear infinite;
-  }
-
-  .animate-aac-breathe {
-    animation: aac-breathe 12s ease-in-out infinite;
-  }
-
-  .animate-aac-glow {
-    animation: aac-glow 6s ease-in-out infinite;
-  }
 }
 
 @layer utilities {

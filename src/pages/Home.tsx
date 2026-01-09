@@ -12,18 +12,21 @@ import {
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 
-import React from "react";
-
 export default function Home() {
   const navigate = useNavigate();
-  const [globeVariant, setGlobeVariant] = React.useState<'crystal' | 'diamond'>('crystal');
 
   return (
     <div className="relative min-h-screen bg-white text-neutral-900">
-      {/* Floating utility bar (actions only - brand lives in hero) */}
+      {/* Floating utility bar (NOT a header, NOT sticky) */}
       <div className="pointer-events-none absolute left-0 right-0 top-6 z-20">
-        <div className="mx-auto flex max-w-7xl items-center justify-end px-6">
-          {/* Actions only - no brand text here */}
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6">
+          {/* Left: small brand text only */}
+          <div className="pointer-events-auto text-sm font-semibold tracking-tight">
+            <span className="text-[#0E56F5]">All Agent</span>{" "}
+            <span className="text-zinc-400">Connect</span>
+          </div>
+
+          {/* Right: actions only */}
           <div className="pointer-events-auto flex items-center gap-5">
             <button
               onClick={() => navigate("/auth")}
@@ -34,7 +37,7 @@ export default function Home() {
 
             <button
               onClick={() => navigate("/auth?mode=register&source=home")}
-              className="group inline-flex items-center gap-2 rounded-2xl bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_26px_rgba(0,0,0,0.18)] hover:-translate-y-0.5 transition-all"
+              className="group inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all"
             >
               Get Access
               <span className="inline-flex items-center gap-1">
@@ -50,45 +53,15 @@ export default function Home() {
         {/* Hero - calm, centered, confident */}
         <section className="relative w-full px-6 sm:px-10 lg:px-20 pt-24 md:pt-28 lg:pt-32 pb-16 md:pb-20">
           <div className="max-w-3xl mx-auto text-center">
-            {/* Brand anchor - THE hero title, bigger than headline */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight mb-8">
+            {/* Brand anchor */}
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
               <span className="text-[#0E56F5]">All Agent</span>
               <span className="text-zinc-400"> Connect</span>
             </h1>
 
-            {/* Globe variant toggle - for comparison */}
-            <div className="flex justify-center gap-2 mb-4">
-              <button
-                onClick={() => setGlobeVariant('crystal')}
-                className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
-                  globeVariant === 'crystal'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                }`}
-              >
-                Crystal
-              </button>
-              <button
-                onClick={() => setGlobeVariant('diamond')}
-                className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
-                  globeVariant === 'diamond'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                }`}
-              >
-                Diamond
-              </button>
-            </div>
-
-            {/* Globe - true 3D rotation with breathing + soft glow */}
-            <div className="mx-auto mb-8 w-[160px] h-[160px] animate-aac-glow">
-              <div className="animate-aac-breathe">
-                <NetworkGlobe 
-                  variant={globeVariant === 'diamond' ? 'diamond' : 'hero'} 
-                  strokeColor="#0E56F5" 
-                  fillTriangles 
-                />
-              </div>
+            {/* Globe - subtle, centered, not dominant */}
+            <div className="mx-auto mb-8 w-[140px] h-[140px]">
+              <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
             </div>
 
             {/* Headline */}
