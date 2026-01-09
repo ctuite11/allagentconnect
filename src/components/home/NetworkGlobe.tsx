@@ -358,58 +358,100 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     return facets;
   }, [isDiamond, diamondPoints]);
 
-  // Diamond facet color logic with stable hash RNG
+  // Diamond facet color logic - brilliant cut with AAC blue
   const getDiamondFacetStyle = (seed: number, distFromCenter: number) => {
-    // TEMP: fingerprint to verify this code is running
-    if (seed === 0) {
-      console.log("DIAMOND STYLE LIVE", { distFromCenter });
-    }
-    
     // 75s shimmer cycle using shimmerT (decoupled from rotation)
     const wave = Math.sin((shimmerT * 2 * Math.PI) / 75 + seed);
+    const fastWave = Math.sin((shimmerT * 2 * Math.PI) / 25 + seed * 2.3);
     
     // Stable hash for deterministic family assignment
     const r = rand01(seed);
-    const blueEligible = distFromCenter < 0.55;
+    const r2 = rand01(seed + 50); // second hash for variation
+    
+    // Brilliant cut: center is blue, outer ring transitions to light/white
+    // Create zones: core (0-0.35), mid (0.35-0.65), outer (0.65-1.0)
+    const isCore = distFromCenter < 0.35;
+    const isMid = distFromCenter >= 0.35 && distFromCenter < 0.65;
+    const isOuter = distFromCenter >= 0.65;
     
     let hue: number, sat: number, lit: number;
-    let isBlue = false;
-    let isLight = false;
+    let family: 'blue' | 'light' | 'dark' | 'highlight';
     
-    if (r < 0.60) {
-      // Light facets: glass-like crisp whites (60%)
-      hue = 220 + wave * 5;
-      sat = 8 + wave * 4;
-      lit = 96 + wave * 2.5 - distFromCenter * 5;
-      isLight = true;
-    } else if (r < 0.85 || !blueEligible) {
-      // Dark facets: deep charcoal for contrast (25% or non-center)
-      hue = 220 + wave * 3;
-      sat = 6 + wave * 3;
-      lit = 30 + wave * 4.5 + distFromCenter * 10;
+    if (isCore) {
+      // Core: mostly vivid AAC blue with some deep blue variation
+      if (r < 0.70) {
+        // Vivid AAC blue (like reference diamond center)
+        hue = 218 + wave * 6; // AAC blue hue
+        sat = 85 + wave * 8 + r2 * 10;
+        lit = 52 + wave * 8 + r2 * 12;
+        family = 'blue';
+      } else {
+        // Deep blue shadows in core
+        hue = 220 + wave * 4;
+        sat = 75 + wave * 6;
+        lit = 32 + wave * 5;
+        family = 'dark';
+      }
+    } else if (isMid) {
+      // Mid ring: mix of blue, light reflections, and dark facets
+      if (r < 0.40) {
+        // Blue facets (less saturated than core)
+        hue = 218 + wave * 5;
+        sat = 70 + wave * 8 + r2 * 8;
+        lit = 58 + wave * 10 + r2 * 10;
+        family = 'blue';
+      } else if (r < 0.65) {
+        // Bright white/silver highlights (like light catching facets)
+        hue = 210 + wave * 3;
+        sat = 12 + wave * 6;
+        lit = 92 + wave * 4 + fastWave * 3;
+        family = 'highlight';
+      } else {
+        // Dark facets for contrast
+        hue = 220 + wave * 3;
+        sat = 25 + wave * 5;
+        lit = 28 + wave * 6 + r2 * 8;
+        family = 'dark';
+      }
     } else {
-      // Blue accent facets: AAC blue (15%, center only)
-      hue = 224 + wave * 4;
-      sat = 85 + wave * 5;
-      lit = 54 + wave * 5 - distFromCenter * 12;
-      isBlue = true;
+      // Outer ring: mostly light/white with some blue accents
+      if (r < 0.55) {
+        // Bright white/silver (brilliant edge reflections)
+        hue = 208 + wave * 4;
+        sat = 15 + wave * 5;
+        lit = 94 + wave * 3 + fastWave * 2;
+        family = 'highlight';
+      } else if (r < 0.75) {
+        // Light blue tint
+        hue = 216 + wave * 4;
+        sat = 45 + wave * 8;
+        lit = 78 + wave * 6;
+        family = 'light';
+      } else {
+        // Dark facets (give edge definition)
+        hue = 218 + wave * 3;
+        sat = 20 + wave * 5;
+        lit = 35 + wave * 5 + r2 * 10;
+        family = 'dark';
+      }
     }
     
-    // Family-dependent alpha: light=glass, dark=depth, blue=internal
+    // Alpha based on family and position
     let alpha: number;
-    if (isBlue) {
-      alpha = 0.14 + (1 - distFromCenter) * 0.26; // internal blue
-    } else if (isLight) {
-      alpha = 0.05 + (1 - distFromCenter) * 0.18; // glass, low alpha
+    if (family === 'blue') {
+      alpha = 0.55 + (1 - distFromCenter) * 0.35 + wave * 0.05;
+    } else if (family === 'highlight') {
+      alpha = 0.40 + (1 - distFromCenter) * 0.25 + fastWave * 0.08;
+    } else if (family === 'light') {
+      alpha = 0.35 + (1 - distFromCenter) * 0.20;
     } else {
-      alpha = 0.10 + (1 - distFromCenter) * 0.24; // dark, stronger contrast
+      // dark
+      alpha = 0.50 + (1 - distFromCenter) * 0.30 + wave * 0.05;
     }
     
-    // Clamp (allow blue to go lower)
-    const minA = isBlue ? 0.08 : 0.05;
     return {
       fill: `hsl(${hue} ${sat}% ${lit}%)`,
-      alpha: Math.max(minA, Math.min(0.55, alpha)),
+      alpha: Math.max(0.25, Math.min(0.92, alpha)),
     };
   };
   
