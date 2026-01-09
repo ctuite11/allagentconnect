@@ -27,8 +27,8 @@ export const TechCard = ({
       className={cn(
         "relative rounded-2xl p-6 cursor-pointer group",
         "border border-zinc-200",
-        "shadow-[0_10px_30px_rgba(15,23,42,0.06)]",
-        "transition hover:shadow-[0_14px_40px_rgba(15,23,42,0.10)]",
+        "shadow-[0_8px_24px_rgba(15,23,42,0.06)]",
+        "transition hover:shadow-[0_12px_32px_rgba(15,23,42,0.10)]",
         className
       )}
       style={{ background: '#FFFFFF' }}
@@ -36,7 +36,7 @@ export const TechCard = ({
     >
       {/* Icon top-right - ALL icons blue (brand), no green */}
       <div className="absolute top-5 right-5">
-        <span className="h-7 w-7 text-blue-600">{icon}</span>
+        <span className="h-7 w-7 text-blue-500">{icon}</span>
       </div>
 
       {/* Title - uses aacStyles.cardTitle */}
