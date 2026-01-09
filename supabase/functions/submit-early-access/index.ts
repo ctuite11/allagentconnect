@@ -103,6 +103,107 @@ Deno.serve(async (req) => {
 
     console.log('Early access submission successful:', data.id);
 
+    // Send admin notification email
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const ADMIN_EMAIL = "chris@allagentconnect.com";
+    const ADMIN_PANEL_URL = "https://allagentconnect.com/admin/approvals";
+
+    const adminEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #0E56F5 0%, #1e40af 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">🚀 New Early Access Request</h1>
+        </div>
+        
+        <div style="background: #ffffff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;">
+          <h2 style="color: #0f172a; margin-top: 0;">Pre-Launch Registration</h2>
+          
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Name:</td>
+                <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${body.first_name} ${body.last_name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Email:</td>
+                <td style="padding: 8px 0; color: #0f172a;"><a href="mailto:${normalizedEmail}" style="color: #2563eb;">${normalizedEmail}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Phone:</td>
+                <td style="padding: 8px 0; color: #0f172a;">${body.phone || 'Not provided'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Brokerage:</td>
+                <td style="padding: 8px 0; color: #0f172a;">${body.brokerage}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">License #:</td>
+                <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${body.license_number}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">State:</td>
+                <td style="padding: 8px 0; color: #0f172a;">${body.state}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Submitted:</td>
+                <td style="padding: 8px 0; color: #0f172a;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' })} EST</td>
+              </tr>
+            </table>
+          </div>
+          
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${ADMIN_PANEL_URL}" target="_blank" style="display: inline-block; background: #0E56F5; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+              📋 View in Admin Panel
+            </a>
+          </div>
+          
+          <div style="background: #eff6ff; border-left: 4px solid #0E56F5; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+            <p style="margin: 0; color: #1e40af; font-size: 14px;">
+              <strong>Early Access:</strong> This agent registered for pre-launch access. They will appear as "pending" in your Admin Panel.
+            </p>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          
+          <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
+            AllAgentConnect Admin Notification
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      const emailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "AllAgentConnect <hello@mail.allagentconnect.com>",
+          reply_to: "hello@allagentconnect.com",
+          to: [ADMIN_EMAIL],
+          subject: `🚀 Early Access Request — ${body.first_name} ${body.last_name}`,
+          html: adminEmailHtml,
+        }),
+      });
+
+      if (!emailRes.ok) {
+        console.error("Failed to send admin notification:", await emailRes.json());
+      } else {
+        console.log("Admin notification sent for early access:", normalizedEmail);
+      }
+    } catch (emailErr) {
+      console.error("Email error:", emailErr);
+      // Don't fail the request if email fails - the registration was successful
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
