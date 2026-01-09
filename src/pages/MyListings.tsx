@@ -335,7 +335,7 @@ function MyListingsView({
       <div className="mb-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300">
               <Plus className="h-4 w-4" />
               New Listing
               <ChevronDown className="h-4 w-4 ml-1" />
