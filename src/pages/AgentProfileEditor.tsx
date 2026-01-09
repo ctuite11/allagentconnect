@@ -28,6 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Navigation from "@/components/Navigation";
+import PageShell from "@/components/layout/PageShell";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
@@ -546,9 +547,9 @@ setHeaderBackgroundType(profile.header_background_type || "color");
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
       <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-20 pb-32">
+      <PageShell className="pb-32">
         {/* Header with inline back button */}
         <div className="flex items-center justify-between mb-8">
           <PageHeader
@@ -1308,7 +1309,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             />
           </div>
         </div>
-      </div>
+      </PageShell>
 
       {/* Sticky Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg z-50">
@@ -1332,7 +1333,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

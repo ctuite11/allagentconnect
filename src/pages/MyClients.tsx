@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import PageShell from "@/components/layout/PageShell";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -489,12 +490,11 @@ const MyClients = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen flex flex-col">
+      <>
         <Navigation />
       
-      <main className="flex-1 bg-background pt-20">
-        <div className="container mx-auto px-4 py-8">
-          <PageHeader
+      <PageShell className="py-8">
+        <PageHeader
             title="My Contacts"
             subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
             className="mb-8"
@@ -999,8 +999,8 @@ const MyClients = () => {
               )}
             </>
           )}
-        </div>
-      </main>
+      </PageShell>
+
 
       {/* Hot Sheet Creation Dialog */}
       <CreateHotSheetDialog
@@ -1095,7 +1095,7 @@ const MyClients = () => {
         }}
         preSelectedClients={getSelectedClientsForHotSheet()}
       />
-    </div>
+    </>
     </TooltipProvider>
   );
 };
