@@ -36,9 +36,10 @@ export const TechCard = ({
     <div
       className={cn(
         "relative rounded-2xl p-6 cursor-pointer group",
-        "border border-zinc-200 hover:border-zinc-300",
-        "shadow-[0_8px_24px_rgba(15,23,42,0.06)]",
-        "transition-all hover:shadow-[0_14px_40px_rgba(15,23,42,0.10)]",
+        "border border-zinc-200/70 hover:border-zinc-300/80",
+        "shadow-[0_10px_30px_rgba(15,23,42,0.06)]",
+        "hover:shadow-[0_16px_46px_rgba(15,23,42,0.10)] hover:-translate-y-[1px]",
+        "transition-all duration-200",
         className
       )}
       style={{ background: '#FFFFFF' }}
