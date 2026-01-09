@@ -1,9 +1,11 @@
 import React from 'react';
+import { Delaunay } from 'd3-delaunay';
 
 /**
  * True 3D rotating network globe for homepage hero
  * Nodes orbit the sphere with depth-based opacity
  * Internal requestAnimationFrame rotation (no CSS spin)
+ * Diamond variant: faceted crystal disc with network overlay
  */
 
 // Neutral gray colors - warmer/darker to align with logo gray family
@@ -11,7 +13,7 @@ const LINE_COLOR = '#8A8A8F';
 const NODE_COLOR = '#A8A8AD';
 
 interface NetworkGlobeProps {
-  variant?: 'hero' | 'ambient' | 'static' | 'mark';
+  variant?: 'hero' | 'ambient' | 'static' | 'mark' | 'diamond';
   strokeColor?: string;
   fillTriangles?: boolean;
 }
@@ -19,9 +21,16 @@ interface NetworkGlobeProps {
 type Node3D = { x: number; y: number; z: number; seed: number };
 type Node2D = { x: number; y: number; z: number; seed: number };
 
+// Stable hash RNG for deterministic facet families
+const rand01 = (s: number) => {
+  const x = Math.sin(s * 999.123) * 43758.5453;
+  return x - Math.floor(x);
+};
+
 const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: NetworkGlobeProps) => {
   const isStatic = variant === 'static';
   const isMark = variant === 'mark';
+  const isDiamond = variant === 'diamond';
   
   // Check for reduced motion preference
   const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
@@ -37,15 +46,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
   
   // Rotation angle state for 3D animation
   const [rotationAngle, setRotationAngle] = React.useState(0);
+  
+  // Shimmer time state for diamond variant (separate from rotation for proper 75s cycle)
+  const [shimmerT, setShimmerT] = React.useState(0);
 
-  // Debug: confirm hero variant is running (remove after verification)
-  React.useEffect(() => {
-    if (variant === "hero") {
-      console.log("GLOBE", { variant, prefersReducedMotion });
-    }
-  }, [variant, prefersReducedMotion]);
-
-  // Animation loop - only for hero variant
+  // Animation loop - for hero and diamond variants
   React.useEffect(() => {
     if (isStatic || isMark || prefersReducedMotion) return;
     
@@ -58,12 +63,18 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
       
       // One full rotation every 75 seconds (crystal: slow but perceptible)
       setRotationAngle((prev) => (prev + (dt * Math.PI * 2) / 75) % (Math.PI * 2));
+      
+      // Shimmer time accumulator for diamond (75s cycle)
+      if (isDiamond) {
+        setShimmerT((prev) => prev + dt);
+      }
+      
       raf = requestAnimationFrame(tick);
     };
     
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [isStatic, isMark, prefersReducedMotion]);
+  }, [isStatic, isMark, isDiamond, prefersReducedMotion]);
   
   // Use provided strokeColor or default neutral colors
   const lineColor = strokeColor || LINE_COLOR;
@@ -274,8 +285,192 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
+      {/* Diamond clip mask */}
+      <clipPath id="diamondClip">
+        <circle cx="150" cy="150" r="118" />
+      </clipPath>
     </defs>
   );
+
+  // ==================== DIAMOND VARIANT ====================
+  // Diamond disc points - generate once (Poisson-like distribution)
+  const diamondPoints = React.useMemo(() => {
+    if (!isDiamond) return [];
+    
+    const points: Array<{ x: number; y: number; seed: number }> = [];
+    const cx = 150;
+    const cy = 150;
+    const radius = 118;
+    const count = 200;
+    
+    // Golden angle spiral for even distribution
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 * 8.17;
+      const r = radius * Math.sqrt(i / count) * 0.95;
+      points.push({
+        x: cx + r * Math.cos(angle),
+        y: cy + r * Math.sin(angle),
+        seed: i * 73,
+      });
+    }
+    
+    return points;
+  }, [isDiamond]);
+
+  // Diamond facets via Delaunay triangulation (computed once)
+  const diamondFacets = React.useMemo(() => {
+    if (!isDiamond || diamondPoints.length === 0) return [];
+    
+    // Correct Delaunay usage with accessor functions
+    const delaunay = Delaunay.from(diamondPoints, p => p.x, p => p.y);
+    const triangleIndices = delaunay.triangles;
+    
+    const facets: Array<{
+      indices: [number, number, number];
+      seed: number;
+      distFromCenter: number;
+    }> = [];
+    
+    const cx = 150;
+    const cy = 150;
+    const radius = 118;
+    
+    for (let i = 0; i < triangleIndices.length; i += 3) {
+      const i0 = triangleIndices[i];
+      const i1 = triangleIndices[i + 1];
+      const i2 = triangleIndices[i + 2];
+      
+      const p0 = diamondPoints[i0];
+      const p1 = diamondPoints[i1];
+      const p2 = diamondPoints[i2];
+      
+      const centroidX = (p0.x + p1.x + p2.x) / 3;
+      const centroidY = (p0.y + p1.y + p2.y) / 3;
+      const distFromCenter = Math.sqrt((centroidX - cx) ** 2 + (centroidY - cy) ** 2) / radius;
+      
+      facets.push({
+        indices: [i0, i1, i2],
+        seed: (p0.seed + p1.seed + p2.seed) * 0.01,
+        distFromCenter,
+      });
+    }
+    
+    return facets;
+  }, [isDiamond, diamondPoints]);
+
+  // Diamond facet color logic with stable hash RNG
+  const getDiamondFacetStyle = (seed: number, distFromCenter: number) => {
+    // 75s shimmer cycle using shimmerT
+    const wave = Math.sin((shimmerT * 2 * Math.PI) / 75 + seed);
+    
+    // Stable hash for deterministic family assignment
+    const r = rand01(seed);
+    const blueEligible = distFromCenter < 0.55;
+    
+    let hue: number, sat: number, lit: number;
+    
+    if (r < 0.60) {
+      // Light facets: near-white / silver (60%)
+      hue = 220 + wave * 5;
+      sat = 8 + wave * 4;
+      lit = 92 + wave * 4 - distFromCenter * 8;
+    } else if (r < 0.85 || !blueEligible) {
+      // Dark facets: charcoal / graphite (25% or non-center blues)
+      hue = 220 + wave * 3;
+      sat = 6 + wave * 3;
+      lit = 42 + wave * 6 + distFromCenter * 4;
+    } else {
+      // Blue accent facets: AAC blue (15%, center only)
+      hue = 224 + wave * 4;
+      sat = 85 + wave * 5;
+      lit = 54 + wave * 5 - distFromCenter * 12;
+    }
+    
+    // Front-facing (center) brighter, edges recede
+    const alpha = 0.35 + (1 - distFromCenter) * 0.45 + wave * 0.08;
+    
+    return {
+      fill: `hsl(${hue} ${sat}% ${lit}%)`,
+      alpha: Math.max(0.15, Math.min(0.85, alpha)),
+    };
+  };
+
+  // Diamond variant render
+  if (isDiamond) {
+    return (
+      <div 
+        className="w-full h-full pointer-events-none flex items-center justify-center"
+        aria-hidden="true"
+      >
+        <svg viewBox="0 0 300 300" className="w-full h-full">
+          {glowDefs}
+          
+          <g filter="url(#aacGlow)">
+            {/* Diamond disc facets (base layer) with clipPath */}
+            <g clipPath="url(#diamondClip)">
+              {diamondFacets.map((facet, i) => {
+                const p0 = diamondPoints[facet.indices[0]];
+                const p1 = diamondPoints[facet.indices[1]];
+                const p2 = diamondPoints[facet.indices[2]];
+                const { fill, alpha } = getDiamondFacetStyle(facet.seed, facet.distFromCenter);
+                return (
+                  <polygon
+                    key={`facet-${i}`}
+                    points={`${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`}
+                    fill={fill}
+                    fillOpacity={alpha}
+                    stroke="rgba(255,255,255,0.12)"
+                    strokeWidth={0.5}
+                  />
+                );
+              })}
+            </g>
+            
+            {/* Network layer overlay */}
+            {/* Connection lines */}
+            {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
+              <line
+                key={`line-${i}`}
+                x1={line.x1}
+                y1={line.y1}
+                x2={line.x2}
+                y2={line.y2}
+                stroke={strokeColor || lineColor}
+                strokeOpacity={getLineOpacity(line.avgZ) * 0.6}
+                strokeWidth={getLineWidth(line.avgZ) * 0.8}
+              />
+            ))}
+            
+            {/* Nodes as specular highlights */}
+            {drawNodes.map((n, i) => {
+              const t = depth01(n.z);
+              const r = getNodeRadius(n.z);
+              return (
+                <g key={`node-${i}`}>
+                  <circle
+                    cx={n.x}
+                    cy={n.y}
+                    r={r}
+                    fill={nodeColor}
+                    opacity={getNodeOpacity(n.z)}
+                  />
+                  {t > 0.55 && (
+                    <circle
+                      cx={n.x - r * 0.25}
+                      cy={n.y - r * 0.25}
+                      r={r * 0.35}
+                      fill="white"
+                      opacity={(t - 0.55) * 0.55}
+                    />
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+      </div>
+    );
+  }
 
   // Mark variant: 130x130px, blue-filled triangles, no nodes
   if (isMark) {
