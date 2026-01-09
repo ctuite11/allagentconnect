@@ -481,7 +481,6 @@ export default function AgentSuccessHub() {
               metricValue={card.metricValue}
               metricLabel={card.metricLabel}
               onClick={() => handleCardClick(card.key, card.route)}
-              iconTone={card.iconTone}
             />
           ))}
         </div>
