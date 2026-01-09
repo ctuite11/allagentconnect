@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 import { aacStyles } from "@/ui/aacStyles";
@@ -22,21 +22,31 @@ export const TechCard = ({
   onClick,
   className,
 }: TechCardProps) => {
+  // Clone icon to apply consistent blue color
+  const styledIcon = React.isValidElement(icon)
+    ? React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
+        className: cn(
+          (icon as React.ReactElement<{ className?: string }>).props?.className,
+          "h-7 w-7 text-blue-500"
+        ),
+      })
+    : icon;
+
   return (
     <div
       className={cn(
         "relative rounded-2xl p-6 cursor-pointer group",
-        "border border-zinc-200",
+        "border border-zinc-200 hover:border-zinc-300",
         "shadow-[0_8px_24px_rgba(15,23,42,0.06)]",
-        "transition hover:shadow-[0_12px_32px_rgba(15,23,42,0.10)]",
+        "transition-all hover:shadow-[0_14px_40px_rgba(15,23,42,0.10)]",
         className
       )}
       style={{ background: '#FFFFFF' }}
       onClick={onClick}
     >
-      {/* Icon top-right - ALL icons blue (brand), no green */}
+      {/* Icon top-right - ALL icons unified blue (brand) */}
       <div className="absolute top-5 right-5">
-        <span className="h-7 w-7 text-blue-500">{icon}</span>
+        {styledIcon}
       </div>
 
       {/* Title - uses aacStyles.cardTitle */}
