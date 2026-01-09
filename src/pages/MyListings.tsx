@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import Navigation from "@/components/Navigation";
+import PageShell from "@/components/layout/PageShell";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1051,9 +1052,9 @@ const MyListings = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <>
       <Navigation />
-      <main className="pt-20">
+      <PageShell className="pb-8">
       <MyListingsView
         listings={listings}
         onEdit={handleEdit}
@@ -1159,8 +1160,8 @@ const MyListings = () => {
         listingUrl={emailListing ? getListingShareUrl(emailListing.id) : ""}
         listingAddress={emailListing ? `${emailListing.address}, ${emailListing.city}` : ""}
       />
-      </main>
-    </div>
+      </PageShell>
+    </>
   );
 };
 

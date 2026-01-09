@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
+import PageShell from "@/components/layout/PageShell";
 import { 
   Search, 
   FileStack, 
@@ -171,9 +172,8 @@ const AllAgentConnectHome = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen bg-white">
-        <div className="mx-auto max-w-6xl px-6 pt-20 pb-10">
-          {/* Hero Zone - ambient network lives here only */}
+      <PageShell className="pb-10">
+        {/* Hero Zone - ambient network lives here only */}
           <div className="relative mb-8 overflow-hidden">
             {/* Ambient network field (decorative, behind content) */}
             <AmbientNetworkField className="absolute -top-8 -right-8 z-0 hidden md:block" />
@@ -347,8 +347,7 @@ const AllAgentConnectHome = () => {
               </button>
             </div>
           )}
-        </div>
-      </div>
+      </PageShell>
     </>
   );
 };

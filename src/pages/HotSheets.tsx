@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import PageShell from "@/components/layout/PageShell";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -234,12 +235,11 @@ const HotSheets = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Navigation />
       
-      <main className="flex-1 bg-background pt-20">
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-          {/* Header */}
+      <PageShell className="py-8">
+        {/* Header */}
           <PageHeader
             title="Hot Sheets"
             subtitle="Create and manage your custom listing alerts"
@@ -286,8 +286,7 @@ const HotSheets = () => {
               ))}
             </div>
           )}
-        </div>
-      </main>
+      </PageShell>
 
       {/* Share Dialog */}
       <Dialog 
@@ -386,7 +385,7 @@ const HotSheets = () => {
           hotSheetName={hotSheets.find(s => s.id === commentsDialogOpen)?.name || ""}
         />
       )}
-    </div>
+    </>
   );
 };
 
