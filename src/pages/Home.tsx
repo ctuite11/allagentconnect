@@ -453,8 +453,8 @@ function StepItem({
 }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="h-12 w-12 rounded-xl bg-emerald-600 shadow-[0_10px_30px_rgba(5,150,105,0.25)] flex items-center justify-center">
-        <span className="text-white font-semibold">{number}</span>
+      <div className="h-12 w-12 rounded-xl bg-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.12)] flex items-center justify-center">
+        <span className="text-emerald-400 font-semibold">{number}</span>
       </div>
       <span className="text-base font-medium text-slate-950">{label}</span>
     </div>
