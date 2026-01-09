@@ -38,6 +38,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
   // Rotation angle state for 3D animation
   const [rotationAngle, setRotationAngle] = React.useState(0);
 
+  // Debug: confirm hero variant is running (remove after verification)
+  React.useEffect(() => {
+    if (variant === "hero") {
+      console.log("GLOBE", { variant, prefersReducedMotion });
+    }
+  }, [variant, prefersReducedMotion]);
+
   // Animation loop - only for hero variant
   React.useEffect(() => {
     if (isStatic || isMark || prefersReducedMotion) return;
@@ -219,49 +226,45 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
 
     return {
       fill: `hsl(${hue} ${sat}% ${lit}%)`,
-      alpha: 0.14 + d * 0.26, // back 0.14, front 0.40
+      alpha: 0.16 + d * 0.30, // back ~0.16, front ~0.46
     };
   };
   
   // Hero-safe line opacity (visible on white background)
   const getLineOpacity = (z: number) => {
     const t = depth01(z);
-    return 0.12 + t * 0.34; // back 0.12, front 0.46
+    return 0.14 + t * 0.38; // back ~0.14, front ~0.52
   };
   
   // Line width varies with depth
   const getLineWidth = (z: number) => {
     const t = depth01(z);
-    return 0.8 + t * 0.8; // back 0.8, front 1.6
+    return 0.9 + t * 0.9; // back ~0.9, front ~1.8
   };
 
   // Node opacity and radius for depth effect
   const getNodeOpacity = (z: number) => {
     const t = depth01(z);
-    return 0.30 + t * 0.60; // back 0.30, front 0.90
+    return 0.35 + t * 0.60; // back ~0.35, front ~0.95
   };
 
   const getNodeRadius = (z: number) => {
     const t = depth01(z);
-    return 1.2 + t * 2.2; // back ~1.2, front ~3.4
+    return 1.4 + t * 2.4; // back ~1.4, front ~3.8
   };
 
   // Thinner stroke weights for subtlety
   const ringStrokeWidth = 0.75;
 
-  // SVG glow filter definition
-  const GlowFilter = () => (
+  // Inline glow filter defs (guaranteed to be inside SVG)
+  const glowDefs = (
     <defs>
       <filter id="aacGlow" x="-40%" y="-40%" width="180%" height="180%">
         <feGaussianBlur stdDeviation="2.2" result="blur" />
         <feColorMatrix
           in="blur"
           type="matrix"
-          values="
-            1 0 0 0 0
-            0 1 0 0 0
-            0 0 1 0 0
-            0 0 0 0.7 0"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.75 0"
           result="glow"
         />
         <feMerge>
@@ -280,7 +283,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
         aria-hidden="true"
       >
         <svg viewBox="0 0 300 300" className="w-full h-full">
-          <GlowFilter />
+          {glowDefs}
           <g filter="url(#aacGlow)">
             {/* Filled triangles */}
             {[...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => (
@@ -331,7 +334,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
         aria-hidden="true"
       >
         <svg viewBox="0 0 300 300" className="w-full h-full" style={strokeColor ? { color: strokeColor } : undefined}>
-          <GlowFilter />
+          {glowDefs}
           <g filter="url(#aacGlow)">
             {/* Filled triangles when enabled - sorted back to front */}
             {fillTriangles && [...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => {
@@ -404,7 +407,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
       aria-hidden="true"
     >
       <svg viewBox="0 0 300 300" className="w-full h-full" style={strokeColor ? { color: strokeColor } : undefined}>
-        <GlowFilter />
+        {glowDefs}
         <g filter="url(#aacGlow)">
           {/* Filled triangles - sorted back to front, with shimmer */}
           {fillTriangles && [...triangles].sort((a, b) => a.avgZ - b.avgZ).map((tri, i) => {
