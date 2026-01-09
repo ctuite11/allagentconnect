@@ -360,7 +360,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
 
   // Diamond facet color logic with stable hash RNG
   const getDiamondFacetStyle = (seed: number, distFromCenter: number) => {
-    // 75s shimmer cycle using shimmerT
+    // 75s shimmer cycle using shimmerT (decoupled from rotation)
     const wave = Math.sin((shimmerT * 2 * Math.PI) / 75 + seed);
     
     // Stable hash for deterministic family assignment
@@ -368,30 +368,39 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     const blueEligible = distFromCenter < 0.55;
     
     let hue: number, sat: number, lit: number;
+    let isBlue = false;
     
     if (r < 0.60) {
-      // Light facets: near-white / silver (60%)
+      // Light facets: sharper whites (60%)
       hue = 220 + wave * 5;
       sat = 8 + wave * 4;
-      lit = 92 + wave * 4 - distFromCenter * 8;
+      lit = 94 + wave * 3 - distFromCenter * 6;
     } else if (r < 0.85 || !blueEligible) {
-      // Dark facets: charcoal / graphite (25% or non-center blues)
+      // Dark facets: deeper charcoal (25% or non-center)
       hue = 220 + wave * 3;
       sat = 6 + wave * 3;
-      lit = 42 + wave * 6 + distFromCenter * 4;
+      lit = 36 + wave * 5 + distFromCenter * 6;
     } else {
       // Blue accent facets: AAC blue (15%, center only)
       hue = 224 + wave * 4;
       sat = 85 + wave * 5;
       lit = 54 + wave * 5 - distFromCenter * 12;
+      isBlue = true;
     }
     
-    // Front-facing (center) brighter, edges recede
-    const alpha = 0.35 + (1 - distFromCenter) * 0.45 + wave * 0.08;
+    // Blue facets get softer alpha to feel "internal"
+    let alpha: number;
+    if (isBlue) {
+      alpha = 0.18 + (1 - distFromCenter) * 0.28; // softer, internal glow
+    } else {
+      alpha = 0.35 + (1 - distFromCenter) * 0.45 + wave * 0.08;
+    }
     
+    // Allow lower alpha for blue (0.10) vs others (0.15)
+    const minA = isBlue ? 0.10 : 0.15;
     return {
       fill: `hsl(${hue} ${sat}% ${lit}%)`,
-      alpha: Math.max(0.15, Math.min(0.85, alpha)),
+      alpha: Math.max(minA, Math.min(0.85, alpha)),
     };
   };
 
@@ -419,12 +428,29 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
                     points={`${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`}
                     fill={fill}
                     fillOpacity={alpha}
-                    stroke="rgba(255,255,255,0.12)"
-                    strokeWidth={0.5}
+                    stroke="rgba(180,185,195,0.25)"
+                    strokeWidth={0.6}
                   />
                 );
               })}
             </g>
+            
+            {/* Rim lighting (subtle diamond cut edge) */}
+            <defs>
+              <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
+                <stop offset="40%" stopColor="rgba(255,255,255,0.18)" />
+                <stop offset="100%" stopColor="rgba(15,23,42,0.10)" />
+              </linearGradient>
+            </defs>
+            <circle
+              cx="150"
+              cy="150"
+              r="118"
+              fill="none"
+              stroke="url(#rimGrad)"
+              strokeWidth="1.4"
+            />
             
             {/* Network layer overlay */}
             {/* Connection lines */}
@@ -454,13 +480,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
                     fill={nodeColor}
                     opacity={getNodeOpacity(n.z)}
                   />
-                  {t > 0.55 && (
+                  {t > 0.6 && (
                     <circle
-                      cx={n.x - r * 0.25}
-                      cy={n.y - r * 0.25}
-                      r={r * 0.35}
+                      cx={n.x - r * 0.3}
+                      cy={n.y - r * 0.3}
+                      r={r * 0.28}
                       fill="white"
-                      opacity={(t - 0.55) * 0.55}
+                      opacity={(t - 0.6) * 0.5}
                     />
                   )}
                 </g>
