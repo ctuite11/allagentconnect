@@ -12,8 +12,11 @@ import {
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 
+import React from "react";
+
 export default function Home() {
   const navigate = useNavigate();
+  const [globeVariant, setGlobeVariant] = React.useState<'crystal' | 'diamond'>('crystal');
 
   return (
     <div className="relative min-h-screen bg-white text-neutral-900">
@@ -53,10 +56,38 @@ export default function Home() {
               <span className="text-zinc-400"> Connect</span>
             </h1>
 
+            {/* Globe variant toggle - for comparison */}
+            <div className="flex justify-center gap-2 mb-4">
+              <button
+                onClick={() => setGlobeVariant('crystal')}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+                  globeVariant === 'crystal'
+                    ? 'bg-zinc-900 text-white'
+                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                }`}
+              >
+                Crystal
+              </button>
+              <button
+                onClick={() => setGlobeVariant('diamond')}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+                  globeVariant === 'diamond'
+                    ? 'bg-zinc-900 text-white'
+                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                }`}
+              >
+                Diamond
+              </button>
+            </div>
+
             {/* Globe - true 3D rotation with breathing + soft glow */}
             <div className="mx-auto mb-8 w-[160px] h-[160px] animate-aac-glow">
               <div className="animate-aac-breathe">
-                <NetworkGlobe variant="hero" strokeColor="#0E56F5" fillTriangles />
+                <NetworkGlobe 
+                  variant={globeVariant === 'diamond' ? 'diamond' : 'hero'} 
+                  strokeColor="#0E56F5" 
+                  fillTriangles 
+                />
               </div>
             </div>
 
