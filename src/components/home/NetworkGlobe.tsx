@@ -56,8 +56,8 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
       const dt = (now - last) / 1000;
       last = now;
       
-      // One full rotation every 120 seconds (slow/classy)
-      setRotationAngle((prev) => (prev + (dt * Math.PI * 2) / 120) % (Math.PI * 2));
+      // One full rotation every 75 seconds (crystal: slow but perceptible)
+      setRotationAngle((prev) => (prev + (dt * Math.PI * 2) / 75) % (Math.PI * 2));
       raf = requestAnimationFrame(tick);
     };
     
@@ -215,56 +215,58 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
   // Depth helpers
   const depth01 = (z: number) => (z + 1) / 2;
 
-  // Hero-safe triangle fill (visible on white background)
+  // Crystal refraction triangle fill (glass planes)
   const triFill = (seed: number, avgZ: number) => {
     const d = depth01(avgZ);
-    const wave = Math.sin(rotationAngle * 0.9 + seed);
+    const wave = Math.sin(rotationAngle * 0.65 + seed); // slower wave
 
-    const hue = 224 + wave * 3;
-    const sat = 90 + wave * 4;
-    const lit = 52 + wave * 6 + d * 8;
+    // Crystal HSL variation for refraction shimmer
+    const hue = 224 + wave * 2.2;
+    const sat = 86 + wave * 3.5;
+    const lit = 54 + wave * 4.0 + d * 6.0;
 
     return {
       fill: `hsl(${hue} ${sat}% ${lit}%)`,
-      alpha: 0.16 + d * 0.30, // back ~0.16, front ~0.46
+      alpha: 0.06 + d * 0.16, // back ~0.06, front ~0.22 (glass planes)
     };
   };
   
-  // Hero-safe line opacity (visible on white background)
+  // Crystal line opacity (structure, not the star)
   const getLineOpacity = (z: number) => {
     const t = depth01(z);
-    return 0.14 + t * 0.38; // back ~0.14, front ~0.52
+    return 0.08 + t * 0.18; // back ~0.08, front ~0.26
   };
   
-  // Line width varies with depth
+  // Line width varies with depth (subtle)
   const getLineWidth = (z: number) => {
     const t = depth01(z);
-    return 0.9 + t * 0.9; // back ~0.9, front ~1.8
+    return 0.7 + t * 0.5; // back ~0.7, front ~1.2
   };
 
-  // Node opacity and radius for depth effect
+  // Node opacity (specular highlights = "alive" cue)
   const getNodeOpacity = (z: number) => {
     const t = depth01(z);
-    return 0.35 + t * 0.60; // back ~0.35, front ~0.95
+    return 0.18 + t * 0.82; // back ~0.18, front ~1.0
   };
 
+  // Node radius for depth effect
   const getNodeRadius = (z: number) => {
     const t = depth01(z);
-    return 1.4 + t * 2.4; // back ~1.4, front ~3.8
+    return 0.9 + t * 2.6; // back ~0.9, front ~3.5
   };
 
   // Thinner stroke weights for subtlety
   const ringStrokeWidth = 0.75;
 
-  // Inline glow filter defs (guaranteed to be inside SVG)
+  // Crystal glow filter (soft, slightly blue, not uniform)
   const glowDefs = (
     <defs>
       <filter id="aacGlow" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="2.2" result="blur" />
+        <feGaussianBlur stdDeviation="1.8" result="blur" />
         <feColorMatrix
           in="blur"
           type="matrix"
-          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.75 0"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.55 0"
           result="glow"
         />
         <feMerge>
@@ -363,17 +365,33 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
               />
             ))}
 
-            {/* Nodes - sorted back to front */}
-            {drawNodes.map((n, i) => (
-              <circle
-                key={`node-${i}`}
-                cx={n.x}
-                cy={n.y}
-                r={getNodeRadius(n.z)}
-                fill={nodeColor}
-                opacity={getNodeOpacity(n.z)}
-              />
-            ))}
+            {/* Nodes with specular glints - sorted back to front */}
+            {drawNodes.map((n, i) => {
+              const t = depth01(n.z);
+              const r = getNodeRadius(n.z);
+              return (
+                <g key={`node-${i}`}>
+                  {/* Base node */}
+                  <circle
+                    cx={n.x}
+                    cy={n.y}
+                    r={r}
+                    fill={nodeColor}
+                    opacity={getNodeOpacity(n.z)}
+                  />
+                  {/* Specular glint (front-biased) */}
+                  {t > 0.55 && (
+                    <circle
+                      cx={n.x - r * 0.25}
+                      cy={n.y - r * 0.25}
+                      r={r * 0.35}
+                      fill="white"
+                      opacity={(t - 0.55) * 0.55}
+                    />
+                  )}
+                </g>
+              );
+            })}
             
             {/* Subtle orbital rings - hide when filling triangles */}
             {!fillTriangles && (
@@ -436,17 +454,33 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
             />
           ))}
 
-          {/* Nodes - back to front for depth */}
-          {drawNodes.map((n, i) => (
-            <circle
-              key={`node-${i}`}
-              cx={n.x}
-              cy={n.y}
-              r={getNodeRadius(n.z)}
-              fill={nodeColor}
-              opacity={getNodeOpacity(n.z)}
-            />
-          ))}
+          {/* Nodes with specular glints - back to front for depth */}
+          {drawNodes.map((n, i) => {
+            const t = depth01(n.z);
+            const r = getNodeRadius(n.z);
+            return (
+              <g key={`node-${i}`}>
+                {/* Base node */}
+                <circle
+                  cx={n.x}
+                  cy={n.y}
+                  r={r}
+                  fill={nodeColor}
+                  opacity={getNodeOpacity(n.z)}
+                />
+                {/* Specular glint (front-biased, glass refraction effect) */}
+                {t > 0.55 && (
+                  <circle
+                    cx={n.x - r * 0.25}
+                    cy={n.y - r * 0.25}
+                    r={r * 0.35}
+                    fill="white"
+                    opacity={(t - 0.55) * 0.55}
+                  />
+                )}
+              </g>
+            );
+          })}
           
           {/* Subtle orbital rings - hide when filling triangles */}
           {!fillTriangles && (
