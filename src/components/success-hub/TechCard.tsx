@@ -11,6 +11,7 @@ interface TechCardProps {
   metricLabel?: string;
   onClick: () => void;
   className?: string;
+  iconTone?: "green" | "blue";
 }
 
 export const TechCard = ({
@@ -21,13 +22,15 @@ export const TechCard = ({
   metricLabel,
   onClick,
   className,
+  iconTone = "green",
 }: TechCardProps) => {
-  // TODO: Migrate to shared hubCard token in aacStyles for single source of truth
+  const toneClass = iconTone === "blue" ? "text-blue-600" : "text-emerald-600";
+  
   return (
     <div
       className={cn(
         "relative rounded-2xl p-6 cursor-pointer group",
-        "border border-zinc-200",
+        "border border-zinc-200 hover:border-zinc-300",
         "shadow-[0_8px_24px_rgba(15,23,42,0.06)]",
         "hover:shadow-[0_12px_32px_rgba(15,23,42,0.10)]",
         "transition-shadow transition-colors duration-200 ease-out",
@@ -38,7 +41,7 @@ export const TechCard = ({
     >
       {/* Icon top-right - section anchor, not utility glyph */}
       <div className="absolute top-5 right-5">
-        <div className="h-7 w-7 text-emerald-600">{icon}</div>
+        <span className={cn("h-7 w-7", toneClass)}>{icon}</span>
       </div>
 
       {/* Title - uses aacStyles.cardTitle */}
