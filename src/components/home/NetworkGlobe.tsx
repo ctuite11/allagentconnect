@@ -360,6 +360,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
 
   // Diamond facet color logic with stable hash RNG
   const getDiamondFacetStyle = (seed: number, distFromCenter: number) => {
+    // TEMP: fingerprint to verify this code is running
+    if (seed === 0) {
+      console.log("DIAMOND STYLE LIVE", { distFromCenter });
+    }
+    
     // 75s shimmer cycle using shimmerT (decoupled from rotation)
     const wave = Math.sin((shimmerT * 2 * Math.PI) / 75 + seed);
     
@@ -369,17 +374,19 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     
     let hue: number, sat: number, lit: number;
     let isBlue = false;
+    let isLight = false;
     
     if (r < 0.60) {
-      // Light facets: sharper whites (60%)
+      // Light facets: glass-like crisp whites (60%)
       hue = 220 + wave * 5;
       sat = 8 + wave * 4;
-      lit = 94 + wave * 3 - distFromCenter * 6;
+      lit = 96 + wave * 2.5 - distFromCenter * 5;
+      isLight = true;
     } else if (r < 0.85 || !blueEligible) {
-      // Dark facets: deeper charcoal (25% or non-center)
+      // Dark facets: deep charcoal for contrast (25% or non-center)
       hue = 220 + wave * 3;
       sat = 6 + wave * 3;
-      lit = 36 + wave * 5 + distFromCenter * 6;
+      lit = 30 + wave * 4.5 + distFromCenter * 10;
     } else {
       // Blue accent facets: AAC blue (15%, center only)
       hue = 224 + wave * 4;
@@ -388,21 +395,29 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
       isBlue = true;
     }
     
-    // Blue facets get softer alpha to feel "internal"
+    // Family-dependent alpha: light=glass, dark=depth, blue=internal
     let alpha: number;
     if (isBlue) {
-      alpha = 0.18 + (1 - distFromCenter) * 0.28; // softer, internal glow
+      alpha = 0.14 + (1 - distFromCenter) * 0.26; // internal blue
+    } else if (isLight) {
+      alpha = 0.05 + (1 - distFromCenter) * 0.18; // glass, low alpha
     } else {
-      alpha = 0.35 + (1 - distFromCenter) * 0.45 + wave * 0.08;
+      alpha = 0.10 + (1 - distFromCenter) * 0.24; // dark, stronger contrast
     }
     
-    // Allow lower alpha for blue (0.10) vs others (0.15)
-    const minA = isBlue ? 0.10 : 0.15;
+    // Clamp (allow blue to go lower)
+    const minA = isBlue ? 0.08 : 0.05;
     return {
       fill: `hsl(${hue} ${sat}% ${lit}%)`,
-      alpha: Math.max(minA, Math.min(0.85, alpha)),
+      alpha: Math.max(minA, Math.min(0.55, alpha)),
     };
   };
+  
+  // Diamond-specific opacity helpers (reduced to let diamond be the star)
+  const getLineOpacityDiamond = (z: number) => 0.05 + depth01(z) * 0.10; // max 0.15
+  const getLineWidthDiamond = (z: number) => 0.6 + depth01(z) * 0.4; // max 1.0
+  const getNodeOpacityDiamond = (z: number) => 0.12 + depth01(z) * 0.35; // max 0.47
+  const getNodeRadiusDiamond = (z: number) => 0.8 + depth01(z) * 1.6; // max 2.4
 
   // Diamond variant render
   if (isDiamond) {
@@ -414,8 +429,17 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
         <svg viewBox="0 0 300 300" className="w-full h-full">
           {glowDefs}
           
+          {/* Rim gradient definition */}
+          <defs>
+            <radialGradient id="rimRad" cx="50%" cy="45%" r="60%">
+              <stop offset="60%" stopColor="rgba(255,255,255,0)" />
+              <stop offset="78%" stopColor="rgba(255,255,255,0.25)" />
+              <stop offset="92%" stopColor="rgba(255,255,255,0)" />
+            </radialGradient>
+          </defs>
+          
           <g filter="url(#aacGlow)">
-            {/* Diamond disc facets (base layer) with clipPath */}
+            {/* Diamond disc facets + rim inside clipPath */}
             <g clipPath="url(#diamondClip)">
               {diamondFacets.map((facet, i) => {
                 const p0 = diamondPoints[facet.indices[0]];
@@ -428,31 +452,27 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
                     points={`${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`}
                     fill={fill}
                     fillOpacity={alpha}
-                    stroke="rgba(180,185,195,0.25)"
-                    strokeWidth={0.6}
+                    stroke="rgba(180,185,195,0.18)"
+                    strokeWidth={0.5}
                   />
                 );
               })}
+              
+              {/* Rim lighting inside clip (radial glow + edge stroke) */}
+              <circle cx="150" cy="150" r="118" fill="url(#rimRad)" opacity="0.9" />
             </g>
             
-            {/* Rim lighting (subtle diamond cut edge) */}
-            <defs>
-              <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
-                <stop offset="40%" stopColor="rgba(255,255,255,0.18)" />
-                <stop offset="100%" stopColor="rgba(15,23,42,0.10)" />
-              </linearGradient>
-            </defs>
+            {/* Rim edge stroke (outside clip for crisp edge) */}
             <circle
               cx="150"
               cy="150"
               r="118"
               fill="none"
-              stroke="url(#rimGrad)"
+              stroke="rgba(255,255,255,0.35)"
               strokeWidth="1.4"
             />
             
-            {/* Network layer overlay */}
+            {/* Network layer overlay (reduced opacity for diamond) */}
             {/* Connection lines */}
             {[...connections].sort((a, b) => a.avgZ - b.avgZ).map((line, i) => (
               <line
@@ -462,15 +482,15 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
                 x2={line.x2}
                 y2={line.y2}
                 stroke={strokeColor || lineColor}
-                strokeOpacity={getLineOpacity(line.avgZ) * 0.6}
-                strokeWidth={getLineWidth(line.avgZ) * 0.8}
+                strokeOpacity={getLineOpacityDiamond(line.avgZ)}
+                strokeWidth={getLineWidthDiamond(line.avgZ)}
               />
             ))}
             
-            {/* Nodes as specular highlights */}
+            {/* Nodes as specular highlights (reduced for diamond) */}
             {drawNodes.map((n, i) => {
               const t = depth01(n.z);
-              const r = getNodeRadius(n.z);
+              const r = getNodeRadiusDiamond(n.z);
               return (
                 <g key={`node-${i}`}>
                   <circle
@@ -478,7 +498,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
                     cy={n.y}
                     r={r}
                     fill={nodeColor}
-                    opacity={getNodeOpacity(n.z)}
+                    opacity={getNodeOpacityDiamond(n.z)}
                   />
                   {t > 0.6 && (
                     <circle
