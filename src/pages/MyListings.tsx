@@ -335,7 +335,7 @@ function MyListingsView({
       <div className="mb-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300">
+            <Button className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide">
               <Plus className="h-4 w-4" />
               New Listing
               <ChevronDown className="h-4 w-4 ml-1" />
@@ -1036,7 +1036,7 @@ const MyListings = () => {
               </p>
               <Button 
                 onClick={() => handleNewListing("new")} 
-                className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
+                className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Listing
