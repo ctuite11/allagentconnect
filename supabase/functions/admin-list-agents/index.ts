@@ -39,6 +39,7 @@ interface MergedAgent {
   agent_status: string
   verified_at: string | null
   created_at: string
+  is_early_access?: boolean
 }
 
 Deno.serve(async (req) => {
@@ -174,12 +175,58 @@ Deno.serve(async (req) => {
 
     console.log('[admin-list-agents] Status distribution:', statusCounts)
 
+    // Fetch early access registrations
+    const { data: earlyAccess, error: earlyAccessError } = await adminClient
+      .from('agent_early_access')
+      .select('id, first_name, last_name, email, phone, brokerage, state, license_number, status, created_at')
+      .order('created_at', { ascending: false })
+
+    if (earlyAccessError) {
+      console.error('[admin-list-agents] Early access error:', earlyAccessError.message)
+    }
+
+    console.log('[admin-list-agents] Early access fetched:', earlyAccess?.length ?? 0)
+
+    // Filter out early access entries that already have an agent profile (by email)
+    const existingEmails = new Set(agents.map(a => a.email.toLowerCase()))
+    const newEarlyAccess = (earlyAccess || []).filter(ea => !existingEmails.has(ea.email.toLowerCase()))
+
+    // Map early access records to MergedAgent format
+    const earlyAccessAgents: MergedAgent[] = newEarlyAccess.map(ea => ({
+      id: ea.id,
+      aac_id: `EA-${ea.id.slice(0, 6).toUpperCase()}`,
+      first_name: ea.first_name,
+      last_name: ea.last_name,
+      email: ea.email,
+      phone: ea.phone,
+      company: ea.brokerage,
+      bio: null,
+      license_number: ea.license_number,
+      license_state: ea.state,
+      agent_status: 'pending',
+      verified_at: null,
+      created_at: ea.created_at,
+      is_early_access: true,
+    }))
+
+    // Combine both lists
+    const allAgents = [...agents, ...earlyAccessAgents]
+
+    // Recalculate status distribution with early access included
+    const allStatusCounts = allAgents.reduce((acc, a) => {
+      acc[a.agent_status] = (acc[a.agent_status] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    console.log('[admin-list-agents] Combined status distribution:', allStatusCounts)
+
     return new Response(
       JSON.stringify({
-        agents,
+        agents: allAgents,
         profilesCount: profiles.length,
         settingsCount: settings?.length ?? 0,
-        statusDistribution: statusCounts,
+        earlyAccessCount: earlyAccessAgents.length,
+        statusDistribution: allStatusCounts,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
