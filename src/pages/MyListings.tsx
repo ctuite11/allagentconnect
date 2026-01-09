@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
-import Navigation from "@/components/Navigation";
+
 import PageShell from "@/components/layout/PageShell";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2 } from "lucide-react";
@@ -1003,9 +1003,8 @@ const MyListings = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navigation />
-        <div className="flex-1 flex items-center justify-center p-6 pt-20">
+      <div className="min-h-screen flex flex-col bg-background pt-20">
+        <div className="flex-1 flex items-center justify-center p-6">
           <p className="text-muted-foreground">You must be signed in as an agent to view your listings.</p>
         </div>
       </div>
@@ -1018,10 +1017,8 @@ const MyListings = () => {
 
   if (listings.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        
-        <main className="flex-1 bg-background pt-20">
+      <div className="min-h-screen flex flex-col pt-20">
+        <main className="flex-1 bg-background">
           <div className="container mx-auto px-4 py-8 max-w-5xl">
             <PageHeader
               title="My Listings"
@@ -1052,9 +1049,7 @@ const MyListings = () => {
   }
 
   return (
-    <>
-      <Navigation />
-      <PageShell className="pb-8">
+    <PageShell className="pb-8 pt-20">
       <MyListingsView
         listings={listings}
         onEdit={handleEdit}
@@ -1161,7 +1156,6 @@ const MyListings = () => {
         listingAddress={emailListing ? `${emailListing.address}, ${emailListing.city}` : ""}
       />
       </PageShell>
-    </>
   );
 };
 
