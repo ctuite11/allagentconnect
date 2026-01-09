@@ -11,7 +11,6 @@ interface TechCardProps {
   metricLabel?: string;
   onClick: () => void;
   className?: string;
-  iconTone?: "green" | "blue";
 }
 
 export const TechCard = ({
@@ -22,26 +21,22 @@ export const TechCard = ({
   metricLabel,
   onClick,
   className,
-  iconTone = "green",
 }: TechCardProps) => {
-  const toneClass = iconTone === "blue" ? "text-blue-600" : "text-emerald-600";
-  
   return (
     <div
       className={cn(
         "relative rounded-2xl p-6 cursor-pointer group",
-        "border border-zinc-200 hover:border-zinc-300",
-        "shadow-[0_8px_24px_rgba(15,23,42,0.06)]",
-        "hover:shadow-[0_12px_32px_rgba(15,23,42,0.10)]",
-        "transition-shadow transition-colors duration-200 ease-out",
+        "border border-zinc-200",
+        "shadow-[0_10px_30px_rgba(15,23,42,0.06)]",
+        "transition hover:shadow-[0_14px_40px_rgba(15,23,42,0.10)]",
         className
       )}
       style={{ background: '#FFFFFF' }}
       onClick={onClick}
     >
-      {/* Icon top-right - section anchor, not utility glyph */}
+      {/* Icon top-right - ALL icons blue (brand), no green */}
       <div className="absolute top-5 right-5">
-        <span className={cn("h-7 w-7", toneClass)}>{icon}</span>
+        <span className="h-7 w-7 text-blue-600">{icon}</span>
       </div>
 
       {/* Title - uses aacStyles.cardTitle */}
@@ -59,10 +54,10 @@ export const TechCard = ({
         </div>
       )}
 
-      {/* CTA link - black authority + green arrow */}
-      <span className="group/cta inline-flex items-center gap-1.5 text-sm font-semibold text-black transition-colors hover:text-emerald-600">
+      {/* CTA pill button - black + green */}
+      <span className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-emerald-300 shadow-sm transition hover:bg-zinc-800">
         Open
-        <ArrowRight className="w-4 h-4 text-emerald-500 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
+        <ArrowRight className="h-4 w-4 text-emerald-300" />
       </span>
     </div>
   );
