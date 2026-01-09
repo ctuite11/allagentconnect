@@ -109,26 +109,20 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Proof Strip - icons in soft blue badges */}
+        {/* Proof Strip - naked icons */}
         <section className="py-8 md:py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 text-sm text-slate-950">
               <span className="inline-flex items-center gap-3 font-medium">
-                <div className="h-10 w-10 rounded-xl bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center">
-                  <ShieldCheck className="h-5 w-5 text-blue-600" />
-                </div>
+                <ShieldCheck className="h-6 w-6 text-blue-600" />
                 Operating since 2016
               </span>
               <span className="inline-flex items-center gap-3 font-medium">
-                <div className="h-10 w-10 rounded-xl bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-blue-600" />
-                </div>
+                <Users className="h-6 w-6 text-blue-600" />
                 Thousands of agents nationwide
               </span>
               <span className="inline-flex items-center gap-3 font-medium">
-                <div className="h-10 w-10 rounded-xl bg-emerald-50 ring-1 ring-emerald-200/60 flex items-center justify-center">
-                  <Handshake className="h-5 w-5 text-emerald-600" />
-                </div>
+                <Handshake className="h-6 w-6 text-emerald-600" />
                 Off-market deals closed
               </span>
             </div>
@@ -141,7 +135,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Built to Increase Production
             </h2>
-            <div className="mx-auto mt-4 mb-8 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
+            <div className="mx-auto mt-4 mb-8 h-[2px] w-16 bg-blue-600" />
             
             <p className="text-center text-lg leading-relaxed text-zinc-600 max-w-2xl mx-auto">
               A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
@@ -161,12 +155,12 @@ export default function Home() {
         </section>
 
         {/* Success Hub — How AAC Gets Used */}
-        <section className="py-12 md:py-16 bg-slate-50/60">
+        <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Success Hub — How AAC Gets Used
             </h2>
-            <div className="mx-auto mt-4 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
+            <div className="mx-auto mt-4 h-[2px] w-16 bg-blue-600" />
             <p className="mt-4 text-center text-lg text-slate-600 max-w-2xl mx-auto">
               Core workflows inside AAC, used daily by working agents across sales and rentals.
             </p>
@@ -228,7 +222,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               How It Works
             </h2>
-            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
             
             <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
               <StepItem number={1} label="Verify" />
@@ -244,7 +238,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Why Clients Love When Their Agent Is in AAC
             </h2>
-            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               <ClientBenefitCard
@@ -273,7 +267,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               The AAC Advantage
             </h2>
-            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
             
             <div className="max-w-2xl mx-auto space-y-4">
               <BulletItem>AAC members collaborate privately instead of competing publicly</BulletItem>
@@ -289,12 +283,12 @@ export default function Home() {
         </section>
 
         {/* Coming Soon */}
-        <section className="py-12 md:py-16 bg-slate-50/60">
+        <section className="py-12 md:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
               Coming Soon
             </h2>
-            <div className="mx-auto mt-4 mb-10 h-[3px] w-16 rounded-full bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 opacity-80" />
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
             
             <div className="max-w-2xl mx-auto space-y-4">
               <BulletItem>Expanded markets and regional growth</BulletItem>
@@ -370,9 +364,7 @@ export default function Home() {
 function BulletItem({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-5 w-5 rounded-md bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <Check className="h-3 w-3 text-blue-600" />
-      </div>
+      <Check className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
       <span className="text-base text-slate-600 leading-relaxed">{children}</span>
     </div>
   );
@@ -386,14 +378,12 @@ function ClientBenefitCard({
   benefits: string[];
 }) {
   return (
-    <div className="rounded-2xl bg-white border border-slate-200/70 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[2px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
+    <div className="rounded-2xl bg-white border border-slate-200 p-7 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[1px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
       <h3 className="text-lg font-semibold mb-4 text-slate-950">{title}</h3>
       <div className="space-y-3">
         {benefits.map((benefit, index) => (
           <div key={index} className="flex items-start gap-3">
-            <div className="h-5 w-5 rounded-md bg-emerald-50 ring-1 ring-emerald-200/60 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Check className="h-3 w-3 text-emerald-600" />
-            </div>
+            <Check className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
             <span className="text-sm text-slate-600 leading-relaxed">{benefit}</span>
           </div>
         ))}
@@ -434,22 +424,20 @@ function ModuleCard({
   tier: "hub" | "premium";
 }) {
   return (
-    <div className="relative h-full rounded-2xl bg-white border border-slate-200/70 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[2px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
+    <div className="relative h-full rounded-2xl bg-white border border-slate-200 p-7 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[1px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
       {/* Tier pill - top right */}
       <span
         className={`absolute top-4 right-4 text-xs font-medium tracking-wide px-2.5 py-1 rounded-full border ${
           tier === "hub"
-            ? "bg-slate-100 text-slate-700 border-slate-200"
-            : "bg-blue-50 text-blue-700 border-blue-200"
+            ? "bg-white text-slate-600 border-slate-200"
+            : "bg-white text-blue-600 border-slate-200"
         }`}
       >
         {tier === "hub" ? "Success Hub" : "AAC Premium"}
       </span>
 
-      {/* Icon in soft badge */}
-      <div className="h-10 w-10 rounded-xl bg-blue-50 ring-1 ring-blue-200/60 flex items-center justify-center mb-4">
-        <Icon className="h-5 w-5 text-blue-600" />
-      </div>
+      {/* Naked icon */}
+      <Icon className="h-6 w-6 text-blue-600 mb-4" />
       <div className="text-base font-semibold tracking-tight text-slate-950">{title}</div>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">{body}</p>
     </div>
