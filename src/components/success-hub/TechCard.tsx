@@ -59,10 +59,10 @@ export const TechCard = ({
         </div>
       )}
 
-      {/* CTA link - AAC green, motion only on hover */}
-      <span className="text-sm font-medium text-emerald-600 inline-flex items-center">
+      {/* CTA link - black authority + green arrow */}
+      <span className="group/cta inline-flex items-center gap-1.5 text-sm font-semibold text-black transition-colors hover:text-emerald-600">
         Open
-        <ArrowRight className="w-4 h-4 ml-1 transition-transform duration-200 group-hover:translate-x-1" />
+        <ArrowRight className="w-4 h-4 text-emerald-500 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
       </span>
     </div>
   );
