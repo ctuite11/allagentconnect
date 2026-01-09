@@ -387,7 +387,6 @@ export default function AgentSuccessHub() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white" style={{ backgroundColor: '#FFFFFF' }}>
-        <Navigation />
         <div className="flex-1 flex items-center justify-center pt-20 min-h-[80vh]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900"></div>
         </div>
@@ -430,6 +429,7 @@ export default function AgentSuccessHub() {
       title: "Communications Center",
       description: "Agent-to-agent collaboration and deal flow",
       route: "/client-needs",
+      iconTone: "blue" as const,
     },
     {
       key: "profile_branding",
@@ -448,6 +448,7 @@ export default function AgentSuccessHub() {
       title: "Admin Tools",
       description: "Manage agent approvals and system settings",
       route: "/admin/approvals",
+      iconTone: "blue" as const,
     });
   }
 
@@ -461,9 +462,10 @@ export default function AgentSuccessHub() {
             subtitle="Your command center for client success"
           />
           <span 
-            className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800"
+            className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700"
             title={`Build: ${BUILD_ID}`}
           >
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             HUB v2
           </span>
         </div>
@@ -479,6 +481,7 @@ export default function AgentSuccessHub() {
               metricValue={card.metricValue}
               metricLabel={card.metricLabel}
               onClick={() => handleCardClick(card.key, card.route)}
+              iconTone={card.iconTone}
             />
           ))}
         </div>
@@ -575,9 +578,7 @@ export default function AgentSuccessHub() {
                 const Icon = activity.icon;
                 return (
                   <div key={index} className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-2xl border border-zinc-200 bg-[#F7F6F3] flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-emerald-600" />
-                    </div>
+                    <Icon className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm text-zinc-900">{activity.description}</p>
                       <p className="text-xs text-zinc-500 mt-1">
