@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
-
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { RotateCcw, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -178,9 +176,7 @@ const ListingSearch = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50 text-neutral-900">
-      <Navigation />
-
-      <main className="flex-1 pt-20">
+      <main className="flex-1">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           {/* Page Header */}
           <PageHeader
