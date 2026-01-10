@@ -697,50 +697,49 @@ export default function AdminApprovals() {
                     selectedIds.has(agent.id) ? 'border-emerald-300 bg-emerald-50/30' : 'border-zinc-100 hover:border-zinc-200'
                   }`}
                 >
-                  {/* Row 1: Checkbox + Actions (left) + Status/Date (right) */}
-                  <div className="flex items-center justify-between mb-2">
+                  {/* Row 1: Checkbox + Agent Info + Status/Date (right) */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Checkbox
                         checked={selectedIds.has(agent.id)}
                         onCheckedChange={() => toggleSelect(agent.id)}
                         aria-label={`Select ${agent.first_name}`}
                       />
-                      <div className="flex items-center gap-2 text-sm text-zinc-600">
-                        <button 
-                          onClick={() => setEditAgent(agent)} 
-                          className="hover:text-emerald-700"
-                        >
-                          Edit
-                        </button>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+                        <span className="font-mono text-xs text-zinc-400">{agent.aac_id}</span>
                         <span className="text-zinc-300">•</span>
-                        <button 
-                          onClick={() => handleEmailAgent(agent)} 
-                          className="hover:text-emerald-700"
-                        >
-                          Email
-                        </button>
-                        {!agent.is_early_access && (
+                        <span className="font-semibold text-zinc-900">{agent.first_name} {agent.last_name}</span>
+                        <span className="text-zinc-300">•</span>
+                        <span className="text-zinc-600">{agent.email}</span>
+                        {agent.company && (
                           <>
                             <span className="text-zinc-300">•</span>
-                            <button 
-                              onClick={() => handleSendPasswordReset(agent)} 
-                              className="hover:text-emerald-700"
-                            >
-                              Reset Password
-                            </button>
+                            <span className="text-zinc-500">{agent.company}</span>
                           </>
                         )}
-                        <span className="text-zinc-300">•</span>
-                        <button 
-                          onClick={() => setDeleteAgent(agent)} 
-                          className="text-rose-500 hover:text-rose-700"
-                        >
-                          Delete
-                        </button>
+                        {agent.phone && (
+                          <>
+                            <span className="text-zinc-300">•</span>
+                            <span className="text-zinc-500">{agent.phone}</span>
+                          </>
+                        )}
+                        {agent.license_state && agent.license_number && (
+                          <>
+                            <span className="text-zinc-300">•</span>
+                            <a 
+                              href={stateLicenseLookupUrls[agent.license_state]} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              {agent.license_state} #{agent.license_number}
+                            </a>
+                          </>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 shrink-0">
                       <Select
                         value={agent.agent_status}
                         onValueChange={(val) => handleStatusChange(agent, val)}
@@ -768,62 +767,60 @@ export default function AdminApprovals() {
                     </div>
                   </div>
 
-                  {/* Row 2: Agent info spread horizontally with bullet separators */}
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
-                    <span className="font-mono text-xs text-zinc-400">{agent.aac_id}</span>
+                  {/* Row 2: Actions */}
+                  <div className="mt-1 flex items-center gap-2 text-sm">
+                    <button 
+                      onClick={() => setEditAgent(agent)} 
+                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                    >
+                      Edit
+                    </button>
                     <span className="text-zinc-300">•</span>
-                    <span className="font-semibold text-zinc-900">{agent.first_name} {agent.last_name}</span>
-                    <span className="text-zinc-300">•</span>
-                    <span className="text-zinc-600">{agent.email}</span>
-                    {agent.company && (
+                    <button 
+                      onClick={() => handleEmailAgent(agent)} 
+                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                    >
+                      Email
+                    </button>
+                    {!agent.is_early_access && (
                       <>
                         <span className="text-zinc-300">•</span>
-                        <span className="text-zinc-500">{agent.company}</span>
-                      </>
-                    )}
-                    {agent.phone && (
-                      <>
-                        <span className="text-zinc-300">•</span>
-                        <span className="text-zinc-500">{agent.phone}</span>
-                      </>
-                    )}
-                    {agent.license_state && agent.license_number && (
-                      <>
-                        <span className="text-zinc-300">•</span>
-                        <a 
-                          href={stateLicenseLookupUrls[agent.license_state]} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
+                        <button 
+                          onClick={() => handleSendPasswordReset(agent)} 
+                          className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
                         >
-                          {agent.license_state} #{agent.license_number}
-                        </a>
+                          Reset Password
+                        </button>
                       </>
                     )}
+                    <span className="text-zinc-300">•</span>
+                    <button 
+                      onClick={() => handleStatusChange(agent, "verified")}
+                      disabled={isProcessing || agent.agent_status === "verified"}
+                      className={agent.agent_status === "verified" 
+                        ? "text-zinc-300 cursor-not-allowed" 
+                        : "text-zinc-500 hover:text-emerald-600 hover:underline transition-colors"}
+                    >
+                      Verify
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button 
+                      onClick={() => handleStatusChange(agent, "rejected")}
+                      disabled={isProcessing || agent.agent_status === "rejected"}
+                      className={agent.agent_status === "rejected" 
+                        ? "text-zinc-300 cursor-not-allowed" 
+                        : "text-zinc-500 hover:text-rose-600 hover:underline transition-colors"}
+                    >
+                      Reject
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button 
+                      onClick={() => setDeleteAgent(agent)} 
+                      className="text-zinc-500 hover:text-rose-600 hover:underline transition-colors"
+                    >
+                      Delete
+                    </button>
                   </div>
-
-                  {/* Row 3: Verify/Reject buttons (only for pending) */}
-                  {agent.agent_status === "pending" && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleStatusChange(agent, "verified")}
-                        disabled={isProcessing}
-                        className="bg-emerald-600 hover:bg-emerald-700"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" /> Verify
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleStatusChange(agent, "rejected")}
-                        disabled={isProcessing}
-                        className="text-rose-600 border-rose-200 hover:bg-rose-50"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Reject
-                      </Button>
-                    </div>
-                  )}
                 </div>
               );
             })}
