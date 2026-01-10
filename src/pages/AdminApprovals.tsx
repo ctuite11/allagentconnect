@@ -721,7 +721,7 @@ export default function AdminApprovals() {
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
                         <span className="font-mono text-xs text-zinc-400">{agent.aac_id}</span>
                         <span className="text-zinc-300">•</span>
-                        <span className="font-semibold text-zinc-900">{agent.first_name} {agent.last_name}</span>
+                        <span className="font-semibold text-[#0E56F5]">{agent.first_name} {agent.last_name}</span>
                         <span className="text-zinc-300">•</span>
                         <span className="text-zinc-600">{agent.email}</span>
                         {agent.company && (
@@ -781,7 +781,7 @@ export default function AdminApprovals() {
                   </div>
 
                   {/* Row 2: Actions */}
-                  <div className="mt-1 flex items-center gap-2 text-sm">
+                  <div className="mt-3 flex items-center gap-2 text-sm">
                     <button 
                       onClick={() => setEditAgent(agent)} 
                       className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
@@ -811,8 +811,8 @@ export default function AdminApprovals() {
                       onClick={() => handleStatusChange(agent, "verified")}
                       disabled={isProcessing || agent.agent_status === "verified"}
                       className={agent.agent_status === "verified" 
-                        ? "text-zinc-300 cursor-not-allowed" 
-                        : "text-zinc-500 hover:text-emerald-600 hover:underline transition-colors"}
+                        ? "text-emerald-300 cursor-not-allowed" 
+                        : "text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"}
                     >
                       Verify
                     </button>
@@ -829,7 +829,7 @@ export default function AdminApprovals() {
                     <span className="text-zinc-300">•</span>
                     <button 
                       onClick={() => setDeleteAgent(agent)} 
-                      className="text-zinc-500 hover:text-rose-600 hover:underline transition-colors"
+                      className="text-rose-600 hover:text-rose-700 hover:underline transition-colors"
                     >
                       Delete
                     </button>
