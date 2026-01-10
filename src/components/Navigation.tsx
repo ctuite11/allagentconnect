@@ -15,8 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Auth cache version - bump this to force clear stale sessions for all users
-const AUTH_CACHE_VERSION = "v2";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,18 +26,6 @@ const Navigation = () => {
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
 
-  // One-time auth cache version check - clears stale Supabase state
-  useEffect(() => {
-    const storedVersion = localStorage.getItem("auth_cache_version");
-    if (storedVersion !== AUTH_CACHE_VERSION) {
-      console.log("Auth cache version mismatch, clearing stale Supabase state...");
-      Object.keys(localStorage)
-        .filter(k => k.startsWith("sb-"))
-        .forEach(k => localStorage.removeItem(k));
-      localStorage.setItem("auth_cache_version", AUTH_CACHE_VERSION);
-      window.location.reload();
-    }
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,6 +126,20 @@ const Navigation = () => {
       navigate("/auth");
     } catch (error) {
       console.error("Error logging out:", error);
+    }
+  };
+
+  // Manual session recovery - only runs when admin clicks button
+  const handleClearSession = async () => {
+    try {
+      await supabase.auth.signOut();
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-"))
+        .forEach((k) => localStorage.removeItem(k));
+      navigate("/auth");
+      window.location.reload();
+    } catch (e) {
+      console.error("Clear session failed:", e);
     }
   };
 
@@ -411,6 +411,16 @@ const Navigation = () => {
                 <Search className="w-4 h-4 mr-2" />
                 {role === "agent" ? "Search" : "Search Homes"}
               </button>
+              {role === "admin" && (
+                <button 
+                  onClick={handleClearSession}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-amber-600 transition-colors"
+                  title="Clear all auth tokens and reload (recovery tool)"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Clear Session
+                </button>
+              )}
               <button 
                 onClick={handleLogout}
                 className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
