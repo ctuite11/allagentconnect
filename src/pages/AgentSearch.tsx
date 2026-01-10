@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,9 +113,7 @@ const AgentSearch = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navigation />
-
-      <main className="flex-1 pt-20">
+      <main className="flex-1">
         {/* Header */}
         <div className="max-w-6xl mx-auto px-4 py-8">
           <PageHeader

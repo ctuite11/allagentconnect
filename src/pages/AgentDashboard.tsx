@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import Navigation from "@/components/Navigation";
+
 import ListingCard from "@/components/ListingCard";
 import forSaleImg from "@/assets/listing-for-sale.jpg";
 import privateSaleImg from "@/assets/listing-private-sale.jpg";
@@ -466,8 +466,7 @@ const AgentDashboard = () => {
   
   return (
     <div className="min-h-screen bg-white" style={{ backgroundColor: '#FFFFFF' }}>
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-20 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Hero Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8 sm:mb-12 animate-fade-in">
           <div className="space-y-3 sm:space-y-4 flex-1">
