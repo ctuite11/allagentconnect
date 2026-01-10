@@ -5,7 +5,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 
 import PageShell from "@/components/layout/PageShell";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2 } from "lucide-react";
+import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2, Calendar, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -630,16 +630,18 @@ function MyListingsView({
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="hover:text-emerald-700 transition"
+                      className="hover:text-emerald-700 transition flex items-center gap-1"
                       onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                     >
+                      <Calendar className="h-3.5 w-3.5 text-emerald-600" />
                       Open House
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="hover:text-emerald-700 transition"
+                      className="hover:text-[#0E56F5] transition flex items-center gap-1"
                       onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                     >
+                      <Car className="h-3.5 w-3.5 text-[#0E56F5]" />
                       Broker Tour
                     </button>
                     <span className="text-zinc-300">•</span>
