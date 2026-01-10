@@ -16,7 +16,13 @@ import { Loader2, AlertTriangle } from "lucide-react";
 interface DeleteAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  agent: { id: string; first_name: string; last_name: string; email: string } | null;
+  agent: { 
+    id: string; 
+    first_name: string; 
+    last_name: string; 
+    email: string;
+    is_early_access?: boolean;
+  } | null;
   onDeleted: () => void;
 }
 
@@ -28,6 +34,26 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
     setDeleting(true);
     try {
+      // EARLY ACCESS BRANCH: Simple delete from agent_early_access only
+      if (agent.is_early_access) {
+        const { error, count } = await supabase
+          .from("agent_early_access")
+          .delete()
+          .eq("id", agent.id);
+
+        if (error) {
+          console.error("Error deleting early access record:", error);
+          throw error;
+        }
+
+        console.log(`[DeleteAgentDialog] Deleted early access record: ${agent.id}`);
+        toast.success(`${agent.first_name} ${agent.last_name} (early access) has been deleted`);
+        onDeleted();
+        onOpenChange(false);
+        return;
+      }
+
+      // REAL AGENT BRANCH: Full deletion flow
       // First, get current user for deleted_by field
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
@@ -125,7 +151,10 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
       if (authError) {
         console.error("Error deleting auth user:", authError);
-        // Don't throw here - the profile is already deleted
+        toast.warning(`${agent.first_name} ${agent.last_name} profile deleted, but auth account removal failed`);
+        onDeleted();
+        onOpenChange(false);
+        return;
       }
 
       toast.success(`${agent.first_name} ${agent.last_name} has been permanently deleted and archived`);

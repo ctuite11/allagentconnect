@@ -19,7 +19,9 @@ import {
   ChevronDown,
   CheckCircle,
   XCircle,
-  Users
+  Users,
+  KeyRound,
+  Sparkles
 } from "lucide-react";
 import {
   Table,
@@ -435,6 +437,29 @@ export default function AdminApprovals() {
     setEmailRecipients([{ id: agent.id, email: agent.email, name: `${agent.first_name} ${agent.last_name}` }]);
   };
 
+  // Send password reset email
+  const handleSendPasswordReset = async (agent: Agent) => {
+    try {
+      const { error } = await supabase.functions.invoke("send-password-reset", {
+        body: { 
+          email: agent.email,
+          redirectUrl: `${window.location.origin}/auth?mode=reset`
+        },
+      });
+
+      if (error) {
+        console.error("Password reset error:", error);
+        toast.error("Failed to send password reset");
+        return;
+      }
+
+      toast.success(`Password reset email sent to ${agent.email}`);
+    } catch (err: any) {
+      console.error("Password reset error:", err);
+      toast.error("Failed to send password reset");
+    }
+  };
+
   if (isChecking) {
     return <LoadingScreen message="Checking admin access..." />;
   }
@@ -727,6 +752,12 @@ export default function AdminApprovals() {
                       </TableCell>
                       <TableCell className="font-mono text-sm text-muted-foreground">
                         {agent.aac_id}
+                        {agent.is_early_access && (
+                          <Badge variant="outline" className="ml-2 bg-violet-50 text-violet-700 border-violet-200 text-xs">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Early Access
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="font-medium">
                         {agent.first_name} {agent.last_name}
@@ -796,14 +827,28 @@ export default function AdminApprovals() {
                             size="sm"
                             onClick={() => handleEmailAgent(agent)}
                             className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600"
+                            title="Send Email"
                           >
                             <Mail className="h-4 w-4" />
                           </Button>
+                          {/* Password reset - only for real agents (not early access) */}
+                          {!agent.is_early_access && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSendPasswordReset(agent)}
+                              className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600"
+                              title="Send Password Reset"
+                            >
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setEditAgent(agent)}
                             className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600"
+                            title="Edit Agent"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -812,6 +857,7 @@ export default function AdminApprovals() {
                             size="sm"
                             onClick={() => setDeleteAgent(agent)}
                             className="h-8 w-8 p-0 text-slate-500 hover:text-rose-600"
+                            title="Delete Agent"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

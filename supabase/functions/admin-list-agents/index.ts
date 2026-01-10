@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
     const existingEmails = new Set(agents.map(a => a.email.toLowerCase()))
     const newEarlyAccess = (earlyAccess || []).filter(ea => !existingEmails.has(ea.email.toLowerCase()))
 
-    // Map early access records to MergedAgent format
+    // Map early access records to MergedAgent format - RESPECT actual status from DB
     const earlyAccessAgents: MergedAgent[] = newEarlyAccess.map(ea => ({
       id: ea.id,
       aac_id: `EA-${ea.id.slice(0, 6).toUpperCase()}`,
@@ -203,7 +203,7 @@ Deno.serve(async (req) => {
       bio: null,
       license_number: ea.license_number,
       license_state: ea.state,
-      agent_status: 'pending',
+      agent_status: ea.status ?? 'pending', // Use actual status from agent_early_access table
       verified_at: null,
       created_at: ea.created_at,
       is_early_access: true,
