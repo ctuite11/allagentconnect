@@ -56,6 +56,7 @@ interface Agent {
   agent_status: string;
   verified_at: string | null;
   created_at: string;
+  is_early_access?: boolean;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
@@ -267,33 +268,48 @@ export default function AdminApprovals() {
     setDebugInfo(prev => ({ ...prev, stateCount: agents.length }));
   }, [agents]);
 
-  // Handle status change with upsert
+  // Handle status change with upsert - branches for early access vs real agents
   const handleStatusChange = async (agent: Agent, newStatus: string) => {
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
-      const { error } = await supabase
-        .from("agent_settings")
-        .upsert(
-          [{
-            user_id: agent.id,
-            agent_status: newStatus as any,
+      // Branch: Early access agents update agent_early_access table
+      if (agent.is_early_access) {
+        const { error } = await supabase
+          .from("agent_early_access")
+          .update({ 
+            status: newStatus,
             verified_at: newStatus === "verified" ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          }],
-          { onConflict: "user_id" }
-        );
+          })
+          .eq("id", agent.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Real agents: update agent_settings table
+        const { error } = await supabase
+          .from("agent_settings")
+          .upsert(
+            [{
+              user_id: agent.id,
+              agent_status: newStatus as any,
+              verified_at: newStatus === "verified" ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            }],
+            { onConflict: "user_id" }
+          );
 
-      // Send email for approval/rejection
+        if (error) throw error;
+      }
+
+      // Send email for approval/rejection (works for both - uses email/name, not userId)
       if (newStatus === "verified" || newStatus === "rejected") {
         await supabase.functions.invoke("send-agent-approval-email", {
           body: {
-            userId: agent.id,
+            userId: agent.is_early_access ? null : agent.id,
             email: agent.email,
             firstName: agent.first_name,
             approved: newStatus === "verified",
+            isEarlyAccess: agent.is_early_access,
           },
         });
       }
