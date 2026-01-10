@@ -20,17 +20,8 @@ import {
   CheckCircle,
   XCircle,
   Users,
-  KeyRound,
-  Sparkles
+  KeyRound
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -684,7 +675,7 @@ export default function AdminApprovals() {
           )}
         </div>
 
-        {/* Table */}
+        {/* Agent Cards */}
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
@@ -695,179 +686,147 @@ export default function AdminApprovals() {
             <p className="text-muted-foreground">No agents found</p>
           </div>
         ) : (
-          <div className="rounded-3xl border border-gray-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-[#FAFAF8] border-b border-gray-200">
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedIds.size === filteredAgents.length && filteredAgents.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                      aria-label="Select all"
-                    />
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">AAC ID</TableHead>
-                  <TableHead 
-                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
-                    onClick={() => handleSort("name")}
-                  >
-                    Name <SortIcon field="name" />
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">Email</TableHead>
-                  <TableHead 
-                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
-                    onClick={() => handleSort("company")}
-                  >
-                    Company <SortIcon field="company" />
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">Phone</TableHead>
-                  <TableHead 
-                    className="font-semibold text-foreground cursor-pointer hover:text-emerald-600"
-                    onClick={() => handleSort("status")}
-                  >
-                    Status <SortIcon field="status" />
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">
-                    Registered
-                  </TableHead>
-                  <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAgents.map((agent) => {
-                  const isProcessing = processingIds.has(agent.id);
+          <div className="space-y-3">
+            {filteredAgents.map((agent) => {
+              const isProcessing = processingIds.has(agent.id);
 
-                  return (
-                    <TableRow 
-                      key={agent.id} 
-                      className="border-b border-gray-200 hover:!bg-[#FAFAF8] data-[state=selected]:!bg-[#F7F6F3]"
-                      data-state={selectedIds.has(agent.id) ? "selected" : undefined}
-                    >
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedIds.has(agent.id)}
-                          onCheckedChange={() => toggleSelect(agent.id)}
-                          aria-label={`Select ${agent.first_name}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">
-                        {agent.aac_id}
-                        {agent.is_early_access && (
-                          <Badge variant="outline" className="ml-2 bg-violet-50 text-violet-700 border-violet-200 text-xs">
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            Early Access
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {agent.first_name} {agent.last_name}
-                      </TableCell>
-                      <TableCell className="text-sm">{agent.email}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {agent.company || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {agent.phone || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={agent.agent_status}
-                          onValueChange={(val) => handleStatusChange(agent, val)}
-                          disabled={isProcessing}
+              return (
+                <div 
+                  key={agent.id} 
+                  className={`relative bg-white border rounded-xl px-4 py-3 transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
+                    selectedIds.has(agent.id) ? 'border-emerald-300 bg-emerald-50/30' : 'border-zinc-100 hover:border-zinc-200'
+                  }`}
+                >
+                  {/* Row 1: Checkbox + Actions (left) + Status/Date (right) */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={selectedIds.has(agent.id)}
+                        onCheckedChange={() => toggleSelect(agent.id)}
+                        aria-label={`Select ${agent.first_name}`}
+                      />
+                      <div className="flex items-center gap-2 text-sm text-zinc-600">
+                        <button 
+                          onClick={() => setEditAgent(agent)} 
+                          className="hover:text-emerald-700"
                         >
-                          <SelectTrigger className="w-[130px] h-8 rounded-lg border-0 bg-transparent p-0 [&>svg]:hidden">
-                            <Badge
-                              variant="outline"
-                              className={`${statusColors[agent.agent_status] || statusColors.unverified} capitalize`}
+                          Edit
+                        </button>
+                        <span className="text-zinc-300">•</span>
+                        <button 
+                          onClick={() => handleEmailAgent(agent)} 
+                          className="hover:text-emerald-700"
+                        >
+                          Email
+                        </button>
+                        {!agent.is_early_access && (
+                          <>
+                            <span className="text-zinc-300">•</span>
+                            <button 
+                              onClick={() => handleSendPasswordReset(agent)} 
+                              className="hover:text-emerald-700"
                             >
-                              {agent.agent_status}
-                            </Badge>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statusOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                              Reset Password
+                            </button>
+                          </>
+                        )}
+                        <span className="text-zinc-300">•</span>
+                        <button 
+                          onClick={() => setDeleteAgent(agent)} 
+                          className="text-rose-500 hover:text-rose-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={agent.agent_status}
+                        onValueChange={(val) => handleStatusChange(agent, val)}
+                        disabled={isProcessing}
+                      >
+                        <SelectTrigger className="w-auto h-auto rounded-lg border-0 bg-transparent p-0 [&>svg]:hidden">
+                          <Badge
+                            variant="outline"
+                            className={`${statusColors[agent.agent_status] || statusColors.unverified} capitalize`}
+                          >
+                            {agent.agent_status}
+                          </Badge>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statusOptions.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-xs text-zinc-500">
                         {new Date(agent.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {/* Quick verify/reject buttons for pending agents */}
-                          {agent.agent_status === "pending" && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleStatusChange(agent, "verified")}
-                                disabled={isProcessing}
-                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                                title="Verify License"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleStatusChange(agent, "rejected")}
-                                disabled={isProcessing}
-                                className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-                                title="Reject"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEmailAgent(agent)}
-                            className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600"
-                            title="Send Email"
-                          >
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          {/* Password reset - only for real agents (not early access) */}
-                          {!agent.is_early_access && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleSendPasswordReset(agent)}
-                              className="h-8 w-8 p-0 text-slate-500 hover:text-amber-600"
-                              title="Send Password Reset"
-                            >
-                              <KeyRound className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setEditAgent(agent)}
-                            className="h-8 w-8 p-0 text-slate-500 hover:text-emerald-600"
-                            title="Edit Agent"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeleteAgent(agent)}
-                            className="h-8 w-8 p-0 text-slate-500 hover:text-rose-600"
-                            title="Delete Agent"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Agent info spread horizontally with bullet separators */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+                    <span className="font-mono text-xs text-zinc-400">{agent.aac_id}</span>
+                    <span className="text-zinc-300">•</span>
+                    <span className="font-semibold text-zinc-900">{agent.first_name} {agent.last_name}</span>
+                    <span className="text-zinc-300">•</span>
+                    <span className="text-zinc-600">{agent.email}</span>
+                    {agent.company && (
+                      <>
+                        <span className="text-zinc-300">•</span>
+                        <span className="text-zinc-500">{agent.company}</span>
+                      </>
+                    )}
+                    {agent.phone && (
+                      <>
+                        <span className="text-zinc-300">•</span>
+                        <span className="text-zinc-500">{agent.phone}</span>
+                      </>
+                    )}
+                    {agent.license_state && agent.license_number && (
+                      <>
+                        <span className="text-zinc-300">•</span>
+                        <a 
+                          href={stateLicenseLookupUrls[agent.license_state]} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {agent.license_state} #{agent.license_number}
+                        </a>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Row 3: Verify/Reject buttons (only for pending) */}
+                  {agent.agent_status === "pending" && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleStatusChange(agent, "verified")}
+                        disabled={isProcessing}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" /> Verify
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleStatusChange(agent, "rejected")}
+                        disabled={isProcessing}
+                        className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
