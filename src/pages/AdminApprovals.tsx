@@ -786,10 +786,10 @@ export default function AdminApprovals() {
                       onClick={() => handleStatusChange(agent, "verified")}
                       disabled={isProcessing || agent.agent_status === "verified"}
                       className={agent.agent_status === "verified" 
-                        ? "text-aacSuccess/50 cursor-not-allowed" 
-                        : "text-aacSuccess hover:text-aacSuccess/80 hover:underline transition-colors"}
+                        ? "text-aacSuccess cursor-not-allowed" 
+                        : "text-black hover:text-zinc-700 hover:underline transition-colors"}
                     >
-                      Verify
+                      {agent.agent_status === "verified" ? "Verified" : "Verify"}
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button 
