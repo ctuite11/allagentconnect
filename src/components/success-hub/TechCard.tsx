@@ -65,10 +65,10 @@ export const TechCard = ({
         </div>
       )}
 
-      {/* CTA pill button - black + green */}
-      <span className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-emerald-300 shadow-sm transition hover:bg-zinc-800">
+      {/* CTA pill button - black + emerald (locked spec) */}
+      <span className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-medium tracking-tight text-emerald-400 shadow-[0_6px_18px_rgba(15,23,42,0.10)] transition hover:text-emerald-300">
         Open
-        <ArrowRight className="h-4 w-4 text-emerald-300" />
+        <ArrowRight className="h-4 w-4" />
       </span>
     </div>
   );
