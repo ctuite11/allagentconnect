@@ -20,7 +20,8 @@ import {
   CheckCircle,
   XCircle,
   Users,
-  KeyRound
+  KeyRound,
+  Check
 } from "lucide-react";
 import {
   Select,
@@ -719,7 +720,7 @@ export default function AdminApprovals() {
                         aria-label={`Select ${agent.first_name}`}
                       />
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
-                        <span className="font-mono text-xs text-zinc-400">{agent.aac_id}</span>
+                        <span className="font-mono text-xs text-black">{agent.aac_id}</span>
                         <span className="text-zinc-300">•</span>
                         <span className="font-semibold text-[#0E56F5]">{agent.first_name} {agent.last_name}</span>
                         <span className="text-zinc-300">•</span>
@@ -786,10 +787,15 @@ export default function AdminApprovals() {
                       onClick={() => handleStatusChange(agent, "verified")}
                       disabled={isProcessing || agent.agent_status === "verified"}
                       className={agent.agent_status === "verified" 
-                        ? "text-aacSuccess cursor-not-allowed" 
-                        : "text-black hover:text-zinc-700 hover:underline transition-colors"}
+                        ? "text-zinc-500 cursor-not-allowed flex items-center gap-1" 
+                        : "text-aacSuccess hover:text-aacSuccess/80 hover:underline transition-colors"}
                     >
-                      {agent.agent_status === "verified" ? "Verified" : "Verify"}
+                      {agent.agent_status === "verified" ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-aacSuccess" />
+                          Verified
+                        </>
+                      ) : "Verify"}
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button 
