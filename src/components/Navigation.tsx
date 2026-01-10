@@ -133,6 +133,7 @@ const Navigation = () => {
   const handleClearSession = async () => {
     try {
       await supabase.auth.signOut();
+      setIsMenuOpen(false);
       Object.keys(localStorage)
         .filter((k) => k.startsWith("sb-"))
         .forEach((k) => localStorage.removeItem(k));
