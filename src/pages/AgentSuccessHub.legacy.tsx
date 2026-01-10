@@ -453,8 +453,8 @@ export default function AgentSuccessHub() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900" style={{ backgroundColor: '#FFFFFF' }}>
-      <div className="mx-auto max-w-6xl px-5 py-8 space-y-10">
+    <div className="min-h-screen bg-white text-zinc-900 pt-24 px-6" style={{ backgroundColor: '#FFFFFF' }}>
+      <div className="mx-auto max-w-6xl space-y-10">
         {/* Header */}
         <div className="flex items-center gap-3">
           <PageHeader

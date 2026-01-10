@@ -322,7 +322,7 @@ function MyListingsView({
   };
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <PageHeader
         title="My Listings"
