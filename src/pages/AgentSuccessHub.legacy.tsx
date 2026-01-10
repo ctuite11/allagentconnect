@@ -454,21 +454,21 @@ export default function AgentSuccessHub() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 pt-24 px-6" style={{ backgroundColor: '#FFFFFF' }}>
-      <div className="mx-auto max-w-6xl space-y-10">
+      <div className="mx-auto max-w-6xl">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <PageHeader
-            title="Success Hub"
-            subtitle="Your command center for client success"
-          />
-          <span 
-            className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] font-medium text-zinc-700"
-            title={`Build: ${BUILD_ID}`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            HUB v2
-          </span>
-        </div>
+        <PageHeader
+          title="Success Hub"
+          subtitle="Your command center for client success"
+          actions={
+            <span 
+              className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] font-medium text-zinc-700"
+              title={`Build: ${BUILD_ID}`}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              HUB v2
+            </span>
+          }
+        />
 
         {/* Unified Hub Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

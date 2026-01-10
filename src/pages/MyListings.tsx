@@ -327,7 +327,6 @@ function MyListingsView({
       <PageHeader
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
-        className="mb-6"
         backTo="/agent-dashboard"
       />
 
@@ -1017,39 +1016,34 @@ const MyListings = () => {
 
   if (listings.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
-        <main className="flex-1 bg-background">
-          <div className="container mx-auto px-4 py-8 max-w-5xl">
-            <PageHeader
-              title="My Listings"
-              subtitle="Manage your active, pending, and past listings from one place."
-              className="mb-8"
-              backTo="/agent-dashboard"
-            />
-            
-            {/* Empty State - matches Hot Sheets pattern */}
-            <div className="aac-card p-12 text-center">
-              <Plus className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
-              <h3 className="text-xl font-semibold text-neutral-800 mb-2">No listings yet</h3>
-              <p className="text-neutral-600 mb-6">
-                Create your first listing to get started.
-              </p>
-              <Button 
-                onClick={() => handleNewListing("new")} 
-                className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Listing
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
+      <PageShell className="pb-8">
+        <PageHeader
+          title="My Listings"
+          subtitle="Create your first listing to get started."
+          backTo="/agent-dashboard"
+        />
+        
+        {/* Empty State - matches Hot Sheets pattern */}
+        <div className="aac-card p-12 text-center">
+          <Plus className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
+          <h3 className="text-xl font-semibold text-zinc-800 mb-2">No listings yet</h3>
+          <p className="text-zinc-600 mb-6">
+            Create your first listing to get started.
+          </p>
+          <Button 
+            onClick={() => handleNewListing("new")} 
+            className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create New Listing
+          </Button>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <PageShell className="pb-8 pt-20">
+    <PageShell className="pb-8">
       <MyListingsView
         listings={listings}
         onEdit={handleEdit}
