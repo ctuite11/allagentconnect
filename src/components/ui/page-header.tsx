@@ -52,7 +52,7 @@ export function PageHeader({
   };
 
   return (
-    <div className={cn("flex items-center justify-between gap-4", className)}>
+    <div className={cn("flex items-center justify-between gap-4 mb-8", className)}>
       <div className="flex items-center gap-2">
         {/* Inline chevron-left back button - only shown when backTo is provided */}
         {backTo && (
