@@ -783,6 +783,16 @@ export default function AdminApprovals() {
                   {/* Row 2: Actions */}
                   <div className="mt-3 flex items-center gap-2 text-sm">
                     <button 
+                      onClick={() => handleStatusChange(agent, "verified")}
+                      disabled={isProcessing || agent.agent_status === "verified"}
+                      className={agent.agent_status === "verified" 
+                        ? "text-aacSuccess/50 cursor-not-allowed" 
+                        : "text-aacSuccess hover:text-aacSuccess/80 hover:underline transition-colors"}
+                    >
+                      Verify
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button 
                       onClick={() => setEditAgent(agent)} 
                       className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
                     >
@@ -806,16 +816,6 @@ export default function AdminApprovals() {
                         </button>
                       </>
                     )}
-                    <span className="text-zinc-300">•</span>
-                    <button 
-                      onClick={() => handleStatusChange(agent, "verified")}
-                      disabled={isProcessing || agent.agent_status === "verified"}
-                      className={agent.agent_status === "verified" 
-                        ? "text-emerald-300 cursor-not-allowed" 
-                        : "text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"}
-                    >
-                      Verify
-                    </button>
                     <span className="text-zinc-300">•</span>
                     <button 
                       onClick={() => handleStatusChange(agent, "rejected")}
