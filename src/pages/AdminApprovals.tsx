@@ -706,7 +706,7 @@ export default function AdminApprovals() {
               return (
                 <div 
                   key={agent.id} 
-                  className={`relative bg-white border rounded-xl px-4 py-3 transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
+                  className={`relative bg-white border rounded-xl px-4 py-4 transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
                     selectedIds.has(agent.id) ? 'border-emerald-300 bg-emerald-50/30' : 'border-zinc-100 hover:border-zinc-200'
                   }`}
                 >
