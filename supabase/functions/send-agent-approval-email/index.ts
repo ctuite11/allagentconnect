@@ -10,10 +10,11 @@ const corsHeaders = {
 };
 
 interface ApprovalEmailRequest {
-  userId: string;
+  userId?: string | null;
   email?: string;
   firstName?: string;
   approved: boolean;
+  isEarlyAccess?: boolean;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -22,17 +23,27 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { userId, email, firstName, approved }: ApprovalEmailRequest = await req.json();
+    const { userId, email, firstName, approved, isEarlyAccess }: ApprovalEmailRequest = await req.json();
 
-    if (!userId) {
-      console.error("No userId provided");
+    // For early access: userId is not required, email and firstName must be provided
+    // For real agents: userId is required to look up profile
+    if (!isEarlyAccess && !userId) {
+      console.error("No userId provided for non-early-access agent");
       return new Response(
-        JSON.stringify({ error: "userId is required" }),
+        JSON.stringify({ error: "userId is required for real agents" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(`Processing ${approved ? 'approval' : 'rejection'} email for user: ${userId}`);
+    if (isEarlyAccess && !email) {
+      console.error("No email provided for early access agent");
+      return new Response(
+        JSON.stringify({ error: "email is required for early access agents" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`Processing ${approved ? 'approval' : 'rejection'} email for ${isEarlyAccess ? 'early access' : 'real'} agent: ${email || userId}`);
 
     // Create Supabase admin client
     const supabaseAdmin = createClient(
@@ -41,11 +52,11 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Get agent profile if email/firstName not provided
+    // Get agent profile if email/firstName not provided (only for real agents)
     let recipientEmail = email;
-    let recipientName = firstName;
+    let recipientName = firstName || "Agent";
 
-    if (!recipientEmail || !recipientName) {
+    if (!isEarlyAccess && (!recipientEmail || !recipientName || recipientName === "Agent")) {
       const { data: profile, error: profileError } = await supabaseAdmin
         .from("agent_profiles")
         .select("email, first_name")
@@ -222,8 +233,8 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailData);
 
-    // Mark approval email as sent if approved
-    if (approved) {
+    // Mark approval email as sent if approved (only for real agents with userId)
+    if (approved && userId && !isEarlyAccess) {
       const { error: updateError } = await supabaseAdmin
         .from("agent_settings")
         .update({ approval_email_sent: true })
