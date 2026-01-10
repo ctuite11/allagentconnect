@@ -13,7 +13,7 @@ type PageShellProps = {
  */
 export function PageShell({ children, className = "" }: PageShellProps) {
   return (
-    <main className={`min-h-screen pt-20 px-6 ${className}`}>
+    <main className={`min-h-screen pt-24 px-6 ${className}`}>
       <div className="mx-auto w-full max-w-6xl">{children}</div>
     </main>
   );
