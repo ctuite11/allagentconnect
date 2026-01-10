@@ -648,31 +648,6 @@ export default function AdminApprovals() {
             </div>
           </div>
 
-          {/* Bulk Actions */}
-          {selectedIds.size > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
-                {selectedIds.size} selected
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBulkEmail}
-                className="rounded-xl text-muted-foreground hover:text-emerald-600 hover:bg-gray-100"
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                Email Selected
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedIds(new Set())}
-                className="rounded-xl text-muted-foreground hover:text-emerald-600"
-              >
-                Clear
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Agent Cards */}
@@ -687,6 +662,44 @@ export default function AdminApprovals() {
           </div>
         ) : (
           <div className="space-y-3">
+            {/* Select All Header */}
+            <div className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={selectedIds.size === filteredAgents.length && filteredAgents.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all agents"
+                />
+                <span className="text-sm text-zinc-600">
+                  {selectedIds.size > 0 
+                    ? `${selectedIds.size} of ${filteredAgents.length} selected` 
+                    : "Select all"}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm">
+                <button
+                  onClick={handleBulkEmail}
+                  disabled={selectedIds.size === 0}
+                  className={selectedIds.size === 0 
+                    ? "text-zinc-300 cursor-not-allowed" 
+                    : "text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"}
+                >
+                  Email Selected
+                </button>
+                {selectedIds.size > 0 && (
+                  <>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      onClick={() => setSelectedIds(new Set())}
+                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
             {filteredAgents.map((agent) => {
               const isProcessing = processingIds.has(agent.id);
 
