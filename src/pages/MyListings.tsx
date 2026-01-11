@@ -334,7 +334,7 @@ function MyListingsView({
   };
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Header */}
       <PageHeader
         title="My Listings"
@@ -343,7 +343,7 @@ function MyListingsView({
       />
 
       {/* New Listing Button Row */}
-      <div className="mb-2">
+      <div className="mb-4">
         <Button 
           onClick={() => onNewListing("new")} 
           className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
@@ -772,7 +772,7 @@ function MyListingsView({
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
