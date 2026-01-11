@@ -107,8 +107,10 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
             county_id,
             counties(name, state)
           ),
-          agent_buyer_coverage_areas(city, state, county)
+          agent_buyer_coverage_areas(city, state, county),
+          agent_settings!inner(agent_status)
         `, { count: "exact" })
+        .eq("agent_settings.agent_status", "verified")
         .order("last_name", { ascending: true })
         .range(from, to);
 
