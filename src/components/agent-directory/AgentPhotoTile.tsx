@@ -65,7 +65,7 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
         </div>
 
         {/* TEXT BLOCK */}
-        <div className="border-t border-zinc-200 px-5 pb-5 pt-5">
+        <div className="px-5 pb-5 pt-5">
           <div className="text-[18px] leading-[22px] font-semibold text-zinc-900 truncate">
             {fullName}
           </div>
