@@ -486,10 +486,10 @@ const MyClients = () => {
 
   return (
     <TooltipProvider>
-      <PageShell className="py-8">
+      <PageShell className="py-8" data-build="CONTACTS_SELECT_FIX_2026_01_11">
         <PageHeader
             title="My Contacts"
-            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
+            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence. [Build: CONTACTS_SELECT_FIX_2026_01_11]"
             className="mb-8"
             backTo="/agent-dashboard"
           />
