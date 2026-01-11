@@ -1,6 +1,5 @@
 import React from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import aacLogo from "@/assets/aac-logo-blue-silver.png";
 
 type Agent = {
   id: string;
@@ -37,41 +36,35 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
 
   const brokerage = agent.company || agent.office_name || agent.team_name || "";
 
-  const initials = fullName
-    .split(" ")
-    .slice(0, 2)
-    .map((s) => s[0]?.toUpperCase())
-    .join("");
-
   return (
     <button
       type="button"
       onClick={() => onClick(agent.id)}
       className="group w-full text-left"
     >
-      {/* Card container with AAC border */}
+      {/* Card container */}
       <div className="border border-zinc-200 overflow-hidden">
-        {/* PHOTO - 3:4 portrait ratio (Compass style) */}
-        <div className="aspect-[3/4] w-full overflow-hidden bg-white">
+        {/* PHOTO - 3:4 portrait ratio */}
+        <div className="aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
               alt={fullName}
               className="block h-full w-full object-cover transition-opacity group-hover:opacity-95"
+              style={{ display: 'block', lineHeight: 0, fontSize: 0 }}
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-white">
-              <img
-                src={aacLogo}
-                alt="All Agent Connect"
-                className="block h-24 w-24 object-contain opacity-60"
-              />
+            <div className="flex h-full w-full flex-col items-center justify-center bg-white">
+              <span className="text-xl font-semibold tracking-tight">
+                <span style={{ color: '#0E56F5' }}>All Agent</span>{' '}
+                <span className="text-zinc-400">Connect</span>
+              </span>
             </div>
           )}
         </div>
 
-        {/* TEXT BLOCK - Compass style with border-top */}
+        {/* TEXT BLOCK */}
         <div className="border-t border-zinc-200 px-5 pb-5 pt-5">
           <div className="text-[18px] leading-[22px] font-semibold text-zinc-900 truncate">
             {fullName}
