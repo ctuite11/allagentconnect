@@ -597,7 +597,7 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="relative bg-white rounded-2xl border border-zinc-200 shadow-sm p-4"
+                className="relative bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden p-4"
               >
                 {/* Action row - tight, no vertical padding */}
                 <div className="mb-3 pr-36">
