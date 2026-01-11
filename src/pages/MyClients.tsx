@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import PageShell from "@/components/layout/PageShell";
 
 import { Button } from "@/components/ui/button";
@@ -479,20 +478,14 @@ const MyClients = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center pt-20">
-          <p className="text-zinc-500">Loading contacts...</p>
-        </main>
-      </div>
+      <PageShell className="flex-1 flex items-center justify-center">
+        <p className="text-zinc-500">Loading contacts...</p>
+      </PageShell>
     );
   }
 
   return (
     <TooltipProvider>
-      <>
-        <Navigation />
-      
       <PageShell className="py-8">
         <PageHeader
             title="My Contacts"
@@ -1095,7 +1088,6 @@ const MyClients = () => {
         }}
         preSelectedClients={getSelectedClientsForHotSheet()}
       />
-    </>
     </TooltipProvider>
   );
 };
