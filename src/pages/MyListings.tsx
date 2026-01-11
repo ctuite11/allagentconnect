@@ -499,7 +499,7 @@ function MyListingsView({
 
       {/* GRID VIEW */}
       {view === "grid" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             return (
@@ -574,7 +574,7 @@ function MyListingsView({
       {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
       {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
       {view === "list" && (
-        <div className="space-y-4">
+        <div className="mt-6 space-y-4">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
