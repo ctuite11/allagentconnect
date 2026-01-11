@@ -5,7 +5,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 
 import PageShell from "@/components/layout/PageShell";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2 } from "lucide-react";
+import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2 } from "lucide-react";
 
 // Filled blue car/SUV icon for Broker Tour (AAC Blue #0E56F5)
 function BlueCarIcon({ className }: { className?: string }) {
@@ -344,38 +344,13 @@ function MyListingsView({
 
       {/* New Listing Button Row */}
       <div className="mb-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide">
-              <Plus className="h-4 w-4" />
-              New Listing
-              <ChevronDown className="h-4 w-4 ml-1" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuItem onClick={() => onNewListing("new")} className="cursor-pointer">
-              <Home className="h-4 w-4 mr-2 text-zinc-500" />
-              <div>
-                <div className="font-medium">New (Active)</div>
-                <div className="text-xs text-zinc-500">Ready to go live on market</div>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onNewListing("off_market")} className="cursor-pointer">
-              <Lock className="h-4 w-4 mr-2 text-zinc-500" />
-              <div>
-                <div className="font-medium">Off-Market (Private)</div>
-                <div className="text-xs text-zinc-500">Private listing for agents only</div>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onNewListing("coming_soon")} className="cursor-pointer">
-              <Sparkles className="h-4 w-4 mr-2 text-zinc-500" />
-              <div>
-                <div className="font-medium">Coming Soon</div>
-                <div className="text-xs text-zinc-500">Pre-market announcement</div>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button 
+          onClick={() => onNewListing("new")} 
+          className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
+        >
+          <Plus className="h-4 w-4" />
+          New Listing
+        </Button>
       </div>
 
       {/* Premium Filter Bar */}
