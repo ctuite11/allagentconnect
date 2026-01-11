@@ -5,7 +5,19 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 
 import PageShell from "@/components/layout/PageShell";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2, Calendar, Car } from "lucide-react";
+import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Lock, Sparkles, Home, Search, Trash2 } from "lucide-react";
+
+// Filled blue car/SUV icon for Broker Tour (AAC Blue #0E56F5)
+function BlueCarIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path
+        fill="#0E56F5"
+        d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5H6.5C5.84 5 5.28 5.42 5.08 6.01L3 12V20C3 20.55 3.45 21 4 21H5C5.55 21 6 20.55 6 20V19H18V20C18 20.55 18.45 21 19 21H20C20.55 21 21 20.55 21 20V12L18.92 6.01ZM6.5 7H17.5L18.53 10H5.47L6.5 7ZM19 17H5V12H19V17ZM7.5 16C8.33 16 9 15.33 9 14.5C9 13.67 8.33 13 7.5 13C6.67 13 6 13.67 6 14.5C6 15.33 6.67 16 7.5 16ZM16.5 16C17.33 16 18 15.33 18 14.5C18 13.67 17.33 13 16.5 13C15.67 13 15 13.67 15 14.5C15 15.33 15.67 16 16.5 16Z"
+      />
+    </svg>
+  );
+}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -630,19 +642,19 @@ function MyListingsView({
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="hover:text-emerald-700 transition flex items-center gap-1"
+                      className="flex items-center gap-1 group"
                       onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
                     >
-                      <Calendar className="h-3.5 w-3.5 text-emerald-600" />
-                      Open House
+                      <span aria-hidden>🎈</span>
+                      <span className="group-hover:text-emerald-700 transition">Open House</span>
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
-                      className="hover:text-[#0E56F5] transition flex items-center gap-1"
+                      className="flex items-center gap-1 group"
                       onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
                     >
-                      <Car className="h-3.5 w-3.5 text-[#0E56F5]" />
-                      Broker Tour
+                      <BlueCarIcon className="h-3.5 w-3.5" />
+                      <span className="group-hover:text-[#0E56F5] transition">Broker Tour</span>
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button
