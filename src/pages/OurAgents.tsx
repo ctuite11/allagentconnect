@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -98,7 +97,25 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
       
-      // Fetch agents with pagination and count
+      // Step 1: Get verified agent IDs from agent_settings (two-step query - no FK needed)
+      const { data: verifiedSettings, error: verifiedError } = await supabase
+        .from("agent_settings")
+        .select("user_id")
+        .eq("agent_status", "verified");
+
+      if (verifiedError) throw verifiedError;
+
+      const verifiedIds = (verifiedSettings || []).map(s => s.user_id);
+
+      // If no verified agents, set empty state and return early
+      if (verifiedIds.length === 0) {
+        setAgents([]);
+        setTotalCount(0);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Fetch only verified agents using .in() filter
       const { data: agentData, count, error: agentError } = await supabase
         .from("agent_profiles")
         .select(`
@@ -107,10 +124,9 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
             county_id,
             counties(name, state)
           ),
-          agent_buyer_coverage_areas(city, state, county),
-          agent_settings!inner(agent_status)
+          agent_buyer_coverage_areas(city, state, county)
         `, { count: "exact" })
-        .eq("agent_settings.agent_status", "verified")
+        .in("id", verifiedIds)
         .order("last_name", { ascending: true })
         .range(from, to);
 
@@ -140,7 +156,10 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
       // Enrich agent data with listing counts and derived data
-      const enrichedAgents: EnrichedAgent[] = (agentData || []).map((agent: any) => {
+      // UI backstop: filter to only verified IDs (defensive - should already be filtered by query)
+      const enrichedAgents: EnrichedAgent[] = (agentData || [])
+        .filter((agent: any) => verifiedIds.includes(agent.id))
+        .map((agent: any) => {
         const agentListings = (listingsData || []).filter(l => l.agent_id === agent.id);
         
         // Count by status
@@ -317,9 +336,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Navigation />
-
-      <main className="flex-1 pt-20 pb-12">
+      <main className="flex-1 pb-12">
         {/* Page Header + Search */}
         <section className="border-b border-zinc-200 bg-white py-8">
           <div className="mx-auto w-full max-w-[1200px] px-6">
