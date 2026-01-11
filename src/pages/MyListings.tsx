@@ -530,8 +530,8 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-              className="aac-card aac-card-2 overflow-hidden"
-            >
+                className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden"
+              >
               <div className="w-full h-48 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
                 <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
               </div>
@@ -622,7 +622,7 @@ function MyListingsView({
             return (
               <div
                 key={l.id}
-                className="relative bg-white border border-zinc-100 hover:border-zinc-200 rounded-2xl p-4 transition-shadow transition-colors hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                className="relative bg-white rounded-2xl border border-zinc-200 shadow-sm p-4"
               >
                 {/* Action row - tight, no vertical padding */}
                 <div className="mb-3 pr-36">
