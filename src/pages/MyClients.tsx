@@ -486,10 +486,10 @@ const MyClients = () => {
 
   return (
     <TooltipProvider>
-      <PageShell className="py-8" data-build="CONTACTS_SELECT_FIX_2026_01_11">
+      <PageShell className="py-8">
         <PageHeader
             title="My Contacts"
-            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence. [Build: CONTACTS_SELECT_FIX_2026_01_11]"
+            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
             className="mb-8"
             backTo="/agent-dashboard"
           />
@@ -652,10 +652,10 @@ const MyClients = () => {
             </div>
           ) : (
             <>
-              <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm mb-4">
+               <div className="border border-zinc-200 rounded-2xl mb-4">
                 <div className="p-6">
-                  <div className="flex flex-wrap gap-4">
-                    <div className="relative flex-1 min-w-[200px] max-w-[560px]" ref={autocompleteRef}>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="relative flex-1 min-w-[200px] max-w-[360px]" ref={autocompleteRef}>
                       <Input
                         ref={searchInputRef}
                         placeholder="Search contacts by name, email, phone, or type..."
@@ -677,7 +677,7 @@ const MyClients = () => {
                         }}
                         className="pl-10"
                       />
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" />
                       
                       {/* Typeahead Autocomplete Dropdown */}
                       {showAutocomplete && searchTerm.length >= 2 && filteredClients.length > 0 && (
@@ -734,7 +734,7 @@ const MyClients = () => {
                     </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                       <SelectTrigger className="w-[200px] bg-white border-zinc-200">
-                        <ArrowUpDown className="h-4 w-4 mr-2 text-zinc-400" />
+                        <ArrowUpDown className="h-4 w-4 mr-2 text-blue-500" />
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="z-50">
@@ -743,28 +743,13 @@ const MyClients = () => {
                         <SelectItem value="updated_at">Sort by Last Updated</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <div>
-                      {(searchTerm || clientTypeFilter !== "all") && (
-                        <p className="text-sm text-zinc-600">
-                          Found {filteredClients.length} of {clients.length} contacts
-                        </p>
-                      )}
-                      <p className="text-sm text-zinc-600">
-                        {sortedClients.length === 1 
-                          ? "Showing 1 of 1 contact"
-                          : `Showing ${startIndex + 1}–${Math.min(endIndex, sortedClients.length)} of ${sortedClients.length} contacts`
-                        }
-                      </p>
-                    </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-zinc-600">Contacts per page:</span>
+                      <span className="text-sm text-zinc-600">Per page:</span>
                       <Select value={itemsPerPage.toString()} onValueChange={(value) => {
                         setItemsPerPage(Number(value));
                         setCurrentPage(1);
                       }}>
-                        <SelectTrigger className="w-[100px] bg-white border-zinc-200">
+                        <SelectTrigger className="w-[80px] bg-white border-zinc-200">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="z-50">
@@ -775,6 +760,19 @@ const MyClients = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+                  <div className="mt-2">
+                    {(searchTerm || clientTypeFilter !== "all") && (
+                      <p className="text-sm text-zinc-600">
+                        Found {filteredClients.length} of {clients.length} contacts
+                      </p>
+                    )}
+                    <p className="text-sm text-zinc-600">
+                      {sortedClients.length === 1 
+                        ? "Showing 1 of 1 contact"
+                        : `Showing ${startIndex + 1}–${Math.min(endIndex, sortedClients.length)} of ${sortedClients.length} contacts`
+                      }
+                    </p>
                   </div>
                 </div>
               </div>
@@ -801,7 +799,7 @@ const MyClients = () => {
               )}
 
               {filteredClients.length === 0 ? (
-                <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-12">
+                <div className="border border-zinc-200 rounded-2xl p-12">
                   <div className="text-center">
                     <User className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
                     <h3 className="text-xl font-semibold text-zinc-900 mb-2">No contacts found</h3>
@@ -815,7 +813,7 @@ const MyClients = () => {
                 </div>
               ) : (
                 <>
-                <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="border border-zinc-200 rounded-2xl overflow-hidden">
                   <Table>
                     <TableHeader className="bg-zinc-50 border-b border-zinc-200">
                       <TableRow className="border-b-0">
@@ -867,19 +865,19 @@ const MyClients = () => {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3 text-zinc-400" />
+                            <Mail className="h-3 w-3 text-blue-500" />
                             {client.email}
                           </div>
                           {client.phone && (
                             <div className="flex items-center gap-2 text-sm text-zinc-500">
-                              <Phone className="h-3 w-3 text-zinc-400" />
+                              <Phone className="h-3 w-3 text-blue-500" />
                               {formatPhoneNumber(client.phone)}
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <p className="text-sm text-zinc-500 truncate capitalize">
+                        <p className="text-sm text-zinc-900 truncate capitalize">
                           {client.client_type || "—"}
                         </p>
                       </TableCell>
