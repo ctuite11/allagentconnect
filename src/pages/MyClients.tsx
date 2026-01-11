@@ -633,7 +633,7 @@ const MyClients = () => {
           </div>
 
           {clients.length === 0 ? (
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-8">
+            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-8">
               <div className="text-center py-4">
                   <User className="h-12 w-12 mx-auto mb-3 text-zinc-400" />
                   <h3 className="text-lg font-semibold text-zinc-900 mb-1">No contacts yet</h3>
@@ -648,7 +648,7 @@ const MyClients = () => {
             </div>
           ) : (
             <>
-              <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-4">
+              <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm mb-4">
                 <div className="p-6">
                   <div className="flex gap-4">
                     <div className="relative flex-1" ref={autocompleteRef}>
@@ -797,7 +797,7 @@ const MyClients = () => {
               )}
 
               {filteredClients.length === 0 ? (
-                <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-12">
+                <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-12">
                   <div className="text-center">
                     <User className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
                     <h3 className="text-xl font-semibold text-zinc-900 mb-2">No contacts found</h3>
@@ -811,10 +811,10 @@ const MyClients = () => {
                 </div>
               ) : (
                 <>
-                <div className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
+                    <TableHeader className="bg-zinc-50 border-b border-zinc-200">
+                      <TableRow className="border-b-0">
                       <TableHead className="w-12">
                           <Checkbox
                             checked={
@@ -844,7 +844,7 @@ const MyClients = () => {
                       {paginatedClients.map((client) => (
                     <TableRow 
                       key={client.id} 
-                      className="cursor-pointer hover:bg-zinc-50"
+                      className="cursor-pointer hover:bg-zinc-50 transition-colors"
                       onClick={() => openContactDrawer(client)}
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
