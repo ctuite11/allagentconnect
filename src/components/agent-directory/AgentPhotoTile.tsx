@@ -1,6 +1,6 @@
 import React from "react";
-import NetworkGlobe from "@/components/home/NetworkGlobe";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import aacLogo from "@/assets/aac-logo-blue-silver.png";
 
 type Agent = {
   id: string;
@@ -52,19 +52,21 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
       {/* Card container with AAC border */}
       <div className="border border-zinc-200 overflow-hidden">
         {/* PHOTO - 3:4 portrait ratio (Compass style) */}
-        <div className={`aspect-[3/4] w-full overflow-hidden ${agent.headshot_url ? "bg-zinc-100" : ""}`}>
+        <div className="aspect-[3/4] w-full overflow-hidden bg-white">
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
               alt={fullName}
-              className="h-full w-full object-cover transition-opacity group-hover:opacity-95"
+              className="block h-full w-full object-cover transition-opacity group-hover:opacity-95"
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-emerald-700">
-              <div className="-mt-2 h-36 w-36 text-white">
-                <NetworkGlobe variant="static" strokeColor="currentColor" />
-              </div>
+            <div className="flex h-full w-full items-center justify-center bg-white">
+              <img
+                src={aacLogo}
+                alt="All Agent Connect"
+                className="block h-24 w-24 object-contain opacity-60"
+              />
             </div>
           )}
         </div>
