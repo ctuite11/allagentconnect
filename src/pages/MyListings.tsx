@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 
 import PageShell from "@/components/layout/PageShell";
+import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2 } from "lucide-react";
 
@@ -503,9 +504,10 @@ function MyListingsView({
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             return (
-              <div
+              <CardSurface
                 key={l.id}
-                className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden"
+                interactive
+                className="cursor-pointer"
               >
               <div className="w-full h-48 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
                 <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
@@ -558,7 +560,7 @@ function MyListingsView({
                   </button>
                 </div>
               </div>
-            </div>
+            </CardSurface>
           );
         })}
 
@@ -595,9 +597,9 @@ function MyListingsView({
             const dom = listDateObj ? Math.max(0, Math.floor((Date.now() - listDateObj.getTime()) / (1000 * 60 * 60 * 24))) : 0;
 
             return (
-              <div
+              <CardSurface
                 key={l.id}
-                className="relative bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden p-4"
+                className="relative p-4"
               >
                 {/* Action row - tight, no vertical padding */}
                 <div className="mb-3 pr-36">
@@ -763,7 +765,7 @@ function MyListingsView({
                   </div>
 
                 </div>
-              </div>
+              </CardSurface>
             );
           })}
 
