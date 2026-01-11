@@ -85,10 +85,10 @@ All colors MUST be HSL.
     --muted-foreground: 240 2% 43%;   /* #6E6E73 - secondary text */
 
     /* AAC Green accent - Emerald 600 (#059669) */
-    --accent: var(--aac);
+    --accent: 160 84% 39%;              /* #059669 - Emerald for interactive states */
     --accent-foreground: 0 0% 100%;
-    --accent-hover: var(--aac-hover);
-    --accent-active: var(--aac-active);
+    --accent-hover: 160 84% 35%;        /* Slightly darker hover */
+    --accent-active: 160 84% 30%;       /* Active/pressed */
     --accent-soft: 160 60% 95%;         /* Light emerald background */
     --accent-muted: 160 50% 75%;        /* Emerald border */
 
@@ -98,7 +98,7 @@ All colors MUST be HSL.
     /* Borders & Dividers - Apple hairline */
     --border: 0 0% 86%;               /* Pure neutral hairline border */
     --input: 0 0% 86%;                /* Pure neutral */
-    --ring: 221 92% 51%;              /* Royal Blue for focus rings */
+    --ring: 160 84% 39% / 0.3;         /* Emerald for focus rings */
 
     /* Soft divider token */
     --soft-divider: 0 0% 90%;         /* Pure neutral divider */
