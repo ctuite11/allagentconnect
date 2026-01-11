@@ -583,7 +583,7 @@ const MyClients = () => {
                       <SelectTrigger id="client_type">
                         <SelectValue placeholder="Select contact type..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
+                      <SelectContent className="z-50">
                         <SelectItem value="buyer">Buyer</SelectItem>
                         <SelectItem value="seller">Seller</SelectItem>
                         <SelectItem value="renter">Renter</SelectItem>
@@ -719,7 +719,7 @@ const MyClients = () => {
                       <SelectTrigger className="w-[180px] bg-white border-zinc-200">
                         <SelectValue placeholder="Filter by type" />
                       </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
+                      <SelectContent className="z-50">
                         <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="buyer">Buyers</SelectItem>
                         <SelectItem value="seller">Sellers</SelectItem>
@@ -737,7 +737,7 @@ const MyClients = () => {
                         <ArrowUpDown className="h-4 w-4 mr-2 text-zinc-400" />
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
+                      <SelectContent className="z-50">
                         <SelectItem value="name">Sort by Name</SelectItem>
                         <SelectItem value="created_at">Sort by Date Added</SelectItem>
                         <SelectItem value="updated_at">Sort by Last Updated</SelectItem>
@@ -767,7 +767,7 @@ const MyClients = () => {
                         <SelectTrigger className="w-[100px] bg-white border-zinc-200">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-background z-50">
+                        <SelectContent className="z-50">
                           <SelectItem value="25">25</SelectItem>
                           <SelectItem value="50">50</SelectItem>
                           <SelectItem value="100">100</SelectItem>
