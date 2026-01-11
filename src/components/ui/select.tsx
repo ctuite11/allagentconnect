@@ -99,6 +99,7 @@ const SelectLabel = React.forwardRef<
 ));
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
+// AAC Select Item Policy: Emerald for selected state, Zinc for hover, no blue
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
@@ -106,14 +107,14 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-neutral-100 focus:text-neutral-900 data-[highlighted]:bg-neutral-100 data-[highlighted]:text-neutral-900",
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-zinc-700 outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-zinc-50 focus:text-zinc-800 data-[highlighted]:bg-zinc-50 data-[highlighted]:text-zinc-800 data-[state=checked]:bg-emerald-50 data-[state=checked]:text-zinc-900",
       className,
     )}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
+        <Check className="h-4 w-4 text-emerald-600" />
       </SelectPrimitive.ItemIndicator>
     </span>
 
