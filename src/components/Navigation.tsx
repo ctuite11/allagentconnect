@@ -665,8 +665,6 @@ const Navigation = () => {
           </div>
         </div>
       )}
-      {/* Bottom fade overlay - positioned to overlap content below */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full h-3 bg-gradient-to-b from-white/60 to-transparent" />
     </header>
   );
 };
