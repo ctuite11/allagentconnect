@@ -1,3 +1,4 @@
+// DO NOT IMPORT THIS INTO PAGES — rendered globally in App.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight, Shield } from "lucide-react";
