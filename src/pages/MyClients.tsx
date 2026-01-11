@@ -495,9 +495,12 @@ const MyClients = () => {
           />
 
           {/* Action Buttons - Primary left, utilities right */}
-          <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
-            {/* Primary CTA - Add Contact */}
-            <Dialog open={addDialogOpen} onOpenChange={(open) => {
+          {/* Action Buttons - Two-row layout: CTAs top, Search/Filters bottom */}
+          <div className="mb-4 flex flex-col gap-4">
+            {/* Row 1: Primary CTA left, utilities right */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              {/* Primary CTA - Add Contact */}
+              <Dialog open={addDialogOpen} onOpenChange={(open) => {
               setAddDialogOpen(open);
               if (!open) resetForm();
             }}>
@@ -605,30 +608,31 @@ const MyClients = () => {
               </DialogContent>
             </Dialog>
 
-            {/* Secondary utilities - right side */}
-            <div className="flex gap-2 flex-wrap">
-              {clients.length > 0 && (
-                <>
-                  {selectedClients.size > 0 && (
-                    <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleBulkEmail}>
-                      <Send className="h-4 w-4 mr-2 text-emerald-400" />
-                      Send Email ({selectedClients.size})
+              {/* Secondary utilities - right side */}
+              <div className="flex gap-2 flex-wrap">
+                {clients.length > 0 && (
+                  <>
+                    {selectedClients.size > 0 && (
+                      <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleBulkEmail}>
+                        <Send className="h-4 w-4 mr-2 text-emerald-400" />
+                        Send Email ({selectedClients.size})
+                      </Button>
+                    )}
+                    <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setAnalyticsDialogOpen(true)}>
+                      <Mail className="h-4 w-4 mr-2 text-zinc-500" />
+                      Email Analytics
                     </Button>
-                  )}
-                  <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setAnalyticsDialogOpen(true)}>
-                    <Mail className="h-4 w-4 mr-2 text-zinc-500" />
-                    Email Analytics
-                  </Button>
-                  <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={handleExportCSV}>
-                    <Download className="h-4 w-4 mr-2 text-zinc-500" />
-                    Export CSV
-                  </Button>
-                </>
-              )}
-              <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setImportDialogOpen(true)}>
-                <Upload className="h-4 w-4 mr-2 text-zinc-500" />
-                Import CSV
-              </Button>
+                    <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={handleExportCSV}>
+                      <Download className="h-4 w-4 mr-2 text-zinc-500" />
+                      Export CSV
+                    </Button>
+                  </>
+                )}
+                <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setImportDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2 text-zinc-500" />
+                  Import CSV
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -650,8 +654,8 @@ const MyClients = () => {
             <>
               <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm mb-4">
                 <div className="p-6">
-                  <div className="flex gap-4">
-                    <div className="relative flex-1" ref={autocompleteRef}>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="relative flex-1 min-w-[200px] max-w-[560px]" ref={autocompleteRef}>
                       <Input
                         ref={searchInputRef}
                         placeholder="Search contacts by name, email, phone, or type..."
@@ -816,23 +820,27 @@ const MyClients = () => {
                     <TableHeader className="bg-zinc-50 border-b border-zinc-200">
                       <TableRow className="border-b-0">
                       <TableHead className="w-12">
-                          <Checkbox
-                            checked={
-                              paginatedClients.length > 0 && 
-                              paginatedClients.every(client => selectedClients.has(client.id))
-                            }
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                const newSelected = new Set(selectedClients);
-                                paginatedClients.forEach(client => newSelected.add(client.id));
-                                setSelectedClients(newSelected);
-                              } else {
-                                const newSelected = new Set(selectedClients);
-                                paginatedClients.forEach(client => newSelected.delete(client.id));
-                                setSelectedClients(newSelected);
-                              }
-                            }}
-                          />
+                          {(() => {
+                            const allOnPageSelected = paginatedClients.length > 0 && paginatedClients.every(client => selectedClients.has(client.id));
+                            const someOnPageSelected = paginatedClients.some(client => selectedClients.has(client.id));
+                            const isIndeterminate = someOnPageSelected && !allOnPageSelected;
+                            return (
+                              <Checkbox
+                                checked={isIndeterminate ? "indeterminate" : allOnPageSelected}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    const newSelected = new Set(selectedClients);
+                                    paginatedClients.forEach(client => newSelected.add(client.id));
+                                    setSelectedClients(newSelected);
+                                  } else {
+                                    const newSelected = new Set(selectedClients);
+                                    paginatedClients.forEach(client => newSelected.delete(client.id));
+                                    setSelectedClients(newSelected);
+                                  }
+                                }}
+                              />
+                            );
+                          })()}
                         </TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Contact</TableHead>
