@@ -494,42 +494,16 @@ const MyClients = () => {
             backTo="/agent-dashboard"
           />
 
-          {/* Action Buttons */}
-          <div className="mb-4 flex gap-2 justify-end flex-wrap">
-            {/* Buttons that only show when clients exist */}
-            {clients.length > 0 && (
-              <>
-                {selectedClients.size > 0 && (
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleBulkEmail}>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Email ({selectedClients.size})
-                  </Button>
-                )}
-                <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
-                  <Mail className="h-4 w-4 mr-2 text-emerald-600" />
-                  Email Analytics
-                </Button>
-                <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={handleExportCSV}>
-                  <Download className="h-4 w-4 mr-2 text-emerald-600" />
-                  Export CSV
-                </Button>
-              </>
-            )}
-            
-            {/* Import CSV - always visible so users can import their first contacts */}
-            <Button variant="ghost" className="text-zinc-600 hover:text-zinc-900" onClick={() => setImportDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2 text-emerald-600" />
-              Import CSV
-            </Button>
-            
-            {/* Add Contact Dialog - always visible */}
+          {/* Action Buttons - Primary left, utilities right */}
+          <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+            {/* Primary CTA - Add Contact */}
             <Dialog open={addDialogOpen} onOpenChange={(open) => {
               setAddDialogOpen(open);
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleAddClient}>
+                  <Plus className="h-4 w-4 mr-2 text-emerald-400" />
                   Add Contact
                 </Button>
               </DialogTrigger>
@@ -630,6 +604,32 @@ const MyClients = () => {
                 </form>
               </DialogContent>
             </Dialog>
+
+            {/* Secondary utilities - right side */}
+            <div className="flex gap-2 flex-wrap">
+              {clients.length > 0 && (
+                <>
+                  {selectedClients.size > 0 && (
+                    <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleBulkEmail}>
+                      <Send className="h-4 w-4 mr-2 text-emerald-400" />
+                      Send Email ({selectedClients.size})
+                    </Button>
+                  )}
+                  <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setAnalyticsDialogOpen(true)}>
+                    <Mail className="h-4 w-4 mr-2 text-zinc-500" />
+                    Email Analytics
+                  </Button>
+                  <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={handleExportCSV}>
+                    <Download className="h-4 w-4 mr-2 text-zinc-500" />
+                    Export CSV
+                  </Button>
+                </>
+              )}
+              <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setImportDialogOpen(true)}>
+                <Upload className="h-4 w-4 mr-2 text-zinc-500" />
+                Import CSV
+              </Button>
+            </div>
           </div>
 
           {clients.length === 0 ? (
@@ -640,8 +640,8 @@ const MyClients = () => {
                   <p className="text-sm text-zinc-600 mb-5">
                     Add your first contact to start managing their property search
                   </p>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleAddClient}>
-                    <Plus className="h-4 w-4 mr-2" />
+                  <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleAddClient}>
+                    <Plus className="h-4 w-4 mr-2 text-emerald-400" />
                     Add First Contact
                   </Button>
               </div>
@@ -673,7 +673,7 @@ const MyClients = () => {
                         }}
                         className="pl-10"
                       />
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                       
                       {/* Typeahead Autocomplete Dropdown */}
                       {showAutocomplete && searchTerm.length >= 2 && filteredClients.length > 0 && (
@@ -730,7 +730,7 @@ const MyClients = () => {
                     </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                       <SelectTrigger className="w-[200px] bg-white border-zinc-200">
-                        <ArrowUpDown className="h-4 w-4 mr-2 text-emerald-600" />
+                        <ArrowUpDown className="h-4 w-4 mr-2 text-zinc-400" />
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
@@ -783,7 +783,7 @@ const MyClients = () => {
                   </span>
                   <Separator orientation="vertical" className="h-4" />
                   <Button variant="outline" size="sm" onClick={handleBulkCreateHotSheet}>
-                    <ListPlus className="h-4 w-4 mr-2 text-emerald-600" />
+                    <ListPlus className="h-4 w-4 mr-2 text-zinc-500" />
                     Create Hot Sheet
                   </Button>
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setBulkRemoveDialogOpen(true)}>
@@ -859,12 +859,12 @@ const MyClients = () => {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3 text-emerald-600" />
+                            <Mail className="h-3 w-3 text-zinc-400" />
                             {client.email}
                           </div>
                           {client.phone && (
                             <div className="flex items-center gap-2 text-sm text-zinc-500">
-                              <Phone className="h-3 w-3 text-emerald-600" />
+                              <Phone className="h-3 w-3 text-zinc-400" />
                               {formatPhoneNumber(client.phone)}
                             </div>
                           )}
@@ -890,13 +890,13 @@ const MyClients = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="px-2"
+                                className="px-2 group"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditClient(client);
                                 }}
                               >
-                                <Edit className="h-4 w-4 text-zinc-500 hover:text-zinc-900" />
+                                <Edit className="h-4 w-4 text-zinc-400 group-hover:text-emerald-600 transition-colors" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent sideOffset={8}>
