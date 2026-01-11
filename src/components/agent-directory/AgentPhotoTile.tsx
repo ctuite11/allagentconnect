@@ -43,7 +43,7 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
       className="group w-full text-left"
     >
       {/* Card container */}
-      <div className="border border-zinc-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
         {/* PHOTO - 3:4 portrait ratio */}
         <div className="aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
           {agent.headshot_url ? (
