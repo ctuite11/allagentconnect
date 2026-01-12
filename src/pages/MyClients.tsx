@@ -735,13 +735,12 @@ const MyClients = () => {
                     </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                       <SelectTrigger className="w-[200px] bg-white border-zinc-200">
-                        <ArrowUpDown className="h-4 w-4 mr-2 text-blue-500" />
-                        <SelectValue />
+                        <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent className="z-50">
-                        <SelectItem value="name">Sort by Name</SelectItem>
-                        <SelectItem value="created_at">Sort by Date Added</SelectItem>
-                        <SelectItem value="updated_at">Sort by Last Updated</SelectItem>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="created_at">Date Added</SelectItem>
+                        <SelectItem value="updated_at">Last Updated</SelectItem>
                       </SelectContent>
                     </Select>
                     </div>
