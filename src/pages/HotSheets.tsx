@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
+
 import PageShell from "@/components/layout/PageShell";
 
 import { Button } from "@/components/ui/button";
@@ -223,69 +223,64 @@ const HotSheets = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center pt-20">
-          <div className="text-center">
-            <p className="text-muted-foreground">Loading hot sheets...</p>
-          </div>
-        </main>
-      </div>
+      <PageShell>
+        <div className="flex items-center justify-center py-24">
+          <p className="text-zinc-500">Loading hot sheets...</p>
+        </div>
+      </PageShell>
     );
   }
 
   return (
     <>
-      <Navigation />
-      
-      <PageShell className="py-8">
+      <PageShell className="pb-8">
         {/* Header */}
-          <PageHeader
-            title="Hot Sheets"
-            subtitle="Create and manage your custom listing alerts"
-            className="mb-8"
-            backTo="/agent-dashboard"
-            actions={
-              hotSheets.length > 0 ? (
-                <Button onClick={() => setCreateDialogOpen(true)} className="bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 shadow-sm hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New Hot Sheet
-                </Button>
-              ) : null
-            }
-          />
-
-          {/* Hot Sheets List */}
-          {hotSheets.length === 0 ? (
-            <div className="aac-card p-12 text-center">
-              <Plus className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
-              <h3 className="text-xl font-semibold text-neutral-800 mb-2">No hot sheets yet</h3>
-              <p className="text-neutral-600 mb-6">
-                Create your first hot sheet to start receiving listing alerts
-              </p>
+        <PageHeader
+          title="Hot Sheets"
+          subtitle="Create and manage your custom listing alerts"
+          className="mb-8"
+          backTo="/agent-dashboard"
+          actions={
+            hotSheets.length > 0 ? (
               <Button onClick={() => setCreateDialogOpen(true)} className="bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 shadow-sm hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Hot Sheet
               </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {hotSheets.map((sheet) => (
-                <HotSheetCard
-                  key={sheet.id}
-                  id={sheet.id}
-                  name={sheet.name}
-                  criteria={sheet.criteria}
-                  clients={getClientsForSheet(sheet)}
-                  lastSentAt={(sheet as any).last_sent_at}
-                  onEdit={handleEdit}
-                  onShare={(id) => setShareDialogOpen(id)}
-                  onComments={(id) => setCommentsDialogOpen(id)}
-                  onDelete={handleDeleteHotSheet}
-                />
-              ))}
-            </div>
-          )}
+            ) : null
+          }
+        />
+
+        {/* Hot Sheets List */}
+        {hotSheets.length === 0 ? (
+          <div className="aac-card p-12 text-center">
+            <Plus className="h-16 w-16 mx-auto mb-4 text-neutral-400" />
+            <h3 className="text-xl font-semibold text-neutral-800 mb-2">No hot sheets yet</h3>
+            <p className="text-neutral-600 mb-6">
+              Create your first hot sheet to start receiving listing alerts
+            </p>
+            <Button onClick={() => setCreateDialogOpen(true)} className="bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 shadow-sm hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Hot Sheet
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {hotSheets.map((sheet) => (
+              <HotSheetCard
+                key={sheet.id}
+                id={sheet.id}
+                name={sheet.name}
+                criteria={sheet.criteria}
+                clients={getClientsForSheet(sheet)}
+                lastSentAt={(sheet as any).last_sent_at}
+                onEdit={handleEdit}
+                onShare={(id) => setShareDialogOpen(id)}
+                onComments={(id) => setCommentsDialogOpen(id)}
+                onDelete={handleDeleteHotSheet}
+              />
+            ))}
+          </div>
+        )}
       </PageShell>
 
       {/* Share Dialog */}
