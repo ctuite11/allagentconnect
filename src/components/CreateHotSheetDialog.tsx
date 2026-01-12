@@ -980,11 +980,11 @@ export function CreateHotSheetDialog({
               <span className="text-sm font-medium text-foreground">Matching Listings:</span>
               {loadingCount ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#0E56F5]" />
                   <span className="text-sm text-muted-foreground">Searching...</span>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-emerald-600">
+                <span className="text-lg font-bold text-[#0E56F5]">
                   {matchingListingsCount} {matchingListingsCount === 1 ? "property" : "properties"}
                 </span>
               )}
@@ -995,7 +995,7 @@ export function CreateHotSheetDialog({
         <div className="space-y-6">
           {/* Hot Sheet Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Hot Sheet Name *</Label>
+            <Label htmlFor="name">Hot Sheet Name <span className="text-[#0E56F5]">*</span></Label>
             <Input
               id="name"
               placeholder="e.g., Downtown Condos under $500k"
@@ -1016,19 +1016,19 @@ export function CreateHotSheetDialog({
 
           {/* Contact Information */}
           <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
-            <Card className={`border ${clientInfoOpen ? 'border-neutral-300' : 'border-border'}`}>
+            <Card className="border border-zinc-200">
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">
-                      Contact Information *
+                      Contact Information <span className="text-[#0E56F5]">*</span>
                       {selectedClients.length > 0 && (
-                        <span className="ml-2 text-sm font-normal text-emerald-600">
+                        <span className="ml-2 text-sm font-normal text-zinc-500">
                           ✓ {selectedClients.length} {selectedClients.length === 1 ? 'contact' : 'contacts'}
                         </span>
                       )}
                     </CardTitle>
-                    {clientInfoOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {clientInfoOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
                   </div>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -1415,16 +1415,16 @@ export function CreateHotSheetDialog({
                   {/* Property Type - Collapsed by default */}
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${propertyTypeOpen ? 'border-neutral-300' : 'border-border'}`}>
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200">
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Property Type
                           {propertyTypes.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-emerald-600">
+                            <span className="ml-2 text-xs font-normal text-zinc-500">
                               ({propertyTypes.length} selected)
                             </span>
                           )}
                         </Label>
-                        {propertyTypeOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {propertyTypeOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
@@ -1464,16 +1464,16 @@ export function CreateHotSheetDialog({
                   {/* Status - Collapsed by default */}
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${statusOpen ? 'border-neutral-300' : 'border-border'}`}>
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200">
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Status
                           {statuses.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-emerald-600">
+                            <span className="ml-2 text-xs font-normal text-zinc-500">
                               ({statuses.length} selected)
                             </span>
                           )}
                         </Label>
-                        {statusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {statusOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
@@ -1702,11 +1702,11 @@ export function CreateHotSheetDialog({
 
           {/* Notification Settings */}
           <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <Card className={`border ${notificationsOpen ? 'border-neutral-300' : 'border-border'}`}>
+            <Card className="border border-zinc-200">
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
                   <CardTitle className="text-base">Notification Settings</CardTitle>
-                  {notificationsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {notificationsOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
