@@ -619,17 +619,17 @@ const MyClients = () => {
                       </Button>
                     )}
                     <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setAnalyticsDialogOpen(true)}>
-                      <Mail className="h-4 w-4 mr-2 text-zinc-500" />
+                      <Mail className="h-4 w-4 mr-2 text-blue-500" />
                       Email Analytics
                     </Button>
                     <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={handleExportCSV}>
-                      <Download className="h-4 w-4 mr-2 text-zinc-500" />
+                      <Download className="h-4 w-4 mr-2 text-blue-500" />
                       Export CSV
                     </Button>
                   </>
                 )}
                 <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2 text-zinc-500" />
+                  <Upload className="h-4 w-4 mr-2 text-blue-500" />
                   Import CSV
                 </Button>
               </div>
@@ -639,7 +639,7 @@ const MyClients = () => {
           {clients.length === 0 ? (
             <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-8">
               <div className="text-center py-4">
-                  <User className="h-12 w-12 mx-auto mb-3 text-zinc-400" />
+                  <User className="h-12 w-12 mx-auto mb-3 text-blue-500" />
                   <h3 className="text-lg font-semibold text-zinc-900 mb-1">No contacts yet</h3>
                   <p className="text-sm text-zinc-600 mb-5">
                     Add your first contact to start managing their property search
@@ -654,8 +654,9 @@ const MyClients = () => {
             <>
                <div className="border border-zinc-200 rounded-2xl mb-4">
                 <div className="p-6">
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="relative flex-1 min-w-[200px] max-w-[360px]" ref={autocompleteRef}>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1">
+                    <div className="relative flex-1 min-w-[200px] max-w-[480px]" ref={autocompleteRef}>
                       <Input
                         ref={searchInputRef}
                         placeholder="Search contacts by name, email, phone, or type..."
@@ -743,6 +744,7 @@ const MyClients = () => {
                         <SelectItem value="updated_at">Sort by Last Updated</SelectItem>
                       </SelectContent>
                     </Select>
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-zinc-600">Per page:</span>
                       <Select value={itemsPerPage.toString()} onValueChange={(value) => {
@@ -785,7 +787,7 @@ const MyClients = () => {
                   </span>
                   <Separator orientation="vertical" className="h-4" />
                   <Button variant="outline" size="sm" onClick={handleBulkCreateHotSheet}>
-                    <ListPlus className="h-4 w-4 mr-2 text-zinc-500" />
+                    <ListPlus className="h-4 w-4 mr-2 text-blue-500" />
                     Create Hot Sheet
                   </Button>
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setBulkRemoveDialogOpen(true)}>
@@ -801,7 +803,7 @@ const MyClients = () => {
               {filteredClients.length === 0 ? (
                 <div className="border border-zinc-200 rounded-2xl p-12">
                   <div className="text-center">
-                    <User className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
+                    <User className="h-16 w-16 mx-auto mb-4 text-blue-500" />
                     <h3 className="text-xl font-semibold text-zinc-900 mb-2">No contacts found</h3>
                     <p className="text-zinc-600 mb-6">
                       Try adjusting your search criteria
@@ -815,7 +817,7 @@ const MyClients = () => {
                 <>
                 <div className="border border-zinc-200 rounded-2xl overflow-hidden">
                   <Table>
-                    <TableHeader className="bg-zinc-50 border-b border-zinc-200">
+                    <TableHeader className="border-b border-zinc-200">
                       <TableRow className="border-b-0">
                       <TableHead className="w-12">
                           {(() => {
