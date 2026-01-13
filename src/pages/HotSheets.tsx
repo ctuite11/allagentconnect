@@ -242,7 +242,7 @@ const HotSheets = () => {
           backTo="/agent-dashboard"
           actions={
             hotSheets.length > 0 ? (
-              <Button onClick={() => setCreateDialogOpen(true)} className="bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 shadow-none hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
+              <Button variant="ghost" onClick={() => setCreateDialogOpen(true)} className="bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 shadow-none hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Hot Sheet
               </Button>
@@ -258,7 +258,7 @@ const HotSheets = () => {
             <p className="text-neutral-600 mb-6">
               Create your first hot sheet to start receiving listing alerts
             </p>
-            <Button onClick={() => setCreateDialogOpen(true)} className="bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 shadow-none hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
+            <Button variant="ghost" onClick={() => setCreateDialogOpen(true)} className="bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 shadow-none hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
               <Plus className="h-4 w-4 mr-2" />
               Create New Hot Sheet
             </Button>
