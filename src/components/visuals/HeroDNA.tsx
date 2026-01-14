@@ -17,7 +17,7 @@ const sizeToStroke = (size: HeroDNASize) => {
       return { rail: 2.6, rung: 1.35, dot: 2.6 };
     case "lg":
     default:
-      return { rail: 3.0, rung: 1.5, dot: 3.0 };
+      return { rail: 4.6, rung: 1.9, dot: 3.2 };
   }
 };
 
@@ -83,85 +83,81 @@ export default function HeroDNA({
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          <filter id="dna-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
+          {/* Soft glow */}
+          <filter id="dnaGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.45 0"
+              result="glow"
+            />
             <feMerge>
-              <feMergeNode in="blur" />
+              <feMergeNode in="glow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+
+          {/* Brand gradients */}
+          <linearGradient id="railA" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0E56F5" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#3B82F6" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#0E56F5" stopOpacity="0.95" />
+          </linearGradient>
+
+          <linearGradient id="railB" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#93C5FD" stopOpacity="0.55" />
+            <stop offset="50%" stopColor="#BFDBFE" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#93C5FD" stopOpacity="0.55" />
+          </linearGradient>
         </defs>
 
+        {/* Inline CSS animations (no deps) */}
         <style>{`
-          .dna-rot {
-            transform-box: fill-box;
-            transform-origin: center;
-            animation: dnaSpin 20s linear infinite;
-            will-change: transform;
-          }
-          @keyframes dnaSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .dna-twinkle {
-            animation: dnaTwinkle 2.4s ease-in-out infinite;
-          }
-          @keyframes dnaTwinkle {
-            0%, 100% { opacity: 0.15; }
-            50% { opacity: 0.65; }
-          }
+          @keyframes dnaSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          .dna-rot { transform-origin: 50% 50%; animation: dnaSpin 58s linear infinite; }
+
+          @keyframes dnaTwinkle { 0%,100% { opacity: .10; } 50% { opacity: .28; } }
+          .dna-twinkle { animation: dnaTwinkle 3.6s ease-in-out infinite; }
         `}</style>
 
-        <g className="dna-rot" filter="url(#dna-glow)">
+        <g className="dna-rot">
           {/* Rails */}
           <path
             d={pathA}
-            stroke="currentColor"
-            strokeWidth={s.rail}
             fill="none"
-            strokeLinecap="round"
-            opacity={0.65}
+            stroke="url(#railA)"
+            strokeWidth={s.rail}
+            filter="url(#dnaGlow)"
           />
           <path
             d={pathB}
-            stroke="currentColor"
-            strokeWidth={s.rail}
             fill="none"
-            strokeLinecap="round"
-            opacity={0.35}
+            stroke="url(#railB)"
+            strokeWidth={s.rail}
+            filter="url(#dnaGlow)"
           />
 
           {/* Rungs */}
           {pts.map((p, idx) => {
             if (idx === 0 || idx === pts.length - 1) return null;
-            const rungOpacity = 0.10 + p.z * 0.30;
+
+            // Depth cue makes the helix read as 3D
+            const rungOpacity = 0.14 + p.z * 0.34;
 
             return (
-              <g key={idx}>
+              <g key={idx} opacity={rungOpacity}>
                 <line
                   x1={p.xA}
                   y1={p.y}
                   x2={p.xB}
                   y2={p.y}
-                  stroke="currentColor"
+                  stroke="#94A3B8"
                   strokeWidth={s.rung}
-                  strokeOpacity={rungOpacity}
                   strokeLinecap="round"
                 />
-                <circle
-                  cx={p.xA}
-                  cy={p.y}
-                  r={s.dot}
-                  fill="currentColor"
-                  fillOpacity={rungOpacity}
-                />
-                <circle
-                  cx={p.xB}
-                  cy={p.y}
-                  r={s.dot}
-                  fill="currentColor"
-                  fillOpacity={rungOpacity * 0.75}
-                />
+                <circle cx={p.xA} cy={p.y} r={s.dot} fill="#0E56F5" opacity={0.70} />
+                <circle cx={p.xB} cy={p.y} r={s.dot} fill="#93C5FD" opacity={0.55} />
               </g>
             );
           })}
@@ -171,14 +167,13 @@ export default function HeroDNA({
             .filter((_, i) => i % 3 === 0)
             .map((p, i) => (
               <circle
-                key={`twinkle-${i}`}
+                key={`tw-${i}`}
                 className="dna-twinkle"
-                cx={(p.xA + p.xB) / 2}
+                cx={cx + (p.xA - cx) * 0.35}
                 cy={p.y}
-                r={2}
-                fill="white"
-                style={{ animationDelay: `${i * 0.22}s` }}
-                opacity={0.25}
+                r={2.2}
+                fill="#E2E8F0"
+                style={{ animationDelay: `${i * 0.15}s` }}
               />
             ))}
         </g>

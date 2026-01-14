@@ -110,7 +110,7 @@ const LandingPage = () => {
 
               {/* Right: DNA helix */}
               <div className="relative overflow-visible pointer-events-none h-[380px] sm:h-[440px] lg:h-[620px]">
-                <HeroDNA opacity={0.22} size="lg" className="w-full h-full" />
+                <HeroDNA opacity={0.40} size="lg" className="w-full h-full" />
               </div>
             </div>
           </div>
