@@ -74,7 +74,6 @@ export default function HeroDNA({
         "relative overflow-visible pointer-events-none select-none" +
         (className ? ` ${className}` : "")
       }
-      style={{ opacity: o }}
       aria-hidden="true"
     >
       <svg
@@ -121,7 +120,7 @@ export default function HeroDNA({
           .dna-twinkle { animation: dnaTwinkle 3.6s ease-in-out infinite; }
         `}</style>
 
-        <g className="dna-rot">
+        <g className="dna-rot" opacity={o}>
           {/* Rails */}
           <path
             d={pathA}
