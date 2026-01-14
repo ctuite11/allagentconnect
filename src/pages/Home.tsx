@@ -10,7 +10,7 @@ import {
   Check,
   X,
 } from "lucide-react";
-import HeroDNA from "@/components/visuals/HeroDNA";
+import NetworkGlobe from "@/components/home/NetworkGlobe";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -59,9 +59,9 @@ export default function Home() {
               <span className="text-zinc-400"> Connect</span>
             </h1>
 
-            {/* DNA Helix - subtle, centered, not dominant */}
-            <div className="mx-auto mb-8 w-[200px] h-[200px]">
-              <HeroDNA opacity={0.40} size="md" className="w-full h-full" />
+            {/* Globe - subtle, centered, not dominant */}
+            <div className="mx-auto mb-8 w-[140px] h-[140px]">
+              <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
             </div>
 
             {/* Headline */}
