@@ -61,7 +61,7 @@ export default function Home() {
 
             {/* DNA Helix - subtle, centered, not dominant */}
             <div className="mx-auto mb-8 w-[200px] h-[200px]">
-              <HeroDNA opacity={0.22} size="md" className="w-full h-full" />
+              <HeroDNA opacity={0.40} size="md" className="w-full h-full" />
             </div>
 
             {/* Headline */}
