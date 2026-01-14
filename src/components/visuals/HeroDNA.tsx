@@ -1,6 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 type HeroDNASize = "sm" | "md" | "lg";
 
@@ -42,18 +40,15 @@ export default function HeroDNA({
   const bottomPad = 90;
   const span = H - topPad - bottomPad;
 
-  // Build points for left/right rails and rungs
   const pts = Array.from({ length: steps + 1 }, (_, i) => {
     const t = i / steps;
     const y = topPad + t * span;
 
-    // phase shift creates the twist
     const phase = t * Math.PI * 4; // two full twists
     const xA = cx + Math.sin(phase) * amp;
     const xB = cx + Math.sin(phase + Math.PI) * amp;
 
-    // Depth cue: rungs fade based on "front/back"
-    const z = (Math.cos(phase) + 1) / 2;
+    const z = (Math.cos(phase) + 1) / 2; // 0..1 front/back cue
     return { t, y, xA, xB, z };
   });
 
@@ -75,10 +70,10 @@ export default function HeroDNA({
 
   return (
     <div
-      className={cn(
-        "relative overflow-visible pointer-events-none select-none",
-        className
-      )}
+      className={
+        "relative overflow-visible pointer-events-none select-none" +
+        (className ? ` ${className}` : "")
+      }
       style={{ opacity: o }}
       aria-hidden="true"
     >
@@ -88,58 +83,57 @@ export default function HeroDNA({
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          {/* Soft glow filter */}
           <filter id="dna-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
-          {/* Gradient for rail A */}
-          <linearGradient id="railGradA" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0E56F5" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#3B82F6" stopOpacity="1" />
-            <stop offset="100%" stopColor="#0E56F5" stopOpacity="0.6" />
-          </linearGradient>
-
-          {/* Gradient for rail B */}
-          <linearGradient id="railGradB" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#059669" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#10B981" stopOpacity="1" />
-            <stop offset="100%" stopColor="#059669" stopOpacity="0.6" />
-          </linearGradient>
         </defs>
 
-        {/* Rotate the whole helix slowly for "life" */}
-        <motion.g
-          animate={{ rotateY: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          style={{ transformOrigin: "center center" }}
-          filter="url(#dna-glow)"
-        >
+        <style>{`
+          .dna-rot {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: dnaSpin 20s linear infinite;
+            will-change: transform;
+          }
+          @keyframes dnaSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          .dna-twinkle {
+            animation: dnaTwinkle 2.4s ease-in-out infinite;
+          }
+          @keyframes dnaTwinkle {
+            0%, 100% { opacity: 0.15; }
+            50% { opacity: 0.65; }
+          }
+        `}</style>
+
+        <g className="dna-rot" filter="url(#dna-glow)">
           {/* Rails */}
           <path
             d={pathA}
-            stroke="url(#railGradA)"
+            stroke="currentColor"
             strokeWidth={s.rail}
             fill="none"
             strokeLinecap="round"
+            opacity={0.65}
           />
           <path
             d={pathB}
-            stroke="url(#railGradB)"
+            stroke="currentColor"
             strokeWidth={s.rail}
             fill="none"
             strokeLinecap="round"
+            opacity={0.35}
           />
 
-          {/* Rungs (base pairs) */}
+          {/* Rungs */}
           {pts.map((p, idx) => {
             if (idx === 0 || idx === pts.length - 1) return null;
-
-            // Fade rungs based on depth cue
             const rungOpacity = 0.10 + p.z * 0.30;
 
             return (
@@ -149,37 +143,45 @@ export default function HeroDNA({
                   y1={p.y}
                   x2={p.xB}
                   y2={p.y}
-                  stroke="#94A3B8"
+                  stroke="currentColor"
                   strokeWidth={s.rung}
                   strokeOpacity={rungOpacity}
                   strokeLinecap="round"
                 />
-                {/* endpoints as tiny nodes */}
-                <circle cx={p.xA} cy={p.y} r={s.dot} fill="#0E56F5" fillOpacity={rungOpacity * 1.2} />
-                <circle cx={p.xB} cy={p.y} r={s.dot} fill="#059669" fillOpacity={rungOpacity * 1.2} />
+                <circle
+                  cx={p.xA}
+                  cy={p.y}
+                  r={s.dot}
+                  fill="currentColor"
+                  fillOpacity={rungOpacity}
+                />
+                <circle
+                  cx={p.xB}
+                  cy={p.y}
+                  r={s.dot}
+                  fill="currentColor"
+                  fillOpacity={rungOpacity * 0.75}
+                />
               </g>
             );
           })}
 
-          {/* Twinkle particles (subtle) */}
+          {/* Twinkles */}
           {pts
             .filter((_, i) => i % 3 === 0)
             .map((p, i) => (
-              <motion.circle
+              <circle
                 key={`twinkle-${i}`}
+                className="dna-twinkle"
                 cx={(p.xA + p.xB) / 2}
                 cy={p.y}
                 r={2}
-                fill="#fff"
-                animate={{ opacity: [0.2, 0.8, 0.2] }}
-                transition={{
-                  duration: 2 + i * 0.3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
+                fill="white"
+                style={{ animationDelay: `${i * 0.22}s` }}
+                opacity={0.25}
               />
             ))}
-        </motion.g>
+        </g>
       </svg>
     </div>
   );
