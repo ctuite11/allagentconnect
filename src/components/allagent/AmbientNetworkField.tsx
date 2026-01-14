@@ -9,7 +9,7 @@ const AmbientNetworkField = ({ className }: { className?: string }) => {
   return (
     <div 
       className={cn(
-        "pointer-events-none select-none w-[400px] h-[300px]",
+        "relative pointer-events-none select-none w-[400px] h-[300px]",
         className
       )}
       aria-hidden="true"
@@ -25,14 +25,14 @@ const AmbientNetworkField = ({ className }: { className?: string }) => {
         <svg 
           viewBox="0 0 400 300" 
           className="w-full h-full"
-          style={{ opacity: 0.06 }}
+          style={{ opacity: 0.22 }}
         >
           {/* Static network paths */}
           <g 
             stroke="currentColor" 
             strokeWidth="0.5" 
             fill="none" 
-            className="text-emerald-600"
+            className="text-[#0E56F5]"
           >
             {/* Primary network paths */}
             <path d="M20,180 Q100,120 180,140 T320,110 T400,130" className="animate-[networkDrift_25s_ease-in-out_infinite]" />
@@ -55,7 +55,7 @@ const AmbientNetworkField = ({ className }: { className?: string }) => {
           </g>
           
           {/* Subtle node points at intersections */}
-          <g fill="currentColor" className="text-emerald-600" style={{ opacity: 0.4 }}>
+          <g fill="currentColor" className="text-[#0E56F5]" style={{ opacity: 0.4 }}>
             <circle cx="180" cy="140" r="2" className="animate-[networkDrift_25s_ease-in-out_infinite]" />
             <circle cx="300" cy="120" r="1.5" className="animate-[networkDrift_30s_ease-in-out_infinite_reverse]" />
             <circle cx="240" cy="170" r="2" className="animate-[networkDrift_22s_ease-in-out_infinite]" />

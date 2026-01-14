@@ -55,7 +55,7 @@ const LandingPage = () => {
         {/* Hero */}
         <section className="relative flex items-center overflow-visible">
           {/* Background network field layer */}
-          <div className="pointer-events-none absolute inset-0 overflow-visible">
+          <div className="pointer-events-none absolute inset-0 overflow-visible z-0">
             <div className="absolute right-0 top-0 lg:right-8 xl:right-16">
               <AmbientNetworkField className="w-[500px] h-[400px] lg:w-[600px] lg:h-[450px] opacity-40" />
             </div>
