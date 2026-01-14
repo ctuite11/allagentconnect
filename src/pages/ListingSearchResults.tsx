@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import ListingCard from "@/components/ListingCard";
@@ -351,10 +351,8 @@ const ListingSearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAF8]">
-      <Navigation />
-
-      <main className="flex-1 pt-20">
+    <div className="min-h-screen flex flex-col bg-[#FAFAF8] pt-20">
+      <main className="flex-1">
         <div className="max-w-[1400px] mx-auto px-6 pt-6">
           {/* Page Header */}
           <div className="mb-6 border-b border-neutral-200/70 bg-transparent px-0 py-6">

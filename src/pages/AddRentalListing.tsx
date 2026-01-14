@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -702,9 +702,8 @@ const AddRentalListing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
+    <div className="min-h-screen bg-background pt-24">
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header Section */}
           <div className="mb-4">

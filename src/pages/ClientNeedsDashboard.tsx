@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import { PageHeader } from "@/components/ui/page-header";
 import { Loader2 } from "lucide-react";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
@@ -295,9 +295,8 @@ const ClientNeedsDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navigation />
-      <main className={`${aacStyles.pageContainer} pt-20 pb-32`}>
+    <div className="min-h-screen bg-white pt-20">
+      <main className={`${aacStyles.pageContainer} pb-32`}>
         <PageHeader
           title="Communications Center"
           subtitle="Agent-to-agent collaboration and deal flow"

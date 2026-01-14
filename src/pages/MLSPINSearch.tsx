@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import MLSPINFilterPanel from "@/components/mlspin-search/MLSPINFilterPanel";
 import MLSPINResultsTable from "@/components/mlspin-search/MLSPINResultsTable";
 import ListingIntelDrawer from "@/components/mlspin-search/ListingIntelDrawer";
@@ -284,10 +284,8 @@ const MLSPINSearch = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navigation />
-      
-      <div className="flex-1 flex overflow-hidden pt-20">
+    <div className="min-h-screen bg-background flex flex-col pt-20">
+      <div className="flex-1 flex overflow-hidden">
         {/* Filter Panel */}
         <MLSPINFilterPanel
           filters={filters}
