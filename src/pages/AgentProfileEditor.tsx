@@ -27,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import PageShell from "@/components/layout/PageShell";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { usCitiesByState } from "@/data/usCitiesData";
@@ -295,7 +295,10 @@ setHeaderBackgroundType(profile.header_background_type || "color");
   };
 
   const handleSaveProfile = async () => {
-    await saveProfileData();
+    const savedId = await saveProfileData();
+    if (savedId) {
+      navigate("/agent-dashboard");
+    }
   };
 
   const handleViewProfile = () => {
@@ -535,9 +538,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-20">
+      <div className="min-h-screen bg-white pt-24">
+        <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="animate-pulse text-zinc-500">Loading profile...</div>
           </div>
@@ -548,7 +550,6 @@ setHeaderBackgroundType(profile.header_background_type || "color");
 
   return (
     <>
-      <Navigation />
       <PageShell className="pb-32">
         {/* Header with inline back button */}
         <div className="flex items-center justify-between mb-8">
@@ -632,7 +633,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
               </CardContent>
             </Card>
 
-            {/* Header Theme Section - Collapsible by default */}
+            {/* Header Theme Section - HIDDEN (UI only, state preserved) */}
+            {false && (
             <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -650,6 +652,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 />
               </CardContent>
             </Card>
+            )}
 
             {/* Basic Info Section */}
             <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
@@ -827,6 +830,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Incentives Section */}
+            {/* Client Incentives - HIDDEN (UI only, state preserved) */}
+            {false && (
             <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -844,6 +849,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 />
               </CardContent>
             </Card>
+            )}
 
             {/* Social Links Section */}
             <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">

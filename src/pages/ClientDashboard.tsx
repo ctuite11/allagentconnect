@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -166,9 +166,8 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="container mx-auto px-4 pt-20 pb-12">
+    <div className="min-h-screen bg-background pt-24">
+      <main className="container mx-auto px-4 pb-12">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
             <PageTitle className="mb-2">My Dashboard</PageTitle>

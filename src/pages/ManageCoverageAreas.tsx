@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import { PageHeader } from "@/components/ui/page-header";
 import StatePreferencesManager from "@/components/StatePreferencesManager";
 import { toast } from "sonner";
@@ -37,9 +37,8 @@ const ManageCoverageAreas = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-20">
+      <div className="min-h-screen bg-background pt-24">
+        <div className="container mx-auto px-4 py-8">
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -51,9 +50,8 @@ const ManageCoverageAreas = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen bg-background pt-24">
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <PageHeader
             title="Manage Coverage Areas"

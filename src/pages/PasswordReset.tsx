@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { Check, X, AlertTriangle } from "lucide-react";
 
@@ -149,10 +149,8 @@ const PasswordReset = () => {
   // Show error state if session is invalid
   if (sessionError) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navigation />
-        
-        <div className="flex-1 container mx-auto px-4 py-24 flex items-center justify-center">
+      <div className="min-h-screen flex flex-col bg-background pt-24">
+        <div className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
           <Card className="w-full max-w-md">
             <CardHeader>
               <div className="flex items-center gap-2 text-destructive mb-2">
@@ -184,10 +182,8 @@ const PasswordReset = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navigation />
-      
-      <div className="flex-1 container mx-auto px-4 py-24 flex items-center justify-center">
+    <div className="min-h-screen flex flex-col bg-background pt-24">
+      <div className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Reset Your Password</CardTitle>

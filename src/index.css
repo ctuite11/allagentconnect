@@ -98,6 +98,9 @@ All colors MUST be HSL.
     /* Borders & Dividers - Apple hairline */
     --border: 0 0% 86%;               /* Pure neutral hairline border */
     --input: 0 0% 86%;                /* Pure neutral */
+    
+    /* Placeholder text - lighter than muted-foreground */
+    --placeholder: 240 2% 60%;        /* Lighter gray for placeholders */
     --ring: 160 84% 39% / 0.3;         /* Emerald for focus rings */
 
     /* Soft divider token */
