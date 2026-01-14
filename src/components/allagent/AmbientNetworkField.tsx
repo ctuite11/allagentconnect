@@ -15,22 +15,16 @@ const AmbientNetworkField = ({ className }: { className?: string }) => {
       aria-hidden="true"
     >
       {/* Fade mask for premium edge blending */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          maskImage: 'radial-gradient(ellipse 80% 70% at 70% 40%, black 30%, transparent 70%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 70% 40%, black 30%, transparent 70%)',
-        }}
-      >
+      <div className="absolute inset-0">
         <svg 
           viewBox="0 0 400 300" 
           className="w-full h-full"
-          style={{ opacity: 0.22 }}
+          style={{ opacity: 1 }}
         >
           {/* Static network paths */}
           <g 
             stroke="currentColor" 
-            strokeWidth="0.5" 
+            strokeWidth="1" 
             fill="none" 
             className="text-[#0E56F5]"
           >
