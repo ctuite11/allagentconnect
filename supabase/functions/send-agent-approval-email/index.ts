@@ -77,7 +77,7 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Sending ${approved ? 'approval' : 'rejection'} email to ${recipientEmail} (${recipientName})`);
 
-    // Build approved email HTML - minimal, confident, no fluff
+    // Build premium AAC-branded approved email HTML
     const approvedHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -89,35 +89,69 @@ serve(async (req: Request): Promise<Response> => {
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc;">
     <tr>
-      <td align="center" style="padding: 48px 24px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px;">
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
+          
+          <!-- Header with Logo -->
+          <tr>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <img src="https://allagentconnect.com/brand/aac-globe.png" 
+                   width="80" height="80" alt="AAC" 
+                   style="display: block; margin: 0 auto 16px;" />
+              <p style="margin: 0; font-size: 22px; font-weight: 600;">
+                <span style="color: #0E56F5;">All Agent </span><span style="color: #94A3B8;">Connect</span>
+              </p>
+              <div style="width: 64px; height: 2px; background: #0E56F5; margin: 12px auto 0;"></div>
+            </td>
+          </tr>
           
           <!-- Content -->
           <tr>
-            <td style="padding: 0;">
-              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
+            <td style="padding: 8px 40px 40px;">
+              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
                 Hi ${recipientName},
               </p>
               
-              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                Your real estate license has been verified, and your access to AllAgentConnect is now active.
+              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 8px 0;">
+                <span style="color: #059669; font-weight: 600;">✓</span> Your license has been verified
               </p>
               
-              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                You can sign in using the link below:
+              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 28px 0;">
+                Your AllAgentConnect access is now active.
               </p>
               
-              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                <a href="https://allagentconnect.com/auth" style="color: #334155;">https://allagentconnect.com/auth</a>
-              </p>
+              <!-- CTA Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
+                <tr>
+                  <td align="center" style="background-color: #0F172A; border-radius: 8px;">
+                    <a href="https://allagentconnect.com/auth" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
+                      Sign In
+                    </a>
+                  </td>
+                </tr>
+              </table>
               
-              <p style="font-size: 15px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                If you have any questions, reach us anytime at <a href="mailto:hello@allagentconnect.com" style="color: #334155;">hello@allagentconnect.com</a>.
+              <!-- Fallback URL -->
+              <p style="font-size: 13px; color: #64748b; margin: 0 0 8px 0;">
+                Or visit:
               </p>
+              <div style="background-color: #F8FAFC; padding: 12px; border-radius: 6px; margin: 0 0 28px 0;">
+                <p style="margin: 0; font-size: 12px; color: #475569; word-break: break-all; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">
+                  https://allagentconnect.com/auth
+                </p>
+              </div>
               
-              <p style="font-size: 15px; color: #64748b; line-height: 1.7; margin: 32px 0 0 0;">
-                —<br>
-                AllAgentConnect
+              <p style="font-size: 15px; color: #64748b; line-height: 1.7; margin: 0;">
+                Questions? <a href="mailto:hello@allagentconnect.com" style="color: #334155; text-decoration: none;">hello@allagentconnect.com</a>
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 40px; border-top: 1px solid #f1f5f9;">
+              <p style="font-size: 13px; color: #94a3b8; margin: 0; text-align: center;">
+                AllAgentConnect &nbsp;•&nbsp; mail.allagentconnect.com
               </p>
             </td>
           </tr>
