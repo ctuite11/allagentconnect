@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -162,9 +162,8 @@ const AgentProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh] mt-20">
+      <div className="min-h-screen bg-background pt-24">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
@@ -173,9 +172,8 @@ const AgentProfile = () => {
 
   if (!agent) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 mt-20">
+      <div className="min-h-screen bg-background pt-24">
+        <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">Agent not found</p>
@@ -188,7 +186,6 @@ const AgentProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
       
       {/* Premium Header - Extends to very top (behind nav) */}
       <div className="pt-20">
