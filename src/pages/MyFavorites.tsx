@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -199,9 +199,8 @@ const MyFavorites = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center pt-20">
+      <div className="min-h-screen flex flex-col pt-20">
+        <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-muted-foreground">Loading favorites...</p>
           </div>
@@ -211,10 +210,8 @@ const MyFavorites = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
-      <main className="flex-1 bg-background pt-20">
+    <div className="min-h-screen flex flex-col pt-20">
+      <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           <PageHeader
             title="My Favorites"

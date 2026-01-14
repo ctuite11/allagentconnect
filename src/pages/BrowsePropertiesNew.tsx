@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
 import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
@@ -141,11 +141,10 @@ const BrowsePropertiesNew = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <div className="min-h-screen flex flex-col pt-20">
       <ActiveAgentBanner />
 
-      <main className="flex-1 bg-background pt-20">
+      <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-6">

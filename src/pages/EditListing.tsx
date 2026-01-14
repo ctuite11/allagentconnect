@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useNavigate, useParams } from "react-router-dom";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,8 +319,7 @@ const EditListing: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
+      <div className="min-h-screen flex flex-col pt-20">
         <div className="flex-1 flex items-center justify-center p-6">
           <p className="text-muted-foreground">You must be signed in as an agent to edit listings.</p>
         </div>
@@ -333,10 +332,8 @@ const EditListing: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navigation />
-      
-      <div className="flex-1 container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
+      <div className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
           <PageHeader 
             title="Edit Listing" 

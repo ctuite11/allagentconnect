@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
+// Navigation removed - rendered globally in App.tsx
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -322,9 +322,8 @@ const PropertyDetail = () => {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 mt-20">
+      <div className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">Listing not found</p>
@@ -358,7 +357,7 @@ const PropertyDetail = () => {
   const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-20">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -371,11 +370,9 @@ const PropertyDetail = () => {
         listingType={listing.listing_type}
         listingId={id!}
       />
-      
-      <Navigation />
 
       {/* Back Button Row - Inline chevron style */}
-      <div className="mx-auto max-w-6xl px-4 pt-20 pb-2">
+      <div className="mx-auto max-w-6xl px-4 pb-2">
         <button
           onClick={() => {
             const fromPage = location.state?.from;
