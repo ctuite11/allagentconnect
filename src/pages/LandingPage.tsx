@@ -2,8 +2,7 @@ import { ArrowRight, Share2, Users, Megaphone, MessageCircle } from "lucide-reac
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand";
-import NetworkGlobe from "@/components/home/NetworkGlobe";
-
+import AmbientNetworkField from "@/components/allagent/AmbientNetworkField";
 function ModuleCard({
   icon: Icon,
   title,
@@ -55,10 +54,10 @@ const LandingPage = () => {
       <main className="pb-12">
         {/* Hero */}
         <section className="relative flex items-center overflow-visible">
-          {/* Background globe layer */}
+          {/* Background network field layer */}
           <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-[-60px] top-[-92px] md:top-[-110px] lg:top-[-128px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
-              <NetworkGlobe />
+            <div className="absolute right-0 top-0 lg:right-8 xl:right-16">
+              <AmbientNetworkField className="w-[500px] h-[400px] lg:w-[600px] lg:h-[450px] opacity-40" />
             </div>
           </div>
           
