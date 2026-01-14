@@ -23,6 +23,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
   const [sending, setSending] = useState(false);
   const [agentInfo, setAgentInfo] = useState<{ name: string; phone: string; email: string } | null>(null);
   const [sendAsGroup, setSendAsGroup] = useState(false);
+  const [sendCopyToSelf, setSendCopyToSelf] = useState(false);
 
   useEffect(() => {
     loadAgentInfo();
@@ -87,15 +88,21 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
         name: replaceVariables(recipient.name, recipient.name),
       }));
 
+      // Add agent to recipients if sendCopyToSelf is enabled
+      const finalRecipients = sendCopyToSelf && agentInfo?.email
+        ? [...personalizedRecipients, { email: agentInfo.email, name: agentInfo.name }]
+        : personalizedRecipients;
+
       const personalizedSubject = subject;
       const personalizedMessage = message;
 
       const { data, error } = await supabase.functions.invoke('send-bulk-email', {
         body: {
-          recipients: personalizedRecipients,
+          recipients: finalRecipients,
           subject: personalizedSubject,
           message: personalizedMessage,
           agentId: user.id,
+          agentEmail: agentInfo?.email, // Pass agent email for replyTo
           sendAsGroup: sendAsGroup && recipients.length < 5, // Only allow group mode for small groups
         },
       });
@@ -105,10 +112,12 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
       const mode = sendAsGroup && recipients.length < 5 ? "group" : "individual";
       const modeText = mode === "group" ? " as a group (Reply All enabled)" : " individually (privacy protected)";
       
-      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}${modeText}. Check analytics to track opens and clicks.`);
+      const copyNote = sendCopyToSelf ? " (copy sent to you)" : "";
+      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}${modeText}${copyNote}. Check analytics to track opens and clicks.`);
       setSubject("");
       setMessage("");
       setSendAsGroup(false);
+      setSendCopyToSelf(false);
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error sending bulk email:", error);
@@ -176,6 +185,17 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               />
             </div>
           )}
+
+          <div className="flex items-center justify-between p-3 rounded-md border bg-accent/10">
+            <Label htmlFor="sendCopyToSelf" className="text-sm flex-1">
+              Send a copy to myself
+            </Label>
+            <Switch
+              id="sendCopyToSelf"
+              checked={sendCopyToSelf}
+              onCheckedChange={setSendCopyToSelf}
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject *</Label>

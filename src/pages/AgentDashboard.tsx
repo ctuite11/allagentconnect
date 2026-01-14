@@ -546,6 +546,8 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Hidden until launch - Communications Center card */}
+          {false && (
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
@@ -559,6 +561,7 @@ const AgentDashboard = () => {
               <p className="text-xs text-muted-foreground mt-0.5">Client needs and requests</p>
             </CardContent>
           </Card>
+          )}
 
           <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/agent-profile-editor")}>
             
