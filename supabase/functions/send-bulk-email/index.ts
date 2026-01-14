@@ -18,6 +18,7 @@ interface BulkEmailRequest {
   subject: string;
   message: string;
   agentId: string;
+  agentEmail?: string;
   sendAsGroup?: boolean;
 }
 
@@ -28,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { recipients, subject, message, agentId, sendAsGroup = false }: BulkEmailRequest = await req.json();
+    const { recipients, subject, message, agentId, agentEmail, sendAsGroup = false }: BulkEmailRequest = await req.json();
 
     console.log(`Sending bulk email to ${recipients.length} recipients (group mode: ${sendAsGroup})`);
 
@@ -94,6 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Send single email to all recipients
       const emailResponse = await resend.emails.send({
         from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+        replyTo: agentEmail || undefined,
         to: recipients.map(r => r.email),
         subject: subject,
         html: `
@@ -111,36 +113,14 @@ const handler = async (req: Request): Promise<Response> => {
                   margin: 0 auto;
                   padding: 20px;
                 }
-                .header {
-                  border-bottom: 2px solid #2563eb;
-                  padding-bottom: 20px;
-                  margin-bottom: 30px;
-                }
                 .content {
-                  margin-bottom: 30px;
                   white-space: pre-wrap;
-                }
-                .footer {
-                  border-top: 1px solid #e5e7eb;
-                  padding-top: 20px;
-                  margin-top: 30px;
-                  text-align: center;
-                  color: #6b7280;
-                  font-size: 14px;
                 }
               </style>
             </head>
             <body>
-              <div class="header">
-                <h1>All Agent Connect</h1>
-              </div>
-              
               <div class="content">
                 <p>${trackedMessage.replace(/\n/g, '<br>')}</p>
-              </div>
-              
-              <div class="footer">
-                <p>This email was sent from All Agent Connect</p>
               </div>
               
               <!-- Tracking pixel -->
@@ -210,6 +190,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         const emailResponse = await resend.emails.send({
           from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+          replyTo: agentEmail || undefined,
           to: [recipient.email],
           subject: subject,
           html: `
@@ -227,36 +208,15 @@ const handler = async (req: Request): Promise<Response> => {
                     margin: 0 auto;
                     padding: 20px;
                   }
-                  .header {
-                    border-bottom: 2px solid #2563eb;
-                    padding-bottom: 20px;
-                    margin-bottom: 30px;
-                  }
                   .content {
                     white-space: pre-wrap;
-                    margin-bottom: 30px;
-                  }
-                  .footer {
-                    border-top: 1px solid #e5e7eb;
-                    padding-top: 20px;
-                    margin-top: 30px;
-                    font-size: 14px;
-                    color: #6b7280;
                   }
                 </style>
               </head>
               <body>
-                <div class="header">
-                  <h1 style="color: #2563eb; margin: 0;">All Agent Connect</h1>
-                </div>
-                
                 <div class="content">
                   <p>Hello ${recipient.name},</p>
                   <p>${trackedMessage.replace(/\n/g, '<br>')}</p>
-                </div>
-                
-                <div class="footer">
-                  <p>This email was sent from All Agent Connect</p>
                 </div>
                 
                 <!-- Tracking pixel -->

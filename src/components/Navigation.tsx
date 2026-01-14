@@ -254,10 +254,13 @@ const Navigation = () => {
                       <Bell className="mr-2 h-4 w-4" />
                       Hot Sheets
                     </DropdownMenuItem>
+                    {/* Hidden until launch - Communications Center */}
+                    {false && (
                     <DropdownMenuItem onClick={() => navigate("/client-needs")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                       <FileText className="mr-2 h-4 w-4" />
                       Communications Center
                     </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                       <UserCog className="mr-2 h-4 w-4" />
                       Profile & Branding
@@ -347,10 +350,13 @@ const Navigation = () => {
                         <Bell className="mr-2 h-4 w-4" />
                         Hot Sheets
                       </DropdownMenuItem>
+                      {/* Hidden until launch - Communications Center */}
+                      {false && (
                       <DropdownMenuItem onClick={() => navigate("/client-needs")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <FileText className="mr-2 h-4 w-4" />
                         Communications Center
                       </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => navigate("/agent-profile-editor")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <UserCog className="mr-2 h-4 w-4" />
                         Profile & Branding
@@ -573,6 +579,8 @@ const Navigation = () => {
                       <Bell className="w-4 h-4" />
                       Hot Sheets
                     </button>
+                    {/* Hidden until launch - Communications Center */}
+                    {false && (
                     <button
                       onClick={() => {
                         navigate("/client-needs");
@@ -583,6 +591,7 @@ const Navigation = () => {
                       <FileText className="w-4 h-4" />
                       Communications Center
                     </button>
+                    )}
                     <button
                       onClick={() => {
                         navigate("/agent-profile-editor");
