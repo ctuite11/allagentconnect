@@ -267,17 +267,71 @@ export default function AdminApprovals() {
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
-      // Branch: Early access agents update agent_early_access table
-      if (agent.is_early_access) {
+      // Branch: Early access agents being verified - convert to full account
+      if (agent.is_early_access && newStatus === "verified") {
+        console.log(`Converting early access user to full account: ${agent.email}`);
+        
+        // Call the conversion edge function which creates auth user + sends password setup email
+        const { data, error } = await supabase.functions.invoke("convert-early-access-to-account", {
+          body: {
+            earlyAccessId: agent.id,
+            email: agent.email,
+            firstName: agent.first_name,
+            lastName: agent.last_name,
+            phone: agent.phone,
+            licenseState: agent.license_state,
+            licenseNumber: agent.license_number,
+            brokerage: agent.company,
+          },
+        });
+
+        if (error) {
+          console.error("Conversion error:", error);
+          throw new Error("Failed to create account for early access user");
+        }
+
+        console.log("Conversion result:", data);
+
+        // Update early access record status
+        const { error: updateError } = await supabase
+          .from("agent_early_access")
+          .update({ 
+            status: "verified",
+            verified_at: new Date().toISOString(),
+          })
+          .eq("id", agent.id);
+
+        if (updateError) {
+          console.error("Error updating early access status:", updateError);
+        }
+
+        toast.success(`Account created and welcome email sent to ${agent.email}`);
+      } else if (agent.is_early_access) {
+        // Early access non-verify status change (e.g., rejected)
         const { error } = await supabase
           .from("agent_early_access")
           .update({ 
             status: newStatus,
-            verified_at: newStatus === "verified" ? new Date().toISOString() : null,
+            verified_at: null,
           })
           .eq("id", agent.id);
 
         if (error) throw error;
+
+        // Send rejection email
+        if (newStatus === "rejected") {
+          await supabase.functions.invoke("send-agent-approval-email", {
+            body: {
+              userId: null,
+              email: agent.email,
+              firstName: agent.first_name,
+              approved: false,
+              isEarlyAccess: true,
+            },
+          });
+        }
+
+        toast.success(`Status updated to ${newStatus}`);
       } else {
         // Real agents: update agent_settings table
         const { error } = await supabase
@@ -293,22 +347,23 @@ export default function AdminApprovals() {
           );
 
         if (error) throw error;
+
+        // Send email for approval/rejection for real agents
+        if (newStatus === "verified" || newStatus === "rejected") {
+          await supabase.functions.invoke("send-agent-approval-email", {
+            body: {
+              userId: agent.id,
+              email: agent.email,
+              firstName: agent.first_name,
+              approved: newStatus === "verified",
+              isEarlyAccess: false,
+            },
+          });
+        }
+
+        toast.success(`Status updated to ${newStatus}`);
       }
 
-      // Send email for approval/rejection (works for both - uses email/name, not userId)
-      if (newStatus === "verified" || newStatus === "rejected") {
-        await supabase.functions.invoke("send-agent-approval-email", {
-          body: {
-            userId: agent.is_early_access ? null : agent.id,
-            email: agent.email,
-            firstName: agent.first_name,
-            approved: newStatus === "verified",
-            isEarlyAccess: agent.is_early_access,
-          },
-        });
-      }
-
-      toast.success(`Status updated to ${newStatus}`);
       setAgents((prev) =>
         prev.map((a) =>
           a.id === agent.id
@@ -322,7 +377,7 @@ export default function AdminApprovals() {
       );
     } catch (error: any) {
       console.error("Error updating status:", error);
-      toast.error("Failed to update status");
+      toast.error(error.message || "Failed to update status");
     } finally {
       setProcessingIds((prev) => {
         const newSet = new Set(prev);
