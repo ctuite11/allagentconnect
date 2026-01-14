@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -11,6 +11,29 @@ const AuthCallback = () => {
   const didNavigate = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CRITICAL: Capture recovery context SYNCHRONOUSLY on first render
+  // This MUST happen BEFORE any useEffect runs or Supabase auth events fire
+  // ═══════════════════════════════════════════════════════════════════════════
+  const { isRecoveryContext, recoveryMarkerSet } = useMemo(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const typeFromHash = hashParams.get("type");
+    const typeFromQuery = searchParams.get("type");
+    
+    const isRecovery = typeFromHash === "recovery" || typeFromQuery === "recovery";
+    
+    // Set recovery marker IMMEDIATELY during render phase (synchronous)
+    if (isRecovery && typeof window !== 'undefined') {
+      sessionStorage.setItem("aac_recovery_flow", "1");
+      if (import.meta.env.DEV) {
+        console.log("[AuthCallback] Recovery context captured SYNCHRONOUSLY");
+      }
+    }
+    
+    return { isRecoveryContext: isRecovery, recoveryMarkerSet: isRecovery };
+  }, [searchParams]);
+  // ═══════════════════════════════════════════════════════════════════════════
+
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const typeFromHash = hashParams.get("type");
@@ -20,11 +43,6 @@ const AuthCallback = () => {
     // Hash-based tokens (implicit flow)
     const accessToken = hashParams.get("access_token");
     const refreshToken = hashParams.get("refresh_token");
-
-    // Recovery detection
-    const isRecoveryContext =
-      typeFromHash === "recovery" ||
-      typeFromQuery === "recovery";
 
     // Generate a stable key to prevent double-processing
     const tokenKey =
@@ -42,6 +60,7 @@ const AuthCallback = () => {
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
         isRecoveryContext,
+        recoveryMarkerSet,
         typeFromHash,
         typeFromQuery,
         tokenKey: hasStableTokenKey ? tokenKey.substring(0, 8) + "..." : "unknown",
@@ -71,12 +90,6 @@ const AuthCallback = () => {
       console.log("[AuthCallback] Link already processed, showing error");
       setError("This link was already used. Please request a new password reset link.");
       return;
-    }
-
-    // Mark recovery flow in sessionStorage for PasswordReset to verify
-    if (isRecoveryContext) {
-      sessionStorage.setItem("aac_recovery_flow", "1");
-      if (import.meta.env.DEV) console.log("[AuthCallback] Recovery flow marked in sessionStorage");
     }
 
     const hasAuthHash = window.location.hash.includes("access_token");
@@ -171,7 +184,10 @@ const AuthCallback = () => {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
-          if (isRecoveryContext) {
+          // CRITICAL: Check STORED recovery marker, not just computed isRecoveryContext
+          // The marker is set synchronously at component top level
+          const hasRecoveryMarker = sessionStorage.getItem("aac_recovery_flow") === "1";
+          if (isRecoveryContext || hasRecoveryMarker) {
             if (!didNavigate.current) {
               didNavigate.current = true;
               window.history.replaceState(null, "", window.location.pathname);
@@ -194,6 +210,18 @@ const AuthCallback = () => {
 
       // Check for existing session
       const checkExistingSession = async () => {
+        // CRITICAL: Check recovery marker FIRST - takes priority over any existing session
+        const hasRecoveryMarker = sessionStorage.getItem("aac_recovery_flow") === "1";
+        if (hasRecoveryMarker && !didNavigate.current) {
+          if (import.meta.env.DEV) {
+            console.log("[AuthCallback] Recovery marker found in checkExistingSession - redirecting to password-reset");
+          }
+          didNavigate.current = true;
+          window.history.replaceState(null, "", window.location.pathname);
+          navigate("/password-reset", { replace: true });
+          return;
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session?.user && !didNavigate.current) {
