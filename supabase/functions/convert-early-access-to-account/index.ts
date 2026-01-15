@@ -255,12 +255,13 @@ serve(async (req: Request): Promise<Response> => {
       console.error("Error assigning agent role:", roleError);
     }
 
-    // Generate password reset link
+    // Generate password reset link - use PUBLIC_SITE_URL env var for redirect
+    const publicSiteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.com";
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
       options: {
-        redirectTo: "https://allagentconnect.com/auth/callback",
+        redirectTo: `${publicSiteUrl}/auth/callback`,
       },
     });
 
