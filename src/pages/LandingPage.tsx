@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
+import VersionStamp from "@/components/VersionStamp";
 
 function ModuleCard({
   icon: Icon,
@@ -163,6 +164,12 @@ const LandingPage = () => {
             </div>
           </div>
         </section>
+
+        {/* Footer fine print */}
+        <footer className="mt-12 text-center pb-6">
+          <div className="text-xs text-neutral-500">© {new Date().getFullYear()} AAC Member Network</div>
+          <VersionStamp className="mt-1" />
+        </footer>
       </main>
     </div>
   );
