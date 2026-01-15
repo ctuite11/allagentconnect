@@ -88,11 +88,10 @@ const App = () => (
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
-            {import.meta.env.VITE_SHOW_BUILD_BADGE === "true" && (
-              <div className="fixed top-3 right-3 z-50 rounded-md border bg-background/80 backdrop-blur px-2 py-1">
-                <VersionStamp className="text-xs" />
-              </div>
-            )}
+            {/* Debug badge - always show for now to verify build */}
+            <div className="fixed top-3 right-3 z-50 rounded-md border bg-background/80 backdrop-blur px-2 py-1">
+              <VersionStamp className="text-xs" />
+            </div>
             <>
               <ActiveAgentBanner />
               <Navigation />
