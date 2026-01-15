@@ -51,6 +51,15 @@ export default function Home() {
       </div>
 
       <main className="pb-12">
+        {/* DEBUG: Environment variable check - REMOVE AFTER TESTING */}
+        <div style={{fontSize: 12, opacity: 0.9, padding: '8px 12px', background: '#fee2e2', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, textAlign: 'center'}}>
+          {JSON.stringify({
+            target: import.meta.env.VITE_DEPLOY_TARGET,
+            version: import.meta.env.VITE_APP_VERSION,
+            publicUrl: import.meta.env.VITE_PUBLIC_URL,
+            mode: import.meta.env.MODE
+          })}
+        </div>
         {/* Hero - calm, centered, confident */}
         <section className="relative w-full px-6 sm:px-10 lg:px-20 pt-24 md:pt-28 lg:pt-32 pb-16 md:pb-20">
           <div className="max-w-3xl mx-auto text-center">
