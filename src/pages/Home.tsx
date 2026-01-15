@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
+import VersionStamp from "@/components/VersionStamp";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -336,6 +337,7 @@ export default function Home() {
           <div className="text-sm text-neutral-600">
             <span className="font-semibold text-neutral-900">All Agent Connect</span> — where real deals get done.
             <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • AAC Member Network</div>
+            <VersionStamp className="mt-1" />
           </div>
 
           <div className="flex items-center gap-4 text-sm">

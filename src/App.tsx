@@ -67,6 +67,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import Navigation from "./components/Navigation";
+import VersionStamp from "./components/VersionStamp";
 
 
 const queryClient = new QueryClient({
@@ -87,6 +88,11 @@ const App = () => (
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
+            {import.meta.env.VITE_SHOW_BUILD_BADGE === "true" && (
+              <div className="fixed top-3 right-3 z-50 rounded-md border bg-background/80 backdrop-blur px-2 py-1">
+                <VersionStamp className="text-xs" />
+              </div>
+            )}
             <>
               <ActiveAgentBanner />
               <Navigation />
