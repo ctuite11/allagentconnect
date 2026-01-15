@@ -25,6 +25,7 @@ interface SendNotificationRequest {
   subject: string;
   message: string;
   previewOnly?: boolean;
+  sendCopyToSelf?: boolean;
   criteria?: {
     state?: string;
     counties?: string[];
@@ -53,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized");
     }
 
-    const { category, subject, message, criteria, previewOnly }: SendNotificationRequest = await req.json();
+    const { category, subject, message, criteria, previewOnly, sendCopyToSelf }: SendNotificationRequest = await req.json();
 
     console.log(`Sending ${category} notification from user ${user.id}`, criteria ? `with criteria: ${JSON.stringify(criteria)}` : "");
 
@@ -392,6 +393,49 @@ const handler = async (req: Request): Promise<Response> => {
         const errorMsg = `Failed to send to ${agent.email}: ${error.message}`;
         emailResults.errors.push(errorMsg);
         console.error(errorMsg);
+      }
+    }
+
+    // Send copy to sender if requested
+    if (sendCopyToSelf && senderEmail && isValidEmail(senderEmail)) {
+      try {
+        const selfCopyHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #e0f2fe; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+              <p style="margin: 0; color: #0369a1; font-size: 14px;">
+                <strong>Copy of email sent to ${emailResults.sent} recipient${emailResults.sent !== 1 ? 's' : ''}</strong>
+              </p>
+            </div>
+            <h2 style="color: #333;">${subject}</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+              <strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}<br>
+              <strong>Category:</strong> ${getCategoryLabel(category)}
+            </p>
+            
+            ${criteriaText ? `
+              <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #333;">Request Criteria</h3>
+                ${criteriaText}
+              </div>
+            ` : ""}
+            
+            <div style="background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+              <p style="white-space: pre-wrap; color: #333;">${message}</p>
+            </div>
+          </div>
+        `;
+
+        const selfEmailPayload: any = {
+          from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+          to: senderEmail,
+          subject: `[COPY] [${getCategoryLabel(category)}] ${subject}`,
+          html: selfCopyHtml,
+        };
+
+        await resend.emails.send(selfEmailPayload);
+        console.log(`Copy sent to sender: ${senderEmail}`);
+      } catch (error: any) {
+        console.error(`Failed to send copy to sender: ${error.message}`);
       }
     }
 
