@@ -32,6 +32,7 @@ import { TownsPicker } from "@/components/TownsPicker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 
 interface SendEmailDialogProps {
   open: boolean;
@@ -85,6 +86,9 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
   // Collapsible sections
   const [geoExpanded, setGeoExpanded] = useState(true);
   const [propertyExpanded, setPropertyExpanded] = useState(false);
+  
+  // Send copy to self
+  const [sendCopyToSelf, setSendCopyToSelf] = useState(false);
   const [priceExpanded, setPriceExpanded] = useState(false);
 
   const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
@@ -220,13 +224,15 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             subject,
             message,
             criteria,
+            sendCopyToSelf,
           }
         }
       );
 
       if (error) throw error;
 
-      toast.success(`Email sent to ${data?.recipientCount || 0} recipients`);
+      const copyMsg = sendCopyToSelf ? " (copy sent to you)" : "";
+      toast.success(`Email sent to ${data?.sent || data?.recipientCount || 0} recipients${copyMsg}`);
       handleClose();
       onSuccess?.();
     } catch (error: any) {
@@ -248,6 +254,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
     setMaxPrice("");
     setPropertyTypes([]);
     setRecipientCount(null);
+    setSendCopyToSelf(false);
     onOpenChange(false);
   };
 
@@ -530,6 +537,20 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             <p className="text-sm text-amber-800 dark:text-amber-200">
               Replies will be delivered to your email inbox, not to DirectConnectMLS.
             </p>
+          </div>
+
+          {/* Send Copy to Self Option */}
+          <div className="flex items-center justify-between p-4 bg-secondary/30 border border-border rounded-xl">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Send a copy to myself</Label>
+              <p className="text-xs text-muted-foreground">
+                Receive a copy of this email at your registered email address
+              </p>
+            </div>
+            <Switch
+              checked={sendCopyToSelf}
+              onCheckedChange={setSendCopyToSelf}
+            />
           </div>
 
           {/* Actions */}
