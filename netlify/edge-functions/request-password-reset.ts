@@ -123,8 +123,9 @@ export default async function handler(request: Request, context: any) {
 
     const cleanEmail = email.trim().toLowerCase();
     
-    // Redirect to auth/callback which handles the recovery token and routes to password-reset
-    const redirectTo = "https://allagentconnect.com/auth/callback";
+    // Use PUBLIC_SITE_URL env var for redirect, fallback to production domain
+    const publicSiteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.com";
+    const redirectTo = `${publicSiteUrl}/auth/callback`;
     console.log("[request-password-reset] redirectTo =", redirectTo);
 
     console.log(`Password reset requested for: ${cleanEmail.substring(0, 3)}***`);

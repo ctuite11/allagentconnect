@@ -658,11 +658,9 @@ const Auth = () => {
     try {
       const validatedEmail = emailSchema.parse(email);
       
-      // Always redirect to production for password reset to ensure allowlisted URL
-      const PROD_CALLBACK = "https://allagentconnect.com/auth/callback";
-      const origin = window.location.origin;
-      const isProd = origin === "https://allagentconnect.com";
-      const redirectUrl = isProd ? `${origin}/auth/callback` : PROD_CALLBACK;
+      // Use VITE_PUBLIC_URL env var for redirect, fallback to production domain
+      const publicSiteUrl = import.meta.env.VITE_PUBLIC_URL || "https://allagentconnect.com";
+      const redirectUrl = `${publicSiteUrl}/auth/callback`;
 
       // Use custom edge function (bypasses Supabase default purple email)
       const { error: fnError } = await supabase.functions.invoke("send-password-reset", {

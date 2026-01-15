@@ -55,6 +55,9 @@ const Footer = () => {
         
         <div className="pt-8 border-t border-border text-center text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} All Agent Connect. All rights reserved.</p>
+          <p className="mt-2 text-xs opacity-60">
+            {import.meta.env.VITE_DEPLOY_TARGET || 'local'} · {import.meta.env.VITE_APP_VERSION || `dev-${Date.now()}`}
+          </p>
         </div>
       </div>
     </footer>
