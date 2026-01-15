@@ -134,11 +134,12 @@ const ConsumerAuth = () => {
       const emailValidation = z.string().trim().email("Invalid email address");
       const validated = emailValidation.parse(resetEmail);
 
-      // Use backend password reset sender (keeps auth project + allowlist consistent)
+      // Use VITE_PUBLIC_URL for consistent redirect across environments, fallback to origin for dev
+      const publicUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
       const { error } = await supabase.functions.invoke("send-password-reset", {
         body: {
           email: validated,
-          redirectUrl: `${window.location.origin}/auth/callback`,
+          redirectUrl: `${publicUrl}/auth/callback`,
         },
       });
 
@@ -211,7 +212,9 @@ const ConsumerAuth = () => {
         phone,
       });
 
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      // Use VITE_PUBLIC_URL for consistent redirect across environments, fallback to origin for dev
+      const publicUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
+      const redirectUrl = `${publicUrl}/auth/callback`;
 
       const { data, error } = await supabase.auth.signUp({
         email: validated.email,
