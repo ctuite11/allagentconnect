@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { LayoutGrid, List, Home, Flame, Heart, Users, Mail, Activity, UserCircle, CheckCircle, Bell } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { DASHBOARD_FILTER_STATUSES, LISTING_STATUS_LABELS } from "@/constants/status";
 interface Listing {
   id: string;
   address: string;
@@ -688,9 +689,17 @@ const AgentDashboard = () => {
             <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               {/* Status Filter Buttons */}
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {['active', 'draft', 'coming_soon', 'new', 'back_on_market', 'expired', 'pending', 'cancelled', 'temp_withdrawn', 'sold'].map(status => <Button key={status} variant={statusFilters.includes(status) ? 'default' : 'outline'} size="sm" onClick={() => toggleStatusFilter(status)} className="rounded-lg capitalize text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-4 shadow-sm hover:shadow transition-all touch-manipulation">
-                    {status.replace(/_/g, ' ')}
-                  </Button>)}
+                {DASHBOARD_FILTER_STATUSES.map(status => (
+                  <Button 
+                    key={status} 
+                    variant={statusFilters.includes(status) ? 'default' : 'outline'} 
+                    size="sm" 
+                    onClick={() => toggleStatusFilter(status)} 
+                    className="rounded-lg text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-4 shadow-sm hover:shadow transition-all touch-manipulation"
+                  >
+                    {LISTING_STATUS_LABELS[status] || status.replace(/_/g, ' ')}
+                  </Button>
+                ))}
               </div>
 
               {/* Sort and View Controls */}

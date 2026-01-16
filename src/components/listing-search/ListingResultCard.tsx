@@ -1,8 +1,6 @@
 import { Check, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-
+import { ListingStatusBadge } from "@/components/ui/status-badge";
 interface Listing {
   id: string;
   listing_number: string;
@@ -37,30 +35,7 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-const getStatusBadge = (status: string) => {
-  const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-    active: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
-    new: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
-    coming_soon: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
-    off_market: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
-    back_on_market: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Back on Market" },
-    price_changed: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Price Change" },
-    under_agreement: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
-    pending: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
-    sold: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Sold" },
-    withdrawn: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Withdrawn" },
-    expired: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Expired" },
-    cancelled: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Cancelled" },
-  };
-
-  const config = statusConfig[status] || { bg: "bg-muted", text: "text-muted-foreground", label: status };
-
-  return (
-    <Badge className={`${config.bg} ${config.text} border-0 text-xs font-medium px-2 py-0.5 whitespace-nowrap`}>
-      {config.label}
-    </Badge>
-  );
-};
+// Status badge now uses centralized StatusBadge component
 
 const getThumbnail = (listing: Listing) => {
   if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
@@ -167,7 +142,7 @@ export const ListingResultCard = ({
             {loc.showNeighborhood && ` • ${loc.neighborhood}`}
           </div>
           <div className="mt-1.5 flex items-center gap-2">
-            {getStatusBadge(listing.status)}
+            <ListingStatusBadge status={listing.status} size="sm" />
             <span className="text-[11px] font-mono text-muted-foreground">#{listing.listing_number}</span>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Heart, ArrowUpDown, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
 
 interface Listing {
   id: string;
@@ -64,29 +65,7 @@ const getDaysOnMarket = (listDate?: string) => {
   return days >= 0 ? days : "-";
 };
 
-const getStatusBadge = (status: string) => {
-  const statusStyles: Record<string, string> = {
-    active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    coming_soon: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    off_market: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-    pending: "bg-teal-500/10 text-teal-600 border-teal-500/20",
-    sold: "bg-muted text-muted-foreground border-border",
-  };
-
-  const labels: Record<string, string> = {
-    active: "Active",
-    coming_soon: "Coming Soon",
-    off_market: "Off-Market",
-    pending: "Pending",
-    sold: "Sold",
-  };
-
-  return (
-    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusStyles[status] || ""}`}>
-      {labels[status] || status}
-    </Badge>
-  );
-};
+// Status badge now uses centralized StatusBadge component
 
 const MLSPINResultsTable = ({
   listings,
@@ -204,7 +183,7 @@ const MLSPINResultsTable = ({
               <TableCell className="text-xs text-center">{listing.bathrooms || "-"}</TableCell>
               <TableCell className="text-xs text-right">{listing.square_feet?.toLocaleString() || "-"}</TableCell>
               <TableCell className="text-xs text-center">{getDaysOnMarket(listing.list_date)}</TableCell>
-              <TableCell>{getStatusBadge(listing.status)}</TableCell>
+              <TableCell><ListingStatusBadge status={listing.status} size="sm" /></TableCell>
               <TableCell>
                 {listing.buyer_match_count && listing.buyer_match_count > 0 ? (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted text-foreground">
