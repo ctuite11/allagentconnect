@@ -211,8 +211,8 @@ const AgentProfile = () => {
               </section>
             )}
 
-            {/* Client Incentives Section */}
-            {(agent.buyer_incentives || agent.seller_incentives) && (
+            {/* Client Incentives Section - hidden per AAC policy */}
+            {false && (agent.buyer_incentives || agent.seller_incentives) && (
               <section>
                 <h2 className="text-2xl font-semibold text-foreground mb-4">
                   Client Incentives

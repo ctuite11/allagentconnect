@@ -185,8 +185,8 @@ const ProfilePreviewPanel = ({
           </>
         )}
 
-        {/* Incentives - matches public profile card styling */}
-        {(buyerIncentives || sellerIncentives) && (
+        {/* Incentives - hidden per AAC policy */}
+        {false && (buyerIncentives || sellerIncentives) && (
           <>
             <Separator />
             <div className="space-y-4">

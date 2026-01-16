@@ -172,8 +172,8 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
           )}
         </div>
 
-        {/* Incentive Badge - Single, Prominent */}
-        {incentiveBadge && (
+        {/* Incentive Badge - hidden per AAC policy */}
+        {false && incentiveBadge && (
           <div className="mb-4">
             <Badge 
               variant="outline" 
