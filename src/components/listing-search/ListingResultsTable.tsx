@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowUpDown, ExternalLink, Check, FileSpreadsheet, Eye, EyeOff, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
 
 import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
@@ -75,38 +76,7 @@ const getDaysOnMarket = (listDate?: string) => {
   return days >= 0 ? days : "-";
 };
 
-// Status badge with specified colors
-const getStatusBadge = (status: string) => {
-  // Green = Active, Orange = Coming Soon, Red = Off-Market, Gray = Sold
-  const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-    active: { bg: "bg-neutral-100", text: "text-emerald-700", label: "Active" },
-    new: { bg: "bg-neutral-100", text: "text-emerald-700", label: "Active" },
-    coming_soon: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Coming Soon" },
-    off_market: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Off-Market" },
-    back_on_market: { bg: "bg-neutral-100", text: "text-emerald-700", label: "Back on Market" },
-    price_changed: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Price Change" },
-    under_agreement: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Under Agreement" },
-    pending: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Pending" },
-    sold: { bg: "bg-neutral-100", text: "text-neutral-600", label: "Sold" },
-    withdrawn: { bg: "bg-neutral-100", text: "text-neutral-600", label: "Withdrawn" },
-    expired: { bg: "bg-neutral-100", text: "text-neutral-600", label: "Expired" },
-    cancelled: { bg: "bg-neutral-100", text: "text-neutral-600", label: "Cancelled" },
-  };
-
-  const config = statusConfig[status] || {
-    bg: "bg-neutral-100",
-    text: "text-neutral-600",
-    label: status,
-  };
-
-  return (
-    <Badge 
-      className={`${config.bg} ${config.text} border-0 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap`}
-    >
-      {config.label}
-    </Badge>
-  );
-};
+// Status badge now uses centralized StatusBadge component
 
 // Get thumbnail from photos array
 const getThumbnail = (listing: Listing) => {
@@ -698,7 +668,7 @@ const ListingResultsTable = ({
                             >
                               #{listing.listing_number}
                             </button>
-                            {getStatusBadge(listing.status)}
+                            <ListingStatusBadge status={listing.status} size="sm" />
                           </div>
 
                           {/* Micro-facts line */}
@@ -846,7 +816,7 @@ const ListingResultsTable = ({
                         </div>
                         <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
                           <div className="text-[11px] text-neutral-500 uppercase tracking-wider">Status</div>
-                          <div className="mt-1">{getStatusBadge(listing.status)}</div>
+                          <div className="mt-1"><ListingStatusBadge status={listing.status} /></div>
                         </div>
                         {getPropertyStyle(listing) && (
                           <div className="rounded-lg border border-neutral-200/70 bg-white p-3">
