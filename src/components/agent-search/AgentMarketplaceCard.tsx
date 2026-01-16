@@ -109,7 +109,7 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
       : null;
 
   // Verified badge logic - must be based on actual verification status, not profile completeness
-  const isVerified = agent.agent_settings?.agent_status === 'approved';
+  const isVerified = agent.agent_settings?.agent_status === 'verified';
 
   // Get incentive badge
   const incentiveBadge = getIncentiveBadge(agent);
