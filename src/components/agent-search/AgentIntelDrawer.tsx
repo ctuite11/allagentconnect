@@ -161,8 +161,8 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
             </div>
           </div>
 
-          {/* Buyer Incentives */}
-          {agent.buyer_incentives && (
+          {/* Buyer Incentives - hidden per AAC policy */}
+          {false && agent.buyer_incentives && (
             <>
               <Separator />
               <div className="space-y-2">

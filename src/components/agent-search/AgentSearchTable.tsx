@@ -184,18 +184,10 @@ const AgentSearchTable = ({ agents, loading, sortOrder, onSortChange }: AgentSea
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    {agent.buyer_incentives ? (
-                      <div className="flex items-center gap-1.5">
-                        <Gift className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                        <span className="text-xs text-muted-foreground truncate max-w-[150px]">
-                          {agent.buyer_incentives}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
+                {/* Incentives column - hidden per AAC policy */}
+                <TableCell className="hidden xl:table-cell">
+                  <span className="text-xs text-muted-foreground">—</span>
+                </TableCell>
                   <TableCell>
                     {(agent.active_listings_count ?? 0) > 0 ? (
                       <Badge className="bg-blue-600 hover:bg-blue-700 gap-1">
