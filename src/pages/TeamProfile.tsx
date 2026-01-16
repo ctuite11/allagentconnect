@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -160,9 +159,8 @@ const TeamProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[60vh] mt-20">
+      <div className="min-h-screen bg-background pt-20">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </div>
@@ -171,9 +169,8 @@ const TeamProfile = () => {
 
   if (!team) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 mt-20">
+      <div className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">Team not found</p>
@@ -187,9 +184,8 @@ const TeamProfile = () => {
   const primaryContact = members.find(m => m.role === 'owner')?.agent_profiles || members[0]?.agent_profiles;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-24">
+    <div className="min-h-screen bg-background pt-20">
+      <div className="container mx-auto px-4 py-8">
         <button
           onClick={() => navigate("/manage-team")}
           className="mb-6 p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"

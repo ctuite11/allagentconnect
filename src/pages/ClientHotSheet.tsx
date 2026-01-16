@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -607,9 +606,8 @@ const ClientHotSheet = () => {
 
   if (!hotSheet) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center pt-20">
+      <div className="min-h-screen flex flex-col pt-20">
+        <main className="flex-1 flex items-center justify-center">
           <Card className="p-8">
             <p className="text-muted-foreground">Hot sheet not found</p>
           </Card>
@@ -693,10 +691,8 @@ const ClientHotSheet = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
-      <main className="flex-1 bg-background pt-20">
+    <div className="min-h-screen flex flex-col pt-20">
+      <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Agent Banner */}
           {agentProfile && (

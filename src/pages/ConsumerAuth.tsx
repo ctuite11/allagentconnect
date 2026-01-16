@@ -10,7 +10,6 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -286,10 +285,8 @@ const ConsumerAuth = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navigation />
-      
-      <div className="flex-1 container mx-auto px-4 py-24 flex items-center justify-center">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
+      <div className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Welcome to All Agent Connect</CardTitle>

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Heart } from "lucide-react";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -70,9 +69,8 @@ export default function ClientFavoritesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="container mx-auto px-4 pt-20 pb-12">
+    <div className="min-h-screen bg-background pt-20">
+      <main className="container mx-auto px-4 pb-12">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <PageTitle icon={<Heart className="w-8 h-8 text-primary" />} className="mb-2">

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -122,9 +121,8 @@ const ListingIntel = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 pt-20">
+      <div className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -134,9 +132,8 @@ const ListingIntel = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen bg-background pt-20">
+      <div className="container mx-auto px-4 py-8">
         <PageHeader
           title="Listing Intel"
           subtitle="Filter and find potential buyers for your listings"

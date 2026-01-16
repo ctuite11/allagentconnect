@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -266,8 +265,7 @@ const ClientHotsheetPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
+      <div className="min-h-screen flex flex-col pt-20">
         <main className="flex-1 flex items-center justify-center px-4">
           <p className="text-muted-foreground text-lg">Loading your hotsheet…</p>
         </main>
@@ -278,8 +276,7 @@ const ClientHotsheetPage = () => {
 
   if (!loading && error) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
+      <div className="min-h-screen flex flex-col pt-20">
         <main className="flex-1 flex items-center justify-center px-4">
           <Card className="max-w-md w-full p-6 text-center">
             <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
@@ -371,9 +368,8 @@ const ClientHotsheetPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      <main className="flex-1 container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen flex flex-col pt-20">
+      <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Agent Header */}
           {agent && (
