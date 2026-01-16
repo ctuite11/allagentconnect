@@ -5,7 +5,6 @@ import { checkIsAdminRole } from "@/lib/auth/roles";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,6 +34,8 @@ import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
 import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
 import { UserPlus } from "lucide-react";
+import { AgentStatusBadge } from "@/components/ui/status-badge";
+import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 
 interface Agent {
   id: string;
@@ -76,23 +77,6 @@ const stateNames: Record<string, string> = {
   NJ: "New Jersey",
   PA: "Pennsylvania",
 };
-
-const statusColors: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800 border-amber-200",
-  verified: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  rejected: "bg-rose-100 text-rose-800 border-rose-200",
-  unverified: "bg-slate-100 text-slate-600 border-slate-200",
-  suspended: "bg-orange-100 text-orange-800 border-orange-200",
-  unknown: "bg-purple-100 text-purple-800 border-purple-200",
-};
-
-const statusOptions = [
-  { value: "unverified", label: "Unverified" },
-  { value: "pending", label: "Pending" },
-  { value: "verified", label: "Verified" },
-  { value: "rejected", label: "Rejected" },
-  { value: "suspended", label: "Suspended" },
-];
 
 type SortField = "name" | "status" | "created_at" | "company";
 type SortDirection = "asc" | "desc";
@@ -670,7 +654,7 @@ export default function AdminApprovals() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  {statusOptions.map((opt) => (
+                  {AGENT_STATUS_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -815,15 +799,10 @@ export default function AdminApprovals() {
                         disabled={isProcessing}
                       >
                         <SelectTrigger className="w-auto h-auto rounded-lg border-0 bg-transparent p-0 [&>svg]:hidden">
-                          <Badge
-                            variant="outline"
-                            className={`${statusColors[agent.agent_status] || statusColors.unverified} capitalize`}
-                          >
-                            {agent.agent_status}
-                          </Badge>
+                          <AgentStatusBadge status={agent.agent_status} />
                         </SelectTrigger>
                         <SelectContent>
-                          {statusOptions.map((opt) => (
+                          {AGENT_STATUS_OPTIONS.map((opt) => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>

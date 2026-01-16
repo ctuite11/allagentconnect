@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
+import { LISTING_SEARCH_STATUSES, PROPERTY_TYPES } from "@/constants/status";
 
 export interface FilterState {
   propertyTypes: string[];
@@ -121,34 +122,8 @@ export const initialFilters: FilterState = {
   pricePerSqFt: "",
 };
 
-const PROPERTY_TYPES = [
-  { value: "single_family", label: "Single Family" },
-  { value: "condo", label: "Condo" },
-  { value: "multi_family", label: "Multi-Family" },
-  { value: "land", label: "Land" },
-  { value: "commercial", label: "Commercial" },
-  { value: "residential_rental", label: "Residential Rental" },
-];
-
-const STATUSES = [
-  { value: "new", label: "New" },
-  { value: "active", label: "Active" },
-  { value: "price_changed", label: "Price Changed" },
-  { value: "back_on_market", label: "Back on Market" },
-  { value: "extended", label: "Extended" },
-  { value: "reactivated", label: "Reactivated" },
-  { value: "coming_soon", label: "Coming Soon" },
-  { value: "off_market", label: "Private" },
-  { value: "under_agreement", label: "Under Agreement" },
-  { value: "pending", label: "Pending" },
-  { value: "contingent", label: "Contingent" },
-  { value: "temporarily_withdrawn", label: "Temporarily Withdrawn" },
-  { value: "withdrawn", label: "Withdrawn" },
-  { value: "expired", label: "Expired" },
-  { value: "canceled", label: "Canceled" },
-  { value: "sold", label: "Sold" },
-  { value: "rented", label: "Rented" },
-];
+// Use centralized status constants
+const STATUSES = LISTING_SEARCH_STATUSES;
 
 interface ListingSearchFiltersProps {
   filters: FilterState;
