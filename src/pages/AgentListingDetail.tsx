@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -293,9 +292,8 @@ const AgentListingDetail = () => {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 mt-20">
+      <div className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-8">
           <Card className="bg-card border-border rounded-xl shadow-sm">
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">Listing not found</p>
@@ -323,8 +321,7 @@ const AgentListingDetail = () => {
     : listing.address;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <div className="min-h-screen bg-background pt-16">
 
       {/* Sticky Header Bar */}
       <div className="border-b border-border bg-card sticky top-16 z-10">

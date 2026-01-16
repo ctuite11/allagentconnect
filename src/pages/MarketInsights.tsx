@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -194,10 +193,8 @@ const MarketInsights = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
-      <main className="flex-1 bg-white pt-20">
+    <div className="min-h-screen flex flex-col pt-20">
+      <main className="flex-1 bg-white">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <PageHeader

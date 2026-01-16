@@ -12,7 +12,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import Navigation from "@/components/Navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { z } from "zod";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
@@ -288,9 +287,8 @@ const SubmitClientNeed = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen bg-background pt-20">
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
           <PageHeader
             title="Submit Client Need"

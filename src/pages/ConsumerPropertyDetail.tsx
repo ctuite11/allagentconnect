@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -214,9 +213,8 @@ const ConsumerPropertyDetail = () => {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 mt-20">
+      <div className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">Listing not found</p>
@@ -242,7 +240,7 @@ const ConsumerPropertyDetail = () => {
   const canonicalUrl = getListingPublicUrl(id!);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-16">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -255,7 +253,6 @@ const ConsumerPropertyDetail = () => {
         listingType={listing.listing_type}
         listingId={id!}
       />
-      <Navigation />
       <div className="container mx-auto px-4 py-8 pt-20" style={{ maxWidth: '1600px' }}>
         <div className="mx-auto">
           {/* Hero Image Section with Carousel Controls */}
