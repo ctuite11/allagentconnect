@@ -2724,6 +2724,12 @@ export type Database = {
       }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
+      get_verified_agent_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       get_verified_early_access_count: { Args: never; Returns: number }
       has_role: {
         Args: {

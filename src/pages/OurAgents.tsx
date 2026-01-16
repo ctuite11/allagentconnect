@@ -97,14 +97,13 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
       
-      // Step 1: Get verified agent IDs from the public view (bypasses agent_settings RLS)
-      const { data: verifiedDirectory, error: verifiedError } = await supabase
-        .from("agent_directory_status")
-        .select("user_id");
+      // Step 1: Get verified agent IDs via SECURITY DEFINER RPC (bypasses agent_settings RLS safely)
+      const { data: verifiedRows, error: verifiedError } = await supabase
+        .rpc("get_verified_agent_ids");
 
       if (verifiedError) throw verifiedError;
 
-      const verifiedIds = (verifiedDirectory || []).map(s => s.user_id);
+      const verifiedIds = (verifiedRows || []).map(r => r.user_id);
 
       // If no verified agents, set empty state and return early
       if (verifiedIds.length === 0) {
