@@ -7,6 +7,8 @@ import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2 } from "lucide-react";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
+import { LISTING_STATUS_LABELS, getStatusConfig } from "@/constants/status";
 
 // Filled blue car/SUV icon for Broker Tour (AAC Blue #0E56F5)
 function BlueCarIcon({ className }: { className?: string }) {
@@ -66,44 +68,19 @@ interface Listing {
   };
 }
 
-// Row 1: Primary statuses
-const STATUS_ROW_1: { label: string; value: ListingStatus }[] = [
-  { label: "Off-Market", value: "off_market" },
-  { label: "Coming Soon", value: "coming_soon" },
-  { label: "New", value: "new" },
-  { label: "Active", value: "active" },
-  { label: "Pending", value: "pending" },
-  { label: "Sold", value: "sold" },
-  { label: "Draft", value: "draft" },
+// Status filter options using centralized labels
+const ALL_STATUSES: { label: string; value: ListingStatus }[] = [
+  { label: LISTING_STATUS_LABELS.off_market || "Off-Market", value: "off_market" },
+  { label: LISTING_STATUS_LABELS.coming_soon || "Coming Soon", value: "coming_soon" },
+  { label: LISTING_STATUS_LABELS.new || "New", value: "new" },
+  { label: LISTING_STATUS_LABELS.active || "Active", value: "active" },
+  { label: LISTING_STATUS_LABELS.pending || "Pending", value: "pending" },
+  { label: LISTING_STATUS_LABELS.sold || "Sold", value: "sold" },
+  { label: LISTING_STATUS_LABELS.draft || "Draft", value: "draft" },
+  { label: LISTING_STATUS_LABELS.withdrawn || "Withdrawn", value: "withdrawn" },
+  { label: LISTING_STATUS_LABELS.expired || "Expired", value: "expired" },
+  { label: LISTING_STATUS_LABELS.canceled || "Cancelled", value: "cancelled" },
 ];
-
-// Row 2: Secondary statuses
-const STATUS_ROW_2: { label: string; value: ListingStatus }[] = [
-  { label: "Withdrawn", value: "withdrawn" },
-  { label: "Expired", value: "expired" },
-  { label: "Cancelled", value: "cancelled" },
-];
-
-const ALL_STATUSES = [...STATUS_ROW_1, ...STATUS_ROW_2];
-
-function statusBadgeClass(status: string) {
-  switch (status) {
-    case "active":
-    case "new":
-      return "border border-emerald-200 bg-emerald-50 text-emerald-700";
-    case "coming_soon":
-    case "pending":
-      return "border border-amber-200 bg-amber-50 text-amber-700";
-    case "sold":
-    case "draft":
-    case "off_market":
-    case "withdrawn":
-    case "expired":
-    case "cancelled":
-    default:
-      return "border border-zinc-200 bg-zinc-50 text-zinc-700";
-  }
-}
 
 function getThumbnailUrl(listing: Listing) {
   if (!listing.photos) return null;
@@ -524,11 +501,7 @@ function MyListingsView({
                 </div>
                 {/* Status + Listing # as secondary metadata */}
                 <div className="flex items-center gap-2 mt-2">
-                  <span
-                    className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize ${statusBadgeClass(l.status)}`}
-                  >
-                    {l.status.replace("_", " ")}
-                  </span>
+                  <ListingStatusBadge status={l.status} size="sm" />
                   {l.listing_number && (
                     <span className="text-xs text-zinc-500">#{l.listing_number}</span>
                   )}
@@ -666,9 +639,7 @@ function MyListingsView({
 
                 {/* Status + Dates - stacked, absolutely positioned top-right */}
                 <div className="absolute top-4 right-4 shrink-0 text-right space-y-0.5">
-                  <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium tracking-tight leading-none capitalize ${statusBadgeClass(l.status)}`}>
-                    {l.status.replace("_", " ")}
-                  </span>
+                  <ListingStatusBadge status={l.status} size="sm" />
                   <div className="text-xs text-zinc-500 leading-tight pt-1">List: {listDate}</div>
                   <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate || "—"}</div>
                   <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>

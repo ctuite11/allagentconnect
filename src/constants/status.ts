@@ -223,6 +223,20 @@ export function normalizeStatus(status: string): string {
 }
 
 // =============================================================================
+// PROPERTY TYPES (shared across filter panels)
+// =============================================================================
+
+export const PROPERTY_TYPES = [
+  { value: "single_family", label: "Single Family" },
+  { value: "condo", label: "Condo" },
+  { value: "multi_family", label: "Multi-Family" },
+  { value: "townhouse", label: "Townhouse" },
+  { value: "land", label: "Land" },
+  { value: "commercial", label: "Commercial" },
+  { value: "residential_rental", label: "Residential Rental" },
+];
+
+// =============================================================================
 // FILTER OPTION ARRAYS (for dropdowns)
 // =============================================================================
 

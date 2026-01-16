@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, Search, RotateCcw } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
+import { MLSPIN_FILTER_STATUSES, PROPERTY_TYPES } from "@/constants/status";
 
 interface FilterState {
   propertyTypes: string[];
@@ -42,23 +43,6 @@ interface MLSPINFilterPanelProps {
   onReset: () => void;
   counties: { id: string; name: string; state: string }[];
 }
-
-const PROPERTY_TYPES = [
-  { value: "single_family", label: "Single Family" },
-  { value: "condo", label: "Condo" },
-  { value: "multi_family", label: "Multi-Family" },
-  { value: "townhouse", label: "Townhouse" },
-  { value: "land", label: "Land" },
-  { value: "commercial", label: "Commercial" },
-];
-
-const STATUSES = [
-  { value: "active", label: "Active" },
-  { value: "coming_soon", label: "Coming Soon" },
-  { value: "off_market", label: "Off-Market (Private)" },
-  { value: "pending", label: "Pending" },
-  { value: "sold", label: "Sold" },
-];
 
 const STATES = [
   { value: "MA", label: "Massachusetts" },
@@ -164,6 +148,9 @@ const MLSPINFilterPanel = ({
     !filters.state || c.state === filters.state
   );
 
+  // Use centralized filter statuses
+  const STATUSES = MLSPIN_FILTER_STATUSES;
+  
   return (
     <div className="w-72 border-r border-border bg-card flex flex-col h-full">
       {/* Header */}
