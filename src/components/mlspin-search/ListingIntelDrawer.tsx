@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { 
   MapPin, 
   Bed, 
@@ -119,29 +120,7 @@ const ListingIntelDrawer = ({ listing, open, onOpenChange }: ListingIntelDrawerP
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusStyles: Record<string, string> = {
-      active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-      coming_soon: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-      off_market: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-      pending: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-      sold: "bg-muted text-muted-foreground border-border",
-    };
-
-    const labels: Record<string, string> = {
-      active: "Active",
-      coming_soon: "Coming Soon",
-      off_market: "Off-Market",
-      pending: "Pending",
-      sold: "Sold",
-    };
-
-    return (
-      <Badge variant="outline" className={statusStyles[status] || ""}>
-        {labels[status] || status}
-      </Badge>
-    );
-  };
+  // Status badge now uses centralized StatusBadge component
 
   const photos = listing?.photos as string[] | undefined;
   const primaryPhoto = photos?.[0];
@@ -161,7 +140,7 @@ const ListingIntelDrawer = ({ listing, open, onOpenChange }: ListingIntelDrawerP
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-3 right-3">
-                    {getStatusBadge(listing.status)}
+                    <ListingStatusBadge status={listing.status} />
                   </div>
                 </div>
               )}
