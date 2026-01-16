@@ -326,13 +326,18 @@ if (agentIds.length > 0) {
                 subtitle={getClientDisplay() ? `Client: ${getClientDisplay()}` : undefined}
                 backTo="/hot-sheets"
                 actions={
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(buildSearchUrl())}
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    View in Search
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(buildSearchUrl())}
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      View in Search
+                    </Button>
+                    <Button onClick={() => navigate("/agent-dashboard")}>
+                      Done
+                    </Button>
+                  </div>
                 }
               />
             </div>

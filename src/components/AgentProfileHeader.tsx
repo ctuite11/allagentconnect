@@ -76,7 +76,7 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
               if (window.history.length > 2) {
                 navigate(-1);
               } else {
-                navigate("/agent-search");
+                navigate("/find-agent");
               }
             }}
             className="mb-5 p-1.5 -ml-1.5 rounded-md hover:bg-white/20 transition-colors text-white/80 hover:text-white"
