@@ -2693,7 +2693,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      agent_directory_status: {
+        Row: {
+          agent_status: Database["public"]["Enums"]["agent_status"] | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_status?: Database["public"]["Enums"]["agent_status"] | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_status?: Database["public"]["Enums"]["agent_status"] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       auto_activate_listings: { Args: never; Returns: undefined }
