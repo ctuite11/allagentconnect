@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Home, DollarSign, Building2, FileText, Calendar, Info } from "lucide-react";
+import { LISTING_STATUS_LABELS } from "@/constants/status";
 
 interface ListingDetailSectionsProps {
   listing: any;
@@ -170,7 +171,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
   const marketInfoRows = [
     { label: "Listing Date", value: listDate ? new Date(listDate).toLocaleDateString() : null },
     { label: "Days on Market", value: daysOnMarket },
-    { label: "Status", value: listing.status ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1) : null },
+    { label: "Status", value: listing.status ? LISTING_STATUS_LABELS[listing.status] || listing.status.charAt(0).toUpperCase() + listing.status.slice(1) : null },
     { label: "Listing Type", value: listing.listing_type === 'for_sale' ? 'For Sale' : listing.listing_type === 'for_rent' ? 'For Rent' : listing.listing_type },
     { label: "Listing Number (AAC ID)", value: listing.listing_number },
     { label: "Go Live Date", value: listing.go_live_date ? new Date(listing.go_live_date).toLocaleDateString() : null },

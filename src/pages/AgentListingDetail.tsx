@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
+import { getStatusConfig } from "@/constants/status";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -247,27 +249,8 @@ const AgentListingDetail = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-      case 'new':
-        return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30';
-      case 'coming_soon':
-        return 'bg-amber-500/10 text-amber-700 border-amber-500/30';
-      case 'pending':
-        return 'bg-blue-500/10 text-blue-700 border-blue-500/30';
-      case 'sold':
-        return 'bg-purple-500/10 text-purple-700 border-purple-500/30';
-      case 'off_market':
-        return 'bg-rose-500/10 text-rose-700 border-rose-500/30';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const formatStatus = (status: string) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
+  const getStatusColor = (status: string) => getStatusConfig(status, "listing");
+  const formatStatus = (status: string) => getStatusConfig(status, "listing").label;
 
   const getPhotoUrl = (photo: any): string => {
     if (typeof photo === 'string') return photo;

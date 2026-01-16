@@ -45,71 +45,87 @@ export const LISTING_STATUS = {
   COMING_SOON: "coming_soon",
   BACK_ON_MARKET: "back_on_market",
   PRICE_CHANGED: "price_changed",
+  EXTENDED: "extended",
+  REACTIVATED: "reactivated",
   UNDER_AGREEMENT: "under_agreement",
   PENDING: "pending",
+  CONTINGENT: "contingent",
   SOLD: "sold",
   RENTED: "rented",
   WITHDRAWN: "withdrawn",
   TEMPORARILY_WITHDRAWN: "temporarily_withdrawn",
   EXPIRED: "expired",
   CANCELLED: "cancelled",
+  CANCELED: "canceled", // alias for backwards compatibility
   DRAFT: "draft",
   OFF_MARKET: "off_market",
 } as const;
 
 export type ListingStatus = (typeof LISTING_STATUS)[keyof typeof LISTING_STATUS];
 
-export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
+export const LISTING_STATUS_LABELS: Record<string, string> = {
   [LISTING_STATUS.ACTIVE]: "Active",
   [LISTING_STATUS.NEW]: "New",
   [LISTING_STATUS.COMING_SOON]: "Coming Soon",
   [LISTING_STATUS.BACK_ON_MARKET]: "Back on Market",
   [LISTING_STATUS.PRICE_CHANGED]: "Price Change",
+  [LISTING_STATUS.EXTENDED]: "Extended",
+  [LISTING_STATUS.REACTIVATED]: "Reactivated",
   [LISTING_STATUS.UNDER_AGREEMENT]: "Under Agreement",
   [LISTING_STATUS.PENDING]: "Pending",
+  [LISTING_STATUS.CONTINGENT]: "Contingent",
   [LISTING_STATUS.SOLD]: "Sold",
   [LISTING_STATUS.RENTED]: "Rented",
   [LISTING_STATUS.WITHDRAWN]: "Withdrawn",
   [LISTING_STATUS.TEMPORARILY_WITHDRAWN]: "Temporarily Withdrawn",
   [LISTING_STATUS.EXPIRED]: "Expired",
   [LISTING_STATUS.CANCELLED]: "Cancelled",
+  [LISTING_STATUS.CANCELED]: "Canceled",
   [LISTING_STATUS.DRAFT]: "Draft",
   [LISTING_STATUS.OFF_MARKET]: "Off-Market",
 };
 
 // MLSPIN code mappings for Hot Sheet dialog
-export const LISTING_STATUS_MLSPIN: Record<ListingStatus, string> = {
+export const LISTING_STATUS_MLSPIN: Record<string, string> = {
   [LISTING_STATUS.ACTIVE]: "ACT",
   [LISTING_STATUS.NEW]: "NEW",
   [LISTING_STATUS.COMING_SOON]: "CSO",
   [LISTING_STATUS.BACK_ON_MARKET]: "BOM",
   [LISTING_STATUS.PRICE_CHANGED]: "PCH",
+  [LISTING_STATUS.EXTENDED]: "EXT",
+  [LISTING_STATUS.REACTIVATED]: "REA",
   [LISTING_STATUS.UNDER_AGREEMENT]: "UAG",
   [LISTING_STATUS.PENDING]: "PND",
+  [LISTING_STATUS.CONTINGENT]: "CTG",
   [LISTING_STATUS.SOLD]: "SLD",
   [LISTING_STATUS.RENTED]: "RNT",
   [LISTING_STATUS.WITHDRAWN]: "WDN",
   [LISTING_STATUS.TEMPORARILY_WITHDRAWN]: "WDN",
   [LISTING_STATUS.EXPIRED]: "EXP",
   [LISTING_STATUS.CANCELLED]: "CAN",
+  [LISTING_STATUS.CANCELED]: "CAN",
   [LISTING_STATUS.DRAFT]: "DFT",
   [LISTING_STATUS.OFF_MARKET]: "OFF",
 };
 
-export const LISTING_STATUS_CONFIG: Record<ListingStatus, { bg: string; text: string; label: string }> = {
+export const LISTING_STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
   [LISTING_STATUS.ACTIVE]: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
   [LISTING_STATUS.NEW]: { bg: "bg-emerald-50", text: "text-emerald-700", label: "New" },
   [LISTING_STATUS.COMING_SOON]: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
   [LISTING_STATUS.BACK_ON_MARKET]: { bg: "bg-orange-50", text: "text-orange-700", label: "Back on Market" },
   [LISTING_STATUS.PRICE_CHANGED]: { bg: "bg-blue-50", text: "text-blue-700", label: "Price Change" },
+  [LISTING_STATUS.EXTENDED]: { bg: "bg-blue-50", text: "text-blue-700", label: "Extended" },
+  [LISTING_STATUS.REACTIVATED]: { bg: "bg-teal-50", text: "text-teal-700", label: "Reactivated" },
   [LISTING_STATUS.UNDER_AGREEMENT]: { bg: "bg-violet-50", text: "text-violet-700", label: "Under Agreement" },
   [LISTING_STATUS.PENDING]: { bg: "bg-violet-50", text: "text-violet-700", label: "Pending" },
+  [LISTING_STATUS.CONTINGENT]: { bg: "bg-violet-50", text: "text-violet-700", label: "Contingent" },
   [LISTING_STATUS.SOLD]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Sold" },
   [LISTING_STATUS.RENTED]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Rented" },
   [LISTING_STATUS.WITHDRAWN]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Withdrawn" },
   [LISTING_STATUS.TEMPORARILY_WITHDRAWN]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Temporarily Withdrawn" },
   [LISTING_STATUS.EXPIRED]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Expired" },
   [LISTING_STATUS.CANCELLED]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Cancelled" },
+  [LISTING_STATUS.CANCELED]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Canceled" },
   [LISTING_STATUS.DRAFT]: { bg: "bg-neutral-100", text: "text-neutral-600", label: "Draft" },
   [LISTING_STATUS.OFF_MARKET]: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
 };
@@ -204,4 +220,68 @@ export function normalizeStatus(status: string): string {
   };
   
   return normalizations[status?.toLowerCase()] || status;
+}
+
+// =============================================================================
+// FILTER OPTION ARRAYS (for dropdowns)
+// =============================================================================
+
+/**
+ * Statuses for MLSPIN filter panel
+ */
+export const MLSPIN_FILTER_STATUSES = [
+  { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
+  { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off-Market (Private)" },
+  { value: LISTING_STATUS.PENDING, label: LISTING_STATUS_LABELS[LISTING_STATUS.PENDING] },
+  { value: LISTING_STATUS.SOLD, label: LISTING_STATUS_LABELS[LISTING_STATUS.SOLD] },
+];
+
+/**
+ * Complete statuses for listing search filters
+ */
+export const LISTING_SEARCH_STATUSES = [
+  { value: LISTING_STATUS.NEW, label: LISTING_STATUS_LABELS[LISTING_STATUS.NEW] },
+  { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
+  { value: LISTING_STATUS.PRICE_CHANGED, label: LISTING_STATUS_LABELS[LISTING_STATUS.PRICE_CHANGED] },
+  { value: LISTING_STATUS.BACK_ON_MARKET, label: LISTING_STATUS_LABELS[LISTING_STATUS.BACK_ON_MARKET] },
+  { value: LISTING_STATUS.EXTENDED, label: LISTING_STATUS_LABELS[LISTING_STATUS.EXTENDED] },
+  { value: LISTING_STATUS.REACTIVATED, label: LISTING_STATUS_LABELS[LISTING_STATUS.REACTIVATED] },
+  { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
+  { value: LISTING_STATUS.OFF_MARKET, label: "Private" },
+  { value: LISTING_STATUS.UNDER_AGREEMENT, label: LISTING_STATUS_LABELS[LISTING_STATUS.UNDER_AGREEMENT] },
+  { value: LISTING_STATUS.PENDING, label: LISTING_STATUS_LABELS[LISTING_STATUS.PENDING] },
+  { value: LISTING_STATUS.CONTINGENT, label: LISTING_STATUS_LABELS[LISTING_STATUS.CONTINGENT] },
+  { value: LISTING_STATUS.TEMPORARILY_WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.TEMPORARILY_WITHDRAWN] },
+  { value: LISTING_STATUS.WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.WITHDRAWN] },
+  { value: LISTING_STATUS.EXPIRED, label: LISTING_STATUS_LABELS[LISTING_STATUS.EXPIRED] },
+  { value: LISTING_STATUS.CANCELLED, label: LISTING_STATUS_LABELS[LISTING_STATUS.CANCELLED] },
+  { value: LISTING_STATUS.SOLD, label: LISTING_STATUS_LABELS[LISTING_STATUS.SOLD] },
+  { value: LISTING_STATUS.RENTED, label: LISTING_STATUS_LABELS[LISTING_STATUS.RENTED] },
+];
+
+/**
+ * Agent status options for admin approvals
+ */
+export const AGENT_STATUS_OPTIONS = [
+  { value: AGENT_STATUS.UNVERIFIED, label: AGENT_STATUS_LABELS[AGENT_STATUS.UNVERIFIED] },
+  { value: AGENT_STATUS.PENDING, label: AGENT_STATUS_LABELS[AGENT_STATUS.PENDING] },
+  { value: AGENT_STATUS.VERIFIED, label: AGENT_STATUS_LABELS[AGENT_STATUS.VERIFIED] },
+  { value: AGENT_STATUS.REJECTED, label: AGENT_STATUS_LABELS[AGENT_STATUS.REJECTED] },
+  { value: AGENT_STATUS.RESTRICTED, label: AGENT_STATUS_LABELS[AGENT_STATUS.RESTRICTED] },
+];
+
+/**
+ * Get label for any status value
+ */
+export function getStatusLabel(status: string, domain: "listing" | "agent" | "hotsheet" = "listing"): string {
+  switch (domain) {
+    case "agent":
+      return AGENT_STATUS_LABELS[status as AgentStatus] || status;
+    case "hotsheet":
+      return HOT_SHEET_STATUS_LABELS[status as HotSheetStatus] || status;
+    case "listing":
+    default:
+      return LISTING_STATUS_LABELS[status] || status?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || status;
+  }
 }

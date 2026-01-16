@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
+import { getStatusConfig } from "@/constants/status";
 import {
   Dialog,
   DialogContent,
@@ -282,19 +284,8 @@ const PropertyDetail = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
-      case 'pending':
-        return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
-      case 'sold':
-        return 'bg-muted text-muted-foreground border-border';
-      case 'cancelled':
-      case 'expired':
-        return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
+    const config = getStatusConfig(status, "listing");
+    return `${config.bg} ${config.text}`;
   };
 
   const formatArray = (arr: any[] | null | undefined) => {
