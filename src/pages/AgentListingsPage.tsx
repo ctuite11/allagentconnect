@@ -499,7 +499,7 @@ function ListingsGrid({ listings }: { listings: AgentListing[] }) {
             <div className="text-lg font-semibold">
               ${listing.listPrice.toLocaleString()}
             </div>
-            <Badge variant="outline">{listing.status.replace(/_/g, " ")}</Badge>
+            <ListingStatusBadge status={listing.status} />
           </div>
         </div>
       ))}
