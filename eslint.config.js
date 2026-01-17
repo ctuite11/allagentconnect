@@ -32,7 +32,7 @@ export default tseslint.config(
       "no-restricted-syntax": [
         "warn",
         {
-          selector: "CallExpression[callee.property.name='replace'][arguments.0.regex.pattern='_']",
+          selector: "CallExpression[callee.property.name='replace'] > Literal[regex.pattern='_'][regex.flags='g']",
           message: "Do not format snake_case manually in UI. Use humanizeSnakeCase() from @/lib or a centralized label map.",
         },
         {
@@ -40,7 +40,15 @@ export default tseslint.config(
           message: "Use LISTING_STATUS.COMING_SOON constant instead of raw string comparison.",
         },
         {
+          selector: "BinaryExpression[operator='==='][left.value='coming_soon']",
+          message: "Use LISTING_STATUS.COMING_SOON constant instead of raw string comparison.",
+        },
+        {
           selector: "BinaryExpression[operator='==='][right.value='verified']",
+          message: "Use AGENT_STATUS.VERIFIED constant instead of raw string comparison.",
+        },
+        {
+          selector: "BinaryExpression[operator='==='][left.value='verified']",
           message: "Use AGENT_STATUS.VERIFIED constant instead of raw string comparison.",
         },
         {
@@ -48,7 +56,15 @@ export default tseslint.config(
           message: "Use AGENT_STATUS.PENDING or LISTING_STATUS constants instead of raw string comparison.",
         },
         {
+          selector: "BinaryExpression[operator='==='][left.value='pending']",
+          message: "Use AGENT_STATUS.PENDING or LISTING_STATUS constants instead of raw string comparison.",
+        },
+        {
           selector: "BinaryExpression[operator='!=='][right.value='verified']",
+          message: "Use AGENT_STATUS.VERIFIED constant instead of raw string comparison.",
+        },
+        {
+          selector: "BinaryExpression[operator='!=='][left.value='verified']",
           message: "Use AGENT_STATUS.VERIFIED constant instead of raw string comparison.",
         },
         {
@@ -56,7 +72,15 @@ export default tseslint.config(
           message: "Use LISTING_STATUS.ACTIVE or AGENT_STATUS constants instead of raw string comparison.",
         },
         {
+          selector: "BinaryExpression[operator='==='][left.value='active']",
+          message: "Use LISTING_STATUS.ACTIVE or AGENT_STATUS constants instead of raw string comparison.",
+        },
+        {
           selector: "BinaryExpression[operator='!=='][right.value='active']",
+          message: "Use LISTING_STATUS.ACTIVE or AGENT_STATUS constants instead of raw string comparison.",
+        },
+        {
+          selector: "BinaryExpression[operator='!=='][left.value='active']",
           message: "Use LISTING_STATUS.ACTIVE or AGENT_STATUS constants instead of raw string comparison.",
         },
       ],
