@@ -366,6 +366,48 @@ export const AGENT_LISTINGS_TAB_STATUSES = [
   { value: "offline_partial", label: "Offline / Partial" },
 ];
 
+/**
+ * Add Listing form - CREATE mode statuses
+ */
+export const ADD_LISTING_CREATE_STATUSES = [
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off-Market (Private)" },
+  { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
+  { value: LISTING_STATUS.NEW, label: "New (Active)" },
+];
+
+/**
+ * Add Listing form - EDIT mode statuses
+ */
+export const ADD_LISTING_EDIT_STATUSES = [
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off-Market (Private)" },
+  { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
+  { value: LISTING_STATUS.NEW, label: LISTING_STATUS_LABELS[LISTING_STATUS.NEW] },
+  { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
+  { value: LISTING_STATUS.PENDING, label: LISTING_STATUS_LABELS[LISTING_STATUS.PENDING] },
+  { value: LISTING_STATUS.WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.WITHDRAWN] },
+  { value: LISTING_STATUS.TEMPORARILY_WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.TEMPORARILY_WITHDRAWN] },
+  { value: LISTING_STATUS.EXPIRED, label: LISTING_STATUS_LABELS[LISTING_STATUS.EXPIRED] },
+  { value: LISTING_STATUS.CANCELLED, label: LISTING_STATUS_LABELS[LISTING_STATUS.CANCELLED] },
+  { value: LISTING_STATUS.SOLD, label: LISTING_STATUS_LABELS[LISTING_STATUS.SOLD] },
+];
+
+/**
+ * Get status color class for diagnostic displays
+ */
+export function getDiagnosticStatusColor(status: string): string {
+  switch (status) {
+    case AGENT_STATUS.VERIFIED:
+      return "text-emerald-600";
+    case AGENT_STATUS.PENDING:
+      return "text-amber-600";
+    case AGENT_STATUS.REJECTED:
+    case AGENT_STATUS.RESTRICTED:
+      return "text-red-600";
+    default:
+      return "text-zinc-700";
+  }
+};
+
 // =============================================================================
 // STATUS HELPERS
 // =============================================================================

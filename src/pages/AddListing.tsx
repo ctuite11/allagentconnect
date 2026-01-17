@@ -34,6 +34,11 @@ import {
   validateLocationCombo,
   type CityOption 
 } from "@/lib/locationData";
+import { 
+  LISTING_STATUS, 
+  ADD_LISTING_CREATE_STATUSES, 
+  ADD_LISTING_EDIT_STATUSES 
+} from "@/constants/status";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -2849,45 +2854,28 @@ const AddListing = () => {
                     <Select 
                       value={formData.status} 
                       onValueChange={handleStatusChange}
-                      disabled={formData.status === 'cancelled' || formData.status === 'sold'}
+                      disabled={formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {!listingId ? (
-                          // CREATE MODE: Off-Market, Coming Soon, and New
-                          <>
-                            <SelectItem value="off_market">Off-Market (Private)</SelectItem>
-                            <SelectItem value="coming_soon">Coming Soon</SelectItem>
-                            <SelectItem value="new">New (Active)</SelectItem>
-                          </>
-                        ) : (
-                          // EDIT MODE: All status options
-                          <>
-                            <SelectItem value="off_market">Off-Market (Private)</SelectItem>
-                            <SelectItem value="coming_soon">Coming Soon</SelectItem>
-                            <SelectItem value="new">New</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="withdrawn">Withdrawn</SelectItem>
-                            <SelectItem value="temporarily_withdrawn">Temporarily Withdrawn</SelectItem>
-                            <SelectItem value="expired">Expired</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                            <SelectItem value="sold">Sold</SelectItem>
-                          </>
-                        )}
+                        {(!listingId ? ADD_LISTING_CREATE_STATUSES : ADD_LISTING_EDIT_STATUSES).map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {/* Helper text for off-market listings */}
-                    {formData.status === 'off_market' && (
+                    {formData.status === LISTING_STATUS.OFF_MARKET && (
                       <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
                         <Lock className="h-3 w-3" />
                         Private listing — visible only to AAC agents, not on MLS.
                       </p>
                     )}
                     {/* Warning for final status states */}
-                    {(formData.status === 'cancelled' || formData.status === 'sold') && (
+                    {(formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD) && (
                       <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-3 w-3" />
                         This is a final state. Status and price cannot be changed.

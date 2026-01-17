@@ -9,6 +9,7 @@ import { Loader2, Copy, Check, ArrowLeft, RefreshCw, Eye, AlertCircle } from "lu
 import { toast } from "sonner";
 import { getAuthDiagnostics, getAgentStatus, type AuthDiagnostic } from "@/lib/authDebug";
 import { checkIsAdminRole } from "@/lib/auth/roles";
+import { getDiagnosticStatusColor } from "@/constants/status";
 
 interface ViewAsState {
   active: boolean;
@@ -338,11 +339,11 @@ interface DiagnosticRowProps {
 }
 
 const DiagnosticRow = ({ label, value, mono, status }: DiagnosticRowProps) => {
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     success: "text-emerald-600",
     warning: "text-amber-600",
     error: "text-red-600",
-    neutral: "text-slate-700",
+    neutral: "text-zinc-700",
   };
 
   return (
