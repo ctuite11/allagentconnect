@@ -20,6 +20,7 @@ import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
+import { humanizeSnakeCase } from "@/lib/format";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -415,7 +416,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <p><strong>Towns/Cities:</strong> {selectedCities.length} selected</p>
                   )}
                     {propertyTypes.length > 0 && (
-                      <p><strong>Property Types:</strong> {propertyTypes.map(t => t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(", ")}</p>
+                      <p><strong>Property Types:</strong> {propertyTypes.map(t => humanizeSnakeCase(t)).join(", ")}</p>
                     )}
                     {minPrice && !noMinPrice && (
                       <p><strong>Min Price:</strong> ${parseFloat(minPrice).toLocaleString()}</p>

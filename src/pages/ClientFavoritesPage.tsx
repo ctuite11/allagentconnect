@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 import { Heart } from "lucide-react";
 import FavoriteButton from "@/components/FavoriteButton";
+import { humanizeSnakeCase } from "@/lib/format";
 
 interface Favorite {
   id: string;
@@ -129,8 +130,8 @@ export default function ClientFavoritesPage() {
                         )}
                       </div>
                       {fav.listing.property_type && (
-                        <p className="text-xs text-muted-foreground mt-2 capitalize">
-                          {fav.listing.property_type.replace(/_/g, " ")}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {humanizeSnakeCase(fav.listing.property_type)}
                         </p>
                       )}
                     </div>
