@@ -9,7 +9,8 @@ import { Loader2, Copy, Check, ArrowLeft, RefreshCw, Eye, AlertCircle } from "lu
 import { toast } from "sonner";
 import { getAuthDiagnostics, getAgentStatus, type AuthDiagnostic } from "@/lib/authDebug";
 import { checkIsAdminRole } from "@/lib/auth/roles";
-import { getDiagnosticStatusColor } from "@/constants/status";
+import { AgentStatusBadge } from "@/components/ui/status-badge";
+import { AGENT_STATUS } from "@/constants/status";
 
 interface ViewAsState {
   active: boolean;
@@ -271,17 +272,14 @@ const AdminDebugAuth = () => {
                     status="error"
                   />
                 )}
-                <DiagnosticRow
-                  label="agent_status"
-                  value={displayData.agentStatus || "(none)"}
-                  status={
-                    displayData.agentStatus === "verified"
-                      ? "success"
-                      : displayData.agentStatus === "pending"
-                      ? "warning"
-                      : "neutral"
-                  }
-                />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                  <span className="text-sm text-zinc-500 sm:w-40 shrink-0">agent_status</span>
+                  {displayData.agentStatus ? (
+                    <AgentStatusBadge status={displayData.agentStatus} />
+                  ) : (
+                    <span className="text-sm text-zinc-500">(none)</span>
+                  )}
+                </div>
                 {displayData.agentStatusError && (
                   <DiagnosticRow
                     label="Agent Status Error"
