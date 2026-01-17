@@ -23,4 +23,29 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  // Phase 6: Status system enforcement for UI components
+  {
+    files: ["src/components/**/*.{ts,tsx}", "src/pages/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "CallExpression[callee.property.name='replace'][arguments.0.regex.pattern='_']",
+          message: "Do not format snake_case manually in UI. Use humanizeSnakeCase() from @/lib or a centralized label map.",
+        },
+        {
+          selector: "BinaryExpression[operator='==='][right.value='coming_soon']",
+          message: "Use LISTING_STATUS.COMING_SOON constant instead of raw string comparison.",
+        },
+        {
+          selector: "BinaryExpression[operator='==='][right.value='verified']",
+          message: "Use AGENT_STATUS.VERIFIED constant instead of raw string comparison.",
+        },
+        {
+          selector: "BinaryExpression[operator='==='][right.value='pending']",
+          message: "Use AGENT_STATUS.PENDING or LISTING_STATUS constants instead of raw string comparison.",
+        },
+      ],
+    },
+  },
 );
