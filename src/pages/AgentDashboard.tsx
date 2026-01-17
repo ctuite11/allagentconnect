@@ -15,6 +15,7 @@ import { LayoutGrid, List, Home, Flame, Heart, Users, Mail, Activity, UserCircle
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DASHBOARD_FILTER_STATUSES, LISTING_STATUS_LABELS } from "@/constants/status";
+import { humanizeSnakeCase } from "@/lib/format";
 interface Listing {
   id: string;
   address: string;
@@ -697,7 +698,7 @@ const AgentDashboard = () => {
                     onClick={() => toggleStatusFilter(status)} 
                     className="rounded-lg text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-4 shadow-sm hover:shadow transition-all touch-manipulation"
                   >
-                    {LISTING_STATUS_LABELS[status] || status.replace(/_/g, ' ')}
+                    {LISTING_STATUS_LABELS[status] || humanizeSnakeCase(status)}
                   </Button>
                 ))}
               </div>
