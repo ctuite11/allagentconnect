@@ -421,29 +421,141 @@ export function getDiagnosticStatusColor(status: string): string {
 };
 
 // =============================================================================
-// STATUS HELPERS
+// TYPE GUARDS
+// =============================================================================
+
+const LISTING_STATUS_VALUES = Object.values(LISTING_STATUS) as string[];
+const AGENT_STATUS_VALUES = Object.values(AGENT_STATUS) as string[];
+const HOT_SHEET_STATUS_VALUES = Object.values(HOT_SHEET_STATUS) as string[];
+
+/**
+ * Type guard: is this a valid ListingStatus?
+ */
+export function isListingStatus(status: unknown): status is ListingStatus {
+  return typeof status === "string" && LISTING_STATUS_VALUES.includes(status);
+}
+
+/**
+ * Type guard: is this a valid AgentStatus?
+ */
+export function isAgentStatus(status: unknown): status is AgentStatus {
+  return typeof status === "string" && AGENT_STATUS_VALUES.includes(status);
+}
+
+/**
+ * Type guard: is this a valid HotSheetStatus?
+ */
+export function isHotSheetStatus(status: unknown): status is HotSheetStatus {
+  return typeof status === "string" && HOT_SHEET_STATUS_VALUES.includes(status);
+}
+
+// =============================================================================
+// STATUS HELPERS — LISTING
 // =============================================================================
 
 /**
- * Check if a status is "coming soon"
+ * Check if a listing status is "coming soon"
  */
 export function isComingSoon(status: string): boolean {
   return status === LISTING_STATUS.COMING_SOON;
 }
 
 /**
- * Check if a status is "active" or "new" (on-market)
+ * Check if a listing status is actively on-market (ACTIVE, NEW, BACK_ON_MARKET, REACTIVATED)
+ */
+export function isListingOnMarket(status: string): boolean {
+  return (
+    status === LISTING_STATUS.ACTIVE ||
+    status === LISTING_STATUS.NEW ||
+    status === LISTING_STATUS.BACK_ON_MARKET ||
+    status === LISTING_STATUS.REACTIVATED
+  );
+}
+
+/**
+ * Check if a status is "active" or "new" (legacy helper, prefer isListingOnMarket)
  */
 export function isActive(status: string): boolean {
   return status === LISTING_STATUS.ACTIVE || status === LISTING_STATUS.NEW;
 }
 
 /**
- * Check if a status is closed (sold/rented)
+ * Check if a listing is closed (sold/rented)
  */
 export function isClosed(status: string): boolean {
   return status === LISTING_STATUS.SOLD || status === LISTING_STATUS.RENTED;
 }
+
+/**
+ * Check if a listing status is under contract (PENDING, UNDER_AGREEMENT, CONTINGENT)
+ */
+export function isUnderContract(status: string): boolean {
+  return (
+    status === LISTING_STATUS.PENDING ||
+    status === LISTING_STATUS.UNDER_AGREEMENT ||
+    status === LISTING_STATUS.CONTINGENT
+  );
+}
+
+/**
+ * Check if a listing status is withdrawn/cancelled/expired
+ */
+export function isListingInactive(status: string): boolean {
+  return (
+    status === LISTING_STATUS.WITHDRAWN ||
+    status === LISTING_STATUS.TEMPORARILY_WITHDRAWN ||
+    status === LISTING_STATUS.EXPIRED ||
+    status === LISTING_STATUS.CANCELLED ||
+    status === LISTING_STATUS.CANCELED
+  );
+}
+
+/**
+ * Check if a listing is a draft
+ */
+export function isDraft(status: string): boolean {
+  return status === LISTING_STATUS.DRAFT;
+}
+
+// =============================================================================
+// STATUS HELPERS — AGENT
+// =============================================================================
+
+/**
+ * Check if an agent is verified
+ */
+export function isVerifiedAgent(status: string): boolean {
+  return status === AGENT_STATUS.VERIFIED;
+}
+
+/**
+ * Check if an agent is pending verification
+ */
+export function isPendingAgent(status: string): boolean {
+  return status === AGENT_STATUS.PENDING;
+}
+
+/**
+ * Check if an agent has restricted or rejected status
+ */
+export function isAgentBlocked(status: string): boolean {
+  return status === AGENT_STATUS.RESTRICTED || status === AGENT_STATUS.REJECTED;
+}
+
+// =============================================================================
+// STATUS HELPERS — HOT SHEET
+// =============================================================================
+
+/**
+ * Check if a hot sheet is active
+ */
+export function isHotSheetActive(status: string): boolean {
+  return status === HOT_SHEET_STATUS.ACTIVE;
+}
+
+// =============================================================================
+// LABEL LOOKUPS
+// =============================================================================
 
 /**
  * Get label for any status value
@@ -458,4 +570,25 @@ export function getStatusLabel(status: string, domain: "listing" | "agent" | "ho
     default:
       return LISTING_STATUS_LABELS[status] || status?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || status;
   }
+}
+
+/**
+ * Convenience wrapper for listing status labels
+ */
+export function getListingStatusLabel(status: string): string {
+  return getStatusLabel(status, "listing");
+}
+
+/**
+ * Convenience wrapper for agent status labels
+ */
+export function getAgentStatusLabel(status: string): string {
+  return getStatusLabel(status, "agent");
+}
+
+/**
+ * Convenience wrapper for hot sheet status labels
+ */
+export function getHotSheetStatusLabel(status: string): string {
+  return getStatusLabel(status, "hotsheet");
 }
