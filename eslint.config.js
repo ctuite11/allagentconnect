@@ -23,7 +23,9 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
-  // Phase 6: Status system enforcement for UI components
+  // Phase 6: Status enforcement (warn → error when warnings reach 0)
+  // Prevents UI drift: domain statuses must use constants + badges.
+  // See: src/constants/status.ts, src/components/ui/status-badge.tsx
   {
     files: ["src/components/**/*.{ts,tsx}", "src/pages/**/*.{ts,tsx}"],
     rules: {
