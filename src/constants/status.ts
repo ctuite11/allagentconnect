@@ -1,8 +1,20 @@
 /**
- * Status Constants - Single Source of Truth
- * 
- * ALL status values, labels, and badge configurations MUST come from this file.
- * Do NOT use inline status strings anywhere in the codebase.
+ * STATUS SYSTEM — SINGLE SOURCE OF TRUTH
+ *
+ * Do not hardcode status labels, colors, or comparisons anywhere in the UI.
+ *
+ * ✅ UI MUST use:
+ *  - ListingStatusBadge / AgentStatusBadge / HotSheetStatusBadge (or StatusBadge variants)
+ *  - exported option arrays from this file for selects/tabs/filters
+ *  - exported constants (e.g., LISTING_STATUS.*, AGENT_STATUS.*, HOT_SHEET_STATUS.*) for any mapping
+ *
+ * ❌ UI MUST NOT use:
+ *  - raw <Badge> to render domain statuses
+ *  - inline labels like "Active", "Pending", "Coming Soon"
+ *  - string comparisons like status === "coming_soon"
+ *  - formatting like status.replace(/_/g, " ")
+ *
+ * If you need a new status, add it here and update the badge + option sets.
  */
 
 // =============================================================================

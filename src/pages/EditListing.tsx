@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { getNeighborhoodsForLocation } from "@/lib/locationData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ADD_LISTING_EDIT_STATUSES, LISTING_STATUS } from "@/constants/status";
 
 const EditListing: React.FC = () => {
   const { user } = useAuthRole();
@@ -22,7 +23,7 @@ const EditListing: React.FC = () => {
 
   const [listingType, setListingType] = useState<"for_sale" | "for_rent">("for_sale");
   const [propertyType, setPropertyType] = useState<"single_family" | "condo" | "multi_family">("single_family");
-  const [status, setStatus] = useState<"New" | "Coming Soon" | "Active">("New");
+  const [status, setStatus] = useState<string>(LISTING_STATUS.NEW);
   const [goLiveDate, setGoLiveDate] = useState<string>("");
   const [autoActivateDays, setAutoActivateDays] = useState<number | "">("");
   const [address, setAddress] = useState("");
@@ -82,15 +83,9 @@ const EditListing: React.FC = () => {
         setListingType((data.listing_type as "for_sale" | "for_rent") || "for_sale");
         setPropertyType((data.property_type as any as "single_family" | "condo" | "multi_family") || "single_family");
         
-        // Load status and timing fields
-        const rawStatus = data.status || "new";
-        if (rawStatus === "coming_soon") {
-          setStatus("Coming Soon");
-        } else if (rawStatus === "active") {
-          setStatus("Active");
-        } else {
-          setStatus("New");
-        }
+        // Load status directly as snake_case (no conversion needed)
+        const rawStatus = data.status || LISTING_STATUS.NEW;
+        setStatus(rawStatus);
         setGoLiveDate(listing.go_live_date ? listing.go_live_date.slice(0, 10) : "");
         setAutoActivateDays(listing.auto_activate_days ?? "");
         
@@ -175,12 +170,11 @@ const EditListing: React.FC = () => {
   };
 
   const handleStatusChange = (value: string) => {
-    const newStatus = value as "New" | "Coming Soon" | "Active";
-    setStatus(newStatus);
+    setStatus(value);
 
-    if (newStatus === "Coming Soon") {
+    if (value === LISTING_STATUS.COMING_SOON) {
       setAutoActivateDays("");
-    } else if (newStatus === "New" || newStatus === "Active") {
+    } else if (value === LISTING_STATUS.NEW || value === LISTING_STATUS.ACTIVE) {
       setGoLiveDate("");
     }
   };
@@ -199,7 +193,7 @@ const EditListing: React.FC = () => {
     }
 
     // Validate Coming Soon go-live date
-    if (status === "Coming Soon" && !goLiveDate) {
+    if (status === LISTING_STATUS.COMING_SOON && !goLiveDate) {
       toast.error("Please select a Go-Live date for Coming Soon listings.");
       return;
     }
@@ -208,10 +202,10 @@ const EditListing: React.FC = () => {
 
     // Compute auto_activate_on
     let computedAutoActivateOn: string | null = null;
-    if (status === "Coming Soon" && goLiveDate) {
+    if (status === LISTING_STATUS.COMING_SOON && goLiveDate) {
       computedAutoActivateOn = new Date(goLiveDate + "T09:00:00").toISOString();
     }
-    if (status === "New" && typeof autoActivateDays === "number") {
+    if (status === LISTING_STATUS.NEW && typeof autoActivateDays === "number") {
       const base = new Date();
       base.setDate(base.getDate() + autoActivateDays);
       computedAutoActivateOn = base.toISOString();
@@ -225,7 +219,7 @@ const EditListing: React.FC = () => {
       neighborhood: neighborhood || null,
       listing_type: listingType,
       property_type: propertyType,
-      status: status.toLowerCase().replace(" ", "_"),
+      status: status, // Already snake_case, no conversion needed
       attom_id: attomId,
       bedrooms: bedrooms || null,
       bathrooms: bathrooms || null,
@@ -237,7 +231,7 @@ const EditListing: React.FC = () => {
       latitude,
       longitude,
       go_live_date: goLiveDate || null,
-      auto_activate_days: status === "New" && typeof autoActivateDays === "number" ? autoActivateDays : null,
+      auto_activate_days: status === LISTING_STATUS.NEW && typeof autoActivateDays === "number" ? autoActivateDays : null,
       auto_activate_on: computedAutoActivateOn,
     };
 
@@ -295,21 +289,20 @@ const EditListing: React.FC = () => {
       setOriginalPrice(numericPrice);
     }
 
-    // Check if status changed
-    const dbStatus = status.toLowerCase().replace(" ", "_");
+    // Check if status changed (status is already snake_case)
     const statusChanged = 
       originalStatus != null &&
-      dbStatus !== originalStatus;
+      status !== originalStatus;
 
     if (statusChanged) {
       await (supabase as any).from("listing_status_history").insert({
         listing_id: id,
         old_status: originalStatus,
-        new_status: dbStatus,
+        new_status: status,
         changed_by: currentUserId,
         note: "Status updated",
       });
-      setOriginalStatus(dbStatus);
+      setOriginalStatus(status);
     }
 
     setSaving(false);
@@ -349,16 +342,18 @@ const EditListing: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="status">Status *</Label>
-                    <select
-                      id="status"
-                      value={status}
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2 text-sm"
-                    >
-                      <option value="New">New</option>
-                      <option value="Coming Soon">Coming Soon</option>
-                      <option value="Active">Active</option>
-                    </select>
+                    <Select value={status} onValueChange={handleStatusChange}>
+                      <SelectTrigger id="status" className="w-full">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ADD_LISTING_EDIT_STATUSES.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
@@ -389,7 +384,7 @@ const EditListing: React.FC = () => {
                   </div>
                 </div>
 
-                {status === "Coming Soon" && (
+                {status === LISTING_STATUS.COMING_SOON && (
                   <div className="border rounded-lg p-4 bg-muted/30">
                     <Label htmlFor="goLiveDate">Go-Live / Active On Date *</Label>
                     <Input
@@ -406,7 +401,7 @@ const EditListing: React.FC = () => {
                   </div>
                 )}
 
-                {status === "New" && (
+                {status === LISTING_STATUS.NEW && (
                   <div className="border rounded-lg p-4 bg-muted/30">
                     <Label htmlFor="autoActivateDays">Auto-activate after (days)</Label>
                     <Input
