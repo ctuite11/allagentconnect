@@ -23,6 +23,7 @@ import { usCitiesByState } from "@/data/usCitiesData";
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 import { cn } from "@/lib/utils";
+import { RENTAL_STATUS_OPTIONS } from "@/constants/status";
 
 interface FileWithPreview {
   file: File;
@@ -1033,9 +1034,11 @@ const AddRentalListing = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="active">Available</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="sold">Rented</SelectItem>
+                        {RENTAL_STATUS_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

@@ -286,6 +286,112 @@ export const AGENT_STATUS_OPTIONS = [
 ];
 
 /**
+ * Hot Sheet status options with MLSPIN codes
+ */
+export const HOT_SHEET_FILTER_STATUSES = [
+  { value: LISTING_STATUS.NEW, label: `New (${LISTING_STATUS_MLSPIN[LISTING_STATUS.NEW]})` },
+  { value: LISTING_STATUS.ACTIVE, label: `Active (${LISTING_STATUS_MLSPIN[LISTING_STATUS.ACTIVE]})` },
+  { value: LISTING_STATUS.PRICE_CHANGED, label: `Price Changed (${LISTING_STATUS_MLSPIN[LISTING_STATUS.PRICE_CHANGED]})` },
+  { value: LISTING_STATUS.BACK_ON_MARKET, label: `Back on Market (${LISTING_STATUS_MLSPIN[LISTING_STATUS.BACK_ON_MARKET]})` },
+  { value: LISTING_STATUS.EXTENDED, label: `Extended (${LISTING_STATUS_MLSPIN[LISTING_STATUS.EXTENDED]})` },
+  { value: LISTING_STATUS.REACTIVATED, label: `Reactivated (${LISTING_STATUS_MLSPIN[LISTING_STATUS.REACTIVATED]})` },
+  { value: LISTING_STATUS.CONTINGENT, label: `Contingent (${LISTING_STATUS_MLSPIN[LISTING_STATUS.CONTINGENT]})` },
+  { value: LISTING_STATUS.UNDER_AGREEMENT, label: `Under Agreement (${LISTING_STATUS_MLSPIN[LISTING_STATUS.UNDER_AGREEMENT]})` },
+  { value: LISTING_STATUS.SOLD, label: `Sold (${LISTING_STATUS_MLSPIN[LISTING_STATUS.SOLD]})` },
+  { value: LISTING_STATUS.RENTED, label: `Rented (${LISTING_STATUS_MLSPIN[LISTING_STATUS.RENTED]})` },
+  { value: LISTING_STATUS.TEMPORARILY_WITHDRAWN, label: `Temporarily Withdrawn (${LISTING_STATUS_MLSPIN[LISTING_STATUS.TEMPORARILY_WITHDRAWN]})` },
+  { value: LISTING_STATUS.EXPIRED, label: `Expired (${LISTING_STATUS_MLSPIN[LISTING_STATUS.EXPIRED]})` },
+  { value: LISTING_STATUS.CANCELED, label: `Canceled (${LISTING_STATUS_MLSPIN[LISTING_STATUS.CANCELED]})` },
+  { value: LISTING_STATUS.COMING_SOON, label: `Coming Soon (${LISTING_STATUS_MLSPIN[LISTING_STATUS.COMING_SOON]})` },
+];
+
+/**
+ * Agent search filter statuses
+ */
+export const AGENT_SEARCH_STATUSES = [
+  { value: LISTING_STATUS.NEW, label: LISTING_STATUS_LABELS[LISTING_STATUS.NEW] },
+  { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
+  { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
+  { value: LISTING_STATUS.BACK_ON_MARKET, label: LISTING_STATUS_LABELS[LISTING_STATUS.BACK_ON_MARKET] },
+  { value: LISTING_STATUS.CONTINGENT, label: LISTING_STATUS_LABELS[LISTING_STATUS.CONTINGENT] },
+  { value: LISTING_STATUS.UNDER_AGREEMENT, label: LISTING_STATUS_LABELS[LISTING_STATUS.UNDER_AGREEMENT] },
+  { value: LISTING_STATUS.SOLD, label: LISTING_STATUS_LABELS[LISTING_STATUS.SOLD] },
+  { value: LISTING_STATUS.EXPIRED, label: LISTING_STATUS_LABELS[LISTING_STATUS.EXPIRED] },
+  { value: LISTING_STATUS.EXTENDED, label: LISTING_STATUS_LABELS[LISTING_STATUS.EXTENDED] },
+  { value: LISTING_STATUS.PRICE_CHANGED, label: LISTING_STATUS_LABELS[LISTING_STATUS.PRICE_CHANGED] },
+  { value: LISTING_STATUS.TEMPORARILY_WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.TEMPORARILY_WITHDRAWN] },
+  { value: LISTING_STATUS.CANCELED, label: LISTING_STATUS_LABELS[LISTING_STATUS.CANCELED] },
+];
+
+/**
+ * Consumer search filter statuses (simplified)
+ */
+export const CONSUMER_SEARCH_STATUSES = [
+  { value: LISTING_STATUS.NEW, label: LISTING_STATUS_LABELS[LISTING_STATUS.NEW] },
+  { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
+  { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
+  { value: LISTING_STATUS.BACK_ON_MARKET, label: LISTING_STATUS_LABELS[LISTING_STATUS.BACK_ON_MARKET] },
+  { value: LISTING_STATUS.PRICE_CHANGED, label: LISTING_STATUS_LABELS[LISTING_STATUS.PRICE_CHANGED] },
+];
+
+/**
+ * Default statuses for search
+ */
+export const DEFAULT_SEARCH_STATUSES = [
+  LISTING_STATUS.NEW,
+  LISTING_STATUS.COMING_SOON,
+  LISTING_STATUS.ACTIVE,
+  LISTING_STATUS.BACK_ON_MARKET,
+];
+
+/**
+ * Rental listing statuses
+ */
+export const RENTAL_STATUS_OPTIONS = [
+  { value: LISTING_STATUS.ACTIVE, label: "Available" },
+  { value: LISTING_STATUS.PENDING, label: "Pending" },
+  { value: LISTING_STATUS.RENTED, label: "Rented" },
+];
+
+/**
+ * Agent listings page tab statuses
+ */
+export const AGENT_LISTINGS_TAB_STATUSES = [
+  { value: "on_market", label: "On Market" },
+  { value: "under_agreement", label: "Under Agreement" },
+  { value: "sold_rented", label: "Sold / Rented" },
+  { value: LISTING_STATUS.WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.WITHDRAWN] },
+  { value: LISTING_STATUS.EXPIRED, label: LISTING_STATUS_LABELS[LISTING_STATUS.EXPIRED] },
+  { value: LISTING_STATUS.CANCELED, label: LISTING_STATUS_LABELS[LISTING_STATUS.CANCELED] },
+  { value: "offline_partial", label: "Offline / Partial" },
+];
+
+// =============================================================================
+// STATUS HELPERS
+// =============================================================================
+
+/**
+ * Check if a status is "coming soon"
+ */
+export function isComingSoon(status: string): boolean {
+  return status === LISTING_STATUS.COMING_SOON;
+}
+
+/**
+ * Check if a status is "active" or "new" (on-market)
+ */
+export function isActive(status: string): boolean {
+  return status === LISTING_STATUS.ACTIVE || status === LISTING_STATUS.NEW;
+}
+
+/**
+ * Check if a status is closed (sold/rented)
+ */
+export function isClosed(status: string): boolean {
+  return status === LISTING_STATUS.SOLD || status === LISTING_STATUS.RENTED;
+}
+
+/**
  * Get label for any status value
  */
 export function getStatusLabel(status: string, domain: "listing" | "agent" | "hotsheet" = "listing"): string {

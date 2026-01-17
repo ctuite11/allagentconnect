@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { buildDisplayAddress, propertyTypeToEnum } from "@/lib/utils";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -381,8 +382,8 @@ const ListingCard = ({
     // Check current listing status directly (not just from history)
     const currentStatus = listing.status;
 
-    // Check for Coming Soon status
-    if (currentStatus === 'coming_soon') {
+    // Check for Coming Soon status using helper
+    if (isComingSoon(currentStatus)) {
       return {
         text: "COMING SOON",
         color: "bg-purple-600",
@@ -391,9 +392,8 @@ const ListingCard = ({
     }
 
     // Check if listing is "new" status OR recently became active (not a relisting)
-    // Show NEW LISTING banner for: status='new' OR status='active' within 7 days
-    const isNewStatus = currentStatus === 'new';
-    const isActiveStatus = currentStatus === 'active';
+    const isNewStatus = currentStatus === LISTING_STATUS.NEW;
+    const isActiveStatus = currentStatus === LISTING_STATUS.ACTIVE;
     
     if ((isNewStatus || isActiveStatus) && !listing.is_relisting) {
       // For 'new' status, always show the banner
@@ -407,7 +407,7 @@ const ListingCard = ({
       
       // For 'active' status, check if it became active recently (within 7 days)
       if (isActiveStatus && statusHistory.length > 0) {
-        const allActiveStatuses = statusHistory.filter(h => h.new_status === 'active');
+        const allActiveStatuses = statusHistory.filter(h => h.new_status === LISTING_STATUS.ACTIVE);
         if (allActiveStatuses.length >= 1) {
           const mostRecentActiveDate = new Date(allActiveStatuses[0].changed_at);
           const daysSinceActive = Math.ceil((Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -423,14 +423,19 @@ const ListingCard = ({
     }
 
     // Check if back on market (was pending, under_contract, withdrawn, or cancelled and now active again)
-    // This applies when status changes within the same listing (not creating a new listing)
     if (statusHistory.length >= 2 && isActiveStatus) {
       const previousStatus = statusHistory[1]?.new_status;
       const changeDate = new Date(statusHistory[0].changed_at);
       const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
 
-      // List of statuses that when followed by active should show "BACK ON MARKET"
-      const offMarketStatuses = ['pending', 'under_contract', 'withdrawn', 'cancelled', 'temporarily_withdrawn'];
+      // Use status constants for comparison
+      const offMarketStatuses = [
+        LISTING_STATUS.PENDING,
+        LISTING_STATUS.UNDER_AGREEMENT,
+        LISTING_STATUS.WITHDRAWN,
+        LISTING_STATUS.CANCELLED,
+        LISTING_STATUS.TEMPORARILY_WITHDRAWN,
+      ];
       if (offMarketStatuses.includes(previousStatus) && daysSinceChange <= 14) {
         return {
           text: "BACK ON MARKET",

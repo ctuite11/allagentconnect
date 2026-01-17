@@ -21,6 +21,7 @@ import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { HOT_SHEET_FILTER_STATUSES, PROPERTY_TYPES as STATUS_PROPERTY_TYPES } from "@/constants/status";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -394,22 +395,8 @@ export function CreateHotSheetDialog({
     { value: "business_opp", label: "Business Opp. (BU)" },
   ];
 
-  const statusOptions = [
-    { value: "new", label: "New (NEW)" },
-    { value: "active", label: "Active (ACT)" },
-    { value: "price_changed", label: "Price Changed (PCG)" },
-    { value: "back_on_market", label: "Back on Market (BOM)" },
-    { value: "extended", label: "Extended (EXT)" },
-    { value: "reactivated", label: "Reactivated (RAC)" },
-    { value: "contingent", label: "Contingent (CTG)" },
-    { value: "under_agreement", label: "Under Agreement (UAG)" },
-    { value: "sold", label: "Sold (SLD)" },
-    { value: "rented", label: "Rented (RNT)" },
-    { value: "temporarily_withdrawn", label: "Temporarily Withdrawn (WDN)" },
-    { value: "expired", label: "Expired (EXP)" },
-    { value: "canceled", label: "Canceled (CAN)" },
-    { value: "coming_soon", label: "Coming Soon (CSO)" },
-  ];
+  // Use centralized status options from constants
+  const statusOptions = HOT_SHEET_FILTER_STATUSES;
 
   const togglePropertyType = (value: string) => {
     setPropertyTypes(prev =>
