@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Clock, RefreshCw, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -337,9 +338,7 @@ const ListingAnalytics = () => {
                     <div className="text-2xl font-bold">
                       ${selectedListingData.price.toLocaleString()}
                     </div>
-                    <Badge variant={selectedListingData.status === "active" ? "default" : "secondary"}>
-                      {selectedListingData.status}
-                    </Badge>
+                    <ListingStatusBadge status={selectedListingData.status} />
                   </div>
                 </div>
               </CardHeader>
@@ -642,18 +641,11 @@ const ListingAnalytics = () => {
                                 <div className="flex items-center gap-3 mb-1">
                                   {history.old_status && (
                                     <>
-                                      <Badge variant="outline" className="capitalize">
-                                        {history.old_status.replace(/_/g, ' ')}
-                                      </Badge>
+                                      <ListingStatusBadge status={history.old_status} />
                                       <span className="text-muted-foreground">→</span>
                                     </>
                                   )}
-                                  <Badge 
-                                    variant={history.new_status === 'active' ? 'default' : 'secondary'}
-                                    className="capitalize"
-                                  >
-                                    {history.new_status.replace(/_/g, ' ')}
-                                  </Badge>
+                                  <ListingStatusBadge status={history.new_status} />
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {format(new Date(history.changed_at), "MMMM d, yyyy 'at' h:mm a")}
