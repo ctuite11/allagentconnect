@@ -11,11 +11,11 @@ The status system centralizes all status definitions, labels, colors, and logic 
 
 ## Three Domains
 
-| Domain     | Constant         | Badge Component       |
-|------------|------------------|-----------------------|
-| Listing    | `LISTING_STATUS` | `ListingStatusBadge`  |
-| Agent      | `AGENT_STATUS`   | `AgentStatusBadge`    |
-| Hot Sheet  | `HOT_SHEET_STATUS` | `HotSheetStatusBadge` |
+| Domain     | Constant           | Badge Component        |
+|------------|--------------------|------------------------|
+| Listing    | `LISTING_STATUS`   | `ListingStatusBadge`   |
+| Agent      | `AGENT_STATUS`     | `AgentStatusBadge`     |
+| Hot Sheet  | `HOT_SHEET_STATUS` | `HotSheetStatusBadge`  |
 
 ## What's Allowed ✅
 
@@ -24,11 +24,17 @@ The status system centralizes all status definitions, labels, colors, and logic 
 import { LISTING_STATUS, isComingSoon, isVerifiedAgent } from "@/constants/status";
 import { ListingStatusBadge, AgentStatusBadge } from "@/components/ui/status-badge";
 
-// Use constants for comparisons
-if (isComingSoon(listing.status)) { ... }
-if (listing.status === LISTING_STATUS.ACTIVE) { ... }
+// Use helper functions for branching logic
+if (isComingSoon(listing.status)) {
+  showCountdown();
+}
 
-// Use badges for display
+// Or use constants for direct comparisons
+if (listing.status === LISTING_STATUS.ACTIVE) {
+  showActiveIndicator();
+}
+
+// Use badges for all status display
 <ListingStatusBadge status={listing.status} />
 <AgentStatusBadge status={agent.agent_status} />
 
@@ -41,16 +47,20 @@ import { LISTING_SEARCH_STATUSES } from "@/constants/status";
 
 ```tsx
 // ❌ Hardcoded string comparisons
-if (status === "coming_soon") { ... }  // Use LISTING_STATUS.COMING_SOON
+if (status === "coming_soon") { /* ... */ }
+// ✅ Use: if (isComingSoon(status)) or if (status === LISTING_STATUS.COMING_SOON)
 
 // ❌ Manual label formatting
-status.replace(/_/g, " ")  // Use getStatusLabel() or StatusBadge
+const label = status.replace(/_/g, " ");
+// ✅ Use: getStatusLabel(status) or <ListingStatusBadge status={status} />
 
 // ❌ Inline status labels
-<Badge>Coming Soon</Badge>  // Use <ListingStatusBadge status={status} />
+<Badge>Coming Soon</Badge>
+// ✅ Use: <ListingStatusBadge status={status} />
 
 // ❌ Local color maps
-const statusColors = { active: "green", ... }  // Colors live in status.ts
+const statusColors = { active: "green", pending: "yellow" };
+// ✅ Colors are defined in LISTING_STATUS_CONFIG within status.ts
 ```
 
 ## Adding a New Status
@@ -103,26 +113,46 @@ When warnings hit zero, flip `"warn"` → `"error"` for hard enforcement.
 ## Good Example
 
 ```tsx
-import { isVerifiedAgent, isListingOnMarket, LISTING_STATUS } from "@/constants/status";
-import { ListingStatusBadge, AgentStatusBadge } from "@/components/ui/status-badge";
+import { 
+  isVerifiedAgent, 
+  isListingOnMarket, 
+  LISTING_STATUS 
+} from "@/constants/status";
+import { 
+  ListingStatusBadge, 
+  AgentStatusBadge 
+} from "@/components/ui/status-badge";
 
-function AgentCard({ agent, listings }) {
+interface AgentCardProps {
+  agent: { agent_status: string; name: string };
+  listings: Array<{ id: string; status: string; address: string }>;
+}
+
+function AgentCard({ agent, listings }: AgentCardProps) {
   const activeListings = listings.filter(l => isListingOnMarket(l.status));
-  
+
   return (
-    <div>
-      <AgentStatusBadge status={agent.agent_status} />
-      {isVerifiedAgent(agent.agent_status) && <VerifiedBadge />}
-      
-      <h3>{agent.name}</h3>
-      <p>{activeListings.length} active listings</p>
-      
-      {activeListings.map(listing => (
-        <div key={listing.id}>
-          <ListingStatusBadge status={listing.status} size="sm" />
-          {listing.address}
-        </div>
-      ))}
+    <div className="p-4 border rounded-lg">
+      <div className="flex items-center gap-2 mb-3">
+        <AgentStatusBadge status={agent.agent_status} />
+        {isVerifiedAgent(agent.agent_status) && (
+          <span className="text-emerald-600">✓</span>
+        )}
+      </div>
+
+      <h3 className="font-semibold">{agent.name}</h3>
+      <p className="text-sm text-muted-foreground">
+        {activeListings.length} active listings
+      </p>
+
+      <div className="mt-4 space-y-2">
+        {activeListings.map(listing => (
+          <div key={listing.id} className="flex items-center gap-2">
+            <ListingStatusBadge status={listing.status} size="sm" />
+            <span className="text-sm">{listing.address}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
