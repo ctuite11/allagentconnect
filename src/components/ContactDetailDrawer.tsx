@@ -16,6 +16,7 @@ import {
   Calendar,
   Clock
 } from "lucide-react";
+import { HotSheetStatusBadge } from "@/components/ui/status-badge";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import ContactQuickActions from "@/components/ContactQuickActions";
 
@@ -273,12 +274,10 @@ const ContactDetailDrawer = ({
                         {new Date(hotSheet.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <Badge 
-                      variant={hotSheet.is_active ? "default" : "secondary"}
-                      className={hotSheet.is_active ? "bg-emerald-600 text-white text-xs" : "text-xs"}
-                    >
-                      {hotSheet.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                    <HotSheetStatusBadge 
+                      status={hotSheet.is_active ? "active" : "paused"} 
+                      size="sm" 
+                    />
                   </div>
                 ))}
               </div>
