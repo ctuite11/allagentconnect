@@ -17,6 +17,7 @@ import {
   Clock
 } from "lucide-react";
 import { HotSheetStatusBadge } from "@/components/ui/status-badge";
+import { HOT_SHEET_STATUS } from "@/constants/status";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import ContactQuickActions from "@/components/ContactQuickActions";
 
@@ -275,7 +276,7 @@ const ContactDetailDrawer = ({
                       </p>
                     </div>
                     <HotSheetStatusBadge 
-                      status={hotSheet.is_active ? "active" : "paused"} 
+                      status={hotSheet.is_active ? HOT_SHEET_STATUS.ACTIVE : HOT_SHEET_STATUS.PAUSED} 
                       size="sm" 
                     />
                   </div>
