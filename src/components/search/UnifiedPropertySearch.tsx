@@ -10,6 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, Home, Building2, Users, MapPin, DollarSign, Bed, Bath, Calendar, Waves, Eye } from "lucide-react";
 import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
 import { cn } from "@/lib/utils";
+import {
+  PROPERTY_TYPES as STATUS_PROPERTY_TYPES,
+  AGENT_SEARCH_STATUSES,
+  CONSUMER_SEARCH_STATUSES,
+  DEFAULT_SEARCH_STATUSES,
+} from "@/constants/status";
 
 export interface SearchCriteria {
   // Location
@@ -74,6 +80,7 @@ interface UnifiedPropertySearchProps {
   mode?: "agent" | "consumer";
 }
 
+// Map property types to icons
 const PROPERTY_TYPES = [
   { value: "Single Family", label: "Single Family", icon: Home },
   { value: "Condominium", label: "Condo", icon: Building2 },
@@ -84,31 +91,6 @@ const PROPERTY_TYPES = [
   { value: "Mobile Home", label: "Mobile Home", icon: Home },
   { value: "Residential Rental", label: "Residential Rental", icon: Home },
 ];
-
-const AGENT_STATUSES = [
-  { value: "new", label: "New" },
-  { value: "coming_soon", label: "Coming Soon" },
-  { value: "active", label: "Active" },
-  { value: "back_on_market", label: "Back on Market" },
-  { value: "contingent", label: "Contingent" },
-  { value: "under_agreement", label: "Under Agreement" },
-  { value: "sold", label: "Sold" },
-  { value: "expired", label: "Expired" },
-  { value: "extended", label: "Extended" },
-  { value: "price_changed", label: "Price Change" },
-  { value: "temp_withdrawn", label: "Temp Withdrawn" },
-  { value: "canceled", label: "Canceled" },
-];
-
-const CONSUMER_STATUSES = [
-  { value: "new", label: "New" },
-  { value: "active", label: "Active" },
-  { value: "coming_soon", label: "Coming Soon" },
-  { value: "back_on_market", label: "Back on Market" },
-  { value: "price_changed", label: "Price Change" },
-];
-
-const DEFAULT_STATUSES = ["new", "coming_soon", "active", "back_on_market"];
 
 const PRICE_SUGGESTIONS = [
   { label: "$100K", value: "100000" },
@@ -131,7 +113,7 @@ export const UnifiedPropertySearch = ({
   onClear,
   mode = "consumer",
 }: UnifiedPropertySearchProps) => {
-  const STATUSES = mode === "agent" ? AGENT_STATUSES : CONSUMER_STATUSES;
+  const STATUSES = mode === "agent" ? AGENT_SEARCH_STATUSES : CONSUMER_SEARCH_STATUSES;
   
   const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(true);
   const [isPriceOpen, setIsPriceOpen] = useState(true);
@@ -143,7 +125,7 @@ export const UnifiedPropertySearch = ({
   // Initialize default statuses if not set
   useEffect(() => {
     if (!criteria.statuses || criteria.statuses.length === 0) {
-      updateCriteria({ statuses: DEFAULT_STATUSES });
+      updateCriteria({ statuses: [...DEFAULT_SEARCH_STATUSES] });
     }
   }, []);
 

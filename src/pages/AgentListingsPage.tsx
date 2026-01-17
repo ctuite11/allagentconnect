@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -23,6 +22,8 @@ import {
 } from "lucide-react";
 import { PriceDialog } from "@/components/PriceDialog";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
+import { AGENT_LISTINGS_TAB_STATUSES, LISTING_STATUS_LABELS } from "@/constants/status";
 
 type ListingStatus =
   | "on_market"
@@ -228,15 +229,11 @@ export default function AgentListingsPage({ listings }: AgentListingsPageProps) 
   );
 }
 
-const statusTabs: { label: string; value: ListingStatus | "all" }[] = [
-  { label: "On Market", value: "on_market" },
-  { label: "Under Agreement", value: "under_agreement" },
-  { label: "Sold / Rented", value: "sold_rented" },
-  { label: "Withdrawn", value: "withdrawn" },
-  { label: "Expired", value: "expired" },
-  { label: "Canceled", value: "canceled" },
-  { label: "Offline / Partial", value: "offline_partial" },
-];
+// Use centralized status tabs from constants
+const statusTabs = AGENT_LISTINGS_TAB_STATUSES.map(s => ({
+  label: s.label,
+  value: s.value as ListingStatus | "all",
+}));
 
 function ListingsTable({ 
   listings,
@@ -371,7 +368,7 @@ function ListingRow({
 
       <td className="px-3 py-3 align-top">
         <div className="space-y-1">
-          <Badge variant="outline">{listing.status.replace(/_/g, " ")}</Badge>
+          <ListingStatusBadge status={listing.status} />
           {listing.dom !== null && (
             <div className="text-xs text-muted-foreground">
               {listing.dom} DOM
