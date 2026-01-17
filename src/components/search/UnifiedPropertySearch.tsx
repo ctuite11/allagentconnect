@@ -167,7 +167,7 @@ export const UnifiedPropertySearch = ({
 
   const handleClearAll = () => {
     onCriteriaChange({
-      statuses: DEFAULT_STATUSES,
+      statuses: DEFAULT_SEARCH_STATUSES,
       propertyTypes: [],
       towns: [],
       state: "MA",
