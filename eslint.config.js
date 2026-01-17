@@ -45,6 +45,18 @@ export default tseslint.config(
           selector: "BinaryExpression[operator='==='][right.value='pending']",
           message: "Use AGENT_STATUS.PENDING or LISTING_STATUS constants instead of raw string comparison.",
         },
+        {
+          selector: "BinaryExpression[operator='!=='][right.value='verified']",
+          message: "Use AGENT_STATUS.VERIFIED constant instead of raw string comparison.",
+        },
+        {
+          selector: "BinaryExpression[operator='==='][right.value='active']",
+          message: "Use LISTING_STATUS.ACTIVE or AGENT_STATUS constants instead of raw string comparison.",
+        },
+        {
+          selector: "BinaryExpression[operator='!=='][right.value='active']",
+          message: "Use LISTING_STATUS.ACTIVE or AGENT_STATUS constants instead of raw string comparison.",
+        },
       ],
     },
   },
