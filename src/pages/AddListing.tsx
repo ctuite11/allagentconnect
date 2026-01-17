@@ -1609,12 +1609,12 @@ const AddListing = () => {
   }, [formData.address, formData.city, formData.zip_code, hasAutoFetched]);
 
   const handleStatusChange = (value: string) => {
-    // Ensure status is never empty - default to original or 'new'
-    const newStatus = value || originalStatusRef.current || 'new';
+    // Ensure status is never empty - default to original or LISTING_STATUS.NEW
+    const newStatus = value || originalStatusRef.current || LISTING_STATUS.NEW;
     setFormData(prev => ({ ...prev, status: newStatus }));
-    if (newStatus === "coming_soon") {
+    if (newStatus === LISTING_STATUS.COMING_SOON) {
       setFormData(prev => ({ ...prev, auto_activate_on: null }));
-    } else if (newStatus === "new" || newStatus === "active") {
+    } else if (newStatus === LISTING_STATUS.NEW || newStatus === LISTING_STATUS.ACTIVE) {
       setFormData(prev => ({ ...prev, go_live_date: "" }));
     }
   };

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authDebug, getAgentStatus } from "@/lib/authDebug";
+import { AGENT_STATUS } from "@/constants/status";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -307,9 +308,9 @@ const AuthCallback = () => {
       const agentResult = await getAgentStatus(userId);
       authDebug("routeUser agent status", { userId, status: agentResult.status, error: agentResult.error });
       
-      const status = agentResult.status || 'pending';
+      const status = agentResult.status || AGENT_STATUS.PENDING;
       
-      if (status === 'verified') {
+      if (status === AGENT_STATUS.VERIFIED) {
         authDebug("routeUser", { action: "dashboard_redirect" });
         didNavigate.current = true;
         navigate('/agent-dashboard', { replace: true });

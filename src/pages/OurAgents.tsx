@@ -15,6 +15,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { z } from "zod";
 import { PageHeader } from "@/components/ui/page-header";
+import { LISTING_STATUS } from "@/constants/status";
 
 interface EnrichedAgent {
   id: string;
@@ -161,13 +162,13 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
         const agentListings = (listingsData || []).filter(l => l.agent_id === agent.id);
         
         // Count by status
-        const activeListingsCount = agentListings.filter(l => l.status === "active").length;
-        const comingSoonCount = agentListings.filter(l => l.status === "coming_soon").length;
-        const offMarketCount = agentListings.filter(l => l.status === "off_market").length;
+        const activeListingsCount = agentListings.filter(l => l.status === LISTING_STATUS.ACTIVE).length;
+        const comingSoonCount = agentListings.filter(l => l.status === LISTING_STATUS.COMING_SOON).length;
+        const offMarketCount = agentListings.filter(l => l.status === LISTING_STATUS.OFF_MARKET).length;
         
         // Sales in last 12 months
         const last12MonthsSales = agentListings.filter(l => 
-          l.status === "sold" && 
+          l.status === LISTING_STATUS.SOLD && 
           new Date(l.created_at) >= twelveMonthsAgo
         ).length;
 
