@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -857,7 +858,7 @@ const ListingCard = ({
                 </div>
               )}
               
-              {(listing.status === 'active' || listing.status === 'coming_soon') && matchCount > 0 && (
+              {(listing.status === LISTING_STATUS.ACTIVE || listing.status === LISTING_STATUS.COMING_SOON) && matchCount > 0 && (
                 <Button 
                   size="sm" 
                   variant={matchButtonStyle.variant} 
@@ -872,9 +873,7 @@ const ListingCard = ({
             </div>
 
             <div className="col-span-2">
-              <Badge variant={listing.status === "active" ? "default" : "secondary"} className="mb-1 text-xs">
-                {listing.status}
-              </Badge>
+              <ListingStatusBadge status={listing.status} size="sm" className="mb-1" />
               {listing.property_type && <div className="text-xs text-muted-foreground">{listing.property_type}</div>}
             </div>
 

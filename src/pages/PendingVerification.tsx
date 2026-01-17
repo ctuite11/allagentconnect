@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { authDebug, getAgentStatus } from "@/lib/authDebug";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 import { Logo } from "@/components/brand";
+import { AGENT_STATUS } from "@/constants/status";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -131,9 +132,9 @@ const PendingVerification = () => {
         }
       }
       
-      const status = agentResult.status || 'unverified';
+      const status = agentResult.status || AGENT_STATUS.UNVERIFIED;
 
-      if (status === 'verified') {
+      if (status === AGENT_STATUS.VERIFIED) {
         // Show approval message briefly, then redirect
         authDebug("PendingVerification", { action: "verified_redirect" });
         setIsApproved(true);
