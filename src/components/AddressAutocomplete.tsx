@@ -8,6 +8,7 @@ interface AddressAutocompleteProps {
   value?: string;
   onChange?: (value: string) => void;
   types?: string[];
+  onError?: () => void;
 }
 
 // --- Google Maps / Places loader (robust + no silent failure) ---
@@ -167,6 +168,7 @@ const AddressAutocomplete = ({
   value,
   onChange,
   types = ["geocode"],
+  onError,
 }: AddressAutocompleteProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -192,6 +194,7 @@ const AddressAutocomplete = ({
         "[AddressAutocomplete] Google Maps key missing. Set VITE_GOOGLE_MAPS_API_KEY (production) or open the preview URL with ?gmaps_key=YOUR_KEY."
       );
       setLoadError("Autocomplete disabled (missing key)");
+      onError?.();
       return;
     }
 
@@ -382,6 +385,7 @@ const AddressAutocomplete = ({
       .catch((err) => {
         console.error("[AddressAutocomplete] Autocomplete disabled:", err?.message || err);
         setLoadError(err?.message || "Autocomplete disabled");
+        onError?.();
       });
 
     return () => {
