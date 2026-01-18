@@ -1,3 +1,5 @@
+import { humanizeSnakeCase } from "@/lib";
+
 /**
  * STATUS SYSTEM — SINGLE SOURCE OF TRUTH
  *
@@ -424,29 +426,29 @@ export function getDiagnosticStatusColor(status: string): string {
 // TYPE GUARDS (use Sets for O(1) lookup)
 // =============================================================================
 
-const LISTING_STATUS_SET: Set<string> = new Set(Object.values(LISTING_STATUS));
-const AGENT_STATUS_SET: Set<string> = new Set(Object.values(AGENT_STATUS));
-const HOT_SHEET_STATUS_SET: Set<string> = new Set(Object.values(HOT_SHEET_STATUS));
+const LISTING_STATUS_SET = new Set<ListingStatus>(Object.values(LISTING_STATUS) as ListingStatus[]);
+const AGENT_STATUS_SET = new Set<AgentStatus>(Object.values(AGENT_STATUS) as AgentStatus[]);
+const HOT_SHEET_STATUS_SET = new Set<HotSheetStatus>(Object.values(HOT_SHEET_STATUS) as HotSheetStatus[]);
 
 /**
  * Type guard: is this a valid ListingStatus?
  */
 export function isListingStatus(status: unknown): status is ListingStatus {
-  return typeof status === "string" && LISTING_STATUS_SET.has(status);
+  return typeof status === "string" && LISTING_STATUS_SET.has(status as ListingStatus);
 }
 
 /**
  * Type guard: is this a valid AgentStatus?
  */
 export function isAgentStatus(status: unknown): status is AgentStatus {
-  return typeof status === "string" && AGENT_STATUS_SET.has(status);
+  return typeof status === "string" && AGENT_STATUS_SET.has(status as AgentStatus);
 }
 
 /**
  * Type guard: is this a valid HotSheetStatus?
  */
 export function isHotSheetStatus(status: unknown): status is HotSheetStatus {
-  return typeof status === "string" && HOT_SHEET_STATUS_SET.has(status);
+  return typeof status === "string" && HOT_SHEET_STATUS_SET.has(status as HotSheetStatus);
 }
 
 // =============================================================================
@@ -556,8 +558,6 @@ export function isHotSheetActive(status: string): boolean {
 // =============================================================================
 // LABEL LOOKUPS
 // =============================================================================
-
-import { humanizeSnakeCase } from "@/lib/format";
 
 /**
  * Get label for any status value
