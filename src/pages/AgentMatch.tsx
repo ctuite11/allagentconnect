@@ -15,6 +15,7 @@ import { US_STATES } from "@/data/usStatesCountiesData";
 import AgentMatchAuthDialog from "@/components/agent-match/AgentMatchAuthDialog";
 import AgentMatchResultsPanel from "@/components/agent-match/AgentMatchResultsPanel";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
+import { normalizeGooglePlace } from "@/lib";
 
 const PROPERTY_TYPES = [
   { value: "Single Family", label: "Single Family" },
@@ -105,44 +106,21 @@ const AgentMatch = () => {
   const handlePlaceSelect = (place: any) => {
     if (!place.address_components) return;
     
-    const components = place.address_components;
+    const normalized = normalizeGooglePlace(place);
     
-    // Extract street number + route for address
-    const streetNumber = components.find((c: any) => 
-      c.types.includes('street_number'))?.long_name || '';
-    const route = components.find((c: any) => 
-      c.types.includes('route'))?.long_name || '';
-    const address = `${streetNumber} ${route}`.trim();
-    
-    // Extract city (locality or sublocality)
-    const city = components.find((c: any) => 
-      c.types.includes('locality') || c.types.includes('sublocality'))?.long_name || '';
-    
-    // Extract state (short_name for abbreviation)
-    const state = components.find((c: any) => 
-      c.types.includes('administrative_area_level_1'))?.short_name || '';
-    
-    // Extract ZIP code
-    const zipCode = components.find((c: any) => 
-      c.types.includes('postal_code'))?.long_name || '';
-    
-    // Extract neighborhood if available
-    const neighborhood = components.find((c: any) => 
-      c.types.includes('neighborhood') || c.types.includes('sublocality_level_1'))?.long_name || '';
-    
-    // Update form state
+    // Update form state with normalized address
     setPropertyData(prev => ({
       ...prev,
-      address: address || place.formatted_address?.split(',')[0] || '',
-      city,
-      state: state || prev.state,
-      zip_code: zipCode,
-      neighborhood: neighborhood || prev.neighborhood,
+      address: normalized.address_line1 || place.formatted_address?.split(',')[0] || '',
+      city: normalized.city,
+      state: normalized.state || prev.state,
+      zip_code: normalized.zip,
+      neighborhood: normalized.neighborhood || prev.neighborhood,
     }));
     
     // Trigger ATTOM data fetch
-    if (address && city && state) {
-      fetchPropertyData(address, city, state, zipCode);
+    if (normalized.address_line1 && normalized.city && normalized.state) {
+      fetchPropertyData(normalized.address_line1, normalized.city, normalized.state, normalized.zip);
     }
   };
 

@@ -8,3 +8,4 @@
 export * from "./format";
 export * from "./phoneFormat";
 export * from "./brandColors";
+export * from "./google-address";
