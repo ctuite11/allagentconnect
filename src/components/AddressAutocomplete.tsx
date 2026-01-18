@@ -19,10 +19,21 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
   useEffect(() => {
     if (!inputRef.current) return;
 
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+    const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+
+    // Allow preview/testing without repo secrets (pass ?gmaps_key=... in URL)
+    const urlKey =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("gmaps_key") ?? undefined
+        : undefined;
+
+    const apiKey = envKey || urlKey;
+
     // If no API key, keep a plain input (graceful fallback)
     if (!apiKey) {
-      console.warn("[AddressAutocomplete] Missing VITE_GOOGLE_MAPS_API_KEY — using plain input fallback");
+      console.warn(
+        "Google Maps key missing. Set VITE_GOOGLE_MAPS_API_KEY or pass ?gmaps_key=... in the URL for preview."
+      );
       return;
     }
 
