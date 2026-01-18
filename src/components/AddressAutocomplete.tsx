@@ -174,8 +174,13 @@ const AddressAutocomplete = ({
   const [useNewElement, setUseNewElement] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Stabilize types dependency to prevent re-init on every render
+  const typesKey = JSON.stringify(types ?? []);
+
   useEffect(() => {
-    if (!inputRef.current && !containerRef.current) return;
+    // Check if we have at least one target element
+    const hasTarget = Boolean(inputRef.current || containerRef.current);
+    if (!hasTarget) return;
 
     const { apiKey, source } = getGmapsKey();
 
@@ -190,17 +195,7 @@ const AddressAutocomplete = ({
       return;
     }
 
-    loadGoogleMapsPlaces(apiKey)
-      .then(() => {
-        console.log("[AddressAutocomplete] Google Places ready.");
-        setLoadError(null);
-        initAutocomplete();
-      })
-      .catch((err) => {
-        console.error("[AddressAutocomplete] Autocomplete disabled:", err?.message || err);
-        setLoadError(err?.message || "Autocomplete disabled");
-      });
-
+    // Define initAutocomplete BEFORE it's used (avoid temporal dead zone)
     const initAutocomplete = async () => {
       console.log("=== [AddressAutocomplete] initAutocomplete called ===");
       const google = (window as any).google;
@@ -226,6 +221,9 @@ const AddressAutocomplete = ({
         "[AddressAutocomplete] Places API loaded, checking for PlaceAutocompleteElement..."
       );
 
+      // Parse types from stabilized key
+      const parsedTypes = JSON.parse(typesKey) as string[];
+
       // Prefer the new Place Autocomplete Element when available
       if (places?.PlaceAutocompleteElement && containerRef.current) {
         console.log("[AddressAutocomplete] PlaceAutocompleteElement available, using new API");
@@ -239,7 +237,7 @@ const AddressAutocomplete = ({
           } catch {}
           // Set types if supported
           try {
-            (el as any).types = types;
+            (el as any).types = parsedTypes;
           } catch {}
           if (placeholder) {
             try {
@@ -343,7 +341,7 @@ const AddressAutocomplete = ({
       }
 
       autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-        types: types,
+        types: parsedTypes,
         componentRestrictions: { country: "us" },
         fields: ["formatted_address", "address_components", "geometry", "name"],
       });
@@ -374,6 +372,18 @@ const AddressAutocomplete = ({
       console.log("[AddressAutocomplete] Legacy Autocomplete setup complete");
     };
 
+    // Now call loadGoogleMapsPlaces with initAutocomplete defined above
+    loadGoogleMapsPlaces(apiKey)
+      .then(() => {
+        console.log("[AddressAutocomplete] Google Places ready.");
+        setLoadError(null);
+        initAutocomplete();
+      })
+      .catch((err) => {
+        console.error("[AddressAutocomplete] Autocomplete disabled:", err?.message || err);
+        setLoadError(err?.message || "Autocomplete disabled");
+      });
+
     return () => {
       if (autocompleteRef.current) {
         // Cleanup for new PlaceAutocompleteElement
@@ -388,7 +398,7 @@ const AddressAutocomplete = ({
         }
       }
     };
-  }, [onPlaceSelect, placeholder, types]);
+  }, [onPlaceSelect, onChange, placeholder, typesKey, value]);
 
   // Sync controlled value to new element when it changes
   useEffect(() => {
