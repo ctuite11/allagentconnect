@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Home, Upload, Check, Users, Lock, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home, Upload, Check, Users, Lock, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { US_STATES } from "@/data/usStatesCountiesData";
 import AgentMatchAuthDialog from "@/components/agent-match/AgentMatchAuthDialog";
 import AgentMatchResultsPanel from "@/components/agent-match/AgentMatchResultsPanel";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const PROPERTY_TYPES = [
   { value: "Single Family", label: "Single Family" },
@@ -80,6 +81,7 @@ const AgentMatch = () => {
     notUnderContract: false,
     ownerOrAuthorized: false,
   });
+  const [autoFillLoading, setAutoFillLoading] = useState(false);
 
   // Check for existing user session
   useEffect(() => {
@@ -96,6 +98,82 @@ const AgentMatch = () => {
 
   const updateProperty = (field: keyof PropertyData, value: string) => {
     setPropertyData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handlePlaceSelect = (place: any) => {
+    if (!place.address_components) return;
+    
+    const components = place.address_components;
+    
+    // Extract street number + route for address
+    const streetNumber = components.find((c: any) => 
+      c.types.includes('street_number'))?.long_name || '';
+    const route = components.find((c: any) => 
+      c.types.includes('route'))?.long_name || '';
+    const address = `${streetNumber} ${route}`.trim();
+    
+    // Extract city (locality or sublocality)
+    const city = components.find((c: any) => 
+      c.types.includes('locality') || c.types.includes('sublocality'))?.long_name || '';
+    
+    // Extract state (short_name for abbreviation)
+    const state = components.find((c: any) => 
+      c.types.includes('administrative_area_level_1'))?.short_name || '';
+    
+    // Extract ZIP code
+    const zipCode = components.find((c: any) => 
+      c.types.includes('postal_code'))?.long_name || '';
+    
+    // Extract neighborhood if available
+    const neighborhood = components.find((c: any) => 
+      c.types.includes('neighborhood') || c.types.includes('sublocality_level_1'))?.long_name || '';
+    
+    // Update form state
+    setPropertyData(prev => ({
+      ...prev,
+      address: address || place.formatted_address?.split(',')[0] || '',
+      city,
+      state: state || prev.state,
+      zip_code: zipCode,
+      neighborhood: neighborhood || prev.neighborhood,
+    }));
+    
+    // Trigger ATTOM data fetch
+    if (address && city && state) {
+      fetchPropertyData(address, city, state, zipCode);
+    }
+  };
+
+  const fetchPropertyData = async (address: string, city: string, state: string, zip: string) => {
+    setAutoFillLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-property-data', {
+        body: { address, city, state, zip }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.results?.length > 0) {
+        const record = data.results[0];
+        
+        // Auto-fill property details from ATTOM
+        setPropertyData(prev => ({
+          ...prev,
+          bedrooms: record.beds?.toString() || prev.bedrooms,
+          bathrooms: record.baths?.toString() || prev.bathrooms,
+          square_feet: record.sqft?.toString() || prev.square_feet,
+          lot_size: record.lotSizeSqft ? (record.lotSizeSqft / 43560).toFixed(2) : prev.lot_size,
+          year_built: record.yearBuilt?.toString() || prev.year_built,
+        }));
+        
+        toast.success("Property details auto-filled from public records");
+      }
+    } catch (err) {
+      console.error("ATTOM fetch error:", err);
+      // Silent fail - seller can still enter manually
+    } finally {
+      setAutoFillLoading(false);
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -306,12 +384,20 @@ const AgentMatch = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="address">Street Address *</Label>
-                <Input
-                  id="address"
+                <AddressAutocomplete
                   value={propertyData.address}
-                  onChange={(e) => updateProperty("address", e.target.value)}
-                  placeholder="123 Main Street"
+                  onChange={(value) => updateProperty("address", value)}
+                  onPlaceSelect={handlePlaceSelect}
+                  placeholder="Start typing an address..."
+                  types={['address']}
+                  className="w-full"
                 />
+                {autoFillLoading && (
+                  <p className="text-sm text-zinc-500 flex items-center gap-2 mt-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Fetching property details...
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
