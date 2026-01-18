@@ -16,6 +16,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/**
+ * Routes that use their own minimal headers (no global Navigation).
+ * Add new public funnel or minimal pages here to prevent double-header regressions.
+ */
+const HIDE_NAV_ROUTES = [
+  "/",                     // Landing page
+  "/home",                 // Home page  
+  "/auth",                 // Auth flow
+  "/register",             // Registration
+  "/agent-match",          // Seller match funnel
+  "/pending-verification", // Pending verification
+];
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -158,15 +170,8 @@ const Navigation = () => {
     return null;
   }
 
-  // Hide global navigation on minimal pages
-  if (location.pathname === "/") return null;
-  if (location.pathname === "/home") return null;
-  if (location.pathname === "/auth") return null;
-  if (location.pathname === "/register") return null;
-  if (location.pathname === "/agent-match") return null;
-
-  // HARD LOCKDOWN: Hide navigation on /pending-verification regardless of role
-  if (location.pathname === "/pending-verification") return null;
+  // Hide global navigation on minimal/public funnel pages (single source of truth)
+  if (HIDE_NAV_ROUTES.includes(location.pathname)) return null;
 
   // Hide navigation for pending agents on any other page as fallback
   const isPending = user && role === "agent" && agentStatus === "pending";
