@@ -21,13 +21,28 @@ const AddressAutocomplete = ({ onPlaceSelect, placeholder, className, value, onC
 
     const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
-    // Allow preview/testing without repo secrets (pass ?gmaps_key=... in URL)
+    // Allow preview/testing without repo secrets.
+    // 1) Pass ?gmaps_key=... in the URL
+    // 2) Or set localStorage.gmaps_key (we persist any URL key automatically)
     const urlKey =
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("gmaps_key") ?? undefined
         : undefined;
 
-    const apiKey = envKey || urlKey;
+    const storedKey =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("gmaps_key") ?? undefined
+        : undefined;
+
+    if (typeof window !== "undefined" && urlKey) {
+      try {
+        window.localStorage.setItem("gmaps_key", urlKey);
+      } catch {
+        // ignore (storage may be blocked)
+      }
+    }
+
+    const apiKey = envKey || urlKey || storedKey;
 
     // If no API key, keep a plain input (graceful fallback)
     if (!apiKey) {
