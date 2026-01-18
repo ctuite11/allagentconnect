@@ -163,6 +163,7 @@ const Navigation = () => {
   if (location.pathname === "/home") return null;
   if (location.pathname === "/auth") return null;
   if (location.pathname === "/register") return null;
+  if (location.pathname === "/agent-match") return null;
 
   // HARD LOCKDOWN: Hide navigation on /pending-verification regardless of role
   if (location.pathname === "/pending-verification") return null;
