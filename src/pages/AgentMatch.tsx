@@ -383,6 +383,22 @@ const AgentMatch = () => {
 
             <div className="space-y-4">
               <div>
+                <Label htmlFor="property_type">Property Type *</Label>
+                <Select value={propertyData.property_type} onValueChange={(v) => updateProperty("property_type", v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROPERTY_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label htmlFor="address">Street Address *</Label>
                 <AddressAutocomplete
                   value={propertyData.address}
@@ -455,22 +471,6 @@ const AgentMatch = () => {
                     placeholder="02101"
                   />
                 </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <Label htmlFor="property_type">Property Type *</Label>
-                <Select value={propertyData.property_type} onValueChange={(v) => updateProperty("property_type", v)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROPERTY_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
