@@ -416,16 +416,18 @@ const AgentMatch = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="unit">Unit/Apt (optional)</Label>
-                  <Input
-                    id="unit"
-                    value={propertyData.unit_number}
-                    onChange={(e) => updateProperty("unit_number", e.target.value)}
-                    placeholder="Unit 2B"
-                  />
-                </div>
+              <div className={`grid gap-4 ${propertyData.property_type === "Condominium" ? "md:grid-cols-2" : "grid-cols-1"}`}>
+                {propertyData.property_type === "Condominium" && (
+                  <div>
+                    <Label htmlFor="unit">Unit/Apt (optional)</Label>
+                    <Input
+                      id="unit"
+                      value={propertyData.unit_number}
+                      onChange={(e) => updateProperty("unit_number", e.target.value)}
+                      placeholder="Unit 2B"
+                    />
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="neighborhood">Neighborhood (optional)</Label>
                   <Input
