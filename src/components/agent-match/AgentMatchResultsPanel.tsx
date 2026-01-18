@@ -1,0 +1,172 @@
+import { useState } from "react";
+import { Users, CheckCircle2, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+
+interface AgentMatchResultsPanelProps {
+  matchCount: number;
+  submissionId: string | null;
+  propertyData: {
+    address: string;
+    city: string;
+    state: string;
+    asking_price: string;
+    buyer_agent_commission: string;
+  };
+}
+
+const AgentMatchResultsPanel = ({
+  matchCount,
+  submissionId,
+  propertyData,
+}: AgentMatchResultsPanelProps) => {
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleProceedToPayment = async () => {
+    if (!acceptedTerms) {
+      toast.error("Please accept the terms to continue");
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    // Placeholder: In production, this would integrate with Stripe
+    toast.info("Payment integration coming soon! Your submission has been saved.");
+    
+    setTimeout(() => {
+      setIsProcessing(false);
+    }, 1000);
+  };
+
+  const formatPrice = (price: string) => {
+    const num = parseFloat(price);
+    if (isNaN(num)) return price;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(num);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Match Count Hero */}
+      <div className="text-center py-8 px-4 bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-100">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#0E56F5]/10 mb-4">
+          <Users className="h-8 w-8 text-[#0E56F5]" />
+        </div>
+        
+        <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 mb-2">
+          {matchCount === 0 ? (
+            "No matches yet"
+          ) : (
+            <>
+              <span className="text-[#0E56F5]">{matchCount}</span> AAC Verified Agent{matchCount !== 1 ? "s" : ""}
+            </>
+          )}
+        </h1>
+        
+        <p className="text-zinc-600 max-w-md mx-auto">
+          {matchCount === 0
+            ? "We don't currently have agents with matching buyer criteria, but we'll notify you when we do."
+            : "currently working with qualified buyers looking for this type of home in this location."}
+        </p>
+      </div>
+
+      {/* Property Summary */}
+      <div className="p-4 bg-zinc-50 rounded-xl">
+        <p className="text-sm font-medium text-zinc-900">
+          {propertyData.address}, {propertyData.city}, {propertyData.state}
+        </p>
+        <p className="text-sm text-zinc-600 mt-1">
+          {formatPrice(propertyData.asking_price)} • {propertyData.buyer_agent_commission} buyer agent commission
+        </p>
+      </div>
+
+      {matchCount > 0 && (
+        <>
+          {/* What's Next */}
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-zinc-900">Ready to connect?</h2>
+            <p className="text-sm text-zinc-600">
+              For a one-time fee of <strong>$29.99</strong>, we'll introduce your property to all {matchCount} matched agents privately.
+            </p>
+
+            <div className="space-y-2 p-4 bg-zinc-50 rounded-xl">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-zinc-700">Private introduction to verified buyer agents only</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-zinc-700">Your property is never publicly listed or syndicated</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-zinc-700">Agents can respond directly to schedule showings</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Terms */}
+          <div className="p-4 border border-zinc-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="terms"
+                checked={acceptedTerms}
+                onCheckedChange={(checked) => setAcceptedTerms(!!checked)}
+              />
+              <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+                I agree to pay the <strong>{propertyData.buyer_agent_commission}</strong> buyer agent commission upon successful sale and the <strong>$29.99</strong> Agent Match delivery fee.
+              </Label>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <Button
+            onClick={handleProceedToPayment}
+            disabled={!acceptedTerms || isProcessing}
+            className="w-full bg-black hover:bg-zinc-800 text-white h-12 text-base"
+          >
+            {isProcessing ? (
+              "Processing..."
+            ) : (
+              <>
+                Proceed to Payment — $29.99
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </>
+      )}
+
+      {matchCount === 0 && (
+        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+          <div className="flex gap-3">
+            <Sparkles className="h-5 w-5 text-[#0E56F5] flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-zinc-900">We'll keep looking</p>
+              <p className="text-xs text-zinc-600 mt-1">
+                When new agents register buyer needs matching your property, we'll notify you by email.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Note */}
+      <div className="flex items-start gap-3 pt-4 border-t">
+        <Lock className="h-4 w-4 text-zinc-400 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-zinc-500">
+          Your property details are never shared publicly. Agent identities are revealed only after you complete payment.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default AgentMatchResultsPanel;
