@@ -82,6 +82,8 @@ const AgentMatch = () => {
     ownerOrAuthorized: false,
   });
   const [autoFillLoading, setAutoFillLoading] = useState(false);
+  const [manualAddress, setManualAddress] = useState(false);
+  const [autocompleteUnavailable, setAutocompleteUnavailable] = useState(false);
 
   // Check for existing user session
   useEffect(() => {
@@ -398,81 +400,128 @@ const AgentMatch = () => {
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="address">Street Address *</Label>
-                <AddressAutocomplete
-                  value={propertyData.address}
-                  onChange={(value) => updateProperty("address", value)}
-                  onPlaceSelect={handlePlaceSelect}
-                  placeholder="Start typing an address..."
-                  types={['address']}
-                  className="w-full"
-                />
-                {autoFillLoading && (
-                  <p className="text-sm text-zinc-500 flex items-center gap-2 mt-1">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Fetching property details...
-                  </p>
-                )}
-              </div>
-
-              <div className={`grid gap-4 ${propertyData.property_type === "Condominium" ? "md:grid-cols-2" : "grid-cols-1"}`}>
-                {propertyData.property_type === "Condominium" && (
+              {/* Address Section - Autocomplete Primary, Manual Fallback */}
+              {!manualAddress && !autocompleteUnavailable ? (
+                <div className="space-y-2">
+                  <Label htmlFor="address">Property Address *</Label>
+                  <AddressAutocomplete
+                    value={propertyData.address}
+                    onChange={(value) => updateProperty("address", value)}
+                    onPlaceSelect={handlePlaceSelect}
+                    onError={() => {
+                      setAutocompleteUnavailable(true);
+                      setManualAddress(true);
+                    }}
+                    placeholder="Start typing address..."
+                    types={['address']}
+                    className="w-full"
+                  />
+                  {autoFillLoading && (
+                    <p className="text-sm text-zinc-500 flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Fetching property details...
+                    </p>
+                  )}
+                  {propertyData.address && propertyData.city && (
+                    <p className="text-sm text-zinc-600">
+                      Using: {propertyData.address}, {propertyData.city} {propertyData.state} {propertyData.zip_code}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setManualAddress(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    Can't find your address? Enter manually
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {autocompleteUnavailable && (
+                    <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+                      Autocomplete unavailable — enter address manually.
+                    </p>
+                  )}
+                  
                   <div>
-                    <Label htmlFor="unit">Unit/Apt (optional)</Label>
+                    <Label htmlFor="address">Street Address *</Label>
                     <Input
-                      id="unit"
-                      value={propertyData.unit_number}
-                      onChange={(e) => updateProperty("unit_number", e.target.value)}
-                      placeholder="Unit 2B"
+                      id="address"
+                      value={propertyData.address}
+                      onChange={(e) => updateProperty("address", e.target.value)}
+                      placeholder="123 Main Street"
                     />
                   </div>
-                )}
-                <div>
-                  <Label htmlFor="neighborhood">Neighborhood (optional)</Label>
-                  <Input
-                    id="neighborhood"
-                    value={propertyData.neighborhood}
-                    onChange={(e) => updateProperty("neighborhood", e.target.value)}
-                    placeholder="Back Bay"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="city">City *</Label>
-                  <Input
-                    id="city"
-                    value={propertyData.city}
-                    onChange={(e) => updateProperty("city", e.target.value)}
-                    placeholder="Boston"
-                  />
+                  {propertyData.property_type === "Condominium" && (
+                    <div>
+                      <Label htmlFor="unit">Unit/Apt (optional)</Label>
+                      <Input
+                        id="unit"
+                        value={propertyData.unit_number}
+                        onChange={(e) => updateProperty("unit_number", e.target.value)}
+                        placeholder="Unit 2B"
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        value={propertyData.city}
+                        onChange={(e) => updateProperty("city", e.target.value)}
+                        placeholder="Boston"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="state">State *</Label>
+                      <Select value={propertyData.state} onValueChange={(v) => updateProperty("state", v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {US_STATES.map((s) => (
+                            <SelectItem key={s.code} value={s.code}>
+                              {s.code}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="zip">ZIP Code *</Label>
+                      <Input
+                        id="zip"
+                        value={propertyData.zip_code}
+                        onChange={(e) => updateProperty("zip_code", e.target.value)}
+                        placeholder="02101"
+                      />
+                    </div>
+                  </div>
+
+                  {!autocompleteUnavailable && (
+                    <button
+                      type="button"
+                      onClick={() => setManualAddress(false)}
+                      className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                    >
+                      Use address autocomplete instead
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <Label htmlFor="state">State *</Label>
-                  <Select value={propertyData.state} onValueChange={(v) => updateProperty("state", v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {US_STATES.map((s) => (
-                        <SelectItem key={s.code} value={s.code}>
-                          {s.code}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="zip">ZIP Code</Label>
-                  <Input
-                    id="zip"
-                    value={propertyData.zip_code}
-                    onChange={(e) => updateProperty("zip_code", e.target.value)}
-                    placeholder="02101"
-                  />
-                </div>
+              )}
+
+              {/* Neighborhood - always visible */}
+              <div>
+                <Label htmlFor="neighborhood">Neighborhood (optional)</Label>
+                <Input
+                  id="neighborhood"
+                  value={propertyData.neighborhood}
+                  onChange={(e) => updateProperty("neighborhood", e.target.value)}
+                  placeholder="Back Bay"
+                />
               </div>
 
               <div className="grid grid-cols-3 gap-4">
