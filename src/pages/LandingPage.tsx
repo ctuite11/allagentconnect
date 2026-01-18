@@ -104,15 +104,25 @@ const LandingPage = () => {
                 ))}
               </div>
 
-              {/* CTA */}
-              <Button
-                size="lg"
-                onClick={() => navigate('/register')}
-                className="bg-[#0E56F5] hover:bg-[#0D4AD9] text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
-              >
-                Request Early Access
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  size="lg"
+                  onClick={() => navigate('/register')}
+                  className="bg-[#0E56F5] hover:bg-[#0D4AD9] text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
+                >
+                  I'm an Agent
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate('/agent-match')}
+                  className="border-zinc-300 text-zinc-700 hover:bg-zinc-50 px-6 py-3 text-base font-medium rounded-xl"
+                >
+                  I'm Selling My Home
+                </Button>
+              </div>
             </div>
           </div>
           <style>{`

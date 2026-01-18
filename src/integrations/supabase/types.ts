@@ -339,6 +339,162 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_match_deliveries: {
+        Row: {
+          agent_id: string
+          created_at: string
+          hot_sheet_id: string | null
+          id: string
+          responded_at: string | null
+          submission_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          hot_sheet_id?: string | null
+          id?: string
+          responded_at?: string | null
+          submission_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          hot_sheet_id?: string | null
+          id?: string
+          responded_at?: string | null
+          submission_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_match_deliveries_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_match_deliveries_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_match_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_match_submissions: {
+        Row: {
+          address: string
+          asking_price: number
+          bathrooms: number
+          bedrooms: number
+          buyer_agent_commission: string | null
+          city: string
+          confirmed_not_under_contract: boolean
+          confirmed_owner_or_authorized: boolean
+          created_at: string
+          delivered_at: string | null
+          delivery_fee_cents: number | null
+          description: string | null
+          floor_plan_urls: string[] | null
+          id: string
+          lot_size: number | null
+          match_count: number | null
+          matched_at: string | null
+          neighborhood: string | null
+          payment_completed_at: string | null
+          photos: string[] | null
+          property_type: string
+          property_website_url: string | null
+          seller_email: string
+          seller_name: string | null
+          seller_phone: string | null
+          square_feet: number
+          state: string
+          status: string
+          unit_number: string | null
+          updated_at: string
+          user_id: string | null
+          video_url: string | null
+          year_built: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          address: string
+          asking_price: number
+          bathrooms: number
+          bedrooms: number
+          buyer_agent_commission?: string | null
+          city: string
+          confirmed_not_under_contract?: boolean
+          confirmed_owner_or_authorized?: boolean
+          created_at?: string
+          delivered_at?: string | null
+          delivery_fee_cents?: number | null
+          description?: string | null
+          floor_plan_urls?: string[] | null
+          id?: string
+          lot_size?: number | null
+          match_count?: number | null
+          matched_at?: string | null
+          neighborhood?: string | null
+          payment_completed_at?: string | null
+          photos?: string[] | null
+          property_type: string
+          property_website_url?: string | null
+          seller_email: string
+          seller_name?: string | null
+          seller_phone?: string | null
+          square_feet: number
+          state: string
+          status?: string
+          unit_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+          video_url?: string | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string
+          asking_price?: number
+          bathrooms?: number
+          bedrooms?: number
+          buyer_agent_commission?: string | null
+          city?: string
+          confirmed_not_under_contract?: boolean
+          confirmed_owner_or_authorized?: boolean
+          created_at?: string
+          delivered_at?: string | null
+          delivery_fee_cents?: number | null
+          description?: string | null
+          floor_plan_urls?: string[] | null
+          id?: string
+          lot_size?: number | null
+          match_count?: number | null
+          matched_at?: string | null
+          neighborhood?: string | null
+          payment_completed_at?: string | null
+          photos?: string[] | null
+          property_type?: string
+          property_website_url?: string | null
+          seller_email?: string
+          seller_name?: string | null
+          seller_phone?: string | null
+          square_feet?: number
+          state?: string
+          status?: string
+          unit_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+          video_url?: string | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       agent_messages: {
         Row: {
           agent_id: string
@@ -2718,6 +2874,17 @@ export type Database = {
         }[]
       }
       cleanup_expired_share_tokens: { Args: never; Returns: undefined }
+      count_matching_agents: {
+        Args: {
+          p_bathrooms: number
+          p_bedrooms: number
+          p_city: string
+          p_price: number
+          p_property_type: string
+          p_state: string
+        }
+        Returns: number
+      }
       delete_draft_listing: {
         Args: { p_listing_id: string }
         Returns: undefined

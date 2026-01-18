@@ -63,6 +63,7 @@ import AllAgentConnectHome from "./pages/AllAgentConnectHome";
 import ShareLinkHandler from "./pages/ShareLinkHandler";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
+import AgentMatch from "./pages/AgentMatch";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
@@ -98,6 +99,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/agent-match" element={<AgentMatch />} />
                 <Route path="/home" element={<Index />} />
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
