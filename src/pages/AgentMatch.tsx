@@ -405,6 +405,20 @@ const AgentMatch = () => {
                       Using: {propertyData.address}, {propertyData.city} {propertyData.state} {propertyData.zip_code}
                     </p>
                   )}
+                  
+                  {/* Unit field for condos - visible in autocomplete mode */}
+                  {propertyData.property_type === "Condominium" && (
+                    <div>
+                      <Label htmlFor="unit-autocomplete">Unit/Apt (optional)</Label>
+                      <Input
+                        id="unit-autocomplete"
+                        value={propertyData.unit_number}
+                        onChange={(e) => updateProperty("unit_number", e.target.value)}
+                        placeholder="Unit 2B"
+                      />
+                    </div>
+                  )}
+                  
                   <button
                     type="button"
                     onClick={() => setManualAddress(true)}
