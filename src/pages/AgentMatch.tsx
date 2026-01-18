@@ -23,7 +23,7 @@ const PROPERTY_TYPES = [
   { value: "Land", label: "Land" },
 ];
 
-type Step = "property" | "photos" | "confirm" | "auth" | "results";
+type Step = "property" | "photos" | "confirm" | "results";
 
 interface PropertyData {
   address: string;
@@ -151,28 +151,36 @@ const AgentMatch = () => {
     if (step === "property") setStep("photos");
     else if (step === "photos") setStep("confirm");
     else if (step === "confirm") {
-      // Show auth dialog to create account
-      setShowAuthDialog(true);
+      // Calculate match count immediately (no auth required)
+      setIsLoading(true);
+      try {
+        const { data: matchData, error: matchError } = await supabase.rpc("count_matching_agents", {
+          p_city: propertyData.city,
+          p_state: propertyData.state,
+          p_property_type: propertyData.property_type,
+          p_price: parseFloat(propertyData.asking_price) || 0,
+          p_bedrooms: parseInt(propertyData.bedrooms) || 0,
+          p_bathrooms: parseFloat(propertyData.bathrooms) || 0,
+        });
+
+        if (matchError) throw matchError;
+        setMatchCount(matchData || 0);
+        setStep("results");
+      } catch (error: any) {
+        console.error("Error calculating matches:", error);
+        toast.error(error.message || "Something went wrong");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleAuthComplete = async (email: string) => {
     setIsLoading(true);
+    setShowAuthDialog(false);
+    
     try {
-      // Calculate match count
-      const { data: matchData, error: matchError } = await supabase.rpc("count_matching_agents", {
-        p_city: propertyData.city,
-        p_state: propertyData.state,
-        p_property_type: propertyData.property_type,
-        p_price: parseFloat(propertyData.asking_price) || 0,
-        p_bedrooms: parseInt(propertyData.bedrooms) || 0,
-        p_bathrooms: parseFloat(propertyData.bathrooms) || 0,
-      });
-
-      if (matchError) throw matchError;
-      setMatchCount(matchData || 0);
-
-      // Upload photos to storage (if user is authenticated)
+      // Upload photos to storage
       const uploadedUrls: string[] = [];
       const session = await supabase.auth.getSession();
       
@@ -192,7 +200,7 @@ const AgentMatch = () => {
         }
       }
 
-      // Create submission record
+      // Create submission record with paid status
       const { data: submission, error: submitError } = await supabase
         .from("agent_match_submissions")
         .insert({
@@ -218,23 +226,26 @@ const AgentMatch = () => {
           buyer_agent_commission: propertyData.buyer_agent_commission || null,
           confirmed_not_under_contract: confirmations.notUnderContract,
           confirmed_owner_or_authorized: confirmations.ownerOrAuthorized,
-          match_count: matchData || 0,
+          match_count: matchCount || 0,
           matched_at: new Date().toISOString(),
-          status: "matched",
+          status: "paid",
         })
         .select()
         .single();
 
       if (submitError) throw submitError;
       setSubmissionId(submission.id);
-      setShowAuthDialog(false);
-      setStep("results");
+      toast.success("Your property has been submitted to matched agents!");
     } catch (error: any) {
       console.error("Error:", error);
       toast.error(error.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTriggerAuth = () => {
+    setShowAuthDialog(true);
   };
 
   const stepNumber = step === "property" ? 1 : step === "photos" ? 2 : step === "confirm" ? 3 : 4;
@@ -611,10 +622,10 @@ const AgentMatch = () => {
             <Button
               onClick={handleNextStep}
               className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9] text-white"
-              disabled={!confirmations.notUnderContract || !confirmations.ownerOrAuthorized}
+              disabled={!confirmations.notUnderContract || !confirmations.ownerOrAuthorized || isLoading}
             >
-              Find My Matches
-              <Sparkles className="ml-2 h-4 w-4" />
+              {isLoading ? "Finding Matches..." : "Find My Matches"}
+              {!isLoading && <Sparkles className="ml-2 h-4 w-4" />}
             </Button>
           </div>
         )}
@@ -625,6 +636,9 @@ const AgentMatch = () => {
             matchCount={matchCount || 0}
             submissionId={submissionId}
             propertyData={propertyData}
+            isAuthenticated={!!user}
+            isProcessing={isLoading}
+            onTriggerAuth={handleTriggerAuth}
           />
         )}
       </main>

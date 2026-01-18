@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Users, CheckCircle2, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 interface AgentMatchResultsPanelProps {
@@ -16,15 +16,23 @@ interface AgentMatchResultsPanelProps {
     asking_price: string;
     buyer_agent_commission: string;
   };
+  isAuthenticated: boolean;
+  isProcessing: boolean;
+  onTriggerAuth: () => void;
 }
 
 const AgentMatchResultsPanel = ({
   matchCount,
   submissionId,
   propertyData,
+  isAuthenticated,
+  isProcessing,
+  onTriggerAuth,
 }: AgentMatchResultsPanelProps) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [messageToAgents, setMessageToAgents] = useState(
+    "I'm interested in connecting with buyer agents who have clients looking for a home like mine."
+  );
 
   const handleProceedToPayment = async () => {
     if (!acceptedTerms) {
@@ -32,14 +40,13 @@ const AgentMatchResultsPanel = ({
       return;
     }
 
-    setIsProcessing(true);
-    
+    if (!isAuthenticated) {
+      onTriggerAuth();
+      return;
+    }
+
     // Placeholder: In production, this would integrate with Stripe
     toast.info("Payment integration coming soon! Your submission has been saved.");
-    
-    setTimeout(() => {
-      setIsProcessing(false);
-    }, 1000);
   };
 
   const formatPrice = (price: string) => {
@@ -89,6 +96,19 @@ const AgentMatchResultsPanel = ({
 
       {matchCount > 0 && (
         <>
+          {/* Message to Agents */}
+          <div className="space-y-2">
+            <Label htmlFor="message">Message to agents (optional)</Label>
+            <Textarea
+              id="message"
+              value={messageToAgents}
+              onChange={(e) => setMessageToAgents(e.target.value)}
+              placeholder="Add a personal message to send with your property introduction..."
+              rows={3}
+              className="resize-none"
+            />
+          </div>
+
           {/* What's Next */}
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-zinc-900">Ready to connect?</h2>
@@ -134,9 +154,14 @@ const AgentMatchResultsPanel = ({
           >
             {isProcessing ? (
               "Processing..."
-            ) : (
+            ) : isAuthenticated ? (
               <>
                 Proceed to Payment — $29.99
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            ) : (
+              <>
+                Create Account & Pay — $29.99
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
