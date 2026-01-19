@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Home, Bed, Bath, Ruler, DollarSign, MapPin, Phone, Mail, MessageSquare, Lock, Calendar, User } from "lucide-react";
+import { ArrowLeft, Home, Bed, Bath, Ruler, DollarSign, MapPin, Phone, Mail, MessageSquare, Lock, Calendar, User, RefreshCw, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface SellerSubmission {
   id: string;
@@ -41,6 +43,8 @@ const SellerListingDetail = () => {
   const [isVerifiedAgent, setIsVerifiedAgent] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(0);
   const [user, setUser] = useState<any>(null);
+  const [isRenewing, setIsRenewing] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     const checkAuthAndFetch = async () => {
@@ -72,6 +76,10 @@ const SellerListingDetail = () => {
           console.error("Error fetching submission:", error);
         } else if (data) {
           setSubmission(data as SellerSubmission);
+          // Check if current user is the owner
+          if (session?.user && data.user_id === session.user.id) {
+            setIsOwner(true);
+          }
         }
       }
 
@@ -124,6 +132,33 @@ const SellerListingDetail = () => {
         return "Phone call";
       default:
         return "Email";
+    }
+  };
+
+  const isExpired = submission ? new Date(submission.expires_at) < new Date() : false;
+
+  const handleRenew = async () => {
+    if (!submission || !id) return;
+    
+    setIsRenewing(true);
+    try {
+      const newExpiresAt = new Date();
+      newExpiresAt.setDate(newExpiresAt.getDate() + 30);
+
+      const { error } = await supabase
+        .from("agent_match_submissions")
+        .update({ expires_at: newExpiresAt.toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setSubmission({ ...submission, expires_at: newExpiresAt.toISOString() });
+      toast.success("Renewed — your listing is active for 30 more days");
+    } catch (error) {
+      console.error("Error renewing:", error);
+      toast.error("Failed to renew listing. Please try again.");
+    } finally {
+      setIsRenewing(false);
     }
   };
 
@@ -364,15 +399,46 @@ const SellerListingDetail = () => {
           )}
         </div>
 
+        {/* Renewal Card for Expired Listings (Owner Only) */}
+        {isOwner && isExpired && (
+          <div className="mb-8 p-6 bg-amber-50 rounded-xl border border-amber-200">
+            <div className="flex items-start gap-4">
+              <RefreshCw className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-zinc-900 mb-2">Renew Seller Match</h3>
+                <p className="text-zinc-600 mb-4">
+                  Renewing keeps your listing active for another 30 days and continues matching against new buyer needs.
+                </p>
+                <Button
+                  onClick={handleRenew}
+                  disabled={isRenewing}
+                  className="bg-[#0F172A] hover:bg-zinc-800"
+                >
+                  {isRenewing ? "Renewing..." : "Renew for 30 days"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Listing Info */}
-        <div className="text-sm text-zinc-400 flex items-center gap-4">
+        <div className="flex items-center gap-4 text-sm text-zinc-400">
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
             Listed {new Date(submission.created_at).toLocaleDateString()}
           </span>
-          <span>
-            Expires {new Date(submission.expires_at).toLocaleDateString()}
-          </span>
+          
+          {/* Status Badge */}
+          {isExpired ? (
+            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+              Expired
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Active until {new Date(submission.expires_at).toLocaleDateString()}
+            </Badge>
+          )}
         </div>
       </main>
     </div>
