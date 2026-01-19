@@ -2499,6 +2499,123 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_match_outcomes: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          notes: string | null
+          outcome: Database["public"]["Enums"]["seller_match_outcome"]
+          recorded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          notes?: string | null
+          outcome: Database["public"]["Enums"]["seller_match_outcome"]
+          recorded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          notes?: string | null
+          outcome?: Database["public"]["Enums"]["seller_match_outcome"]
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_match_outcomes_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "seller_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_matches: {
+        Row: {
+          agent_id: string
+          archived_at: string | null
+          archived_reason: string | null
+          contact_attempts: number
+          created_at: string
+          delivery_id: string | null
+          first_contacted_at: string | null
+          followup_reason: string | null
+          hot_sheet_id: string | null
+          id: string
+          last_contact_note: string | null
+          last_contacted_at: string | null
+          latest_outcome: Database["public"]["Enums"]["seller_match_outcome"]
+          latest_outcome_at: string | null
+          next_followup_at: string | null
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          archived_at?: string | null
+          archived_reason?: string | null
+          contact_attempts?: number
+          created_at?: string
+          delivery_id?: string | null
+          first_contacted_at?: string | null
+          followup_reason?: string | null
+          hot_sheet_id?: string | null
+          id?: string
+          last_contact_note?: string | null
+          last_contacted_at?: string | null
+          latest_outcome?: Database["public"]["Enums"]["seller_match_outcome"]
+          latest_outcome_at?: string | null
+          next_followup_at?: string | null
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          archived_at?: string | null
+          archived_reason?: string | null
+          contact_attempts?: number
+          created_at?: string
+          delivery_id?: string | null
+          first_contacted_at?: string | null
+          followup_reason?: string | null
+          hot_sheet_id?: string | null
+          id?: string
+          last_contact_note?: string | null
+          last_contacted_at?: string | null
+          latest_outcome?: Database["public"]["Enums"]["seller_match_outcome"]
+          latest_outcome_at?: string | null
+          next_followup_at?: string | null
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_matches_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "agent_match_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_matches_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_matches_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_match_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_tokens: {
         Row: {
           accepted_at: string | null
@@ -2940,6 +3057,18 @@ export type Database = {
         | "commercial"
         | "residential_rental"
         | "commercial_rental"
+      seller_match_outcome:
+        | "pending"
+        | "no_response"
+        | "not_a_fit"
+        | "connected"
+        | "showing_scheduled"
+        | "offer_submitted"
+        | "offer_accepted"
+        | "closed_won"
+        | "closed_lost"
+        | "duplicate"
+        | "invalid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3084,6 +3213,19 @@ export const Constants = {
         "commercial",
         "residential_rental",
         "commercial_rental",
+      ],
+      seller_match_outcome: [
+        "pending",
+        "no_response",
+        "not_a_fit",
+        "connected",
+        "showing_scheduled",
+        "offer_submitted",
+        "offer_accepted",
+        "closed_won",
+        "closed_lost",
+        "duplicate",
+        "invalid",
       ],
     },
   },
