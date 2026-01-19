@@ -860,7 +860,7 @@ const AgentMatch = () => {
                     <strong>Seller Verification Agreement:</strong> If my property results in a sale through Seller Match, I agree to provide AllAgentConnect with the name and brokerage of the buyer's agent involved in the transaction, and acknowledge this information may be used for verification and compliance purposes.
                   </Label>
                   <p className="mt-1 text-sm text-zinc-500">
-                    This helps keep AAC Verified and protects the integrity of the private network.
+                    Your listing will remain active and presented to buyer agents as new matching client needs are added.
                   </p>
                 </div>
               </div>
