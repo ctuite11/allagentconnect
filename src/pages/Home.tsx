@@ -205,108 +205,82 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="rounded-2xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
               <div className="p-6 sm:p-8">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700">
-                    New • Seller Tool
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    AAC Verified agents only
-                  </span>
-                </div>
+                <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase mb-4">
+                  For Homeowners
+                </p>
 
-                <div className="mt-4 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+                <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
                   {/* Left: Value */}
                   <div>
                     <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
-                      Seller Match
+                      Match your home with real buyers — before it ever hits the market
                     </h2>
-                    <p className="mt-2 text-base leading-relaxed text-zinc-600">
-                      Get your home in front of <span className="font-medium text-zinc-800">AAC Verified agents</span>{" "}
-                      already working with <span className="font-medium text-zinc-800">real buyers</span> — before you list publicly.
+                    <p className="mt-3 text-base leading-relaxed text-zinc-600">
+                      Seller Match connects your home directly with <span className="font-medium text-zinc-800">AAC Verified agents</span> who are actively representing qualified buyers searching for properties like yours.
+                    </p>
+                    <p className="mt-3 text-base leading-relaxed text-zinc-600">
+                      Instead of listing publicly, your home is privately matched against real buyer needs — giving you visibility, leverage, and optionality without committing to a brokerage upfront.
                     </p>
 
-                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-                        <p className="text-xs font-medium text-zinc-700">Step 1</p>
-                        <p className="mt-1 text-sm text-zinc-800">
-                          Add details + photos
-                        </p>
+                    <div className="mt-6 space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">Private, off-market exposure</span>
                       </div>
-                      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-                        <p className="text-xs font-medium text-zinc-700">Step 2</p>
-                        <p className="mt-1 text-sm text-zinc-800">
-                          See your match count
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">Matches only with agents representing real buyers</span>
                       </div>
-                      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-                        <p className="text-xs font-medium text-zinc-700">Step 3</p>
-                        <p className="mt-1 text-sm text-zinc-800">
-                          Approve distribution
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">No public listing, no portals, no noise</span>
                       </div>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-3">
-                      <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">
-                        <Lock className="h-4 w-4" />
-                        Not on MLS — private distribution
-                      </div>
-                      <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">
-                        <ShieldCheck className="h-4 w-4" />
-                        Verified pros only
-                      </div>
-                      <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700">
-                        <Clock className="h-4 w-4" />
-                        Fast signal in minutes
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">Your listing stays active as new matching buyers enter the network</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Right: CTA */}
                   <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        AAC Verified agents only
+                      </span>
+                    </div>
+
                     <p className="text-sm font-medium text-zinc-900">
-                      What you'll see before anything is sent
+                      See how many agents match your home
                     </p>
                     <p className="mt-2 text-sm text-zinc-600">
-                      "Your home matches <span className="font-medium text-zinc-800">X AAC Verified agents</span> working with buyers for this exact type of home in this location."
+                      Enter your property details and instantly see how many verified agents are working with buyers looking for homes like yours.
                     </p>
-
-                    <div className="mt-4 rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-700">
-                      You control distribution. Before sending, you'll confirm:
-                      <ul className="mt-2 list-disc pl-5 text-zinc-600">
-                        <li>Buyer-agent commission offered</li>
-                        <li>AAC distribution fee</li>
-                        <li>Preferred contact method</li>
-                      </ul>
-                    </div>
 
                     <div className="mt-5 grid gap-2">
                       <button
                         onClick={() => navigate("/agent-match")}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white hover:bg-zinc-800 transition"
                       >
-                        Start Seller Match
+                        See how many agents match your home
                         <ArrowRight className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => navigate("/agent-match")}
                         className="inline-flex w-full items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition"
                       >
-                        How it works
+                        Learn how Seller Match works
                       </button>
-                      <p className="mt-1 text-xs text-zinc-500">
-                        Not represented by a listing agent. Not under contract with a brokerage.
-                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Optional footer */}
+              {/* Footer */}
               <div className="border-t border-zinc-200 px-6 py-4 sm:px-8">
                 <p className="text-xs text-zinc-500">
-                  Seller Match is designed for owners who want a private, verified-agent distribution before going public.
+                  If a match results in a sale, sellers agree to provide buyer-agent details for verification and network integrity.
                 </p>
               </div>
             </div>
