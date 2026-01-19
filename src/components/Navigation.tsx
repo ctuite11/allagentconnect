@@ -35,6 +35,7 @@ const Navigation = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [agentStatusLoading, setAgentStatusLoading] = useState(false);
+  const [hasSellerSubmission, setHasSellerSubmission] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
@@ -80,12 +81,42 @@ const Navigation = () => {
     };
   }, []);
 
-  // Reset agent status when user changes (prevents stale state)
+  // Reset agent status and seller submission when user changes (prevents stale state)
   useEffect(() => {
     if (!user) {
       setAgentStatus(null);
       setAgentStatusLoading(false);
+      setHasSellerSubmission(false);
     }
+  }, [user]);
+
+  // Check if user has a seller submission
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkSellerSubmission = async () => {
+      if (!user) {
+        setHasSellerSubmission(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('agent_match_submissions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'paid')
+        .limit(1)
+        .maybeSingle();
+
+      if (cancelled) return;
+      setHasSellerSubmission(!!data);
+    };
+
+    checkSellerSubmission();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   // Check agent status for pending users
@@ -423,6 +454,15 @@ const Navigation = () => {
                   </button>
                 </>
               )}
+              {hasSellerSubmission && (
+                <button 
+                  onClick={() => navigate("/seller/dashboard")}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Seller Dashboard
+                </button>
+              )}
               {/* Signed in as email indicator */}
               <span className="hidden lg:inline text-xs text-slate-400 max-w-[150px] truncate" title={user.email || undefined}>
                 {user.email}
@@ -660,6 +700,21 @@ const Navigation = () => {
                     >
                       <Search className="w-4 h-4" />
                       Search Homes
+                    </button>
+                  </>
+                )}
+                {hasSellerSubmission && (
+                  <>
+                    <p className="text-xs font-semibold text-slate-500 mb-2 px-2 mt-4">Seller</p>
+                    <button
+                      onClick={() => {
+                        navigate("/seller/dashboard");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <Home className="w-4 h-4" />
+                      Dashboard
                     </button>
                   </>
                 )}
