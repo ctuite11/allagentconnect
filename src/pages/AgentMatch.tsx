@@ -91,6 +91,7 @@ const AgentMatch = () => {
   const [confirmations, setConfirmations] = useState({
     notUnderContract: false,
     ownerOrAuthorized: false,
+    sellerVerificationConsent: false,
   });
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [manualAddress, setManualAddress] = useState(false);
@@ -221,8 +222,8 @@ const AgentMatch = () => {
       toast.error("Phone number is required for text/call contact preference");
       return false;
     }
-    if (!confirmations.notUnderContract || !confirmations.ownerOrAuthorized) {
-      toast.error("Please confirm both statements");
+    if (!confirmations.notUnderContract || !confirmations.ownerOrAuthorized || !confirmations.sellerVerificationConsent) {
+      toast.error("Please confirm all statements to continue");
       return false;
     }
     return true;
@@ -316,6 +317,7 @@ const AgentMatch = () => {
           buyer_agent_commission: propertyData.buyer_agent_commission || null,
           confirmed_not_under_contract: confirmations.notUnderContract,
           confirmed_owner_or_authorized: confirmations.ownerOrAuthorized,
+          seller_verification_consent: confirmations.sellerVerificationConsent,
           match_count: matchCount || 0,
           matched_at: new Date().toISOString(),
           status: "paid",
@@ -844,6 +846,19 @@ const AgentMatch = () => {
                   I am the <strong>property owner</strong> or am <strong>authorized to represent the owner</strong>.
                 </Label>
               </div>
+
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="seller-verification-consent"
+                  checked={confirmations.sellerVerificationConsent}
+                  onCheckedChange={(checked) =>
+                    setConfirmations((prev) => ({ ...prev, sellerVerificationConsent: !!checked }))
+                  }
+                />
+                <Label htmlFor="seller-verification-consent" className="text-sm leading-relaxed cursor-pointer">
+                  <strong>Seller Verification Agreement:</strong> If my property results in a sale through Seller Match, I agree to provide AllAgentConnect with the name and brokerage of the buyer's agent involved in the transaction, and acknowledge this information may be used for verification and compliance purposes.
+                </Label>
+              </div>
             </div>
 
             <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
@@ -861,7 +876,7 @@ const AgentMatch = () => {
             <Button
               onClick={handleNextStep}
               className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9] text-white"
-              disabled={!confirmations.notUnderContract || !confirmations.ownerOrAuthorized || isLoading}
+              disabled={!confirmations.notUnderContract || !confirmations.ownerOrAuthorized || !confirmations.sellerVerificationConsent || isLoading}
             >
               {isLoading ? "Finding Matches..." : "Find My Matches"}
               {!isLoading && <Sparkles className="ml-2 h-4 w-4" />}

@@ -416,6 +416,7 @@ export type Database = {
           seller_email: string
           seller_name: string | null
           seller_phone: string | null
+          seller_verification_consent: boolean
           square_feet: number
           state: string
           status: string
@@ -454,6 +455,7 @@ export type Database = {
           seller_email: string
           seller_name?: string | null
           seller_phone?: string | null
+          seller_verification_consent?: boolean
           square_feet: number
           state: string
           status?: string
@@ -492,6 +494,7 @@ export type Database = {
           seller_email?: string
           seller_name?: string | null
           seller_phone?: string | null
+          seller_verification_consent?: boolean
           square_feet?: number
           state?: string
           status?: string
