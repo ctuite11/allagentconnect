@@ -2504,24 +2504,30 @@ export type Database = {
           created_at: string
           id: string
           match_id: string
+          next_followup_at: string | null
           notes: string | null
           outcome: Database["public"]["Enums"]["seller_match_outcome"]
+          outcome_at: string | null
           recorded_by: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           match_id: string
+          next_followup_at?: string | null
           notes?: string | null
           outcome: Database["public"]["Enums"]["seller_match_outcome"]
+          outcome_at?: string | null
           recorded_by?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           match_id?: string
+          next_followup_at?: string | null
           notes?: string | null
           outcome?: Database["public"]["Enums"]["seller_match_outcome"]
+          outcome_at?: string | null
           recorded_by?: string | null
         }
         Relationships: [
@@ -2550,6 +2556,8 @@ export type Database = {
           last_contacted_at: string | null
           latest_outcome: Database["public"]["Enums"]["seller_match_outcome"]
           latest_outcome_at: string | null
+          latest_outcome_id: string | null
+          latest_outcome_notes: string | null
           next_followup_at: string | null
           submission_id: string
           updated_at: string
@@ -2569,6 +2577,8 @@ export type Database = {
           last_contacted_at?: string | null
           latest_outcome?: Database["public"]["Enums"]["seller_match_outcome"]
           latest_outcome_at?: string | null
+          latest_outcome_id?: string | null
+          latest_outcome_notes?: string | null
           next_followup_at?: string | null
           submission_id: string
           updated_at?: string
@@ -2588,6 +2598,8 @@ export type Database = {
           last_contacted_at?: string | null
           latest_outcome?: Database["public"]["Enums"]["seller_match_outcome"]
           latest_outcome_at?: string | null
+          latest_outcome_id?: string | null
+          latest_outcome_notes?: string | null
           next_followup_at?: string | null
           submission_id?: string
           updated_at?: string
