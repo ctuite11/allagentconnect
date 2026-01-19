@@ -204,59 +204,75 @@ const handler = async (req: Request): Promise<Response> => {
 
       const detailsUrl = `${baseUrl}/seller-listing/${submission_id}`;
 
+      // Build location string (omit neighborhood if empty)
+      const locationParts = [submission.city, submission.state].filter(Boolean);
+      const locationWithNeighborhood = submission.neighborhood 
+        ? `${submission.city}, ${submission.neighborhood}` 
+        : submission.city;
+
+      // Build property snapshot lines
+      const propertySnapshotLines = [
+        `<li style="color: #475569; margin-bottom: 6px;"><strong>Location:</strong> ${locationWithNeighborhood}${submission.state ? `, ${submission.state}` : ""}</li>`,
+        `<li style="color: #475569; margin-bottom: 6px;"><strong>Property type:</strong> ${submission.property_type}</li>`,
+        `<li style="color: #475569; margin-bottom: 6px;"><strong>Beds / Baths:</strong> ${submission.bedrooms} / ${submission.bathrooms}</li>`,
+        `<li style="color: #475569; margin-bottom: 6px;"><strong>Square feet:</strong> ${submission.square_feet?.toLocaleString() || "N/A"}</li>`,
+        `<li style="color: #475569; margin-bottom: 6px;"><strong>Asking price:</strong> ${priceFormatted}</li>`,
+      ];
+
+      // Only include commission if available
+      if (submission.buyer_agent_commission) {
+        propertySnapshotLines.push(
+          `<li style="color: #475569; margin-bottom: 6px;"><strong>Buyer agent commission:</strong> ${submission.buyer_agent_commission}</li>`
+        );
+      }
+
       // Send email
       try {
         await resend.emails.send({
           from: "AllAgentConnect <mail@mail.allagentconnect.com>",
           to: [profile.email],
           reply_to: submission.seller_email,
-          subject: `Seller Alert: Home matches your Hot Sheet`,
+          subject: `Seller Alert: Home matches your active buyer needs`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <p style="color: #0F172A; font-weight: 600; font-size: 18px; margin-bottom: 4px;">AllAgentConnect</p>
               
-              <h1 style="color: #0F172A; font-size: 24px; margin: 24px 0 16px;">
-                A seller has a home that matches your Hot Sheet
-              </h1>
-              
-              <p style="color: #475569; font-size: 16px; margin-bottom: 24px;">
+              <p style="color: #475569; font-size: 16px; margin: 24px 0 16px;">
                 Hi ${profile.first_name || "Agent"},
               </p>
               
               <p style="color: #475569; font-size: 16px; margin-bottom: 24px;">
-                A seller has submitted a property that matches your Hot Sheet criteria. Here are the details:
+                A homeowner has submitted a private Seller Match listing that aligns with your active buyer criteria.
               </p>
               
               <div style="background: #F8FAFC; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                <p style="color: #0F172A; font-weight: 600; font-size: 16px; margin: 0 0 12px;">📍 ${location}</p>
-                <p style="color: #475569; font-size: 14px; margin: 0 0 8px;">
-                  🏠 ${submission.property_type} • ${submission.bedrooms} bed • ${submission.bathrooms} bath
-                </p>
-                <p style="color: #475569; font-size: 14px; margin: 0 0 8px;">
-                  📐 ${submission.square_feet?.toLocaleString()} sqft
-                </p>
-                <p style="color: #0F172A; font-weight: 600; font-size: 18px; margin: 12px 0 8px;">
-                  💰 Asking: ${priceFormatted}
-                </p>
-                <p style="color: #475569; font-size: 14px; margin: 0;">
-                  💵 Buyer Agent Commission: ${submission.buyer_agent_commission || "Contact seller"}
-                </p>
+                <p style="color: #0F172A; font-weight: 600; font-size: 15px; margin: 0 0 12px;">Property snapshot</p>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  ${propertySnapshotLines.join("\n                  ")}
+                </ul>
               </div>
               
               <div style="background: #EFF6FF; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #BFDBFE;">
-                <p style="color: #0F172A; font-weight: 600; font-size: 14px; margin: 0 0 8px;">Preferred Contact Method: ${contactMethodLabel}</p>
-                <p style="color: #0F172A; font-size: 16px; margin: 0;">
-                  ${submission.seller_name ? `<strong>${submission.seller_name}</strong><br/>` : ""}
-                  ${contactInfo}
+                <p style="color: #0F172A; font-weight: 600; font-size: 15px; margin: 0 0 8px;">Seller preference</p>
+                <p style="color: #475569; font-size: 14px; margin: 0;">
+                  <strong>Preferred contact method:</strong> ${contactMethodLabel}
                 </p>
               </div>
               
+              <p style="color: #475569; font-size: 14px; margin-bottom: 24px;">
+                This listing is not publicly marketed and is shared only with AAC Verified agents representing real buyers.
+              </p>
+              
               <a href="${detailsUrl}" style="display: inline-block; background: #0F172A; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 16px;">
-                View Property Details
+                View Seller Match Listing →
               </a>
               
-              <p style="color: #64748B; font-size: 12px; margin-top: 32px;">
-                AllAgentConnect mail.allagentconnect.com
+              <p style="color: #64748B; font-size: 12px; margin-top: 32px; line-height: 1.5;">
+                If you proceed and a transaction results, reporting is required per the Seller Match Agent Agreement.
+              </p>
+              
+              <p style="color: #64748B; font-size: 12px; margin-top: 16px;">
+                — AllAgentConnect
               </p>
             </div>
           `,
