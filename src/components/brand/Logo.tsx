@@ -65,40 +65,18 @@ export const Logo: React.FC<LogoProps> = ({
     );
   }
 
-  // Full wordmark logo
+  // Full wordmark logo - text only
   return (
     <svg
-      viewBox="0 0 280 48"
+      viewBox="0 0 200 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`${sizeClasses[size]} w-auto ${className}`}
       aria-label="All Agent Connect"
     >
-      {/* Icon mark - green to match accent */}
-      <g>
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          stroke={SLATE_900}
-          strokeWidth="2"
-          fill="none"
-        />
-        <circle cx="24" cy="12" r="3" fill={accentColor} />
-        <circle cx="12" cy="32" r="3" fill={accentColor} />
-        <circle cx="36" cy="32" r="3" fill={accentColor} />
-        <path
-          d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-          stroke={accentColor}
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <circle cx="24" cy="26" r="2" fill={accentColor} />
-      </g>
-      
       {/* Wordmark - "All Agent Connect" */}
       <text
-        x="56"
+        x="0"
         y="32"
         fontFamily="Inter, system-ui, sans-serif"
         fontSize="22"
@@ -113,57 +91,22 @@ export const Logo: React.FC<LogoProps> = ({
   );
 };
 
-// Email-safe version using inline styles (no external fonts required)
+// Email-safe version using inline styles (no external fonts required) - text only
 export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = false }) => {
   const accentColor = ACC_BLUE; // Logo uses brand Royal Blue
   
   return (
-    <table cellPadding="0" cellSpacing="0" border={0} style={{ borderCollapse: 'collapse' }}>
-      <tbody>
-        <tr>
-          <td style={{ verticalAlign: 'middle', paddingRight: '12px' }}>
-            {/* Simple icon for email - using basic shapes - green */}
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 48 48"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="24"
-                cy="24"
-                r="22"
-                stroke={accentColor}
-                strokeWidth="2"
-                fill="none"
-              />
-              <circle cx="24" cy="12" r="3" fill={accentColor} />
-              <circle cx="12" cy="32" r="3" fill={accentColor} />
-              <circle cx="36" cy="32" r="3" fill={accentColor} />
-              <path
-                d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-                stroke={accentColor}
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <circle cx="24" cy="26" r="2" fill={accentColor} />
-            </svg>
-          </td>
-          <td style={{ 
-            verticalAlign: 'middle',
-            fontFamily: 'Arial, Helvetica, sans-serif',
-            fontSize: '20px',
-            fontWeight: 700,
-            letterSpacing: '-0.01em'
-          }}>
-            <span style={{ color: accentColor }}>All </span>
-            <span style={{ color: accentColor }}>Agent </span>
-            <span style={{ color: '#94A3B8' }}>Connect</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <p style={{ 
+      margin: 0,
+      fontFamily: 'Arial, Helvetica, sans-serif',
+      fontSize: '20px',
+      fontWeight: 700,
+      letterSpacing: '-0.01em'
+    }}>
+      <span style={{ color: accentColor }}>All </span>
+      <span style={{ color: accentColor }}>Agent </span>
+      <span style={{ color: '#94A3B8' }}>Connect</span>
+    </p>
   );
 };
 
