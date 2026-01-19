@@ -209,7 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
         await resend.emails.send({
           from: "AllAgentConnect <mail@mail.allagentconnect.com>",
           to: [profile.email],
-          replyTo: submission.seller_email,
+          reply_to: submission.seller_email,
           subject: `Seller Alert: Home matches your Hot Sheet`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
