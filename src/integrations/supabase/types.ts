@@ -2538,6 +2538,13 @@ export type Database = {
             referencedRelation: "seller_matches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seller_match_outcomes_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "seller_matches_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seller_matches: {
@@ -3005,6 +3012,50 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_matches_public: {
+        Row: {
+          archived_at: string | null
+          created_at: string | null
+          id: string | null
+          latest_outcome:
+            | Database["public"]["Enums"]["seller_match_outcome"]
+            | null
+          latest_outcome_at: string | null
+          next_followup_at: string | null
+          submission_id: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          latest_outcome?:
+            | Database["public"]["Enums"]["seller_match_outcome"]
+            | null
+          latest_outcome_at?: string | null
+          next_followup_at?: string | null
+          submission_id?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          latest_outcome?:
+            | Database["public"]["Enums"]["seller_match_outcome"]
+            | null
+          latest_outcome_at?: string | null
+          next_followup_at?: string | null
+          submission_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_matches_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "agent_match_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       auto_activate_listings: { Args: never; Returns: undefined }
@@ -3051,6 +3102,7 @@ export type Database = {
         Returns: boolean
       }
       is_verified_agent: { Args: never; Returns: boolean }
+      owns_submission: { Args: { p_submission_id: string }; Returns: boolean }
     }
     Enums: {
       agent_status:
