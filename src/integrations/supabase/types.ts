@@ -345,6 +345,7 @@ export type Database = {
           created_at: string
           hot_sheet_id: string | null
           id: string
+          notified_agent_at: string | null
           responded_at: string | null
           submission_id: string
           viewed_at: string | null
@@ -354,6 +355,7 @@ export type Database = {
           created_at?: string
           hot_sheet_id?: string | null
           id?: string
+          notified_agent_at?: string | null
           responded_at?: string | null
           submission_id: string
           viewed_at?: string | null
@@ -363,6 +365,7 @@ export type Database = {
           created_at?: string
           hot_sheet_id?: string | null
           id?: string
+          notified_agent_at?: string | null
           responded_at?: string | null
           submission_id?: string
           viewed_at?: string | null
@@ -398,6 +401,7 @@ export type Database = {
           delivered_at: string | null
           delivery_fee_cents: number | null
           description: string | null
+          expires_at: string
           floor_plan_urls: string[] | null
           id: string
           lot_size: number | null
@@ -406,6 +410,7 @@ export type Database = {
           neighborhood: string | null
           payment_completed_at: string | null
           photos: string[] | null
+          preferred_contact_method: string
           property_type: string
           property_website_url: string | null
           seller_email: string
@@ -434,6 +439,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_fee_cents?: number | null
           description?: string | null
+          expires_at?: string
           floor_plan_urls?: string[] | null
           id?: string
           lot_size?: number | null
@@ -442,6 +448,7 @@ export type Database = {
           neighborhood?: string | null
           payment_completed_at?: string | null
           photos?: string[] | null
+          preferred_contact_method?: string
           property_type: string
           property_website_url?: string | null
           seller_email: string
@@ -470,6 +477,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_fee_cents?: number | null
           description?: string | null
+          expires_at?: string
           floor_plan_urls?: string[] | null
           id?: string
           lot_size?: number | null
@@ -478,6 +486,7 @@ export type Database = {
           neighborhood?: string | null
           payment_completed_at?: string | null
           photos?: string[] | null
+          preferred_contact_method?: string
           property_type?: string
           property_website_url?: string | null
           seller_email?: string

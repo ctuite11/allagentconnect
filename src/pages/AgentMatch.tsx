@@ -45,6 +45,11 @@ interface PropertyData {
   video_url: string;
   property_website_url: string;
   buyer_agent_commission: string;
+  // Seller contact fields
+  seller_name: string;
+  seller_email: string;
+  seller_phone: string;
+  preferred_contact_method: "email" | "text" | "phone";
 }
 
 const AgentMatch = () => {
@@ -74,6 +79,11 @@ const AgentMatch = () => {
     video_url: "",
     property_website_url: "",
     buyer_agent_commission: "2.5%",
+    // Seller contact
+    seller_name: "",
+    seller_email: "",
+    seller_phone: "",
+    preferred_contact_method: "email",
   });
 
   const [photos, setPhotos] = useState<File[]>([]);
@@ -192,6 +202,25 @@ const AgentMatch = () => {
   };
 
   const validateConfirmStep = (): boolean => {
+    if (!propertyData.seller_name.trim()) {
+      toast.error("Please enter your name");
+      return false;
+    }
+    if (!propertyData.seller_email.trim()) {
+      toast.error("Please enter your email address");
+      return false;
+    }
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(propertyData.seller_email)) {
+      toast.error("Please enter a valid email address");
+      return false;
+    }
+    // Phone required for text/phone contact methods
+    if (propertyData.preferred_contact_method !== "email" && !propertyData.seller_phone.trim()) {
+      toast.error("Phone number is required for text/call contact preference");
+      return false;
+    }
     if (!confirmations.notUnderContract || !confirmations.ownerOrAuthorized) {
       toast.error("Please confirm both statements");
       return false;
@@ -263,7 +292,10 @@ const AgentMatch = () => {
         .from("agent_match_submissions")
         .insert({
           user_id: session.data.session?.user?.id || null,
-          seller_email: email,
+          seller_email: propertyData.seller_email,
+          seller_name: propertyData.seller_name || null,
+          seller_phone: propertyData.seller_phone || null,
+          preferred_contact_method: propertyData.preferred_contact_method,
           address: propertyData.address,
           unit_number: propertyData.unit_number || null,
           city: propertyData.city,
@@ -287,12 +319,25 @@ const AgentMatch = () => {
           match_count: matchCount || 0,
           matched_at: new Date().toISOString(),
           status: "paid",
+          // expires_at is set by default to now() + 30 days
         })
         .select()
         .single();
 
       if (submitError) throw submitError;
       setSubmissionId(submission.id);
+
+      // Trigger Seller Alert emails to matched agents
+      if (matchCount && matchCount > 0) {
+        try {
+          await supabase.functions.invoke("send-seller-alert", {
+            body: { submission_id: submission.id },
+          });
+        } catch (alertError) {
+          console.error("Failed to send seller alerts:", alertError);
+          // Don't fail the submission if alerts fail
+        }
+      }
       toast.success("Your property has been submitted to matched agents!");
     } catch (error: any) {
       console.error("Error:", error);
@@ -700,14 +745,79 @@ const AgentMatch = () => {
           </div>
         )}
 
-        {/* Step 3: Confirmations */}
+        {/* Step 3: Contact & Confirmations */}
         {step === "confirm" && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-semibold text-zinc-900 mb-2">Confirm eligibility</h1>
-              <p className="text-zinc-500">Please confirm the following before we find your matches.</p>
+              <h1 className="text-2xl font-semibold text-zinc-900 mb-2">How should agents contact you?</h1>
+              <p className="text-zinc-500">Your info is only shared with matched AAC Verified agents.</p>
             </div>
 
+            {/* Contact Method */}
+            <div className="space-y-4 p-6 bg-zinc-50 rounded-xl">
+              <Label className="text-sm font-medium text-zinc-900">Preferred contact method *</Label>
+              <div className="flex gap-4">
+                {[
+                  { value: "email", label: "Email" },
+                  { value: "text", label: "Text message" },
+                  { value: "phone", label: "Phone call" },
+                ].map((option) => (
+                  <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="contact_method"
+                      value={option.value}
+                      checked={propertyData.preferred_contact_method === option.value}
+                      onChange={(e) => updateProperty("preferred_contact_method", e.target.value as "email" | "text" | "phone")}
+                      className="w-4 h-4 text-[#0E56F5] border-zinc-300 focus:ring-[#0E56F5]"
+                    />
+                    <span className="text-sm text-zinc-700">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Contact Fields */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="seller_name">Your Name *</Label>
+                <Input
+                  id="seller_name"
+                  value={propertyData.seller_name}
+                  onChange={(e) => updateProperty("seller_name", e.target.value)}
+                  placeholder="John Smith"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="seller_email">Email Address *</Label>
+                <Input
+                  id="seller_email"
+                  type="email"
+                  value={propertyData.seller_email}
+                  onChange={(e) => updateProperty("seller_email", e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="seller_phone">
+                  Phone Number {propertyData.preferred_contact_method !== "email" ? "*" : "(optional)"}
+                </Label>
+                <Input
+                  id="seller_phone"
+                  type="tel"
+                  value={propertyData.seller_phone}
+                  onChange={(e) => updateProperty("seller_phone", e.target.value)}
+                  placeholder="(555) 123-4567"
+                />
+                {propertyData.preferred_contact_method !== "email" && !propertyData.seller_phone && (
+                  <p className="text-xs text-amber-600 mt-1">Phone required for text/call contact preference</p>
+                )}
+              </div>
+            </div>
+
+            {/* Confirmations */}
             <div className="space-y-4 p-6 bg-zinc-50 rounded-xl">
               <div className="flex items-start gap-3">
                 <Checkbox
