@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -172,24 +172,35 @@ const Register = () => {
       </header>
 
       <main className="pt-16 pb-8 relative min-h-screen">
-        {/* Background globe */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-20">
-          <div className="absolute right-0 lg:right-6 top-0">
-            <NetworkGlobe />
+        {/* Background globe - only show on form, not success */}
+        {!isSuccess && (
+          <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-20">
+            <div className="absolute right-0 lg:right-6 top-0">
+              <NetworkGlobe />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Content */}
         <div className="relative z-10 max-w-md mx-auto px-6 pt-4">
           {isSuccess ? (
             /* Premium Success State */
-            <div className="mx-auto w-full max-w-[620px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
-              {/* Success Icon */}
-              <div className="flex justify-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
-                  <Check className="h-6 w-6" />
+            <div className="relative">
+              {/* Globe watermark behind card */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.08]">
+                <div className="w-[900px] h-[900px]">
+                  <NetworkGlobe variant="static" />
                 </div>
               </div>
+
+              {/* Confirmation card */}
+              <div className="relative z-10 mx-auto w-full max-w-[620px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
+                {/* Signal Mark (AAC brand dot-in-ring) */}
+                <div className="flex justify-center">
+                  <div className="h-9 w-9 rounded-full bg-white ring-1 ring-zinc-200 flex items-center justify-center">
+                    <div className="h-2 w-2 rounded-full bg-[#0E56F5]" />
+                  </div>
+                </div>
 
               {/* Pill */}
               <div className="mt-5 flex justify-center">
@@ -201,7 +212,7 @@ const Register = () => {
 
               {/* Headline */}
               <h1 className="mt-4 text-center text-3xl font-semibold tracking-tight text-zinc-900">
-                {isDuplicate ? "You're Already On The List" : "You're In"}
+                {isDuplicate ? "You're Already On The List" : "You're in."}
               </h1>
 
               {/* Body */}
@@ -248,6 +259,7 @@ const Register = () => {
                   Invite an Agent
                 </button>
               </div>
+            </div>
             </div>
           ) : (
             /* Form */
