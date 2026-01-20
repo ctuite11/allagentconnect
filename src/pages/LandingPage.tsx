@@ -17,7 +17,7 @@ function ModuleCard({
   tier: "hub" | "premium";
 }) {
   return (
-    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-colors duration-200">
+    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_30px_rgba(0,0,0,0.06)] transition-colors duration-200">
       <span
         className={`absolute top-4 right-4 text-xs font-medium tracking-normal px-2.5 py-1 rounded-full border ${
           tier === "hub"
