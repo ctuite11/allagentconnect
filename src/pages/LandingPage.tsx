@@ -87,10 +87,6 @@ const LandingPage = () => {
                 The deals you don't see are the ones that can change a client's life — and your bottom line.
               </p>
 
-              {/* Identity */}
-              <p className="text-base font-medium text-zinc-700 mb-6">
-                By agents. For agents. All agents.
-              </p>
 
               {/* Capability pills */}
               <div className="flex flex-wrap gap-2 mb-8">
@@ -128,16 +124,16 @@ const LandingPage = () => {
         {/* Success Hub — How AAC Gets Used */}
         <section className="w-full px-6 sm:px-10 lg:px-20 py-12 md:py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-900 mb-2 text-center">
-              Built on what already works
-            </h2>
-            <p className="text-center text-lg font-semibold tracking-wide mb-10">
+            <p className="text-center text-lg font-semibold tracking-wide mb-2">
               <span className="text-[#0E56F5]">BY AGENTS</span>
               <span className="text-zinc-300 mx-2">·</span>
               <span className="text-[#0E56F5]">FOR AGENTS</span>
               <span className="text-zinc-300 mx-2">·</span>
               <span className="text-[#94A3B8]">ALL AGENTS</span>
             </p>
+            <h2 className="text-xl sm:text-2xl font-semibold text-zinc-900 mb-10 text-center">
+              Built on what already works
+            </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
               <ModuleCard
