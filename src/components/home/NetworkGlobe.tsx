@@ -7,8 +7,8 @@ import React from 'react';
  */
 
 // Neutral gray colors - warmer/darker to align with logo gray family
-const LINE_COLOR = '#8A8A8F'; // between zinc-400/500, warmer
-const NODE_COLOR = '#A8A8AD'; // darker than zinc-300, warmer
+const LINE_COLOR = '#A1A1AA'; // zinc-400
+const NODE_COLOR = '#71717A'; // zinc-500
 
 interface NetworkGlobeProps {
   variant?: 'hero' | 'ambient' | 'static';
@@ -118,27 +118,27 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     return tris;
   }, [nodes, fillTriangles]);
   
-  // Simple depth fade for lines: back ~0.35, front ~0.65
+  // Lines: back ~0.40, front ~0.72
   const getLineOpacity = (z: number) => {
-    const t = (z + 1) / 2; // normalize to 0..1
-    return 0.35 + t * 0.30;
-  };
-  
-  // Depth fade for triangles: back ~0.08, front ~0.25
-  const getTriangleOpacity = (z: number) => {
     const t = (z + 1) / 2;
-    return 0.08 + t * 0.17;
-  };
-  
-  // Simple depth fade for nodes: back ~0.45, front ~0.80
-  const getNodeOpacity = (z: number) => {
-    const t = (z + 1) / 2; // normalize to 0..1
-    return 0.45 + t * 0.35;
+    return 0.40 + t * 0.32;
   };
 
-  // Thinner stroke weights for subtlety
-  const lineStrokeWidth = 1.0;
-  const ringStrokeWidth = 0.75;
+  // Triangles: back ~0.10, front ~0.30
+  const getTriangleOpacity = (z: number) => {
+    const t = (z + 1) / 2;
+    return 0.10 + t * 0.20;
+  };
+
+  // Nodes: back ~0.52, front ~0.86
+  const getNodeOpacity = (z: number) => {
+    const t = (z + 1) / 2;
+    return 0.52 + t * 0.34;
+  };
+
+  // Stroke weights - slightly bumped for visibility
+  const lineStrokeWidth = 1.15;
+  const ringStrokeWidth = 0.85;
   const nodeRadius = { large: 2.5, small: 2.0 };
 
   // Static mode: no animation
@@ -249,20 +249,15 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
   // Hero mode - fixed-size, subtle architectural background
   return (
     <div 
-      className="hidden md:block w-[640px] h-[640px] lg:w-[760px] lg:h-[760px] xl:w-[820px] xl:h-[820px] 2xl:w-[860px] 2xl:h-[860px] overflow-visible pointer-events-none relative"
+      className="relative w-[680px] h-[680px] md:w-[720px] md:h-[720px] lg:w-[820px] lg:h-[820px]"
       aria-hidden="true"
     >
-      {/* Globe container - neutral architectural watermark, no blue tinting */}
+      {/* Globe container - neutral architectural watermark */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 opacity-[0.18] [filter:saturate(1.08)_contrast(1.08)]"
         style={{
-          opacity: 0.28,
-          transform: 'rotateX(8deg)',
-          willChange: 'transform',
-          maskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
-          WebkitMaskImage: 'radial-gradient(circle at 75% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%)',
-          maskRepeat: 'no-repeat',
-          WebkitMaskRepeat: 'no-repeat'
+          maskImage: 'radial-gradient(circle at 50% 50%, black 0%, black 55%, transparent 78%)',
+          WebkitMaskImage: 'radial-gradient(circle at 50% 50%, black 0%, black 55%, transparent 78%)',
         }}
       >
         <svg
