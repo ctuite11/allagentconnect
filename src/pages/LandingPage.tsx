@@ -57,10 +57,18 @@ const LandingPage = () => {
         {/* Hero */}
         <section className="relative flex items-center overflow-visible">
           {/* Background globe layer */}
-          <div className="pointer-events-none absolute inset-0 overflow-visible">
-            <div className="absolute right-[-60px] top-[-92px] md:top-[-110px] lg:top-[-128px] lg:right-[-40px] xl:right-[-20px] 2xl:right-0">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute left-1/2 top-[52%] -translate-x-[42%] -translate-y-1/2">
               <NetworkGlobe />
             </div>
+
+            {/* subtle radial wash to separate globe from background */}
+            <div className="absolute inset-0"
+                 style={{
+                   background:
+                     "radial-gradient(circle at 62% 46%, rgba(14,86,245,0.10) 0%, rgba(250,250,250,0) 60%)"
+                 }}
+            />
           </div>
           
           {/* Foreground content */}
