@@ -356,8 +356,9 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
           strokeWidth={ringStrokeWidth} opacity={0.4}
         />
         </svg>
+      </div>
         
-        <style>{`
+      <style>{`
           @keyframes networkSpin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -400,7 +401,6 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
             );
           })}
         </svg>
-      </div>
     </div>
   );
 };
