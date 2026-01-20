@@ -129,13 +129,13 @@ const LandingPage = () => {
         <section className="w-full px-6 sm:px-10 lg:px-20 py-12 md:py-16">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-900 mb-2 text-center">
-              Success Hub — How AAC Gets Used
+              Built on what already works
             </h2>
             <p className="text-center text-lg text-zinc-600 mb-2">
-              Core workflows inside AAC, used daily by working agents across sales and rentals.
+              If you've ever found or placed a deal through the AAC Facebook group, this will feel familiar.
             </p>
             <p className="text-center text-sm text-zinc-500 mb-10">
-              Supports residential sales, rentals, and agent-only opportunities across markets.
+              Private. Agent-to-agent. Built for real inventory and real timelines.
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
