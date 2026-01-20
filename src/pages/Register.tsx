@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -172,7 +173,7 @@ const Register = () => {
 
       <main className="pt-16 pb-8 relative min-h-screen">
         {/* Background globe */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-30">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-20">
           <div className="absolute right-0 lg:right-6 top-0">
             <NetworkGlobe />
           </div>
@@ -386,13 +387,19 @@ const Register = () => {
 
 
                   {/* Submit */}
-                  <Button
+                  <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-11 bg-[#0E56F5] hover:bg-[#0D4AD9] text-white font-medium rounded-xl mt-2"
+                    className="w-full inline-flex items-center justify-center gap-3 h-12 bg-zinc-900 text-white text-[15px] font-semibold rounded-xl mt-2 shadow-[0_1px_2px_rgba(0,0,0,0.10)] hover:bg-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isSubmitting ? "Submitting..." : "Request Early Access"}
-                  </Button>
+                    {!isSubmitting && (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <ArrowRight className="w-4 h-4 text-white" />
+                      </span>
+                    )}
+                  </button>
                 </form>
               </div>
             </>
