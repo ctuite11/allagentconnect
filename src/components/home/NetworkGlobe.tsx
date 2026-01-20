@@ -118,24 +118,16 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
     return tris;
   }, [nodes, fillTriangles]);
 
-  // Generate shooting stars with randomized properties
-  const shootingStars = React.useMemo(() => {
-    const stars: { id: number; x1: number; y1: number; angle: number; length: number; delay: number; duration: number }[] = [];
-    const count = 6;
-    
-    for (let i = 0; i < count; i++) {
-      // Distribute starting positions around the globe area
-      const x1 = 50 + Math.random() * 200;
-      const y1 = 30 + Math.random() * 120;
-      const angle = 30 + Math.random() * 30; // 30-60 degrees (diagonal)
-      const length = 25 + Math.random() * 20; // 25-45px tail
-      const delay = i * 1.5 + Math.random() * 2; // Staggered delays
-      const duration = 1.5 + Math.random() * 1; // 1.5-2.5s duration
-      
-      stars.push({ id: i, x1, y1, angle, length, delay, duration });
-    }
-    return stars;
-  }, []);
+  // Select a few connections for signal animation
+  const signalConnections = React.useMemo(() => {
+    // Pick 4-5 evenly distributed connections for signal pulses
+    const indices = [2, 8, 14, 22, 28].filter(i => i < connections.length);
+    return indices.map((idx, i) => ({
+      ...connections[idx],
+      delay: i * 2.5, // Stagger the signals
+      duration: 2.0 + (i % 2) * 0.5 // Vary duration slightly
+    }));
+  }, [connections]);
   
   // Simple depth fade for lines: back ~0.35, front ~0.65
   const getLineOpacity = (z: number) => {
@@ -260,44 +252,13 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
           }
-          @keyframes shootingStar {
-            0% { opacity: 0; transform: translateX(0) translateY(0); }
-            5% { opacity: 0.9; }
-            100% { opacity: 0; transform: translateX(60px) translateY(60px); }
+          @keyframes signalFlow {
+            0% { stroke-dashoffset: 100; opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { stroke-dashoffset: 0; opacity: 0; }
           }
         `}</style>
-        
-        {/* Shooting stars overlay */}
-        <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full pointer-events-none">
-          <defs>
-            <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {shootingStars.map((star) => {
-            const rad = (star.angle * Math.PI) / 180;
-            const x2 = star.x1 + Math.cos(rad) * star.length;
-            const y2 = star.y1 + Math.sin(rad) * star.length;
-            return (
-              <line
-                key={`star-${star.id}`}
-                x1={star.x1}
-                y1={star.y1}
-                x2={x2}
-                y2={y2}
-                stroke="url(#starGradient)"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                style={{
-                  animation: `shootingStar ${star.duration}s ease-out infinite`,
-                  animationDelay: `${star.delay}s`,
-                  opacity: 0
-                }}
-              />
-            );
-          })}
-        </svg>
       </div>
     );
   }
@@ -363,43 +324,40 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
           }
-          @keyframes shootingStar {
-            0% { opacity: 0; transform: translateX(0) translateY(0); }
-            5% { opacity: 0.9; }
-            100% { opacity: 0; transform: translateX(60px) translateY(60px); }
+          @keyframes signalFlow {
+            0% { stroke-dashoffset: 100; opacity: 0; }
+            10% { opacity: 0.9; }
+            90% { opacity: 0.9; }
+            100% { stroke-dashoffset: 0; opacity: 0; }
           }
         `}</style>
         
-        {/* Shooting stars overlay */}
-        <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 1 }}>
+        {/* Signal flow overlay - travels along connection lines */}
+        <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.6 }}>
           <defs>
-            <linearGradient id="heroStarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0E56F5" stopOpacity="0.95" />
+            <linearGradient id="signalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0E56F5" stopOpacity="0" />
+              <stop offset="50%" stopColor="#0E56F5" stopOpacity="1" />
               <stop offset="100%" stopColor="#0E56F5" stopOpacity="0" />
             </linearGradient>
           </defs>
-          {shootingStars.map((star) => {
-            const rad = (star.angle * Math.PI) / 180;
-            const x2 = star.x1 + Math.cos(rad) * star.length;
-            const y2 = star.y1 + Math.sin(rad) * star.length;
-            return (
-              <line
-                key={`hero-star-${star.id}`}
-                x1={star.x1}
-                y1={star.y1}
-                x2={x2}
-                y2={y2}
-                stroke="url(#heroStarGradient)"
-                strokeWidth={3}
-                strokeLinecap="round"
-                style={{
-                  animation: `shootingStar ${star.duration}s ease-out infinite`,
-                  animationDelay: `${star.delay}s`,
-                  opacity: 0
-                }}
-              />
-            );
-          })}
+          {signalConnections.map((conn, i) => (
+            <line
+              key={`signal-${i}`}
+              x1={conn.x1}
+              y1={conn.y1}
+              x2={conn.x2}
+              y2={conn.y2}
+              stroke="url(#signalGradient)"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeDasharray="20 80"
+              style={{
+                animation: `signalFlow ${conn.duration}s ease-in-out infinite`,
+                animationDelay: `${conn.delay}s`,
+              }}
+            />
+          ))}
         </svg>
     </div>
   );
