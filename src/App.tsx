@@ -65,6 +65,7 @@ import ShareLinkHandler from "./pages/ShareLinkHandler";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
+import DesignMockup from "./pages/DesignMockup";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import SellerDashboard from "./pages/SellerDashboard";
 import ScrollToTop from "./components/ScrollToTop";
@@ -185,6 +186,8 @@ const App = () => (
                 <Route path="/admin/approvals" element={<AdminApprovals />} />
                 <Route path="/admin/matches" element={<AdminMatches />} />
                 <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
+                {/* Design mockup - isolated visual exploration, not production */}
+                <Route path="/mockup" element={<DesignMockup />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </>
