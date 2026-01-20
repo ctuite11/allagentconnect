@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -182,38 +182,72 @@ const Register = () => {
         {/* Content */}
         <div className="relative z-10 max-w-md mx-auto px-6 pt-4">
           {isSuccess ? (
-            /* Success State */
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 mb-6">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0E56F5]" />
-                <span className="text-xs font-medium tracking-wide text-zinc-600 uppercase">
+            /* Premium Success State */
+            <div className="mx-auto w-full max-w-[620px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
+              {/* Success Icon */}
+              <div className="flex justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
+                  <Check className="h-6 w-6" />
+                </div>
+              </div>
+
+              {/* Pill */}
+              <div className="mt-5 flex justify-center">
+                <span className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   Early Access
                 </span>
               </div>
 
-              {isDuplicate ? (
-                <>
-                  <h1 className="text-3xl font-semibold text-zinc-900 mb-4">
-                    You're Already On The List
-                  </h1>
-                  <p className="text-zinc-500 leading-relaxed">
-                    This email is already on our early access list.
-                    <br />
-                    We'll be in touch soon.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h1 className="text-3xl font-semibold text-zinc-900 mb-4">
-                    You're in.
-                  </h1>
-                  <p className="text-zinc-500 leading-relaxed mb-8">
-                    Thanks — we've received your information and added you to the All Agent Connect early access list.
-                    <br /><br />
-                    We'll be in touch shortly as access opens.
-                  </p>
-                </>
+              {/* Headline */}
+              <h1 className="mt-4 text-center text-3xl font-semibold tracking-tight text-zinc-900">
+                {isDuplicate ? "You're Already On The List" : "You're In"}
+              </h1>
+
+              {/* Body */}
+              <p className="mt-2 text-center text-sm leading-relaxed text-zinc-600">
+                {isDuplicate
+                  ? "This email is already on our early access list. We'll be in touch soon."
+                  : "Thanks — we've received your details and added you to the All Agent Connect early access list."}
+              </p>
+
+              {/* What happens next */}
+              {!isDuplicate && (
+                <div className="mt-6 rounded-xl bg-zinc-50 p-5 ring-1 ring-zinc-200">
+                  <h3 className="text-sm font-semibold text-zinc-900">What happens next</h3>
+                  <ul className="mt-3 space-y-2 text-sm text-zinc-600">
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
+                      We verify your license and brokerage.
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
+                      You'll receive an email when access opens in your market.
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
+                      Early access rolls out market-by-market.
+                    </li>
+                  </ul>
+                </div>
               )}
+
+              {/* CTAs */}
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  type="button"
+                  className="h-11 rounded-xl border border-zinc-200 bg-white px-5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 transition-colors"
+                  onClick={() => window.location.href = '/'}
+                >
+                  Back to Home
+                </button>
+                <button
+                  type="button"
+                  className="h-11 rounded-xl bg-zinc-900 px-5 text-sm font-semibold text-white hover:bg-zinc-950 transition-colors"
+                >
+                  Invite an Agent
+                </button>
+              </div>
             </div>
           ) : (
             /* Form */
