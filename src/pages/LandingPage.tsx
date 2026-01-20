@@ -124,16 +124,16 @@ const LandingPage = () => {
         {/* Success Hub — How AAC Gets Used */}
         <section className="w-full px-6 sm:px-10 lg:px-20 py-12 md:py-16">
           <div className="max-w-6xl mx-auto">
-            <p className="text-center text-xs font-medium tracking-normal mb-3 opacity-90">
-              <span className="text-blue-600">BY AGENTS</span>
+            <h2 className="text-center text-[36px] md:text-[40px] font-semibold tracking-tight leading-tight">
+              <span className="text-[#0E56F5]">BY AGENTS</span>
               <span className="text-zinc-300 mx-2">·</span>
-              <span className="text-blue-600">FOR AGENTS</span>
+              <span className="text-[#0E56F5]">FOR AGENTS</span>
               <span className="text-zinc-300 mx-2">·</span>
               <span className="text-zinc-400">ALL AGENTS</span>
-            </p>
-            <h2 className="text-[32px] md:text-[36px] font-semibold tracking-tight leading-tight text-zinc-900 mb-10 text-center">
-              Built on what already works
             </h2>
+            <p className="mt-2 text-lg md:text-xl font-medium text-zinc-600 mb-10 text-center">
+              Built on what already works
+            </p>
 
             <div className="grid md:grid-cols-2 gap-6">
               <ModuleCard
