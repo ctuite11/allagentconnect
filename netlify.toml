@@ -3,8 +3,16 @@
   [headers.values]
     X-Robots-Tag = "all"
 
+# Canonical OG image - no long-term caching so social scrapers can refresh
 [[headers]]
-  for = "/og/*.png"
+  for = "/og/aac-og.png"
+  [headers.values]
+    Content-Type = "image/png"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Versioned OG images - immutable caching is fine
+[[headers]]
+  for = "/og/aac-og-v*.png"
   [headers.values]
     Content-Type = "image/png"
     Cache-Control = "public, max-age=31536000, immutable"
