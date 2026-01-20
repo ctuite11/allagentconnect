@@ -222,22 +222,22 @@ const Register = () => {
                   : "Thanks — we've received your details and added you to the All Agent Connect early access list."}
               </p>
 
-              {/* What happens next */}
+              {/* What to expect */}
               {!isDuplicate && (
-                <div className="mt-6 rounded-xl bg-zinc-50 p-5 ring-1 ring-zinc-200">
-                  <h3 className="text-sm font-semibold text-zinc-900">What happens next</h3>
+                <div className="mt-8">
+                  <h3 className="text-sm font-semibold text-zinc-900">What to expect</h3>
                   <ul className="mt-3 space-y-2 text-sm text-zinc-600">
                     <li className="flex items-start gap-2">
                       <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
-                      We verify your license and brokerage.
+                      You'll receive launch updates as access opens.
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
-                      You'll receive an email when access opens in your market.
+                      Early access members receive priority status.
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-400 flex-shrink-0" />
-                      Early access rolls out market-by-market.
+                      Early access members receive preferred pricing.
                     </li>
                   </ul>
                 </div>
