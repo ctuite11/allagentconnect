@@ -67,16 +67,16 @@ export const Logo: React.FC<LogoProps> = ({
     );
   }
 
-  // Full wordmark logo - text only with stylized E letters
+  // Full wordmark logo - text only
   return (
     <svg
-      viewBox="0 0 260 48"
+      viewBox="0 0 220 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`${sizeClasses[size]} w-auto ${className}`}
       aria-label="All Agent Connect"
     >
-      {/* "All Ag" in Royal Blue */}
+      {/* Wordmark - "All Agent Connect" */}
       <text
         x="0"
         y="32"
@@ -84,62 +84,9 @@ export const Logo: React.FC<LogoProps> = ({
         fontSize="22"
         fontWeight="600"
         letterSpacing="-0.01em"
-        fill={accentColor}
       >
-        All Ag
-      </text>
-      
-      {/* Stylized E for "Agent" - three horizontal lines in Royal Blue */}
-      <g transform="translate(68, 18)">
-        <line x1="0" y1="0" x2="9" y2="0" stroke={accentColor} strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="0" y1="7" x2="7" y2="7" stroke={accentColor} strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="0" y1="14" x2="9" y2="14" stroke={accentColor} strokeWidth="2.5" strokeLinecap="round" />
-      </g>
-      
-      {/* "nt " in Royal Blue */}
-      <text
-        x="80"
-        y="32"
-        fontFamily="Inter, system-ui, sans-serif"
-        fontSize="22"
-        fontWeight="600"
-        letterSpacing="-0.01em"
-        fill={accentColor}
-      >
-        nt
-      </text>
-      
-      {/* "Conn" in Silver Gray */}
-      <text
-        x="105"
-        y="32"
-        fontFamily="Inter, system-ui, sans-serif"
-        fontSize="22"
-        fontWeight="600"
-        letterSpacing="-0.01em"
-        fill={SLATE_400}
-      >
-        Conn
-      </text>
-      
-      {/* Stylized E for "Connect" - three horizontal lines in Silver Gray */}
-      <g transform="translate(163, 18)">
-        <line x1="0" y1="0" x2="9" y2="0" stroke={SLATE_400} strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="0" y1="7" x2="7" y2="7" stroke={SLATE_400} strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="0" y1="14" x2="9" y2="14" stroke={SLATE_400} strokeWidth="2.5" strokeLinecap="round" />
-      </g>
-      
-      {/* "ct" in Silver Gray */}
-      <text
-        x="175"
-        y="32"
-        fontFamily="Inter, system-ui, sans-serif"
-        fontSize="22"
-        fontWeight="600"
-        letterSpacing="-0.01em"
-        fill={SLATE_400}
-      >
-        ct
+        <tspan fill={accentColor}>All Agent </tspan>
+        <tspan fill={SLATE_400}>Connect</tspan>
       </text>
     </svg>
   );
