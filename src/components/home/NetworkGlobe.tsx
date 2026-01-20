@@ -307,30 +307,46 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
           strokeWidth={ringStrokeWidth} opacity={0.4}
         />
         
-        {/* White streaming pulse on horizontal ring */}
+        {/* Glow filter for streaming pulses */}
+        <defs>
+          <filter id="pulseGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        
+        {/* White streaming pulse on tilted ring (intersecting) */}
         <ellipse
-          cx="150" cy="150" rx="120" ry="40"
+          cx="150" cy="150" rx="110" ry="50"
           fill="none"
           stroke="#FFFFFF"
-          strokeWidth={2}
+          strokeWidth={2.5}
           strokeLinecap="round"
-          strokeDasharray="25 375"
+          strokeDasharray="30 350"
+          filter="url(#pulseGlow)"
+          transform="rotate(-25 150 150)"
           style={{
-            animation: 'ringStream 6s linear infinite',
+            animation: 'ringStream 7s linear infinite',
           }}
         />
 
-        {/* White streaming pulse on circular ring */}
+        {/* White streaming pulse on opposite tilted ring (intersecting) */}
         <ellipse
-          cx="150" cy="150" rx="100" ry="100"
+          cx="150" cy="150" rx="105" ry="55"
           fill="none"
           stroke="#FFFFFF"
-          strokeWidth={2}
+          strokeWidth={2.5}
           strokeLinecap="round"
-          strokeDasharray="35 600"
+          strokeDasharray="25 380"
+          filter="url(#pulseGlow)"
+          transform="rotate(30 150 150)"
           style={{
-            animation: 'ringStream 10s linear infinite',
-            animationDelay: '3s',
+            animation: 'ringStream 9s linear infinite reverse',
+            animationDelay: '2s',
           }}
         />
         </svg>
