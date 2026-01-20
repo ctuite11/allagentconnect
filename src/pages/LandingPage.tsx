@@ -131,11 +131,12 @@ const LandingPage = () => {
             <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-900 mb-2 text-center">
               Built on what already works
             </h2>
-            <p className="text-center text-lg text-zinc-600 mb-2">
-              If you've ever found or placed a deal through the AAC Facebook group, this will feel familiar.
-            </p>
-            <p className="text-center text-sm text-zinc-500 mb-10">
-              Private. Agent-to-agent. Built for real inventory and real timelines.
+            <p className="text-center text-lg font-semibold tracking-wide mb-10">
+              <span className="text-[#0E56F5]">BY AGENTS</span>
+              <span className="text-zinc-300 mx-2">·</span>
+              <span className="text-[#0E56F5]">FOR AGENTS</span>
+              <span className="text-zinc-300 mx-2">·</span>
+              <span className="text-[#94A3B8]">ALL AGENTS</span>
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
