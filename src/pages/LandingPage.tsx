@@ -44,7 +44,7 @@ const LandingPage = () => {
         <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between">
             <div className="flex items-center gap-3 -ml-1">
-              <Logo size="lg" />
+              <Logo size="2xl" />
             </div>
             <a href="/auth" className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors">
               Log in

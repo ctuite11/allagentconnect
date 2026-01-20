@@ -3,7 +3,7 @@ import React from "react";
 interface LogoProps {
   variant?: "primary" | "reversed" | "icon" | "email";
   className?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
 }
 
 const sizeClasses = {
@@ -11,6 +11,7 @@ const sizeClasses = {
   md: "h-10",
   lg: "h-12",
   xl: "h-14",
+  "2xl": "h-16",
 };
 
 // Primary colors - LOGO ASSET COLORS
