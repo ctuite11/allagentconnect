@@ -17,9 +17,9 @@ function ModuleCard({
   tier: "hub" | "premium";
 }) {
   return (
-    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200">
+    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-shadow duration-200">
       <span
-        className={`absolute top-4 right-4 text-xs font-medium tracking-wide px-2.5 py-1 rounded-full border ${
+        className={`absolute top-4 right-4 text-xs font-medium tracking-normal px-2.5 py-1 rounded-full border ${
           tier === "hub"
             ? "bg-zinc-100 text-zinc-700 border-zinc-200"
             : "bg-blue-50 text-blue-700 border-blue-200"
@@ -28,7 +28,7 @@ function ModuleCard({
         {tier === "hub" ? "Success Hub" : "AAC Premium"}
       </span>
       <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
-      <div className="text-base font-semibold tracking-tight text-zinc-900">{title}</div>
+      <div className="text-base font-semibold text-zinc-900">{title}</div>
       <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
     </div>
   );
@@ -124,14 +124,14 @@ const LandingPage = () => {
         {/* Success Hub — How AAC Gets Used */}
         <section className="w-full px-6 sm:px-10 lg:px-20 py-12 md:py-16">
           <div className="max-w-6xl mx-auto">
-            <p className="text-center text-lg font-semibold tracking-wide mb-2">
-              <span className="text-[#0E56F5]">BY AGENTS</span>
+            <p className="text-center text-xs font-medium tracking-normal mb-3 opacity-90">
+              <span className="text-blue-600">BY AGENTS</span>
               <span className="text-zinc-300 mx-2">·</span>
-              <span className="text-[#0E56F5]">FOR AGENTS</span>
+              <span className="text-blue-600">FOR AGENTS</span>
               <span className="text-zinc-300 mx-2">·</span>
-              <span className="text-[#94A3B8]">ALL AGENTS</span>
+              <span className="text-zinc-400">ALL AGENTS</span>
             </p>
-            <h2 className="text-xl sm:text-2xl font-semibold text-zinc-900 mb-10 text-center">
+            <h2 className="text-[32px] md:text-[36px] font-semibold tracking-tight leading-tight text-zinc-900 mb-10 text-center">
               Built on what already works
             </h2>
 
