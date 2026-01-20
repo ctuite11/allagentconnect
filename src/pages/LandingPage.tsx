@@ -133,44 +133,21 @@ const LandingPage = () => {
           `}</style>
         </section>
 
-        {/* Success Hub — How AAC Gets Used */}
-        <section className="w-full px-6 sm:px-10 lg:px-20 py-12 md:py-16">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-900 mb-2 text-center">
-              Success Hub — How AAC Gets Used
+        {/* From the AAC Facebook group — evolved */}
+        <section className="w-full px-6 sm:px-10 lg:px-20 py-16 md:py-20">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-900 mb-3">
+              From the AAC Facebook group — evolved
             </h2>
-            <p className="text-center text-lg text-zinc-600 mb-2">
-              Core workflows inside AAC, used daily by working agents across sales and rentals.
-            </p>
-            <p className="text-center text-sm text-zinc-500 mb-10">
-              Supports residential sales, rentals, and agent-only opportunities across markets.
+            <p className="text-lg text-zinc-600 mb-10">
+              If you've ever closed a deal through the AAC Facebook group, you already understand this.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <ModuleCard
-                icon={Share2}
-                tier="hub"
-                title="Listings Exchange"
-                body="Quietly share off-market sales and rental listings with verified agents — with full control over visibility and timing."
-              />
-              <ModuleCard
-                icon={Megaphone}
-                tier="hub"
-                title="Buyer & Renter Needs"
-                body="Post active buyer and renter demand privately, so opportunities surface without public exposure."
-              />
-              <ModuleCard
-                icon={Users}
-                tier="premium"
-                title="Private Matching"
-                body="Match listings, buyers, and renters before they hit the open market — or without going public at all."
-              />
-              <ModuleCard
-                icon={MessageCircle}
-                tier="premium"
-                title="Agent-to-Agent Workspace"
-                body="Direct, verified agent collaboration — sales and rentals — without feeds, noise, or outside interference."
-              />
+            <div className="flex flex-col gap-3 text-base sm:text-lg text-zinc-700 font-medium">
+              <p>Same agents</p>
+              <p>Same off-market and coming-soon inventory</p>
+              <p>Same direct conversations</p>
+              <p className="text-zinc-900 mt-2">Less noise, more control, better outcomes</p>
             </div>
           </div>
         </section>
