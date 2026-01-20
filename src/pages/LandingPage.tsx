@@ -17,7 +17,7 @@ function ModuleCard({
   tier: "hub" | "premium";
 }) {
   return (
-    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-shadow duration-200">
+    <div className="relative h-full rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-colors duration-200">
       <span
         className={`absolute top-4 right-4 text-xs font-medium tracking-normal px-2.5 py-1 rounded-full border ${
           tier === "hub"
@@ -102,14 +102,16 @@ const LandingPage = () => {
 
               {/* CTAs - Royal Blue for early access */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  size="lg"
+                <button
                   onClick={() => navigate('/register')}
-                  className="bg-[#0E56F5] hover:bg-[#0D4AD9] text-white px-6 py-3 text-base font-medium rounded-xl shadow-sm"
+                  className="inline-flex items-center justify-center gap-3 h-12 px-6 rounded-xl bg-zinc-900 text-white text-[15px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.10)] hover:bg-zinc-950 focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(24,24,27,0.18)] transition-colors"
                 >
                   Request Early Access
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                  <span className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
+                    <ArrowRight className="h-4 w-4 text-white/80" />
+                  </span>
+                </button>
               </div>
             </div>
           </div>
