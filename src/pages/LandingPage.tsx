@@ -104,12 +104,12 @@ const LandingPage = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => navigate('/register')}
-                  className="inline-flex items-center justify-center gap-3 h-12 px-6 rounded-xl bg-zinc-900 text-white text-[15px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.10)] hover:bg-zinc-950 focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(24,24,27,0.18)] transition-colors"
+                  className="inline-flex items-center gap-3 h-12 px-6 rounded-xl bg-zinc-900 text-white text-[15px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.10)] hover:bg-zinc-950 focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(24,24,27,0.18)] transition-colors"
                 >
                   Request Early Access
-                  <span className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
-                    <ArrowRight className="h-4 w-4 text-white/80" />
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <ArrowRight className="w-4 h-4 text-white" />
                   </span>
                 </button>
               </div>
