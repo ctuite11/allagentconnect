@@ -371,11 +371,11 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
         `}</style>
         
         {/* Shooting stars overlay */}
-        <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }}>
+        <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 1 }}>
           <defs>
             <linearGradient id="heroStarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
-              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="0%" stopColor="#0E56F5" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#0E56F5" stopOpacity="0" />
             </linearGradient>
           </defs>
           {shootingStars.map((star) => {
@@ -390,7 +390,7 @@ const NetworkGlobe = ({ variant = 'hero', strokeColor, fillTriangles = false }: 
                 x2={x2}
                 y2={y2}
                 stroke="url(#heroStarGradient)"
-                strokeWidth={1.8}
+                strokeWidth={3}
                 strokeLinecap="round"
                 style={{
                   animation: `shootingStar ${star.duration}s ease-out infinite`,
