@@ -339,6 +339,36 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string
+          id: string
+          invitee_email: string
+          inviter_user_id: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          id?: string
+          invitee_email: string
+          inviter_user_id: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          id?: string
+          invitee_email?: string
+          inviter_user_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       agent_match_deliveries: {
         Row: {
           agent_id: string

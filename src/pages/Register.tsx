@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Logo } from "@/components/brand";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
+import { InviteAgentDialog } from "@/components/InviteAgentDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -88,6 +89,7 @@ const Register = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const {
     register,
@@ -195,17 +197,14 @@ const Register = () => {
 
               {/* Confirmation card */}
               <div className="relative z-10 mx-auto w-full max-w-[620px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
-                {/* Signal Mark (AAC brand dot-in-ring) */}
-                <div className="flex justify-center">
-                  <div className="h-9 w-9 rounded-full bg-white ring-1 ring-zinc-200 flex items-center justify-center">
-                    <div className="h-2 w-2 rounded-full bg-[#0E56F5]" />
-                  </div>
-                </div>
+              {/* AAC Monogram */}
+              <div className="flex justify-center">
+                <Logo variant="icon" size="sm" />
+              </div>
 
               {/* Pill */}
               <div className="mt-5 flex justify-center">
-                <span className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 uppercase tracking-wide">
                   Early Access
                 </span>
               </div>
@@ -255,6 +254,7 @@ const Register = () => {
                 <button
                   type="button"
                   className="h-11 rounded-xl bg-zinc-900 px-5 text-sm font-semibold text-white hover:bg-zinc-950 transition-colors"
+                  onClick={() => setShowInviteDialog(true)}
                 >
                   Invite an Agent
                 </button>
@@ -452,6 +452,12 @@ const Register = () => {
           )}
         </div>
       </main>
+
+      {/* Invite Agent Dialog */}
+      <InviteAgentDialog
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
+      />
     </div>
   );
 };
