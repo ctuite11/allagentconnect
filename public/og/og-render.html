@@ -14,19 +14,14 @@
       background: #FFFFFF;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       overflow: hidden;
-      position: relative;
-    }
-    
-    .content {
-      position: absolute;
-      left: 72px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
     
     .wordmark {
-      font-size: 48px;
+      font-size: 64px;
       font-weight: 600;
       letter-spacing: -0.02em;
       margin-bottom: 24px;
@@ -37,100 +32,21 @@
     }
     
     .wordmark .connect {
-      color: #94A3B8; /* Silvery Gray */
+      color: #374151; /* Zinc-700 for social compression */
     }
     
     .headline {
-      font-size: 56px;
+      font-size: 48px;
       font-weight: 700;
       color: #18181B; /* Near-black / zinc-900 */
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      max-width: 520px;
-    }
-    
-    .globe-container {
-      position: absolute;
-      right: -120px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 600px;
-      height: 600px;
-      opacity: 0.26; /* Slightly higher for social compression survival */
-    }
-    
-    .globe-svg {
-      width: 100%;
-      height: 100%;
+      letter-spacing: -0.02em;
     }
   </style>
 </head>
 <body>
-  <!-- Text content on left -->
-  <div class="content">
-    <div class="wordmark">
-      <span class="all-agent">All Agent</span> <span class="connect">Connect</span>
-    </div>
-    <div class="headline">Where Real Deals<br>Get Done</div>
+  <div class="wordmark">
+    <span class="all-agent">All Agent</span> <span class="connect">Connect</span>
   </div>
-  
-  <!-- Network globe on right - lines-only style matching NetworkGlobe.tsx hero mode -->
-  <div class="globe-container">
-    <svg class="globe-svg" viewBox="0 0 300 300">
-      <!-- Line color: #8A8A8F (neutral gray) - matching NetworkGlobe.tsx -->
-      <!-- NO node circles - hero mode skips node rendering -->
-      
-      <!-- Connection lines between points (depth-based opacity 0.35-0.65) -->
-      <g stroke="#8A8A8F" stroke-width="1" fill="none">
-        <!-- Top connections -->
-        <line x1="150" y1="30" x2="207" y2="60" opacity="0.65" />
-        <line x1="150" y1="30" x2="93" y2="60" opacity="0.65" />
-        <line x1="207" y1="60" x2="252" y2="105" opacity="0.6" />
-        <line x1="93" y1="60" x2="48" y2="105" opacity="0.6" />
-        <line x1="207" y1="60" x2="150" y2="80" opacity="0.55" />
-        <line x1="93" y1="60" x2="150" y2="80" opacity="0.55" />
-        <line x1="252" y1="105" x2="270" y2="150" opacity="0.5" />
-        <line x1="48" y1="105" x2="30" y2="150" opacity="0.5" />
-        <line x1="252" y1="105" x2="230" y2="130" opacity="0.55" />
-        <line x1="48" y1="105" x2="70" y2="130" opacity="0.55" />
-        <!-- Middle connections -->
-        <line x1="270" y1="150" x2="252" y2="195" opacity="0.5" />
-        <line x1="30" y1="150" x2="48" y2="195" opacity="0.5" />
-        <line x1="230" y1="130" x2="250" y2="170" opacity="0.45" />
-        <line x1="70" y1="130" x2="50" y2="170" opacity="0.45" />
-        <!-- Bottom connections -->
-        <line x1="252" y1="195" x2="207" y2="240" opacity="0.45" />
-        <line x1="48" y1="195" x2="93" y2="240" opacity="0.45" />
-        <line x1="207" y1="240" x2="150" y2="270" opacity="0.4" />
-        <line x1="93" y1="240" x2="150" y2="270" opacity="0.4" />
-        <line x1="207" y1="240" x2="150" y2="220" opacity="0.42" />
-        <line x1="93" y1="240" x2="150" y2="220" opacity="0.42" />
-        <!-- Cross connections -->
-        <line x1="150" y1="80" x2="190" y2="120" opacity="0.5" />
-        <line x1="150" y1="80" x2="110" y2="120" opacity="0.5" />
-        <line x1="190" y1="120" x2="210" y2="150" opacity="0.48" />
-        <line x1="110" y1="120" x2="90" y2="150" opacity="0.48" />
-        <line x1="210" y1="150" x2="190" y2="180" opacity="0.45" />
-        <line x1="90" y1="150" x2="110" y2="180" opacity="0.45" />
-        <line x1="190" y1="180" x2="150" y2="220" opacity="0.42" />
-        <line x1="110" y1="180" x2="150" y2="220" opacity="0.42" />
-        <!-- Inner mesh -->
-        <line x1="150" y1="120" x2="180" y2="150" opacity="0.5" />
-        <line x1="150" y1="120" x2="120" y2="150" opacity="0.5" />
-        <line x1="180" y1="150" x2="150" y2="180" opacity="0.48" />
-        <line x1="120" y1="150" x2="150" y2="180" opacity="0.48" />
-        <line x1="180" y1="150" x2="190" y2="120" opacity="0.5" />
-        <line x1="120" y1="150" x2="110" y2="120" opacity="0.5" />
-        <line x1="180" y1="150" x2="190" y2="180" opacity="0.45" />
-        <line x1="120" y1="150" x2="110" y2="180" opacity="0.45" />
-      </g>
-      
-      <!-- Orbital rings - matching NetworkGlobe.tsx -->
-      <ellipse cx="150" cy="150" rx="120" ry="40" fill="none" stroke="#8A8A8F" stroke-width="0.75" opacity="0.4" />
-      <ellipse cx="150" cy="150" rx="100" ry="100" fill="none" stroke="#8A8A8F" stroke-width="0.75" opacity="0.4" />
-      
-      <!-- NO nodes/circles - hero mode explicitly skips node rendering -->
-    </svg>
-  </div>
+  <div class="headline">Where Real Deals Get Done</div>
 </body>
 </html>
