@@ -16,25 +16,18 @@
       overflow: hidden;
       display: flex;
       align-items: center;
+      justify-content: center;
       padding: 72px 80px;
     }
     
-    .container {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .left {
-      flex: 1;
-      text-align: left;
+    .content {
+      text-align: center;
     }
     
     .wordmark {
-      font-size: 88px;
+      font-size: 96px;
       letter-spacing: -0.02em;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       line-height: 1.1;
     }
     
@@ -49,38 +42,19 @@
     }
     
     .tagline {
-      font-size: 36px;
+      font-size: 40px;
       font-weight: 600;
       color: #0F172A;
       letter-spacing: -0.01em;
     }
-    
-    .right {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .globe {
-      width: 380px;
-      height: 380px;
-      object-fit: contain;
-      opacity: 0.65;
-    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="left">
-      <div class="wordmark">
-        <span class="all-agent">All Agent</span> <span class="connect">Connect</span>
-      </div>
-      <div class="tagline">Where Real Deals Get Done</div>
+  <div class="content">
+    <div class="wordmark">
+      <span class="all-agent">All Agent</span> <span class="connect">Connect</span>
     </div>
-    <div class="right">
-      <img src="og-globe.png" class="globe" alt="" />
-    </div>
+    <div class="tagline">Where Real Deals Get Done</div>
   </div>
 </body>
 </html>

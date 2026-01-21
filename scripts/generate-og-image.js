@@ -19,7 +19,7 @@ const fs = require('fs');
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 const INPUT_HTML = path.join(__dirname, '../public/og/og-render.html');
-const OUTPUT_PNG = path.join(__dirname, '../public/og/aac-og.png');
+const OUTPUT_PNG = path.join(__dirname, '../public/og/aac-og-2026-01-20.png');
 
 async function generateOGImage() {
   console.log('🖼️  Generating OG image...');
