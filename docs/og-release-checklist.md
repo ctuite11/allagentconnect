@@ -1,6 +1,6 @@
 # OG Image Release Checklist
 
-> **Quick command**: `node scripts/generate-og-image.js`  
+> **Quick command**: `node scripts/generate-og-image.cjs`  
 > *(Note: `npm run og:build` requires manual addition to package.json)*
 
 ---
@@ -24,7 +24,7 @@
 npx playwright install chromium
 
 # Generate OG image
-node scripts/generate-og-image.js
+node scripts/generate-og-image.cjs
 ```
 
 - [ ] Confirm output created at: `public/og/<your-og-filename>.png`
@@ -109,7 +109,7 @@ git push
 | File | Purpose |
 |------|---------|
 | `public/og/og-render.html` | HTML template for OG image |
-| `scripts/generate-og-image.js` | Playwright script to render PNG |
+| `scripts/generate-og-image.cjs` | Playwright script to render PNG |
 | `index.html` | Meta tags for social sharing |
 | `netlify.toml` | Headers for OG image caching |
 
