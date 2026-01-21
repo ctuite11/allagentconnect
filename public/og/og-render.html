@@ -6,7 +6,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap');
     
     body {
       width: 1200px;
@@ -17,36 +17,43 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: center;
+      padding: 72px;
+    }
+    
+    .content {
+      max-width: 960px;
     }
     
     .wordmark {
-      font-size: 64px;
-      font-weight: 600;
+      font-size: 96px;
       letter-spacing: -0.02em;
       margin-bottom: 24px;
     }
     
     .wordmark .all-agent {
-      color: #0E56F5; /* Royal Blue */
+      font-weight: 800;
+      color: #0E56F5;
     }
     
     .wordmark .connect {
-      color: #374151; /* Zinc-700 for social compression */
+      font-weight: 700;
+      color: #94A3B8;
     }
     
-    .headline {
-      font-size: 48px;
-      font-weight: 700;
-      color: #18181B; /* Near-black / zinc-900 */
-      letter-spacing: -0.02em;
+    .tagline {
+      font-size: 40px;
+      font-weight: 600;
+      color: #0F172A;
+      letter-spacing: -0.01em;
     }
   </style>
 </head>
 <body>
-  <div class="wordmark">
-    <span class="all-agent">All Agent</span> <span class="connect">Connect</span>
+  <div class="content">
+    <div class="wordmark">
+      <span class="all-agent">All Agent</span> <span class="connect">Connect</span>
+    </div>
+    <div class="tagline">Where Real Deals Get Done</div>
   </div>
-  <div class="headline">Where Real Deals Get Done</div>
 </body>
 </html>
