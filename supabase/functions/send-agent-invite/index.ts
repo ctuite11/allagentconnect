@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.lovable.app";
+const LOGO_URL = "https://allagentconnect.lovable.app/brand/aac-globe.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,103 @@ interface AgentInviteRequest {
   inviteeEmails: string[];
   inviterName: string;
   inviterEmail: string;
+}
+
+function buildInviteEmailHtml(inviterName: string): string {
+  const registerUrl = `${PUBLIC_SITE_URL}/register`;
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          
+          <!-- Header with Logo -->
+          <tr>
+            <td align="center" style="padding: 40px 40px 24px 40px;">
+              <img src="${LOGO_URL}" width="64" height="64" alt="AAC" style="display: block; border: 0;" />
+              <p style="margin: 16px 0 0 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">
+                <span style="color: #0E56F5;">All Agent </span><span style="color: #94A3B8;">Connect</span>
+              </p>
+              <div style="width: 48px; height: 2px; background-color: #0E56F5; margin-top: 16px;"></div>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 0 40px 32px 40px;">
+              <p style="margin: 0 0 20px 0; font-size: 15px; color: #3f3f46; line-height: 1.6;">
+                Hi there,
+              </p>
+              
+              <p style="margin: 0 0 20px 0; font-size: 15px; color: #3f3f46; line-height: 1.6;">
+                <strong style="color: #18181b;">${inviterName}</strong> thinks you'd be a great fit for All Agent Connect.
+              </p>
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 24px 0;">
+                <tr>
+                  <td style="padding: 0 8px 0 0; vertical-align: top;">
+                    <span style="color: #059669; font-size: 16px;">✓</span>
+                  </td>
+                  <td style="font-size: 14px; color: #52525b; line-height: 1.5;">
+                    <strong style="color: #18181b;">By invitation only</strong> — the professional network built by agents, for agents.
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 0 0 28px 0; font-size: 15px; color: #3f3f46; line-height: 1.6;">
+                Join to connect with buyer agents, share listings, and grow your business.
+              </p>
+              
+              <!-- CTA Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+                <tr>
+                  <td align="center" style="background-color: #0F172A; border-radius: 8px;">
+                    <a href="${registerUrl}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none;">
+                      Request Early Access
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Fallback URL -->
+              <p style="margin: 28px 0 8px 0; font-size: 13px; color: #71717a;">
+                Or copy this link:
+              </p>
+              <div style="background-color: #F8FAFC; border-radius: 6px; padding: 12px 16px;">
+                <code style="font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 12px; color: #475569; word-break: break-all;">${registerUrl}</code>
+              </div>
+              
+              <!-- Questions -->
+              <p style="margin: 28px 0 0 0; font-size: 13px; color: #71717a;">
+                Questions? <span style="color: #3f3f46;">hello@allagentconnect.com</span>
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding: 24px 40px; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+                AllAgentConnect • mail.allagentconnect.com
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -34,39 +132,11 @@ const handler = async (req: Request): Promise<Response> => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+          from: "All Agent Connect <hello@mail.allagentconnect.com>",
           to: [email],
           reply_to: inviterEmail,
           subject: `${inviterName} invited you to All Agent Connect`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #18181b; font-size: 24px; margin-bottom: 20px;">You've been invited!</h1>
-              
-              <p style="font-size: 16px; color: #3f3f46; line-height: 1.6; margin-bottom: 16px;">
-                <strong>${inviterName}</strong> thinks you'd be a great fit for All Agent Connect — 
-                the professional network built by agents, for agents.
-              </p>
-              
-              <p style="font-size: 16px; color: #3f3f46; line-height: 1.6; margin-bottom: 24px;">
-                Join the network to connect with buyer agents, share listings, 
-                and grow your business.
-              </p>
-              
-              <div style="margin: 30px 0;">
-                <a href="${PUBLIC_SITE_URL}/register" 
-                   style="background-color: #18181b; color: white; padding: 14px 28px; 
-                          text-decoration: none; border-radius: 8px; font-weight: 600;
-                          display: inline-block;">
-                  Request Early Access
-                </a>
-              </div>
-              
-              <p style="font-size: 14px; color: #71717a; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e4e4e7;">
-                Best regards,<br/>
-                The All Agent Connect Team
-              </p>
-            </div>
-          `,
+          html: buildInviteEmailHtml(inviterName),
         }),
       });
 
