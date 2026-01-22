@@ -253,10 +253,14 @@ const Register = () => {
                 </button>
                 <button
                   type="button"
-                  className="h-11 rounded-xl bg-zinc-900 px-5 text-sm font-semibold text-white hover:bg-zinc-950 transition-colors"
+                  className="inline-flex items-center justify-center gap-3 h-11 rounded-xl bg-zinc-900 px-5 text-sm font-semibold text-white hover:bg-zinc-950 transition-colors"
                   onClick={() => setShowInviteDialog(true)}
                 >
                   Invite an Agent
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </span>
                 </button>
               </div>
             </div>
