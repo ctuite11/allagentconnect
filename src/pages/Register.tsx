@@ -184,7 +184,7 @@ const Register = () => {
         )}
 
         {/* Content */}
-        <div className="relative z-10 max-w-md mx-auto px-6 pt-4">
+        <div className="relative z-10 max-w-[720px] mx-auto px-6 pt-4">
           {isSuccess ? (
             /* Premium Success State */
             <div className="relative">
@@ -196,10 +196,10 @@ const Register = () => {
               </div>
 
               {/* Confirmation card */}
-              <div className="relative z-10 mx-auto w-full max-w-[620px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
+              <div className="relative z-10 mx-auto w-full max-w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
               {/* AAC Monogram */}
               <div className="flex justify-center">
-                <Logo variant="icon" size="sm" />
+                <Logo variant="icon" size="lg" />
               </div>
 
               {/* Pill */}
