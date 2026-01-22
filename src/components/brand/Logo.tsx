@@ -4,7 +4,7 @@ import aacMonogram from "@/assets/aac-monogram.png";
 interface LogoProps {
   variant?: "primary" | "reversed" | "icon" | "email";
   className?: string;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
 }
 
 const sizeClasses = {
@@ -14,6 +14,8 @@ const sizeClasses = {
   xl: "h-14",
   "2xl": "h-16",
   "3xl": "h-20",
+  "4xl": "h-24",
+  "5xl": "h-28",
 };
 
 // Primary colors - LOGO ASSET COLORS
