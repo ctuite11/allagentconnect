@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.lovable.app";
-const LOGO_URL = "https://allagentconnect.lovable.app/brand/aac-globe.png";
+const LOGO_URL = "https://allagentconnect.lovable.app/brand/aac-wordmark.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,12 +68,24 @@ function buildInviteEmailHtml(inviterName: string): string {
                 Join to connect with buyer agents, share listings, and grow your business.
               </p>
               
-              <!-- CTA Button -->
+              <!-- CTA Button with green dot and arrow -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
                 <tr>
-                  <td align="center" style="background-color: #0F172A; border-radius: 8px;">
-                    <a href="${registerUrl}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none;">
-                      Request Early Access
+                  <td align="center" style="background-color: #0F172A; border-radius: 10px;">
+                    <a href="${registerUrl}" target="_blank" style="display: inline-block; padding: 14px 24px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none;">
+                      <table role="presentation" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 15px; font-weight: 600; padding-right: 12px;">
+                            Request Early Access
+                          </td>
+                          <td style="vertical-align: middle; padding-right: 6px;">
+                            <span style="display: inline-block; width: 8px; height: 8px; background-color: #10B981; border-radius: 50%;"></span>
+                          </td>
+                          <td style="vertical-align: middle;">
+                            <span style="color: #ffffff; font-size: 16px;">→</span>
+                          </td>
+                        </tr>
+                      </table>
                     </a>
                   </td>
                 </tr>
