@@ -29,7 +29,7 @@
       transform: translate(-50%, -50%);
       width: 480px;
       height: 480px;
-      opacity: 0.08;
+      opacity: 0.06;
     }
     
     .content {
@@ -40,9 +40,10 @@
     
     /* Small centered globe mark above wordmark */
     .globe-mark {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 20px;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 24px;
+      opacity: 0.35;
     }
     
     .wordmark {
@@ -71,34 +72,106 @@
   </style>
 </head>
 <body>
-  <!-- Background globe watermark -->
+  <!-- Background globe watermark - geodesic mesh -->
   <svg class="globe-bg" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Orbital rings -->
-    <ellipse cx="150" cy="150" rx="140" ry="140" stroke="#0E56F5" stroke-width="1.5"/>
-    <ellipse cx="150" cy="150" rx="140" ry="50" stroke="#0E56F5" stroke-width="1.5"/>
-    <ellipse cx="150" cy="150" rx="50" ry="140" stroke="#0E56F5" stroke-width="1.5"/>
-    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(30 150 150)"/>
-    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(-30 150 150)"/>
-    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(60 150 150)"/>
-    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(-60 150 150)"/>
-    <!-- Cross meridians -->
-    <line x1="150" y1="10" x2="150" y2="290" stroke="#0E56F5" stroke-width="1"/>
-    <line x1="10" y1="150" x2="290" y2="150" stroke="#0E56F5" stroke-width="1"/>
+    <!-- Geodesic mesh lines - pre-computed from Fibonacci spiral (24 nodes, radius 120) -->
+    <!-- Orbital ellipses for structure -->
+    <ellipse cx="150" cy="150" rx="120" ry="40" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <ellipse cx="150" cy="150" rx="100" ry="100" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    
+    <!-- Connection lines between nodes -->
+    <line x1="150" y1="30" x2="193" y2="55" stroke="#8A8A8F" stroke-width="1" opacity="0.5"/>
+    <line x1="150" y1="30" x2="107" y2="55" stroke="#8A8A8F" stroke-width="1" opacity="0.5"/>
+    <line x1="193" y1="55" x2="230" y2="95" stroke="#8A8A8F" stroke-width="1" opacity="0.45"/>
+    <line x1="107" y1="55" x2="70" y2="95" stroke="#8A8A8F" stroke-width="1" opacity="0.45"/>
+    <line x1="230" y1="95" x2="255" y2="140" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="70" y1="95" x2="45" y2="140" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="255" y1="140" x2="265" y2="185" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="45" y1="140" x2="35" y2="185" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="265" y1="185" x2="250" y2="225" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="35" y1="185" x2="50" y2="225" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="250" y1="225" x2="215" y2="255" stroke="#8A8A8F" stroke-width="1" opacity="0.45"/>
+    <line x1="50" y1="225" x2="85" y2="255" stroke="#8A8A8F" stroke-width="1" opacity="0.45"/>
+    <line x1="215" y1="255" x2="170" y2="270" stroke="#8A8A8F" stroke-width="1" opacity="0.5"/>
+    <line x1="85" y1="255" x2="130" y2="270" stroke="#8A8A8F" stroke-width="1" opacity="0.5"/>
+    <line x1="170" y1="270" x2="130" y2="270" stroke="#8A8A8F" stroke-width="1" opacity="0.55"/>
+    
+    <!-- Cross connections for mesh density -->
+    <line x1="193" y1="55" x2="150" y2="90" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="107" y1="55" x2="150" y2="90" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="230" y1="95" x2="190" y2="120" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    <line x1="70" y1="95" x2="110" y2="120" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    <line x1="255" y1="140" x2="210" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="45" y1="140" x2="90" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="265" y1="185" x2="215" y2="180" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="35" y1="185" x2="85" y2="180" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="250" y1="225" x2="200" y2="210" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    <line x1="50" y1="225" x2="100" y2="210" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    <line x1="215" y1="255" x2="175" y2="230" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="85" y1="255" x2="125" y2="230" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    
+    <!-- Inner mesh triangulation -->
+    <line x1="150" y1="90" x2="190" y2="120" stroke="#8A8A8F" stroke-width="1" opacity="0.42"/>
+    <line x1="150" y1="90" x2="110" y2="120" stroke="#8A8A8F" stroke-width="1" opacity="0.42"/>
+    <line x1="190" y1="120" x2="210" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="110" y1="120" x2="90" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="210" y1="150" x2="215" y2="180" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    <line x1="90" y1="150" x2="85" y2="180" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    <line x1="215" y1="180" x2="200" y2="210" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="85" y1="180" x2="100" y2="210" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="200" y1="210" x2="175" y2="230" stroke="#8A8A8F" stroke-width="1" opacity="0.42"/>
+    <line x1="100" y1="210" x2="125" y2="230" stroke="#8A8A8F" stroke-width="1" opacity="0.42"/>
+    <line x1="175" y1="230" x2="150" y2="210" stroke="#8A8A8F" stroke-width="1" opacity="0.45"/>
+    <line x1="125" y1="230" x2="150" y2="210" stroke="#8A8A8F" stroke-width="1" opacity="0.45"/>
+    
+    <!-- Central horizontal band -->
+    <line x1="90" y1="150" x2="150" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="150" y1="150" x2="210" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.4"/>
+    <line x1="85" y1="180" x2="150" y2="180" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    <line x1="150" y1="180" x2="215" y2="180" stroke="#8A8A8F" stroke-width="1" opacity="0.38"/>
+    
+    <!-- Diagonal cross-bracing -->
+    <line x1="150" y1="90" x2="210" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="150" y1="90" x2="90" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="150" y1="210" x2="210" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
+    <line x1="150" y1="210" x2="90" y2="150" stroke="#8A8A8F" stroke-width="1" opacity="0.35"/>
   </svg>
 
   <div class="content">
-    <!-- Small globe mark -->
+    <!-- Small globe mark - geodesic mesh -->
     <svg class="globe-mark" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Orbital rings - Royal Blue -->
-      <ellipse cx="150" cy="150" rx="140" ry="140" stroke="#0E56F5" stroke-width="3"/>
-      <ellipse cx="150" cy="150" rx="140" ry="50" stroke="#0E56F5" stroke-width="2.5"/>
-      <ellipse cx="150" cy="150" rx="50" ry="140" stroke="#0E56F5" stroke-width="2.5"/>
-      <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="2" transform="rotate(30 150 150)"/>
-      <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="2" transform="rotate(-30 150 150)"/>
-      <!-- Filled triangular regions for depth -->
-      <path d="M150 10 L240 80 L200 150 L150 120 Z" fill="#0E56F5" fill-opacity="0.06"/>
-      <path d="M150 10 L60 80 L100 150 L150 120 Z" fill="#0E56F5" fill-opacity="0.04"/>
-      <path d="M150 290 L240 220 L200 150 L150 180 Z" fill="#0E56F5" fill-opacity="0.05"/>
+      <!-- Orbital ellipses -->
+      <ellipse cx="150" cy="150" rx="120" ry="40" stroke="#0E56F5" stroke-width="2" opacity="0.6"/>
+      <ellipse cx="150" cy="150" rx="100" ry="100" stroke="#0E56F5" stroke-width="2" opacity="0.6"/>
+      
+      <!-- Mesh lines - Royal Blue -->
+      <line x1="150" y1="30" x2="193" y2="55" stroke="#0E56F5" stroke-width="1.5" opacity="0.7"/>
+      <line x1="150" y1="30" x2="107" y2="55" stroke="#0E56F5" stroke-width="1.5" opacity="0.7"/>
+      <line x1="193" y1="55" x2="230" y2="95" stroke="#0E56F5" stroke-width="1.5" opacity="0.65"/>
+      <line x1="107" y1="55" x2="70" y2="95" stroke="#0E56F5" stroke-width="1.5" opacity="0.65"/>
+      <line x1="230" y1="95" x2="255" y2="140" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
+      <line x1="70" y1="95" x2="45" y2="140" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
+      <line x1="255" y1="140" x2="265" y2="185" stroke="#0E56F5" stroke-width="1.5" opacity="0.5"/>
+      <line x1="45" y1="140" x2="35" y2="185" stroke="#0E56F5" stroke-width="1.5" opacity="0.5"/>
+      <line x1="265" y1="185" x2="250" y2="225" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
+      <line x1="35" y1="185" x2="50" y2="225" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
+      <line x1="250" y1="225" x2="215" y2="255" stroke="#0E56F5" stroke-width="1.5" opacity="0.65"/>
+      <line x1="50" y1="225" x2="85" y2="255" stroke="#0E56F5" stroke-width="1.5" opacity="0.65"/>
+      <line x1="215" y1="255" x2="170" y2="270" stroke="#0E56F5" stroke-width="1.5" opacity="0.7"/>
+      <line x1="85" y1="255" x2="130" y2="270" stroke="#0E56F5" stroke-width="1.5" opacity="0.7"/>
+      <line x1="170" y1="270" x2="130" y2="270" stroke="#0E56F5" stroke-width="1.5" opacity="0.75"/>
+      
+      <!-- Cross connections -->
+      <line x1="193" y1="55" x2="150" y2="90" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
+      <line x1="107" y1="55" x2="150" y2="90" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
+      <line x1="150" y1="90" x2="190" y2="120" stroke="#0E56F5" stroke-width="1.5" opacity="0.5"/>
+      <line x1="150" y1="90" x2="110" y2="120" stroke="#0E56F5" stroke-width="1.5" opacity="0.5"/>
+      <line x1="190" y1="120" x2="210" y2="150" stroke="#0E56F5" stroke-width="1.5" opacity="0.45"/>
+      <line x1="110" y1="120" x2="90" y2="150" stroke="#0E56F5" stroke-width="1.5" opacity="0.45"/>
+      <line x1="90" y1="150" x2="150" y2="150" stroke="#0E56F5" stroke-width="1.5" opacity="0.5"/>
+      <line x1="150" y1="150" x2="210" y2="150" stroke="#0E56F5" stroke-width="1.5" opacity="0.5"/>
+      <line x1="175" y1="230" x2="150" y2="210" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
+      <line x1="125" y1="230" x2="150" y2="210" stroke="#0E56F5" stroke-width="1.5" opacity="0.55"/>
     </svg>
     
     <div class="wordmark">
