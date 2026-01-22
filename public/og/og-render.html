@@ -18,10 +18,31 @@
       align-items: center;
       justify-content: center;
       padding: 72px 80px;
+      position: relative;
+    }
+    
+    /* Globe background - subtle watermark */
+    .globe-bg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px;
+      height: 480px;
+      opacity: 0.08;
     }
     
     .content {
       text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Small centered globe mark above wordmark */
+    .globe-mark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
     }
     
     .wordmark {
@@ -50,7 +71,36 @@
   </style>
 </head>
 <body>
+  <!-- Background globe watermark -->
+  <svg class="globe-bg" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Orbital rings -->
+    <ellipse cx="150" cy="150" rx="140" ry="140" stroke="#0E56F5" stroke-width="1.5"/>
+    <ellipse cx="150" cy="150" rx="140" ry="50" stroke="#0E56F5" stroke-width="1.5"/>
+    <ellipse cx="150" cy="150" rx="50" ry="140" stroke="#0E56F5" stroke-width="1.5"/>
+    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(30 150 150)"/>
+    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(-30 150 150)"/>
+    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(60 150 150)"/>
+    <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="1" transform="rotate(-60 150 150)"/>
+    <!-- Cross meridians -->
+    <line x1="150" y1="10" x2="150" y2="290" stroke="#0E56F5" stroke-width="1"/>
+    <line x1="10" y1="150" x2="290" y2="150" stroke="#0E56F5" stroke-width="1"/>
+  </svg>
+
   <div class="content">
+    <!-- Small globe mark -->
+    <svg class="globe-mark" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Orbital rings - Royal Blue -->
+      <ellipse cx="150" cy="150" rx="140" ry="140" stroke="#0E56F5" stroke-width="3"/>
+      <ellipse cx="150" cy="150" rx="140" ry="50" stroke="#0E56F5" stroke-width="2.5"/>
+      <ellipse cx="150" cy="150" rx="50" ry="140" stroke="#0E56F5" stroke-width="2.5"/>
+      <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="2" transform="rotate(30 150 150)"/>
+      <ellipse cx="150" cy="150" rx="140" ry="80" stroke="#0E56F5" stroke-width="2" transform="rotate(-30 150 150)"/>
+      <!-- Filled triangular regions for depth -->
+      <path d="M150 10 L240 80 L200 150 L150 120 Z" fill="#0E56F5" fill-opacity="0.06"/>
+      <path d="M150 10 L60 80 L100 150 L150 120 Z" fill="#0E56F5" fill-opacity="0.04"/>
+      <path d="M150 290 L240 220 L200 150 L150 180 Z" fill="#0E56F5" fill-opacity="0.05"/>
+    </svg>
+    
     <div class="wordmark">
       <span class="all-agent">All Agent</span> <span class="connect">Connect</span>
     </div>
