@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { X, Plus } from "lucide-react";
+import { X, Plus, ArrowRight } from "lucide-react";
 
 const emailSchema = z.string().email();
 
@@ -164,7 +164,7 @@ export const InviteAgentDialog = ({ open, onOpenChange }: InviteAgentDialogProps
 
         <div className="space-y-4 mt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="invitee_email">Email address</Label>
+            <Label htmlFor="invitee_email">Email addresses</Label>
             <div className="flex gap-2">
               <Input
                 id="invitee_email"
@@ -189,6 +189,9 @@ export const InviteAgentDialog = ({ open, onOpenChange }: InviteAgentDialogProps
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
+            <p className="text-xs text-zinc-500">
+              Add up to 10 colleagues. Press Enter or click + to add each email.
+            </p>
             {emailError && (
               <p className="text-xs text-red-500">{emailError}</p>
             )}
@@ -224,15 +227,20 @@ export const InviteAgentDialog = ({ open, onOpenChange }: InviteAgentDialogProps
             >
               Cancel
             </Button>
-            <Button 
-              onClick={onSubmit} 
+            <button
+              onClick={onSubmit}
               disabled={isSubmitting || emails.length === 0}
+              className="inline-flex items-center justify-center gap-3 h-11 px-6 rounded-xl bg-zinc-900 text-white font-semibold text-[15px] hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting 
                 ? "Sending..." 
                 : `Send ${emails.length > 0 ? emails.length : ""} Invite${emails.length !== 1 ? "s" : ""}`
               }
-            </Button>
+              <span className="inline-flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <ArrowRight className="w-4 h-4 text-white" />
+              </span>
+            </button>
           </div>
         </div>
       </DialogContent>
