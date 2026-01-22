@@ -199,7 +199,7 @@ const Register = () => {
               <div className="relative z-10 mx-auto w-full max-w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
               {/* AAC Monogram */}
               <div className="flex justify-center">
-                <Logo variant="icon" size="lg" />
+                <Logo variant="icon" size="4xl" />
               </div>
 
               {/* Pill */}
