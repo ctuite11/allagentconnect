@@ -1,4 +1,5 @@
 import React from "react";
+import aacMonogram from "@/assets/aac-monogram.png";
 
 interface LogoProps {
   variant?: "primary" | "reversed" | "icon" | "email";
@@ -32,38 +33,13 @@ export const Logo: React.FC<LogoProps> = ({
   const accentColor = ACC_BLUE; // Logo uses brand Royal Blue
 
   if (isIcon) {
-    // Icon-only mark - stylized "AAC" monogram
+    // Icon-only mark - AAC house monogram
     return (
-      <svg
-        viewBox="0 0 48 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={`${sizeClasses[size]} ${className}`}
-        aria-label="All Agent Connect"
-      >
-        {/* Outer ring */}
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          stroke={SLATE_900}
-          strokeWidth="2"
-          fill="none"
-        />
-        {/* Inner connection nodes */}
-        <circle cx="24" cy="12" r="3" fill={accentColor} />
-        <circle cx="12" cy="32" r="3" fill={accentColor} />
-        <circle cx="36" cy="32" r="3" fill={accentColor} />
-        {/* Connection lines */}
-        <path
-          d="M24 15 L14 30 M24 15 L34 30 M14 32 L34 32"
-          stroke={accentColor}
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        {/* Center accent dot */}
-        <circle cx="24" cy="26" r="2" fill={accentColor} />
-      </svg>
+      <img
+        src={aacMonogram}
+        alt="All Agent Connect"
+        className={`${sizeClasses[size]} w-auto ${className}`}
+      />
     );
   }
 
