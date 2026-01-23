@@ -12,7 +12,7 @@ interface EmailJob {
   payload: {
     provider: string;
     template: string;
-    to: string;
+    to: string | string[];
     subject: string;
     html?: string;
     reply_to?: string;
@@ -160,6 +160,17 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
 async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
   
+  // Normalize recipients: handle string, array, or comma-separated string
+  const toList: string[] = Array.isArray(payload.to)
+    ? payload.to
+    : typeof payload.to === "string"
+      ? payload.to.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+
+  if (toList.length === 0) {
+    throw new Error("No valid recipients in payload.to");
+  }
+
   // Render the HTML from template
   const html = payload.html || renderEmailTemplate(payload.template, payload.variables || {});
 
@@ -170,8 +181,8 @@ async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
       Authorization: `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-      to: [payload.to],
+      from: "All Agent Connect <hello@allagentconnect.com>",
+      to: toList,
       subject: payload.subject,
       html,
       reply_to: payload.reply_to,

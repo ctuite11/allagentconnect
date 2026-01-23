@@ -46,6 +46,10 @@
   to = "/.netlify/functions/send-password-changed-email"
   status = 200
 
+# Functions configuration
+[functions]
+  node_bundler = "esbuild"
+
 # Scheduled email worker - runs every minute to drain email queue
 [functions."email-worker"]
-  schedule = "* * * * *"
+  schedule = "@every 1m"

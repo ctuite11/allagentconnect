@@ -40,13 +40,16 @@ serve(async (req) => {
     }
 
     // Rate limit: 5 requests per minute per user
-    const { data: rateLimit } = await supabase.rpc('rate_limit_consume', {
+    const { data: rateLimitData } = await supabase.rpc('rate_limit_consume', {
       p_key: `route:notify-agents|user:${user.id}`,
       p_window_seconds: 60,
       p_limit: 5,
     });
 
-    if (rateLimit && !rateLimit.allowed) {
+    // Handle array or single object return from RPC
+    const rateLimit = Array.isArray(rateLimitData) ? rateLimitData[0] : rateLimitData;
+
+    if (rateLimit && rateLimit.allowed === false) {
       return new Response(
         JSON.stringify({ error: "Rate limit exceeded" }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
