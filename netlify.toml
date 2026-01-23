@@ -3,6 +3,17 @@
   [headers.values]
     X-Robots-Tag = "all"
 
+# Favicon - no caching to ensure Google picks up updates
+[[headers]]
+  for = "/favicon.png"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/favicon.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 # Canonical OG image - no long-term caching so social scrapers can refresh
 [[headers]]
   for = "/og/aac-og-2026-01-22.jpg"
