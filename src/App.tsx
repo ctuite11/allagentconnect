@@ -93,10 +93,6 @@ const App = () => (
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
-            {/* Debug badge - always show for now to verify build */}
-            <div className="fixed top-3 right-3 z-50 rounded-md border bg-background/80 backdrop-blur px-2 py-1">
-              <VersionStamp className="text-xs" />
-            </div>
             <>
               <ActiveAgentBanner />
               <Navigation />
