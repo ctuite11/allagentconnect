@@ -168,7 +168,7 @@ const Register = () => {
     <div className="min-h-screen bg-white">
       {/* Minimal header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-0 shadow-none">
-        <div className="mx-auto max-w-6xl px-5 py-3 flex items-center">
+        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-5 sm:py-3 flex items-center">
           <Logo size="lg" />
         </div>
       </header>
@@ -196,7 +196,7 @@ const Register = () => {
               </div>
 
               {/* Confirmation card */}
-              <div className="relative z-10 mx-auto w-full max-w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-10 py-10">
+              <div className="relative z-10 mx-auto w-full max-w-[720px] rounded-2xl border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] px-6 py-8 sm:px-10 sm:py-10">
               {/* AAC Monogram */}
               <div className="flex justify-center">
                 <Logo variant="icon" size="4xl" />
@@ -300,7 +300,7 @@ const Register = () => {
               <div className="bg-white rounded-2xl border border-zinc-200 p-6 shadow-sm">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   {/* Name row */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="first_name" className="text-zinc-700">
                         First Name
@@ -391,7 +391,7 @@ const Register = () => {
                   </div>
 
                   {/* State + License row */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="state" className="text-zinc-700">
                         License State
