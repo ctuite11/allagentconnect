@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@4.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -96,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
       message,
     }: BulkShareRequest = await req.json();
 
-    console.log(`Sharing ${listingIds.length} listings to ${recipientEmail}`);
+    console.log(`[send-bulk-listing-share] Enqueuing ${listingIds.length} listings to ${recipientEmail}`);
 
     // Fetch all listings
     const { data: listings, error: listingsError } = await supabase
@@ -105,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
       .in("id", listingIds);
 
     if (listingsError || !listings || listings.length === 0) {
-      console.error("Error fetching listings:", listingsError);
+      console.error("[send-bulk-listing-share] Error fetching listings:", listingsError);
       throw new Error("Failed to fetch listings");
     }
 
@@ -184,29 +181,41 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-      to: [recipientEmail],
-      subject: `${agentName} shared ${listings.length} property listing${listings.length > 1 ? 's' : ''} with you`,
-      html: emailHtml,
-    });
+    // Enqueue job instead of sending directly
+    const { error: insertError } = await supabase
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template: "bulk-listing-share",
+          to: recipientEmail,
+          subject: `${agentName} shared ${listings.length} property listing${listings.length > 1 ? 's' : ''} with you`,
+          html: emailHtml,
+          reply_to: agentEmail,
+          variables: {
+            recipientName,
+            agentName,
+            listingCount: listings.length,
+          },
+        },
+      });
 
-    if (emailError) {
-      console.error("Error sending email:", emailError);
-      throw emailError;
+    if (insertError) {
+      console.error("[send-bulk-listing-share] Failed to enqueue job:", insertError);
+      throw new Error("Failed to queue email for sending");
     }
 
-    console.log("Bulk listings email sent successfully:", emailData);
+    console.log("[send-bulk-listing-share] Job enqueued successfully");
 
     return new Response(
-      JSON.stringify({ success: true, data: emailData }),
+      JSON.stringify({ success: true, message: "Email queued for delivery" }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error: any) {
-    console.error("Error in send-bulk-listing-share:", error);
+    console.error("[send-bulk-listing-share] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@4.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,16 +26,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const {
-      userEmail,
-      userName,
-      hotSheetName,
-      newListings,
-    }: HotSheetAlertRequest = await req.json();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Sending hot sheet alert to:", userEmail);
+    const { userEmail, userName, hotSheetName, newListings }: HotSheetAlertRequest = await req.json();
 
-    const listingsList = newListings.map(listing => `
+    console.log("[send-hot-sheet-alert] Enqueuing job for:", userEmail);
+
+    const listingsHtml = newListings.map(listing => `
       <li style="margin-bottom: 20px; padding: 0; background-color: #f9f9f9; border-radius: 5px; overflow: hidden;">
         ${listing.photoUrl ? `<img src="${listing.photoUrl}" alt="${listing.address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
         <div style="padding: 15px;">
@@ -50,50 +47,33 @@ const handler = async (req: Request): Promise<Response> => {
       </li>
     `).join('');
 
-    const { data, error: emailError } = await resend.emails.send({
-      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-      to: [userEmail],
-      subject: `🏠 New listings match your Hot Sheet: ${hotSheetName}`,
-      html: `
-        <h2>New Properties Match Your Hot Sheet!</h2>
-        <p>Hi ${userName},</p>
-        <p>We found <strong>${newListings.length}</strong> new ${newListings.length === 1 ? 'listing' : 'listings'} that match your Hot Sheet "<strong>${hotSheetName}</strong>":</p>
-        
-        <ul style="list-style: none; padding: 0;">
-          ${listingsList}
-        </ul>
-        
-        <p style="margin-top: 30px;">
-          Don't miss out on these opportunities! Properties that match your criteria can go quickly.
-        </p>
-        
-        <p>Best regards,<br>Your Real Estate Platform</p>
-        
-        <hr style="margin-top: 30px; border: none; border-top: 1px solid #eee;">
-        <p style="font-size: 12px; color: #999;">
-          You're receiving this because you have an active Hot Sheet alert. 
-          You can manage your alerts in your account settings.
-        </p>
-      `,
+    const { error: insertError } = await supabase.from("email_jobs").insert({
+      payload: {
+        provider: "resend",
+        template: "hot-sheet-alert",
+        to: userEmail,
+        subject: `🏠 New listings match your Hot Sheet: ${hotSheetName}`,
+        variables: {
+          userName,
+          hotSheetName,
+          matchCount: newListings.length,
+          listingsHtml: `<ul style="list-style: none; padding: 0;">${listingsHtml}</ul>`,
+        },
+      },
     });
 
-    if (emailError) {
-      console.error("Resend API error:", emailError);
-      throw emailError;
-    }
+    if (insertError) throw insertError;
 
-    console.log("Hot sheet alert sent successfully:", data);
-
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Error sending hot sheet alert:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    console.error("[send-hot-sheet-alert] Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 

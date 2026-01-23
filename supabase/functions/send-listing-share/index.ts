@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -49,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Listing not found');
     }
 
-    // Build listing details HTML (without original agent info)
+    // Build listing details HTML
     const photos = listing.photos || [];
     const primaryPhoto = Array.isArray(photos) && photos.length > 0 
       ? (typeof photos[0] === 'string' ? photos[0] : photos[0]?.url || '') 
@@ -111,36 +109,43 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email via Resend
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'All Agent Connect <noreply@mail.allagentconnect.com>',
-        to: [recipientEmail],
-        subject: `Property Shared: ${listing.address}`,
-        html: htmlContent,
-        reply_to: agentEmail,
-      }),
-    });
+    console.log(`[send-listing-share] Enqueuing job for ${recipientEmail}`);
 
-    if (!resendResponse.ok) {
-      const error = await resendResponse.text();
-      console.error('Resend API error:', error);
-      throw new Error('Failed to send email');
+    // Enqueue job instead of sending directly
+    const { error: insertError } = await supabase
+      .from('email_jobs')
+      .insert({
+        payload: {
+          provider: 'resend',
+          template: 'listing-share',
+          to: recipientEmail,
+          subject: `Property Shared: ${listing.address}`,
+          html: htmlContent,
+          reply_to: agentEmail,
+          variables: {
+            recipientName,
+            agentName,
+            agentEmail,
+            agentPhone,
+            listingAddress: listing.address,
+            message,
+          },
+        },
+      });
+
+    if (insertError) {
+      console.error('[send-listing-share] Failed to enqueue job:', insertError);
+      throw new Error('Failed to queue email for sending');
     }
 
-    console.log(`Listing ${listingId} shared to ${recipientEmail} by agent ${agentEmail}`);
+    console.log(`[send-listing-share] Job enqueued for ${recipientEmail}`);
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Listing shared successfully' }),
+      JSON.stringify({ success: true, message: 'Email queued for delivery' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: unknown) {
-    console.error('Error sharing listing:', error);
+    console.error('[send-listing-share] Error:', error);
     const message = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ error: message }),

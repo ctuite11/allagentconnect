@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -38,13 +36,11 @@ interface RateLimitResult {
 }
 
 async function checkRateLimit(
-  supabaseUrl: string,
-  supabaseKey: string,
+  supabase: any,
   key: string,
   windowSeconds: number,
   limit: number
 ): Promise<RateLimitResult> {
-  const supabase = createClient(supabaseUrl, supabaseKey);
   const { data, error } = await supabase.rpc('rate_limit_consume', {
     p_key: key,
     p_window_seconds: windowSeconds,
@@ -76,14 +72,14 @@ function build429Response(resetAt: string): Response {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get IP for rate limiting
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
@@ -91,14 +87,12 @@ const handler = async (req: Request): Promise<Response> => {
                "unknown";
 
     // Database-backed rate limiting: 5 reverse prospecting campaigns per minute per IP
-    if (supabaseUrl && supabaseAnonKey) {
-      const rateLimitKey = `route:send-reverse-prospecting|ip:${ip}`;
-      const rateLimitResult = await checkRateLimit(supabaseUrl, supabaseAnonKey, rateLimitKey, 60, 5);
-      
-      if (!rateLimitResult.allowed) {
-        console.log(`[rate-limit] Blocked IP: ${ip}, count: ${rateLimitResult.current_count}`);
-        return build429Response(rateLimitResult.reset_at);
-      }
+    const rateLimitKey = `route:send-reverse-prospecting|ip:${ip}`;
+    const rateLimitResult = await checkRateLimit(supabase, rateLimitKey, 60, 5);
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[rate-limit] Blocked IP: ${ip}, count: ${rateLimitResult.current_count}`);
+      return build429Response(rateLimitResult.reset_at);
     }
 
     const {
@@ -112,39 +106,45 @@ const handler = async (req: Request): Promise<Response> => {
       filters,
     }: ReverseProspectingRequest = await req.json();
 
-    console.log(`Sending reverse prospecting emails to ${recipients.length} recipients`);
+    console.log(`[send-reverse-prospecting] Enqueuing ${recipients.length} jobs`);
 
-    // Send emails to all recipients
-    const emailPromises = recipients.map(async (recipient) => {
+    // Cap recipients to prevent abuse
+    if (recipients.length > 100) {
+      throw new Error("Maximum 100 recipients allowed per reverse prospecting request");
+    }
+
+    // Build filter summary
+    const filterParts = [];
+    if (filters.propertyType) {
+      const formattedType = filters.propertyType
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+      filterParts.push(formattedType);
+    }
+    if (filters.city) filterParts.push(filters.city);
+    if (filters.state) filterParts.push(filters.state);
+
+    const filterSummary = filterParts.length > 0
+      ? `<p style="color: #666; margin: 15px 0;">This property matches your search for: <strong>${filterParts.join(", ")}</strong></p>`
+      : "";
+
+    // Build listing details
+    let listingDetails = "";
+    if (listingAddress || listingPrice) {
+      listingDetails = `
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin: 0 0 10px 0; color: #333;">Listing Details</h3>
+          ${listingAddress ? `<p style="margin: 5px 0;"><strong>Address:</strong> ${listingAddress}</p>` : ""}
+          ${listingPrice ? `<p style="margin: 5px 0;"><strong>Price:</strong> ${listingPrice}</p>` : ""}
+        </div>
+      `;
+    }
+
+    // Enqueue jobs for each recipient
+    const emailJobs = recipients.map((recipient) => {
       const recipientName = recipient.first_name
         ? `${recipient.first_name} ${recipient.last_name || ""}`.trim()
         : "there";
-
-      let listingDetails = "";
-      if (listingAddress || listingPrice) {
-        listingDetails = `
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin: 0 0 10px 0; color: #333;">Listing Details</h3>
-            ${listingAddress ? `<p style="margin: 5px 0;"><strong>Address:</strong> ${listingAddress}</p>` : ""}
-            ${listingPrice ? `<p style="margin: 5px 0;"><strong>Price:</strong> ${listingPrice}</p>` : ""}
-          </div>
-        `;
-      }
-
-      let filterSummary = "";
-      const filterParts = [];
-      if (filters.propertyType) {
-        const formattedType = filters.propertyType
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (l) => l.toUpperCase());
-        filterParts.push(formattedType);
-      }
-      if (filters.city) filterParts.push(filters.city);
-      if (filters.state) filterParts.push(filters.state);
-
-      if (filterParts.length > 0) {
-        filterSummary = `<p style="color: #666; margin: 15px 0;">This property matches your search for: <strong>${filterParts.join(", ")}</strong></p>`;
-      }
 
       const html = `
         <!DOCTYPE html>
@@ -190,58 +190,50 @@ const handler = async (req: Request): Promise<Response> => {
         </html>
       `;
 
-      try {
-        const response = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${RESEND_API_KEY}`,
+      return {
+        payload: {
+          provider: "resend",
+          template: "reverse-prospecting",
+          to: recipient.email,
+          subject: `New Property Match: ${listingAddress || "Property Available"}`,
+          html: html,
+          reply_to: agentEmail,
+          variables: {
+            recipientName,
+            agentName,
+            agentEmail,
+            listingAddress,
+            listingPrice,
           },
-          body: JSON.stringify({
-            from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-            to: [recipient.email],
-            reply_to: agentEmail,
-            subject: `New Property Match: ${listingAddress || "Property Available"}`,
-            html: html,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Resend API error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log(`Email sent to ${recipient.email}:`, data);
-        return { success: true, email: recipient.email };
-      } catch (error) {
-        console.error(`Failed to send email to ${recipient.email}:`, error);
-        return { success: false, email: recipient.email, error };
-      }
+        },
+      };
     });
 
-    const results = await Promise.all(emailPromises);
-    const successCount = results.filter((r) => r.success).length;
-    const failCount = results.filter((r) => !r.success).length;
+    // Insert all jobs into the queue
+    const { error: insertError } = await supabase
+      .from("email_jobs")
+      .insert(emailJobs);
 
-    console.log(`Emails sent: ${successCount} succeeded, ${failCount} failed`);
+    if (insertError) {
+      console.error("[send-reverse-prospecting] Failed to enqueue jobs:", insertError);
+      throw new Error("Failed to queue emails for sending");
+    }
+
+    console.log(`[send-reverse-prospecting] Successfully enqueued ${emailJobs.length} jobs`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        sent: successCount,
-        failed: failCount,
-        results,
+        queued: emailJobs.length,
+        total: recipients.length,
       }),
       {
         status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   } catch (error: any) {
-    console.error("Error in send-reverse-prospecting function:", error);
+    console.error("[send-reverse-prospecting] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
