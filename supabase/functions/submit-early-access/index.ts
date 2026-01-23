@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 40px 0 24px 0;">
         
         <p style="color: #6b7280; font-size: 12px; margin: 0;">
-          All Agent Connect · mail.allagentconnect.com
+          All Agent Connect · hello@allagentconnect.com
         </p>
       </body>
       </html>
