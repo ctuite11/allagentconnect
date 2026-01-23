@@ -22,6 +22,48 @@ interface BulkEmailRequest {
   sendAsGroup?: boolean;
 }
 
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  reset_at: string;
+  current_count: number;
+}
+
+async function checkRateLimit(
+  key: string,
+  windowSeconds: number,
+  limit: number
+): Promise<RateLimitResult> {
+  const { data, error } = await supabase.rpc('rate_limit_consume', {
+    p_key: key,
+    p_window_seconds: windowSeconds,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("[rate-limit] RPC error:", error);
+    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+  }
+
+  return data as RateLimitResult;
+}
+
+function build429Response(resetAt: string): Response {
+  const resetDate = new Date(resetAt);
+  const retryAfter = Math.max(1, Math.ceil((resetDate.getTime() - Date.now()) / 1000));
+  
+  return new Response(JSON.stringify({ error: "Too many requests" }), {
+    status: 429,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+      "Retry-After": String(retryAfter),
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": String(Math.floor(resetDate.getTime() / 1000)),
+    },
+  });
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -43,6 +85,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!agentId) {
       throw new Error("Agent ID is required");
+    }
+
+    // Database-backed rate limiting: 2 bulk email campaigns per minute per user (prevents abuse)
+    const rateLimitKey = `route:send-bulk-email|user:${agentId}`;
+    const rateLimitResult = await checkRateLimit(rateLimitKey, 60, 2);
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[rate-limit] Blocked user: ${agentId}, count: ${rateLimitResult.current_count}`);
+      return build429Response(rateLimitResult.reset_at);
     }
 
     // Create email campaign

@@ -20,6 +20,49 @@ interface ConvertRequest {
   brokerage?: string;
 }
 
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  reset_at: string;
+  current_count: number;
+}
+
+async function checkRateLimit(
+  supabase: any,
+  key: string,
+  windowSeconds: number,
+  limit: number
+): Promise<RateLimitResult> {
+  const { data, error } = await supabase.rpc('rate_limit_consume', {
+    p_key: key,
+    p_window_seconds: windowSeconds,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("[rate-limit] RPC error:", error);
+    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+  }
+
+  return data as RateLimitResult;
+}
+
+function build429Response(resetAt: string): Response {
+  const resetDate = new Date(resetAt);
+  const retryAfter = Math.max(1, Math.ceil((resetDate.getTime() - Date.now()) / 1000));
+  
+  return new Response(JSON.stringify({ error: "Too many requests" }), {
+    status: 429,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+      "Retry-After": String(retryAfter),
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": String(Math.floor(resetDate.getTime() / 1000)),
+    },
+  });
+}
+
 // Generate a secure random password
 function generateSecurePassword(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -148,6 +191,20 @@ serve(async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
+
+    // Get IP for rate limiting
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+               req.headers.get("x-real-ip") || 
+               "unknown";
+
+    // Database-backed rate limiting: 5 conversions per minute per IP (admin action)
+    const rateLimitKey = `route:convert-early-access|ip:${ip}`;
+    const rateLimitResult = await checkRateLimit(supabaseAdmin, rateLimitKey, 60, 5);
+    
+    if (!rateLimitResult.allowed) {
+      console.log(`[rate-limit] Blocked IP: ${ip}, count: ${rateLimitResult.current_count}`);
+      return build429Response(rateLimitResult.reset_at);
+    }
 
     // Check if user already exists in auth.users
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();

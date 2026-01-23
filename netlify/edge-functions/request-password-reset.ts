@@ -1,29 +1,41 @@
-// Same-origin password reset endpoint - no CORS issues
-// Rate limiting via simple in-memory store (resets on deploy)
+// Same-origin password reset endpoint with database-backed rate limiting
+// Uses Supabase RPC for durable rate limits across cold starts
 
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 3;
-const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const record = ipRequestCounts.get(ip);
-  
-  if (!record || now > record.resetAt) {
-    ipRequestCounts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-  
-  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
-    return true;
-  }
-  
-  record.count++;
-  return false;
-}
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
 interface PasswordResetRequest {
   email: string;
+}
+
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  reset_at: string;
+  current_count: number;
+}
+
+async function checkRateLimit(
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+  key: string,
+  windowSeconds: number,
+  limit: number
+): Promise<RateLimitResult> {
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  
+  const { data, error } = await supabase.rpc('rate_limit_consume', {
+    p_key: key,
+    p_window_seconds: windowSeconds,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("[rate-limit] RPC error:", error);
+    // Fail open - allow request if rate limiting fails
+    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+  }
+
+  return data as RateLimitResult;
 }
 
 function buildLockedEmailHtml(resetLink: string): string {
@@ -90,6 +102,21 @@ function buildLockedEmailHtml(resetLink: string): string {
 </html>`;
 }
 
+function build429Response(resetAt: string): Response {
+  const resetDate = new Date(resetAt);
+  const retryAfter = Math.max(1, Math.ceil((resetDate.getTime() - Date.now()) / 1000));
+  
+  return new Response(JSON.stringify({ error: "Too many requests" }), {
+    status: 429,
+    headers: {
+      "Content-Type": "application/json",
+      "Retry-After": String(retryAfter),
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": String(Math.floor(resetDate.getTime() / 1000)),
+    },
+  });
+}
+
 export default async function handler(request: Request, context: any) {
   // Only allow POST
   if (request.method !== "POST") {
@@ -99,16 +126,26 @@ export default async function handler(request: Request, context: any) {
     });
   }
 
-  const clientIP = context.ip || request.headers.get("x-forwarded-for") || "unknown";
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  const SUPABASE_SERVICE_ROLE_KEY = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "").trim();
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+  // Get client IP
+  const clientIP = context.ip || 
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+    "unknown";
   
-  // Rate limiting
-  if (isRateLimited(clientIP)) {
-    console.log(`Rate limited IP: ${clientIP}`);
-    // Still return success to not leak information
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+  // Database-backed rate limiting
+  if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+    const rateLimitKey = `route:request-password-reset|ip:${clientIP}`;
+    const result = await checkRateLimit(SUPABASE_URL, SUPABASE_ANON_KEY, rateLimitKey, 60, 3);
+    
+    if (!result.allowed) {
+      console.log(`[rate-limit] Blocked IP: ${clientIP}, count: ${result.current_count}`);
+      // Return 429 with proper headers for rate-limited requests
+      return build429Response(result.reset_at);
+    }
   }
 
   try {
@@ -132,11 +169,6 @@ export default async function handler(request: Request, context: any) {
     console.log("[request-password-reset] redirectTo =", redirectTo);
 
     console.log(`Password reset requested for: ${cleanEmail.substring(0, 3)}***`);
-
-    // Get secrets from Netlify environment
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "").trim();
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY) {
       console.error("Missing environment variables:", {
