@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { AgentEditDrawer } from "@/components/admin/AgentEditDrawer";
 import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
+import { BulkDeleteAgentsDialog } from "@/components/admin/BulkDeleteAgentsDialog";
 import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
 import { UserPlus } from "lucide-react";
@@ -135,6 +136,7 @@ export default function AdminApprovals() {
   const [deleteAgent, setDeleteAgent] = useState<Agent | null>(null);
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
 
   // Check admin role using has_role RPC - loading → allow → deny pattern
   useEffect(() => {
@@ -727,6 +729,16 @@ export default function AdminApprovals() {
                 >
                   Email Selected
                 </button>
+                <span className="text-zinc-300">•</span>
+                <button
+                  onClick={() => setShowBulkDeleteDialog(true)}
+                  disabled={selectedIds.size === 0}
+                  className={selectedIds.size === 0 
+                    ? "text-zinc-300 cursor-not-allowed" 
+                    : "text-rose-500 hover:text-rose-700 hover:underline transition-colors"}
+                >
+                  Delete Selected
+                </button>
                 {selectedIds.size > 0 && (
                   <>
                     <span className="text-zinc-300">•</span>
@@ -906,6 +918,16 @@ export default function AdminApprovals() {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={fetchAgents}
+      />
+
+      <BulkDeleteAgentsDialog
+        open={showBulkDeleteDialog}
+        onOpenChange={setShowBulkDeleteDialog}
+        agents={filteredAgents.filter((a) => selectedIds.has(a.id))}
+        onDeleted={() => {
+          setSelectedIds(new Set());
+          fetchAgents();
+        }}
       />
     </div>
   );
