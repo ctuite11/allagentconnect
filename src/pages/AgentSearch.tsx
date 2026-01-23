@@ -30,7 +30,15 @@ const AgentSearch = () => {
     try {
       setLoading(true);
       
-      // Fetch agents with county preferences and settings (for verification status)
+      // Get verified agent IDs (already excludes hidden agents via the RPC)
+      const { data: verifiedIds, error: verifiedError } = await supabase
+        .rpc("get_verified_agent_ids");
+      
+      if (verifiedError) throw verifiedError;
+      
+      const verifiedIdSet = new Set((verifiedIds || []).map((r: { user_id: string }) => r.user_id));
+      
+      // Fetch agents with county preferences
       const { data: agentData, error: agentError } = await supabase
         .from("agent_profiles")
         .select(`
@@ -38,9 +46,6 @@ const AgentSearch = () => {
           agent_county_preferences (
             county_id,
             counties (id, name, state)
-          ),
-          agent_settings!agent_settings_user_id_fkey (
-            agent_status
           )
         `)
         .eq("receive_buyer_alerts", true)
@@ -48,7 +53,11 @@ const AgentSearch = () => {
 
       if (agentError) throw agentError;
 
-      setAgents(agentData || []);
+      // Filter to only verified (and not hidden) agents
+      const visibleAgents = (agentData || []).filter(
+        (agent) => verifiedIdSet.has(agent.id)
+      );
+      setAgents(visibleAgents);
     } catch (error: any) {
       toast.error("Failed to load agents");
       console.error(error);
