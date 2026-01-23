@@ -1,5 +1,26 @@
-# Legacy route redirect
+# Legacy marketing page redirects (301 for SEO cleanup)
+/howitworks / 301
+/how-it-works / 301
+/features / 301
+/about / 301
+/pricing / 301
+/contact / 301
+/faq / 301
+/blog / 301
+/press / 301
+/careers / 301
+/team / 301
+/partners / 301
+/investors / 301
+/demo / 301
+/get-started / 301
+/signup / /auth 301
+/sign-up / /auth 301
+/login / /auth 301
+/log-in / /auth 301
+
+# Legacy app route redirect
 /allagentconnect /agent-dashboard 301
 
-# SPA fallback
+# SPA fallback (must be last - catches all unmatched routes, returns 404 for truly unknown URLs)
 /* /index.html 200
