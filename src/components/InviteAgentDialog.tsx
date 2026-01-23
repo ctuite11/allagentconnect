@@ -176,13 +176,12 @@ export const InviteAgentDialog = ({ open, onOpenChange }: InviteAgentDialogProps
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="agent@brokerage.com"
-                className="h-11 flex-1"
+                className="h-11 flex-1 focus-visible:ring-primary"
               />
               <Button
                 type="button"
-                variant="outline"
                 size="icon"
-                className="h-11 w-11 shrink-0"
+                className="h-11 w-11 shrink-0 bg-primary hover:bg-primary/90 text-white"
                 onClick={addEmail}
                 disabled={!currentEmail.trim()}
               >
