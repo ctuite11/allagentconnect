@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@4.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,53 +19,36 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const {
-      invitedEmail,
-      inviterName,
-      hotSheetName,
-      hotSheetLink,
-    }: HotSheetInviteRequest = await req.json();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Sending hot sheet invite to:", invitedEmail);
+    const { invitedEmail, inviterName, hotSheetName, hotSheetLink }: HotSheetInviteRequest = await req.json();
 
-    const { data, error: emailError } = await resend.emails.send({
-      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-      to: [invitedEmail],
-      subject: `${inviterName} shared a Hot Sheet with you`,
-      html: `
-        <h2>You've Been Invited to View a Hot Sheet</h2>
-        <p>Hi there,</p>
-        <p><strong>${inviterName}</strong> has shared their Hot Sheet "<strong>${hotSheetName}</strong>" with you.</p>
-        
-        <p>Hot Sheets help you track properties that match specific criteria. Click the link below to view the properties:</p>
-        
-        <p style="margin: 30px 0;">
-          <a href="${hotSheetLink}" style="background-color: #2754C5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-            View Hot Sheet
-          </a>
-        </p>
-        
-        <p>Best regards,<br>Your Real Estate Platform</p>
-      `,
+    console.log("[send-hot-sheet-invite] Enqueuing job for:", invitedEmail);
+
+    const { error: insertError } = await supabase.from("email_jobs").insert({
+      payload: {
+        provider: "resend",
+        template: "hot-sheet-invite",
+        to: invitedEmail,
+        subject: `${inviterName} shared a Hot Sheet with you`,
+        variables: { inviterName, hotSheetName, hotSheetLink },
+      },
     });
 
-    if (emailError) {
-      console.error("Resend API error:", emailError);
-      throw emailError;
-    }
+    if (insertError) throw insertError;
 
-    console.log("Hot sheet invite sent successfully:", data);
-
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Error sending hot sheet invite:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    console.error("[send-hot-sheet-invite] Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 

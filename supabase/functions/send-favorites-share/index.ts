@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +24,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const {
       recipientEmail,
       senderName,
@@ -32,56 +35,51 @@ const handler = async (req: Request): Promise<Response> => {
       shareLink,
     }: FavoritesShareRequest = await req.json();
 
-    console.log("Sending favorites share to:", recipientEmail);
+    console.log("[send-favorites-share] Enqueuing job for:", recipientEmail);
 
-    const propertiesList = properties.map(p => `
-      <li style="margin-bottom: 15px;">
+    const propertiesHtml = properties.map(p => `
+      <li style="margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
         <strong>${p.address}</strong><br>
         Price: ${p.price}
-        ${p.bedrooms ? `| ${p.bedrooms} bed` : ''}
-        ${p.bathrooms ? `| ${p.bathrooms} bath` : ''}
+        ${p.bedrooms ? ` | ${p.bedrooms} bed` : ''}
+        ${p.bathrooms ? ` | ${p.bathrooms} bath` : ''}
       </li>
     `).join('');
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-        to: [recipientEmail],
-        subject: `${senderName} shared favorite properties with you`,
-        html: `
-          <h2>Someone Shared Their Favorite Properties</h2>
-          <p>Hi there,</p>
-          <p><strong>${senderName}</strong> wants to share some properties they've been looking at:</p>
-          
-          <ul style="list-style: none; padding: 0;">
-            ${propertiesList}
-          </ul>
-          
-          <p style="margin: 30px 0;">
-            <a href="${shareLink}" style="background-color: #2754C5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              View All Properties
-            </a>
-          </p>
-          
-          <p>Best regards,<br>Your Real Estate Platform</p>
-        `,
-      }),
-    });
+    // Enqueue job instead of sending directly
+    const { error: insertError } = await supabase
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template: "favorites-share",
+          to: recipientEmail,
+          subject: `${senderName} shared favorite properties with you`,
+          variables: {
+            senderName,
+            shareLink,
+            propertiesHtml: `<ul style="list-style: none; padding: 0;">${propertiesHtml}</ul>`,
+            propertyCount: properties.length,
+          },
+        },
+      });
 
-    const data = await emailResponse.json();
-    console.log("Favorites share sent successfully:", data);
+    if (insertError) {
+      console.error("[send-favorites-share] Failed to enqueue job:", insertError);
+      throw insertError;
+    }
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    console.log("[send-favorites-share] Job enqueued successfully");
+
+    return new Response(
+      JSON.stringify({ success: true, message: "Email queued for delivery" }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
   } catch (error: any) {
-    console.error("Error sending favorites share:", error);
+    console.error("[send-favorites-share] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

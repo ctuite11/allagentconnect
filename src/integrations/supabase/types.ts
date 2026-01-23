@@ -1253,6 +1253,71 @@ export type Database = {
           },
         ]
       }
+      email_events: {
+        Row: {
+          created_at: string
+          detail: Json | null
+          event: string
+          id: number
+          job_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json | null
+          event: string
+          id?: number
+          job_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json | null
+          event?: string
+          id?: number
+          job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          max_attempts: number
+          payload: Json
+          run_after: string
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          payload: Json
+          run_after?: string
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          payload?: Json
+          run_after?: string
+          status?: string
+        }
+        Relationships: []
+      }
       email_opens: {
         Row: {
           created_at: string | null
@@ -3131,6 +3196,25 @@ export type Database = {
       delete_draft_listing: {
         Args: { p_listing_id: string }
         Returns: undefined
+      }
+      email_jobs_claim: {
+        Args: { p_limit: number }
+        Returns: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          max_attempts: number
+          payload: Json
+          run_after: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "email_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }

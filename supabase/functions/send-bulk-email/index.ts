@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -65,7 +63,6 @@ function build429Response(resetAt: string): Response {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -73,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { recipients, subject, message, agentId, agentEmail, sendAsGroup = false }: BulkEmailRequest = await req.json();
 
-    console.log(`Sending bulk email to ${recipients.length} recipients (group mode: ${sendAsGroup})`);
+    console.log(`[send-bulk-email] Enqueuing bulk email to ${recipients.length} recipients`);
 
     if (!recipients || recipients.length === 0) {
       throw new Error("No recipients provided");
@@ -87,7 +84,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Agent ID is required");
     }
 
-    // Database-backed rate limiting: 2 bulk email campaigns per minute per user (prevents abuse)
+    // Cap recipients to prevent abuse
+    if (recipients.length > 100) {
+      throw new Error("Maximum 100 recipients allowed per bulk email");
+    }
+
+    // Database-backed rate limiting: 2 bulk email campaigns per minute per user
     const rateLimitKey = `route:send-bulk-email|user:${agentId}`;
     const rateLimitResult = await checkRateLimit(rateLimitKey, 60, 2);
     
@@ -96,7 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
       return build429Response(rateLimitResult.reset_at);
     }
 
-    // Create email campaign
+    // Create email campaign record for tracking
     const { data: campaign, error: campaignError } = await supabase
       .from("email_campaigns")
       .insert({
@@ -109,113 +111,107 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (campaignError) {
-      console.error("Error creating campaign:", campaignError);
+      console.error("[send-bulk-email] Error creating campaign:", campaignError);
       throw new Error("Failed to create campaign");
     }
 
-    console.log("Created campaign:", campaign.id);
+    console.log("[send-bulk-email] Created campaign:", campaign.id);
 
-    // Check if sending as group (for small groups to allow Reply All)
+    // Build email HTML template
+    const htmlTemplate = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .content {
+              white-space: pre-wrap;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="content">
+            {{GREETING}}
+            <p>${message.replace(/\n/g, '<br>')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // For group sends (small groups), create a single job with all recipients
     if (sendAsGroup && recipients.length < 5) {
-      console.log("Sending as group email");
-      
-      // Create tracking pixel URL for the group email
-      const { data: emailSend, error: sendError } = await supabase
+      console.log("[send-bulk-email] Enqueuing as group email");
+
+      // Create email send record for tracking
+      const { data: emailSend } = await supabase
         .from("email_sends")
         .insert({
           campaign_id: campaign.id,
-          recipient_email: recipients[0].email, // Primary recipient for tracking
+          recipient_email: recipients[0].email,
           recipient_name: "Group Email",
         })
         .select()
         .single();
 
-      if (sendError) {
-        console.error("Error creating email send record:", sendError);
-        throw sendError;
-      }
+      const trackingPixelUrl = emailSend 
+        ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
+        : "";
 
-      const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`;
-      
-      // Replace URLs in message with tracked links
-      const trackedMessage = message.replace(
-        /(https?:\/\/[^\s<>"]+)/g,
-        `${supabaseUrl}/functions/v1/track-email-click?id=${emailSend.id}&url=$1`
-      );
+      const groupHtml = htmlTemplate.replace("{{GREETING}}", "") + 
+        (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
 
-      // Send single email to all recipients
-      const emailResponse = await resend.emails.send({
-        from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-        replyTo: agentEmail || undefined,
-        to: recipients.map(r => r.email),
-        subject: subject,
-        html: `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                  line-height: 1.6;
-                  color: #333;
-                  max-width: 600px;
-                  margin: 0 auto;
-                  padding: 20px;
-                }
-                .content {
-                  white-space: pre-wrap;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="content">
-                <p>${trackedMessage.replace(/\n/g, '<br>')}</p>
-              </div>
-              
-              <!-- Tracking pixel -->
-              <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
-            </body>
-          </html>
-        `,
-      });
+      // Enqueue single group job
+      const { error: insertError } = await supabase
+        .from("email_jobs")
+        .insert({
+          payload: {
+            provider: "resend",
+            template: "bulk-email-group",
+            to: recipients.map(r => r.email).join(","), // Worker will split this
+            subject: subject,
+            html: groupHtml,
+            reply_to: agentEmail,
+            variables: {
+              campaignId: campaign.id,
+              isGroup: true,
+              recipients: recipients,
+            },
+          },
+        });
 
-      console.log("Group email sent:", emailResponse);
-
-      if (emailResponse.error) {
-        await supabase
-          .from("email_sends")
-          .update({ status: "failed" })
-          .eq("id", emailSend.id);
-        throw emailResponse.error;
+      if (insertError) {
+        console.error("[send-bulk-email] Failed to enqueue group job:", insertError);
+        throw new Error("Failed to queue email for sending");
       }
 
       return new Response(
         JSON.stringify({
           success: true,
-          sent: recipients.length,
-          failed: 0,
+          queued: 1,
           total: recipients.length,
           mode: "group",
         }),
         {
           status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders,
-          },
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
 
-    // Send emails individually for privacy and better deliverability
-    // This ensures recipients don't see each other's addresses (better than BCC)
-    // and allows for individual tracking and personalization
-    const results = await Promise.allSettled(
+    // For individual sends, create one job per recipient
+    const emailJobs = await Promise.all(
       recipients.map(async (recipient) => {
-        // Create email send record first
-        const { data: emailSend, error: sendError } = await supabase
+        // Create email send record for tracking
+        const { data: emailSend } = await supabase
           .from("email_sends")
           .insert({
             campaign_id: campaign.id,
@@ -225,103 +221,58 @@ const handler = async (req: Request): Promise<Response> => {
           .select()
           .single();
 
-        if (sendError) {
-          console.error("Error creating email send record:", sendError);
-          throw sendError;
-        }
+        const trackingPixelUrl = emailSend 
+          ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
+          : "";
 
-        // Create tracking pixel URL
-        const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`;
-        
-        // Replace URLs in message with tracked links
-        const trackedMessage = message.replace(
-          /(https?:\/\/[^\s<>"]+)/g,
-          `${supabaseUrl}/functions/v1/track-email-click?id=${emailSend.id}&url=$1`
-        );
+        const personalizedHtml = htmlTemplate
+          .replace("{{GREETING}}", `<p>Hello ${recipient.name},</p>`) +
+          (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
 
-        const emailResponse = await resend.emails.send({
-          from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-          replyTo: agentEmail || undefined,
-          to: [recipient.email],
-          subject: subject,
-          html: `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                  body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                  }
-                  .content {
-                    white-space: pre-wrap;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="content">
-                  <p>Hello ${recipient.name},</p>
-                  <p>${trackedMessage.replace(/\n/g, '<br>')}</p>
-                </div>
-                
-                <!-- Tracking pixel -->
-                <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
-              </body>
-            </html>
-          `,
-        });
-
-        console.log(`Email sent to ${recipient.email}:`, emailResponse);
-        
-        // Update status if failed
-        if (emailResponse.error) {
-          await supabase
-            .from("email_sends")
-            .update({ status: "failed" })
-            .eq("id", emailSend.id);
-        }
-
-        return emailResponse;
+        return {
+          payload: {
+            provider: "resend",
+            template: "bulk-email",
+            to: recipient.email,
+            subject: subject,
+            html: personalizedHtml,
+            reply_to: agentEmail,
+            variables: {
+              recipientName: recipient.name,
+              campaignId: campaign.id,
+              emailSendId: emailSend?.id,
+            },
+          },
+        };
       })
     );
 
-    // Count successes and failures
-    const successes = results.filter((r) => r.status === "fulfilled").length;
-    const failures = results.filter((r) => r.status === "rejected").length;
+    // Insert all jobs into the queue
+    const { error: insertError } = await supabase
+      .from("email_jobs")
+      .insert(emailJobs);
 
-    console.log(`Bulk email results: ${successes} successes, ${failures} failures`);
-
-    if (failures > 0) {
-      const failedEmails = results
-        .map((r, i) => (r.status === "rejected" ? recipients[i].email : null))
-        .filter(Boolean);
-      
-      console.error("Failed emails:", failedEmails);
+    if (insertError) {
+      console.error("[send-bulk-email] Failed to enqueue jobs:", insertError);
+      throw new Error("Failed to queue emails for sending");
     }
+
+    console.log(`[send-bulk-email] Successfully enqueued ${emailJobs.length} jobs`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        sent: successes,
-        failed: failures,
+        queued: emailJobs.length,
         total: recipients.length,
+        campaignId: campaign.id,
       }),
       {
         status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   } catch (error: any) {
-    console.error("Error in send-bulk-email function:", error);
+    console.error("[send-bulk-email] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

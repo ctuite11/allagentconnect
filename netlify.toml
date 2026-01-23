@@ -45,3 +45,7 @@
   from = "/api/send-password-changed-email"
   to = "/.netlify/functions/send-password-changed-email"
   status = 200
+
+# Scheduled email worker - runs every minute to drain email queue
+[functions."email-worker"]
+  schedule = "* * * * *"
