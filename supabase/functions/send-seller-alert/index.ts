@@ -1,13 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface SellerAlertRequest {
@@ -15,7 +11,6 @@ interface SellerAlertRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -24,6 +19,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const baseUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.lovable.app";
 
     const { submission_id }: SellerAlertRequest = await req.json();
 
@@ -31,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("submission_id is required");
     }
 
-    // 1. Load the submission
+    // Load the submission
     const { data: submission, error: subError } = await supabase
       .from("agent_match_submissions")
       .select("*")
@@ -42,118 +38,83 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Submission not found: ${subError?.message}`);
     }
 
-    // 2. Find matching hot sheets (same logic as count_matching_agents)
-    const { data: hotSheets, error: hsError } = await supabase
+    // Find matching hot sheets
+    const { data: hotSheets } = await supabase
       .from("hot_sheets")
-      .select(`
-        id,
-        name,
-        user_id,
-        criteria
-      `)
+      .select("id, name, user_id, criteria")
       .eq("is_active", true);
 
-    if (hsError) {
-      throw new Error(`Failed to fetch hot sheets: ${hsError.message}`);
-    }
-
-    // 3. Get AAC Verified agents
-    const { data: verifiedAgents, error: vaError } = await supabase
+    // Get verified agents
+    const { data: verifiedAgents } = await supabase
       .from("agent_settings")
       .select("user_id")
       .eq("agent_status", "verified");
 
-    if (vaError) {
-      throw new Error(`Failed to fetch verified agents: ${vaError.message}`);
-    }
-
     const verifiedAgentIds = new Set(verifiedAgents?.map((a) => a.user_id) || []);
 
-    // 4. Filter hot sheets to verified agents and matching criteria
+    // Filter hot sheets to verified agents and matching criteria
     const matchingHotSheets = (hotSheets || []).filter((hs) => {
-      // Must be a verified agent
       if (!verifiedAgentIds.has(hs.user_id)) return false;
-
       const criteria = hs.criteria || {};
-
-      // City match (if specified in hot sheet)
-      if (criteria.cities && Array.isArray(criteria.cities) && criteria.cities.length > 0) {
-        if (!criteria.cities.includes(submission.city)) return false;
-      }
-
-      // State match (if specified)
-      if (criteria.state && criteria.state.toLowerCase() !== submission.state?.toLowerCase()) {
-        return false;
-      }
-
-      // Property type match (if specified)
-      if (criteria.propertyTypes && Array.isArray(criteria.propertyTypes) && criteria.propertyTypes.length > 0) {
-        if (!criteria.propertyTypes.includes(submission.property_type)) return false;
-      }
-
-      // Price within range
+      
+      if (criteria.cities?.length && !criteria.cities.includes(submission.city)) return false;
+      if (criteria.state && criteria.state.toLowerCase() !== submission.state?.toLowerCase()) return false;
+      if (criteria.propertyTypes?.length && !criteria.propertyTypes.includes(submission.property_type)) return false;
+      
       const price = parseFloat(submission.asking_price) || 0;
       if (criteria.minPrice && price < parseFloat(criteria.minPrice)) return false;
       if (criteria.maxPrice && price > parseFloat(criteria.maxPrice)) return false;
-
-      // Beds minimum
-      if (criteria.bedrooms && (submission.bedrooms || 0) < parseInt(criteria.bedrooms)) {
-        return false;
-      }
-
-      // Baths minimum
-      if (criteria.bathrooms && (submission.bathrooms || 0) < parseFloat(criteria.bathrooms)) {
-        return false;
-      }
-
+      if (criteria.bedrooms && (submission.bedrooms || 0) < parseInt(criteria.bedrooms)) return false;
+      if (criteria.bathrooms && (submission.bathrooms || 0) < parseFloat(criteria.bathrooms)) return false;
+      
       return true;
     });
 
-    // 5. Group by agent_id (avoid duplicate emails)
-    const agentHotSheetMap = new Map<string, { hotSheetIds: string[]; hotSheetNames: string[] }>();
-    
+    // Group by agent
+    const agentHotSheetMap = new Map<string, string[]>();
     for (const hs of matchingHotSheets) {
-      const existing = agentHotSheetMap.get(hs.user_id);
-      if (existing) {
-        existing.hotSheetIds.push(hs.id);
-        existing.hotSheetNames.push(hs.name);
-      } else {
-        agentHotSheetMap.set(hs.user_id, {
-          hotSheetIds: [hs.id],
-          hotSheetNames: [hs.name],
-        });
-      }
+      const existing = agentHotSheetMap.get(hs.user_id) || [];
+      existing.push(hs.id);
+      agentHotSheetMap.set(hs.user_id, existing);
     }
 
-    // 6. Get agent profiles for email addresses
     const agentIds = Array.from(agentHotSheetMap.keys());
     
     if (agentIds.length === 0) {
-      console.log("No matching agents found for submission:", submission_id);
       return new Response(
         JSON.stringify({ success: true, agentsNotified: 0 }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const { data: agentProfiles, error: apError } = await supabase
+    // Get agent profiles
+    const { data: agentProfiles } = await supabase
       .from("agent_profiles")
       .select("id, email, first_name, last_name")
       .in("id", agentIds);
 
-    if (apError) {
-      throw new Error(`Failed to fetch agent profiles: ${apError.message}`);
-    }
+    // Format price
+    const priceFormatted = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(parseFloat(submission.asking_price) || 0);
 
-    // 7. Send emails and create delivery records
-    let agentsNotified = 0;
-    const baseUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.lovable.app";
+    const locationWithNeighborhood = submission.neighborhood 
+      ? `${submission.city}, ${submission.neighborhood}` 
+      : submission.city;
 
+    const detailsUrl = `${baseUrl}/seller-listing/${submission_id}`;
+
+    console.log(`[send-seller-alert] Enqueuing ${agentProfiles?.length || 0} jobs`);
+
+    // Build jobs for each agent
+    const emailJobs = [];
+    
     for (const profile of agentProfiles || []) {
-      const agentData = agentHotSheetMap.get(profile.id);
-      if (!agentData) continue;
+      const hotSheetIds = agentHotSheetMap.get(profile.id) || [];
 
-      // Check if already notified (via deliveries table)
+      // Check if already notified
       const { data: existingDelivery } = await supabase
         .from("agent_match_deliveries")
         .select("id, notified_agent_at")
@@ -161,154 +122,84 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("agent_id", profile.id)
         .maybeSingle();
 
-      if (existingDelivery?.notified_agent_at) {
-        console.log(`Agent ${profile.id} already notified for submission ${submission_id}`);
-        continue;
-      }
+      if (existingDelivery?.notified_agent_at) continue;
 
-      // Create or update delivery record for each matching hot sheet
-      for (const hsId of agentData.hotSheetIds) {
-        await supabase
-          .from("agent_match_deliveries")
-          .upsert(
-            {
-              submission_id,
-              agent_id: profile.id,
-              hot_sheet_id: hsId,
-            },
-            { onConflict: "submission_id,agent_id,hot_sheet_id" }
-          );
-      }
-
-      // Format property details
-      const location = [submission.neighborhood, submission.city, submission.state]
-        .filter(Boolean)
-        .join(", ");
-      const priceFormatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      }).format(parseFloat(submission.asking_price) || 0);
-
-      const contactMethodLabel =
-        submission.preferred_contact_method === "text"
-          ? "Text message"
-          : submission.preferred_contact_method === "phone"
-          ? "Phone call"
-          : "Email";
-
-      const contactInfo =
-        submission.preferred_contact_method === "email"
-          ? submission.seller_email
-          : submission.seller_phone || submission.seller_email;
-
-      const detailsUrl = `${baseUrl}/seller-listing/${submission_id}`;
-
-      // Build location string (omit neighborhood if empty)
-      const locationParts = [submission.city, submission.state].filter(Boolean);
-      const locationWithNeighborhood = submission.neighborhood 
-        ? `${submission.city}, ${submission.neighborhood}` 
-        : submission.city;
-
-      // Build property snapshot lines
-      const propertySnapshotLines = [
-        `<li style="color: #475569; margin-bottom: 6px;"><strong>Location:</strong> ${locationWithNeighborhood}${submission.state ? `, ${submission.state}` : ""}</li>`,
-        `<li style="color: #475569; margin-bottom: 6px;"><strong>Property type:</strong> ${submission.property_type}</li>`,
-        `<li style="color: #475569; margin-bottom: 6px;"><strong>Beds / Baths:</strong> ${submission.bedrooms} / ${submission.bathrooms}</li>`,
-        `<li style="color: #475569; margin-bottom: 6px;"><strong>Square feet:</strong> ${submission.square_feet?.toLocaleString() || "N/A"}</li>`,
-        `<li style="color: #475569; margin-bottom: 6px;"><strong>Asking price:</strong> ${priceFormatted}</li>`,
-      ];
-
-      // Only include commission if available
-      if (submission.buyer_agent_commission) {
-        propertySnapshotLines.push(
-          `<li style="color: #475569; margin-bottom: 6px;"><strong>Buyer agent commission:</strong> ${submission.buyer_agent_commission}</li>`
+      // Create delivery records
+      for (const hsId of hotSheetIds) {
+        await supabase.from("agent_match_deliveries").upsert(
+          { submission_id, agent_id: profile.id, hot_sheet_id: hsId },
+          { onConflict: "submission_id,agent_id,hot_sheet_id" }
         );
       }
 
-      // Send email
-      try {
-        await resend.emails.send({
-          from: "AllAgentConnect <mail@mail.allagentconnect.com>",
-          to: [profile.email],
+      // Build property snapshot
+      const propertySnapshotLines = [
+        `<li><strong>Location:</strong> ${locationWithNeighborhood}${submission.state ? `, ${submission.state}` : ""}</li>`,
+        `<li><strong>Property type:</strong> ${submission.property_type}</li>`,
+        `<li><strong>Beds / Baths:</strong> ${submission.bedrooms} / ${submission.bathrooms}</li>`,
+        `<li><strong>Square feet:</strong> ${submission.square_feet?.toLocaleString() || "N/A"}</li>`,
+        `<li><strong>Asking price:</strong> ${priceFormatted}</li>`,
+      ];
+      if (submission.buyer_agent_commission) {
+        propertySnapshotLines.push(`<li><strong>Buyer agent commission:</strong> ${submission.buyer_agent_commission}</li>`);
+      }
+
+      const contactMethodLabel = submission.preferred_contact_method === "text" ? "Text message" 
+        : submission.preferred_contact_method === "phone" ? "Phone call" : "Email";
+
+      emailJobs.push({
+        payload: {
+          provider: "resend",
+          template: "seller-alert",
+          to: profile.email,
+          subject: "Seller Alert: Home matches your active buyer needs",
           reply_to: submission.seller_email,
-          subject: `Seller Alert: Home matches your active buyer needs`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <p style="color: #0F172A; font-weight: 600; font-size: 18px; margin-bottom: 4px;">AllAgentConnect</p>
-              
-              <p style="color: #475569; font-size: 16px; margin: 24px 0 16px;">
-                Hi ${profile.first_name || "Agent"},
-              </p>
-              
-              <p style="color: #475569; font-size: 16px; margin-bottom: 24px;">
-                A homeowner has submitted a private Seller Match listing that aligns with your active buyer criteria.
-              </p>
-              
-              <div style="background: #F8FAFC; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                <p style="color: #0F172A; font-weight: 600; font-size: 15px; margin: 0 0 12px;">Property snapshot</p>
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                  ${propertySnapshotLines.join("\n                  ")}
-                </ul>
+          variables: {
+            agentName: profile.first_name || "Agent",
+            propertyHtml: `<ul style="list-style: none; padding: 0;">${propertySnapshotLines.join("")}</ul>`,
+            contactMethod: contactMethodLabel,
+            viewLink: detailsUrl,
+            submissionId: submission_id,
+            contentHtml: `
+              <p>Hi ${profile.first_name || "Agent"},</p>
+              <p>A homeowner has submitted a private Seller Match listing that aligns with your active buyer criteria.</p>
+              <div style="background: #F8FAFC; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <p style="font-weight: 600;">Property snapshot</p>
+                <ul style="list-style: none; padding: 0;">${propertySnapshotLines.join("")}</ul>
               </div>
-              
-              <div style="background: #EFF6FF; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #BFDBFE;">
-                <p style="color: #0F172A; font-weight: 600; font-size: 15px; margin: 0 0 8px;">Seller preference</p>
-                <p style="color: #475569; font-size: 14px; margin: 0;">
-                  <strong>Preferred contact method:</strong> ${contactMethodLabel}
-                </p>
+              <div style="background: #EFF6FF; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <p><strong>Preferred contact method:</strong> ${contactMethodLabel}</p>
               </div>
-              
-              <p style="color: #475569; font-size: 14px; margin-bottom: 24px;">
-                This listing is not publicly marketed and is shared only with AAC Verified agents representing real buyers.
-              </p>
-              
-              <a href="${detailsUrl}" style="display: inline-block; background: #0F172A; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 16px;">
-                View Seller Match Listing →
-              </a>
-              
-              <p style="color: #64748B; font-size: 12px; margin-top: 32px; line-height: 1.5;">
-                If you proceed and a transaction results, reporting is required per the Seller Match Agent Agreement.
-              </p>
-              
-              <p style="color: #64748B; font-size: 12px; margin-top: 16px;">
-                — AllAgentConnect
-              </p>
-            </div>
-          `,
-        });
+              <p><a href="${detailsUrl}" style="display: inline-block; background: #0F172A; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">View Seller Match Listing →</a></p>
+            `,
+          },
+        },
+      });
 
-        // Mark as notified
-        await supabase
-          .from("agent_match_deliveries")
-          .update({ notified_agent_at: new Date().toISOString() })
-          .eq("submission_id", submission_id)
-          .eq("agent_id", profile.id);
+      // Mark as notified
+      await supabase
+        .from("agent_match_deliveries")
+        .update({ notified_agent_at: new Date().toISOString() })
+        .eq("submission_id", submission_id)
+        .eq("agent_id", profile.id);
+    }
 
-        agentsNotified++;
-        console.log(`Seller Alert sent to agent ${profile.id} (${profile.email})`);
-      } catch (emailError) {
-        console.error(`Failed to send email to ${profile.email}:`, emailError);
+    if (emailJobs.length > 0) {
+      const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
+      if (insertError) {
+        console.error("[send-seller-alert] Failed to enqueue:", insertError);
       }
     }
 
-    console.log(`Seller Alert complete: ${agentsNotified} agents notified for submission ${submission_id}`);
-
     return new Response(
-      JSON.stringify({ success: true, agentsNotified }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      JSON.stringify({ success: true, agentsNotified: emailJobs.length }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
-    console.error("Error in send-seller-alert:", error);
+    console.error("[send-seller-alert] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

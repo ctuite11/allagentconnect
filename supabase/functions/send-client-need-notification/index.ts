@@ -1,23 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
-// Helper function to add delay for rate limiting
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Helper function to validate email format
-const isValidEmail = (email: string): boolean => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface SendNotificationRequest {
@@ -37,6 +26,18 @@ interface SendNotificationRequest {
   };
 }
 
+const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const getCategoryLabel = (cat: string) => {
+  switch (cat) {
+    case "buyer_need": return "Buyer Need";
+    case "renter_need": return "Renter Need";
+    case "sales_intel": return "Sales Intel";
+    case "general_discussion": return "General Discussion";
+    default: return cat;
+  }
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -45,7 +46,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get the authenticated user
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
@@ -56,415 +56,190 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { category, subject, message, criteria, previewOnly, sendCopyToSelf }: SendNotificationRequest = await req.json();
 
-    console.log(`Sending ${category} notification from user ${user.id}`, criteria ? `with criteria: ${JSON.stringify(criteria)}` : "");
-
-    // Get sender's profile information
-    const { data: senderProfile, error: senderError } = await supabase
+    // Get sender's profile
+    const { data: senderProfile } = await supabase
       .from("agent_profiles")
       .select("first_name, last_name, email, company")
       .eq("id", user.id)
       .single();
 
-    if (senderError) {
-      console.error("Error fetching sender profile:", senderError);
-    }
-
-    const senderName = senderProfile 
-      ? `${senderProfile.first_name} ${senderProfile.last_name}`
-      : "An Agent";
+    const senderName = senderProfile ? `${senderProfile.first_name} ${senderProfile.last_name}` : "An Agent";
     const senderEmail = senderProfile?.email || user.email;
     const senderCompany = senderProfile?.company || "";
-    
-    // Validate and format reply_to email
-    const validReplyTo = senderEmail && isValidEmail(senderEmail) 
-      ? (senderName !== "An Agent" ? `${senderName} <${senderEmail}>` : senderEmail)
-      : undefined;
+    const validReplyTo = senderEmail && isValidEmail(senderEmail) ? senderEmail : undefined;
 
-    // Query for agents who have this notification preference enabled
-    let query = supabase
-      .from("notification_preferences")
-      .select(`
-        user_id,
-        ${category}
-      `)
-      .eq(category, true);
+    // Query for agents with this notification preference enabled
+    let query = supabase.from("notification_preferences").select("user_id").eq(category, true);
 
-    // Filter by state, property type, and price preferences if criteria provided
-    if (criteria && criteria.state) {
-      // Get agent profiles first to have their IDs
+    // Apply criteria filters if provided
+    if (criteria?.state) {
       const { data: allPrefs } = await query;
-      
-      if (!allPrefs || allPrefs.length === 0) {
-        console.log("No agents found with notification preference enabled");
+      if (!allPrefs?.length) {
         return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: "No agents found with this notification preference enabled",
-            recipientCount: 0 
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          JSON.stringify({ success: true, message: "No agents found", recipientCount: 0 }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const agentIds = allPrefs.map(p => p.user_id);
-      console.log(`Initial agents with ${category} enabled: ${agentIds.length}`);
+      let matchingAgentIds = allPrefs.map(p => p.user_id);
 
-      // Filter by detailed geographic preferences using agent_buyer_coverage_areas
-      let matchingAgentIds = agentIds;
-      if (criteria.state || criteria.cities || criteria.counties || criteria.neighborhoods) {
-        // Start with state filter
-        let geoQuery = supabase
+      // Geographic filtering
+      if (criteria.state || criteria.cities?.length || criteria.counties?.length) {
+        const { data: geoPrefs } = await supabase
           .from("agent_buyer_coverage_areas")
           .select("agent_id")
-          .in("agent_id", agentIds)
+          .in("agent_id", matchingAgentIds)
           .eq("state", criteria.state);
 
-        // If ANY geographic criteria are provided, use OR logic across them
-        const hasGeoCriteria = 
-          (criteria.counties && criteria.counties.length > 0) ||
-          (criteria.cities && criteria.cities.length > 0) ||
-          (criteria.neighborhoods && criteria.neighborhoods.length > 0);
-
-        if (hasGeoCriteria) {
-          // Build OR conditions: match if county OR city OR neighborhood matches
-          const orConditions: string[] = [];
-          
-          if (criteria.counties && criteria.counties.length > 0) {
-            orConditions.push(`county.in.(${criteria.counties.join(',')})`);
-          }
-          
-          if (criteria.cities && criteria.cities.length > 0) {
-            orConditions.push(`city.in.(${criteria.cities.join(',')})`);
-          }
-          
-          if (criteria.neighborhoods && criteria.neighborhoods.length > 0) {
-            orConditions.push(`neighborhood.in.(${criteria.neighborhoods.join(',')})`);
-          }
-
-          // Apply OR filter using PostgREST syntax
-          if (orConditions.length > 0) {
-            geoQuery = geoQuery.or(orConditions.join(','));
-          }
-        }
-
-        const { data: geoPrefs, error: geoError } = await geoQuery;
-
-        if (geoError) {
-          console.error("Error fetching geographic preferences:", geoError);
-        } else if (geoPrefs && geoPrefs.length > 0) {
-          // Get unique agent IDs
-          matchingAgentIds = [...new Set(geoPrefs.map(p => p.agent_id))];
-          console.log(`After geographic filtering: ${matchingAgentIds.length} agents`);
-        } else {
-          console.log("No agents found matching geographic criteria");
-          matchingAgentIds = [];
-        }
+        matchingAgentIds = [...new Set(geoPrefs?.map(p => p.agent_id) || [])];
       }
 
-      // Filter by price preferences if provided
+      // Price filtering
       if ((criteria.minPrice || criteria.maxPrice) && matchingAgentIds.length > 0) {
-        const { data: pricePrefs, error: priceError } = await supabase
+        const { data: pricePrefs } = await supabase
           .from("notification_preferences")
           .select("user_id, min_price, max_price")
           .in("user_id", matchingAgentIds);
 
-        if (priceError) {
-          console.error("Error fetching price preferences:", priceError);
-        } else if (pricePrefs && pricePrefs.length > 0) {
-          matchingAgentIds = pricePrefs
-            .filter(pref => {
-              const criteriaMin = criteria.minPrice || 0;
-              const criteriaMax = criteria.maxPrice || Infinity;
-              const prefMin = pref.min_price || 0;
-              const prefMax = pref.max_price || Infinity;
-              
-              return prefMin <= criteriaMax && prefMax >= criteriaMin;
-            })
-            .map(p => p.user_id);
-          
-          console.log(`After price filtering: ${matchingAgentIds.length} agents`);
-        }
-      }
-
-      // Filter by property types if provided
-      if (criteria.propertyTypes && criteria.propertyTypes.length > 0 && matchingAgentIds.length > 0) {
-        const { data: propertyTypePrefs, error: propertyTypeError } = await supabase
-          .from("notification_preferences")
-          .select("user_id, property_types")
-          .in("user_id", matchingAgentIds);
-
-        if (propertyTypeError) {
-          console.error("Error fetching property type preferences:", propertyTypeError);
-        } else if (propertyTypePrefs && propertyTypePrefs.length > 0) {
-          matchingAgentIds = propertyTypePrefs
-            .filter(pref => {
-              const agentTypes = (pref.property_types as string[]) || [];
-              // If agent has no property type restrictions, they match everything
-              if (agentTypes.length === 0) return true;
-              // Otherwise, agent must have at least one matching property type
-              return criteria.propertyTypes!.some(type => agentTypes.includes(type));
-            })
-            .map(p => p.user_id);
-          
-          console.log(`After property type filtering: ${matchingAgentIds.length} agents`);
-        }
+        matchingAgentIds = (pricePrefs || [])
+          .filter(pref => {
+            const criteriaMin = criteria.minPrice || 0;
+            const criteriaMax = criteria.maxPrice || Infinity;
+            return (pref.min_price || 0) <= criteriaMax && (pref.max_price || Infinity) >= criteriaMin;
+          })
+          .map(p => p.user_id);
       }
 
       if (matchingAgentIds.length === 0) {
-        console.log("No agents match all criteria");
         return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: "No agents found matching all criteria",
-            recipientCount: 0 
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          JSON.stringify({ success: true, message: "No agents match criteria", recipientCount: 0 }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Final matching agent IDs
-      query = supabase
-        .from("notification_preferences")
-        .select("user_id")
-        .in("user_id", matchingAgentIds);
+      query = supabase.from("notification_preferences").select("user_id").in("user_id", matchingAgentIds);
     }
 
-    const { data: recipients, error: recipientsError } = await query;
+    const { data: recipients } = await query;
 
-    if (recipientsError) {
-      console.error("Error fetching recipients:", recipientsError);
-      throw new Error("Failed to fetch recipients");
-    }
-
-    if (!recipients || recipients.length === 0) {
-      console.log("No matching recipients found");
+    if (!recipients?.length) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "No agents found matching your criteria",
-          recipientCount: 0 
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ success: true, message: "No matching recipients", recipientCount: 0 }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // If preview only, return the count
     if (previewOnly) {
-      console.log(`Preview mode: Found ${recipients.length} potential recipients`);
       return new Response(
-        JSON.stringify({ 
-          success: true,
-          recipientCount: recipients.length
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ success: true, recipientCount: recipients.length }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get full agent profiles for recipients
+    // Get agent profiles
     const agentIds = recipients.map(r => r.user_id);
-    const { data: agentProfiles, error: profileError } = await supabase
+    const { data: agentProfiles } = await supabase
       .from("agent_profiles")
       .select("id, email, first_name, last_name")
       .in("id", agentIds);
 
-    if (profileError || !agentProfiles) {
-      console.error("Error fetching agent profiles:", profileError);
+    if (!agentProfiles?.length) {
       throw new Error("Failed to fetch agent profiles");
     }
 
-    // Build criteria summary for email
+    // Build criteria text
     let criteriaText = "";
     if (criteria) {
-      if (criteria.state) {
-        criteriaText += `<strong>State:</strong> ${criteria.state}<br>`;
-      }
-      if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
-        criteriaText += `<strong>Property Types:</strong> ${criteria.propertyTypes.join(', ')}<br>`;
-      }
-      if (criteria.minPrice) {
-        criteriaText += `<strong>Min Price:</strong> $${criteria.minPrice.toLocaleString()}<br>`;
-      }
-      if (criteria.maxPrice) {
-        criteriaText += `<strong>Max Price:</strong> $${criteria.maxPrice.toLocaleString()}<br>`;
-      }
+      if (criteria.state) criteriaText += `<strong>State:</strong> ${criteria.state}<br>`;
+      if (criteria.propertyTypes?.length) criteriaText += `<strong>Property Types:</strong> ${criteria.propertyTypes.join(', ')}<br>`;
+      if (criteria.minPrice) criteriaText += `<strong>Min Price:</strong> $${criteria.minPrice.toLocaleString()}<br>`;
+      if (criteria.maxPrice) criteriaText += `<strong>Max Price:</strong> $${criteria.maxPrice.toLocaleString()}<br>`;
     }
 
-    // Send emails to all matching agents
-    const emailResults = {
-      sent: 0,
-      failed: 0,
-      errors: [] as string[],
-    };
+    console.log(`[send-client-need-notification] Enqueuing ${agentProfiles.length} jobs`);
 
-    const getCategoryLabel = (cat: string) => {
-      switch (cat) {
-        case "buyer_need": return "Buyer Need";
-        case "renter_need": return "Renter Need";
-        case "sales_intel": return "Sales Intel";
-        case "general_discussion": return "General Discussion";
-        default: return cat;
-      }
-    };
-
-    let index = 0;
-    for (const agent of agentProfiles) {
-      try {
-        index++;
-        
-        const html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #333;">${subject}</h2>
-            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
-              <strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}<br>
-              <strong>Category:</strong> ${getCategoryLabel(category)}
-            </p>
-            
-            ${criteriaText ? `
-              <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #333;">Request Criteria</h3>
-                ${criteriaText}
-              </div>
-            ` : ""}
-            
+    // Enqueue jobs
+    const emailJobs: Array<{ payload: Record<string, any> }> = agentProfiles.map(agent => ({
+      payload: {
+        provider: "resend",
+        template: "client-need-broadcast",
+        to: agent.email,
+        subject: `[${getCategoryLabel(category)}] ${subject}`,
+        reply_to: validReplyTo,
+        variables: {
+          agentName: agent.first_name,
+          senderName,
+          senderCompany,
+          category: getCategoryLabel(category),
+          subject,
+          message,
+          criteriaText,
+          contentHtml: `
+            <h2>${subject}</h2>
+            <p><strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}</p>
+            <p><strong>Category:</strong> ${getCategoryLabel(category)}</p>
+            ${criteriaText ? `<div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;"><h3>Request Criteria</h3>${criteriaText}</div>` : ""}
             <div style="background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
-              <p style="white-space: pre-wrap; color: #333;">${message}</p>
+              <p style="white-space: pre-wrap;">${message}</p>
             </div>
-            
-            <p style="color: #999; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              You received this email because you opted into ${getCategoryLabel(category)} notifications. You can manage your notification preferences in your dashboard.
-            </p>
-          </div>
-        `;
+          `,
+        },
+      },
+    }));
 
-        // Send email with retry logic for rate limiting
-        const emailPayload: any = {
-          from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-          to: agent.email,
-          subject: `[${getCategoryLabel(category)}] ${subject}`,
-          html,
-        };
-        
-        if (validReplyTo) {
-          emailPayload.reply_to = validReplyTo;
-        }
-        
-        const sendEmail = async () => await resend.emails.send(emailPayload);
-
-        let result = await sendEmail();
-
-        // If rate limited, wait and retry once
-        if (result.error && (result.error.message.includes("Too many requests") || result.error.message.includes("429"))) {
-          console.warn(`Rate limited for ${agent.email}, retrying after 1.5s...`);
-          await sleep(1500);
-          result = await sendEmail();
-        }
-
-        // Check if Resend accepted the email
-        if (result.error) {
-          emailResults.failed++;
-          const errorMsg = result.error.message.includes("Too many requests") 
-            ? `Rate limited by Resend for ${agent.email} — ${result.error.message}`
-            : `Resend rejected email to ${agent.email}: ${result.error.message}`;
-          emailResults.errors.push(errorMsg);
-          console.error(errorMsg);
-        } else {
-          emailResults.sent++;
-          console.log(`Email sent successfully to ${agent.email} (Resend ID: ${result.data?.id})`);
-        }
-
-        // Throttle: after every 2 sends, pause 1 second to respect Resend's rate limit
-        if (index % 2 === 0) {
-          await sleep(1000);
-        }
-      } catch (error: any) {
-        emailResults.failed++;
-        const errorMsg = `Failed to send to ${agent.email}: ${error.message}`;
-        emailResults.errors.push(errorMsg);
-        console.error(errorMsg);
-      }
-    }
-
-    // Send copy to sender if requested
+    // Add sender copy if requested
     if (sendCopyToSelf && senderEmail && isValidEmail(senderEmail)) {
-      try {
-        const selfCopyHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #e0f2fe; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
-              <p style="margin: 0; color: #0369a1; font-size: 14px;">
-                <strong>Copy of email sent to ${emailResults.sent} recipient${emailResults.sent !== 1 ? 's' : ''}</strong>
-              </p>
-            </div>
-            <h2 style="color: #333;">${subject}</h2>
-            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
-              <strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}<br>
-              <strong>Category:</strong> ${getCategoryLabel(category)}
-            </p>
-            
-            ${criteriaText ? `
-              <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #333;">Request Criteria</h3>
-                ${criteriaText}
-              </div>
-            ` : ""}
-            
-            <div style="background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
-              <p style="white-space: pre-wrap; color: #333;">${message}</p>
-            </div>
-          </div>
-        `;
-
-        const selfEmailPayload: any = {
-          from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+      emailJobs.push({
+        payload: {
+          provider: "resend",
+          template: "client-need-broadcast",
           to: senderEmail,
           subject: `[COPY] [${getCategoryLabel(category)}] ${subject}`,
-          html: selfCopyHtml,
-        };
-
-        await resend.emails.send(selfEmailPayload);
-        console.log(`Copy sent to sender: ${senderEmail}`);
-      } catch (error: any) {
-        console.error(`Failed to send copy to sender: ${error.message}`);
-      }
+          reply_to: undefined,
+          variables: {
+            agentName: senderName,
+            senderName,
+            senderCompany,
+            category: getCategoryLabel(category),
+            subject,
+            message,
+            criteriaText,
+            isCopy: true,
+            recipientCount: agentProfiles.length,
+            contentHtml: `
+              <div style="background: #e0f2fe; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+                <p><strong>Copy of email sent to ${agentProfiles.length} recipients</strong></p>
+              </div>
+              <h2>${subject}</h2>
+              <p><strong>Category:</strong> ${getCategoryLabel(category)}</p>
+              ${criteriaText ? `<div style="background: #f5f5f5; padding: 15px; margin: 20px 0;">${criteriaText}</div>` : ""}
+              <div style="padding: 20px; border: 1px solid #ddd;"><p style="white-space: pre-wrap;">${message}</p></div>
+            `,
+          },
+        },
+      });
     }
 
-    console.log(`Email campaign completed: ${emailResults.sent} sent, ${emailResults.failed} failed`);
+    const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
+
+    if (insertError) {
+      console.error("[send-client-need-notification] Failed to enqueue:", insertError);
+      throw new Error("Failed to queue emails");
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Successfully sent ${emailResults.sent} email${emailResults.sent !== 1 ? 's' : ''}`,
-        sent: emailResults.sent,
-        failed: emailResults.failed,
-        errors: emailResults.errors,
+        message: `Queued ${agentProfiles.length} emails`,
+        queued: agentProfiles.length,
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Error in send-client-need-notification:", error);
+    console.error("[send-client-need-notification] Error:", error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: error.message, success: false }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 };

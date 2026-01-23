@@ -43,7 +43,9 @@ async function checkRateLimit(
     return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
   }
 
-  return data as RateLimitResult;
+  // Handle array or single object return from RPC
+  const row = Array.isArray(data) ? data[0] : data;
+  return row as RateLimitResult;
 }
 
 function build429Response(resetAt: string): Response {
