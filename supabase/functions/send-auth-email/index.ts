@@ -8,12 +8,58 @@
 
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature",
 };
+
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  reset_at: string;
+  current_count: number;
+}
+
+async function checkRateLimit(
+  supabaseUrl: string,
+  supabaseKey: string,
+  key: string,
+  windowSeconds: number,
+  limit: number
+): Promise<RateLimitResult> {
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const { data, error } = await supabase.rpc('rate_limit_consume', {
+    p_key: key,
+    p_window_seconds: windowSeconds,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("[rate-limit] RPC error:", error);
+    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+  }
+
+  return data as RateLimitResult;
+}
+
+function build429Response(resetAt: string): Response {
+  const resetDate = new Date(resetAt);
+  const retryAfter = Math.max(1, Math.ceil((resetDate.getTime() - Date.now()) / 1000));
+  
+  return new Response(JSON.stringify({ error: "Too many requests" }), {
+    status: 429,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+      "Retry-After": String(retryAfter),
+      "X-RateLimit-Remaining": "0",
+      "X-RateLimit-Reset": String(Math.floor(resetDate.getTime() / 1000)),
+    },
+  });
+}
 
 function mustGetEnv(name: string): string {
   const v = Deno.env.get(name);
@@ -89,8 +135,6 @@ function buildLockedEmailHtml(opts: { title: string; bodyText: string; ctaLabel?
               <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
                 <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color:#94a3b8;text-decoration:underline;">Click here</a> to request account removal.
               </p>
-            </td>
-          </tr>
             </td>
           </tr>
         </table>
@@ -183,6 +227,8 @@ Deno.serve(async (req: Request) => {
     const resendApiKey = mustGetEnv("RESEND_API_KEY");
     const resendFromEmail = mustGetEnv("RESEND_FROM_EMAIL");
     const resendReplyTo = mustGetEnv("RESEND_REPLY_TO");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
 
     const rawBody = await req.text();
     const headersObj = Object.fromEntries(req.headers.entries());
@@ -221,6 +267,17 @@ Deno.serve(async (req: Request) => {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
+    }
+
+    // Database-backed rate limiting: 5 auth emails per minute per email
+    if (supabaseUrl && supabaseAnonKey) {
+      const rateLimitKey = `route:send-auth-email|email:${email.toLowerCase()}`;
+      const rateLimitResult = await checkRateLimit(supabaseUrl, supabaseAnonKey, rateLimitKey, 60, 5);
+      
+      if (!rateLimitResult.allowed) {
+        console.log(`[rate-limit] Blocked email: ${email}, count: ${rateLimitResult.current_count}`);
+        return build429Response(rateLimitResult.reset_at);
+      }
     }
 
     console.log("send-auth-email hook invoked:", {

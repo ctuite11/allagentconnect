@@ -2529,6 +2529,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          updated_at?: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       seller_match_outcomes: {
         Row: {
           created_at: string
@@ -3133,6 +3154,11 @@ export type Database = {
       }
       is_verified_agent: { Args: never; Returns: boolean }
       owns_submission: { Args: { p_submission_id: string }; Returns: boolean }
+      rate_limit_consume: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: Json
+      }
+      rate_limits_cleanup: { Args: never; Returns: undefined }
     }
     Enums: {
       agent_status:
