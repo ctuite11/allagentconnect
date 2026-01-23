@@ -56,7 +56,7 @@ function buildLockedEmailHtml(name: string): string {
           <tr>
             <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
               <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
-              <p style="margin:0;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">mail.allagentconnect.com</p>
+              <p style="margin:0;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">hello@allagentconnect.com</p>
             </td>
           </tr>
         </table>

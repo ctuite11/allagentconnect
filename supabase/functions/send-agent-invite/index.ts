@@ -110,7 +110,7 @@ function buildInviteEmailHtml(inviterName: string): string {
           <tr>
             <td align="center" style="padding: 24px 40px; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
-                AllAgentConnect • mail.allagentconnect.com
+                AllAgentConnect • hello@allagentconnect.com
               </p>
             </td>
           </tr>

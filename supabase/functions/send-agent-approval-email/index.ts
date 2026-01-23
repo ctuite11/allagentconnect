@@ -151,7 +151,7 @@ serve(async (req: Request): Promise<Response> => {
           <tr>
             <td style="padding: 20px 40px; border-top: 1px solid #f1f5f9;">
               <p style="font-size: 13px; color: #94a3b8; margin: 0; text-align: center;">
-                AllAgentConnect &nbsp;•&nbsp; mail.allagentconnect.com
+                AllAgentConnect &nbsp;•&nbsp; hello@allagentconnect.com
               </p>
             </td>
           </tr>
