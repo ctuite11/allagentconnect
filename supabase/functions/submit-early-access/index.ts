@@ -143,9 +143,12 @@ Deno.serve(async (req) => {
         
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 40px 0 24px 0;">
         
-        <p style="color: #6b7280; font-size: 12px; margin: 0;">
-          All Agent Connect · hello@allagentconnect.com
-        </p>
+              <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px 0;">
+                All Agent Connect · hello@allagentconnect.com
+              </p>
+              <p style="color: #9ca3af; font-size: 11px; margin: 0;">
+                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #9ca3af; text-decoration: underline;">Click here</a> to request account removal.
+              </p>
       </body>
       </html>
     `;

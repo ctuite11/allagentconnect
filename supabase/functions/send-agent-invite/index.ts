@@ -109,8 +109,11 @@ function buildInviteEmailHtml(inviterName: string): string {
           <!-- Footer -->
           <tr>
             <td align="center" style="padding: 24px 40px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+              <p style="margin: 0 0 8px; font-size: 12px; color: #a1a1aa;">
                 AllAgentConnect • hello@allagentconnect.com
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #a1a1aa;">
+                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #a1a1aa; text-decoration: underline;">Click here</a> to request account removal.
               </p>
             </td>
           </tr>
