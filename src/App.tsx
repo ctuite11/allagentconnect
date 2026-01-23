@@ -57,7 +57,6 @@ import AdminApprovals from "./pages/AdminApprovals";
 import AdminDebugAuth from "./pages/AdminDebugAuth";
 import AdminMatches from "./pages/AdminMatches";
 
-
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
@@ -73,6 +72,14 @@ import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import Navigation from "./components/Navigation";
 import VersionStamp from "./components/VersionStamp";
+
+// Legal pages
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import AgentNetworkRules from "./pages/legal/AgentNetworkRules";
+import CookiePolicy from "./pages/legal/CookiePolicy";
+import FairHousing from "./pages/legal/FairHousing";
+import Disclosures from "./pages/legal/Disclosures";
 
 
 const queryClient = new QueryClient({
@@ -182,6 +189,13 @@ const App = () => (
                 <Route path="/admin/approvals" element={<AdminApprovals />} />
                 <Route path="/admin/matches" element={<AdminMatches />} />
                 <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
+                {/* Legal pages */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/agent-rules" element={<AgentNetworkRules />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/fair-housing" element={<FairHousing />} />
+                <Route path="/disclosures" element={<Disclosures />} />
                 {/* Design mockup - isolated visual exploration, not production */}
                 <Route path="/mockup" element={<DesignMockup />} />
                 <Route path="*" element={<NotFound />} />
