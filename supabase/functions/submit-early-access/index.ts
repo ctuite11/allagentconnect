@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff;">
         <div style="margin-bottom: 32px;">
-          <span style="font-size: 20px; font-weight: 600; color: #0E56F5;">All Agent Connect</span>
+          <span style="font-size: 20px; font-weight: 600; color: #0E56F5;">All Agent</span><span style="font-size: 20px; font-weight: 600; color: #94A3B8;"> Connect</span>
         </div>
         
         <p style="margin: 0 0 24px 0; font-size: 16px;">Hi ${body.first_name},</p>
@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
         <p style="margin: 0 0 32px 0; font-size: 16px;">We'll be in touch soon with additional updates and next steps as we approach launch.</p>
         
         <p style="margin: 0 0 8px 0; font-size: 16px;">Welcome to the network,</p>
-        <p style="margin: 0; font-size: 16px; font-weight: 600; color: #0E56F5;">All Agent Connect</p>
+        <p style="margin: 0; font-size: 16px; font-weight: 600;"><span style="color: #0E56F5;">All Agent</span><span style="color: #94A3B8;"> Connect</span></p>
         
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 40px 0 24px 0;">
         
