@@ -103,8 +103,79 @@ Deno.serve(async (req) => {
 
     console.log('Early access submission successful:', data.id);
 
-    // Send admin notification email
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+    // Send welcome email to the agent
+    const welcomeEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff;">
+        <div style="margin-bottom: 32px;">
+          <span style="font-size: 20px; font-weight: 600; color: #0E56F5;">All Agent Connect</span>
+        </div>
+        
+        <p style="margin: 0 0 24px 0; font-size: 16px;">Hi ${body.first_name},</p>
+        
+        <p style="margin: 0 0 24px 0; font-size: 16px;">You're officially confirmed for Early Access to All Agent Connect.</p>
+        
+        <p style="margin: 0 0 24px 0; font-size: 16px;">All Agent Connect was built to elevate agent collaboration to the next level — providing a private, professional network focused on real opportunities, without the noise of public portals.</p>
+        
+        <p style="margin: 0 0 16px 0; font-size: 16px;">As an Early Access member, you'll be among the first agents to use a platform designed around:</p>
+        
+        <ul style="margin: 0 0 24px 0; padding-left: 24px; font-size: 16px;">
+          <li style="margin-bottom: 12px;">A private, agent-only environment with MLS-style listing search</li>
+          <li style="margin-bottom: 12px;">Direct agent-to-agent communication around opportunities and active needs</li>
+          <li style="margin-bottom: 12px;">The ability to share and receive buyer and renter needs in a targeted, professional way</li>
+          <li style="margin-bottom: 12px;">Custom Hot Sheets you control — for yourself and for your clients</li>
+          <li style="margin-bottom: 12px;">Full control over what you see and when you see it</li>
+        </ul>
+        
+        <p style="margin: 0 0 24px 0; font-size: 16px;">All Agent Connect is built by agents, for agents — all agents, with a focus on increasing efficiency, production, and deal velocity.</p>
+        
+        <p style="margin: 0 0 32px 0; font-size: 16px;">We'll be in touch soon with additional updates and next steps as we approach launch.</p>
+        
+        <p style="margin: 0 0 8px 0; font-size: 16px;">Welcome to the network,</p>
+        <p style="margin: 0; font-size: 16px; font-weight: 600; color: #0E56F5;">All Agent Connect</p>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 40px 0 24px 0;">
+        
+        <p style="color: #6b7280; font-size: 12px; margin: 0;">
+          All Agent Connect · mail.allagentconnect.com
+        </p>
+      </body>
+      </html>
+    `;
+
+    try {
+      const welcomeRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "All Agent Connect <hello@mail.allagentconnect.com>",
+          reply_to: "hello@allagentconnect.com",
+          to: [normalizedEmail],
+          subject: "Welcome to All Agent Connect Early Access",
+          html: welcomeEmailHtml,
+        }),
+      });
+
+      if (!welcomeRes.ok) {
+        console.error("Failed to send welcome email:", await welcomeRes.json());
+      } else {
+        console.log("Welcome email sent to:", normalizedEmail);
+      }
+    } catch (welcomeErr) {
+      console.error("Welcome email error:", welcomeErr);
+    }
+
+    // Send admin notification email
     const ADMIN_EMAIL = "chris@allagentconnect.com";
     const ADMIN_PANEL_URL = "https://allagentconnect.com/admin/approvals";
 
