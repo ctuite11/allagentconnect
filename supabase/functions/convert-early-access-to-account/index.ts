@@ -106,8 +106,11 @@ function buildPasswordSetupEmailHtml(firstName: string, resetLink: string): stri
           <!-- Footer -->
           <tr>
             <td style="padding: 20px 40px; border-top: 1px solid #f1f5f9;">
-              <p style="font-size: 13px; color: #94a3b8; margin: 0; text-align: center;">
+              <p style="font-size: 13px; color: #94a3b8; margin: 0 0 8px 0; text-align: center;">
                 AllAgentConnect &nbsp;•&nbsp; hello@allagentconnect.com
+              </p>
+              <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">
+                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #94a3b8; text-decoration: underline;">Click here</a> to request account removal.
               </p>
             </td>
           </tr>
