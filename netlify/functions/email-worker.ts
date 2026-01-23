@@ -159,6 +159,10 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
 
 async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
+
+  // Sender: always include an email address for RFC/Resend compliance.
+  // Allow override per-environment via Netlify env var RESEND_FROM.
+  const FROM_EMAIL = process.env.RESEND_FROM || "hello@allagentconnect.com";
   
   // Normalize recipients: handle string, array, or comma-separated string
   const toList: string[] = Array.isArray(payload.to)
@@ -181,7 +185,7 @@ async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
       Authorization: `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: "All Agent Connect <hello@allagentconnect.com>",
+      from: `All Agent Connect <${FROM_EMAIL}>`,
       to: toList,
       subject: payload.subject,
       html,
