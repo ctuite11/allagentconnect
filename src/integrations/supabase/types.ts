@@ -679,6 +679,7 @@ export type Database = {
           created_at: string
           early_access: boolean
           email_frequency: string
+          hide_from_directory: boolean
           last_verification_attempt_at: string | null
           license_last_name: string | null
           license_number: string | null
@@ -712,6 +713,7 @@ export type Database = {
           created_at?: string
           early_access?: boolean
           email_frequency?: string
+          hide_from_directory?: boolean
           last_verification_attempt_at?: string | null
           license_last_name?: string | null
           license_number?: string | null
@@ -745,6 +747,7 @@ export type Database = {
           created_at?: string
           early_access?: boolean
           email_frequency?: string
+          hide_from_directory?: boolean
           last_verification_attempt_at?: string | null
           license_last_name?: string | null
           license_number?: string | null
