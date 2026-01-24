@@ -13,13 +13,18 @@
  */
 
 const { chromium } = require('playwright');
+const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 const INPUT_HTML = path.join(__dirname, '../public/og/og-render.html');
-const OUTPUT_PNG = path.join(__dirname, '../public/og/aac-og-2026-01-22.png');
+
+// Dynamic date-based versioning
+const stamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+const OUTPUT_PNG = path.join(__dirname, `../public/og/aac-og-${stamp}.png`);
+const OUTPUT_JPG = OUTPUT_PNG.replace('.png', '.jpg');
 
 async function generateOGImage() {
   console.log('🖼️  Generating OG image...');
@@ -59,15 +64,27 @@ async function generateOGImage() {
 
   await browser.close();
 
-  console.log('✅ OG image generated successfully!');
+  console.log('✅ PNG generated successfully!');
   console.log(`   File: ${OUTPUT_PNG}`);
   
-  // Show file size
-  const stats = fs.statSync(OUTPUT_PNG);
-  console.log(`   Size: ${(stats.size / 1024).toFixed(1)} KB`);
-}
+  // Show PNG file size
+  const pngStats = fs.statSync(OUTPUT_PNG);
+  console.log(`   Size: ${(pngStats.size / 1024).toFixed(1)} KB`);
 
-generateOGImage().catch((err) => {
+  // Auto-convert to JPEG for Facebook/social compatibility
+  console.log('\n🔄 Converting to JPEG...');
+  execSync(`sips -s format jpeg "${OUTPUT_PNG}" --out "${OUTPUT_JPG}"`, { stdio: 'inherit' });
+  
+  const jpgStats = fs.statSync(OUTPUT_JPG);
+  console.log(`✅ JPEG created: ${OUTPUT_JPG}`);
+  console.log(`   Size: ${(jpgStats.size / 1024).toFixed(1)} KB`);
+  
+  console.log('\n📋 Next steps:');
+  console.log(`   1. Verify: open ${OUTPUT_JPG}`);
+  console.log(`   2. Update index.html og:image to: /og/aac-og-${stamp}.jpg`);
+  console.log(`   3. Update netlify.toml header path`);
+  console.log(`   4. Commit, push, and Publish in Lovable`);
+}
   console.error('❌ Failed to generate OG image:', err);
   process.exit(1);
 });
