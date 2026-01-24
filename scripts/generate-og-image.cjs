@@ -85,6 +85,8 @@ async function generateOGImage() {
   console.log(`   3. Update netlify.toml header path`);
   console.log(`   4. Commit, push, and Publish in Lovable`);
 }
+
+generateOGImage().catch((err) => {
   console.error('❌ Failed to generate OG image:', err);
   process.exit(1);
 });
