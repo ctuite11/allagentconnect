@@ -16,7 +16,7 @@
 
 # Canonical OG image - no long-term caching so social scrapers can refresh
 [[headers]]
-  for = "/og/aac-og-2026-01-22.jpg"
+  for = "/og/aac-og-2026-01-25.jpg"
   [headers.values]
     Content-Type = "image/jpeg"
     Cache-Control = "public, max-age=0, must-revalidate"
