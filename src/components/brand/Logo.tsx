@@ -22,7 +22,7 @@ const sizeClasses = {
 const SLATE_900 = "#0F172A";
 const ACC_BLUE = "#0E56F5"; // Royal Blue - Brand primary
 const WHITE = "#FFFFFF";
-const SLATE_400 = "#94A3B8"; // Matches "Connect" text color
+const ZINC_500 = "#6B7280"; // Wordmark "Connect" color - refined gray
 
 export const Logo: React.FC<LogoProps> = ({ 
   variant = "primary", 
@@ -64,7 +64,7 @@ export const Logo: React.FC<LogoProps> = ({
         letterSpacing="-0.01em"
       >
         <tspan fill={accentColor}>All Agent </tspan>
-        <tspan fill={SLATE_400}>Connect</tspan>
+        <tspan fill={ZINC_500}>Connect</tspan>
       </text>
     </svg>
   );
@@ -84,7 +84,7 @@ export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = fal
     }}>
       <span style={{ color: accentColor }}>All </span>
       <span style={{ color: accentColor }}>Agent </span>
-      <span style={{ color: '#94A3B8' }}>Connect</span>
+      <span style={{ color: '#6B7280' }}>Connect</span>
     </p>
   );
 };
