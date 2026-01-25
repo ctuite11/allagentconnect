@@ -1,5 +1,5 @@
 import React from "react";
-import aacMonogram from "@/assets/aac-monogram.png";
+import aacLogoMaster from "@/assets/aac-logo-master.svg";
 
 interface LogoProps {
   variant?: "primary" | "reversed" | "icon" | "email";
@@ -35,10 +35,10 @@ export const Logo: React.FC<LogoProps> = ({
   const accentColor = ACC_BLUE; // Logo uses brand Royal Blue
 
   if (isIcon) {
-    // Icon-only mark - AAC house monogram
+    // Icon-only mark - AAC house monogram (SVG with locked colors)
     return (
       <img
-        src={aacMonogram}
+        src={aacLogoMaster}
         alt="All Agent Connect"
         className={`${sizeClasses[size]} w-auto ${className}`}
       />
