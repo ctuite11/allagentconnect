@@ -857,7 +857,7 @@ const MyListings = () => {
   };
 
   const handlePreview = (id: string) => {
-    navigate(`/property/${id}`);
+    navigate(`/property/${id}`, { state: { from: '/agent/listings' } });
   };
 
   const handleShare = async (id: string) => {
