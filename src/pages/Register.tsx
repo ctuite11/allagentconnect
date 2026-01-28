@@ -1,3 +1,9 @@
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -123,6 +129,11 @@ const Register = () => {
   };
 
   const onSubmit = async (data: FormData) => {
+    // GA4 conversion event - fires immediately on submit intent
+    window.gtag?.('event', 'agent_signup_start', {
+      source: 'early_access_form'
+    });
+    
     setIsSubmitting(true);
     try {
       const { data: response, error } = await supabase.functions.invoke(
