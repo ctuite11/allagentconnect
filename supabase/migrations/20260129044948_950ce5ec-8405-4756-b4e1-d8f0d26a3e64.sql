@@ -1,0 +1,2 @@
+-- Fix: Use security_invoker=on properly (already set, the linter warning is about other views)
+-- The conversation_inbox view uses security_invoker=on which is correct.

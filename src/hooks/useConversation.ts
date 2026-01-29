@@ -96,17 +96,12 @@ export function useConversation(conversationId: string | undefined) {
 
       setMessages(formattedMessages);
 
-      // Mark as read - update conversation_participants
+      // Mark as read - update conversation_participants.last_read_at only
       await supabase
         .from("conversation_participants")
-        .upsert(
-          {
-            conversation_id: conversationId,
-            user_id: user.id,
-            last_read_at: new Date().toISOString(),
-          },
-          { onConflict: "conversation_id,user_id" }
-        );
+        .update({ last_read_at: new Date().toISOString() })
+        .eq("conversation_id", conversationId)
+        .eq("user_id", user.id);
     } catch (error) {
       console.error("Error in useConversation:", error);
     } finally {
@@ -153,18 +148,13 @@ export function useConversation(conversationId: string | undefined) {
 
           setMessages((prev) => [...prev, message]);
 
-          // Mark as read if not own message
+          // Mark as read if not own message - update only
           if (newMsg.sender_agent_id !== user.id) {
             await supabase
               .from("conversation_participants")
-              .upsert(
-                {
-                  conversation_id: conversationId,
-                  user_id: user.id,
-                  last_read_at: new Date().toISOString(),
-                },
-                { onConflict: "conversation_id,user_id" }
-              );
+              .update({ last_read_at: new Date().toISOString() })
+              .eq("conversation_id", conversationId)
+              .eq("user_id", user.id);
           }
         }
       )

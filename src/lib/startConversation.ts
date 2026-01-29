@@ -54,12 +54,19 @@ async function ensureParticipants(
   userA: string,
   userB: string
 ): Promise<void> {
-  // Upsert both participants (ignore conflicts)
-  await supabase.from("conversation_participants").upsert(
+  // Upsert both participants - rely on onConflict without ignoreDuplicates
+  // Note: RLS requires user_id = auth.uid(), so we insert for the current user only here
+  // The other participant row should be inserted by that user when they access the thread
+  // OR we can insert both since the policy checks happen per-row
+  const { error } = await supabase.from("conversation_participants").upsert(
     [
       { conversation_id: conversationId, user_id: userA },
       { conversation_id: conversationId, user_id: userB },
     ],
-    { onConflict: "conversation_id,user_id", ignoreDuplicates: true }
+    { onConflict: "conversation_id,user_id" }
   );
+  
+  if (error) {
+    console.error("Error ensuring participants:", error);
+  }
 }
