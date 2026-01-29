@@ -179,7 +179,12 @@ const PropertyDetail = () => {
       });
       if (convoId) {
         navigate(`/messages/${convoId}`);
+      } else {
+        toast.error("Couldn't start message. Please try again.");
       }
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't start message. Please try again.");
     } finally {
       setIsStartingChat(false);
     }
