@@ -56,13 +56,16 @@ export const handler: Handler = async (event) => {
     // Using listings with minimal results to reduce load
     const testUrl = "https://api.repliers.io/listings?resultsPerPage=1";
 
-    console.log("[repliers-health] Testing upstream connectivity...");
-
     // If using Authorization header, format as Bearer token
     const authHeaderValue =
       authHeaderName.toLowerCase() === "authorization"
         ? `Bearer ${apiKey}`
         : apiKey;
+
+    // Debug: confirm auth header configuration (no secrets logged)
+    console.log("[repliers-health] auth header name:", authHeaderName);
+    console.log("[repliers-health] auth value starts with Bearer:", authHeaderValue.startsWith("Bearer "));
+    console.log("[repliers-health] Testing upstream connectivity...");
 
     const response = await fetch(testUrl, {
       method: "GET",

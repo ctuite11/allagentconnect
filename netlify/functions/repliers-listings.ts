@@ -99,6 +99,9 @@ export const handler: Handler = async (event) => {
         ? `Bearer ${apiKey}`
         : apiKey;
 
+    // Debug: confirm auth header configuration (no secrets logged)
+    console.log("[repliers-listings] auth header name:", authHeaderName);
+    console.log("[repliers-listings] auth value starts with Bearer:", authHeaderValue.startsWith("Bearer "));
     console.log("[repliers-listings] Fetching:", upstreamUrl.replace(apiKey, "***"));
 
     const response = await fetch(upstreamUrl, {
