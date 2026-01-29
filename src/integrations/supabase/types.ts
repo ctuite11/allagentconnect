@@ -1080,6 +1080,35 @@ export type Database = {
           },
         ]
       }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          last_read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          last_read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          last_read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           agent_a_id: string
@@ -1087,6 +1116,7 @@ export type Database = {
           buyer_need_id: string | null
           created_at: string
           id: string
+          last_message_at: string
           listing_id: string | null
           updated_at: string
         }
@@ -1096,6 +1126,7 @@ export type Database = {
           buyer_need_id?: string | null
           created_at?: string
           id?: string
+          last_message_at?: string
           listing_id?: string | null
           updated_at?: string
         }
@@ -1105,6 +1136,7 @@ export type Database = {
           buyer_need_id?: string | null
           created_at?: string
           id?: string
+          last_message_at?: string
           listing_id?: string | null
           updated_at?: string
         }
