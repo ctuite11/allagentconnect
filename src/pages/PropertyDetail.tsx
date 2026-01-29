@@ -47,7 +47,8 @@ import {
   Building2,
   Info,
   Users,
-  HelpCircle
+  HelpCircle,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -62,6 +63,7 @@ import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { findOrCreateConversation } from "@/lib/startConversation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -146,15 +148,42 @@ const PropertyDetail = () => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [isStartingChat, setIsStartingChat] = useState(false);
   
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
   const isAgent = role === "agent";
+  const isAdmin = role === "admin";
   
   // Check for client mode via URL query param or path suffix
   const searchParams = new URLSearchParams(location.search);
   const isClientMode = searchParams.get('view') === 'client' || location.pathname.endsWith('/client');
   const isAgentView = isAgent && !isClientMode;
+
+  // Can current user message the listing agent?
+  const viewerId = user?.id;
+  const listingAgentId = agentProfile?.id;
+  const canMessageListingAgent =
+    !!viewerId &&
+    (role === "agent" || role === "admin") &&
+    !!listingAgentId &&
+    viewerId !== listingAgentId;
+
+  const handleMessageListingAgent = async () => {
+    if (!viewerId || !listingAgentId || isStartingChat) return;
+    
+    setIsStartingChat(true);
+    try {
+      const convoId = await findOrCreateConversation(viewerId, listingAgentId, {
+        listingId: listing?.id ?? null,
+      });
+      if (convoId) {
+        navigate(`/messages/${convoId}`);
+      }
+    } finally {
+      setIsStartingChat(false);
+    }
+  };
 
   // Track listing view
   useListingView(id);
@@ -699,6 +728,19 @@ const PropertyDetail = () => {
                       agentId={listing.agent_id}
                       listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
                     />
+                    
+                    {/* Message about this listing button - agents/admins only */}
+                    {canMessageListingAgent && (
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2 gap-2"
+                        onClick={handleMessageListingAgent}
+                        disabled={isStartingChat}
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Message about this listing
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               )}
