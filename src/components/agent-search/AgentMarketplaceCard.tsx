@@ -8,6 +8,8 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { findOrCreateConversation } from "@/lib/startConversation";
 
 interface Agent {
   id: string;
@@ -97,6 +99,12 @@ const getIncentiveBadge = (agent: Agent): { label: string; icon: React.ReactNode
 
 const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
+  const { user, role } = useAuthRole();
+  const [isStartingChat, setIsStartingChat] = useState(false);
+  
+  const viewerId = user?.id;
+  const canMessage = !!viewerId && (role === "agent" || role === "admin") && viewerId !== agent.id;
+  
   const fullName = `${agent.first_name} ${agent.last_name}`;
   const initials = `${agent.first_name?.[0] || ""}${agent.last_name?.[0] || ""}`.toUpperCase();
   const phoneNumber = agent.cell_phone || agent.phone;
@@ -118,6 +126,21 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
     e.stopPropagation();
     if (phoneNumber) {
       window.location.href = `tel:${phoneNumber}`;
+    }
+  };
+
+  const handleMessageClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!viewerId || isStartingChat) return;
+    
+    setIsStartingChat(true);
+    try {
+      const convoId = await findOrCreateConversation(viewerId, agent.id);
+      if (convoId) {
+        navigate(`/messages/${convoId}`);
+      }
+    } finally {
+      setIsStartingChat(false);
     }
   };
 
@@ -210,6 +233,18 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
           >
             <Mail className="h-4 w-4" />
           </Button>
+          {canMessage && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full bg-neutral-50 text-neutral-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-200"
+              onClick={handleMessageClick}
+              disabled={isStartingChat}
+              title="Message"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Primary CTA */}

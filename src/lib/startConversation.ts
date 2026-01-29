@@ -1,21 +1,37 @@
 import { supabase } from "@/integrations/supabase/client";
 
+interface ConversationOptions {
+  listingId?: string | null;
+}
+
 /**
  * Find or create a 1:1 conversation between two agents.
+ * Optionally scoped to a specific listing.
  * Returns the conversation ID.
  */
 export async function findOrCreateConversation(
   currentUserId: string,
-  otherUserId: string
+  otherUserId: string,
+  opts?: ConversationOptions
 ): Promise<string | null> {
-  // Check for existing conversation (either direction)
-  const { data: existing, error: searchError } = await supabase
+  const listingId = opts?.listingId ?? null;
+
+  // Build query for existing conversation between the two users
+  let query = supabase
     .from("conversations")
     .select("id")
     .or(
       `and(agent_a_id.eq.${currentUserId},agent_b_id.eq.${otherUserId}),and(agent_a_id.eq.${otherUserId},agent_b_id.eq.${currentUserId})`
-    )
-    .maybeSingle();
+    );
+
+  // Scope to listing if provided, otherwise find generic conversation
+  if (listingId) {
+    query = query.eq("listing_id", listingId);
+  } else {
+    query = query.is("listing_id", null);
+  }
+
+  const { data: existing, error: searchError } = await query.maybeSingle();
 
   if (searchError) {
     console.error("Error searching for conversation:", searchError);
@@ -34,6 +50,7 @@ export async function findOrCreateConversation(
     .insert({
       agent_a_id: currentUserId,
       agent_b_id: otherUserId,
+      listing_id: listingId,
     })
     .select("id")
     .single();
@@ -54,10 +71,7 @@ async function ensureParticipants(
   userA: string,
   userB: string
 ): Promise<void> {
-  // Upsert both participants - rely on onConflict without ignoreDuplicates
-  // Note: RLS requires user_id = auth.uid(), so we insert for the current user only here
-  // The other participant row should be inserted by that user when they access the thread
-  // OR we can insert both since the policy checks happen per-row
+  // Upsert both participants
   const { error } = await supabase.from("conversation_participants").upsert(
     [
       { conversation_id: conversationId, user_id: userA },
