@@ -83,6 +83,10 @@ import CookiePolicy from "./pages/legal/CookiePolicy";
 import FairHousing from "./pages/legal/FairHousing";
 import Disclosures from "./pages/legal/Disclosures";
 
+// Messaging
+import Messages from "./pages/Messages";
+import Conversation from "./pages/Conversation";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -168,6 +172,8 @@ const App = () => (
                 <Route path="/agent/off-market" element={<Navigate to="/agent/listings?status=off_market" replace />} />
                 <Route path="/hot-sheets/:id/review" element={<RouteGuard requireRole="agent"><HotSheetReview /></RouteGuard>} />
                 <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
+                <Route path="/messages" element={<RouteGuard requireRole="agent"><Messages /></RouteGuard>} />
+                <Route path="/messages/:id" element={<RouteGuard requireRole="agent"><Conversation /></RouteGuard>} />
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />

@@ -1,10 +1,11 @@
 // DO NOT IMPORT THIS INTO PAGES — rendered globally in App.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight, Shield } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight, Shield, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { Logo } from "@/components/brand";
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
+  const { unreadCount } = useUnreadConversations();
 
 
   useEffect(() => {
@@ -478,6 +480,21 @@ const Navigation = () => {
                 <Search className="w-4 h-4 mr-2" />
                 {role === "agent" ? "Search" : "Search Homes"}
               </button>
+              {/* Messages icon with unread badge */}
+              {role === "agent" && (
+                <button 
+                  onClick={() => navigate("/messages")}
+                  className="relative inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
+                  title="Messages"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
               {role === "admin" && (
                 <button 
                   onClick={handleClearSession}
