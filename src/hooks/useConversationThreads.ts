@@ -28,83 +28,55 @@ export function useConversationThreads() {
     }
 
     try {
-      // Get conversations where user is participant (via new table or legacy fields)
-      const { data: convos, error } = await supabase
-        .from("conversations")
-        .select("id, agent_a_id, agent_b_id, listing_id, buyer_need_id, last_message_at, created_at")
-        .or(`agent_a_id.eq.${user.id},agent_b_id.eq.${user.id}`)
+      // Query the conversation_inbox view directly - no N+1!
+      const { data: inboxData, error } = await supabase
+        .from("conversation_inbox")
+        .select("*")
         .order("last_message_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching conversations:", error);
+        console.error("Error fetching inbox:", error);
         setLoading(false);
         return;
       }
 
-      if (!convos || convos.length === 0) {
+      if (!inboxData || inboxData.length === 0) {
         setThreads([]);
         setLoading(false);
         return;
       }
 
-      // Get participant read cursors for current user
-      const { data: participants } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id, last_read_at")
-        .eq("user_id", user.id);
+      // Get profiles for all other users in one query
+      const otherUserIds = inboxData.map((row: any) => row.other_user_id);
+      const { data: profiles } = await supabase
+        .from("agent_profiles")
+        .select("id, first_name, last_name, email")
+        .in("id", otherUserIds);
 
-      const participantMap = new Map(
-        (participants || []).map((p) => [p.conversation_id, p.last_read_at])
+      const profileMap = new Map(
+        (profiles || []).map((p) => [p.id, p])
       );
 
-      // Build thread list
-      const threadPromises = convos.map(async (convo) => {
-        const otherUserId = convo.agent_a_id === user.id ? convo.agent_b_id : convo.agent_a_id;
-
-        // Get other user's profile
-        const { data: profile } = await supabase
-          .from("agent_profiles")
-          .select("first_name, last_name, email")
-          .eq("id", otherUserId)
-          .maybeSingle();
-
-        // Get latest message
-        const { data: latestMsg } = await supabase
-          .from("conversation_messages")
-          .select("body, sender_agent_id, created_at")
-          .eq("conversation_id", convo.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        const lastReadAt = participantMap.get(convo.id);
-        const lastMessageAt = latestMsg?.created_at || convo.last_message_at || convo.created_at;
-
-        // Determine unread status
-        const lastReadTime = lastReadAt ? new Date(lastReadAt).getTime() : 0;
-        const lastMsgTime = new Date(lastMessageAt).getTime();
-        const isUnread =
-          lastMsgTime > lastReadTime &&
-          latestMsg?.sender_agent_id !== user.id;
-
+      // Map to thread format
+      const formattedThreads: ConversationThread[] = inboxData.map((row: any) => {
+        const profile = profileMap.get(row.other_user_id);
         return {
-          id: convo.id,
-          otherUserId,
+          id: row.conversation_id,
+          otherUserId: row.other_user_id,
           otherUserName: profile
             ? `${profile.first_name} ${profile.last_name}`
             : "Unknown Agent",
           otherUserEmail: profile?.email || "",
-          lastMessagePreview: latestMsg?.body?.substring(0, 100) || null,
-          lastMessageAt,
-          lastMessageSenderId: latestMsg?.sender_agent_id || null,
-          isUnread,
-          listingId: convo.listing_id,
-          buyerNeedId: convo.buyer_need_id,
+          lastMessagePreview: row.last_message_preview?.substring(0, 100) || null,
+          lastMessageAt: row.last_message_at,
+          lastMessageSenderId: row.last_message_sender_id,
+          isUnread: row.is_unread,
+          listingId: row.listing_id,
+          buyerNeedId: row.buyer_need_id,
         };
       });
 
-      const results = await Promise.all(threadPromises);
-      setThreads(results);
+      setThreads(formattedThreads);
     } catch (error) {
       console.error("Error building thread list:", error);
     } finally {
@@ -116,7 +88,7 @@ export function useConversationThreads() {
     fetchThreads();
   }, [fetchThreads]);
 
-  // Subscribe to realtime changes
+  // Subscribe to realtime changes - only for messages where recipient is current user
   useEffect(() => {
     if (!user) return;
 
@@ -128,6 +100,7 @@ export function useConversationThreads() {
           event: "INSERT",
           schema: "public",
           table: "conversation_messages",
+          filter: `recipient_agent_id=eq.${user.id}`,
         },
         () => {
           fetchThreads();
