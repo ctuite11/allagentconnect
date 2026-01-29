@@ -4,8 +4,9 @@ declare global {
   }
 }
 
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ArrowRight, Play, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,6 +25,10 @@ import NetworkGlobe from "@/components/home/NetworkGlobe";
 import { InviteAgentDialog } from "@/components/InviteAgentDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 
 const US_STATES = [
   { value: "AL", label: "Alabama" },
@@ -91,11 +96,40 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+// Video placeholder URL - replace with actual Vimeo/Wistia embed when ready
+const VIDEO_EMBED_URL = ""; // e.g., "https://player.vimeo.com/video/123456789"
+
 const Register = () => {
+  const [searchParams] = useSearchParams();
+  const listingId = searchParams.get("listing_id");
+  const autoplay = searchParams.get("autoplay") === "1";
+  const source = searchParams.get("source");
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  
+  // Auto-open video modal if autoplay=1 and listing_id exists
+  useEffect(() => {
+    if (autoplay && listingId && VIDEO_EMBED_URL) {
+      setShowVideoModal(true);
+    }
+  }, [autoplay, listingId]);
+  
+  // Track source for analytics
+  useEffect(() => {
+    if (source) {
+      window.gtag?.('event', 'early_access_view', {
+        source,
+        listing_id: listingId || undefined,
+      });
+    }
+  }, [source, listingId]);
+  
+  // Determine if this is listing-driven traffic
+  const isListingDriven = Boolean(listingId);
 
   const {
     register,
@@ -282,29 +316,72 @@ const Register = () => {
               {/* Page framing */}
               <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 mb-6">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#0E56F5]" />
-                  <span className="text-xs font-medium tracking-wide text-zinc-600 uppercase">
-                    Early Access
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {isListingDriven ? "Private Network" : "Early Access"}
                   </span>
                 </div>
 
-                <h1 className="text-3xl font-semibold text-zinc-900 mb-6">
-                  Request Early Access to All Agent Connect
+                <h1 className="text-3xl font-semibold text-foreground mb-4">
+                  {isListingDriven 
+                    ? "This property is available inside the AllAgentConnect private network"
+                    : "Request Early Access to All Agent Connect"}
                 </h1>
 
-                {/* Capability pills */}
-                <div className="flex flex-wrap justify-center gap-2 mb-8">
-                  {["Off-market", "Coming soon", "Agent-to-agent"].map(
-                    (pill) => (
-                      <span
-                        key={pill}
-                        className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-full"
-                      >
-                        {pill}
-                      </span>
-                    )
-                  )}
-                </div>
+                {isListingDriven && (
+                  <p className="text-base text-muted-foreground mb-6">
+                    Register for early access to view details and message the listing agent directly.
+                  </p>
+                )}
+
+                {/* Video block - only show when listing-driven and video URL is configured */}
+                {isListingDriven && VIDEO_EMBED_URL && (
+                  <div className="mb-8">
+                    {/* Video thumbnail with play button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowVideoModal(true)}
+                      className="relative w-full max-w-md mx-auto aspect-video rounded-xl overflow-hidden bg-zinc-900 group cursor-pointer"
+                    >
+                      {/* Placeholder gradient background */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
+                      
+                      {/* Play button overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="w-7 h-7 text-zinc-900 ml-1" fill="currentColor" />
+                        </div>
+                      </div>
+                      
+                      {/* Caption */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+                        <p className="text-white text-sm font-medium">
+                          Why listings are private on AllAgentConnect
+                        </p>
+                      </div>
+                    </button>
+                    
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      This listing is not publicly syndicated.
+                    </p>
+                  </div>
+                )}
+
+                {/* Capability pills - only show for generic registration */}
+                {!isListingDriven && (
+                  <div className="flex flex-wrap justify-center gap-2 mb-8">
+                    {["Off-market", "Coming soon", "Agent-to-agent"].map(
+                      (pill) => (
+                        <span
+                          key={pill}
+                          className="px-3 py-1 text-sm font-medium text-muted-foreground bg-muted rounded-full"
+                        >
+                          {pill}
+                        </span>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Form card */}
@@ -473,6 +550,30 @@ const Register = () => {
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
       />
+
+      {/* Video Modal */}
+      <Dialog open={showVideoModal} onOpenChange={setShowVideoModal}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-0">
+          <button
+            onClick={() => setShowVideoModal(false)}
+            className="absolute right-3 top-3 z-10 rounded-full bg-white/10 p-2 hover:bg-white/20 transition-colors"
+          >
+            <X className="h-5 w-5 text-white" />
+            <span className="sr-only">Close</span>
+          </button>
+          {VIDEO_EMBED_URL && (
+            <div className="aspect-video">
+              <iframe
+                src={`${VIDEO_EMBED_URL}${autoplay ? '?autoplay=1&muted=1' : ''}`}
+                className="w-full h-full"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                title="AllAgentConnect Private Network"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
