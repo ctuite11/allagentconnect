@@ -48,6 +48,27 @@ export interface RepliersListingsParams {
   lastStatus?: string;
 }
 
+export interface RepliersAgent {
+  name?: string;
+  email?: string;
+  phones?: string[];
+  website?: string;
+  photo?: { small?: string; large?: string };
+  brokerage?: { name?: string; address?: string };
+  // Role fields vary by MLS feed
+  role?: string;
+  roles?: string[];
+  type?: string;
+  agentType?: string;
+}
+
+export interface RepliersOffice {
+  brokerageName?: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+}
+
 export interface RepliersListing {
   mlsNumber?: string;
   listPrice?: number;
@@ -70,11 +91,8 @@ export interface RepliersListing {
   };
   photos?: string[];
   description?: string;
-  listingAgent?: {
-    name?: string;
-    phone?: string;
-    email?: string;
-  };
+  agents?: RepliersAgent[];
+  office?: RepliersOffice;
   [key: string]: unknown;
 }
 
@@ -221,4 +239,67 @@ export async function checkHealth(): Promise<RepliersHealthResponse> {
   });
   
   return handleResponse<RepliersHealthResponse>(response);
+}
+
+/**
+ * Pick the listing agent from the agents array.
+ * MLS feeds vary in how they mark agent roles.
+ * 
+ * Selection logic:
+ * 1. If any agent has a role/type containing "list", "listing", or "seller" → pick that one
+ * 2. Otherwise → pick agents[0] as primary
+ * 3. If no agents → return null
+ */
+export function pickListingAgent(agents: RepliersAgent[] = []): RepliersAgent | null {
+  const isListingRole = (agent: RepliersAgent): boolean => {
+    const roleText = [
+      agent.role,
+      agent.type,
+      agent.agentType,
+      ...(agent.roles ?? []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return roleText.includes("list") || roleText.includes("seller") || roleText.includes("listing");
+  };
+
+  return agents.find(isListingRole) ?? agents[0] ?? null;
+}
+
+/**
+ * Get display-ready agent info from a listing.
+ * Returns structured data for UI rendering with fallbacks.
+ */
+export function getListingAgentDisplay(listing: RepliersListing): {
+  agentName: string | null;
+  agentPhone: string | null;
+  agentEmail: string | null;
+  agentPhoto: string | null;
+  agentWebsite: string | null;
+  brokerageName: string | null;
+  hasPrimaryContact: boolean;
+} {
+  const agent = pickListingAgent(listing.agents);
+  
+  const agentName = agent?.name || null;
+  const agentPhone = agent?.phones?.[0] || null;
+  const agentEmail = agent?.email || null;
+  const agentPhoto = agent?.photo?.small || null;
+  const agentWebsite = agent?.website || null;
+  const brokerageName = agent?.brokerage?.name || listing.office?.brokerageName || null;
+  
+  // Has primary contact if we have either email or phone
+  const hasPrimaryContact = !!(agentEmail || agentPhone);
+  
+  return {
+    agentName,
+    agentPhone,
+    agentEmail,
+    agentPhoto,
+    agentWebsite,
+    brokerageName,
+    hasPrimaryContact,
+  };
 }
