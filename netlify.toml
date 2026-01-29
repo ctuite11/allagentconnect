@@ -46,6 +46,31 @@
   to = "/.netlify/functions/send-password-changed-email"
   status = 200
 
+# Repliers IDX proxy endpoints (secure server-side)
+[[redirects]]
+  from = "/api/repliers/health"
+  to = "/.netlify/functions/repliers-health"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/repliers/listings"
+  to = "/.netlify/functions/repliers-listings"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/repliers/listing/*"
+  to = "/.netlify/functions/repliers-listing-detail"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/repliers/autocomplete"
+  to = "/.netlify/functions/repliers-autocomplete"
+  status = 200
+  force = true
+
 # Functions configuration
 [functions]
   node_bundler = "esbuild"
