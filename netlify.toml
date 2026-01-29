@@ -78,3 +78,9 @@
 # Scheduled email worker - runs every minute to drain email queue
 [functions."email-worker"]
   schedule = "* * * * *"
+
+# SPA fallback - must be LAST (after all API redirects)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

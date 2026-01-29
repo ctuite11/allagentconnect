@@ -21,6 +21,3 @@
 
 # Legacy app route redirect
 /allagentconnect /agent-dashboard 301!
-
-# SPA fallback (must be last)
-/* /index.html 200

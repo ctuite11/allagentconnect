@@ -152,6 +152,16 @@ function buildQueryString(params: RepliersListingsParams): string {
  * Handle API response and throw appropriate errors
  */
 async function handleResponse<T>(response: Response): Promise<T> {
+  // Guard against HTML responses (SPA fallback or routing miss)
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const text = await response.text();
+    throw new RepliersApiError(
+      `Expected JSON, got ${contentType}. First 120 chars: ${text.slice(0, 120)}`,
+      response.status
+    );
+  }
+
   if (response.ok) {
     return response.json();
   }

@@ -58,10 +58,16 @@ export const handler: Handler = async (event) => {
 
     console.log("[repliers-health] Testing upstream connectivity...");
 
+    // If using Authorization header, format as Bearer token
+    const authHeaderValue =
+      authHeaderName.toLowerCase() === "authorization"
+        ? `Bearer ${apiKey}`
+        : apiKey;
+
     const response = await fetch(testUrl, {
       method: "GET",
       headers: {
-        [authHeaderName]: apiKey,
+        [authHeaderName]: authHeaderValue,
         Accept: "application/json",
       },
     });
