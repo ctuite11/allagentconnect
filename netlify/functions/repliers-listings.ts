@@ -93,12 +93,18 @@ export const handler: Handler = async (event) => {
     // Configurable auth header (default: REPLIERS-API-KEY, can override via env)
     const authHeaderName = process.env.REPLIERS_API_KEY_HEADER || "REPLIERS-API-KEY";
 
+    // If using Authorization header, format as Bearer token
+    const authHeaderValue =
+      authHeaderName.toLowerCase() === "authorization"
+        ? `Bearer ${apiKey}`
+        : apiKey;
+
     console.log("[repliers-listings] Fetching:", upstreamUrl.replace(apiKey, "***"));
 
     const response = await fetch(upstreamUrl, {
       method: "GET",
       headers: {
-        [authHeaderName]: apiKey,
+        [authHeaderName]: authHeaderValue,
         Accept: "application/json",
       },
     });

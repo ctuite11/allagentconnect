@@ -65,12 +65,18 @@ export const handler: Handler = async (event) => {
     // Configurable auth header
     const authHeaderName = process.env.REPLIERS_API_KEY_HEADER || "REPLIERS-API-KEY";
 
+    // If using Authorization header, format as Bearer token
+    const authHeaderValue =
+      authHeaderName.toLowerCase() === "authorization"
+        ? `Bearer ${apiKey}`
+        : apiKey;
+
     console.log("[repliers-autocomplete] Searching:", sanitizedQuery);
 
     const response = await fetch(upstreamUrl, {
       method: "GET",
       headers: {
-        [authHeaderName]: apiKey,
+        [authHeaderName]: authHeaderValue,
         Accept: "application/json",
       },
     });
