@@ -10,6 +10,7 @@ import { useState } from "react";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { findOrCreateConversation } from "@/lib/startConversation";
+import { toast } from "sonner";
 
 interface Agent {
   id: string;
@@ -138,6 +139,8 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
       const convoId = await findOrCreateConversation(viewerId, agent.id);
       if (convoId) {
         navigate(`/messages/${convoId}`);
+      } else {
+        toast.error("Couldn't start message. Please try again.");
       }
     } finally {
       setIsStartingChat(false);
