@@ -239,6 +239,10 @@ const Navigation = () => {
                   <Search className="mr-2 h-4 w-4" />
                   Search
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/idx/search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                  <Search className="mr-2 h-4 w-4" />
+                  MLS Search
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/market-insights")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                   <BarChart3 className="mr-2 h-4 w-4" />
                   Market Insights
