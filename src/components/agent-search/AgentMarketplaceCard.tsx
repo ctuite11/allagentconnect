@@ -237,10 +237,10 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full bg-neutral-50 text-neutral-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-200"
+              className="h-9 w-9 rounded-full bg-neutral-50 text-neutral-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-200 disabled:opacity-60"
               onClick={handleMessageClick}
               disabled={isStartingChat}
-              title="Message"
+              title={isStartingChat ? "Opening…" : "Message"}
             >
               <MessageSquare className="h-4 w-4" />
             </Button>

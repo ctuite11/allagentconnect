@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -15,13 +16,16 @@ import {
   Copy, 
   Send,
   Calendar,
-  Globe
+  Globe,
+  MessageSquare
 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { BuyerAgentShowcase } from "./BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "./BuyerCompensationInfoModal";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { findOrCreateConversation } from "@/lib/startConversation";
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
@@ -34,6 +38,33 @@ interface PropertyDetailRightColumnProps {
 
 export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }: PropertyDetailRightColumnProps) => {
   const navigate = useNavigate();
+  const { user, role } = useAuthRole();
+  const [isStartingChat, setIsStartingChat] = useState(false);
+  
+  // Can current user message the listing agent?
+  const viewerId = user?.id;
+  const listingAgentId = agent?.id;
+  const canMessageListingAgent =
+    !!viewerId &&
+    (role === "agent" || role === "admin") &&
+    !!listingAgentId &&
+    viewerId !== listingAgentId;
+
+  const handleMessageListingAgent = async () => {
+    if (!viewerId || !listingAgentId || isStartingChat) return;
+    
+    setIsStartingChat(true);
+    try {
+      const convoId = await findOrCreateConversation(viewerId, listingAgentId, {
+        listingId: listing?.id ?? null,
+      });
+      if (convoId) {
+        navigate(`/messages/${convoId}`);
+      }
+    } finally {
+      setIsStartingChat(false);
+    }
+  };
 
   const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (!value && value !== 0) return null;
@@ -334,6 +365,19 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
               <Button className="w-full">Request a Tour</Button>
               <Button variant="outline" className="w-full">Contact Agent</Button>
             </div>
+            
+            {/* Message about this listing button - agents/admins only */}
+            {canMessageListingAgent && (
+              <Button
+                variant="outline"
+                className="w-full mt-2 gap-2 disabled:opacity-60"
+                onClick={handleMessageListingAgent}
+                disabled={isStartingChat}
+              >
+                <MessageSquare className="w-4 h-4" />
+                {isStartingChat ? "Opening…" : "Message about this listing"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
