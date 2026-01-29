@@ -11,12 +11,15 @@ import {
   Download,
   Users,
   ShieldCheck,
-  ArrowLeft
+  ArrowLeft,
+  MessageSquare
 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { getHeaderBackgroundStyle } from "@/components/profile-editor/HeaderBackgroundSelector";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { useNavigate } from "react-router-dom";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { findOrCreateConversation } from "@/lib/startConversation";
 
 interface SocialLinks {
   linkedin?: string;
@@ -50,6 +53,9 @@ interface AgentProfileHeaderProps {
 
 const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) => {
   const navigate = useNavigate();
+  const { user, role } = useAuthRole();
+  const viewerId = user?.id;
+  const canChat = !!viewerId && role === "agent" && viewerId !== agent.id;
   
   const backgroundType = agent.header_background_type || "color";
   const backgroundValue = agent.header_background_value || "directconnect-blue";
@@ -143,6 +149,19 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
                 agentName={`${agent.first_name} ${agent.last_name}`}
                 agentEmail={agent.email}
               />
+              {canChat && (
+                <Button 
+                  variant="secondary" 
+                  className="w-full bg-white/20 text-white border-white/30 hover:bg-white/30"
+                  onClick={async () => {
+                    const convoId = await findOrCreateConversation(viewerId!, agent.id);
+                    if (convoId) navigate(`/messages/${convoId}`);
+                  }}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Chat
+                </Button>
+              )}
               <Button 
                 variant="secondary" 
                 className="w-full bg-white/20 text-white border-white/30 hover:bg-white/30"
@@ -264,6 +283,20 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
                     agentName={`${agent.first_name} ${agent.last_name}`}
                     agentEmail={agent.email}
                   />
+                  {canChat && (
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                      onClick={async () => {
+                        const convoId = await findOrCreateConversation(viewerId!, agent.id);
+                        if (convoId) navigate(`/messages/${convoId}`);
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1.5" />
+                      Chat
+                    </Button>
+                  )}
                   <Button 
                     variant="secondary" 
                     size="sm"
