@@ -733,12 +733,12 @@ const PropertyDetail = () => {
                     {canMessageListingAgent && (
                       <Button
                         variant="outline"
-                        className="w-full mt-2 gap-2"
+                        className="w-full mt-2 gap-2 disabled:opacity-60"
                         onClick={handleMessageListingAgent}
                         disabled={isStartingChat}
                       >
                         <MessageSquare className="w-4 h-4" />
-                        Message about this listing
+                        {isStartingChat ? "Opening…" : "Message about this listing"}
                       </Button>
                     )}
                   </CardContent>
