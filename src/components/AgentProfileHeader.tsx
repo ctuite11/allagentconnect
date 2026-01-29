@@ -55,7 +55,7 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
   const navigate = useNavigate();
   const { user, role } = useAuthRole();
   const viewerId = user?.id;
-  const canChat = !!viewerId && role === "agent" && viewerId !== agent.id;
+  const canChat = !!viewerId && (role === "agent" || role === "admin") && viewerId !== agent.id;
   
   const backgroundType = agent.header_background_type || "color";
   const backgroundValue = agent.header_background_value || "directconnect-blue";
