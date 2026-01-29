@@ -18,8 +18,10 @@ interface IDXSearchFiltersProps {
   onReset: () => void;
 }
 
+const ANY_VALUE = "__any__";
+
 const PROPERTY_TYPES = [
-  { value: "", label: "Any Type" },
+  { value: ANY_VALUE, label: "Any Type" },
   { value: "single_family", label: "Single Family" },
   { value: "condo", label: "Condo" },
   { value: "townhouse", label: "Townhouse" },
@@ -28,7 +30,7 @@ const PROPERTY_TYPES = [
 ];
 
 const BED_OPTIONS = [
-  { value: "", label: "Any" },
+  { value: ANY_VALUE, label: "Any" },
   { value: "1", label: "1+" },
   { value: "2", label: "2+" },
   { value: "3", label: "3+" },
@@ -37,7 +39,7 @@ const BED_OPTIONS = [
 ];
 
 const BATH_OPTIONS = [
-  { value: "", label: "Any" },
+  { value: ANY_VALUE, label: "Any" },
   { value: "1", label: "1+" },
   { value: "1.5", label: "1.5+" },
   { value: "2", label: "2+" },
@@ -46,7 +48,7 @@ const BATH_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "", label: "Any Status" },
+  { value: ANY_VALUE, label: "Any Status" },
   { value: "active", label: "Active" },
   { value: "pending", label: "Pending" },
   { value: "sold", label: "Sold" },
@@ -60,7 +62,7 @@ export function IDXSearchFilters({
 }: IDXSearchFiltersProps) {
   const updateFilter = (key: keyof RepliersListingsParams, value: string | number | undefined) => {
     const newFilters = { ...filters };
-    if (value === "" || value === undefined) {
+    if (value === "" || value === undefined || value === ANY_VALUE) {
       delete newFilters[key];
     } else {
       // @ts-expect-error - dynamic key assignment
@@ -133,7 +135,7 @@ export function IDXSearchFilters({
         <div className="space-y-1.5">
           <Label className="text-sm text-neutral-700">Property Type</Label>
           <Select
-            value={filters.propertyType || ""}
+            value={filters.propertyType || ANY_VALUE}
             onValueChange={(val) => updateFilter("propertyType", val)}
           >
             <SelectTrigger className="rounded-xl">
@@ -153,9 +155,9 @@ export function IDXSearchFilters({
         <div className="space-y-1.5">
           <Label className="text-sm text-neutral-700">Beds</Label>
           <Select
-            value={filters.minBeds?.toString() || ""}
+            value={filters.minBeds?.toString() || ANY_VALUE}
             onValueChange={(val) =>
-              updateFilter("minBeds", val ? Number(val) : undefined)
+              updateFilter("minBeds", val !== ANY_VALUE ? Number(val) : undefined)
             }
           >
             <SelectTrigger className="rounded-xl">
@@ -175,9 +177,9 @@ export function IDXSearchFilters({
         <div className="space-y-1.5">
           <Label className="text-sm text-neutral-700">Baths</Label>
           <Select
-            value={filters.minBaths?.toString() || ""}
+            value={filters.minBaths?.toString() || ANY_VALUE}
             onValueChange={(val) =>
-              updateFilter("minBaths", val ? Number(val) : undefined)
+              updateFilter("minBaths", val !== ANY_VALUE ? Number(val) : undefined)
             }
           >
             <SelectTrigger className="rounded-xl">
@@ -197,7 +199,7 @@ export function IDXSearchFilters({
         <div className="space-y-1.5">
           <Label className="text-sm text-neutral-700">Status</Label>
           <Select
-            value={filters.status || ""}
+            value={filters.status || ANY_VALUE}
             onValueChange={(val) => updateFilter("status", val)}
           >
             <SelectTrigger className="rounded-xl">
