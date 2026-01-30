@@ -292,9 +292,12 @@ export type Database = {
           id: string
           last_name: string
           license_number: string
+          listing_id: string | null
           markets: string | null
           notes: string | null
           phone: string | null
+          registered_from_listing: boolean
+          source: string | null
           specialties: string[] | null
           state: string
           status: string
@@ -310,9 +313,12 @@ export type Database = {
           id?: string
           last_name: string
           license_number: string
+          listing_id?: string | null
           markets?: string | null
           notes?: string | null
           phone?: string | null
+          registered_from_listing?: boolean
+          source?: string | null
           specialties?: string[] | null
           state: string
           status?: string
@@ -328,9 +334,12 @@ export type Database = {
           id?: string
           last_name?: string
           license_number?: string
+          listing_id?: string | null
           markets?: string | null
           notes?: string | null
           phone?: string | null
+          registered_from_listing?: boolean
+          source?: string | null
           specialties?: string[] | null
           state?: string
           status?: string

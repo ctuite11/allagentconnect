@@ -15,6 +15,9 @@ interface EarlyAccessRequest {
   license_number: string;
   markets?: string;
   specialties?: string[];
+  // Listing attribution fields
+  listing_id?: string;
+  source?: string;
 }
 
 interface RateLimitResult {
@@ -133,6 +136,10 @@ Deno.serve(async (req) => {
         specialties: body.specialties || null,
         status: 'pending',
         founding_partner: false,
+        // Listing attribution
+        listing_id: body.listing_id || null,
+        source: body.source?.trim() || null,
+        registered_from_listing: Boolean(body.listing_id),
       })
       .select('id')
       .single();
