@@ -186,6 +186,9 @@ const Register = () => {
             brokerage: data.brokerage,
             state: data.state,
             license_number: data.license_number,
+            // Listing attribution
+            listing_id: listingId || undefined,
+            source: source || undefined,
           },
         }
       );
