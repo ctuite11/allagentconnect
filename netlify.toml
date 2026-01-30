@@ -33,6 +33,10 @@
   function = "social-preview"
 
 [[edge_functions]]
+  path = "/register"
+  function = "register-social-preview"
+
+[[edge_functions]]
   path = "/api/auth/request-password-reset"
   function = "request-password-reset"
 

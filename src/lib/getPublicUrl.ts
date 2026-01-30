@@ -15,10 +15,10 @@ export const getListingPublicUrl = (listingId: string): string => {
 
 /**
  * Returns the share URL for a property listing.
- * Uses the canonical /property/ path. The Netlify Edge Function
- * intercepts crawler requests to serve OG metadata, while regular
- * users are passed through to the SPA.
+ * Routes to the Early Access registration funnel with listing context.
+ * The Netlify Edge Function intercepts crawler requests to serve
+ * listing-specific OG metadata, while regular users see the registration form.
  */
 export const getListingShareUrl = (listingId: string): string => {
-  return `${getPublicOrigin()}/property/${listingId}`;
+  return `${getPublicOrigin()}/register?listing_id=${listingId}&source=social`;
 };
