@@ -330,16 +330,21 @@ const Register = () => {
                   </span>
                 </div>
 
-                <h1 className="text-3xl font-semibold text-foreground mb-4">
+                <h1 className="text-3xl font-semibold text-foreground mb-2">
                   {isListingDriven 
-                    ? "This property is available inside the AllAgentConnect private network"
+                    ? "AllAgentConnect. Evolved."
                     : "Request Early Access to All Agent Connect"}
                 </h1>
 
                 {isListingDriven && (
-                  <p className="text-base text-muted-foreground mb-6">
-                    Register for early access to view details and message the listing agent directly.
-                  </p>
+                  <>
+                    <p className="text-lg font-medium text-foreground mb-4">
+                      The private agent network — now with real tools.
+                    </p>
+                    <p className="text-base text-muted-foreground mb-6">
+                      Search off-market and coming-soon opportunities, share real buyer needs, view complete showing instructions, and communicate directly with verified agents — all in one place.
+                    </p>
+                  </>
                 )}
 
                 {/* Video block - only show when listing-driven and video URL is configured */}
@@ -364,13 +369,13 @@ const Register = () => {
                       {/* Caption */}
                       <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
                         <p className="text-white text-sm font-medium">
-                          Why listings are private on AllAgentConnect
+                          The next chapter of agent-to-agent collaboration
                         </p>
                       </div>
                     </button>
                     
                     <p className="mt-3 text-xs text-muted-foreground">
-                      This listing is not publicly syndicated.
+                      Shared inside the AllAgentConnect private network.
                     </p>
                   </div>
                 )}
