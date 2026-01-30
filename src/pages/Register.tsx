@@ -96,12 +96,17 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-// Video placeholder URL - replace with actual Vimeo/Wistia embed when ready
-const VIDEO_EMBED_URL = ""; // e.g., "https://player.vimeo.com/video/123456789"
+// Video URL from environment - set VITE_REGISTER_VIDEO_EMBED_URL in Netlify
+const VIDEO_EMBED_URL = import.meta.env.VITE_REGISTER_VIDEO_EMBED_URL || "";
+
+// UUID validation for listing_id soft guard
+const isUuid = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 
 const Register = () => {
   const [searchParams] = useSearchParams();
-  const listingId = searchParams.get("listing_id");
+  const listingIdRaw = searchParams.get("listing_id");
+  const listingId = listingIdRaw && isUuid(listingIdRaw) ? listingIdRaw : null;
   const autoplay = searchParams.get("autoplay") === "1";
   const source = searchParams.get("source");
   
