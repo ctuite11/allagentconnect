@@ -190,6 +190,10 @@ const Navigation = () => {
     }
   };
 
+  // Hide global navigation on minimal/public funnel pages FIRST (before any loading states)
+  // This prevents any flash of navigation on funnel pages
+  if (HIDE_NAV_ROUTES.includes(location.pathname)) return null;
+
   // ---- Render gate: Navigation should not "change on its own" ----
   // Wait for auth; if user exists, wait for role; if agent, also wait for agent_status
   const navLoading =
@@ -202,9 +206,6 @@ const Navigation = () => {
     // Return null during loading - no debug bar in production
     return null;
   }
-
-  // Hide global navigation on minimal/public funnel pages (single source of truth)
-  if (HIDE_NAV_ROUTES.includes(location.pathname)) return null;
 
   // Hide navigation for pending agents on any other page as fallback
   const isPending = user && role === "agent" && agentStatus === "pending";
