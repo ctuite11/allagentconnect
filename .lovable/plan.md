@@ -1,84 +1,118 @@
 
-# Fix: Share Button Not Working (URL Routing Issue)
+# Fix: Share Button Should Link to Registration Funnel
 
 ## Problem
-When users click the "Share" button on a listing, the shared URL uses `/social-preview/{id}` path. However:
-- The Netlify Edge Function only intercepts `/property/*` paths
-- There's no React route for `/social-preview/*`
-- Result: Clicking shared links leads to a 404 page
+When users share a listing via social media, clicking "View on Facebook" takes them directly to the listing page (`/property/:id`). According to the marketing strategy, public share links should route to the **Early Access registration page** (`/register?listing_id=UUID&source=social`) so unregistered agents must sign up to view the listing.
 
-## Root Cause
-The `getListingShareUrl()` function in `src/lib/getPublicUrl.ts` returns a `/social-preview/` path that doesn't exist in either the edge function routing or the React router.
+## Current vs Expected Behavior
 
-## Solution
-Change `getListingShareUrl()` to use `/property/{id}` instead of `/social-preview/{id}`.
+| Share Channel | Current URL | Expected URL |
+|---------------|-------------|--------------|
+| Copy Link | `/property/abc123` | `/register?listing_id=abc123&source=social` |
+| Facebook | `/property/abc123` | `/register?listing_id=abc123&source=social` |
+| LinkedIn | `/property/abc123` | `/register?listing_id=abc123&source=social` |
+| Twitter | `/property/abc123` | `/register?listing_id=abc123&source=social` |
 
-The current edge function architecture already handles this correctly:
-- **Crawlers** (Facebook, Twitter, etc.) → Edge function intercepts and serves OG metadata
-- **Regular users** → Edge function passes through to the SPA
+## Solution Overview
 
-The `/social-preview/` path was a design artifact that's no longer needed.
+Two changes are needed:
 
----
-
-## Technical Changes
-
-### File: `src/lib/getPublicUrl.ts`
-
-**Current code (line 22-24):**
-```typescript
-export const getListingShareUrl = (listingId: string): string => {
-  return `${getPublicOrigin()}/social-preview/${listingId}`;
-};
-```
-
-**Updated code:**
-```typescript
-export const getListingShareUrl = (listingId: string): string => {
-  return `${getPublicOrigin()}/property/${listingId}`;
-};
-```
-
-Also update the JSDoc comment to reflect the new behavior (lines 16-21).
+1. **Update share URL generator** to point to the registration funnel
+2. **Create new edge function** to serve listing-specific OG metadata for `/register` URLs when crawlers visit
 
 ---
 
-## How It Works After the Fix
+## Technical Implementation
+
+### 1. Update `src/lib/getPublicUrl.ts`
+
+Change `getListingShareUrl` to generate registration funnel URLs:
+
+```typescript
+export const getListingShareUrl = (listingId: string): string => {
+  return `${getPublicOrigin()}/register?listing_id=${listingId}&source=social`;
+};
+```
+
+### 2. Create Netlify Edge Function for `/register`
+
+**New file:** `netlify/edge-functions/register-social-preview.ts`
+
+This edge function will:
+- Only intercept requests from crawlers (Facebook, Twitter, etc.)
+- Extract `listing_id` from query params
+- Proxy to the existing Supabase `social-preview` function to get listing OG metadata
+- Pass regular users through to the SPA
+
+### 3. Add Edge Function Route to `netlify.toml`
+
+```toml
+[[edge_functions]]
+  path = "/register"
+  function = "register-social-preview"
+```
+
+---
+
+## Data Flow After Fix
 
 ```text
-User clicks Share → URL: /property/abc123
+Agent clicks Share → URL: /register?listing_id=abc123&source=social
 
-        ┌──────────────────┐
-        │  Netlify Edge    │
-        │  social-preview  │
-        └────────┬─────────┘
-                 │
-     ┌───────────┴───────────┐
-     │                       │
-  Crawler?                Regular User?
-     │                       │
-     ▼                       ▼
-┌─────────────┐      ┌─────────────┐
-│  Supabase   │      │   React     │
-│  OG Tags    │      │   SPA       │
-└─────────────┘      └─────────────┘
+             ┌─────────────────────────┐
+             │  Netlify Edge Function  │
+             │  register-social-preview│
+             └───────────┬─────────────┘
+                         │
+          ┌──────────────┴──────────────┐
+          │                             │
+       Crawler?                    Regular User?
+          │                             │
+          ▼                             ▼
+   ┌─────────────────┐          ┌────────────────┐
+   │ Fetch listing   │          │ React SPA      │
+   │ OG metadata     │          │ /register page │
+   │ from Supabase   │          │ (shows form +  │
+   │ (price, photo)  │          │  video modal)  │
+   └─────────────────┘          └────────────────┘
 ```
+
+---
+
+## Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/lib/getPublicUrl.ts` | Modify: Update URL pattern |
+| `netlify/edge-functions/register-social-preview.ts` | Create: New edge function |
+| `netlify.toml` | Modify: Add edge function route |
+
+---
+
+## Edge Function Logic
+
+The new edge function will:
+
+1. Check if visitor is a crawler using User-Agent regex
+2. If crawler AND `listing_id` param exists:
+   - Fetch listing data from Supabase
+   - Return HTML with property-specific OG tags (price, photo, address)
+3. If not a crawler OR no `listing_id`:
+   - Pass through to SPA (`context.next()`)
 
 ---
 
 ## Verification Steps
 
-1. Deploy the change
-2. Navigate to any listing detail page
-3. Click the Share button
-4. Select "Copy Link" - verify the copied URL uses `/property/` not `/social-preview/`
-5. Paste the link in a new incognito tab - verify it loads the property page correctly
-6. Test in Facebook Sharing Debugger - verify OG metadata still appears correctly
+1. Navigate to any listing and click "Share"
+2. Select "Copy Link" → verify URL is `/register?listing_id=...&source=social`
+3. Paste in Facebook Debugger → verify property photo and price appear in OG preview
+4. Click the link in Facebook → verify it opens the registration page with video modal
 
 ---
 
 ## Impact
 
-- **Users**: Shared links now work correctly for all visitors
-- **Social platforms**: No change - crawlers still receive proper OG metadata via the edge function
-- **Backward compatibility**: Any existing `/social-preview/` links shared before this fix will still 404 (they were already broken)
+- **Marketing funnel**: All social shares now drive Early Access signups
+- **OG previews**: Still show property-specific images and pricing
+- **Attribution**: Registration captures `listing_id` and `source=social` for analytics
