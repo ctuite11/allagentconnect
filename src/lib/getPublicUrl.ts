@@ -15,10 +15,10 @@ export const getListingPublicUrl = (listingId: string): string => {
 
 /**
  * Returns the share URL for a property listing.
- * Uses /social-preview/ path which proxies to the Supabase function
- * to provide proper OG tags for social media crawlers.
- * Non-crawlers are redirected to the canonical /property/ URL.
+ * Uses the canonical /property/ path. The Netlify Edge Function
+ * intercepts crawler requests to serve OG metadata, while regular
+ * users are passed through to the SPA.
  */
 export const getListingShareUrl = (listingId: string): string => {
-  return `${getPublicOrigin()}/social-preview/${listingId}`;
+  return `${getPublicOrigin()}/property/${listingId}`;
 };
