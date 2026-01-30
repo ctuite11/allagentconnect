@@ -1,45 +1,82 @@
 
+# Fix: Add Price to Social Share Title
 
-# Configure Video for Registration Funnel
+## Problem
+The social share preview shows the price only in the description, not in the title. Since social platforms display titles more prominently, the price isn't immediately visible.
 
-## Overview
-Your video is uploaded to Cloudflare Stream and ready. This plan covers configuring the environment variable to activate the video on the `/register` page.
+## Current Behavior
+| Field | Current Content |
+|-------|-----------------|
+| Title | `33 Sleeper St, Boston, MA - All Agent Connect` |
+| Description | `$1,375,000 - 2 bed, 1 bath...` |
 
-## What You Need To Do (in Netlify)
+## Proposed Change
+| Field | New Content |
+|-------|-------------|
+| Title | `$1,375,000 · 33 Sleeper St, Boston, MA` |
+| Description | `2 bed, 1 bath. [listing description]` |
 
-### Step 1: Add Environment Variable
-1. Go to your Netlify dashboard → Site settings → Environment variables
-2. Add a new variable:
-   - **Key:** `VITE_REGISTER_VIDEO_EMBED_URL`
-   - **Value:** `https://customer-1vv02j3t0mqd2nts.cloudflarestream.com/07ed3075fab03ce4c55bf8c97798224c/iframe`
+This puts the price front and center where social platforms display it most visibly.
 
-### Step 2: Trigger Redeploy
-Since `VITE_` variables are bundled at build time, you need to redeploy:
-- Go to Deploys → Trigger deploy → Deploy site
+---
 
-### Step 3: Configure Allowed Origins (Optional but Recommended)
-Back in Cloudflare Stream (your screenshot), add your domains to "Allowed Origins":
+## Technical Implementation
+
+### File to Modify
+`supabase/functions/social-preview/index.ts`
+
+### Changes
+
+**1. Update title format (line 79)**
+
+Current:
+```typescript
+const title = `${listing.address}, ${listing.city}, ${listing.state} - All Agent Connect`;
 ```
-allagentconnect.lovable.app,allagentconnect.com
+
+New:
+```typescript
+const title = `${priceText} · ${listing.address}, ${listing.city}, ${listing.state}`;
 ```
-This prevents the video from being embedded on unauthorized sites.
 
-## What I Will Implement
+**2. Update description format (lines 84-86)**
 
-Once the environment variable is set, no code changes are needed. The existing implementation will automatically:
+Current:
+```typescript
+const description = listing.description
+  ? `${priceText} - ${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath. ${String(listing.description).substring(0, 120)}...`
+  : `${priceText} - ${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath in ${listing.city}, ${listing.state}`;
+```
 
-1. **Show video thumbnail** on `/register?listing_id=UUID` 
-2. **Auto-open video modal** when `autoplay=1` is in the URL
-3. **Hide video block** on generic `/register` (no listing_id)
+New (remove price from description since it's in title):
+```typescript
+const bedsAndBaths = `${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath`;
+const description = listing.description
+  ? `${bedsAndBaths}. ${String(listing.description).substring(0, 140)}...`
+  : `${bedsAndBaths} in ${listing.city}, ${listing.state} | All Agent Connect`;
+```
 
-## Test URLs After Deployment
+---
 
-- **With video thumbnail:** `https://allagentconnect.com/register?listing_id=12345678-1234-1234-1234-123456789abc`
-- **With auto-play:** `https://allagentconnect.com/register?listing_id=12345678-1234-1234-1234-123456789abc&autoplay=1`
+## Result Preview
 
-## Technical Notes
+**Facebook/LinkedIn/iMessage will show:**
 
-- The iframe already supports autoplay parameters via `?autoplay=1&muted=1`
-- Cloudflare Stream handles adaptive bitrate streaming automatically
-- Mobile browsers typically require muted autoplay, which is already configured
+```text
+┌─────────────────────────────────────────────────┐
+│  [Property Photo]                               │
+│                                                 │
+│  $1,375,000 · 33 Sleeper St, Boston, MA         │
+│  2 bed, 1 bath. Beautiful waterfront property...│
+└─────────────────────────────────────────────────┘
+```
 
+---
+
+## Verification Steps
+
+1. Deploy the updated edge function
+2. Go to Facebook Sharing Debugger: https://developers.facebook.com/tools/debug/
+3. Enter: `https://allagentconnect.com/property/f5aace9a-d002-4101-a42f-9505c1947362`
+4. Click "Scrape Again" twice
+5. Confirm the title now shows `$1,375,000 · 33 Sleeper St, Boston, MA`
