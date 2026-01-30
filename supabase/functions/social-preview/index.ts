@@ -76,14 +76,16 @@ serve(async (req) => {
     }
 
     // Build title/description
-    const title = `${listing.address}, ${listing.city}, ${listing.state} - All Agent Connect`;
     const priceText = listing.listing_type === "for_rent"
       ? `$${Number(listing.price || 0).toLocaleString()}/month`
       : `$${Number(listing.price || 0).toLocaleString()}`;
 
+    const title = `${priceText} · ${listing.address}, ${listing.city}, ${listing.state}`;
+
+    const bedsAndBaths = `${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath`;
     const description = listing.description
-      ? `${priceText} - ${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath. ${String(listing.description).substring(0, 120)}...`
-      : `${priceText} - ${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath in ${listing.city}, ${listing.state}`;
+      ? `${bedsAndBaths}. ${String(listing.description).substring(0, 140)}...`
+      : `${bedsAndBaths} in ${listing.city}, ${listing.state} | All Agent Connect`;
 
     const fbAppId = Deno.env.get("FACEBOOK_APP_ID") || Deno.env.get("FB_APP_ID") || "";
 
