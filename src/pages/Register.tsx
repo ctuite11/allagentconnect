@@ -116,7 +116,7 @@ const Register = () => {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   
-  // Auto-open video modal if autoplay=1 and listing_id exists
+  // Auto-open video modal if autoplay=1 (for listing traffic only)
   useEffect(() => {
     if (autoplay && listingId && VIDEO_EMBED_URL) {
       setShowVideoModal(true);
@@ -347,8 +347,8 @@ const Register = () => {
                   </>
                 )}
 
-                {/* Video block - only show when listing-driven and video URL is configured */}
-                {isListingDriven && VIDEO_EMBED_URL && (
+                {/* Video block - show for all visitors when video URL is configured */}
+                {VIDEO_EMBED_URL && (
                   <div className="mb-8">
                     {/* Video thumbnail with play button */}
                     <button
