@@ -1,118 +1,77 @@
 
-# Fix: Share Button Should Link to Registration Funnel
+# Simplify Time Picker to Single Dropdown (MLS Style)
 
 ## Problem
-When users share a listing via social media, clicking "View on Facebook" takes them directly to the listing page (`/property/:id`). According to the marketing strategy, public share links should route to the **Early Access registration page** (`/register?listing_id=UUID&source=social`) so unregistered agents must sign up to view the listing.
+The current time picker uses 3 separate dropdowns (Hour, Minute, AM/PM) which requires 3 clicks to select a time. The MLS-style picker uses a single dropdown with pre-formatted time slots, making selection much faster.
 
-## Current vs Expected Behavior
+## Current vs Target
 
-| Share Channel | Current URL | Expected URL |
-|---------------|-------------|--------------|
-| Copy Link | `/property/abc123` | `/register?listing_id=abc123&source=social` |
-| Facebook | `/property/abc123` | `/register?listing_id=abc123&source=social` |
-| LinkedIn | `/property/abc123` | `/register?listing_id=abc123&source=social` |
-| Twitter | `/property/abc123` | `/register?listing_id=abc123&source=social` |
+| Current | Target (MLS Style) |
+|---------|-------------------|
+| 3 dropdowns: Hr / Min / AM-PM | 1 dropdown: "12:00 AM", "12:15 AM", etc. |
+| 3 clicks required | 1 click required |
+| 70px + 70px + 70px wide | Single ~130px dropdown |
 
-## Solution Overview
+## Solution
 
-Two changes are needed:
-
-1. **Update share URL generator** to point to the registration funnel
-2. **Create new edge function** to serve listing-specific OG metadata for `/register` URLs when crawlers visit
+Replace the `TimePicker12h` component internals with a single Select dropdown that displays all time options in 15-minute increments.
 
 ---
 
-## Technical Implementation
+## Technical Details
 
-### 1. Update `src/lib/getPublicUrl.ts`
+### File: `src/components/ui/time-picker-12h.tsx`
 
-Change `getListingShareUrl` to generate registration funnel URLs:
+**Changes:**
+- Generate 96 time slots (24 hours × 4 intervals per hour)
+- Display each as "12:00 AM", "12:15 AM", ... "11:45 PM"
+- Store value internally as 24-hour format (unchanged API)
+- Single Select component instead of three
 
+**Time generation logic:**
 ```typescript
-export const getListingShareUrl = (listingId: string): string => {
-  return `${getPublicOrigin()}/register?listing_id=${listingId}&source=social`;
-};
+const timeSlots = [];
+for (let h = 0; h < 24; h++) {
+  for (const m of ["00", "15", "30", "45"]) {
+    const hour24 = `${h.toString().padStart(2, "0")}:${m}`;
+    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const period = h < 12 ? "AM" : "PM";
+    const label = `${displayHour}:${m} ${period}`;
+    timeSlots.push({ value: hour24, label });
+  }
+}
+// Result: [{value: "00:00", label: "12:00 AM"}, {value: "00:15", label: "12:15 AM"}, ...]
 ```
 
-### 2. Create Netlify Edge Function for `/register`
-
-**New file:** `netlify/edge-functions/register-social-preview.ts`
-
-This edge function will:
-- Only intercept requests from crawlers (Facebook, Twitter, etc.)
-- Extract `listing_id` from query params
-- Proxy to the existing Supabase `social-preview` function to get listing OG metadata
-- Pass regular users through to the SPA
-
-### 3. Add Edge Function Route to `netlify.toml`
-
-```toml
-[[edge_functions]]
-  path = "/register"
-  function = "register-social-preview"
+**Component structure:**
+```tsx
+<Select value={value} onValueChange={onChange}>
+  <SelectTrigger className="w-[130px]">
+    <SelectValue placeholder="Select time" />
+  </SelectTrigger>
+  <SelectContent>
+    {timeSlots.map((slot) => (
+      <SelectItem key={slot.value} value={slot.value}>
+        {slot.label}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
 ```
-
----
-
-## Data Flow After Fix
-
-```text
-Agent clicks Share → URL: /register?listing_id=abc123&source=social
-
-             ┌─────────────────────────┐
-             │  Netlify Edge Function  │
-             │  register-social-preview│
-             └───────────┬─────────────┘
-                         │
-          ┌──────────────┴──────────────┐
-          │                             │
-       Crawler?                    Regular User?
-          │                             │
-          ▼                             ▼
-   ┌─────────────────┐          ┌────────────────┐
-   │ Fetch listing   │          │ React SPA      │
-   │ OG metadata     │          │ /register page │
-   │ from Supabase   │          │ (shows form +  │
-   │ (price, photo)  │          │  video modal)  │
-   └─────────────────┘          └────────────────┘
-```
-
----
-
-## Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| `src/lib/getPublicUrl.ts` | Modify: Update URL pattern |
-| `netlify/edge-functions/register-social-preview.ts` | Create: New edge function |
-| `netlify.toml` | Modify: Add edge function route |
-
----
-
-## Edge Function Logic
-
-The new edge function will:
-
-1. Check if visitor is a crawler using User-Agent regex
-2. If crawler AND `listing_id` param exists:
-   - Fetch listing data from Supabase
-   - Return HTML with property-specific OG tags (price, photo, address)
-3. If not a crawler OR no `listing_id`:
-   - Pass through to SPA (`context.next()`)
-
----
-
-## Verification Steps
-
-1. Navigate to any listing and click "Share"
-2. Select "Copy Link" → verify URL is `/register?listing_id=...&source=social`
-3. Paste in Facebook Debugger → verify property photo and price appear in OG preview
-4. Click the link in Facebook → verify it opens the registration page with video modal
 
 ---
 
 ## Impact
 
-- **Marketing funnel**: All social shares now drive Early Access signups
-- **OG previews**: Still show property-specific images and pricing
-- **Attribution**: Registration captures `listing_id` and `source=social` for analytics
+- **No API changes** - Still accepts/returns 24-hour format strings
+- **No consumer changes** - `OpenHouseDialog` works without modification
+- **Faster UX** - Single click instead of three
+- **Matches MLS pattern** - Familiar to agents
+
+---
+
+## Files to Modify
+
+| File | Action |
+|------|--------|
+| `src/components/ui/time-picker-12h.tsx` | Rewrite to single dropdown |
