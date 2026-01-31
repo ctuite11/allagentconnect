@@ -102,6 +102,27 @@ function formatDate(value?: string | null) {
   return d.toLocaleDateString();
 }
 
+// Format open house/broker tour event for inline display
+function formatOpenHouseEvent(openHouse: any): { isBrokerTour: boolean; dateLabel: string; timeLabel: string } {
+  const date = new Date(openHouse.date);
+  const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+  const monthDay = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  
+  const formatTime = (time: string) => {
+    const [h, m] = time.split(":");
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${m} ${ampm}`;
+  };
+  
+  return {
+    isBrokerTour: openHouse.event_type === "broker_tour",
+    dateLabel: `${dayName}, ${monthDay}`,
+    timeLabel: `${formatTime(openHouse.start_time)} - ${formatTime(openHouse.end_time)}`
+  };
+}
+
 // Helper for Title Case
 function toTitleCase(str: string): string {
   return str
@@ -733,6 +754,31 @@ function MyListingsView({
                         </div>
                       )}
                     </div>
+
+                    {/* Scheduled Open Houses / Broker Tours */}
+                    {hasOpenHouses && (
+                      <div className="mt-2 space-y-1">
+                        {(l.open_houses as any[]).map((oh, idx) => {
+                          const event = formatOpenHouseEvent(oh);
+                          return (
+                            <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
+                              {event.isBrokerTour ? (
+                                <BlueCarIcon className="h-3.5 w-3.5 shrink-0" />
+                              ) : (
+                                <span className="shrink-0">🎈</span>
+                              )}
+                              <span>{event.dateLabel} · {event.timeLabel}</span>
+                              <button
+                                className="text-primary hover:text-primary/80 hover:underline ml-1"
+                                onClick={() => onViewOpenHouses(l)}
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                 </div>
