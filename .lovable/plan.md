@@ -1,72 +1,105 @@
 
-# Simplify Time Picker to Single Dropdown (MLS Style)
+# Display Scheduled Open Houses on Listing Cards
 
-## Problem
-The current time picker uses 3 separate dropdowns (Hour, Minute, AM/PM) which requires 3 clicks to select a time. The MLS-style picker uses a single dropdown with pre-formatted time slots, making selection much faster.
+## Overview
+Add inline display of scheduled open houses and broker tours in the **center content column** of each listing card, with individual edit options per event. Uses the blue car icon (already exists in the file) for broker tours.
 
-## Current vs Target
+## Layout (Based on Screenshot)
 
-| Current | Target (MLS Style) |
-|---------|-------------------|
-| 3 dropdowns: Hr / Min / AM-PM | 1 dropdown: "12:00 AM", "12:15 AM", etc. |
-| 3 clicks required | 1 click required |
-| 70px + 70px + 70px wide | Single ~130px dropdown |
+The events will appear in the center column, below the price/Quick Edit row:
 
-## Solution
+```text
+┌────────────────────────────────────────────────────────────────────────────────┐
+│ Edit • Photos • 🎈 Open House • [🚙] Broker Tour • Matches • Email • Social    │
+├────────────────────────────────────────────────────────────────────────────────┤
+│                                                           ┌─────────────────┐  │
+│ [Photo]  │ #L-1121                                        │ Coming Soon     │  │
+│          │ 28-32 Atlantic Ave #436, Boston                │ List: 1/24/2026 │  │
+│          │ MA 02110 · Waterfront                          │ Exp: 2/26/2026  │  │
+│          │ $4,270,000  Quick Edit                         │ DOM: 6          │  │
+│          │                                                └─────────────────┘  │
+│          │ 🎈 Sat, Feb 1 · 1:00 PM - 3:00 PM         Edit                      │
+│          │ [🚙] Tue, Feb 4 · 10:00 AM - 11:30 AM     Edit                      │
+└────────────────────────────────────────────────────────────────────────────────┘
+```
 
-Replace the `TimePicker12h` component internals with a single Select dropdown that displays all time options in 15-minute increments.
+- **Each event** = icon + date/time + individual "Edit" button
+- **Blue car icon** used for broker tours (already exists in codebase as `BlueCarIcon`)
+- **Centered** in the middle column, not below Quick Edit in a way that expands the card height unnecessarily
 
 ---
 
 ## Technical Details
 
-### File: `src/components/ui/time-picker-12h.tsx`
+### File: `src/pages/MyListings.tsx`
 
-**Changes:**
-- Generate 96 time slots (24 hours × 4 intervals per hour)
-- Display each as "12:00 AM", "12:15 AM", ... "11:45 PM"
-- Store value internally as 24-hour format (unchanged API)
-- Single Select component instead of three
-
-**Time generation logic:**
+**1. Add helper function to format open house display (near line 98):**
 ```typescript
-const timeSlots = [];
-for (let h = 0; h < 24; h++) {
-  for (const m of ["00", "15", "30", "45"]) {
-    const hour24 = `${h.toString().padStart(2, "0")}:${m}`;
-    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    const period = h < 12 ? "AM" : "PM";
-    const label = `${displayHour}:${m} ${period}`;
-    timeSlots.push({ value: hour24, label });
-  }
+function formatOpenHouseEvent(openHouse: any): { isBrokerTour: boolean; dateLabel: string; timeLabel: string } {
+  const date = new Date(openHouse.date);
+  const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+  const monthDay = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  
+  // Format times from 24h to 12h
+  const formatTime = (time: string) => {
+    const [h, m] = time.split(":");
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${m} ${ampm}`;
+  };
+  
+  return {
+    isBrokerTour: openHouse.event_type === "broker_tour",
+    dateLabel: `${dayName}, ${monthDay}`,
+    timeLabel: `${formatTime(openHouse.start_time)} - ${formatTime(openHouse.end_time)}`
+  };
 }
-// Result: [{value: "00:00", label: "12:00 AM"}, {value: "00:15", label: "12:15 AM"}, ...]
 ```
 
-**Component structure:**
+**2. Add scheduled events in the center column (after price section, ~line 735):**
 ```tsx
-<Select value={value} onValueChange={onChange}>
-  <SelectTrigger className="w-[130px]">
-    <SelectValue placeholder="Select time" />
-  </SelectTrigger>
-  <SelectContent>
-    {timeSlots.map((slot) => (
-      <SelectItem key={slot.value} value={slot.value}>
-        {slot.label}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
+{/* Scheduled Open Houses / Broker Tours */}
+{hasOpenHouses && (
+  <div className="mt-2 space-y-1">
+    {(l.open_houses as any[]).map((oh, idx) => {
+      const event = formatOpenHouseEvent(oh);
+      return (
+        <div key={idx} className="flex items-center gap-2 text-xs text-zinc-600">
+          {event.isBrokerTour ? (
+            <BlueCarIcon className="h-3.5 w-3.5 shrink-0" />
+          ) : (
+            <span className="shrink-0">🎈</span>
+          )}
+          <span>{event.dateLabel} · {event.timeLabel}</span>
+          <button
+            className="text-primary hover:text-primary/80 hover:underline ml-1"
+            onClick={() => onViewOpenHouses(l)}
+          >
+            Edit
+          </button>
+        </div>
+      );
+    })}
+  </div>
+)}
 ```
 
 ---
 
-## Impact
+## Icon Reference
+The blue car icon already exists in the file (lines 14-23):
+```tsx
+function BlueCarIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path fill="#0E56F5" d="..." />
+    </svg>
+  );
+}
+```
 
-- **No API changes** - Still accepts/returns 24-hour format strings
-- **No consumer changes** - `OpenHouseDialog` works without modification
-- **Faster UX** - Single click instead of three
-- **Matches MLS pattern** - Familiar to agents
+This will be reused for the inline broker tour display (no new icons needed).
 
 ---
 
@@ -74,4 +107,12 @@ for (let h = 0; h < 24; h++) {
 
 | File | Action |
 |------|--------|
-| `src/components/ui/time-picker-12h.tsx` | Rewrite to single dropdown |
+| `src/pages/MyListings.tsx` | Add helper function + inline event display in list view center column |
+
+---
+
+## Result
+- Each scheduled event appears on its own line with icon + date/time
+- Individual "Edit" link per event opens the existing ViewOpenHousesDialog
+- Blue car icon (AAC Blue #0E56F5) for broker tours, 🎈 balloon for open houses
+- Compact display that doesn't expand the card height significantly
