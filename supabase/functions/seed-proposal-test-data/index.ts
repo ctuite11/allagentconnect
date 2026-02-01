@@ -1,4 +1,5 @@
 // supabase/functions/seed-proposal-test-data/index.ts
+// Proposal System Test Harness - Admin-only dark-launch infrastructure
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 type Action = "seed" | "reset";
