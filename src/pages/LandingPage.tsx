@@ -46,9 +46,7 @@ const LandingPage = () => {
             <div className="flex items-center gap-3 -ml-1">
               <Logo size="3xl" />
             </div>
-            <a href="/auth" className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors">
-              Log in
-            </a>
+            {/* No login link - funnel goes through /register only */}
           </div>
         </div>
       </header>
