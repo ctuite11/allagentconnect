@@ -452,6 +452,7 @@ export type Database = {
           preferred_contact_method: string
           property_type: string
           property_website_url: string | null
+          receive_listing_proposals: boolean
           seller_email: string
           seller_name: string | null
           seller_phone: string | null
@@ -491,6 +492,7 @@ export type Database = {
           preferred_contact_method?: string
           property_type: string
           property_website_url?: string | null
+          receive_listing_proposals?: boolean
           seller_email: string
           seller_name?: string | null
           seller_phone?: string | null
@@ -530,6 +532,7 @@ export type Database = {
           preferred_contact_method?: string
           property_type?: string
           property_website_url?: string | null
+          receive_listing_proposals?: boolean
           seller_email?: string
           seller_name?: string | null
           seller_phone?: string | null
@@ -680,6 +683,56 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_proposal_incentives: {
+        Row: {
+          agent_id: string
+          buyer_fee_credit_type: string | null
+          buyer_fee_credit_value: number | null
+          created_at: string
+          custom_incentive_notes: string | null
+          flat_fee_amount: number | null
+          flat_fee_option: boolean
+          id: string
+          listing_commission_type: string | null
+          listing_commission_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          buyer_fee_credit_type?: string | null
+          buyer_fee_credit_value?: number | null
+          created_at?: string
+          custom_incentive_notes?: string | null
+          flat_fee_amount?: number | null
+          flat_fee_option?: boolean
+          id?: string
+          listing_commission_type?: string | null
+          listing_commission_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          buyer_fee_credit_type?: string | null
+          buyer_fee_credit_value?: number | null
+          created_at?: string
+          custom_incentive_notes?: string | null
+          flat_fee_amount?: number | null
+          flat_fee_option?: boolean
+          id?: string
+          listing_commission_type?: string | null
+          listing_commission_value?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_proposal_incentives_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_settings: {
         Row: {
           agent_status: Database["public"]["Enums"]["agent_status"]
@@ -704,6 +757,8 @@ export type Database = {
           price_no_max: boolean
           price_no_min: boolean
           property_types: string[]
+          show_buyer_proposal: boolean
+          show_seller_proposal: boolean
           state: string | null
           tour_completed: boolean
           towns: string[]
@@ -738,6 +793,8 @@ export type Database = {
           price_no_max?: boolean
           price_no_min?: boolean
           property_types?: string[]
+          show_buyer_proposal?: boolean
+          show_seller_proposal?: boolean
           state?: string | null
           tour_completed?: boolean
           towns?: string[]
@@ -772,6 +829,8 @@ export type Database = {
           price_no_max?: boolean
           price_no_min?: boolean
           property_types?: string[]
+          show_buyer_proposal?: boolean
+          show_seller_proposal?: boolean
           state?: string | null
           tour_completed?: boolean
           towns?: string[]
@@ -886,6 +945,62 @@ export type Database = {
           verified_by?: string | null
         }
         Relationships: []
+      }
+      buyer_qualifications: {
+        Row: {
+          created_at: string
+          documentation_agreed: boolean
+          documentation_agreed_at: string | null
+          id: string
+          pre_approval_file_path: string | null
+          pre_approval_uploaded: boolean
+          proof_of_funds_file_path: string | null
+          proof_of_funds_uploaded: boolean
+          qualification_method: string | null
+          receive_agent_proposals: boolean
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          documentation_agreed?: boolean
+          documentation_agreed_at?: string | null
+          id?: string
+          pre_approval_file_path?: string | null
+          pre_approval_uploaded?: boolean
+          proof_of_funds_file_path?: string | null
+          proof_of_funds_uploaded?: boolean
+          qualification_method?: string | null
+          receive_agent_proposals?: boolean
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          documentation_agreed?: boolean
+          documentation_agreed_at?: string | null
+          id?: string
+          pre_approval_file_path?: string | null
+          pre_approval_uploaded?: boolean
+          proof_of_funds_file_path?: string | null
+          proof_of_funds_uploaded?: boolean
+          qualification_method?: string | null
+          receive_agent_proposals?: boolean
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_qualifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_agent_relationships: {
         Row: {
@@ -1561,6 +1676,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          flag_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          flag_name: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          flag_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       hot_sheet_clients: {
         Row: {
@@ -3319,6 +3461,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }
       is_team_owner: {
         Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
