@@ -139,9 +139,9 @@ const AgentProposalIncentivesForm = ({ userId, featureEnabled }: AgentProposalIn
                 Buyer-agent fee credit type
               </Label>
               <Select
-                value={formData.buyerFeeCredItType ?? "none"}
+                value={formData.buyerFeeCreditType ?? "none"}
                 onValueChange={(value) =>
-                  updateField("buyerFeeCredItType", value === "none" ? null : (value as "percentage" | "flat"))
+                  updateField("buyerFeeCreditType", value === "none" ? null : (value as "percentage" | "flat"))
                 }
               >
                 <SelectTrigger id="credit-type">
@@ -163,20 +163,20 @@ const AgentProposalIncentivesForm = ({ userId, featureEnabled }: AgentProposalIn
                 <Input
                   id="credit-value"
                   type="number"
-                  placeholder={formData.buyerFeeCredItType === "percentage" ? "e.g., 0.5" : "e.g., 2500"}
+                  placeholder={formData.buyerFeeCreditType === "percentage" ? "e.g., 0.5" : "e.g., 2500"}
                   value={formData.buyerFeeCreditValue ?? ""}
                   onChange={(e) =>
                     updateField("buyerFeeCreditValue", e.target.value ? parseFloat(e.target.value) : null)
                   }
-                  disabled={!formData.buyerFeeCredItType}
+                  disabled={!formData.buyerFeeCreditType}
                   className="pr-8"
                 />
-                {formData.buyerFeeCredItType === "percentage" && (
+                {formData.buyerFeeCreditType === "percentage" && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                     %
                   </span>
                 )}
-                {formData.buyerFeeCredItType === "flat" && (
+                {formData.buyerFeeCreditType === "flat" && (
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                     $
                   </span>
