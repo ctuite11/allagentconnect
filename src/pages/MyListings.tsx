@@ -159,6 +159,7 @@ function MyListingsView({
   onOpenHouse,
   onBrokerTour,
   onViewOpenHouses,
+  onDeleteOpenHouse,
   onMatches,
   onSocialShare,
   onEmail,
@@ -176,6 +177,7 @@ function MyListingsView({
   onOpenHouse: (listing: Listing) => void;
   onBrokerTour: (listing: Listing) => void;
   onViewOpenHouses: (listing: Listing) => void;
+  onDeleteOpenHouse: (listingId: string, eventIndex: number) => void;
   onMatches: (listing: Listing) => void;
   onSocialShare: (listing: Listing) => void;
   onEmail: (listing: Listing) => void;
@@ -664,6 +666,43 @@ function MyListingsView({
                   <div className="text-xs text-zinc-500 leading-tight pt-1">List: {listDate}</div>
                   <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate || "—"}</div>
                   <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
+
+                  {/* Scheduled Events */}
+                  {hasOpenHouses && (
+                    <div className="mt-2 pt-2 border-t border-zinc-200 space-y-2">
+                      {(l.open_houses as any[]).map((oh, idx) => {
+                        const event = formatOpenHouseEvent(oh);
+                        return (
+                          <div key={idx} className="text-xs">
+                            <div className="flex items-center justify-end gap-1.5 text-zinc-600">
+                              {event.isBrokerTour ? (
+                                <BlueCarIcon className="h-3 w-3 shrink-0" />
+                              ) : (
+                                <span className="shrink-0">🎈</span>
+                              )}
+                              <span>{event.dateLabel}</span>
+                            </div>
+                            <div className="text-zinc-500">{event.timeLabel}</div>
+                            <div className="flex items-center justify-end gap-2 mt-0.5">
+                              <button
+                                className="text-primary hover:underline"
+                                onClick={() => onViewOpenHouses(l)}
+                              >
+                                Edit
+                              </button>
+                              <span className="text-zinc-300">•</span>
+                              <button
+                                className="text-destructive hover:underline"
+                                onClick={() => onDeleteOpenHouse(l.id, idx)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Content row - photo + info + status */}
@@ -755,30 +794,6 @@ function MyListingsView({
                       )}
                     </div>
 
-                    {/* Scheduled Open Houses / Broker Tours */}
-                    {hasOpenHouses && (
-                      <div className="mt-2 space-y-1">
-                        {(l.open_houses as any[]).map((oh, idx) => {
-                          const event = formatOpenHouseEvent(oh);
-                          return (
-                            <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                              {event.isBrokerTour ? (
-                                <BlueCarIcon className="h-3.5 w-3.5 shrink-0" />
-                              ) : (
-                                <span className="shrink-0">🎈</span>
-                              )}
-                              <span>{event.dateLabel} · {event.timeLabel}</span>
-                              <button
-                                className="text-primary hover:text-primary/80 hover:underline ml-1"
-                                onClick={() => onViewOpenHouses(l)}
-                              >
-                                Edit
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
 
                 </div>
@@ -985,6 +1000,28 @@ const MyListings = () => {
     navigate(`/analytics/${id}`);
   };
 
+  const handleDeleteOpenHouse = async (listingId: string, eventIndex: number) => {
+    if (!confirm("Delete this scheduled event?")) return;
+    
+    const listing = listings.find(l => l.id === listingId);
+    if (!listing) return;
+    
+    const updatedOpenHouses = (listing.open_houses as any[]).filter((_, i) => i !== eventIndex);
+    
+    const { error } = await supabase
+      .from("listings")
+      .update({ open_houses: updatedOpenHouses })
+      .eq("id", listingId);
+      
+    if (error) {
+      toast.error("Failed to delete event");
+      return;
+    }
+    
+    toast.success("Event deleted");
+    fetchListings();
+  };
+
   const handleBulkDeleteDrafts = async (ids: string[]) => {
     try {
       const { error } = await supabase.from("listings").delete().in("id", ids);
@@ -1065,6 +1102,7 @@ const MyListings = () => {
         onOpenHouse={handleOpenHouse}
         onBrokerTour={handleBrokerTour}
         onViewOpenHouses={handleViewOpenHouses}
+        onDeleteOpenHouse={handleDeleteOpenHouse}
         onMatches={handleMatches}
         onSocialShare={handleSocialShare}
         onEmail={handleEmail}
