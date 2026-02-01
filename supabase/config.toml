@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.send-agent-invite]
 verify_jwt = false
+
+[functions.seed-proposal-test-data]
+verify_jwt = true
