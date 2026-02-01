@@ -33,10 +33,8 @@ export const useFeatureFlag = (flagName: string) => {
         return;
       }
 
-      // Mark as fetching to prevent duplicate calls
-      if (!cachedValue) {
-        flagCache.set(flagName, { value: false, fetching: true });
-      }
+      // Mark as fetching to prevent duplicate calls (normalize state before RPC)
+      flagCache.set(flagName, { value: cachedValue?.value ?? false, fetching: true });
 
       try {
         const { data, error } = await supabase.rpc("is_feature_enabled", {

@@ -7,7 +7,7 @@ export interface ProposalIncentivesData {
   showBuyerProposal: boolean;
   showSellerProposal: boolean;
   // From agent_proposal_incentives
-  buyerFeeCredItType: "percentage" | "flat" | null;
+  buyerFeeCreditType: "percentage" | "flat" | null;
   buyerFeeCreditValue: number | null;
   flatFeeOption: boolean;
   flatFeeAmount: number | null;
@@ -17,7 +17,7 @@ export interface ProposalIncentivesData {
 const defaultData: ProposalIncentivesData = {
   showBuyerProposal: false,
   showSellerProposal: false,
-  buyerFeeCredItType: null,
+  buyerFeeCreditType: null,
   buyerFeeCreditValue: null,
   flatFeeOption: false,
   flatFeeAmount: null,
@@ -75,7 +75,7 @@ export const useAgentProposalIncentives = (
       setData({
         showBuyerProposal: settingsData?.show_buyer_proposal ?? false,
         showSellerProposal: settingsData?.show_seller_proposal ?? false,
-        buyerFeeCredItType: incentivesData?.buyer_fee_credit_type as "percentage" | "flat" | null,
+        buyerFeeCreditType: incentivesData?.buyer_fee_credit_type as "percentage" | "flat" | null,
         buyerFeeCreditValue: incentivesData?.buyer_fee_credit_value ?? null,
         flatFeeOption: incentivesData?.flat_fee_option ?? false,
         flatFeeAmount: incentivesData?.flat_fee_amount ?? null,
@@ -98,7 +98,7 @@ export const useAgentProposalIncentives = (
 
   /**
    * Save data with atomic semantics: only show success if BOTH updates succeed.
-   * Uses fail-fast: if first update fails, second is not attempted.
+   * Uses fail-fast with best-effort rollback: if step 2 fails, attempts to revert step 1.
    */
   const save = async (updates: Partial<ProposalIncentivesData>): Promise<boolean> => {
     if (!featureEnabled || !userId) {
@@ -114,6 +114,12 @@ export const useAgentProposalIncentives = (
     setError(null);
 
     const newData = { ...data, ...updates };
+
+    // Store previous toggle values for potential rollback
+    const previousToggles = {
+      show_buyer_proposal: data.showBuyerProposal,
+      show_seller_proposal: data.showSellerProposal,
+    };
 
     try {
       // Step 1: Update agent_settings (toggles)
@@ -135,7 +141,7 @@ export const useAgentProposalIncentives = (
         .upsert(
           {
             agent_id: userId,
-            buyer_fee_credit_type: newData.buyerFeeCredItType,
+            buyer_fee_credit_type: newData.buyerFeeCreditType,
             buyer_fee_credit_value: newData.buyerFeeCreditValue,
             flat_fee_option: newData.flatFeeOption,
             flat_fee_amount: newData.flatFeeAmount,
@@ -145,6 +151,16 @@ export const useAgentProposalIncentives = (
         );
 
       if (incentivesError) {
+        // Best-effort rollback: revert toggles to previous values
+        console.warn("[useAgentProposalIncentives] Incentives failed, attempting rollback...");
+        await supabase
+          .from("agent_settings")
+          .update(previousToggles)
+          .eq("user_id", userId);
+        
+        // Refetch to ensure UI reflects DB truth
+        await fetchData();
+        
         throw new Error(`Incentives update failed: ${incentivesError.message}`);
       }
 
