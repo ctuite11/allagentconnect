@@ -44,6 +44,8 @@ import IncentivesSection from "@/components/profile-editor/IncentivesSection";
 import TestimonialCard from "@/components/profile-editor/TestimonialCard";
 import HeaderBackgroundSelector from "@/components/profile-editor/HeaderBackgroundSelector";
 import { PageHeader } from "@/components/ui/page-header";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import AgentProposalIncentivesForm from "@/components/proposals/AgentProposalIncentivesForm";
 
 
 interface SocialLinks {
@@ -126,6 +128,8 @@ const [headerBackgroundType, setHeaderBackgroundType] = useState("color");
   const [headerImageUrl, setHeaderImageUrl] = useState("");
   const [uploadingHeaderImage, setUploadingHeaderImage] = useState(false);
   
+  // Feature flag for Agent Proposals (Phase 2)
+  const { enabled: proposalsEnabled, loading: proposalsFlagLoading } = useFeatureFlag("FEATURE_AGENT_PROPOSALS");
 
   useEffect(() => {
     checkAuthAndLoadProfile();
@@ -867,6 +871,14 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 />
               </CardContent>
             </Card>
+
+            {/* Agent Proposal Incentives - Feature Flagged */}
+            {proposalsEnabled && userId && (
+              <AgentProposalIncentivesForm
+                userId={userId}
+                featureEnabled={proposalsEnabled}
+              />
+            )}
 
             {/* Buyer Leads Section */}
             <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
