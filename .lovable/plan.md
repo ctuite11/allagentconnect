@@ -1,58 +1,148 @@
-# Phase 2 Complete: Agent Proposal Incentives UI
+
+
+# Plan: Agent Count Bar with Pending-Only Default
+
+## Overview
+Add a horizontal status count bar to the Admin Approvals page (`/admin/approvals`) that displays counts for all agent statuses, while limiting the main agent list to only show **Pending** agents by default.
+
+---
+
+## Current State
+- The page shows all agents regardless of status
+- Status filtering is via a dropdown (line 653-665)
+- Status distribution data is already available from the edge function response
+- Agent statuses defined in `src/constants/status.ts`: `unverified`, `pending`, `verified`, `restricted`, `rejected`
+
+---
+
+## Implementation
+
+### 1. Status Count Bar Component
+Add a horizontal bar of clickable pills showing counts for each status, positioned between the filters bar and the agent list.
+
+**UI Design:**
+```text
+┌───────────────────────────────────────────────────────────────────────────┐
+│  Pending (12)  │  All (47)  │  Verified (30)  │  Rejected (3)  │  ...    │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+- Use the existing `Pill` component from `src/components/ui/pill.tsx`
+- Highlight the active filter with `active` prop
+- Each pill is clickable to filter by that status
+- Colors match the status badge colors from `AGENT_STATUS_CONFIG`
+
+### 2. Default Filter Behavior
+- Change the default `statusFilter` state from `"all"` to `"pending"`
+- This ensures the approvals queue shows only agents awaiting review
+
+### 3. Filter Logic Update
+Update the `filteredAgents` useMemo to handle the filter:
+
+```typescript
+// Status filter - "pending" is the default
+if (statusFilter !== "all") {
+  result = result.filter((a) => a.agent_status === statusFilter);
+}
+```
+
+### 4. Count Calculation
+Create a computed object for status counts:
+
+```typescript
+const statusCounts = useMemo(() => {
+  const counts: Record<string, number> = { all: agents.length };
+  agents.forEach((a) => {
+    counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
+  });
+  return counts;
+}, [agents]);
+```
+
+---
+
+## Technical Details
+
+### File Changes
+
+| File | Change |
+|------|--------|
+| `src/pages/AdminApprovals.tsx` | Add status count bar, change default filter to "pending", add count calculation |
+
+### Status Pills Order
+1. **Pending** (amber) - default selected, first position
+2. **All** (neutral)
+3. **Verified** (emerald)
+4. **Unverified** (neutral)
+5. **Rejected** (rose)
+6. **Restricted** (rose)
+
+### Pill Variant Mapping
+```typescript
+const variantForStatus = (status: string): PillVariant => {
+  switch (status) {
+    case "pending": return "warning";
+    case "verified": return "success";
+    case "rejected":
+    case "restricted": return "danger";
+    default: return "neutral";
+  }
+};
+```
+
+---
+
+## UI Placement
+The count bar will be inserted after the search/filter bar (around line 693) and before the agent cards:
+
+```tsx
+{/* Status Count Bar */}
+<div className="flex flex-wrap gap-2 mb-6">
+  <Pill
+    label={`Pending (${statusCounts.pending || 0})`}
+    variant="warning"
+    active={statusFilter === "pending"}
+    onClick={() => setStatusFilter("pending")}
+  />
+  <Pill
+    label={`All (${statusCounts.all})`}
+    variant="neutral"
+    active={statusFilter === "all"}
+    onClick={() => setStatusFilter("all")}
+  />
+  <Pill
+    label={`Verified (${statusCounts.verified || 0})`}
+    variant="success"
+    active={statusFilter === "verified"}
+    onClick={() => setStatusFilter("verified")}
+  />
+  <Pill
+    label={`Unverified (${statusCounts.unverified || 0})`}
+    variant="neutral"
+    active={statusFilter === "unverified"}
+    onClick={() => setStatusFilter("unverified")}
+  />
+  <Pill
+    label={`Rejected (${statusCounts.rejected || 0})`}
+    variant="danger"
+    active={statusFilter === "rejected"}
+    onClick={() => setStatusFilter("rejected")}
+  />
+  <Pill
+    label={`Restricted (${statusCounts.restricted || 0})`}
+    variant="danger"
+    active={statusFilter === "restricted"}
+    onClick={() => setStatusFilter("restricted")}
+  />
+</div>
+```
+
+---
 
 ## Summary
-Built a fully feature-flagged UI section in the Agent Profile Editor for managing agent proposal visibility and incentives. The entire section is gated behind `FEATURE_AGENT_PROPOSALS` (currently `false`).
+- Adds a visual status count bar for quick filtering
+- Defaults to showing only **Pending** agents (the approval queue)
+- Maintains ability to view all agents or filter by any specific status
+- Uses existing Pill component and AGENT_STATUS constants for consistency
+- Pending pill is positioned first and highlighted by default
 
-## Completed Work
-
-### Database Migration
-- Added RLS policies to `agent_proposal_incentives`:
-  - `Agents can read own incentives` (SELECT with `auth.uid() = agent_id`)
-  - `Agents can insert own incentives` (INSERT with `WITH CHECK auth.uid() = agent_id`)
-  - `Agents can update own incentives` (UPDATE with `USING` + `WITH CHECK` to prevent `agent_id` tampering)
-- Existing admin policies preserved
-
-### New Files Created
-1. **`src/hooks/useFeatureFlag.ts`**
-   - Module-level cache prevents repeated RPC calls
-   - Returns `{ enabled, loading }` for any flag name
-   - Zero queries if cached
-
-2. **`src/hooks/useAgentProposalIncentives.ts`**
-   - STRICT GUARD: Only executes queries when `featureEnabled === true`
-   - Fetches `show_buyer_proposal` and `show_seller_proposal` from `agent_settings`
-   - Fetches incentives from `agent_proposal_incentives` (maybeSingle)
-   - ATOMIC SAVE: Both updates must succeed; shows error if either fails
-
-3. **`src/components/proposals/AgentProposalIncentivesForm.tsx`**
-   - UI for visibility toggles + incentives
-   - Uses locked microcopy from `docs/proposal-system-copy.md`
-   - Independent save flow with toast feedback
-
-### Integration
-- `src/pages/AgentProfileEditor.tsx` now conditionally renders the form after Social Media section
-- Gated by `proposalsEnabled && userId`
-
-## Security Guardrails
-- ✅ Feature flag check happens first
-- ✅ Zero queries when flag is false
-- ✅ RLS enforces `agent_id = auth.uid()` on all operations
-- ✅ WITH CHECK prevents agent_id tampering on UPDATE
-- ✅ Admin access preserved (existing policy untouched)
-- ✅ No public/consumer page changes
-- ✅ No email triggers or background jobs
-- ✅ Atomic save: success only if both updates succeed
-
-## Testing Checklist
-- [ ] With flag OFF: section does not appear, no network calls
-- [ ] With flag ON: section appears, data loads correctly
-- [ ] Toggle saves update `agent_settings` correctly
-- [ ] Incentives save creates row if none exists (INSERT via upsert)
-- [ ] Incentives save updates row if exists (UPDATE via upsert)
-- [ ] Partial saves preserve unmodified fields
-- [ ] Feature flag RPC called only once per session (cached)
-- [ ] Error states show appropriate toast messages
-
-## Next Steps (Phase 2 continued)
-- [ ] Buyer Qualifications flow (docs upload, agreement modal, receive_agent_proposals toggle)
-- [ ] Add listing commission fields to incentives (listing_commission_type, listing_commission_value)
