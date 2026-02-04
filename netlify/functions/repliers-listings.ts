@@ -1,18 +1,6 @@
 import type { Handler } from "@netlify/functions";
 
-// CORS helper - allows production, deploy previews, and local dev
-const cors = (origin: string | undefined) => {
-  const o = origin || "";
-  const allowed =
-    o === "https://allagentconnect.com" ||
-    o.endsWith(".netlify.app") ||
-    o.startsWith("http://localhost:");
-  return {
-    "Access-Control-Allow-Origin": allowed ? o : "https://allagentconnect.com",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-  };
-};
+import { buildCorsHeaders } from "./repliers-utils";
 
 // Allowlisted query params that can be forwarded to Repliers
 const ALLOWED_PARAMS = new Set([
@@ -40,11 +28,16 @@ const MAX_PAGE_SIZE = 50;
 
 export const handler: Handler = async (event) => {
   const origin = event.headers.origin || event.headers.Origin;
+  const cors = buildCorsHeaders(origin, "GET, OPTIONS");
   const headers = {
     "Content-Type": "application/json",
     "Cache-Control": "s-maxage=60, stale-while-revalidate=120",
-    ...cors(origin),
+    ...cors.headers,
   };
+
+  if (cors.isBrowserRequest && !cors.isAllowedOrigin) {
+    return { statusCode: 403, headers, body: "" };
+  }
 
   // Handle CORS preflight
   if (event.httpMethod === "OPTIONS") {
