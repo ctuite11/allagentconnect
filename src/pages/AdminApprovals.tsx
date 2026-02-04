@@ -716,16 +716,16 @@ export default function AdminApprovals() {
         {/* Status Count Bar */}
         <div className="flex flex-wrap gap-2 mb-6">
           <Pill
-            label={`Pending (${statusCounts.pending || 0})`}
-            variant="warning"
-            active={statusFilter === "pending"}
-            onClick={() => setStatusFilter("pending")}
-          />
-          <Pill
             label={`All (${statusCounts.all})`}
             variant="neutral"
             active={statusFilter === "all"}
             onClick={() => setStatusFilter("all")}
+          />
+          <Pill
+            label={`Pending (${statusCounts.pending || 0})`}
+            variant="warning"
+            active={statusFilter === "pending"}
+            onClick={() => setStatusFilter("pending")}
           />
           <Pill
             label={`Verified (${statusCounts.verified || 0})`}
