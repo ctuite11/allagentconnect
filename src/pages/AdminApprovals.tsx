@@ -37,6 +37,7 @@ import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
+import { Pill, type PillVariant } from "@/components/ui/pill";
 
 interface Agent {
   id: string;
@@ -120,8 +121,8 @@ export default function AdminApprovals() {
     created_at: string;
   }>>([]);
   
-  // Filters & Search
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  // Filters & Search - default to "pending" to show approval queue
+  const [statusFilter, setStatusFilter] = useState<string>("pending");
   const [searchQuery, setSearchQuery] = useState("");
   
   // Sorting
@@ -370,6 +371,26 @@ export default function AdminApprovals() {
         newSet.delete(agent.id);
         return newSet;
       });
+    }
+  };
+
+  // Status counts for the filter bar
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: agents.length };
+    agents.forEach((a) => {
+      counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
+    });
+    return counts;
+  }, [agents]);
+
+  // Helper to map status to Pill variant
+  const variantForStatus = (status: string): PillVariant => {
+    switch (status) {
+      case "pending": return "warning";
+      case "verified": return "success";
+      case "rejected":
+      case "restricted": return "danger";
+      default: return "neutral";
     }
   };
 
@@ -690,6 +711,46 @@ export default function AdminApprovals() {
             </div>
           </div>
 
+        </div>
+
+        {/* Status Count Bar */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Pill
+            label={`Pending (${statusCounts.pending || 0})`}
+            variant="warning"
+            active={statusFilter === "pending"}
+            onClick={() => setStatusFilter("pending")}
+          />
+          <Pill
+            label={`All (${statusCounts.all})`}
+            variant="neutral"
+            active={statusFilter === "all"}
+            onClick={() => setStatusFilter("all")}
+          />
+          <Pill
+            label={`Verified (${statusCounts.verified || 0})`}
+            variant="success"
+            active={statusFilter === "verified"}
+            onClick={() => setStatusFilter("verified")}
+          />
+          <Pill
+            label={`Unverified (${statusCounts.unverified || 0})`}
+            variant="neutral"
+            active={statusFilter === "unverified"}
+            onClick={() => setStatusFilter("unverified")}
+          />
+          <Pill
+            label={`Rejected (${statusCounts.rejected || 0})`}
+            variant="danger"
+            active={statusFilter === "rejected"}
+            onClick={() => setStatusFilter("rejected")}
+          />
+          <Pill
+            label={`Restricted (${statusCounts.restricted || 0})`}
+            variant="danger"
+            active={statusFilter === "restricted"}
+            onClick={() => setStatusFilter("restricted")}
+          />
         </div>
 
         {/* Agent Cards */}
