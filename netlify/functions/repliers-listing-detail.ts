@@ -38,32 +38,17 @@ export const handler: Handler = async (event) => {
     };
   }
 
-  // Extract listing ID from path
-  // Netlify passes the original path; we need to extract the ID
-  // Path format: /api/repliers/listing/:id -> we get the full path
-  const path = event.path || "";
-  const listingId = event.queryStringParameters?.id || path.split("/").pop();
+  const mlsNumber = event.queryStringParameters?.mlsNumber;
 
-  if (!listingId || listingId === "listing") {
+  if (!mlsNumber) {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: "Listing ID required" }),
-    };
-  }
-
-  // Validate listing ID format (alphanumeric, dashes, underscores)
-  if (!/^[\w-]+$/.test(listingId)) {
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify({ error: "Invalid listing ID format" }),
+      body: JSON.stringify({ error: "mlsNumber required" }),
     };
   }
 
   try {
-    const upstreamUrl = `https://api.repliers.io/listings/${encodeURIComponent(listingId)}`;
-
     // Configurable auth header
     const authHeaderName = process.env.REPLIERS_API_KEY_HEADER || "REPLIERS-API-KEY";
 
@@ -73,9 +58,13 @@ export const handler: Handler = async (event) => {
         ? `Bearer ${apiKey}`
         : apiKey;
 
-    console.log("[repliers-listing-detail] Fetching listing:", listingId);
+    const lookupUrl = `https://api.repliers.io/listings?mlsNumber=${encodeURIComponent(
+      mlsNumber
+    )}&resultsPerPage=1`;
 
-    const response = await fetch(upstreamUrl, {
+    console.log("[repliers-listing-detail] Fetching listing by MLS:", mlsNumber);
+
+    const lookupResponse = await fetch(lookupUrl, {
       method: "GET",
       headers: {
         [authHeaderName]: authHeaderValue,
@@ -83,15 +72,15 @@ export const handler: Handler = async (event) => {
       },
     });
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "Unknown error");
+    if (!lookupResponse.ok) {
+      const errorText = await lookupResponse.text().catch(() => "Unknown error");
       console.error("[repliers-listing-detail] Upstream error:", {
-        status: response.status,
-        listingId,
+        status: lookupResponse.status,
+        mlsNumber,
         body: errorText.substring(0, 500),
       });
 
-      if (response.status === 404) {
+      if (lookupResponse.status === 404) {
         return {
           statusCode: 404,
           headers,
@@ -104,17 +93,70 @@ export const handler: Handler = async (event) => {
         headers,
         body: JSON.stringify({
           error: "Upstream API error",
-          status: response.status,
+          status: lookupResponse.status,
         }),
       };
     }
 
-    const data = await response.json();
+    const lookupData = await lookupResponse.json();
+    const listings = Array.isArray(lookupData?.listings) ? lookupData.listings : [];
+    const listing = listings[0];
+    const resource = listing?.resource;
+
+    if (!resource) {
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ error: "Listing not found" }),
+      };
+    }
+
+    const resourceUrl = `https://api.repliers.io/listings?resource=${encodeURIComponent(
+      resource
+    )}&resultsPerPage=1`;
+
+    console.log("[repliers-listing-detail] Fetching listing by resource:", resource);
+
+    const resourceResponse = await fetch(resourceUrl, {
+      method: "GET",
+      headers: {
+        [authHeaderName]: authHeaderValue,
+        Accept: "application/json",
+      },
+    });
+
+    if (!resourceResponse.ok) {
+      const errorText = await resourceResponse.text().catch(() => "Unknown error");
+      console.error("[repliers-listing-detail] Upstream error:", {
+        status: resourceResponse.status,
+        resource,
+        body: errorText.substring(0, 500),
+      });
+
+      if (resourceResponse.status === 404) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: "Listing not found" }),
+        };
+      }
+
+      return {
+        statusCode: 502,
+        headers,
+        body: JSON.stringify({
+          error: "Upstream API error",
+          status: resourceResponse.status,
+        }),
+      };
+    }
+
+    const responseBody = await resourceResponse.text();
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(data),
+      body: responseBody,
     };
   } catch (e: any) {
     console.error("[repliers-listing-detail] Error:", e?.message || e);
