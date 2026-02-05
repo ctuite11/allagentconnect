@@ -58,6 +58,11 @@
   force = true
 
 [[redirects]]
+  from = "/api/repliers/listing-detail"
+  to = "/.netlify/functions/repliers-listing-detail"
+  status = 200
+
+[[redirects]]
   from = "/api/repliers/listings"
   to = "/.netlify/functions/repliers-listings"
   status = 200
