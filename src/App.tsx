@@ -68,6 +68,8 @@ import DesignMockup from "./pages/DesignMockup";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
 import IDXPropertyDetail from "./pages/IDXPropertyDetail";
+import IDXSearchBeta from "./pages/IDXSearchBeta";
+import IDXListingDetailBeta from "./pages/IDXListingDetailBeta";
 import SellerDashboard from "./pages/SellerDashboard";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
@@ -207,6 +209,8 @@ const App = () => (
                 {/* Design mockup - isolated visual exploration, not production */}
                 <Route path="/mockup" element={<DesignMockup />} />
                 {/* IDX Routes - MLS property search via Repliers (separate from Supabase listings) */}
+                <Route path="/idx" element={<IDXSearchBeta />} />
+                <Route path="/idx/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="/idx/search" element={<IDXSearch />} />
                 <Route path="/idx/property/:id" element={<IDXPropertyDetail />} />
                 <Route path="*" element={<NotFound />} />
