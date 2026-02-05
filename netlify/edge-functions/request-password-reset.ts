@@ -1,7 +1,7 @@
 // Same-origin password reset endpoint with database-backed rate limiting
 // Uses Supabase RPC for durable rate limits across cold starts
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { createClient } from "https://esm.sh/v135/@supabase/supabase-js@2.42.3?target=denonext";
 
 interface PasswordResetRequest {
   email: string;
@@ -126,10 +126,10 @@ export default async function handler(request: Request, context: any) {
     });
   }
 
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
-  const SUPABASE_SERVICE_ROLE_KEY = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "").trim();
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  const SUPABASE_URL = Netlify.env.get("SUPABASE_URL");
+  const SUPABASE_ANON_KEY = Netlify.env.get("SUPABASE_ANON_KEY") || Netlify.env.get("SUPABASE_PUBLISHABLE_KEY");
+  const SUPABASE_SERVICE_ROLE_KEY = (Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY") || "").trim();
+  const RESEND_API_KEY = Netlify.env.get("RESEND_API_KEY");
 
   // Get client IP
   const clientIP = context.ip || 
@@ -164,7 +164,7 @@ export default async function handler(request: Request, context: any) {
     const cleanEmail = email.trim().toLowerCase();
     
     // Use PUBLIC_SITE_URL env var for redirect, fallback to production domain
-    const publicSiteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.com";
+    const publicSiteUrl = Netlify.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.com";
     const redirectTo = `${publicSiteUrl}/auth/callback`;
     console.log("[request-password-reset] redirectTo =", redirectTo);
 
