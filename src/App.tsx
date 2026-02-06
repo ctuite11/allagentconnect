@@ -67,6 +67,7 @@ import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
+import IDXSearchBeta from "./pages/IDXSearchBeta";
 import IDXPropertyDetail from "./pages/IDXPropertyDetail";
 import IDXSearchBeta from "./pages/IDXSearchBeta";
 import IDXListingDetailBeta from "./pages/IDXListingDetailBeta";
@@ -98,6 +99,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const IDXListingDetailBeta = IDXPropertyDetail;
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: true }}>
