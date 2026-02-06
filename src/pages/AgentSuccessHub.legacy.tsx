@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { 
   Users, Mail, Heart, Bell, 
-  Home, Megaphone, Palette, Shield
+  Home, Megaphone, Palette, Shield, ClipboardList
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -422,6 +422,14 @@ export default function AgentSuccessHub() {
       metricValue: activeHotsheetsCount,
       metricLabel: "Active",
       route: "/hot-sheets",
+    },
+    {
+      key: "showing_requests",
+      icon: <ClipboardList className="h-7 w-7" />,
+      title: "Showing Requests",
+      description: "Review incoming showing requests",
+      route: "/showing-requests",
+      iconTone: "blue" as const,
     },
     {
       key: "communications_center",

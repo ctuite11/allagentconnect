@@ -87,6 +87,7 @@ import Disclosures from "./pages/legal/Disclosures";
 // Messaging
 import Messages from "./pages/Messages";
 import Conversation from "./pages/Conversation";
+import ShowingRequests from "./pages/ShowingRequests";
 
 
 const queryClient = new QueryClient({
@@ -175,6 +176,7 @@ const App = () => (
                 <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
                 <Route path="/messages" element={<RouteGuard requireRole="agent"><Messages /></RouteGuard>} />
                 <Route path="/messages/:id" element={<RouteGuard requireRole="agent"><Conversation /></RouteGuard>} />
+                <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
