@@ -68,8 +68,6 @@ import DesignMockup from "./pages/DesignMockup";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
 import IDXSearchBeta from "./pages/IDXSearchBeta";
-import IDXPropertyDetail from "./pages/IDXPropertyDetail";
-import IDXSearchBeta from "./pages/IDXSearchBeta";
 import IDXListingDetailBeta from "./pages/IDXListingDetailBeta";
 import SellerDashboard from "./pages/SellerDashboard";
 import ScrollToTop from "./components/ScrollToTop";
@@ -99,8 +97,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const IDXListingDetailBeta = IDXPropertyDetail;
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: true }}>
@@ -215,7 +211,7 @@ const App = () => (
                 <Route path="/idx" element={<IDXSearchBeta />} />
                 <Route path="/idx/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="/idx/search" element={<IDXSearch />} />
-                <Route path="/idx/property/:id" element={<IDXPropertyDetail />} />
+                <Route path="/idx/property/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </>
