@@ -69,6 +69,8 @@ import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
 import IDXSearchBeta from "./pages/IDXSearchBeta";
 import IDXPropertyDetail from "./pages/IDXPropertyDetail";
+import IDXSearchBeta from "./pages/IDXSearchBeta";
+import IDXListingDetailBeta from "./pages/IDXListingDetailBeta";
 import SellerDashboard from "./pages/SellerDashboard";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
