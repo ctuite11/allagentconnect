@@ -1,148 +1,76 @@
 
 
-# Plan: Agent Count Bar with Pending-Only Default
+# Plan: Update OG Monogram to Emerald Green
 
 ## Overview
-Add a horizontal status count bar to the Admin Approvals page (`/admin/approvals`) that displays counts for all agent statuses, while limiting the main agent list to only show **Pending** agents by default.
+Replace the gray color (`#6B7280`) with AAC Success emerald green (`#059669`) in the OG image monogram and the "Connect" wordmark text.
 
 ---
 
 ## Current State
-- The page shows all agents regardless of status
-- Status filtering is via a dropdown (line 653-665)
-- Status distribution data is already available from the edge function response
-- Agent statuses defined in `src/constants/status.ts`: `unverified`, `pending`, `verified`, `restricted`, `rejected`
+- **Monogram SVG**: `public/og/aac-monogram.svg` uses gray `#6B7280` for the interior path
+- **OG Render HTML**: `public/og/og-render.html` uses gray `#6B7280` for the "Connect" text and descriptor
+- **Brand Color**: AAC Success is defined as `#059669` (Emerald-600)
 
 ---
 
-## Implementation
+## Files to Update
 
-### 1. Status Count Bar Component
-Add a horizontal bar of clickable pills showing counts for each status, positioned between the filters bar and the agent list.
+### 1. `public/og/aac-monogram.svg`
+Change the interior path fill from gray to emerald green:
 
-**UI Design:**
-```text
-┌───────────────────────────────────────────────────────────────────────────┐
-│  Pending (12)  │  All (47)  │  Verified (30)  │  Rejected (3)  │  ...    │
-└───────────────────────────────────────────────────────────────────────────┘
+```svg
+<!-- Line 5: Change fill color -->
+<path ... fill="#059669"/>  <!-- Was #6B7280 -->
 ```
 
-- Use the existing `Pill` component from `src/components/ui/pill.tsx`
-- Highlight the active filter with `active` prop
-- Each pill is clickable to filter by that status
-- Colors match the status badge colors from `AGENT_STATUS_CONFIG`
+### 2. `public/og/og-render.html`
+Update the CSS for the "Connect" wordmark and descriptor to use emerald green:
 
-### 2. Default Filter Behavior
-- Change the default `statusFilter` state from `"all"` to `"pending"`
-- This ensures the approvals queue shows only agents awaiting review
-
-### 3. Filter Logic Update
-Update the `filteredAgents` useMemo to handle the filter:
-
-```typescript
-// Status filter - "pending" is the default
-if (statusFilter !== "all") {
-  result = result.filter((a) => a.agent_status === statusFilter);
-}
-```
-
-### 4. Count Calculation
-Create a computed object for status counts:
-
-```typescript
-const statusCounts = useMemo(() => {
-  const counts: Record<string, number> = { all: agents.length };
-  agents.forEach((a) => {
-    counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
-  });
-  return counts;
-}, [agents]);
-```
+| Element | Current Color | New Color |
+|---------|--------------|-----------|
+| `.wordmark .connect` | `#6B7280` | `#059669` |
+| `.descriptor` | `rgba(107, 114, 128, 0.85)` | `rgba(5, 150, 105, 0.85)` |
 
 ---
 
 ## Technical Details
 
-### File Changes
+### Color Values
+| Token | Value |
+|-------|-------|
+| AAC Success (Emerald-600) | `#059669` |
+| AAC Success RGB | `5, 150, 105` |
 
-| File | Change |
-|------|--------|
-| `src/pages/AdminApprovals.tsx` | Add status count bar, change default filter to "pending", add count calculation |
+### Updated CSS (og-render.html)
+```css
+.wordmark .connect {
+  font-weight: 700;
+  color: #059669;  /* AAC Success Emerald */
+}
 
-### Status Pills Order
-1. **Pending** (amber) - default selected, first position
-2. **All** (neutral)
-3. **Verified** (emerald)
-4. **Unverified** (neutral)
-5. **Rejected** (rose)
-6. **Restricted** (rose)
-
-### Pill Variant Mapping
-```typescript
-const variantForStatus = (status: string): PillVariant => {
-  switch (status) {
-    case "pending": return "warning";
-    case "verified": return "success";
-    case "rejected":
-    case "restricted": return "danger";
-    default: return "neutral";
-  }
-};
+.descriptor {
+  font-size: 32px;
+  font-weight: 600;
+  color: rgba(5, 150, 105, 0.85);  /* Emerald at 85% opacity */
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
 ```
 
 ---
 
-## UI Placement
-The count bar will be inserted after the search/filter bar (around line 693) and before the agent cards:
-
-```tsx
-{/* Status Count Bar */}
-<div className="flex flex-wrap gap-2 mb-6">
-  <Pill
-    label={`Pending (${statusCounts.pending || 0})`}
-    variant="warning"
-    active={statusFilter === "pending"}
-    onClick={() => setStatusFilter("pending")}
-  />
-  <Pill
-    label={`All (${statusCounts.all})`}
-    variant="neutral"
-    active={statusFilter === "all"}
-    onClick={() => setStatusFilter("all")}
-  />
-  <Pill
-    label={`Verified (${statusCounts.verified || 0})`}
-    variant="success"
-    active={statusFilter === "verified"}
-    onClick={() => setStatusFilter("verified")}
-  />
-  <Pill
-    label={`Unverified (${statusCounts.unverified || 0})`}
-    variant="neutral"
-    active={statusFilter === "unverified"}
-    onClick={() => setStatusFilter("unverified")}
-  />
-  <Pill
-    label={`Rejected (${statusCounts.rejected || 0})`}
-    variant="danger"
-    active={statusFilter === "rejected"}
-    onClick={() => setStatusFilter("rejected")}
-  />
-  <Pill
-    label={`Restricted (${statusCounts.restricted || 0})`}
-    variant="danger"
-    active={statusFilter === "restricted"}
-    onClick={() => setStatusFilter("restricted")}
-  />
-</div>
-```
+## Post-Update Steps
+After updating the SVG and HTML:
+1. Regenerate the OG image: `node scripts/generate-og-image.cjs`
+2. Update `index.html` and `netlify.toml` with the new dated filename
+3. Verify via Facebook Sharing Debugger
 
 ---
 
 ## Summary
-- Adds a visual status count bar for quick filtering
-- Defaults to showing only **Pending** agents (the approval queue)
-- Maintains ability to view all agents or filter by any specific status
-- Uses existing Pill component and AGENT_STATUS constants for consistency
-- Pending pill is positioned first and highlighted by default
+- Updates the monogram interior from gray to emerald green `#059669`
+- Updates "Connect" wordmark from gray to emerald green
+- Updates descriptor text to use emerald green at 85% opacity
+- Maintains brand consistency with the AAC Success color standard
 
