@@ -98,7 +98,10 @@ export default function IDXListingDetailBeta() {
     staleTime: 60 * 1000,
   });
 
-  const listing: RepliersListing | undefined = data?.listings?.[0];
+  const listing: RepliersListing | null =
+    Array.isArray(data?.listings) && data.listings.length > 0
+      ? data.listings[0]
+      : null;
 
   const handleBack = () => {
     navigate("/idx/search");
@@ -130,7 +133,34 @@ export default function IDXListingDetailBeta() {
     );
   }
 
-  if (error || !listing) {
+  if (error) {
+    return (
+      <PageShell>
+        <Button
+          variant="ghost"
+          onClick={handleBack}
+          className="mb-4 -ml-2 text-neutral-600"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Search
+        </Button>
+        <div className="text-center py-16">
+          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <p className="text-neutral-700 font-medium mb-2">
+            Unable to load listing
+          </p>
+          <p className="text-neutral-500 text-sm mb-4">
+            Please try again in a few moments
+          </p>
+          <Button onClick={handleBack} className="rounded-xl">
+            Return to Search
+          </Button>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (listing === null) {
     return (
       <PageShell>
         <Button
