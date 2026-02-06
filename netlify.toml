@@ -55,6 +55,11 @@
   to = "/.netlify/functions/request-showing"
   status = 200
 
+[[redirects]]
+  from = "/api/showing-requests"
+  to = "/.netlify/functions/showing-requests"
+  status = 200
+
 # Repliers IDX proxy endpoints (secure server-side)
 [[redirects]]
   from = "/api/repliers/health"

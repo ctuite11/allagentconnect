@@ -1,7 +1,7 @@
 // DO NOT IMPORT THIS INTO PAGES — rendered globally in App.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight, Shield, MessageSquare } from "lucide-react";
+import { Home, Search, Users, LayoutDashboard, Menu, X, Heart, Bell, ChevronDown, Building2, FileText, UserCog, Plus, List, UserCircle, BarChart3, LogOut, ArrowRight, Shield, MessageSquare, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -298,6 +298,10 @@ const Navigation = () => {
                       <Bell className="mr-2 h-4 w-4" />
                       Hot Sheets
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/showing-requests")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Showing Requests
+                    </DropdownMenuItem>
                     {/* Hidden until launch - Communications Center */}
                     {false && (
                     <DropdownMenuItem onClick={() => navigate("/client-needs")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
@@ -393,6 +397,10 @@ const Navigation = () => {
                       <DropdownMenuItem onClick={() => navigate("/hot-sheets")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <Bell className="mr-2 h-4 w-4" />
                         Hot Sheets
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/showing-requests")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                        <ClipboardList className="mr-2 h-4 w-4" />
+                        Showing Requests
                       </DropdownMenuItem>
                       {/* Hidden until launch - Communications Center */}
                       {false && (
