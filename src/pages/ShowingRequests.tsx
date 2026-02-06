@@ -51,13 +51,9 @@ export default function ShowingRequests() {
 
   const endpoint = useMemo(() => {
     const params = new URLSearchParams();
-    if (status !== "all") {
-      params.set("status", status);
-    }
-    if (search.trim()) {
-      params.set("q", search.trim());
-    }
-    params.set("limit", "50");
+    params.set("status", status === "all" ? "" : status);
+    params.set("q", search.trim());
+    params.set("limit", "100");
     return `/api/showing-requests?${params.toString()}`;
   }, [search, status]);
 
