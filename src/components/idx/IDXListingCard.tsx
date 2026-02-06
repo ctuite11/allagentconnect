@@ -44,7 +44,7 @@ export function IDXListingCard({ listing }: IDXListingCardProps) {
 
   const handleClick = () => {
     if (listing.mlsNumber) {
-      navigate(`/idx/property/${listing.mlsNumber}`);
+      navigate(`/idx/${listing.mlsNumber}`);
     }
   };
 
