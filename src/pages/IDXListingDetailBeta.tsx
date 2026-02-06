@@ -4,8 +4,23 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { IDXAgentInfo } from "@/components/idx/IDXAgentInfo";
-import { RepliersListing, RepliersListingsResponse } from "@/lib/repliers";
+import {
+  RepliersListing,
+  RepliersListingsResponse,
+  getListingAgentDisplay,
+} from "@/lib/repliers";
 import {
   ArrowLeft,
   Bed,
@@ -19,6 +34,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 /**
  * Formats address from Repliers address object
@@ -80,6 +96,16 @@ export default function IDXListingDetailBeta() {
   const { mlsNumber } = useParams<{ mlsNumber: string }>();
   const navigate = useNavigate();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [showingForm, setShowingForm] = useState({
+    requesterName: "",
+    requesterEmail: "",
+    requesterPhone: "",
+    preferredDates: "",
+    preferredTimeWindow: "",
+    message: "",
+  });
 
   const { data, isLoading, error } = useQuery<RepliersListingsResponse, Error>({
     queryKey: ["repliers", "listing-detail", mlsNumber],
@@ -179,6 +205,65 @@ export default function IDXListingDetailBeta() {
 
   const photos = listing.photos || [];
   const details = listing.details || {};
+  const listingAgent = getListingAgentDisplay(listing);
+
+  const handleShowingFieldChange = (field: keyof typeof showingForm, value: string) => {
+    setShowingForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitShowingRequest = async () => {
+    if (!showingForm.requesterName.trim() || !showingForm.requesterEmail.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+
+    const body = {
+      mlsNumber: listing.mlsNumber,
+      requesterName: showingForm.requesterName,
+      requesterEmail: showingForm.requesterEmail,
+      requesterPhone: showingForm.requesterPhone,
+      preferredDates: showingForm.preferredDates,
+      preferredTimeWindow: showingForm.preferredTimeWindow,
+      message: showingForm.message,
+      listingAddress: formatAddress(listing.address),
+      listingCity: listing.address?.city,
+      listingState: listing.address?.state,
+      listingZip: listing.address?.zip,
+      listingAgentName: listingAgent.agentName,
+      listingAgentPhone: listingAgent.agentPhone,
+      listingAgentEmail: listingAgent.agentEmail,
+    };
+
+    setIsSubmittingRequest(true);
+    try {
+      const response = await fetch("/api/request-showing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const responseData = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(responseData.error || "Failed to send request");
+      }
+
+      toast.success("Request sent");
+      setIsRequestDialogOpen(false);
+      setShowingForm({
+        requesterName: "",
+        requesterEmail: "",
+        requesterPhone: "",
+        preferredDates: "",
+        preferredTimeWindow: "",
+        message: "",
+      });
+    } catch (submitError: unknown) {
+      const message = submitError instanceof Error ? submitError.message : "Unable to send request";
+      toast.error(message);
+    } finally {
+      setIsSubmittingRequest(false);
+    }
+  };
 
   const handlePrevPhoto = () => {
     setCurrentPhotoIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
@@ -249,6 +334,91 @@ export default function IDXListingDetailBeta() {
                 MLS# {listing.mlsNumber}
               </Badge>
             )}
+            <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-xl">Request Showing</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[560px]">
+                <DialogHeader>
+                  <DialogTitle>Request Showing</DialogTitle>
+                  <DialogDescription>
+                    Submit your preferred dates and contact information. We&apos;ll share this request with the listing side.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="requester-name">Name *</Label>
+                    <Input
+                      id="requester-name"
+                      value={showingForm.requesterName}
+                      onChange={(event) => handleShowingFieldChange("requesterName", event.target.value)}
+                      placeholder="Your full name"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="requester-email">Email *</Label>
+                    <Input
+                      id="requester-email"
+                      type="email"
+                      value={showingForm.requesterEmail}
+                      onChange={(event) => handleShowingFieldChange("requesterEmail", event.target.value)}
+                      placeholder="you@example.com"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="requester-phone">Phone</Label>
+                    <Input
+                      id="requester-phone"
+                      value={showingForm.requesterPhone}
+                      onChange={(event) => handleShowingFieldChange("requesterPhone", event.target.value)}
+                      placeholder="(555) 555-5555"
+                    />
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="preferred-dates">Preferred dates</Label>
+                      <Input
+                        id="preferred-dates"
+                        value={showingForm.preferredDates}
+                        onChange={(event) => handleShowingFieldChange("preferredDates", event.target.value)}
+                        placeholder="e.g. Fri/Sat this week"
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="preferred-window">Preferred time window</Label>
+                      <Input
+                        id="preferred-window"
+                        value={showingForm.preferredTimeWindow}
+                        onChange={(event) => handleShowingFieldChange("preferredTimeWindow", event.target.value)}
+                        placeholder="e.g. 2pm - 5pm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="showing-message">Message</Label>
+                    <Textarea
+                      id="showing-message"
+                      value={showingForm.message}
+                      onChange={(event) => handleShowingFieldChange("message", event.target.value)}
+                      placeholder="Anything you'd like the listing side to know"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button onClick={handleSubmitShowingRequest} disabled={isSubmittingRequest} className="rounded-xl">
+                    {isSubmittingRequest ? "Sending..." : "Send Request"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Address */}

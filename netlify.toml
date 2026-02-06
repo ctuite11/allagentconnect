@@ -50,6 +50,12 @@
   to = "/.netlify/functions/send-password-changed-email"
   status = 200
 
+[[redirects]]
+  from = "/api/request-showing"
+  to = "/.netlify/functions/request-showing"
+  status = 200
+  force = true
+
 # Repliers IDX proxy endpoints (secure server-side)
 [[redirects]]
   from = "/api/repliers/health"
