@@ -16,7 +16,7 @@
 
 # Canonical OG image - no long-term caching so social scrapers can refresh
 [[headers]]
-  for = "/og/aac-og-2026-01-25.jpg"
+  for = "/og/aac-og-2026-01-22.jpg"
   [headers.values]
     Content-Type = "image/jpeg"
     Cache-Control = "public, max-age=0, must-revalidate"
@@ -33,10 +33,6 @@
   function = "social-preview"
 
 [[edge_functions]]
-  path = "/register"
-  function = "register-social-preview"
-
-[[edge_functions]]
   path = "/api/auth/request-password-reset"
   function = "request-password-reset"
 
@@ -50,57 +46,6 @@
   to = "/.netlify/functions/send-password-changed-email"
   status = 200
 
-[[redirects]]
-  from = "/api/request-showing"
-  to = "/.netlify/functions/request-showing"
-  status = 200
-
-[[redirects]]
-  from = "/api/showing-requests"
-  to = "/.netlify/functions/showing-requests"
-  status = 200
-
-# Repliers IDX proxy endpoints (secure server-side)
-[[redirects]]
-  from = "/api/repliers/health"
-  to = "/.netlify/functions/repliers-health"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/repliers/listing-detail"
-  to = "/.netlify/functions/repliers-listing-detail"
-  status = 200
-
-[[redirects]]
-  from = "/api/repliers/listings"
-  to = "/.netlify/functions/repliers-listings"
-  status = 200
-  force = true
-
-[[redirects]]
-from = "/api/repliers/listing-detail"
-to = "/.netlify/functions/repliers-listing-detail"
-status = 200
-
-[[redirects]]
-  from = "/api/repliers/listing/*"
-  to = "/.netlify/functions/repliers-listing-detail"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/repliers/autocomplete"
-  to = "/.netlify/functions/repliers-autocomplete"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/repliers/diagnostics"
-  to = "/.netlify/functions/repliers-diagnostics"
-  status = 200
-  force = true
-
 # Functions configuration
 [functions]
   node_bundler = "esbuild"
@@ -109,8 +54,7 @@ status = 200
 [functions."email-worker"]
   schedule = "* * * * *"
 
-# SPA fallback - must be LAST (after all API redirects)
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/api/showing-requests"
+  to = "/.netlify/functions/showing-requests"
   status = 200
