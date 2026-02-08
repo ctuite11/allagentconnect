@@ -2333,6 +2333,7 @@ export type Database = {
           property_type: string | null
           property_website_url: string | null
           rental_fee: number | null
+          rental_fee_text: string | null
           residential_exemption: string | null
           roof_materials: Json | null
           schools_data: Json | null
@@ -2449,6 +2450,7 @@ export type Database = {
           property_type?: string | null
           property_website_url?: string | null
           rental_fee?: number | null
+          rental_fee_text?: string | null
           residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null
@@ -2565,6 +2567,7 @@ export type Database = {
           property_type?: string | null
           property_website_url?: string | null
           rental_fee?: number | null
+          rental_fee_text?: string | null
           residential_exemption?: string | null
           roof_materials?: Json | null
           schools_data?: Json | null

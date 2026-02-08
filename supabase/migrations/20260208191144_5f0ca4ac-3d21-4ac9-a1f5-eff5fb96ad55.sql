@@ -1,0 +1,1 @@
+ALTER TABLE public.listings ADD COLUMN rental_fee_text TEXT NULL;

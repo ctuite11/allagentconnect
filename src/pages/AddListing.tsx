@@ -203,6 +203,7 @@ const AddListing = () => {
     unit_number: "",
     building_name: "",
     rental_fee: "",
+    rental_fee_text: "",
     laundry_type: "none",
     pets_comment: "",
   });
@@ -648,6 +649,7 @@ const AddListing = () => {
           unit_number: data.unit_number || "",
           building_name: data.building_name || "",
           rental_fee: data.rental_fee?.toString() || "",
+          rental_fee_text: data.rental_fee_text || "",
           laundry_type: data.laundry_type || "none",
           pets_comment: data.pets_comment || "",
           listing_agreement_type: Array.isArray(data.listing_agreement_types) && data.listing_agreement_types.length > 0 
@@ -2141,6 +2143,7 @@ const AddListing = () => {
     // Rental-specific (conditionally added in handlers)
     ...(formData.listing_type === "for_rent" ? {
       rental_fee: formData.rental_fee ? parseFloat(formData.rental_fee) : null,
+      rental_fee_text: formData.rental_fee_text?.trim() || null,
       deposit_requirements: depositRequirements,
       outdoor_space: outdoorSpace,
       storage_options: storageOptions,
@@ -3348,7 +3351,18 @@ const AddListing = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="rental_fee">Rental Fee (Commission)</Label>
+                          <Label htmlFor="rental_fee_text">Rental Fee (Commission)</Label>
+                          <Input
+                            id="rental_fee_text"
+                            type="text"
+                            placeholder="e.g. 1 month, 1/2 month, negotiable"
+                            value={formData.rental_fee_text}
+                            onChange={(e) => setFormData(prev => ({ ...prev, rental_fee_text: e.target.value }))}
+                          />
+                          <p className="text-xs text-muted-foreground">Describe the rental fee / commission</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="rental_fee">Rental Fee (Numeric – optional)</Label>
                           <FormattedInput
                             id="rental_fee"
                             format="currency"
@@ -3357,7 +3371,7 @@ const AddListing = () => {
                             onChange={(value) => setFormData(prev => ({ ...prev, rental_fee: value }))}
                             decimals={0}
                           />
-                          <p className="text-xs text-muted-foreground">Flat dollar amount</p>
+                          <p className="text-xs text-muted-foreground">For reporting only (leave blank if not needed)</p>
                         </div>
                       </div>
 
