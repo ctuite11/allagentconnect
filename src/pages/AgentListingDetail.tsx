@@ -115,6 +115,7 @@ interface Listing {
   building_name?: string | null;
   rental_fee?: number | null;
   rental_fee_text?: string | null;
+  listing_agreement_types?: any;
 }
 
 interface AgentProfile {
@@ -941,6 +942,26 @@ const AgentListingDetail = () => {
                       ? listing.rental_fee_text
                       : `$${listing.rental_fee!.toLocaleString()}`}
                   </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Listing Agreement Type - Agent Only */}
+            {isAgentView && listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
+              <Card className="bg-card border-border rounded-xl shadow-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                      <FileText className="w-5 h-5 text-muted-foreground" />
+                      Listing Agreement Type
+                    </CardTitle>
+                    <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                      Agent Only
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm font-medium text-foreground">{formatArray(listing.listing_agreement_types)}</p>
                 </CardContent>
               </Card>
             )}
