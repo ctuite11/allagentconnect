@@ -2466,6 +2466,14 @@ const AddListing = () => {
         return;
       }
 
+      // Validate listing agreement type (required)
+      if (!formData.listing_agreement_type) {
+        setValidationErrors(prev => [...prev, "listing_agreement_type"]);
+        toast.error("Please select a Type of Listing Agreement.");
+        setSubmitting(false);
+        return;
+      }
+
       // Validate county for MA
       if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
         toast.error("Please select a county for Massachusetts listings.");
@@ -4143,23 +4151,40 @@ const AddListing = () => {
                 {/* Listing Agreement Type */}
                 <div className="space-y-2 border-t pt-6">
                   <Label className="text-xl font-semibold">Listing Agreement</Label>
-                  <div className="space-y-2 max-w-md">
-                    <Label htmlFor="listing_agreement_type">Type of Listing Agreement</Label>
-                    <Select
-                      value={formData.listing_agreement_type}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, listing_agreement_type: value }))}
-                    >
-                      <SelectTrigger className="bg-white border-neutral-200">
-                        <SelectValue placeholder="Select agreement type..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        <SelectItem value="exclusive_right_to_sell">Exclusive Right to Sell</SelectItem>
-                        <SelectItem value="exclusive_agency">Exclusive Agency</SelectItem>
-                        <SelectItem value="entry_only">Entry Only</SelectItem>
-                        <SelectItem value="open_listing">Open Listing</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-3 max-w-md">
+                    <Label>
+                      Type of Listing Agreement <span className="text-destructive">*</span>
+                    </Label>
+                    {[
+                      { value: "A - Exclusive Right to Rent", label: "A – Exclusive Right to Rent" },
+                      { value: "B - ER w/ Named Exclusion", label: "B – ER w/ Named Exclusion" },
+                      { value: "D - Exclusive Agency", label: "D – Exclusive Agency" },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-3 cursor-pointer group"
+                      >
+                        <Checkbox
+                          checked={formData.listing_agreement_type === option.value}
+                          onCheckedChange={(checked) => {
+                            const newValue = checked ? option.value : "";
+                            setFormData(prev => ({
+                              ...prev,
+                              listing_agreement_type: newValue,
+                            }));
+                            if (newValue) {
+                              setValidationErrors(prev => prev.filter(e => e !== "listing_agreement_type"));
+                            }
+                          }}
+                        />
+                        <span className="text-sm text-foreground group-hover:text-foreground/80">
+                          {option.label}
+                        </span>
+                      </label>
+                    ))}
+                    {!formData.listing_agreement_type && validationErrors.includes("listing_agreement_type") && (
+                      <p className="text-sm text-destructive">Please select a listing agreement type.</p>
+                    )}
                   </div>
                 </div>
 
