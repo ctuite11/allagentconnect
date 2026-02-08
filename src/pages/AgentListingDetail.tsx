@@ -118,6 +118,8 @@ interface Listing {
   multi_family_details?: any;
   unit_number?: string | null;
   building_name?: string | null;
+  rental_fee?: number | null;
+  rental_fee_text?: string | null;
 }
 
 interface AgentProfile {
@@ -944,6 +946,28 @@ const AgentListingDetail = () => {
                   {listing.commission_notes && (
                     <p className="text-sm text-muted-foreground">{listing.commission_notes}</p>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Rental Fee (Commission) - Agent Only, Rentals Only */}
+            {isAgentView && listing.listing_type === 'for_rent' && (listing.rental_fee_text || listing.rental_fee) && (
+              <Card className="bg-muted/50 dark:bg-muted/20 border-border rounded-xl shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                    <DollarSign className="w-5 h-5 text-muted-foreground" />
+                    Rental Fee (Commission)
+                    <Badge variant="outline" className="ml-auto text-xs border-border text-muted-foreground">
+                      Agent Only
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xl font-bold text-foreground">
+                    {listing.rental_fee_text
+                      ? listing.rental_fee_text
+                      : `$${listing.rental_fee!.toLocaleString()}`}
+                  </p>
                 </CardContent>
               </Card>
             )}
