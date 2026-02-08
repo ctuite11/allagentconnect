@@ -38,7 +38,7 @@ serve(async (req) => {
     let jobsQueued = 0;
 
     for (const hotSheet of hotSheets) {
-      // Check for new matches
+      // Check for new matches (now uses hot_sheet_sent_listings for dedup)
       const { data: matchingListings, error: matchError } = await supabase
         .rpc("check_hot_sheet_matches", { p_hot_sheet_id: hotSheet.id });
 
@@ -86,7 +86,17 @@ serve(async (req) => {
       if (!insertError) {
         jobsQueued++;
         
-        // Record notifications
+        // Record in hot_sheet_sent_listings (canonical dedup source)
+        const sentRecords = matchingListings.map((match: any) => ({
+          hot_sheet_id: hotSheet.id,
+          listing_id: match.listing_id,
+        }));
+
+        await supabase
+          .from("hot_sheet_sent_listings")
+          .upsert(sentRecords, { onConflict: "hot_sheet_id,listing_id" });
+
+        // Also record in hot_sheet_notifications (audit/logging)
         const notificationRecords = matchingListings.map((match: any) => ({
           hot_sheet_id: hotSheet.id,
           listing_id: match.listing_id,
