@@ -8,7 +8,7 @@ import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2 } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { LISTING_STATUS_LABELS, getStatusConfig } from "@/constants/status";
+import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig } from "@/constants/status";
 
 // Filled blue car/SUV icon for Broker Tour (AAC Blue #0E56F5)
 function BlueCarIcon({ className }: { className?: string }) {
@@ -34,7 +34,10 @@ import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/ui/page-header";
-type ListingStatus = "new" | "active" | "pending" | "sold" | "withdrawn" | "expired" | "cancelled" | "draft" | "coming_soon" | "off_market";
+type ListingStatus = "new" | "active" | "coming_soon" | "off_market";
+
+// Single source of truth for the active pipeline statuses
+const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market"];
 
 interface Listing {
   id: string;
@@ -45,6 +48,7 @@ interface Listing {
   price: number;
   status: string;
   listing_number: string;
+  listing_type?: string | null;
   photos: any;
   open_houses?: any;
   created_at: string;
@@ -68,19 +72,11 @@ interface Listing {
   };
 }
 
-// Status filter options using centralized labels
-const ALL_STATUSES: { label: string; value: ListingStatus }[] = [
-  { label: LISTING_STATUS_LABELS.off_market || "Off-Market", value: "off_market" },
-  { label: LISTING_STATUS_LABELS.coming_soon || "Coming Soon", value: "coming_soon" },
-  { label: LISTING_STATUS_LABELS.new || "New", value: "new" },
-  { label: LISTING_STATUS_LABELS.active || "Active", value: "active" },
-  { label: LISTING_STATUS_LABELS.pending || "Pending", value: "pending" },
-  { label: LISTING_STATUS_LABELS.sold || "Sold", value: "sold" },
-  { label: LISTING_STATUS_LABELS.draft || "Draft", value: "draft" },
-  { label: LISTING_STATUS_LABELS.withdrawn || "Withdrawn", value: "withdrawn" },
-  { label: LISTING_STATUS_LABELS.expired || "Expired", value: "expired" },
-  { label: LISTING_STATUS_LABELS.canceled || "Cancelled", value: "cancelled" },
-];
+// Status filter options restricted to active pipeline
+const ALL_STATUSES: { label: string; value: ListingStatus }[] = PIPELINE_STATUSES.map(s => ({
+  label: s === "off_market" ? "Private" : (LISTING_STATUS_LABELS[s] || s),
+  value: s,
+}));
 
 function getThumbnailUrl(listing: Listing) {
   if (!listing.photos) return null;
@@ -232,15 +228,8 @@ function MyListingsView({
   const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
   const [isDeletingSingle, setIsDeletingSingle] = useState(false);
 
-  // Get draft listings for bulk selection
+  // Draft listings won't appear (filtered server-side), but keep state for type compat
   const draftListings = useMemo(() => listings.filter(l => l.status === "draft"), [listings]);
-
-  // Clear selection when switching away from draft filter
-  useEffect(() => {
-    if (!selectedStatuses.has("draft")) {
-      setSelectedDraftIds(new Set());
-    }
-  }, [selectedStatuses]);
 
   const toggleDraftSelection = (id: string) => {
     setSelectedDraftIds(prev => {
@@ -471,32 +460,7 @@ function MyListingsView({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Select All Drafts Row - only visible on Draft tab */}
-      {selectedStatuses.has("draft") && selectedStatuses.size === 1 && draftListings.length > 0 && (
-        <div className="flex items-center gap-4 py-2">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="select-all-drafts"
-              checked={selectedDraftIds.size === draftListings.length && draftListings.length > 0}
-              onCheckedChange={selectAllDrafts}
-            />
-            <label htmlFor="select-all-drafts" className="text-sm font-medium cursor-pointer">
-              Select All Drafts ({selectedDraftIds.size} of {draftListings.length})
-            </label>
-          </div>
-          {selectedDraftIds.size > 0 && (
-            <Button
-              variant="destructive"
-              onClick={() => setShowBulkDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Selected ({selectedDraftIds.size})
-            </Button>
-          )}
-        </div>
-      )}
+      {/* Draft bulk-select removed — drafts filtered out server-side */}
 
       {/* GRID VIEW */}
       {view === "grid" && (
@@ -525,6 +489,11 @@ function MyListingsView({
                 {/* Status + Listing # as secondary metadata */}
                 <div className="flex items-center gap-2 mt-2">
                   <ListingStatusBadge status={l.status} size="sm" />
+                  {l.listing_type && (
+                    <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                      {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
+                    </span>
+                  )}
                   {l.listing_number && (
                     <span className="text-xs text-zinc-500">#{l.listing_number}</span>
                   )}
@@ -662,7 +631,14 @@ function MyListingsView({
 
                 {/* Status + Dates - stacked, absolutely positioned top-right */}
                 <div className="absolute top-4 right-4 shrink-0 text-right space-y-0.5">
-                  <ListingStatusBadge status={l.status} size="sm" />
+                  <div className="flex items-center justify-end gap-1.5">
+                    <ListingStatusBadge status={l.status} size="sm" />
+                    {l.listing_type && (
+                      <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                        {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-zinc-500 leading-tight pt-1">List: {listDate}</div>
                   <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate || "—"}</div>
                   <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
@@ -707,15 +683,7 @@ function MyListingsView({
 
                 {/* Content row - photo + info + status */}
                 <div className="flex items-start gap-4">
-                  {/* Checkbox for draft selection */}
-                  {selectedStatuses.has("draft") && selectedStatuses.size === 1 && l.status === "draft" && (
-                    <div className="shrink-0 pt-1">
-                      <Checkbox
-                        checked={selectedDraftIds.has(l.id)}
-                        onCheckedChange={() => toggleDraftSelection(l.id)}
-                      />
-                    </div>
-                  )}
+                  {/* Draft checkbox removed — drafts filtered out server-side */}
 
                   {/* Photo - locked size */}
                   <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer">
@@ -842,7 +810,8 @@ const MyListings = () => {
           *,
           listing_stats (view_count, save_count, share_count, contact_count, showing_request_count)
         `)
-        .eq("agent_id", user.id);
+        .eq("agent_id", user.id)
+        .in("status", PIPELINE_STATUSES);
 
       if (error) throw error;
       
