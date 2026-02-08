@@ -101,17 +101,12 @@ interface Listing {
   waterfront?: boolean;
   water_view?: boolean;
   beach_nearby?: boolean;
-  annual_property_tax?: number | null;
-  tax_year?: number | null;
-  assessed_value?: number | null;
   disclosures?: any[] | null;
   disclosures_other?: string | null;
   lead_paint?: string | null;
   showing_instructions?: string | null;
   lockbox_code?: string | null;
   appointment_required?: boolean;
-  showing_contact_name?: string | null;
-  showing_contact_phone?: string | null;
   broker_comments?: string | null;
   additional_notes?: string | null;
   condo_details?: any;
@@ -829,28 +824,6 @@ const AgentListingDetail = () => {
 
           {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Tax Information */}
-            {(listing.annual_property_tax || listing.assessed_value) && (
-              <Card className="bg-card border-border rounded-xl shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-muted-foreground" />
-                    Tax Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  {listing.annual_property_tax && (
-                    <DetailRow label="Annual Tax" value={`$${listing.annual_property_tax.toLocaleString()}`} />
-                  )}
-                  {listing.tax_year && (
-                    <DetailRow label="Tax Year" value={listing.tax_year} />
-                  )}
-                  {listing.assessed_value && (
-                    <DetailRow label="Assessed Value" value={`$${listing.assessed_value.toLocaleString()}`} />
-                  )}
-                </CardContent>
-              </Card>
-            )}
 
             {/* Agent & Office Information */}
             {agentProfile && (
@@ -993,12 +966,6 @@ const AgentListingDetail = () => {
                   />
                   {listing.lockbox_code && (
                     <DetailRow label="Lockbox Code" value={listing.lockbox_code} />
-                  )}
-                  {listing.showing_contact_name && (
-                    <DetailRow label="Contact Name" value={listing.showing_contact_name} />
-                  )}
-                  {listing.showing_contact_phone && (
-                    <DetailRow label="Contact Phone" value={formatPhoneNumber(listing.showing_contact_phone)} />
                   )}
                   <div className="pt-2 mt-2 border-t border-border">
                     <p className="text-sm text-muted-foreground mb-1">Instructions:</p>

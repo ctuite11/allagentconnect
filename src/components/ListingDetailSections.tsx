@@ -151,21 +151,14 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
     { label: "Town", value: listing.town },
     { label: "Neighborhood", value: listing.neighborhood },
     { label: "Property Style", value: listing.property_styles ? formatArray(listing.property_styles) : null },
-    { label: "Parcel ID / APN", value: listing.attom_id },
+    
     { label: "Facing Direction", value: listing.facing_direction ? formatArray(listing.facing_direction) : null },
   ].filter(row => row.value);
   
   const displayedPropertyRows = showAllPropertyDetails ? propertyDetailRows : propertyDetailRows.slice(0, DETAIL_ROWS_LIMIT);
 
-  // Build tax info rows
-  const taxInfoRows = [
-    { label: "Annual Tax", value: listing.annual_property_tax ? `$${listing.annual_property_tax.toLocaleString()}` : null },
-    { label: "Tax Year", value: listing.tax_year },
-    { label: "Tax Assessment", value: listing.tax_assessment_value ? `$${listing.tax_assessment_value.toLocaleString()}` : null },
-    { label: "Assessed Value", value: listing.assessed_value ? `$${listing.assessed_value.toLocaleString()}` : null },
-    { label: "Fiscal Year", value: listing.fiscal_year },
-    { label: "Residential Exemption", value: listing.residential_exemption },
-  ].filter(row => row.value);
+  const taxInfoRows: { label: string; value: any }[] = [];
+
 
   // Market info rows (always fully open since typically few rows)
   const marketInfoRows = [
