@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@4.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    // Admin client for bypassing RLS when fetching client emails
+    // Admin client for bypassing RLS when fetching client emails and inserting email_jobs
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -116,8 +113,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (criteria.statuses && criteria.statuses.length > 0) {
       query = query.in("status", criteria.statuses);
     } else {
-      // Default to match Search page behavior
-      query = query.in("status", ["active", "coming_soon"]);
+      // Default to match pipeline statuses
+      query = query.in("status", ["active", "new", "coming_soon", "off_market"]);
     }
     if (criteria.minPrice) {
       query = query.gte("price", criteria.minPrice);
@@ -244,7 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (hotSheet.notify_agent_email) {
         const { data: agentProfile } = await supabaseClient
           .from("agent_profiles")
-          .select("email")
+          .select("email, first_name")
           .eq("id", hotSheet.user_id)
           .single();
         
@@ -305,7 +302,7 @@ const handler = async (req: Request): Promise<Response> => {
           console.log("Found client email from criteria:", clientEmail);
         }
         
-        // Log warning if no client email found (shouldn't happen but handle gracefully)
+        // Log warning if no client email found
         if (!clientEmail) {
           console.warn("⚠️  No client email found for hotsheet. Token will have null client_email.");
         }
@@ -319,7 +316,7 @@ const handler = async (req: Request): Promise<Response> => {
               type: "client_hotsheet_invite",
               client_id: hotSheet.client_id || null,
               hot_sheet_id: hotSheet.id,
-              client_email: clientEmail  // CRITICAL: Always include client email in payload
+              client_email: clientEmail
             },
             expires_at: null
           })
@@ -339,30 +336,51 @@ const handler = async (req: Request): Promise<Response> => {
         const baseUrl = req.headers.get("origin") || "http://localhost:5173";
         const accessUrl = `${baseUrl}/client-hot-sheet/${token}`;
         
+        // Build listings HTML in the same format as send-hot-sheet-alert
         const listingsHtml = newListings.slice(0, 5).map(listing => {
           const photos = listing.photos || [];
           const photoUrl = photos[0]?.url || '';
+          const listingUrl = `${baseUrl}/property/${listing.id}`;
           
           return `
-          <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 16px;">
+          <li style="margin-bottom: 20px; padding: 0; background-color: #f9f9f9; border-radius: 5px; overflow: hidden;">
             ${photoUrl ? `<img src="${photoUrl}" alt="${listing.address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
-            <div style="padding: 16px;">
-              <h3 style="margin: 0 0 8px 0; font-size: 18px;">${listing.address}</h3>
-              <p style="margin: 4px 0; color: #6b7280;">${listing.city}, ${listing.state} ${listing.zip_code}</p>
-              <p style="margin: 8px 0; font-size: 24px; font-weight: bold; color: #2563eb;">$${listing.price?.toLocaleString()}</p>
-              ${listing.bedrooms || listing.bathrooms ? `
-                <p style="margin: 4px 0; color: #6b7280;">
-                  ${listing.bedrooms ? `${listing.bedrooms} beds` : ''} 
-                  ${listing.bathrooms ? `• ${listing.bathrooms} baths` : ''}
-                  ${listing.square_feet ? `• ${listing.square_feet.toLocaleString()} sqft` : ''}
-                </p>
-              ` : ''}
+            <div style="padding: 15px;">
+              <strong style="font-size: 16px;">${listing.address}</strong><br>
+              <span style="color: #6b7280;">${listing.city}, ${listing.state} ${listing.zip_code}</span><br>
+              <span style="color: #2754C5; font-size: 18px; font-weight: bold;">$${listing.price?.toLocaleString()}</span><br>
+              ${listing.bedrooms ? `${listing.bedrooms} bed` : ''} 
+              ${listing.bathrooms ? `| ${listing.bathrooms} bath` : ''}
+              ${listing.square_feet ? `| ${listing.square_feet.toLocaleString()} sqft` : ''}<br>
+              <a href="${listingUrl}" style="color: #2754C5; text-decoration: none; display: inline-block; margin-top: 10px;">View Listing →</a>
             </div>
-          </div>
+          </li>
         `;
         }).join('');
 
-        // Get client name from criteria or from first client in junction table
+        // Build the full listingsHtml with overflow note and CTA
+        let fullListingsHtml = `<ul style="list-style: none; padding: 0;">${listingsHtml}</ul>`;
+        
+        if (newListings.length > 5) {
+          fullListingsHtml += `
+            <p style="color: #6b7280; margin: 16px 0;">
+              And ${newListings.length - 5} more ${newListings.length - 5 === 1 ? 'property' : 'properties'}...
+            </p>
+          `;
+        }
+        
+        // Add "View Hot Sheet" CTA
+        fullListingsHtml += `
+          <div style="margin-top: 32px; padding: 16px; background-color: #f3f4f6; border-radius: 8px;">
+            <p style="margin: 0 0 12px 0; color: #1f2937;">View all properties and add comments:</p>
+            <a href="${accessUrl}" 
+              style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+              View Hot Sheet
+            </a>
+          </div>
+        `;
+
+        // Get client name for the email
         let clientName = "Client";
         if (hotSheet.criteria?.clientFirstName && hotSheet.criteria?.clientLastName) {
           clientName = `${hotSheet.criteria.clientFirstName} ${hotSheet.criteria.clientLastName}`;
@@ -375,42 +393,28 @@ const handler = async (req: Request): Promise<Response> => {
           }
         }
 
-        const { data, error: emailError } = await resend.emails.send({
-          from: "All Agent Connect <noreply@mail.allagentconnect.com>",
-          to: recipients,
-          subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #1f2937; margin-bottom: 16px;">New Properties Available!</h1>
-              <p style="color: #6b7280; margin-bottom: 24px;">
-                We found ${newListings.length} new ${newListings.length === 1 ? 'property' : 'properties'} matching your hot sheet "${hotSheet.name}"${hotSheet.clients ? ` for ${clientName}` : ''}.
-              </p>
-              
-              ${listingsHtml}
-              
-              ${newListings.length > 5 ? `
-                <p style="color: #6b7280; margin: 16px 0;">
-                  And ${newListings.length - 5} more ${newListings.length - 5 === 1 ? 'property' : 'properties'}...
-                </p>
-              ` : ''}
-              
-              <div style="margin-top: 32px; padding: 16px; background-color: #f3f4f6; border-radius: 8px;">
-                <p style="margin: 0 0 12px 0; color: #1f2937;">View all properties and add comments:</p>
-                 <a href="${accessUrl}" 
-                   style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
-                  View Hot Sheet
-                </a>
-              </div>
-            </div>
-          `,
+        // Enqueue via email_jobs instead of direct Resend send
+        const { error: emailJobError } = await adminClient.from("email_jobs").insert({
+          payload: {
+            provider: "resend",
+            template: "hot-sheet-alert",
+            to: recipients,
+            subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
+            variables: {
+              userName: clientName,
+              hotSheetName: hotSheet.name,
+              matchCount: newListings.length,
+              listingsHtml: fullListingsHtml,
+            },
+          },
         });
 
-        if (emailError) {
-          console.error("Resend API error:", emailError);
-          throw emailError;
+        if (emailJobError) {
+          console.error("❌ Error enqueuing email job:", emailJobError);
+          throw new Error(`Failed to enqueue email: ${emailJobError.message}`);
         }
 
-        console.log("✅ Email sent successfully");
+        console.log("✅ Email job enqueued successfully");
         console.log("Recipients:", recipients);
         console.log("Listing count:", newListings.length);
         console.log("Hot sheet:", hotSheet.name);
