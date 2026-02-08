@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -2203,7 +2204,7 @@ const AddListing = () => {
       
       if (!isAutoSave) {
         toast.success("Draft saved successfully!");
-        navigate("/agent-dashboard", { state: { reload: true } });
+        navigate(ROUTES.MY_LISTINGS);
       }
     } catch (error: any) {
       console.error("Error saving draft listing:", {
@@ -2251,6 +2252,51 @@ const AddListing = () => {
     }
 
     setSubmitting(true);
+
+    // --- Validation (match handleSubmit gates) ---
+    const requiredFields =
+      formData.listing_type === "for_sale"
+        ? {
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zip_code,
+            price: formData.price,
+          }
+        : {
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zip_code,
+            monthlyRent: formData.price,
+          };
+
+    const missingFields = Object.entries(requiredFields).filter(([_, value]) => !value);
+    if (missingFields.length > 0) {
+      toast.error("Please fill in all required fields.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!formData.listing_agreement_type) {
+      setValidationErrors((prev) => [...prev, "listing_agreement_type"]);
+      toast.error("Please select a Type of Listing Agreement.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
+      toast.error("Please select a county for Massachusetts listings.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (formData.status === "coming_soon" && !formData.go_live_date) {
+      toast.error("Please select a Go-Live date for Coming Soon listings.");
+      setSubmitting(false);
+      return;
+    }
+    // --- End validation ---
 
     try {
       // Upload any new files
@@ -2674,12 +2720,8 @@ const AddListing = () => {
         toast.success("Listing created successfully!");
       }
 
-      // Navigate to My Listings in edit mode, dashboard for new listings
-      if (isEditMode) {
-        navigate("/agent/listings");
-      } else {
-        navigate("/agent-dashboard", { state: { reload: true } });
-      }
+      // Always navigate to My Listings after save/publish
+      navigate(ROUTES.MY_LISTINGS);
     } catch (error: any) {
       console.error("Error creating listing:", error);
       if (error instanceof z.ZodError) {
