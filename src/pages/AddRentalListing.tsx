@@ -97,8 +97,6 @@ const AddRentalListing = () => {
     showing_instructions: "",
     lockbox_code: "",
     appointment_required: false,
-    showing_contact_name: "",
-    showing_contact_phone: "",
     additional_notes: "",
   });
 
@@ -650,8 +648,6 @@ const AddRentalListing = () => {
         showing_instructions: formData.showing_instructions || null,
         lockbox_code: formData.lockbox_code || null,
         appointment_required: formData.appointment_required,
-        showing_contact_name: formData.showing_contact_name || null,
-        showing_contact_phone: formData.showing_contact_phone || null,
         disclosures: disclosures,
         property_features: propertyFeatures,
         amenities: propertyFeatures, // Same as property_features - unified storage
@@ -1238,25 +1234,6 @@ const AddRentalListing = () => {
                           placeholder="1234"
                           value={formData.lockbox_code}
                           onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="showing_contact_name">Contact Name</Label>
-                        <Input
-                          id="showing_contact_name"
-                          placeholder="John Doe"
-                          value={formData.showing_contact_name}
-                          onChange={(e) => setFormData({ ...formData, showing_contact_name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="showing_contact_phone">Contact Phone</Label>
-                        <FormattedInput
-                          id="showing_contact_phone"
-                          format="phone"
-                          placeholder="1234567890"
-                          value={formData.showing_contact_phone}
-                          onChange={(value) => setFormData({ ...formData, showing_contact_phone: value })}
                         />
                       </div>
                     </div>

@@ -166,12 +166,7 @@ const AddListing = () => {
     showing_instructions: "",
     lockbox_code: "",
     appointment_required: false,
-    showing_contact_name: "",
-    showing_contact_phone: "",
     additional_notes: "",
-    annual_property_tax: "",
-    tax_year: "",
-    assessed_value: "",
     go_live_date: "",
     auto_activate_on: null as Date | null,
     // New date fields
@@ -194,7 +189,7 @@ const AddListing = () => {
     total_monthly_rent: "",
     // New fields
     disclosures_other: "",
-    listing_exclusions: "",
+    
     property_website_url: "",
     virtual_tour_url: "",
     video_url: "",
@@ -637,12 +632,7 @@ const AddListing = () => {
           showing_instructions: data.showing_instructions || "",
           lockbox_code: data.lockbox_code || "",
           appointment_required: data.appointment_required || false,
-          showing_contact_name: data.showing_contact_name || "",
-          showing_contact_phone: data.showing_contact_phone || "",
           additional_notes: data.additional_notes || "",
-          annual_property_tax: data.annual_property_tax?.toString() || "",
-          tax_year: data.tax_year?.toString() || "",
-          assessed_value: data.assessed_value?.toString() || "",
           go_live_date: data.go_live_date || "",
           list_date: data.list_date || "",
           expiration_date: data.expiration_date || "",
@@ -656,7 +646,7 @@ const AddListing = () => {
             ? data.listing_agreement_types[0] as string 
             : "",
           // Additional fields that were missing
-          listing_exclusions: data.listing_exclusions || "",
+          
           property_website_url: data.property_website_url || "",
           virtual_tour_url: data.virtual_tour_url || "",
           video_url: data.video_url || "",
@@ -1214,23 +1204,9 @@ const AddListing = () => {
         console.log('[ATTOM] Setting year_built:', record.yearBuilt, forceOverwrite ? '(forced)' : '');
       }
       
-      // Tax amount - overwrite if force, otherwise only fill if empty
-      if (record.taxAmount && (forceOverwrite || !prev.annual_property_tax)) {
-        updates.annual_property_tax = record.taxAmount.toString();
-        console.log('[ATTOM] Setting annual_property_tax:', record.taxAmount, forceOverwrite ? '(forced)' : '');
-      }
+      // Tax fields removed from form — ATTOM data still populates DB via edge function
+      // but these fields are no longer exposed in the UI or form state
       
-      // Tax year - overwrite if force, otherwise only fill if empty
-      if (record.taxYear && (forceOverwrite || !prev.tax_year)) {
-        updates.tax_year = record.taxYear.toString();
-        console.log('[ATTOM] Setting tax_year:', record.taxYear, forceOverwrite ? '(forced)' : '');
-      }
-      
-      // Assessed value - overwrite if force, otherwise only fill if empty
-      if (record.assessedValue && (forceOverwrite || !prev.assessed_value)) {
-        updates.assessed_value = record.assessedValue.toString();
-        console.log('[ATTOM] Setting assessed_value:', record.assessedValue, forceOverwrite ? '(forced)' : '');
-      }
       
       // Latitude/longitude - always update if ATTOM provides them
       if (record.latitude != null) {
@@ -1283,8 +1259,6 @@ const AddListing = () => {
         bathrooms: newState.bathrooms,
         square_feet: newState.square_feet,
         year_built: newState.year_built,
-        annual_property_tax: newState.annual_property_tax,
-        tax_year: newState.tax_year
       });
       
       return newState;
@@ -1668,10 +1642,6 @@ const AddListing = () => {
         setFormData(prev => ({
           ...prev,
           unit_number: '',
-          // Also clear tax/assessment since it was for the wrong property type
-          annual_property_tax: '',
-          tax_year: '',
-          assessed_value: '',
         }));
       }
       
@@ -2113,14 +2083,9 @@ const AddListing = () => {
     showing_instructions: formData.showing_instructions || null,
     lockbox_code: formData.lockbox_code || null,
     appointment_required: formData.appointment_required,
-    showing_contact_name: formData.showing_contact_name || null,
-    showing_contact_phone: formData.showing_contact_phone || null,
     additional_notes: formData.additional_notes || null,
     
-    // Taxes & Dates
-    annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
-    tax_year: formData.tax_year ? parseInt(formData.tax_year) : null,
-    assessed_value: formData.assessed_value ? parseFloat(formData.assessed_value) : null,
+    // Dates
     list_date: formData.list_date || null,
     expiration_date: formData.expiration_date || null,
     go_live_date: formData.go_live_date || null,
@@ -2129,7 +2094,7 @@ const AddListing = () => {
     unit_number: formData.unit_number || null,
     building_name: formData.building_name || null,
     disclosures_other: formData.disclosures_other || null,
-    listing_exclusions: formData.listing_exclusions || null,
+    
     property_website_url: formData.property_website_url || null,
     virtual_tour_url: formData.virtual_tour_url || null,
     video_url: formData.video_url || null,
@@ -3516,10 +3481,10 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Tax & Public Record Data Section - Always visible */}
+                {/* Public Record Verification Section - Tax UI removed */}
                 <div className="space-y-4 border-t pt-6">
                   <div className="flex items-center justify-between">
-                    <Label className="text-lg font-semibold">Tax & Public Record Data</Label>
+                    <Label className="text-lg font-semibold">Public Record Verification</Label>
                     {publicRecordStatus !== 'success' && (
                       <Button
                         type="button"
@@ -3545,61 +3510,12 @@ const AddListing = () => {
                   </div>
                   
                   {/* Show placeholder when no ATTOM data loaded */}
-                  {publicRecordStatus !== 'success' && !formData.annual_property_tax && !formData.tax_year && (
+                  {publicRecordStatus !== 'success' && (
                     <div className="p-4 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/20">
                       <p className="text-sm text-muted-foreground flex items-center gap-2">
                         <Cloud className="h-4 w-4" />
-                        Verify with ATTOM to load tax and public record data.
+                        Verify with ATTOM to load public record data.
                       </p>
-                    </div>
-                  )}
-                  
-                  {/* Tax fields - show when data exists OR after successful ATTOM load */}
-                  {(publicRecordStatus === 'success' || formData.annual_property_tax || formData.tax_year || formData.assessed_value) && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="annual_property_tax">Annual Property Tax</Label>
-                        <FormattedInput
-                          id="annual_property_tax"
-                          format="currency"
-                          value={formData.annual_property_tax}
-                          onChange={(value) => setFormData(prev => ({ ...prev, annual_property_tax: value }))}
-                          decimals={0}
-                          placeholder="5000"
-                        />
-                        {publicRecordStatus === 'success' && formData.annual_property_tax && (
-                          <p className="text-xs text-muted-foreground">Loaded from public records</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="tax_year">Tax Year</Label>
-                        <Input
-                          id="tax_year"
-                          type="number"
-                          min="2000"
-                          max={new Date().getFullYear()}
-                          value={formData.tax_year}
-                          onChange={(e) => setFormData(prev => ({ ...prev, tax_year: e.target.value }))}
-                          placeholder={new Date().getFullYear().toString()}
-                        />
-                        {publicRecordStatus === 'success' && formData.tax_year && (
-                          <p className="text-xs text-muted-foreground">Loaded from public records</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="assessed_value">Assessed Value</Label>
-                        <FormattedInput
-                          id="assessed_value"
-                          format="currency"
-                          value={formData.assessed_value}
-                          onChange={(value) => setFormData(prev => ({ ...prev, assessed_value: value }))}
-                          decimals={0}
-                          placeholder="350000"
-                        />
-                        {publicRecordStatus === 'success' && formData.assessed_value && (
-                          <p className="text-xs text-muted-foreground">Loaded from public records</p>
-                        )}
-                      </div>
                     </div>
                   )}
                   
@@ -3611,11 +3527,11 @@ const AddListing = () => {
                     </div>
                   )}
                   
-                  {/* Condo missing unit warning in tax section */}
+                  {/* Condo missing unit warning */}
                   {isCondoMissingUnit && (
                     <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
                       <AlertCircle className="h-4 w-4" />
-                      <span>Enter unit number above to load condo-specific tax data</span>
+                      <span>Enter unit number above to load condo-specific data</span>
                     </div>
                   )}
                 </div>
@@ -4247,20 +4163,6 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Exclusions - Not for Multi-Family FOR SALE */}
-                {!(formData.listing_type === "for_sale" && formData.property_type === "multi_family") && (
-                  <div className="space-y-2 border-t pt-6">
-                    <Label htmlFor="listing_exclusions">Exclusions</Label>
-                    <p className="text-sm text-muted-foreground">Items excluded from the sale</p>
-                    <Textarea
-                      id="listing_exclusions"
-                      placeholder="Items excluded from the sale (e.g. dining room chandelier, washer/dryer)..."
-                      value={formData.listing_exclusions}
-                      onChange={(e) => setFormData(prev => ({ ...prev, listing_exclusions: e.target.value }))}
-                      rows={3}
-                    />
-                  </div>
-                )}
 
                 {/* Showing Instructions */}
                 <div className="space-y-4 border-t pt-6">
@@ -4276,7 +4178,7 @@ const AddListing = () => {
                         rows={3}
                       />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="lockbox_code">Lockbox Code</Label>
                         <Input
@@ -4287,25 +4189,6 @@ const AddListing = () => {
                           onChange={(e) => setFormData(prev => ({ ...prev, lockbox_code: e.target.value }))}
                           autoComplete="off"
                           data-form-type="other"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="showing_contact_name">Contact Name</Label>
-                        <Input
-                          id="showing_contact_name"
-                          placeholder="John Doe"
-                          value={formData.showing_contact_name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, showing_contact_name: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="showing_contact_phone">Contact Phone</Label>
-                        <FormattedInput
-                          id="showing_contact_phone"
-                          format="phone"
-                          placeholder="1234567890"
-                          value={formData.showing_contact_phone}
-                          onChange={(value) => setFormData(prev => ({ ...prev, showing_contact_phone: value }))}
                         />
                       </div>
                     </div>

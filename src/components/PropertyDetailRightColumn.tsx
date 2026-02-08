@@ -185,8 +185,6 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
               <DetailRow label="Appointment Required" value={listing.appointment_required ? 'Yes' : 'No'} />
               <DetailRow label="Entry Only" value={listing.entry_only ? 'Yes' : 'No'} />
               {listing.lockbox_code && <DetailRow label="Lockbox Code" value={listing.lockbox_code} />}
-              {listing.showing_contact_name && <DetailRow label="Showing Contact" value={listing.showing_contact_name} />}
-              {listing.showing_contact_phone && <DetailRow label="Showing Phone" value={formatPhoneNumber(listing.showing_contact_phone)} />}
             </DetailGrid>
             {listing.showing_instructions && (
               <div className="pt-2 border-t">
@@ -197,33 +195,25 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </CardContent>
         </Card>
 
-        {/* Disclosures & Exclusions - Agent Only */}
-        {(listing.disclosures || listing.listing_exclusions) && (
+        {/* Disclosures - Agent Only */}
+        {listing.disclosures && (
           <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base text-amber-900 dark:text-amber-100">
                 <FileText className="w-5 h-5" />
-                Disclosures & Exclusions
+                Disclosures
                 <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {listing.disclosures && (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
-                  <p className="text-sm">
-                    {typeof listing.disclosures === 'string' 
-                      ? listing.disclosures 
-                      : formatArray(listing.disclosures) || 'None specified'}
-                  </p>
-                </div>
-              )}
-              {listing.listing_exclusions && (
-                <div className="pt-2 border-t">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
-                  <p className="text-sm">{listing.listing_exclusions}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
+                <p className="text-sm">
+                  {typeof listing.disclosures === 'string' 
+                    ? listing.disclosures 
+                    : formatArray(listing.disclosures) || 'None specified'}
+                </p>
+              </div>
               {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
                 <div className="pt-2 border-t">
                   <p className="text-xs font-semibold text-muted-foreground mb-1">Documents Available:</p>
