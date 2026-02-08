@@ -2760,6 +2760,11 @@ const AddListing = () => {
         toast.success("Listing created successfully!");
       }
 
+      // Clear draft state on publish success to prevent duplicate re-entries
+      if (draftId) {
+        setDraftId(null);
+      }
+
       // Always navigate to My Listings after save/publish
       navigate(ROUTES.MY_LISTINGS);
     } catch (error: any) {
