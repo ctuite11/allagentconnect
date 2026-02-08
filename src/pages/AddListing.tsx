@@ -2653,7 +2653,7 @@ const AddListing = () => {
       }
 
       // Determine if we're in edit mode
-      const isEditMode = !!listingId;
+      const isEditMode = !!(listingId || draftId);
       const targetListingId = listingId || draftId;
 
       let resultListingId: string | null = null;
