@@ -202,6 +202,11 @@ const AddListing = () => {
     rental_fee_text: "",
     laundry_type: "none",
     pets_comment: "",
+    // Parking fields
+    total_parking_spaces: "",
+    garage_spaces: "",
+    parking_comments: "",
+    garage_comments: "",
   });
 
   // Multi-family units state
@@ -237,6 +242,9 @@ const AddListing = () => {
   const [multiFamilyFeatures, setMultiFamilyFeatures] = useState<string[]>([]);
   const [multiFamilyLaundry, setMultiFamilyLaundry] = useState<string[]>([]);
   const [rentalFeatures, setRentalFeatures] = useState<string[]>([]);
+  const [parkingFeatures, setParkingFeatures] = useState<string[]>([]);
+  const [garageFeatures, setGarageFeatures] = useState<string[]>([]);
+  const [garageAdditionalFeatures, setGarageAdditionalFeatures] = useState<string[]>([]);
   
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
@@ -762,6 +770,29 @@ const AddListing = () => {
         // Load area_amenities
         if (Array.isArray(data.area_amenities)) {
           setAreaAmenities(data.area_amenities as string[]);
+        }
+        
+        // Load parking fields
+        if (data.total_parking_spaces != null) {
+          setFormData(prev => ({ ...prev, total_parking_spaces: String(data.total_parking_spaces) }));
+        }
+        if (data.garage_spaces != null) {
+          setFormData(prev => ({ ...prev, garage_spaces: String(data.garage_spaces) }));
+        }
+        if (data.parking_comments) {
+          setFormData(prev => ({ ...prev, parking_comments: data.parking_comments }));
+        }
+        if (data.garage_comments) {
+          setFormData(prev => ({ ...prev, garage_comments: data.garage_comments }));
+        }
+        if (Array.isArray(data.parking_features_list)) {
+          setParkingFeatures(data.parking_features_list as string[]);
+        }
+        if (Array.isArray(data.garage_features_list)) {
+          setGarageFeatures(data.garage_features_list as string[]);
+        }
+        if (Array.isArray(data.garage_additional_features_list)) {
+          setGarageAdditionalFeatures(data.garage_additional_features_list as string[]);
         }
         
         // For edit mode: always prevent ATTOM auto-popup
@@ -2101,6 +2132,15 @@ const AddListing = () => {
     video_url: formData.video_url || null,
     listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
     attom_id: attomId,
+    
+    // Parking & Garage
+    total_parking_spaces: (() => { const n = Number(formData.total_parking_spaces); return Number.isFinite(n) ? n : null; })(),
+    garage_spaces: (() => { const n = Number(formData.garage_spaces); return Number.isFinite(n) ? n : null; })(),
+    parking_features_list: parkingFeatures.length > 0 ? parkingFeatures : null,
+    garage_features_list: garageFeatures.length > 0 ? garageFeatures : null,
+    garage_additional_features_list: garageAdditionalFeatures.length > 0 ? garageAdditionalFeatures : null,
+    parking_comments: formData.parking_comments?.trim() || null,
+    garage_comments: formData.garage_comments?.trim() || null,
     
     // Disclosures (lead_paint is stored as string, not array)
     lead_paint: leadPaint.length > 0 ? leadPaint.join(', ') : null,
@@ -4138,6 +4178,136 @@ const AddListing = () => {
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Parking Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <Label className="text-xl font-semibold">Parking</Label>
+                  
+                  {/* Numeric Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+                    <div className="space-y-2">
+                      <Label htmlFor="total_parking_spaces">Total Parking Spaces</Label>
+                      <Input
+                        id="total_parking_spaces"
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={formData.total_parking_spaces}
+                        onChange={(e) => setFormData(prev => ({ ...prev, total_parking_spaces: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="garage_spaces">Garage Spaces</Label>
+                      <Input
+                        id="garage_spaces"
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={formData.garage_spaces}
+                        onChange={(e) => setFormData(prev => ({ ...prev, garage_spaces: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Parking Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Parking Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {["Assigned", "Deeded", "Off-Street", "On-Street", "Tandem", "Valet", "Carport", "Covered", "Uncovered", "Guest Parking"].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`parking-${feature}`}
+                            checked={parkingFeatures.includes(feature)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setParkingFeatures(prev => Array.from(new Set([...prev, feature])));
+                              } else {
+                                setParkingFeatures(prev => prev.filter(f => f !== feature));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`parking-${feature}`} className="font-normal cursor-pointer">
+                            {feature}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Parking Comments */}
+                  <div className="space-y-2">
+                    <Label htmlFor="parking_comments">Parking Comments (optional)</Label>
+                    <Textarea
+                      id="parking_comments"
+                      placeholder="Additional parking notes..."
+                      value={formData.parking_comments}
+                      onChange={(e) => setFormData(prev => ({ ...prev, parking_comments: e.target.value }))}
+                      rows={2}
+                    />
+                  </div>
+
+                  {/* Garage Features */}
+                  <div className="space-y-3 border-t pt-4">
+                    <Label className="text-base font-medium">Garage Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {["Attached", "Detached", "Heated", "Under", "Oversized", "Electric Door", "Storage Above"].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`garage-${feature}`}
+                            checked={garageFeatures.includes(feature)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setGarageFeatures(prev => Array.from(new Set([...prev, feature])));
+                              } else {
+                                setGarageFeatures(prev => prev.filter(f => f !== feature));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`garage-${feature}`} className="font-normal cursor-pointer">
+                            {feature}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Garage Additional Features */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">Garage Additional Features</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {["EV Charger", "Workshop", "High Ceiling", "Loft Storage"].map((feature) => (
+                        <div key={feature} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`garage-extra-${feature}`}
+                            checked={garageAdditionalFeatures.includes(feature)}
+                            onCheckedChange={(isChecked) => {
+                              if (isChecked === true) {
+                                setGarageAdditionalFeatures(prev => Array.from(new Set([...prev, feature])));
+                              } else {
+                                setGarageAdditionalFeatures(prev => prev.filter(f => f !== feature));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`garage-extra-${feature}`} className="font-normal cursor-pointer">
+                            {feature}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Garage Comments */}
+                  <div className="space-y-2">
+                    <Label htmlFor="garage_comments">Garage Comments (optional)</Label>
+                    <Textarea
+                      id="garage_comments"
+                      placeholder="Additional garage notes..."
+                      value={formData.garage_comments}
+                      onChange={(e) => setFormData(prev => ({ ...prev, garage_comments: e.target.value }))}
+                      rows={2}
+                    />
+                  </div>
                 </div>
 
                 {/* Disclosures - Simplified */}

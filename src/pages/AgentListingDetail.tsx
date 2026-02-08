@@ -116,6 +116,11 @@ interface Listing {
   rental_fee?: number | null;
   rental_fee_text?: string | null;
   listing_agreement_types?: any;
+  parking_features_list?: string[] | null;
+  garage_features_list?: string[] | null;
+  garage_additional_features_list?: string[] | null;
+  parking_comments?: string | null;
+  garage_comments?: string | null;
 }
 
 interface AgentProfile {
@@ -735,6 +740,53 @@ const AgentListingDetail = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Parking & Garage */}
+            {(listing.total_parking_spaces || listing.garage_spaces || 
+              (listing.parking_features_list && listing.parking_features_list.length > 0) || 
+              (listing.garage_features_list && listing.garage_features_list.length > 0) || 
+              (listing.garage_additional_features_list && listing.garage_additional_features_list.length > 0) ||
+              listing.parking_comments || listing.garage_comments) && (
+              <Card className="bg-card border-border rounded-xl shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Car className="w-5 h-5 text-muted-foreground" />
+                    Parking & Garage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+                    <DetailRow label="Total Parking Spaces" value={listing.total_parking_spaces} />
+                    {listing.parking_features_list && listing.parking_features_list.length > 0 && (
+                      <DetailRow label="Parking Features" value={formatArray(listing.parking_features_list)} />
+                    )}
+                    <DetailRow label="Garage Spaces" value={listing.garage_spaces} />
+                    {listing.garage_features_list && listing.garage_features_list.length > 0 && (
+                      <DetailRow label="Garage Features" value={formatArray(listing.garage_features_list)} />
+                    )}
+                    {listing.garage_additional_features_list && listing.garage_additional_features_list.length > 0 && (
+                      <DetailRow label="Additional Garage Features" value={formatArray(listing.garage_additional_features_list)} />
+                    )}
+                  </div>
+                  {(listing.parking_comments || listing.garage_comments) && (
+                    <div className="mt-4 pt-3 border-t border-border space-y-2">
+                      {listing.parking_comments && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Parking Notes</p>
+                          <p className="text-sm text-foreground">{listing.parking_comments}</p>
+                        </div>
+                      )}
+                      {listing.garage_comments && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Garage Notes</p>
+                          <p className="text-sm text-foreground">{listing.garage_comments}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Disclosures */}
             {(listing.disclosures || listing.disclosures_other || listing.lead_paint) && (
