@@ -15,9 +15,14 @@ import {
   AGENT_SEARCH_STATUSES,
   CONSUMER_SEARCH_STATUSES,
   DEFAULT_SEARCH_STATUSES,
+  LISTING_TYPE,
+  LISTING_TYPE_LABELS,
 } from "@/constants/status";
 
 export interface SearchCriteria {
+  // Listing type
+  listingType?: "for_sale" | "for_rent";
+  
   // Location
   state?: string;
   county?: string;
@@ -167,6 +172,7 @@ export const UnifiedPropertySearch = ({
 
   const handleClearAll = () => {
     onCriteriaChange({
+      listingType: LISTING_TYPE.FOR_SALE,
       statuses: DEFAULT_SEARCH_STATUSES,
       propertyTypes: [],
       towns: [],
@@ -213,6 +219,29 @@ export const UnifiedPropertySearch = ({
           </div>
         </div>
       )}
+
+      {/* Listing Type Toggle: For Sale / For Rent */}
+      <div className="bg-card rounded-lg shadow-sm border p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Home className="h-4 w-4 text-primary" />
+          <h3 className="font-semibold text-sm">LISTING TYPE</h3>
+        </div>
+        <ToggleGroup
+          type="single"
+          value={criteria.listingType || LISTING_TYPE.FOR_SALE}
+          onValueChange={(value) => {
+            if (value) updateCriteria({ listingType: value as "for_sale" | "for_rent" });
+          }}
+          className="justify-start w-full"
+        >
+          <ToggleGroupItem value={LISTING_TYPE.FOR_SALE} variant="outline" className="flex-1">
+            {LISTING_TYPE_LABELS[LISTING_TYPE.FOR_SALE]}
+          </ToggleGroupItem>
+          <ToggleGroupItem value={LISTING_TYPE.FOR_RENT} variant="outline" className="flex-1">
+            {LISTING_TYPE_LABELS[LISTING_TYPE.FOR_RENT]}
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
 
       {/* Location - Using Unified GeographicSelector */}
       <GeographicSelector

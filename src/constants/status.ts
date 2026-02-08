@@ -237,6 +237,22 @@ export function normalizeStatus(status: string): string {
 }
 
 // =============================================================================
+// LISTING TYPE (For Sale vs For Rent)
+// =============================================================================
+
+export const LISTING_TYPE = {
+  FOR_SALE: "for_sale",
+  FOR_RENT: "for_rent",
+} as const;
+
+export type ListingType = (typeof LISTING_TYPE)[keyof typeof LISTING_TYPE];
+
+export const LISTING_TYPE_LABELS: Record<string, string> = {
+  [LISTING_TYPE.FOR_SALE]: "For Sale",
+  [LISTING_TYPE.FOR_RENT]: "For Rent",
+};
+
+// =============================================================================
 // PROPERTY TYPES (shared across filter panels)
 // =============================================================================
 

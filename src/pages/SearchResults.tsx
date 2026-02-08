@@ -32,6 +32,7 @@ const SearchResults = () => {
     const getBool = (k: string) => params.get(k) === "true";
 
     return {
+      listingType: get("lt"),
       statuses: getList("status"),
       types: getList("type"),
       minPrice: get("minPrice"),
@@ -68,6 +69,7 @@ const SearchResults = () => {
         
         // Build unified search criteria
         const criteria = {
+          listingType: filters.listingType,
           statuses: filters.statuses,
           propertyTypes: filters.types,
           cities: filters.towns || [],
