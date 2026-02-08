@@ -29,6 +29,7 @@ const BrowsePropertiesNew = () => {
   const searchMode = role === "agent" ? "agent" : "consumer";
 
   const [criteria, setCriteria] = useState<SearchCriteria>({
+    listingType: "for_sale",
     state: "MA",
     county: "all",
     towns: [],
@@ -46,6 +47,7 @@ const BrowsePropertiesNew = () => {
     const params = new URLSearchParams(window.location.search);
     const urlCriteria: Partial<SearchCriteria> = {};
 
+    if (params.has("lt")) urlCriteria.listingType = params.get("lt") as "for_sale" | "for_rent";
     if (params.has("status")) urlCriteria.statuses = params.get("status")!.split(",");
     if (params.has("type")) urlCriteria.propertyTypes = params.get("type")!.split(",");
     if (params.has("minPrice")) urlCriteria.minPrice = params.get("minPrice")!;
@@ -74,6 +76,7 @@ const BrowsePropertiesNew = () => {
 
       // Convert SearchCriteria to buildListingsQuery format with proper types
       const queryParams: any = {
+        listingType: criteria.listingType || "for_sale",
         statuses: criteria.statuses,
         propertyTypes: criteria.propertyTypes,
         zipCode: criteria.zipCode,
@@ -121,6 +124,7 @@ const BrowsePropertiesNew = () => {
 
   const buildQueryParams = () => {
     const params = new URLSearchParams();
+    if (criteria.listingType) params.set("lt", criteria.listingType);
     if (criteria.statuses?.length) params.set("status", criteria.statuses.join(","));
     if (criteria.propertyTypes?.length) params.set("type", criteria.propertyTypes.join(","));
     if (criteria.minPrice) params.set("minPrice", criteria.minPrice);

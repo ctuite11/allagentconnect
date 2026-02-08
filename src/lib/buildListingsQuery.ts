@@ -14,6 +14,9 @@ interface SearchCriteria {
   maxSqft?: number;
   listingNumber?: string;
   
+  // Listing type filter
+  listingType?: string;
+  
   // Agent-only filters
   listDate?: string;
   offMarketWindow?: string;
@@ -65,6 +68,7 @@ export function buildListingsQuery(
     minSqft: rawCriteria.minSqft || 0,
     maxSqft: rawCriteria.maxSqft || 0,
     listingNumber: rawCriteria.listingNumber || "",
+    listingType: rawCriteria.listingType || "",
     listDate: rawCriteria.listDate || "",
     offMarketWindow: rawCriteria.offMarketWindow || "",
     onlyOpenHouses: rawCriteria.onlyOpenHouses || false,
@@ -73,6 +77,11 @@ export function buildListingsQuery(
     brokerTourDays: rawCriteria.brokerTourDays || "",
     maxPricePerSqft: rawCriteria.maxPricePerSqft || 0,
   };
+
+  // Listing type filter (for_sale / for_rent)
+  if (criteria.listingType) {
+    query = query.eq("listing_type", criteria.listingType);
+  }
 
   // Status filter (defaults to active and coming_soon)
   // Note: Private listings are included in the status filter when explicitly requested
