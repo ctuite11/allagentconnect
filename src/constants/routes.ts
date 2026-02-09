@@ -18,6 +18,7 @@ export const ROUTES = {
   MARKET_INSIGHTS: '/market-insights',
   AGENT_SEARCH: '/agent-search',
   BROWSE: '/browse',
+  DRAFT_LISTINGS: '/agent/listings/drafts',
   
   // Child/Detail pages (show back button)
   HOT_SHEET_REVIEW: '/hot-sheets/:id/review',

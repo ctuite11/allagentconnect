@@ -6,7 +6,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2 } from "lucide-react";
+import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2, FileText } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig } from "@/constants/status";
 
@@ -180,6 +180,7 @@ function MyListingsView({
   onStats: (id: string) => void;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const statusFromUrl = searchParams.get("status");
   
   // Multi-select: parse comma-separated statuses from URL
@@ -333,13 +334,21 @@ function MyListingsView({
       />
 
       {/* New Listing Button Row */}
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-3">
         <Button 
           onClick={() => onNewListing("new")} 
           className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
         >
           <Plus className="h-4 w-4" />
           New Listing
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/agent/listings/drafts")}
+          className="gap-2 text-zinc-600"
+        >
+          <FileText className="h-4 w-4" />
+          Drafts
         </Button>
       </div>
 

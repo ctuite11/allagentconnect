@@ -290,6 +290,10 @@ const Navigation = () => {
                       <List className="mr-2 h-4 w-4" />
                       My Listings
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/agent/listings/drafts")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Drafts
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/my-clients")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                       <UserCircle className="mr-2 h-4 w-4" />
                       My Contacts
@@ -389,6 +393,10 @@ const Navigation = () => {
                       <DropdownMenuItem onClick={() => navigate("/agent/listings")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <List className="mr-2 h-4 w-4" />
                         My Listings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/agent/listings/drafts")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Drafts
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/my-clients")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                         <UserCircle className="mr-2 h-4 w-4" />
@@ -653,6 +661,16 @@ const Navigation = () => {
                     >
                       <List className="w-4 h-4" />
                       My Listings
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/agent/listings/drafts");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Drafts
                     </button>
                     <button
                       onClick={() => {
