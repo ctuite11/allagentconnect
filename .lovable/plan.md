@@ -1,43 +1,46 @@
 
 
-# Ticket 15 / 15A / 15B: DOM Rules, Clone Listing, Back on Market, and Property History
+# Fix: Delete Button Always Red + Pending Changes
 
-## Status: ✅ Complete
+## All Changes (in `src/pages/MyListings.tsx`)
 
-All items implemented:
+### 1. Delete buttons — always red (not just on hover)
+Both Delete buttons (Open House line 757-762, Broker Tour line 783-788) change from `text-primary hover:text-primary/80` to `text-red-600 hover:text-red-700`.
 
-### 15A — Back on Market + DOM Continuity
-- `AGING_RESET_DAYS = 30` constant in `src/constants/status.ts`
-- `back_on_market` in edit-mode dropdown (`ADD_LISTING_EDIT_STATUSES`)
-- `back_on_market` in pipeline filter set (`PIPELINE_STATUSES` in MyListings)
-- Status badges, labels, pipeline visibility all configured
+### 2. Move status badge to top-right corner
+Remove `ListingStatusBadge` from line 666 (center column, inline with listing number). Place it as an absolute-positioned element in the top-right of the card. The listing type badge stays next to the listing number.
 
-### 15B Part 1 — Clone Listing
-- "Clone as New Listing" button on AgentListingDetail (own expired/cancelled only)
-- Clone reception in AddListing via `location.state.clonedListing`
-- `is_relisting` / `original_listing_id` metadata in insert payload
+### 3. Replace Open House icon
+Line 745: change `📍` to `🎈`.
 
-### 15B Part 2 — Property History Panel (Cross-Agent)
-- Edge function `get-property-history` (authenticated, service-role bypass)
-  - `verify_jwt = true` — only authenticated users can call
-  - Priority matching: attom_id first, then normalized address/city/state
-  - Address normalization: lowercase, strip punctuation, normalize suffixes
-  - Bounded results: max 10 listings, 20 status events, 10 price changes per listing
-  - Whitelisted fields only (no broker remarks, contacts, lockbox, etc.)
-  - Agent display name + office name from agent_profiles join
-- `PropertyHistoryPanel` component in `src/components/PropertyHistoryPanel.tsx`
-  - Collapsible card, lazy-loads on first open
-  - Loading skeleton, error state, empty state
-  - Timeline: status changes, price changes, agent info, dates
-- Integrated into AgentListingDetail (agent view only, after detail cards)
+### 4. Add two new statuses
+Add `"temporarily_withdrawn"` and `"cancelled"` to the `ListingStatus` type (line 37) and `PIPELINE_STATUSES` array (line 40).
 
 ---
 
-## DOM Rules Summary
+### Technical Detail
 
-| Scenario | What happens | DOM |
-|----------|-------------|-----|
-| Back on Market (within 30 days) | Same row, status change | Continues |
-| Reactivate (within 30 days) | Same row, status → active | Continues |
-| Reactivate (after 30 days) | Same row, cumulative_active_days reset | Resets |
-| Clone listing | New row, is_relisting: true | Starts at 0 |
+**Delete button class change (lines 757-762 and 783-788):**
+- From: `text-xs text-primary hover:text-primary/80 hover:underline shrink-0`
+- To: `text-xs text-red-600 hover:text-red-700 hover:underline shrink-0`
+
+**Status badge repositioning:**
+- Add `relative` to the card's content container (around line 642)
+- Remove `ListingStatusBadge` from line 666
+- Add: `<div className="absolute top-0 right-0"><ListingStatusBadge status={l.status} size="sm" /></div>`
+- Listing number row becomes: `#L-1002 . [For Sale]`
+
+**Icon swap (line 745):**
+- `📍` becomes `🎈`
+
+**Status expansion (lines 37-40):**
+```
+type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled";
+const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market", "temporarily_withdrawn", "cancelled"];
+```
+
+| File | Changes |
+|------|---------|
+| `src/pages/MyListings.tsx` | Delete buttons always red; status badge to top-right; icon swap; add two statuses |
+
+No other files changed.
