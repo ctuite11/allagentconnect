@@ -119,8 +119,8 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
             <Button 
               variant="outline" 
               onClick={() => {
-                navigate(`/agent/${agent.id}`);
-                onOpenChange(false);
+              navigate(`/agent/${agent.aac_id || agent.id}`);
+              onOpenChange(false);
               }}
               className="gap-2"
             >

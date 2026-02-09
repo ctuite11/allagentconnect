@@ -28,5 +28,5 @@ export const ROUTES = {
   LISTING_ANALYTICS: '/agent/listings/:id/analytics',
   SEARCH_RESULTS: '/search',
   CLIENT_DETAIL: '/my-clients/:id',
-  AGENT_PROFILE: '/agents/:id',
+  AGENT_PROFILE: '/agent/:idOrCode',
 } as const;

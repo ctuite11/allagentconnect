@@ -3,6 +3,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 type Agent = {
   id: string;
+  aac_id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   company?: string | null;

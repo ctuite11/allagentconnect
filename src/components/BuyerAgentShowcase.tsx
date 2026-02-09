@@ -10,6 +10,7 @@ const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
 interface BuyerAgent {
   id: string;
+  aac_id?: string;
   first_name: string;
   last_name: string;
   headshot_url: string | null;
@@ -52,7 +53,7 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
           
           const { data: agentData } = await supabase
             .from("agent_profiles")
-            .select("id, first_name, last_name, headshot_url, logo_url, company, title, cell_phone, phone, social_links")
+            .select("id, aac_id, first_name, last_name, headshot_url, logo_url, company, title, cell_phone, phone, social_links")
             .in("id", agentIds);
 
           if (agentData) {
@@ -162,7 +163,7 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/agent/${agent.id}`)}
+                  onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`)}
                   className="text-xs"
                 >
                   <ExternalLink className="w-3 h-3 mr-1" />

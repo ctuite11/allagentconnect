@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 interface Agent {
   id: string;
+  aac_id?: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -257,7 +258,7 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
         {/* Primary CTA */}
         <Button 
           className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
-          onClick={() => navigate(`/agent/${agent.id}`)}
+          onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`)}
         >
           View Incentives
         </Button>

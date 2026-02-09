@@ -58,3 +58,9 @@
   from = "/api/showing-requests"
   to = "/.netlify/functions/showing-requests"
   status = 200
+
+# SPA fallback (MUST be last — all client routes fall through to React Router)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
