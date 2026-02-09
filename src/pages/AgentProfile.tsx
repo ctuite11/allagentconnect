@@ -96,8 +96,10 @@ interface Testimonial {
   created_at: string;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const AgentProfile = () => {
-  const { id } = useParams();
+  const { id: idOrCode } = useParams();
   const navigate = useNavigate();
   const [agent, setAgent] = useState<AgentProfile | null>(null);
   const [listings, setListings] = useState<any[]>([]);
@@ -106,11 +108,14 @@ const AgentProfile = () => {
 
   useEffect(() => {
     fetchAgentProfile();
-  }, [id]);
+  }, [idOrCode]);
 
   const fetchAgentProfile = async () => {
     try {
       setLoading(true);
+
+      const isUuid = UUID_RE.test(idOrCode ?? "");
+      const filterCol = isUuid ? "id" : "aac_id";
 
       const { data: agentData, error: agentError } = await supabase
         .from("agent_profiles")
@@ -121,7 +126,7 @@ const AgentProfile = () => {
             counties (name, state)
           )
         `)
-        .eq("id", id)
+        .eq(filterCol, idOrCode)
         .maybeSingle();
 
       if (agentError) throw agentError;
@@ -133,10 +138,13 @@ const AgentProfile = () => {
 
       setAgent(agentData as AgentProfile);
 
+      // Use the resolved agent UUID for related queries
+      const agentUuid = agentData.id;
+
       const { data: listingsData, error: listingsError } = await supabase
         .from("listings")
         .select("*")
-        .eq("agent_id", id)
+        .eq("agent_id", agentUuid)
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(6);
@@ -147,7 +155,7 @@ const AgentProfile = () => {
       const { data: testimonialsData, error: testimonialsError } = await supabase
         .from("testimonials")
         .select("*")
-        .eq("agent_id", id)
+        .eq("agent_id", agentUuid)
         .order("created_at", { ascending: false });
 
       if (testimonialsError) throw testimonialsError;

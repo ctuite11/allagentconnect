@@ -19,6 +19,7 @@ import { LISTING_STATUS } from "@/constants/status";
 
 interface EnrichedAgent {
   id: string;
+  aac_id: string;
   first_name: string;
   last_name: string;
   title?: string;
@@ -118,7 +119,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
       const { data: agentData, count, error: agentError } = await supabase
         .from("agent_profiles")
         .select(`
-          id, first_name, last_name, company, office_name, team_name, cell_phone, phone, email, headshot_url, buyer_incentives, updated_at, title,
+          id, aac_id, first_name, last_name, company, office_name, team_name, cell_phone, phone, email, headshot_url, buyer_incentives, updated_at, title,
           agent_county_preferences(
             county_id,
             counties(name, state)
@@ -208,6 +209,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
 
         return {
           id: agent.id,
+          aac_id: agent.aac_id,
           first_name: agent.first_name,
           last_name: agent.last_name,
           title: agent.title,
@@ -330,7 +332,9 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   };
 
   const handleViewProfile = (agentId: string) => {
-    navigate(`/agent/${agentId}`);
+    // Find agent to use aac_id for friendly URL
+    const agent = agents.find(a => a.id === agentId);
+    navigate(`/agent/${agent?.aac_id || agentId}`);
   };
 
   return (
