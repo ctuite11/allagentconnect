@@ -1,76 +1,96 @@
 
 
-# Plan: Update OG Monogram to Emerald Green
+# Ticket 11: Schedule `update-listing-statuses` to Run Automatically
 
-## Overview
-Replace the gray color (`#6B7280`) with AAC Success emerald green (`#059669`) in the OG image monogram and the "Connect" wordmark text.
+## What This Does
 
----
+The `update-listing-statuses` backend function already handles two critical automations:
+- **Auto-activate**: Flips `coming_soon`/`new` listings to `active` when their scheduled go-live date arrives
+- **Auto-expire**: Flips `active` listings to `expired` when their expiration date passes
+
+But nothing calls it on a schedule. This ticket wires up a database-level cron job to invoke the function every 15 minutes.
 
 ## Current State
-- **Monogram SVG**: `public/og/aac-monogram.svg` uses gray `#6B7280` for the interior path
-- **OG Render HTML**: `public/og/og-render.html` uses gray `#6B7280` for the "Connect" text and descriptor
-- **Brand Color**: AAC Success is defined as `#059669` (Emerald-600)
 
----
+- The backend function exists and works correctly when called manually
+- It has no authentication requirement (`verify_jwt = false` in `supabase/config.toml`)
+- The required database extensions (`pg_cron` for scheduling, `pg_net` for HTTP calls) are **not yet enabled**
+- No cron jobs exist in the database
 
-## Files to Update
+## Implementation Steps
 
-### 1. `public/og/aac-monogram.svg`
-Change the interior path fill from gray to emerald green:
+### Step 1: Enable required extensions (database migration)
 
-```svg
-<!-- Line 5: Change fill color -->
-<path ... fill="#059669"/>  <!-- Was #6B7280 -->
+A database migration will enable `pg_cron` and `pg_net` using the Supabase-standard `extensions` schema:
+
+```text
+create extension if not exists pg_cron with schema extensions;
+create extension if not exists pg_net with schema extensions;
 ```
 
-### 2. `public/og/og-render.html`
-Update the CSS for the "Connect" wordmark and descriptor to use emerald green:
+No extra GRANT statements are needed -- Supabase managed environments handle permissions automatically.
 
-| Element | Current Color | New Color |
-|---------|--------------|-----------|
-| `.wordmark .connect` | `#6B7280` | `#059669` |
-| `.descriptor` | `rgba(107, 114, 128, 0.85)` | `rgba(5, 150, 105, 0.85)` |
+### Step 2: Create the cron job (direct SQL, not a migration)
 
----
+This must be run as a direct SQL statement because it contains the project-specific function URL and should not be included in portable migrations.
 
-## Technical Details
-
-### Color Values
-| Token | Value |
-|-------|-------|
-| AAC Success (Emerald-600) | `#059669` |
-| AAC Success RGB | `5, 150, 105` |
-
-### Updated CSS (og-render.html)
-```css
-.wordmark .connect {
-  font-weight: 700;
-  color: #059669;  /* AAC Success Emerald */
-}
-
-.descriptor {
-  font-size: 32px;
-  font-weight: 600;
-  color: rgba(5, 150, 105, 0.85);  /* Emerald at 85% opacity */
-  letter-spacing: 0.08em;
-  margin-bottom: 12px;
-}
+```text
+select cron.schedule(
+  'update-listing-statuses-every-15-min',
+  '*/15 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/update-listing-statuses',
+    headers := '{"Content-Type":"application/json"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
 ```
 
----
+No Authorization header is needed because the function has `verify_jwt = false`.
 
-## Post-Update Steps
-After updating the SVG and HTML:
-1. Regenerate the OG image: `node scripts/generate-og-image.cjs`
-2. Update `index.html` and `netlify.toml` with the new dated filename
-3. Verify via Facebook Sharing Debugger
+### Step 3: Verify the job was created
 
----
+After setup, verification queries confirm the job is registered:
 
-## Summary
-- Updates the monogram interior from gray to emerald green `#059669`
-- Updates "Connect" wordmark from gray to emerald green
-- Updates descriptor text to use emerald green at 85% opacity
-- Maintains brand consistency with the AAC Success color standard
+```text
+-- Confirm job exists
+select jobid, jobname, schedule from cron.job;
+
+-- Check run history after first execution
+select * from cron.job_run_details
+where jobid in (select jobid from cron.job where jobname = 'update-listing-statuses-every-15-min')
+order by start_time desc limit 10;
+```
+
+## What Does NOT Change
+
+- No changes to the `update-listing-statuses` edge function code
+- No changes to any frontend pages
+- No changes to listing creation or editing
+- No new tables or columns
+
+## Rollback
+
+If needed, the job can be removed with:
+```text
+select cron.unschedule('update-listing-statuses-every-15-min');
+```
+
+## Acceptance Checklist
+
+- `pg_cron` and `pg_net` extensions are enabled
+- Cron job `update-listing-statuses-every-15-min` exists and runs every 15 minutes
+- A `coming_soon` listing with `auto_activate_on <= now()` automatically flips to `active`
+- An `active` listing with `expiration_date <= today` automatically flips to `expired`
+- `listing_status_history` gets a row for each automated change
+- `cron.job_run_details` shows successful runs
+
+## Technical Notes
+
+- The extensions migration uses `with schema extensions` (Supabase standard), not `pg_catalog`
+- No GRANT statements are needed in Supabase managed environments
+- The cron job SQL is run as a direct SQL insert (not a migration) because it contains the project-specific function URL
+- The 15-minute interval balances responsiveness with resource efficiency
 
