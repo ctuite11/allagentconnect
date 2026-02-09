@@ -6,7 +6,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2, FileText } from "lucide-react";
+import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig } from "@/constants/status";
 
@@ -576,7 +576,7 @@ function MyListingsView({
                 className="relative p-4"
               >
                 {/* Action row - tight, no vertical padding */}
-                <div className="mb-3 pr-36">
+                <div className="mb-3">
                   <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
                       className="hover:text-emerald-700 transition"
@@ -638,62 +638,8 @@ function MyListingsView({
                   </div>
                 </div>
 
-                {/* Status + Dates - stacked, absolutely positioned top-right */}
-                <div className="absolute top-4 right-4 shrink-0 text-right space-y-0.5">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <ListingStatusBadge status={l.status} size="sm" />
-                    {l.listing_type && (
-                      <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-                        {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-zinc-500 leading-tight pt-1">List: {listDate}</div>
-                  <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate || "—"}</div>
-                  <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
-
-                  {/* Scheduled Events */}
-                  {hasOpenHouses && (
-                    <div className="mt-2 pt-2 border-t border-zinc-200 space-y-2">
-                      {(l.open_houses as any[]).map((oh, idx) => {
-                        const event = formatOpenHouseEvent(oh);
-                        return (
-                          <div key={idx} className="text-xs">
-                            <div className="flex items-center justify-end gap-1.5 text-zinc-600">
-                              {event.isBrokerTour ? (
-                                <BlueCarIcon className="h-3 w-3 shrink-0" />
-                              ) : (
-                                <span className="shrink-0">🎈</span>
-                              )}
-                              <span>{event.dateLabel}</span>
-                            </div>
-                            <div className="text-zinc-500">{event.timeLabel}</div>
-                            <div className="flex items-center justify-end gap-2 mt-0.5">
-                              <button
-                                className="text-primary hover:underline"
-                                onClick={() => onViewOpenHouses(l)}
-                              >
-                                Edit
-                              </button>
-                              <span className="text-zinc-300">•</span>
-                              <button
-                                className="text-destructive hover:underline"
-                                onClick={() => onDeleteOpenHouse(l.id, idx)}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Content row - photo + info + status */}
+                {/* Content row - photo + info + metadata */}
                 <div className="flex items-start gap-4">
-                  {/* Draft checkbox removed — drafts filtered out server-side */}
-
                   {/* Photo - locked size */}
                   <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer">
                     <img
@@ -704,17 +650,26 @@ function MyListingsView({
                     />
                   </div>
 
-                  {/* Center text stack - compressed */}
+                  {/* Center text stack */}
                   <div className="min-w-0 flex-1 space-y-0.5">
-                    {/* Listing # - blue, clickable */}
-                    {l.listing_number && (
-                      <button 
-                        className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer leading-none"
-                        onClick={() => onPreview(l.id)}
-                      >
-                        #{l.listing_number}
-                      </button>
-                    )}
+                    {/* Listing # + Status inline */}
+                    <div className="flex items-center gap-2">
+                      {l.listing_number && (
+                        <button 
+                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer leading-none"
+                          onClick={() => onPreview(l.id)}
+                        >
+                          #{l.listing_number}
+                        </button>
+                      )}
+                      <span className="text-zinc-300">•</span>
+                      <ListingStatusBadge status={l.status} size="sm" />
+                      {l.listing_type && (
+                        <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                          {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
+                        </span>
+                      )}
+                    </div>
                     {/* Address */}
                     <div className="font-semibold text-base text-zinc-900 truncate leading-tight">
                       {formatAddressWithUnit(l)}
@@ -771,8 +726,81 @@ function MyListingsView({
                       )}
                     </div>
 
+                    {/* Inline Event Rows */}
+                    {(() => {
+                      const openHouses = Array.isArray(l.open_houses)
+                        ? (l.open_houses as any[]).filter((oh: any) => oh.event_type !== "broker_tour")
+                        : [];
+                      const brokerTours = Array.isArray(l.open_houses)
+                        ? (l.open_houses as any[]).filter((oh: any) => oh.event_type === "broker_tour")
+                        : [];
+
+                      return (
+                        <>
+                          {openHouses.length > 0 && (() => {
+                            const first = formatOpenHouseEvent(openHouses[0]);
+                            return (
+                              <div className="flex items-center gap-1.5 text-sm text-zinc-600 mt-1">
+                                <span aria-hidden>📍</span>
+                                <span>Open House</span>
+                                <span className="text-zinc-300">•</span>
+                                <span>{first.dateLabel}</span>
+                                <span className="text-zinc-300">•</span>
+                                <span>{first.timeLabel}</span>
+                                {openHouses.length > 1 && (
+                                  <span className="text-zinc-400 text-xs">+{openHouses.length - 1} more</span>
+                                )}
+                                <button
+                                  className="text-xs text-primary hover:text-primary/80 hover:underline ml-1"
+                                  onClick={() => onViewOpenHouses(l)}
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            );
+                          })()}
+                          {brokerTours.length > 0 && (() => {
+                            const first = formatOpenHouseEvent(brokerTours[0]);
+                            return (
+                              <div className="flex items-center gap-1.5 text-sm text-zinc-600 mt-0.5">
+                                <BlueCarIcon className="h-3.5 w-3.5 shrink-0" />
+                                <span>Broker Tour</span>
+                                <span className="text-zinc-300">•</span>
+                                <span>{first.dateLabel}</span>
+                                <span className="text-zinc-300">•</span>
+                                <span>{first.timeLabel}</span>
+                                {brokerTours.length > 1 && (
+                                  <span className="text-zinc-400 text-xs">+{brokerTours.length - 1} more</span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </>
+                      );
+                    })()}
                   </div>
 
+                  {/* Right side - quiet metadata + overflow */}
+                  <div className="shrink-0 text-right space-y-0.5 pt-0.5">
+                    <div className="text-xs text-zinc-500 leading-tight">Listed: {listDate}</div>
+                    <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="mt-1 p-1 rounded hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem
+                          className="cursor-pointer text-sm text-destructive focus:text-destructive"
+                          onClick={() => setListingToDelete(l)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-2" />
+                          Delete Listing
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </CardSurface>
             );
