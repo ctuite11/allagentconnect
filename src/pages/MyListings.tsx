@@ -728,50 +728,65 @@ function MyListingsView({
 
                     {/* Inline Event Rows */}
                     {(() => {
-                      const openHouses = Array.isArray(l.open_houses)
-                        ? (l.open_houses as any[]).filter((oh: any) => oh.event_type !== "broker_tour")
-                        : [];
-                      const brokerTours = Array.isArray(l.open_houses)
-                        ? (l.open_houses as any[]).filter((oh: any) => oh.event_type === "broker_tour")
-                        : [];
+                      const events = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
+                      const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
+                      const openHouseEvent = openHouseIndex >= 0 ? events[openHouseIndex] : null;
+                      const openHouseCount = events.filter((e: any) => e?.event_type !== "broker_tour").length;
+                      const brokerTourIndex = events.findIndex((e: any) => e?.event_type === "broker_tour");
+                      const brokerTourEvent = brokerTourIndex >= 0 ? events[brokerTourIndex] : null;
+                      const brokerTourCount = events.filter((e: any) => e?.event_type === "broker_tour").length;
 
                       return (
                         <>
-                          {openHouses.length > 0 && (() => {
-                            const first = formatOpenHouseEvent(openHouses[0]);
+                          {openHouseEvent && (() => {
+                            const first = formatOpenHouseEvent(openHouseEvent);
                             return (
-                              <div className="flex items-center gap-1.5 text-sm text-zinc-600 mt-1">
-                                <span aria-hidden>📍</span>
-                                <span>Open House</span>
-                                <span className="text-zinc-300">•</span>
-                                <span>{first.dateLabel}</span>
-                                <span className="text-zinc-300">•</span>
-                                <span>{first.timeLabel}</span>
-                                {openHouses.length > 1 && (
-                                  <span className="text-zinc-400 text-xs">+{openHouses.length - 1} more</span>
+                              <div className="flex items-center gap-1.5 text-sm text-zinc-600 mt-1 min-w-0">
+                                <span aria-hidden className="shrink-0">📍</span>
+                                <span className="truncate">Open House • {first.dateLabel} • {first.timeLabel}</span>
+                                {openHouseCount > 1 && (
+                                  <span className="text-zinc-400 text-xs shrink-0">+{openHouseCount - 1} more</span>
                                 )}
                                 <button
-                                  className="text-xs text-primary hover:text-primary/80 hover:underline ml-1"
+                                  type="button"
+                                  className="text-xs text-primary hover:text-primary/80 hover:underline ml-1 shrink-0"
                                   onClick={() => onViewOpenHouses(l)}
                                 >
                                   Edit
                                 </button>
+                                <button
+                                  type="button"
+                                  className="text-xs text-primary hover:text-primary/80 hover:underline shrink-0"
+                                  onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
+                                >
+                                  Delete
+                                </button>
                               </div>
                             );
                           })()}
-                          {brokerTours.length > 0 && (() => {
-                            const first = formatOpenHouseEvent(brokerTours[0]);
+                          {brokerTourEvent && (() => {
+                            const first = formatOpenHouseEvent(brokerTourEvent);
                             return (
-                              <div className="flex items-center gap-1.5 text-sm text-zinc-600 mt-0.5">
+                              <div className="flex items-center gap-1.5 text-sm text-zinc-600 mt-0.5 min-w-0">
                                 <BlueCarIcon className="h-3.5 w-3.5 shrink-0" />
-                                <span>Broker Tour</span>
-                                <span className="text-zinc-300">•</span>
-                                <span>{first.dateLabel}</span>
-                                <span className="text-zinc-300">•</span>
-                                <span>{first.timeLabel}</span>
-                                {brokerTours.length > 1 && (
-                                  <span className="text-zinc-400 text-xs">+{brokerTours.length - 1} more</span>
+                                <span className="truncate">Broker Tour • {first.dateLabel} • {first.timeLabel}</span>
+                                {brokerTourCount > 1 && (
+                                  <span className="text-zinc-400 text-xs shrink-0">+{brokerTourCount - 1} more</span>
                                 )}
+                                <button
+                                  type="button"
+                                  className="text-xs text-primary hover:text-primary/80 hover:underline ml-1 shrink-0"
+                                  onClick={() => onViewOpenHouses(l)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="text-xs text-primary hover:text-primary/80 hover:underline shrink-0"
+                                  onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
+                                >
+                                  Delete
+                                </button>
                               </div>
                             );
                           })()}
@@ -783,6 +798,9 @@ function MyListingsView({
                   {/* Right side - quiet metadata + overflow */}
                   <div className="shrink-0 text-right space-y-0.5 pt-0.5">
                     <div className="text-xs text-zinc-500 leading-tight">Listed: {listDate}</div>
+                    {expDate && (
+                      <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>
+                    )}
                     <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
