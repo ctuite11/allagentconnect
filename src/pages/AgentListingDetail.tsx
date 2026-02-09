@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { getStatusConfig } from "@/constants/status";
+import { getStatusConfig, LISTING_STATUS } from "@/constants/status";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -37,7 +37,8 @@ import {
   Building2,
   Info,
   Flame,
-  MessageSquare
+  MessageSquare,
+  Copy
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -400,6 +401,88 @@ const AgentListingDetail = () => {
                     <Send className="w-4 h-4" />
                     Send to Agents
                   </Button>
+                  {/* Clone as New Listing — only for own expired/cancelled listings */}
+                  {viewerId && listing.agent_id === viewerId &&
+                    (listing.status === LISTING_STATUS.EXPIRED ||
+                     listing.status === LISTING_STATUS.CANCELLED ||
+                     listing.status === LISTING_STATUS.CANCELED) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => {
+                        // Build the cloned payload — property data only, lifecycle stripped
+                        const clonedListing: Record<string, any> = {
+                          // Location
+                          address: listing.address,
+                          unit_number: listing.unit_number ?? null,
+                          building_name: listing.building_name ?? null,
+                          city: listing.city,
+                          state: listing.state,
+                          zip_code: listing.zip_code,
+                          county: listing.county ?? null,
+                          neighborhood: listing.neighborhood ?? null,
+                          latitude: listing.latitude,
+                          longitude: listing.longitude,
+                          // Type
+                          property_type: listing.property_type,
+                          listing_type: listing.listing_type,
+                          // Details
+                          bedrooms: listing.bedrooms,
+                          bathrooms: listing.bathrooms,
+                          square_feet: listing.square_feet,
+                          lot_size: listing.lot_size,
+                          year_built: listing.year_built,
+                          floors: listing.floors,
+                          description: listing.description,
+                          additional_notes: listing.additional_notes,
+                          // Media (references to existing storage URLs)
+                          photos: listing.photos,
+                          floor_plans: listing.floor_plans,
+                          // Features
+                          property_features: listing.property_features,
+                          amenities: listing.amenities,
+                          exterior_features_list: listing.exterior_features_list,
+                          construction_features: listing.construction_features,
+                          roof_materials: listing.roof_materials,
+                          heating_types: listing.heating_types,
+                          cooling_types: listing.cooling_types,
+                          foundation_types: listing.foundation_types,
+                          basement_types: listing.basement_types,
+                          has_basement: listing.has_basement,
+                          num_fireplaces: listing.num_fireplaces,
+                          total_parking_spaces: listing.total_parking_spaces,
+                          garage_spaces: listing.garage_spaces,
+                          parking_features_list: listing.parking_features_list,
+                          parking_comments: listing.parking_comments,
+                          garage_features_list: listing.garage_features_list,
+                          garage_comments: listing.garage_comments,
+                          waterfront: listing.waterfront,
+                          water_view: listing.water_view,
+                          beach_nearby: listing.beach_nearby,
+                          lead_paint: listing.lead_paint,
+                          laundry_type: listing.laundry_type,
+                          // Condo / MF / Commercial
+                          condo_details: listing.condo_details,
+                          multi_family_details: listing.multi_family_details,
+                          // Links
+                          video_url: listing.video_url,
+                          virtual_tour_url: listing.virtual_tour_url,
+                          property_website_url: listing.property_website_url,
+                          // Relisting metadata
+                          is_relisting: true,
+                          original_listing_id: listing.id,
+                        };
+                        navigate("/agent/listings/new", {
+                          state: { clonedListing },
+                        });
+                        toast.info("Cloned listing opened as new draft. Review and publish when ready.");
+                      }}
+                    >
+                      <Copy className="w-4 h-4" />
+                      Clone as New Listing
+                    </Button>
+                  )}
                 </>
               )}
               

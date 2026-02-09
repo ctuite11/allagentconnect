@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { PageTitle } from "@/components/ui/page-title";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
@@ -89,6 +89,7 @@ const listingSchema = z.object({
 
 const AddListing = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: listingId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const initialStatus = searchParams.get("status") || "new";
@@ -140,6 +141,10 @@ const AddListing = () => {
   // Refs to track original values for change detection in edit mode
   const originalPriceRef = useRef<number | null>(null);
   const originalStatusRef = useRef<string | null>(null);
+
+  // Clone listing state (set when navigating from AgentListingDetail "Clone as New Listing")
+  const [isRelisting, setIsRelisting] = useState(false);
+  const [originalListingId, setOriginalListingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     status: initialStatus,
@@ -522,6 +527,107 @@ const AddListing = () => {
       if (listingId) {
         console.log('[AddListing] Loading listing from URL param:', listingId);
         await loadExistingListing(listingId);
+      } else if (location.state?.clonedListing) {
+        // Clone path — pre-fill form from cloned data without setting draftId/listingId
+        console.log('[AddListing] Hydrating from clonedListing state');
+        const cloned = location.state.clonedListing as Record<string, any>;
+
+        // Mark as relisting
+        setIsRelisting(true);
+        setOriginalListingId(cloned.original_listing_id ?? null);
+
+        // Set hydration flag to prevent cascading useEffects from clearing values
+        isHydratingLocationRef.current = true;
+
+        // Location selectors
+        if (cloned.state) {
+          setSelectedState(cloned.state);
+          const counties = getCountiesForState(cloned.state);
+          setAvailableCounties(counties);
+        }
+        if (cloned.county) setSelectedCounty(cloned.county);
+        if (cloned.city) {
+          setCityChoice(cloned.city);
+          const cityOptions = getCitiesForStateAndCounty(cloned.state || "", cloned.county || "all");
+          setAvailableCities(cityOptions);
+        }
+        if (cloned.zip_code) {
+          setSuggestedZips([cloned.zip_code]);
+          setAvailableZips([cloned.zip_code]);
+        }
+
+        setTimeout(() => { isHydratingLocationRef.current = false; }, 100);
+
+        // Form data
+        setFormData(prev => ({
+          ...prev,
+          status: "draft",
+          listing_type: cloned.listing_type || "for_sale",
+          property_type: cloned.property_type || "single_family",
+          address: cloned.address || "",
+          city: cloned.city || "",
+          state: cloned.state || "",
+          zip_code: cloned.zip_code || "",
+          county: cloned.county || "",
+          neighborhood: cloned.neighborhood || "",
+          latitude: cloned.latitude ?? null,
+          longitude: cloned.longitude ?? null,
+          bedrooms: cloned.bedrooms?.toString() || "",
+          bathrooms: cloned.bathrooms?.toString() || "",
+          square_feet: cloned.square_feet?.toString() || "",
+          lot_size: cloned.lot_size?.toString() || "",
+          year_built: cloned.year_built?.toString() || "",
+          price: "", // Agent should set new price
+          description: cloned.description || "",
+          additional_notes: cloned.additional_notes || "",
+          unit_number: cloned.unit_number || "",
+          building_name: cloned.building_name || "",
+          laundry_type: cloned.laundry_type || "none",
+          video_url: cloned.video_url || "",
+          virtual_tour_url: cloned.virtual_tour_url || "",
+          property_website_url: cloned.property_website_url || "",
+          total_parking_spaces: cloned.total_parking_spaces?.toString() || "",
+          garage_spaces: cloned.garage_spaces?.toString() || "",
+          parking_comments: cloned.parking_comments || "",
+          garage_comments: cloned.garage_comments || "",
+        }));
+
+        // Photos — existing storage URLs
+        if (cloned.photos && Array.isArray(cloned.photos) && cloned.photos.length > 0) {
+          const loadedPhotos: FileWithPreview[] = cloned.photos.map((photo: any, i: number) => ({
+            file: new File([], ''),
+            preview: typeof photo === 'string' ? photo : photo.url,
+            id: `cloned-photo-${i}`,
+            uploaded: true,
+            url: typeof photo === 'string' ? photo : photo.url,
+          }));
+          setPhotos(loadedPhotos);
+        }
+
+        if (cloned.floor_plans && Array.isArray(cloned.floor_plans) && cloned.floor_plans.length > 0) {
+          const loadedFloorPlans: FileWithPreview[] = cloned.floor_plans.map((plan: any, i: number) => ({
+            file: new File([], ''),
+            preview: typeof plan === 'string' ? plan : plan.url,
+            id: `cloned-floor-${i}`,
+            uploaded: true,
+            url: typeof plan === 'string' ? plan : plan.url,
+          }));
+          setFloorPlans(loadedFloorPlans);
+        }
+
+        // Feature arrays
+        if (cloned.property_features) setPropertyFeatures(Array.isArray(cloned.property_features) ? cloned.property_features : []);
+        if (cloned.amenities) setAmenities(Array.isArray(cloned.amenities) ? cloned.amenities : []);
+        if (cloned.heating_types) setInteriorAmenities(prev => [...prev]); // keep existing
+        if (cloned.lead_paint) setLeadPaint(typeof cloned.lead_paint === 'string' ? cloned.lead_paint.split(', ').filter(Boolean) : []);
+        if (cloned.has_basement !== undefined) {} // form will pick up from property_features
+        if (cloned.parking_features_list) setParkingFeatures(cloned.parking_features_list);
+        if (cloned.garage_features_list) setGarageFeatures(cloned.garage_features_list);
+        if (cloned.handicap_accessible) setHandicapAccessible(cloned.handicap_accessible);
+        if (cloned.area_amenities) setAreaAmenities(Array.isArray(cloned.area_amenities) ? cloned.area_amenities : []);
+
+        // Set ATTOM ID if available
+        if (cloned.attom_id) setAttomId(cloned.attom_id);
       }
       
       setLoading(false);
@@ -2157,6 +2263,12 @@ const AddListing = () => {
       pets_comment: formData.pets_comment || null,
       pet_options: petOptions,
     } : {}),
+
+    // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
+    ...(isRelisting ? {
+      is_relisting: true,
+      original_listing_id: originalListingId,
+    } : {}),
     };
   };
 
@@ -2740,7 +2852,9 @@ const AddListing = () => {
               old_status: null,
               new_status: formData.status,
               changed_by: currentUserId,
-              notes: "Listing created",
+              notes: isRelisting && originalListingId
+                ? `Cloned from ${originalListingId}`
+                : "Listing created",
             });
           } catch (historyError) {
             console.error("[AddListing] Error logging initial history:", historyError);

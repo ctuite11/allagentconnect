@@ -50,6 +50,16 @@ export const AGENT_STATUS_CONFIG: Record<AgentStatus, { bg: string; text: string
 };
 
 // =============================================================================
+// LISTING LIFECYCLE
+// =============================================================================
+
+/**
+ * Aging window (days) — listings reactivated within this window continue DOM;
+ * after this window, a clone creates a new market cycle with DOM = 0.
+ */
+export const AGING_RESET_DAYS = 30;
+
+// =============================================================================
 // LISTING STATUS
 // =============================================================================
 
@@ -413,6 +423,7 @@ export const ADD_LISTING_EDIT_STATUSES = [
   { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
   { value: LISTING_STATUS.NEW, label: LISTING_STATUS_LABELS[LISTING_STATUS.NEW] },
   { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
+  { value: LISTING_STATUS.BACK_ON_MARKET, label: LISTING_STATUS_LABELS[LISTING_STATUS.BACK_ON_MARKET] },
   { value: LISTING_STATUS.PENDING, label: LISTING_STATUS_LABELS[LISTING_STATUS.PENDING] },
   { value: LISTING_STATUS.WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.WITHDRAWN] },
   { value: LISTING_STATUS.TEMPORARILY_WITHDRAWN, label: LISTING_STATUS_LABELS[LISTING_STATUS.TEMPORARILY_WITHDRAWN] },
