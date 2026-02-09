@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
 
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, Pencil, Trash2, FileText } from "lucide-react";
+import { Grid, List as ListIcon, Plus, Pencil, Trash2, FileText, X, AlertTriangle } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { LISTING_TYPE_LABELS } from "@/constants/status";
 import { Button } from "@/components/ui/button";
@@ -69,11 +70,18 @@ function getThumbnailUrl(listing: DraftListing) {
   return firstPhoto?.url || null;
 }
 
-function formatDate(value?: string | null) {
+function getDraftAgeBadge(updatedAt: string): { label: string; className: string } | null {
+  const days = differenceInDays(new Date(), new Date(updatedAt));
+  if (days >= 90) return { label: "Old Draft", className: "bg-red-50 text-red-700" };
+  if (days >= 30) return { label: "Stale Draft", className: "bg-yellow-50 text-yellow-700" };
+  return null;
+}
+
+function formatRelativeTime(value?: string | null) {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString();
+  return formatDistanceToNow(d, { addSuffix: true });
 }
 
 export default function DraftListings() {
@@ -84,6 +92,8 @@ export default function DraftListings() {
   const [view, setView] = useState<"grid" | "list">("list");
   const [listingToDelete, setListingToDelete] = useState<DraftListing | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [filterStale, setFilterStale] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -111,6 +121,18 @@ export default function DraftListings() {
     setLoading(false);
   };
 
+  const filteredListings = useMemo(() => {
+    if (!filterStale) return listings;
+    return listings.filter(
+      (l) => differenceInDays(new Date(), new Date(l.updated_at)) >= 30
+    );
+  }, [listings, filterStale]);
+
+  const oldDraftCount = useMemo(
+    () => listings.filter((l) => differenceInDays(new Date(), new Date(l.updated_at)) >= 90).length,
+    [listings]
+  );
+
   const handleDelete = async () => {
     if (!listingToDelete || listingToDelete.status !== "draft") return;
     setIsDeleting(true);
@@ -135,6 +157,16 @@ export default function DraftListings() {
     return <LoadingScreen message="Loading drafts..." />;
   }
 
+  const renderAgeBadge = (updatedAt: string) => {
+    const badge = getDraftAgeBadge(updatedAt);
+    if (!badge) return null;
+    return (
+      <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded ${badge.className}`}>
+        {badge.label}
+      </span>
+    );
+  };
+
   return (
     <PageShell>
       <PageHeader
@@ -152,6 +184,30 @@ export default function DraftListings() {
           <Plus className="h-4 w-4" />
           New Listing
         </Button>
+
+        {/* Stale filter toggle */}
+        <div className="inline-flex items-center border border-zinc-200 rounded-lg p-0.5 bg-white">
+          <button
+            onClick={() => setFilterStale(false)}
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              !filterStale
+                ? "bg-zinc-100 text-zinc-900"
+                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilterStale(true)}
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              filterStale
+                ? "bg-zinc-100 text-zinc-900"
+                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+            }`}
+          >
+            Stale
+          </button>
+        </div>
 
         {/* View toggle */}
         <div className="ml-auto inline-flex items-center border border-zinc-200 rounded-lg p-0.5 bg-white">
@@ -177,6 +233,29 @@ export default function DraftListings() {
           </button>
         </div>
       </div>
+
+      {/* Old drafts cleanup banner */}
+      {oldDraftCount > 0 && !bannerDismissed && (
+        <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+          <span className="flex-1">
+            You have {oldDraftCount} {oldDraftCount === 1 ? "draft" : "drafts"} older than 90 days. Consider deleting the ones you don't need.
+          </span>
+          <button
+            onClick={() => setFilterStale(true)}
+            className="text-xs font-medium text-amber-700 hover:text-amber-900 underline underline-offset-2 whitespace-nowrap"
+          >
+            Show Old Drafts
+          </button>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="text-amber-500 hover:text-amber-700 transition"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
@@ -205,25 +284,38 @@ export default function DraftListings() {
       </AlertDialog>
 
       {/* Empty State */}
-      {listings.length === 0 && !loading && (
+      {filteredListings.length === 0 && !loading && (
         <div className="text-center py-16">
           <FileText className="mx-auto h-10 w-10 text-zinc-300 mb-3" />
-          <p className="text-zinc-500 text-sm mb-4">No drafts yet.</p>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/agent/listings/new")}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Create New Listing
-          </Button>
+          <p className="text-zinc-500 text-sm mb-4">
+            {filterStale ? "No stale drafts found." : "No drafts yet."}
+          </p>
+          {!filterStale && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/agent/listings/new")}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create New Listing
+            </Button>
+          )}
+          {filterStale && (
+            <Button
+              variant="outline"
+              onClick={() => setFilterStale(false)}
+              className="gap-2"
+            >
+              Show All Drafts
+            </Button>
+          )}
         </div>
       )}
 
       {/* GRID VIEW */}
-      {view === "grid" && listings.length > 0 && (
+      {view === "grid" && filteredListings.length > 0 && (
         <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {listings.map((l) => {
+          {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             return (
               <CardSurface key={l.id} interactive className="cursor-pointer">
@@ -244,13 +336,14 @@ export default function DraftListings() {
                   <div className="text-zinc-500 text-sm mt-0.5">
                     {l.state} {l.zip_code}
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <ListingStatusBadge status="draft" size="sm" />
                     {l.listing_type && (
                       <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
                         {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
                       </span>
                     )}
+                    {renderAgeBadge(l.updated_at)}
                   </div>
                   {l.price > 0 && (
                     <div className="text-zinc-600 text-sm mt-2 font-medium">
@@ -258,7 +351,7 @@ export default function DraftListings() {
                     </div>
                   )}
                   <div className="text-xs text-zinc-400 mt-1">
-                    Updated {formatDate(l.updated_at)}
+                    Updated {formatRelativeTime(l.updated_at)}
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-sm">
                     <button
@@ -289,9 +382,9 @@ export default function DraftListings() {
       )}
 
       {/* LIST VIEW */}
-      {view === "list" && listings.length > 0 && (
+      {view === "list" && filteredListings.length > 0 && (
         <div className="mt-2 space-y-4">
-          {listings.map((l) => {
+          {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             return (
               <CardSurface key={l.id} className="relative p-4">
@@ -318,16 +411,17 @@ export default function DraftListings() {
 
                 {/* Status badges – top-right */}
                 <div className="absolute top-4 right-4 text-right space-y-0.5">
-                  <div className="flex items-center justify-end gap-1.5">
+                  <div className="flex items-center justify-end gap-1.5 flex-wrap">
                     <ListingStatusBadge status="draft" size="sm" />
                     {l.listing_type && (
                       <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
                         {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
                       </span>
                     )}
+                    {renderAgeBadge(l.updated_at)}
                   </div>
                   <div className="text-xs text-zinc-500 leading-tight pt-1">
-                    Updated: {formatDate(l.updated_at)}
+                    Updated: {formatRelativeTime(l.updated_at)}
                   </div>
                 </div>
 
