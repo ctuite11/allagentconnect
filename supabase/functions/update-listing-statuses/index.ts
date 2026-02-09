@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     const { data: listingsToExpire, error: expireQueryError } = await supabase
       .from('listings')
       .select('id, address, status, expiration_date')
-      .eq('status', 'active')
+      .in('status', ['active', 'new', 'coming_soon', 'off_market'])
       .not('expiration_date', 'is', null)
       .lte('expiration_date', today);
 
