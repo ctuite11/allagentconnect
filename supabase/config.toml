@@ -71,3 +71,6 @@ verify_jwt = true
 
 [functions.diag-listings]
 verify_jwt = false
+
+[functions.get-property-history]
+verify_jwt = true

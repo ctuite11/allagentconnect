@@ -49,6 +49,7 @@ import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { findOrCreateConversation } from "@/lib/startConversation";
+import { PropertyHistoryPanel } from "@/components/PropertyHistoryPanel";
 
 interface Listing {
   id: string;
@@ -122,6 +123,7 @@ interface Listing {
   garage_additional_features_list?: string[] | null;
   parking_comments?: string | null;
   garage_comments?: string | null;
+  attom_id?: string | null;
 }
 
 interface AgentProfile {
@@ -1162,6 +1164,20 @@ const AgentListingDetail = () => {
             </Card>
           </div>
         </div>
+
+        {/* Property History — cross-agent, agent view only */}
+        {isAgentView && (
+          <div className="mt-6">
+            <PropertyHistoryPanel
+              address={listing.address}
+              city={listing.city}
+              state={listing.state}
+              unitNumber={listing.unit_number}
+              attomId={listing.attom_id}
+              currentListingId={listing.id}
+            />
+          </div>
+        )}
 
         {/* Full Photo Grid Gallery */}
         {listing.photos && listing.photos.length > 1 && (
