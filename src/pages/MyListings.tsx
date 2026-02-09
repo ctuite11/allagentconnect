@@ -34,10 +34,10 @@ import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/ui/page-header";
-type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market";
+type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled";
 
 // Single source of truth for the active pipeline statuses
-const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market"];
+const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market", "temporarily_withdrawn", "cancelled"];
 
 interface Listing {
   id: string;
@@ -639,7 +639,7 @@ function MyListingsView({
                 </div>
 
                 {/* Content row - photo + info + metadata */}
-                <div className="flex items-start gap-4">
+                <div className="relative flex items-start gap-4">
                   {/* Photo - locked size */}
                   <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer">
                     <img
@@ -651,6 +651,9 @@ function MyListingsView({
                   </div>
 
                   {/* Center text stack */}
+                  <div className="absolute top-0 right-12">
+                    <ListingStatusBadge status={l.status} size="sm" />
+                  </div>
                   <div className="min-w-0 flex-1 space-y-0.5">
                     {/* Listing # + Status inline */}
                     <div className="flex items-center gap-2">
@@ -662,12 +665,13 @@ function MyListingsView({
                           #{l.listing_number}
                         </button>
                       )}
-                      <span className="text-zinc-300">•</span>
-                      <ListingStatusBadge status={l.status} size="sm" />
                       {l.listing_type && (
-                        <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-                          {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
-                        </span>
+                        <>
+                          <span className="text-zinc-300">•</span>
+                          <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                            {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
+                          </span>
+                        </>
                       )}
                     </div>
                     {/* Address */}
@@ -742,7 +746,7 @@ function MyListingsView({
                             const first = formatOpenHouseEvent(openHouseEvent);
                             return (
                               <div className="flex items-center gap-1.5 text-sm text-zinc-600 mt-1 min-w-0">
-                                <span aria-hidden className="shrink-0">📍</span>
+                                <span aria-hidden className="shrink-0">🎈</span>
                                 <span className="truncate">Open House • {first.dateLabel} • {first.timeLabel}</span>
                                 {openHouseCount > 1 && (
                                   <span className="text-zinc-400 text-xs shrink-0">+{openHouseCount - 1} more</span>
@@ -756,7 +760,7 @@ function MyListingsView({
                                 </button>
                                 <button
                                   type="button"
-                                  className="text-xs text-primary hover:text-primary/80 hover:underline shrink-0"
+                                  className="text-xs text-red-600 hover:text-red-700 hover:underline shrink-0"
                                   onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
                                 >
                                   Delete
@@ -782,7 +786,7 @@ function MyListingsView({
                                 </button>
                                 <button
                                   type="button"
-                                  className="text-xs text-primary hover:text-primary/80 hover:underline shrink-0"
+                                  className="text-xs text-red-600 hover:text-red-700 hover:underline shrink-0"
                                   onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
                                 >
                                   Delete
