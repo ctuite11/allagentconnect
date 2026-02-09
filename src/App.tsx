@@ -68,6 +68,7 @@ import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
+import AgentDiagnostics from "./pages/AgentDiagnostics";
 import DraftListings from "./pages/DraftListings";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
@@ -156,6 +157,7 @@ const App = () => (
                 <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
                 <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
                 <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
+                <Route path="/agent/diagnostics" element={<RouteGuard requireRole="agent"><AgentDiagnostics /></RouteGuard>} />
                 <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
                 <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
