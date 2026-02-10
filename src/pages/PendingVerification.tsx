@@ -191,6 +191,11 @@ const PendingVerification = () => {
 
       setUploadComplete(true);
       toast.success("License uploaded — we'll review it shortly.");
+
+      // Notify admin via edge function (fire-and-forget)
+      supabase.functions.invoke("send-license-upload-notification", {
+        body: { userId },
+      }).catch((notifyErr) => console.warn("Admin notification failed:", notifyErr));
     } catch (err: any) {
       console.error("Upload error:", err);
       toast.error(err.message || "Upload failed. Please try again.");

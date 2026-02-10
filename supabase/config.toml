@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.get-property-history]
 verify_jwt = true
+
+[functions.send-license-upload-notification]
+verify_jwt = false
