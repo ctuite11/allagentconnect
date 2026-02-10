@@ -1,36 +1,38 @@
 
 
-# Fix: Send Approval Email After Early Access Agent Verification
+# Fix: Approval Email — "You Have Been Accepted" with Create Password Link
 
-**Single file:** `src/pages/AdminApprovals.tsx`
+**Files changed:** `supabase/functions/send-agent-approval-email/index.ts`, `src/pages/AdminApprovals.tsx`
 
-## What's Wrong
+## Problem
 
-When you verify an early access agent, the `convert-early-access-to-account` function skips email if the user already exists in auth. The approval email function (`send-agent-approval-email`) is never called for early access agents — only for "real" agents.
+Two issues preventing the correct approval email:
 
-## Exact Edit
+1. For early access agents whose auth account already exists, no approval email is sent at all — the conversion function returns early and `AdminApprovals.tsx` never calls `send-agent-approval-email`.
 
-Insert 9 lines after line 293 (after the early access status update succeeds, before the toast):
+2. The approval email template currently says "Sign In" with a link to `/auth`. It should say **"You Have Been Accepted"** with a **"Create Your Password"** button that generates a real password reset link.
 
-```typescript
-// Send approval notification email
-await supabase.functions.invoke("send-agent-approval-email", {
-  body: {
-    userId: null,
-    email: agent.email,
-    firstName: agent.first_name,
-    approved: true,
-    isEarlyAccess: true,
-  },
-});
-```
+## Fix
 
-## Why This Is Safe
+### 1. Update the Edge Function (`send-agent-approval-email/index.ts`)
 
-- `send-agent-approval-email` already handles `isEarlyAccess: true` (validated by reading the full edge function code)
-- No other files changed
-- No edge function changes
+- Use `supabaseAdmin.auth.admin.generateLink({ type: "recovery" })` to create a password reset link for the agent's email
+- Replace the approved email HTML:
+  - Subject: "You've Been Accepted — Set Up Your Account"
+  - Body: "Your license has been verified" confirmation, then a "Create Your Password" CTA button linking to the generated reset URL
+  - Fallback URL shown below the button
+- Keep the rejection email unchanged
+- Keep all existing validation, CORS, and error handling unchanged
+
+### 2. Add the Missing Call in `AdminApprovals.tsx`
+
+- After the early access status is updated to "verified" (line ~293), add a call to `send-agent-approval-email` with `isEarlyAccess: true`
+- This ensures early access agents always receive the acceptance email, even if `convert-early-access-to-account` skipped it because the user already existed
+
+## What This Does Not Change
+
+- Rejection email flow — unchanged
+- Real agent verification path — already calls `send-agent-approval-email`, which will now send the improved email
+- `convert-early-access-to-account` function — unchanged
+- Password reset page (`/password-reset`) — unchanged, already handles recovery tokens
 - No database changes
-- Rejection path (line 296+) is untouched
-- Real-agent verification path is untouched
-
