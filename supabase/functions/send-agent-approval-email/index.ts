@@ -83,7 +83,7 @@ serve(async (req: Request): Promise<Response> => {
           type: "recovery",
           email: recipientEmail,
           options: {
-            redirectTo: "https://allagentconnect.com/password-reset",
+            redirectTo: "https://allagentconnect.com/auth/callback",
           },
         });
 
