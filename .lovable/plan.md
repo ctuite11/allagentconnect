@@ -1,41 +1,54 @@
 
 
-# Fix: Recovery Link Redirects to Wrong Page
+# License Upload for Rejected Agents
 
-## Problem
+## Overview
 
-The "You've Been Accepted" email contains a recovery link that redirects directly to `/password-reset`. But `/password-reset` requires a sessionStorage marker (`aac_recovery_flow`) that is only set by `/auth/callback`. Since `/auth/callback` is never visited, the marker is missing and PasswordReset shows "Link Expired."
+When an agent's license can't be verified, they'll see a clear message explaining why, with the option to upload a copy of their license directly. Admins will see when a rejected agent has uploaded a document, making re-review easy.
 
-## Fix
+## What Gets Built
 
-**File:** `supabase/functions/send-agent-approval-email/index.ts` (line 86)
+### 1. Database and Storage Setup
 
-Change the `redirectTo` from:
-```
-https://allagentconnect.com/password-reset
-```
-to:
-```
-https://allagentconnect.com/auth/callback
-```
+- **New table**: `agent_license_uploads` to track each uploaded file (who uploaded it, file location, review status, admin notes)
+- **New private storage bucket**: `agent-license-docs` for the actual files
+- **Security rules**: Agents can only upload/view their own files. Admins can see and update everything.
 
-This routes the recovery token through `AuthCallback.tsx`, which:
-1. Detects `type=recovery` in the URL
-2. Sets `aac_recovery_flow` marker in sessionStorage
-3. Establishes the auth session via `setSession()`
-4. Redirects to `/password-reset`
+### 2. Rejected Agent Experience (PendingVerification page)
 
-This is the same proven path used by the manual password reset flow.
+When an agent's status is "rejected":
+- Polling stops (no need to keep checking)
+- They see a clear message: "We couldn't verify your license"
+- Explanation of common reasons (name mismatch, expired, lookup issue)
+- A drag-and-drop style upload area for JPG, PNG, or PDF (max 10MB)
+- After upload: confirmation message saying "License received -- we'll review it shortly"
+- If they already uploaded previously, they see the confirmation right away
 
-## What Changes
+### 3. Updated Rejection Email
 
-- One line in `send-agent-approval-email/index.ts` (the `redirectTo` value)
-- Redeploy the edge function
+The rejection email currently just says "reply to this email." The updated version:
+- Keeps the same explanation of why verification failed
+- Adds an "Upload Your License" button linking back to the app
+- Matches the approved email's premium template design (globe header, branded CTA button)
+- Still includes the "reply to this email" option as a fallback
 
-## What Does Not Change
+### 4. Admin Visibility
 
-- PasswordReset page logic
-- AuthCallback logic
-- Email template content
-- No database changes
+On the Admin Approvals page, rejected agents who have uploaded a license document will show a small "License uploaded" indicator next to their name, so admins know to re-review.
+
+## Files Changed
+
+| File | What Changes |
+|------|-------------|
+| New migration SQL | Creates `agent_license_uploads` table, `agent-license-docs` bucket, and security policies |
+| `src/pages/PendingVerification.tsx` | Adds rejected state detection, file upload UI, and upload-complete confirmation |
+| `supabase/functions/send-agent-approval-email/index.ts` | Updates `buildRejectedHtml()` with premium template and "Upload Your License" CTA |
+| `src/pages/AdminApprovals.tsx` | Adds license-uploaded indicator for rejected agents |
+
+## What Does NOT Change
+
+- Approval flow (already working)
+- Authentication system
+- Other email templates
+- Existing agent statuses
 
