@@ -18,29 +18,6 @@ const PendingVerification = () => {
   const [fatalError, setFatalError] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const emailSentRef = useRef(false);
-
-  // Send pending approval email via Netlify function
-  const sendPendingApprovalEmail = async (email: string, firstName?: string, lastName?: string) => {
-    if (emailSentRef.current) return; // Only send once
-    emailSentRef.current = true;
-    
-    try {
-      const resp = await fetch("/api/send-pending-approval-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, firstName, lastName }),
-      });
-      const data = await resp.json();
-      if (!data.ok) {
-        console.error("[PENDING] Failed to send approval email:", data.error);
-      } else {
-        console.log("[PENDING] Pending approval email sent");
-      }
-    } catch (err) {
-      console.error("[PENDING] Error sending pending approval email:", err);
-    }
-  };
 
   useEffect(() => {
     let attempts = 0;
@@ -154,26 +131,6 @@ const PendingVerification = () => {
           }
         }, 2000);
         return;
-      }
-
-      // If pending/unverified, send the pending approval email (once)
-      if (email && (status === 'pending' || status === 'unverified')) {
-        let firstName: string | undefined;
-        let lastName: string | undefined;
-        
-        try {
-          const { data: profile } = await supabase
-            .from('agent_profiles')
-            .select('first_name, last_name')
-            .eq('id', userId)
-            .maybeSingle();
-          firstName = profile?.first_name ?? undefined;
-          lastName = profile?.last_name ?? undefined;
-        } catch (err) {
-          authDebug("PendingVerification profile fetch error", { error: err instanceof Error ? err.message : "Unknown" });
-        }
-        
-        sendPendingApprovalEmail(email, firstName, lastName);
       }
 
       setLoading(false);
