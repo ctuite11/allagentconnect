@@ -729,8 +729,8 @@ function MyListingsView({
                             </button>
                           </div>
                         ) : (
-                          <>
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center gap-2 shrink-0">
                               <span className="text-sm font-medium text-zinc-900">${l.price.toLocaleString()}</span>
                               <button
                                 className="text-xs text-primary hover:text-primary/80 hover:underline"
@@ -740,7 +740,6 @@ function MyListingsView({
                                 Quick Edit
                               </button>
                             </div>
-                            {/* Event Rows - own line below price */}
                             {(() => {
                               const events = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
                               const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
@@ -754,7 +753,7 @@ function MyListingsView({
                               if (!hasEvents) return null;
 
                               return (
-                                <div className="mt-2 space-y-0.5">
+                                <div className="ml-auto min-w-0 space-y-0.5">
                                   {openHouseEvent && (() => {
                                     const first = formatOpenHouseEvent(openHouseEvent);
                                     return (
@@ -810,7 +809,7 @@ function MyListingsView({
                                 </div>
                               );
                             })()}
-                          </>
+                          </div>
                         )}
                      </div>
                   </div>
