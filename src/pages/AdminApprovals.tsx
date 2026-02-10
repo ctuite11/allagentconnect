@@ -20,7 +20,8 @@ import {
   XCircle,
   Users,
   KeyRound,
-  Check
+  Check,
+  FileText
 } from "lucide-react";
 import {
   Select,
@@ -89,6 +90,7 @@ export default function AdminApprovals() {
   const [isChecking, setIsChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   
   // DIAGNOSTIC: Debug state for on-page panel
@@ -212,6 +214,15 @@ export default function AdminApprovals() {
       }
 
       setAgents(agentList);
+
+      // Fetch which agents have uploaded license docs
+      const { data: uploads } = await supabase
+        .from("agent_license_uploads")
+        .select("user_id")
+        .eq("status", "pending_review");
+      if (uploads) {
+        setLicenseUploadAgentIds(new Set(uploads.map((u: any) => u.user_id)));
+      }
 
       // Fetch pending verifications (backup notifications)
       const { data: pendingData } = await supabase
@@ -871,6 +882,15 @@ export default function AdminApprovals() {
                             >
                               {agent.license_state} #{agent.license_number}
                             </a>
+                          </>
+                        )}
+                        {licenseUploadAgentIds.has(agent.id) && (
+                          <>
+                            <span className="text-zinc-300">•</span>
+                            <span className="inline-flex items-center gap-1 text-amber-600 text-xs font-medium">
+                              <FileText className="h-3 w-3" />
+                              License uploaded
+                            </span>
                           </>
                         )}
                       </div>

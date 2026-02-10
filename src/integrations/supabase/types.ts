@@ -378,6 +378,39 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_license_uploads: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_match_deliveries: {
         Row: {
           agent_id: string
