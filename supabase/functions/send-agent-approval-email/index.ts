@@ -25,8 +25,6 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const { userId, email, firstName, approved, isEarlyAccess }: ApprovalEmailRequest = await req.json();
 
-    // For early access: userId is not required, email and firstName must be provided
-    // For real agents: userId is required to look up profile
     if (!isEarlyAccess && !userId) {
       console.error("No userId provided for non-early-access agent");
       return new Response(
@@ -45,7 +43,6 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Processing ${approved ? 'approval' : 'rejection'} email for ${isEarlyAccess ? 'early access' : 'real'} agent: ${email || userId}`);
 
-    // Create Supabase admin client
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -77,14 +74,94 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Sending ${approved ? 'approval' : 'rejection'} email to ${recipientEmail} (${recipientName})`);
 
-    // Build premium AAC-branded approved email HTML
-    const approvedHtml = `
-<!DOCTYPE html>
+    // Generate password reset link for approved agents
+    let passwordSetupUrl = "https://allagentconnect.com/auth";
+
+    if (approved && recipientEmail) {
+      try {
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+          type: "recovery",
+          email: recipientEmail,
+          options: {
+            redirectTo: "https://allagentconnect.com/password-reset",
+          },
+        });
+
+        if (linkError) {
+          console.error("Error generating recovery link:", linkError);
+        } else if (linkData?.properties?.action_link) {
+          passwordSetupUrl = linkData.properties.action_link;
+          console.log("Generated password setup link for", recipientEmail);
+        }
+      } catch (linkErr) {
+        console.error("Failed to generate recovery link:", linkErr);
+      }
+    }
+
+    // Build "You've Been Accepted" email HTML
+    const approvedHtml = buildApprovedHtml(recipientName, passwordSetupUrl);
+    const rejectedHtml = buildRejectedHtml(recipientName);
+
+    // Send email via Resend API
+    const emailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
+        reply_to: "hello@allagentconnect.com",
+        to: [recipientEmail],
+        subject: approved 
+          ? "You've Been Accepted — Set Up Your Account"
+          : "AllAgentConnect - Verification Update",
+        html: approved ? approvedHtml : rejectedHtml,
+      }),
+    });
+
+    const emailData = await emailRes.json();
+
+    if (!emailRes.ok) {
+      console.error("Resend API error:", emailData);
+      throw new Error(emailData.message || "Failed to send email");
+    }
+
+    console.log("Email sent successfully:", emailData);
+
+    // Mark approval email as sent if approved (only for real agents with userId)
+    if (approved && userId && !isEarlyAccess) {
+      const { error: updateError } = await supabaseAdmin
+        .from("agent_settings")
+        .update({ approval_email_sent: true })
+        .eq("user_id", userId);
+
+      if (updateError) {
+        console.error("Warning: Failed to update approval_email_sent flag:", updateError);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, emailId: emailData.id }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+
+  } catch (error: any) {
+    console.error("Error in send-agent-approval-email function:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+  }
+});
+
+function buildApprovedHtml(name: string, passwordUrl: string): string {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You're Approved</title>
+  <title>You've Been Accepted</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc;">
@@ -109,7 +186,7 @@ serve(async (req: Request): Promise<Response> => {
           <tr>
             <td style="padding: 8px 40px 40px;">
               <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                Hi ${recipientName},
+                Hi ${name},
               </p>
               
               <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 8px 0;">
@@ -117,15 +194,15 @@ serve(async (req: Request): Promise<Response> => {
               </p>
               
               <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 28px 0;">
-                Your AllAgentConnect access is now active.
+                You've been accepted into AllAgentConnect. Create your password below to activate your account.
               </p>
               
               <!-- CTA Button -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
                 <tr>
-                  <td align="center" style="background-color: #0F172A; border-radius: 8px;">
-                    <a href="https://allagentconnect.com/auth" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
-                      Sign In
+                  <td align="center" style="background-color: #0F172A; border-radius: 10px;">
+                    <a href="${passwordUrl}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
+                      <span style="color: #10B981;">●</span>&nbsp;&nbsp;Create Your Password&nbsp;&nbsp;→
                     </a>
                   </td>
                 </tr>
@@ -133,11 +210,11 @@ serve(async (req: Request): Promise<Response> => {
               
               <!-- Fallback URL -->
               <p style="font-size: 13px; color: #64748b; margin: 0 0 8px 0;">
-                Or visit:
+                Or copy and paste this link:
               </p>
               <div style="background-color: #F8FAFC; padding: 12px; border-radius: 6px; margin: 0 0 28px 0;">
                 <p style="margin: 0; font-size: 12px; color: #475569; word-break: break-all; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">
-                  https://allagentconnect.com/auth
+                  ${passwordUrl}
                 </p>
               </div>
               
@@ -164,12 +241,11 @@ serve(async (req: Request): Promise<Response> => {
     </tr>
   </table>
 </body>
-</html>
-    `;
+</html>`;
+}
 
-    // Build rejected email HTML
-    const rejectedHtml = `
-<!DOCTYPE html>
+function buildRejectedHtml(name: string): string {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -199,7 +275,7 @@ serve(async (req: Request): Promise<Response> => {
           <tr>
             <td style="padding: 40px;">
               <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
-                Hi ${recipientName},
+                Hi ${name},
               </p>
               
               <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
@@ -240,58 +316,5 @@ serve(async (req: Request): Promise<Response> => {
     </tr>
   </table>
 </body>
-</html>
-    `;
-
-    // Send email via Resend API
-    const emailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
-        reply_to: "hello@allagentconnect.com",
-        to: [recipientEmail],
-        subject: approved 
-          ? "Your AllAgentConnect access is active"
-          : "AllAgentConnect - Verification Update",
-        html: approved ? approvedHtml : rejectedHtml,
-      }),
-    });
-
-    const emailData = await emailRes.json();
-
-    if (!emailRes.ok) {
-      console.error("Resend API error:", emailData);
-      throw new Error(emailData.message || "Failed to send email");
-    }
-
-    console.log("Email sent successfully:", emailData);
-
-    // Mark approval email as sent if approved (only for real agents with userId)
-    if (approved && userId && !isEarlyAccess) {
-      const { error: updateError } = await supabaseAdmin
-        .from("agent_settings")
-        .update({ approval_email_sent: true })
-        .eq("user_id", userId);
-
-      if (updateError) {
-        console.error("Warning: Failed to update approval_email_sent flag:", updateError);
-      }
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, emailId: emailData.id }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
-
-  } catch (error: any) {
-    console.error("Error in send-agent-approval-email function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
-  }
-});
+</html>`;
+}
