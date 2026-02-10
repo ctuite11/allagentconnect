@@ -292,7 +292,18 @@ export default function AdminApprovals() {
           console.error("Error updating early access status:", updateError);
         }
 
-        toast.success(`Account created and welcome email sent to ${agent.email}`);
+        // Send "You've Been Accepted" approval email with password setup link
+        await supabase.functions.invoke("send-agent-approval-email", {
+          body: {
+            userId: null,
+            email: agent.email,
+            firstName: agent.first_name,
+            approved: true,
+            isEarlyAccess: true,
+          },
+        });
+
+        toast.success(`Account created and acceptance email sent to ${agent.email}`);
       } else if (agent.is_early_access) {
         // Early access non-verify status change (e.g., rejected)
         const { error } = await supabase
