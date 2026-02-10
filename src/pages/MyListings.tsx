@@ -565,7 +565,7 @@ function MyListingsView({
                 className="relative p-4"
               >
                 {/* Action row - tight, no vertical padding */}
-                <div className="flex justify-between items-start">
+                <div className="mb-3 flex justify-between items-start">
                   <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
                       className="hover:text-emerald-700 transition"
