@@ -1,47 +1,33 @@
 
 
-# Fix: Early Access Agent Deletion Not Removing Auth Account
+# Fix: Remove Duplicate "Waiting for Verification" Email
 
 ## The Problem
 
-When you deleted the early access agent (`christuitet11@gmail.com`), only the `agent_early_access` row was removed. The auth account (`45251fc5-3e5a-4021-9ce7-1c8d4bb792c0`) was **never deleted** because the early access deletion branch (line 38-53 in `DeleteAgentDialog.tsx`) returns early without calling the `delete-users` edge function.
+When a new agent registers, they receive **two** emails saying they're waiting for verification:
 
-That's why re-registering with the same email says "email in use" -- the auth user is still there.
+1. **Auth Hook email** ("Confirm your email for AllAgentConnect") -- sent automatically by the `send-auth-email` edge function, triggered by Supabase on every signup
+2. **Pending approval email** ("Welcome -- You're Almost In") -- sent by the `send-pending-approval-email` Netlify function, called from the `PendingVerification.tsx` page
 
-## Fix (2 parts)
+Both fire within seconds of registration. They're redundant.
 
-### Part 1: Clean up the orphaned auth user now
+## Fix
 
-Invoke the `delete-users` edge function with the email `christuitet11@gmail.com` to remove the orphaned auth account immediately.
+**File:** `src/pages/PendingVerification.tsx`
 
-### Part 2: Fix `DeleteAgentDialog.tsx` — early access branch
+Remove the `sendPendingApprovalEmail` function and its invocation entirely (lines 23-43 and the call around line 157). The `emailSentRef` ref can also be removed.
 
-**Current code (lines 38-53):**
-Deletes the `agent_early_access` row and returns. Never touches auth.
+The Auth Hook email already tells the user their account is being reviewed. The PendingVerification page itself shows the live status. And when approved, the `send-agent-approval-email` function sends the "You've Been Accepted" email with a password setup link.
 
-**Updated code:**
-Before returning, call `delete-users` with the agent's **email** (not ID) so the edge function looks up the correct auth user and deletes it. The `delete-users` function already supports email-based lookup.
+**What stays:**
+- The Auth Hook signup confirmation email (already works)
+- The PendingVerification page UI (polling, status display)
+- The approval email on verification (`send-agent-approval-email`)
 
-```
-// After deleting early access record, also remove any auth account
-await supabase.functions.invoke("delete-users", {
-  body: { emails: [agent.email] },
-});
-```
+**What gets removed:**
+- `emailSentRef` ref declaration (line 22)
+- `sendPendingApprovalEmail` function (lines 24-43)
+- The block that calls `sendPendingApprovalEmail` (lines ~155-170, inside the `pending/unverified` status check)
 
-### Part 3: Fix `BulkDeleteAgentsDialog.tsx` — same issue
-
-The bulk delete dialog has the identical early access branch that skips auth deletion. Add the same `delete-users` call there.
-
-## Files Changed
-
-- `src/components/admin/DeleteAgentDialog.tsx` — add auth deletion to early access branch
-- `src/components/admin/BulkDeleteAgentsDialog.tsx` — add auth deletion to early access branch
-
-## What This Does Not Change
-
-- Real agent deletion flow (already works correctly)
-- The `delete-users` edge function (already supports email lookup)
-- Database schema
-- Any other files
+No other files change. No edge function changes. No database changes.
 
