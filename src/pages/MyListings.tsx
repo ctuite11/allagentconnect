@@ -740,6 +740,7 @@ function MyListingsView({
                                 Quick Edit
                               </button>
                             </div>
+                            <div className="w-8 shrink-0" />
                             {(() => {
                               const events = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
                               const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
@@ -753,7 +754,7 @@ function MyListingsView({
                               if (!hasEvents) return null;
 
                               return (
-                                <div className="ml-auto min-w-0 space-y-0.5">
+                                <div className="min-w-0 space-y-0.5">
                                   {openHouseEvent && (() => {
                                     const first = formatOpenHouseEvent(openHouseEvent);
                                     return (
