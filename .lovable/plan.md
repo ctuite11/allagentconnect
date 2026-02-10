@@ -1,54 +1,66 @@
 
 
-# License Upload for Rejected Agents
+# Auto-Remove Past Open Houses and Broker Tours
 
-## Overview
+## The Problem
 
-When an agent's license can't be verified, they'll see a clear message explaining why, with the option to upload a copy of their license directly. Admins will see when a rejected agent has uploaded a document, making re-review easy.
+When an open house or broker tour's date and time passes, the event data stays in the system forever. It still shows on your My Listings cards, in the View Open Houses dialog, and clutters the database.
 
 ## What Gets Built
 
-### 1. Database and Storage Setup
+### 1. Automatic Cleanup (Backend -- runs every 15 minutes)
 
-- **New table**: `agent_license_uploads` to track each uploaded file (who uploaded it, file location, review status, admin notes)
-- **New private storage bucket**: `agent-license-docs` for the actual files
-- **Security rules**: Agents can only upload/view their own files. Admins can see and update everything.
+Add a new section (Part 3) to the existing `update-listing-statuses` backend function that already runs on a 15-minute schedule. It will:
 
-### 2. Rejected Agent Experience (PendingVerification page)
+- Query all listings that have an `open_houses` array
+- For each listing, check every event's date + end_time against the current time
+- Remove any event where the end time has already passed
+- Update the listing with only the future events remaining
+- If all events have passed, set `open_houses` to an empty array
 
-When an agent's status is "rejected":
-- Polling stops (no need to keep checking)
-- They see a clear message: "We couldn't verify your license"
-- Explanation of common reasons (name mismatch, expired, lookup issue)
-- A drag-and-drop style upload area for JPG, PNG, or PDF (max 10MB)
-- After upload: confirmation message saying "License received -- we'll review it shortly"
-- If they already uploaded previously, they see the confirmation right away
+This means past events are automatically cleaned up within 15 minutes of ending -- no manual work needed.
 
-### 3. Updated Rejection Email
+### 2. Frontend Safety Net (Immediate filtering)
 
-The rejection email currently just says "reply to this email." The updated version:
-- Keeps the same explanation of why verification failed
-- Adds an "Upload Your License" button linking back to the app
-- Matches the approved email's premium template design (globe header, branded CTA button)
-- Still includes the "reply to this email" option as a fallback
+Even though the backend cleans up every 15 minutes, there could be a brief window where a past event still shows. To handle that:
 
-### 4. Admin Visibility
+- **My Listings page**: Filter out past events before displaying the inline open house/broker tour lines, so agents never see stale events
+- **View Open Houses dialog**: Filter out past events from the list, so only upcoming events appear
 
-On the Admin Approvals page, rejected agents who have uploaded a license document will show a small "License uploaded" indicator next to their name, so admins know to re-review.
+The search results pages already do this filtering, so no changes needed there.
 
 ## Files Changed
 
 | File | What Changes |
 |------|-------------|
-| New migration SQL | Creates `agent_license_uploads` table, `agent-license-docs` bucket, and security policies |
-| `src/pages/PendingVerification.tsx` | Adds rejected state detection, file upload UI, and upload-complete confirmation |
-| `supabase/functions/send-agent-approval-email/index.ts` | Updates `buildRejectedHtml()` with premium template and "Upload Your License" CTA |
-| `src/pages/AdminApprovals.tsx` | Adds license-uploaded indicator for rejected agents |
+| `supabase/functions/update-listing-statuses/index.ts` | Add Part 3: auto-remove past open house/broker tour events from the `open_houses` array |
+| `src/pages/MyListings.tsx` | Filter out past events before rendering inline event lines |
+| `src/components/ViewOpenHousesDialog.tsx` | Filter out past events from the displayed list |
 
 ## What Does NOT Change
 
-- Approval flow (already working)
-- Authentication system
-- Other email templates
-- Existing agent statuses
+- How open houses are created (OpenHouseDialog stays the same)
+- Search result filtering (already works correctly)
+- Listing statuses or expiration logic
+- No new database tables or migrations needed
 
+## Technical Details
+
+The cleanup logic in the backend function:
+
+```text
+For each listing with open_houses:
+  Filter events where: new Date(`${event.date}T${event.end_time}`) > now
+  If filtered array differs from original:
+    Update listing with filtered array
+    Log: "Removed X past event(s) from listing Y"
+```
+
+The frontend filter (applied in both MyListings and ViewOpenHousesDialog):
+
+```text
+const now = new Date();
+const upcomingEvents = events.filter(e => 
+  new Date(`${e.date}T${e.end_time}`) > now
+);
+```
