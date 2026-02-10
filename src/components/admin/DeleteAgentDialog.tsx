@@ -46,7 +46,12 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
           throw error;
         }
 
-        console.log(`[DeleteAgentDialog] Deleted early access record: ${agent.id}`);
+        // Also remove any auth account tied to this email
+        await supabase.functions.invoke("delete-users", {
+          body: { emails: [agent.email] },
+        });
+
+        console.log(`[DeleteAgentDialog] Deleted early access record and auth user: ${agent.id}`);
         toast.success(`${agent.first_name} ${agent.last_name} (early access) has been deleted`);
         onDeleted();
         onOpenChange(false);

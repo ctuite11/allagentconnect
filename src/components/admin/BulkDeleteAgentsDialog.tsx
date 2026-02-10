@@ -61,6 +61,12 @@ export function BulkDeleteAgentsDialog({
             .eq("id", agent.id);
 
           if (error) throw error;
+
+          // Also remove any auth account tied to this email
+          await supabase.functions.invoke("delete-users", {
+            body: { emails: [agent.email] },
+          });
+
           successCount++;
           continue;
         }
