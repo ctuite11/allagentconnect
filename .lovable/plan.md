@@ -1,33 +1,41 @@
 
 
-# Fix: Remove Duplicate "Waiting for Verification" Email
+# Fix: Recovery Link Redirects to Wrong Page
 
-## The Problem
+## Problem
 
-When a new agent registers, they receive **two** emails saying they're waiting for verification:
-
-1. **Auth Hook email** ("Confirm your email for AllAgentConnect") -- sent automatically by the `send-auth-email` edge function, triggered by Supabase on every signup
-2. **Pending approval email** ("Welcome -- You're Almost In") -- sent by the `send-pending-approval-email` Netlify function, called from the `PendingVerification.tsx` page
-
-Both fire within seconds of registration. They're redundant.
+The "You've Been Accepted" email contains a recovery link that redirects directly to `/password-reset`. But `/password-reset` requires a sessionStorage marker (`aac_recovery_flow`) that is only set by `/auth/callback`. Since `/auth/callback` is never visited, the marker is missing and PasswordReset shows "Link Expired."
 
 ## Fix
 
-**File:** `src/pages/PendingVerification.tsx`
+**File:** `supabase/functions/send-agent-approval-email/index.ts` (line 86)
 
-Remove the `sendPendingApprovalEmail` function and its invocation entirely (lines 23-43 and the call around line 157). The `emailSentRef` ref can also be removed.
+Change the `redirectTo` from:
+```
+https://allagentconnect.com/password-reset
+```
+to:
+```
+https://allagentconnect.com/auth/callback
+```
 
-The Auth Hook email already tells the user their account is being reviewed. The PendingVerification page itself shows the live status. And when approved, the `send-agent-approval-email` function sends the "You've Been Accepted" email with a password setup link.
+This routes the recovery token through `AuthCallback.tsx`, which:
+1. Detects `type=recovery` in the URL
+2. Sets `aac_recovery_flow` marker in sessionStorage
+3. Establishes the auth session via `setSession()`
+4. Redirects to `/password-reset`
 
-**What stays:**
-- The Auth Hook signup confirmation email (already works)
-- The PendingVerification page UI (polling, status display)
-- The approval email on verification (`send-agent-approval-email`)
+This is the same proven path used by the manual password reset flow.
 
-**What gets removed:**
-- `emailSentRef` ref declaration (line 22)
-- `sendPendingApprovalEmail` function (lines 24-43)
-- The block that calls `sendPendingApprovalEmail` (lines ~155-170, inside the `pending/unverified` status check)
+## What Changes
 
-No other files change. No edge function changes. No database changes.
+- One line in `send-agent-approval-email/index.ts` (the `redirectTo` value)
+- Redeploy the edge function
+
+## What Does Not Change
+
+- PasswordReset page logic
+- AuthCallback logic
+- Email template content
+- No database changes
 
