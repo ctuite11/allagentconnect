@@ -565,7 +565,7 @@ function MyListingsView({
                 className="relative p-4"
               >
                 {/* Action row - tight, no vertical padding */}
-                <div className="mb-1 flex justify-between items-start">
+                <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
                       className="hover:text-emerald-700 transition"
@@ -626,7 +626,7 @@ function MyListingsView({
                     </button>
                   </div>
                   {/* Right side - quiet metadata + overflow */}
-                   <div className="shrink-0 text-right space-y-0.5 pt-0.5">
+                   <div className="absolute top-4 right-4 text-right space-y-0.5">
                      <ListingStatusBadge status={l.status} size="sm" />
                      <div className="text-xs text-zinc-500 leading-tight">Listed: {listDate}</div>
                     {expDate && (
