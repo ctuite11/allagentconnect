@@ -245,6 +245,7 @@ function buildApprovedHtml(name: string, passwordUrl: string): string {
 }
 
 function buildRejectedHtml(name: string): string {
+  const uploadUrl = "https://allagentconnect.com/pending-verification";
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -258,55 +259,69 @@ function buildRejectedHtml(name: string): string {
       <td align="center" style="padding: 40px 20px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
           
-          <!-- Header -->
+          <!-- Header with Globe -->
           <tr>
-            <td style="padding: 32px 40px 24px 40px; border-bottom: 1px solid #f1f5f9;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td>
-                    <span style="font-size: 20px; font-weight: 600; color: #0f172a;">AllAgent</span><span style="font-size: 20px; font-weight: 600; color: #94a3b8;">Connect</span>
-                  </td>
-                </tr>
-              </table>
+            <td align="center" style="padding: 32px 40px 24px;">
+              <img src="https://allagentconnect.com/brand/aac-globe.png" 
+                   width="80" height="80" alt="AAC" 
+                   style="display: block; margin: 0 auto 16px;" />
+              <p style="margin: 0; font-size: 22px; font-weight: 600;">
+                <span style="color: #0E56F5;">All Agent </span><span style="color: #94A3B8;">Connect</span>
+              </p>
+              <div style="width: 64px; height: 2px; background: #0E56F5; margin: 12px auto 0;"></div>
             </td>
           </tr>
           
           <!-- Content -->
           <tr>
-            <td style="padding: 40px;">
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
+            <td style="padding: 8px 40px 40px;">
+              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
                 Hi ${name},
               </p>
               
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
-                Thank you for your interest in AllAgentConnect.
+              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
+                Thank you for your interest in AllAgentConnect. Unfortunately, we were unable to verify your real estate license with the information provided. This could be due to:
               </p>
               
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
-                Unfortunately, we were unable to verify your real estate license with the information provided. This could be due to:
-              </p>
-              
-              <ul style="margin: 0 0 24px 20px; padding: 0; color: #64748b; font-size: 16px; line-height: 1.8;">
+              <ul style="margin: 0 0 24px 20px; padding: 0; color: #64748b; font-size: 15px; line-height: 2;">
                 <li>License number not found in state database</li>
                 <li>Name mismatch with license records</li>
                 <li>License may be expired or inactive</li>
               </ul>
               
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0 0 32px 0;">
-                If you believe this was an error, please reply to this email with your correct license information and we'll be happy to take another look.
+              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 28px 0;">
+                You can upload a photo or PDF of your license and we'll review it manually.
               </p>
               
-              <p style="font-size: 16px; color: #334155; line-height: 1.6; margin: 0;">
-                <span style="color: #64748b;">— AllAgentConnect Team</span>
+              <!-- CTA Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
+                <tr>
+                  <td align="center" style="background-color: #0F172A; border-radius: 10px;">
+                    <a href="${uploadUrl}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
+                      <span style="color: #10B981;">●</span>&nbsp;&nbsp;Upload Your License&nbsp;&nbsp;→
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size: 14px; color: #64748b; line-height: 1.7; margin: 0 0 8px 0;">
+                Or reply to this email with your correct license information and we'll be happy to take another look.
+              </p>
+              
+              <p style="font-size: 15px; color: #64748b; line-height: 1.7; margin: 24px 0 0 0;">
+                Questions? <a href="mailto:hello@allagentconnect.com" style="color: #334155; text-decoration: none;">hello@allagentconnect.com</a>
               </p>
             </td>
           </tr>
           
           <!-- Footer -->
           <tr>
-            <td style="padding: 24px 40px; border-top: 1px solid #f1f5f9; background-color: #fafafa; border-radius: 0 0 16px 16px;">
-              <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">
-                © ${new Date().getFullYear()} AllAgentConnect. All rights reserved.
+            <td style="padding: 20px 40px; border-top: 1px solid #f1f5f9;">
+              <p style="font-size: 13px; color: #94a3b8; margin: 0 0 8px 0; text-align: center;">
+                AllAgentConnect &nbsp;•&nbsp; hello@allagentconnect.com
+              </p>
+              <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">
+                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #94a3b8; text-decoration: underline;">Click here</a> to request account removal.
               </p>
             </td>
           </tr>
