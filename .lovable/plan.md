@@ -1,44 +1,35 @@
 
 
-# Move Metadata Block Up to Action-Button Row
+# Eliminate White Space — Absolute-Position the Right Metadata Block
 
-## What Changes
+**Single file:** `src/pages/MyListings.tsx`
 
-The right-side metadata block (Status badge, Listed date, Exp date, DOM, overflow menu) stays exactly as designed -- just moves from the content row up to the action-button row, so the status badge is visually in line with Edit / Photos / Open House buttons.
+## Root Cause
 
-## Technical Detail (all in `src/pages/MyListings.tsx`)
+The right-side metadata (Coming Soon, Listed, Exp, DOM, overflow menu) stacks 5 items vertically inside the action row's `flex justify-between` container (lines 629-652). This makes the action row ~100px tall, even though the left-side buttons are only one line. The content row (photo + listing data) starts below this tall container, creating the visible white band.
 
-### 1. Change the action row container (lines 568-628)
+## Fix (2 edits, no layout redesign)
 
-Currently the action row is:
+### Edit 1 — Line 568: Remove bottom margin from action row
+
 ```
-<div className="mb-3">
-  <div className="flex items-center gap-2 ...">
-    Edit . Photos . Open House ...
-  </div>
-</div>
+Before: <div className="mb-1 flex justify-between items-start">
+After:  <div className="flex justify-between items-start">
 ```
 
-Wrap to `flex justify-between items-start` so actions go left and metadata goes right:
+### Edit 2 — Line 629: Absolutely position the metadata block
+
 ```
-<div className="mb-3 flex justify-between items-start">
-  <div className="flex items-center gap-2 ...">
-    Edit . Photos . Open House ...
-  </div>
-  <!-- metadata block moved here, unchanged -->
-</div>
+Before: <div className="shrink-0 text-right space-y-0.5 pt-0.5">
+After:  <div className="absolute top-4 right-4 text-right space-y-0.5">
 ```
 
-### 2. Move the metadata block (lines 797-820) into the action row
+The CardSurface already has `relative p-4` (line 565), so `absolute top-4 right-4` places the metadata exactly in the top-right corner with matching padding. It's removed from document flow, so the action row collapses to one-line height and the content row moves up immediately below.
 
-Cut the entire right-side metadata `div` (StatusBadge, Listed, Exp, DOM, overflow menu) from line 797-820 and paste it inside the new `flex justify-between` container, after the action buttons div. The metadata markup stays identical -- same classes, same content, no design changes.
+## Why this is safe
 
-### 3. Remove empty space from content row
-
-After moving the metadata block out, the content row (line 631) will only contain the photo and center text stack. No other changes to the content row.
-
-| File | Changes |
-|------|---------|
-| `src/pages/MyListings.tsx` | Move metadata div from content row into action-button row container; wrap action row in `flex justify-between items-start` |
-
-No design changes to the metadata block itself. No other files changed.
+- CardSurface already has `relative` — no new positioning context needed
+- The metadata block was already visually in the top-right corner; this just formalizes it
+- No overlap risk: the action buttons are left-aligned, the metadata is right-aligned
+- No handler, data, or event logic changes
+- No other files affected
