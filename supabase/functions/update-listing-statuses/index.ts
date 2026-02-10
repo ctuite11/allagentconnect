@@ -111,9 +111,58 @@ Deno.serve(async (req) => {
       console.log('No listings to expire at this time.');
     }
 
+    // ========== PART 3: Auto-remove past open house / broker tour events ==========
+    const now = new Date();
+    console.log('Checking for past open house/broker tour events...');
+
+    // Fetch all listings that have a non-empty open_houses array
+    const { data: listingsWithEvents, error: ohQueryError } = await supabase
+      .from('listings')
+      .select('id, address, open_houses')
+      .not('open_houses', 'is', null);
+
+    if (ohQueryError) {
+      console.error('Error querying listings with open_houses:', ohQueryError);
+    }
+
+    let cleanedCount = 0;
+    let removedEventsTotal = 0;
+
+    if (listingsWithEvents && listingsWithEvents.length > 0) {
+      for (const listing of listingsWithEvents) {
+        const events = listing.open_houses as any[];
+        if (!Array.isArray(events) || events.length === 0) continue;
+
+        const upcoming = events.filter((e: any) => {
+          if (!e?.date || !e?.end_time) return true; // keep malformed entries for safety
+          const endDateTime = new Date(`${e.date}T${e.end_time}`);
+          return endDateTime > now;
+        });
+
+        const removedCount = events.length - upcoming.length;
+        if (removedCount > 0) {
+          const { error: updateError } = await supabase
+            .from('listings')
+            .update({ open_houses: upcoming as any })
+            .eq('id', listing.id);
+
+          if (updateError) {
+            console.error(`Error cleaning open_houses for listing ${listing.id}:`, updateError);
+            continue;
+          }
+
+          cleanedCount++;
+          removedEventsTotal += removedCount;
+          console.log(`Removed ${removedCount} past event(s) from listing ${listing.id} (${listing.address})`);
+        }
+      }
+    }
+
+    console.log(`Open house cleanup: removed ${removedEventsTotal} past event(s) from ${cleanedCount} listing(s).`);
+
     return new Response(
       JSON.stringify({ 
-        message: `Processed ${activatedIds.length} activation(s) and ${expiredIds.length} expiration(s)`,
+        message: `Processed ${activatedIds.length} activation(s), ${expiredIds.length} expiration(s), and cleaned ${removedEventsTotal} past event(s)`,
         activated: {
           count: activatedIds.length,
           ids: activatedIds
@@ -121,6 +170,10 @@ Deno.serve(async (req) => {
         expired: {
           count: expiredIds.length,
           ids: expiredIds
+        },
+        open_house_cleanup: {
+          listings_cleaned: cleanedCount,
+          events_removed: removedEventsTotal
         }
       }),
       { 

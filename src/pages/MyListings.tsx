@@ -549,11 +549,17 @@ function MyListingsView({
             const shares = l.listing_stats?.share_count ?? 0;
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
-            const hasOpenHouses = Array.isArray(l.open_houses) && l.open_houses.length > 0;
-            const hasPublicOpenHouse = Array.isArray(l.open_houses) && 
-              l.open_houses.some((oh: any) => oh.event_type === "in_person");
-            const hasBrokerTour = Array.isArray(l.open_houses) && 
-              l.open_houses.some((oh: any) => oh.event_type === "broker_tour");
+            // Filter out past events for toolbar button logic
+            const nowForToolbar = new Date();
+            const upcomingEvents = Array.isArray(l.open_houses) 
+              ? (l.open_houses as any[]).filter((e: any) => {
+                  if (!e?.date || !e?.end_time) return true;
+                  return new Date(`${e.date}T${e.end_time}`) > nowForToolbar;
+                })
+              : [];
+            const hasOpenHouses = upcomingEvents.length > 0;
+            const hasPublicOpenHouse = upcomingEvents.some((oh: any) => oh.event_type === "in_person");
+            const hasBrokerTour = upcomingEvents.some((oh: any) => oh.event_type === "broker_tour");
             
             // Calculate Days on Market
             const listDateObj = l.list_date ? new Date(l.list_date) : l.created_at ? new Date(l.created_at) : null;
@@ -742,7 +748,13 @@ function MyListingsView({
                             </div>
                             <div className="w-8 shrink-0" />
                             {(() => {
-                              const events = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
+                              const now = new Date();
+                              const allEvents = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
+                              // Filter out past events (safety net while backend cleans up every 15 min)
+                              const events = allEvents.filter((e: any) => {
+                                if (!e?.date || !e?.end_time) return true;
+                                return new Date(`${e.date}T${e.end_time}`) > now;
+                              });
                               const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
                               const openHouseEvent = openHouseIndex >= 0 ? events[openHouseIndex] : null;
                               const openHouseCount = events.filter((e: any) => e?.event_type !== "broker_tour").length;

@@ -62,7 +62,13 @@ export function ViewOpenHousesDialog({
       if (error) throw error;
 
       const houses = (data?.open_houses as any[]) || [];
-      setOpenHouses(houses);
+      // Filter out past events (safety net)
+      const now = new Date();
+      const upcoming = houses.filter((e: any) => {
+        if (!e?.date || !e?.end_time) return true;
+        return new Date(`${e.date}T${e.end_time}`) > now;
+      });
+      setOpenHouses(upcoming);
     } catch (error) {
       console.error("Error fetching open houses:", error);
       toast.error("Failed to load open houses");
