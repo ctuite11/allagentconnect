@@ -565,7 +565,7 @@ function MyListingsView({
                 className="relative p-4"
               >
                 {/* Action row - tight, no vertical padding */}
-                <div className="mb-3">
+                <div className="mb-3 flex justify-between items-start">
                   <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
                       className="hover:text-emerald-700 transition"
@@ -625,9 +625,34 @@ function MyListingsView({
                       Stats
                     </button>
                   </div>
+                  {/* Right side - quiet metadata + overflow */}
+                   <div className="shrink-0 text-right space-y-0.5 pt-0.5">
+                     <ListingStatusBadge status={l.status} size="sm" />
+                     <div className="text-xs text-zinc-500 leading-tight">Listed: {listDate}</div>
+                    {expDate && (
+                      <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>
+                    )}
+                    <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="mt-1 p-1 rounded hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem
+                          className="cursor-pointer text-sm text-destructive focus:text-destructive"
+                          onClick={() => setListingToDelete(l)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-2" />
+                          Delete Listing
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
 
-                {/* Content row - photo + info + metadata */}
+                {/* Content row - photo + info */}
                 <div className="relative flex items-start gap-4">
                   {/* Photo - locked size */}
                   <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer">
@@ -793,31 +818,6 @@ function MyListingsView({
                     </div>
                   </div>
 
-                  {/* Right side - quiet metadata + overflow */}
-                   <div className="shrink-0 text-right space-y-0.5 pt-0.5">
-                     <ListingStatusBadge status={l.status} size="sm" />
-                     <div className="text-xs text-zinc-500 leading-tight">Listed: {listDate}</div>
-                    {expDate && (
-                      <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>
-                    )}
-                    <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="mt-1 p-1 rounded hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem
-                          className="cursor-pointer text-sm text-destructive focus:text-destructive"
-                          onClick={() => setListingToDelete(l)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-2" />
-                          Delete Listing
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
                 </div>
               </CardSurface>
             );
