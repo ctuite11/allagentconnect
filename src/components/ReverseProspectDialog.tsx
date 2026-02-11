@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { propertyTypeToEnum } from "@/lib/utils";
-import { Loader2, MapPin, DollarSign, Home } from "lucide-react";
+import { Loader2, MapPin, DollarSign, Home, Users, User } from "lucide-react";
 
 interface ReverseProspectDialogProps {
   open: boolean;
@@ -25,33 +25,31 @@ interface ReverseProspectDialogProps {
     bathrooms: number | null;
     square_feet: number | null;
   };
-  matchCount: number;
+  agentCount: number;
+  buyerCount: number;
 }
 
-interface ClientNeed {
-  id: string;
-  property_type: string;
-  city: string;
-  state: string;
-  max_price: number;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  description: string | null;
-  submitted_by: string;
+interface AgentGroup {
+  userId: string;
+  agentName: string;
+  agentEmail: string;
+  isConsumer: boolean;
+  clientNames: string[];
 }
 
 export function ReverseProspectDialog({
   open,
   onOpenChange,
   listing,
-  matchCount,
+  agentCount,
+  buyerCount,
 }: ReverseProspectDialogProps) {
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [agentPhone, setAgentPhone] = useState("");
-  const [matches, setMatches] = useState<ClientNeed[]>([]);
+  const [agentGroups, setAgentGroups] = useState<AgentGroup[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
 
   useEffect(() => {
@@ -82,43 +80,149 @@ export function ReverseProspectDialog({
     }
   };
 
+  const matchesListing = (criteria: any): boolean => {
+    if (!criteria) return false;
+    if (criteria.min_price && listing.price < criteria.min_price) return false;
+    if (criteria.max_price && listing.price > criteria.max_price) return false;
+    if (criteria.bedrooms != null && (listing.bedrooms == null || listing.bedrooms < criteria.bedrooms)) return false;
+    if (criteria.bathrooms != null && (listing.bathrooms == null || listing.bathrooms < criteria.bathrooms)) return false;
+    if (criteria.city?.trim() && listing.city?.toLowerCase() !== criteria.city.toLowerCase()) return false;
+    if (criteria.state?.trim() && listing.state?.toLowerCase() !== criteria.state.toLowerCase()) return false;
+    if (criteria.property_type?.trim()) {
+      const listingType = propertyTypeToEnum(listing.property_type || "");
+      if (!listingType || listingType !== criteria.property_type) return false;
+    }
+    return true;
+  };
+
   const loadMatches = async () => {
     try {
       setLoadingMatches(true);
-      let query = supabase
-        .from("client_needs")
-        .select("*");
 
-      // Match by state
-      if (listing.state) {
-        query = query.eq("state", listing.state);
-      }
-
-      // Match by city
-      if (listing.city) {
-        query = query.ilike("city", `%${listing.city}%`);
-      }
-
-      // Match by property type
-      if (listing.property_type) {
-        const enumValue = propertyTypeToEnum(listing.property_type);
-        query = query.eq("property_type", enumValue as any);
-      }
-
-      // Match by price (listing price should be at or below max_price)
-      if (listing.price) {
-        query = query.gte("max_price", listing.price);
-      }
-
-      // Match by bedrooms
-      if (listing.bedrooms) {
-        query = query.lte("bedrooms", listing.bedrooms);
-      }
-
-      const { data, error } = await query;
+      // Fetch active hot sheets
+      const { data: hotSheets, error } = await supabase
+        .from("hot_sheets")
+        .select("id, criteria, user_id, name, client_id")
+        .eq("is_active", true);
 
       if (error) throw error;
-      setMatches(data || []);
+      if (!hotSheets || hotSheets.length === 0) {
+        setAgentGroups([]);
+        return;
+      }
+
+      // Filter matching sheets
+      const matchingSheets = hotSheets.filter(sheet => matchesListing(sheet.criteria as any));
+
+      if (matchingSheets.length === 0) {
+        setAgentGroups([]);
+        return;
+      }
+
+      // Get hot_sheet_clients for matching sheets
+      const matchingIds = matchingSheets.map(s => s.id);
+      const { data: hotSheetClients } = await supabase
+        .from("hot_sheet_clients")
+        .select("hot_sheet_id, client_id")
+        .in("hot_sheet_id", matchingIds);
+
+      // Get client details
+      const clientIds = [...new Set((hotSheetClients || []).map(hsc => hsc.client_id))];
+      let clientsMap: Record<string, { first_name: string; last_name: string }> = {};
+      if (clientIds.length > 0) {
+        const { data: clients } = await supabase
+          .from("clients")
+          .select("id, first_name, last_name")
+          .in("id", clientIds);
+        if (clients) {
+          clients.forEach(c => { clientsMap[c.id] = { first_name: c.first_name, last_name: c.last_name }; });
+        }
+      }
+
+      // Build a map of hot_sheet_id -> client names
+      const sheetClientNames: Record<string, string[]> = {};
+      (hotSheetClients || []).forEach(hsc => {
+        if (!sheetClientNames[hsc.hot_sheet_id]) sheetClientNames[hsc.hot_sheet_id] = [];
+        const client = clientsMap[hsc.client_id];
+        if (client) {
+          sheetClientNames[hsc.hot_sheet_id].push(`${client.first_name} ${client.last_name}`.trim());
+        }
+      });
+
+      // Group matching sheets by user_id (agent)
+      const groupedByAgent: Record<string, { sheets: typeof matchingSheets; clientNames: string[] }> = {};
+      matchingSheets.forEach(sheet => {
+        if (!groupedByAgent[sheet.user_id]) {
+          groupedByAgent[sheet.user_id] = { sheets: [], clientNames: [] };
+        }
+        groupedByAgent[sheet.user_id].sheets.push(sheet);
+        const names = sheetClientNames[sheet.id];
+        if (names && names.length > 0) {
+          groupedByAgent[sheet.user_id].clientNames.push(...names);
+        } else {
+          // No linked clients -- use the hot sheet name as the buyer name
+          groupedByAgent[sheet.user_id].clientNames.push(sheet.name || "Direct Buyer");
+        }
+      });
+
+      // Look up agent profiles for all user_ids
+      const userIds = Object.keys(groupedByAgent);
+      const { data: agentProfiles } = await supabase
+        .from("agent_profiles")
+        .select("id, first_name, last_name, email")
+        .in("id", userIds);
+
+      const agentProfileMap: Record<string, { first_name: string; last_name: string; email: string }> = {};
+      (agentProfiles || []).forEach(p => { agentProfileMap[p.id] = p; });
+
+      // For consumer users without agent profiles, look up in profiles table
+      const missingUserIds = userIds.filter(id => !agentProfileMap[id]);
+      let consumerProfileMap: Record<string, { first_name: string | null; last_name: string | null; email: string }> = {};
+      if (missingUserIds.length > 0) {
+        const { data: consumerProfiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name, email")
+          .in("id", missingUserIds);
+        (consumerProfiles || []).forEach(p => { consumerProfileMap[p.id] = p; });
+      }
+
+      // Build agent groups
+      const groups: AgentGroup[] = userIds.map(userId => {
+        const group = groupedByAgent[userId];
+        const agentProfile = agentProfileMap[userId];
+        const consumerProfile = consumerProfileMap[userId];
+
+        // Deduplicate client names
+        const uniqueNames = [...new Set(group.clientNames)];
+
+        if (agentProfile) {
+          return {
+            userId,
+            agentName: `${agentProfile.first_name} ${agentProfile.last_name}`.trim(),
+            agentEmail: agentProfile.email,
+            isConsumer: false,
+            clientNames: uniqueNames,
+          };
+        } else if (consumerProfile) {
+          return {
+            userId,
+            agentName: `${consumerProfile.first_name || ''} ${consumerProfile.last_name || ''}`.trim() || "Direct Buyer",
+            agentEmail: consumerProfile.email,
+            isConsumer: true,
+            clientNames: uniqueNames,
+          };
+        } else {
+          return {
+            userId,
+            agentName: "Unknown",
+            agentEmail: "",
+            isConsumer: true,
+            clientNames: uniqueNames,
+          };
+        }
+      }).filter(g => g.agentEmail);
+
+      setAgentGroups(groups);
     } catch (error) {
       console.error("Error loading matches:", error);
     } finally {
@@ -136,28 +240,25 @@ export function ReverseProspectDialog({
       return;
     }
 
+    if (agentGroups.length === 0) {
+      toast.error("No matching agents found");
+      return;
+    }
+
     try {
       setSending(true);
 
-      // Get unique user profiles
-      const userIds = [...new Set(matches.map(match => match.submitted_by))];
-      
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("email, first_name, last_name")
-        .in("id", userIds);
+      // Build recipients: one per agent with their matching client names
+      const recipients = agentGroups.map(group => ({
+        email: group.agentEmail,
+        first_name: group.agentName.split(' ')[0] || group.agentName,
+        last_name: group.agentName.split(' ').slice(1).join(' ') || '',
+        matchingClientNames: group.clientNames,
+      }));
 
-      if (profilesError) throw profilesError;
-
-      if (!profiles || profiles.length === 0) {
-        toast.error("No matching buyers found");
-        return;
-      }
-
-      // Call edge function to send emails
       const { error: sendError } = await supabase.functions.invoke("send-reverse-prospecting", {
         body: {
-          recipients: profiles,
+          recipients,
           agentName,
           agentEmail,
           agentPhone: agentPhone || null,
@@ -174,10 +275,8 @@ export function ReverseProspectDialog({
 
       if (sendError) throw sendError;
 
-      toast.success(`Message sent to ${profiles.length} potential buyers!`);
+      toast.success(`Message sent to ${recipients.length} agent${recipients.length !== 1 ? 's' : ''}!`);
       onOpenChange(false);
-      
-      // Reset form
       setMessage("");
     } catch (error: any) {
       console.error("Error sending messages:", error);
@@ -187,21 +286,19 @@ export function ReverseProspectDialog({
     }
   };
 
-  const formatPropertyType = (type: string) => {
-    return type.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
-  };
+  if (!listing) return null;
 
-  if (!listing) {
-    return null;
-  }
+  const totalBuyers = agentGroups.reduce((sum, g) => sum + g.clientNames.length, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Reverse Prospect: {matchCount} Matching Buyers</DialogTitle>
+          <DialogTitle>
+            Reverse Prospect: {agentGroups.length} Agent{agentGroups.length !== 1 ? 's' : ''}, {totalBuyers} Prospective Buyer{totalBuyers !== 1 ? 's' : ''}
+          </DialogTitle>
           <DialogDescription>
-            Send your listing to buyers actively looking for similar properties
+            Send your listing to agents whose clients are actively looking for similar properties
           </DialogDescription>
         </DialogHeader>
 
@@ -223,46 +320,45 @@ export function ReverseProspectDialog({
                 <span>{listing.bedrooms} bed</span>
               </div>
             )}
-            {listing.bathrooms && (
-              <span>{listing.bathrooms} bath</span>
-            )}
-            {listing.square_feet && (
-              <span>{listing.square_feet.toLocaleString()} sqft</span>
-            )}
+            {listing.bathrooms && <span>{listing.bathrooms} bath</span>}
+            {listing.square_feet && <span>{listing.square_feet.toLocaleString()} sqft</span>}
           </div>
         </div>
 
-        {/* Matching Buyers Preview */}
+        {/* Matching Agents & Buyers */}
         {loadingMatches ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-2">
-            <h3 className="font-semibold text-sm">Matching Buyer Criteria ({matches.length})</h3>
-            <div className="max-h-[200px] overflow-y-auto space-y-2">
-              {matches.slice(0, 5).map((match) => (
-                <div key={match.id} className="p-3 bg-muted/30 rounded-md text-sm">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="secondary" className="text-xs">
-                      {formatPropertyType(match.property_type)}
-                    </Badge>
-                    <span className="text-muted-foreground">
-                      {match.city}, {match.state}
-                    </span>
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm">
+              Matching Agents ({agentGroups.length}) · Prospective Buyers ({totalBuyers})
+            </h3>
+            <div className="max-h-[250px] overflow-y-auto space-y-3">
+              {agentGroups.map((group) => (
+                <div key={group.userId} className="p-3 bg-muted/30 rounded-md text-sm space-y-2">
+                  <div className="flex items-center gap-2">
+                    {group.isConsumer ? (
+                      <User className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span className="font-medium">{group.agentName}</span>
+                    {group.isConsumer && (
+                      <Badge variant="secondary" className="text-xs">Direct Buyer</Badge>
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Max Budget: ${match.max_price.toLocaleString()}
-                    {match.bedrooms && ` • ${match.bedrooms}+ bed`}
-                    {match.bathrooms && ` • ${match.bathrooms}+ bath`}
+                  <div className="text-xs text-muted-foreground ml-6">{group.agentEmail}</div>
+                  <div className="ml-6 flex flex-wrap gap-1">
+                    {group.clientNames.map((name, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">
+                        {name}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               ))}
-              {matches.length > 5 && (
-                <p className="text-xs text-muted-foreground text-center py-2">
-                  + {matches.length - 5} more matching buyers
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -305,13 +401,13 @@ export function ReverseProspectDialog({
             <Label htmlFor="message">Your Message *</Label>
             <Textarea
               id="message"
-              placeholder="I have a property that matches your search criteria..."
+              placeholder="I have a property that matches your client's search criteria..."
               className="min-h-[120px]"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              This message will be sent to all matching buyers
+              Each agent receives one email listing all their matching clients
             </p>
           </div>
         </div>
@@ -320,14 +416,14 @@ export function ReverseProspectDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>
             Cancel
           </Button>
-          <Button onClick={handleSend} disabled={sending || matches.length === 0}>
+          <Button onClick={handleSend} disabled={sending || agentGroups.length === 0}>
             {sending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Sending...
               </>
             ) : (
-              `Send to ${matches.length} Buyers`
+              `Send to ${agentGroups.length} Agent${agentGroups.length !== 1 ? 's' : ''}`
             )}
           </Button>
         </div>

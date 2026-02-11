@@ -11,6 +11,7 @@ interface Recipient {
   email: string;
   first_name?: string;
   last_name?: string;
+  matchingClientNames?: string[];
 }
 
 interface ReverseProspectingRequest {
@@ -52,7 +53,6 @@ async function checkRateLimit(
     return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
   }
 
-  // Handle array or single object return from RPC
   const row = Array.isArray(data) ? data[0] : data;
   return row as RateLimitResult;
 }
@@ -73,6 +73,17 @@ function build429Response(resetAt: string): Response {
   });
 }
 
+function buildMatchingClientsSection(clientNames: string[]): string {
+  if (!clientNames || clientNames.length === 0) return "";
+  const items = clientNames.map(name => `<li style="margin: 4px 0;">${name}</li>`).join("");
+  return `
+    <div style="margin: 20px 0; padding: 15px; background-color: #f0f7ff; border-radius: 8px;">
+      <h4 style="margin: 0 0 10px 0; color: #333;">This property matches criteria for:</h4>
+      <ul style="margin: 0; padding-left: 20px; color: #555;">${items}</ul>
+    </div>
+  `;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -83,12 +94,10 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get IP for rate limiting
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
                req.headers.get("x-real-ip") || 
                "unknown";
 
-    // Database-backed rate limiting: 5 reverse prospecting campaigns per minute per IP
     const rateLimitKey = `route:send-reverse-prospecting|ip:${ip}`;
     const rateLimitResult = await checkRateLimit(supabase, rateLimitKey, 60, 5);
     
@@ -110,7 +119,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[send-reverse-prospecting] Enqueuing ${recipients.length} jobs`);
 
-    // Cap recipients to prevent abuse
     if (recipients.length > 100) {
       throw new Error("Maximum 100 recipients allowed per reverse prospecting request");
     }
@@ -142,11 +150,13 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    // Enqueue jobs for each recipient
+    // Enqueue one job per recipient (one per agent, consolidated)
     const emailJobs = recipients.map((recipient) => {
       const recipientName = recipient.first_name
         ? `${recipient.first_name} ${recipient.last_name || ""}`.trim()
         : "there";
+
+      const matchingClientsSection = buildMatchingClientsSection(recipient.matchingClientNames || []);
 
       const html = `
         <!DOCTYPE html>
@@ -164,6 +174,8 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="font-size: 16px;">Hi ${recipientName},</p>
               
               ${filterSummary}
+              
+              ${matchingClientsSection}
               
               <div style="margin: 25px 0; padding: 20px; background-color: #fafafa; border-left: 4px solid #667eea; border-radius: 4px;">
                 <p style="margin: 0; white-space: pre-wrap;">${message}</p>
@@ -206,12 +218,12 @@ const handler = async (req: Request): Promise<Response> => {
             agentEmail,
             listingAddress,
             listingPrice,
+            matchingClientNames: recipient.matchingClientNames || [],
           },
         },
       };
     });
 
-    // Insert all jobs into the queue
     const { error: insertError } = await supabase
       .from("email_jobs")
       .insert(emailJobs);
