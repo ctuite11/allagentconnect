@@ -1,54 +1,36 @@
 
 
-# Update: Off Market/Private Listings Include Expiration Date
+# Wire Existing Address Autocomplete into Add Listing Page
 
-## Summary
+## Clarification
 
-Two changes needed:
+The `AddressAutocomplete` component and `normalizeGooglePlace` utility already exist and work on three other pages (Agent Match, Profile Editor, Manage Team). The Add Listing page has never had this wired up — so this is connecting existing, proven components to the listing form, not building anything new.
 
-1. **AddListing.tsx** (line 3137): Remove the `off_market` exclusion so the date section (AAC List Date + Expiration Date) is visible for off_market/private listings too.
-2. **MyListings.tsx** (lines 640-645): Restructure the date display for all three cases:
-   - **Coming Soon**: AAC List Date, On MLS Date (`go_live_date`), Expiration Date
-   - **Off Market / All other statuses**: AAC List Date, Expiration Date
+## What Will Change
 
-## File: `src/pages/AddListing.tsx`
+**Single file: `src/pages/AddListing.tsx`**
 
-### Line 3137: Remove off_market gate
+1. **Add two imports** at the top of the file:
+   - `AddressAutocomplete` from `@/components/AddressAutocomplete`
+   - `normalizeGooglePlace` from `@/lib/google-address`
 
-Current:
-```tsx
-{formData.status !== 'off_market' && (
-```
+2. **Add a handler function** (`handleAddressPlaceSelect`) that:
+   - Takes the Google place result
+   - Runs it through `normalizeGooglePlace()` (same pattern used in AgentMatch.tsx)
+   - Auto-fills `address`, `city`, `state`, and `zip_code` in the form state
 
-New -- show for all statuses. The condition becomes unconditional (just remove the wrapper, keep the inner grid). The label "List Date (On MLS)" should also be renamed to "AAC List Date" for consistency.
+3. **Replace the plain text input** for Street Address with the `AddressAutocomplete` component, keeping manual typing as a fallback (identical to how it works on other pages)
 
-For Coming Soon, restructure to three equal columns:
-- Col 1: AAC List Date (`list_date`)
-- Col 2: On MLS Date (`go_live_date`) -- move from the separate bordered box above
-- Col 3: Expiration Date (`expiration_date`)
+## Expected Behavior After Fix
 
-For all other statuses (including off_market): two columns as today, but always shown:
-- Col 1: AAC List Date (`list_date`)
-- Col 2: Expiration Date (`expiration_date`)
+1. User types in the Street Address field
+2. Google autocomplete suggestions appear
+3. User selects an address
+4. City, State, Zip auto-populate
+5. Existing ATTOM auto-fetch triggers to verify the property
+6. If no suggestion is selected, user can still type manually
 
-The separate `go_live_date` bordered box (lines 3102-3118) merges into the Coming Soon three-column layout.
+## No New Files or Components
 
-## File: `src/pages/MyListings.tsx`
-
-### Lines 640-645: Three-tier date display
-
-Current logic shows "On MLS Date" or "Exp" conditionally on the same `expiration_date` field.
-
-New logic:
-- **Coming Soon**: Show three lines using `go_live_date` for On MLS Date and `expiration_date` for Exp
-- **All others** (including off_market): Show AAC List Date + Exp (if exists)
-
-Add `go_live_date` formatting around line 553.
-
-## Files Changed
-
-| File | Change |
-|------|--------|
-| `src/pages/AddListing.tsx` | Remove off_market exclusion from date section; merge go_live_date into 3-col layout for Coming Soon; rename label to "AAC List Date" |
-| `src/pages/MyListings.tsx` | Add `go_live_date` display for Coming Soon; show 3 date lines for Coming Soon, 2 for all others including off_market |
+Everything needed already exists. This is purely a wiring change in one file.
 
