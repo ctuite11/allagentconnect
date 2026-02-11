@@ -1634,8 +1634,13 @@ const AddListing = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.address, formData.state, selectedCounty, formData.city, formData.zip_code, hasAutoFetched, autoFillLoading, isAddressConfirmOpen, isInitialLoad, listingId, hasConfirmedAttomAddress]);
   
-  // Manual ATTOM lookup trigger
+  // Manual ATTOM lookup trigger (temporary off switch controlled by ATTOM_ENABLED)
   const handleManualAttomLookup = () => {
+    if (!ATTOM_ENABLED) {
+      toast.info("Public record lookup is temporarily disabled.");
+      return;
+    }
+
     if (!formData.address || !formData.city || !formData.state) {
       toast.error("Please enter address, city, and state first.");
       return;
@@ -3168,7 +3173,7 @@ const AddListing = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleManualAttomLookup}
-                      disabled={autoFillLoading || !formData.address || !formData.city || !formData.state}
+                      disabled={!ATTOM_ENABLED || autoFillLoading || !formData.address || !formData.city || !formData.state}
                       className="gap-2"
                     >
                       {autoFillLoading ? (
@@ -3214,7 +3219,7 @@ const AddListing = () => {
                         variant="outline"
                         size="sm"
                         onClick={handleManualAttomLookup}
-                        disabled={autoFillLoading}
+                        disabled={!ATTOM_ENABLED || autoFillLoading}
                         className="flex-shrink-0 border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
                       >
                         <RefreshCw className="h-3 w-3 mr-1" />
@@ -3235,7 +3240,7 @@ const AddListing = () => {
                         variant="outline"
                         size="sm"
                         onClick={handleManualAttomLookup}
-                        disabled={autoFillLoading}
+                        disabled={!ATTOM_ENABLED || autoFillLoading}
                         className="flex-shrink-0 border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
                       >
                         <RefreshCw className="h-3 w-3 mr-1" />
@@ -3775,7 +3780,7 @@ const AddListing = () => {
                         variant="outline"
                         size="sm"
                         onClick={handleManualAttomLookup}
-                        disabled={autoFillLoading || !formData.address || !formData.city || !formData.state}
+                        disabled={!ATTOM_ENABLED || autoFillLoading || !formData.address || !formData.city || !formData.state}
                         className="gap-2"
                       >
                         {autoFillLoading ? (
