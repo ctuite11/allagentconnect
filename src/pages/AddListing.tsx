@@ -176,7 +176,7 @@ const AddListing = () => {
     go_live_date: "",
     auto_activate_on: null as Date | null,
     // New date fields
-    list_date: new Date().toISOString().split('T')[0],
+    list_date: new Date().toLocaleDateString('en-CA'),
     expiration_date: "",
     // Rental-specific
     monthly_rent: "",

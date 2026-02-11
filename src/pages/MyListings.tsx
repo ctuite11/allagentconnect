@@ -84,6 +84,9 @@ function formatDate(value?: string | null) {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+  }
   return d.toLocaleDateString();
 }
 
