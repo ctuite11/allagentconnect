@@ -1,37 +1,48 @@
 
 
-# Listing Card Badge: Show Buyer Count Only, Rename "Client" to "Buyer"
+# Fix: AAC List Date Showing Tomorrow Instead of Today
 
-## What Changes
+## Problem
 
-On the listing card in My Listings, the match badge currently shows a dual label like "3 agents, 12 buyers". It should show **only the buyer count** as a single number, e.g. "12 Buyer Matches" or "1 Buyer Match".
+When creating a listing, `list_date` defaults to `new Date().toISOString().split('T')[0]`. The `.toISOString()` method converts to **UTC**, so if you're in a US timezone (e.g., EST at 8pm = UTC 1am next day), the default date becomes **tomorrow**.
 
-The Reverse Prospect dialog remains unchanged -- it keeps its dual agent + buyer display.
+## Fix
 
-## File: `src/components/ListingCard.tsx`
+### File: `src/pages/AddListing.tsx` (line 179)
 
-### Update `getMatchLabel()` (lines 544-554)
-
-Remove the agent count from the label. Show only buyer count with the word "Buyer":
-
-- `0 Buyer Matches` when buyerCount is 0
-- `1 Buyer Match` when buyerCount is 1  
-- `N Buyer Matches` when buyerCount > 1
-
-Current code builds a parts array with agents + buyers. New code simply returns:
+Replace the UTC-based default:
 ```
-`${buyerCount} Buyer Match${buyerCount !== 1 ? 'es' : ''}`
+list_date: new Date().toISOString().split('T')[0]
 ```
 
-### No other changes
+With a local-date default:
+```
+list_date: new Date().toLocaleDateString('en-CA')
+```
 
-- `loadMatchCount()` stays the same (still computes both `agentCount` and `buyerCount` -- needed by the dialog)
-- `getMatchButtonStyle()` stays the same (already uses `buyerCount` for color thresholds)
-- `ReverseProspectDialog` stays the same (keeps its dual agent/buyer display)
-- Edge function stays the same
+`en-CA` locale produces `YYYY-MM-DD` format (what HTML date inputs expect), using the user's **local** timezone.
 
-## Single file changed
+### Also apply the same pattern in `formatDate` (MyListings.tsx lines 83-88)
+
+The `formatDate` function also has a timezone issue: `new Date("2026-02-08")` parses date-only strings as UTC midnight, which can shift the displayed date. Add timezone offset correction:
+
+```
+function formatDate(value?: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  // If date-only string (no time component), adjust for UTC parse
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+  }
+  return d.toLocaleDateString();
+}
+```
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/ListingCard.tsx` | Simplify `getMatchLabel()` to show only buyer count with "Buyer Match(es)" label |
+| `src/pages/AddListing.tsx` | Fix default `list_date` to use local date instead of UTC |
+| `src/pages/MyListings.tsx` | Fix `formatDate` to handle date-only strings without timezone shift |
+
