@@ -544,13 +544,7 @@ const ListingCard = ({
   // Build the match label for display
   const getMatchLabel = () => {
     if (loadingMatches) return "...";
-    if (buyerCount === 0) return "0 Matches";
-    const parts: string[] = [];
-    if (agentCount > 0) {
-      parts.push(`${agentCount} agent${agentCount !== 1 ? 's' : ''}`);
-    }
-    parts.push(`${buyerCount} buyer${buyerCount !== 1 ? 's' : ''}`);
-    return parts.join(', ');
+    return `${buyerCount} Buyer Match${buyerCount !== 1 ? 'es' : ''}`;
   };
   const matchButtonStyle = getMatchButtonStyle();
   const getUnitNumber = () => {
