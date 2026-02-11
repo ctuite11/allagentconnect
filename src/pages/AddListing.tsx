@@ -54,6 +54,8 @@ const STATE_ABBREVIATIONS: Record<string, string> = {
   Maine: "ME",
 };
 
+const ATTOM_ENABLED = false;
+
 interface FileWithPreview {
   file: File;
   preview: string;
@@ -985,6 +987,13 @@ const AddListing = () => {
   // - Condo/Co-op/Apartment: Unit REQUIRED before ATTOM fires
   // =====================================================================
   const handleAutoFillFromPublicRecords = async (isAutoTrigger = false) => {
+    if (!ATTOM_ENABLED) {
+      if (!isAutoTrigger) {
+        toast.info("Public record lookup is temporarily disabled.");
+      }
+      return;
+    }
+
     if (!formData.address || !formData.city || !formData.state) {
       if (!isAutoTrigger) {
         toast.error("Please enter address, city, and state first.");
@@ -1574,6 +1583,8 @@ const AddListing = () => {
 
   // Auto-fetch when all location fields are filled - ONLY for new listings
   useEffect(() => {
+    if (!ATTOM_ENABLED) return;
+
     // Skip during initial data load to prevent ATTOM from triggering on loaded data
     if (isInitialLoad) {
       console.log("[AddListing] ATTOM auto-fetch skipped: initial load in progress");
@@ -2864,13 +2875,15 @@ const AddListing = () => {
           }
 
           // Auto-fetch ATTOM data
-          try {
-            console.log("[AddListing] Triggering auto-fetch-property-data for listing:", resultListingId);
-            await supabase.functions.invoke('auto-fetch-property-data', {
-              body: { listing_id: resultListingId }
-            });
-          } catch (fetchError) {
-            console.error("[AddListing] Error fetching ATTOM data:", fetchError);
+          if (ATTOM_ENABLED) {
+            try {
+              console.log("[AddListing] Triggering auto-fetch-property-data for listing:", resultListingId);
+              await supabase.functions.invoke('auto-fetch-property-data', {
+                body: { listing_id: resultListingId }
+              });
+            } catch (fetchError) {
+              console.error("[AddListing] Error fetching ATTOM data:", fetchError);
+            }
           }
         }
 
@@ -3240,8 +3253,18 @@ const AddListing = () => {
                         onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
                         onPlaceSelect={(place) => {
                           const normalized = normalizeGooglePlace(place);
+                          const placeComponents = (place as { address_components?: Array<{ long_name?: string; types?: string[] }> }).address_components || [];
+                          const getGoogleLongName = (type: string) =>
+                            placeComponents.find((component) => component.types?.includes(type))?.long_name || "";
+
+                          const preferredCity =
+                            getGoogleLongName("locality") ||
+                            getGoogleLongName("postal_town") ||
+                            getGoogleLongName("sublocality_level_1") ||
+                            normalized.city;
+
                           const normalizedState = normalized.state || formData.state;
-                          const normalizedCity = normalized.city || formData.city;
+                          const normalizedCity = preferredCity || formData.city;
                           const normalizedZip = normalized.zip || formData.zip_code;
 
                           // Infer county from state+city when mapping data exists.
@@ -3302,6 +3325,8 @@ const AddListing = () => {
                             state: normalizedState,
                             county: nextCounty !== "all" ? nextCounty : "",
                             zip_code: normalizedZip,
+                            latitude: normalized.lat ?? prev.latitude,
+                            longitude: normalized.lng ?? prev.longitude,
                           }));
 
                           setTimeout(() => {
