@@ -44,6 +44,7 @@ interface Listing {
   active_date: string | null;
   list_date?: string | null;
   expiration_date?: string | null;
+  go_live_date?: string | null;
   hot_sheet_matches?: number | null;
   views_count?: number | null;
   property_type?: string | null;
@@ -552,6 +553,7 @@ function MyListingsView({
             const shares = l.listing_stats?.share_count ?? 0;
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
+            const goLiveDate = formatDate(l.go_live_date);
             // Filter out past events for toolbar button logic
             const nowForToolbar = new Date();
             const upcomingEvents = Array.isArray(l.open_houses) 
@@ -638,10 +640,13 @@ function MyListingsView({
                    <div className="absolute top-4 right-4 text-right space-y-0.5">
                      <ListingStatusBadge status={l.status} size="sm" />
                       <div className="text-xs text-zinc-500 leading-tight">AAC List Date: {listDate}</div>
-                    {expDate && (
-                      <div className="text-xs text-zinc-500 leading-tight">
-                        {isComingSoon(l.status) ? "On MLS Date" : "Exp"}: {expDate}
-                      </div>
+                    {isComingSoon(l.status) ? (
+                      <>
+                        {goLiveDate && <div className="text-xs text-zinc-500 leading-tight">On MLS Date: {goLiveDate}</div>}
+                        {expDate && <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>}
+                      </>
+                    ) : (
+                      expDate && <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>
                     )}
                     <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
                     <DropdownMenu>

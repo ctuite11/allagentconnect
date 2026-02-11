@@ -3099,69 +3099,48 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Coming Soon Date - Only shown for Coming Soon status */}
-                {formData.status === "coming_soon" && (
-                  <div className="border rounded-lg p-4 bg-muted/30">
-                    <Label htmlFor="go_live_date">Choose the date your listing will become Active (on MLS) *</Label>
+                {/* Date Section - shown for all statuses */}
+                <div className={`grid grid-cols-1 ${formData.status === "coming_soon" ? "md:grid-cols-3" : "md:grid-cols-2"} gap-4 border-b pb-6`}>
+                  <div className="space-y-2">
+                    <Label htmlFor="list_date">AAC List Date</Label>
                     <Input
-                      id="go_live_date"
+                      id="list_date"
                       type="date"
-                      value={formData.go_live_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, go_live_date: e.target.value }))}
-                      className="mt-1"
-                      required
+                      value={formData.list_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, list_date: e.target.value }))}
                     />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      On this date, the system will automatically change the status from Coming Soon to Active.
+                    <p className="text-xs text-muted-foreground">
+                      The date this listing was added to AAC.
                     </p>
                   </div>
-                )}
-
-                {/* Off-Market Info Banner */}
-                {formData.status === "off_market" && (
-                  <div className="border border-amber-200 rounded-lg p-4 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
-                    <div className="flex items-start gap-3">
-                      <Lock className="h-5 w-5 text-amber-600 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-amber-800 dark:text-amber-200">Private Listing</p>
-                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                          This listing is visible only to AAC agents and will not appear on MLS or public search. 
-                          You can promote it to Coming Soon or Active status later if you choose to list publicly.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* List Date & Expiration Date Section - Hidden for Off-Market listings */}
-                {formData.status !== 'off_market' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-6">
+                  {formData.status === "coming_soon" && (
                     <div className="space-y-2">
-                      <Label htmlFor="list_date">List Date (On MLS)</Label>
+                      <Label htmlFor="go_live_date">On MLS Date *</Label>
                       <Input
-                        id="list_date"
+                        id="go_live_date"
                         type="date"
-                        value={formData.list_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, list_date: e.target.value }))}
+                        value={formData.go_live_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, go_live_date: e.target.value }))}
+                        required
                       />
                       <p className="text-xs text-muted-foreground">
-                        The date this listing was/will be added to the MLS.
+                        On this date, the system will automatically change the status from Coming Soon to Active.
                       </p>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="expiration_date">Expiration Date</Label>
-                      <Input
-                        id="expiration_date"
-                        type="date"
-                        value={formData.expiration_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, expiration_date: e.target.value }))}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Listing will automatically change to "Expired" status on this date.
-                      </p>
-                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="expiration_date">Expiration Date</Label>
+                    <Input
+                      id="expiration_date"
+                      type="date"
+                      value={formData.expiration_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiration_date: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Listing will automatically change to "Expired" status on this date.
+                    </p>
                   </div>
-                )}
+                </div>
 
                 {/* Address Section */}
                 <div className="space-y-4">
