@@ -1202,7 +1202,8 @@ const MyListings = () => {
           bathrooms: matchesListing.bathrooms || null,
           square_feet: matchesListing.square_feet || null
         } : null}
-        matchCount={matchesListing?.hot_sheet_matches ?? 0}
+        agentCount={0}
+        buyerCount={matchesListing?.hot_sheet_matches ?? 0}
       />
 
       {/* Social Share Dialog */}

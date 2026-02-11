@@ -76,7 +76,8 @@ const ListingCard = ({
   agentInfo = null
 }: ListingCardProps) => {
   const navigate = useNavigate();
-  const [matchCount, setMatchCount] = useState<number>(0);
+  const [agentCount, setAgentCount] = useState<number>(0);
+  const [buyerCount, setBuyerCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
   const [marketInsightsOpen, setMarketInsightsOpen] = useState(false);
@@ -164,16 +165,17 @@ const ListingCard = ({
     try {
       setLoadingMatches(true);
       
-      // Fetch all active hot sheets
+      // Fetch all active hot sheets with user_id for agent counting
       const { data: hotSheets, error } = await supabase
         .from("hot_sheets")
-        .select("id, criteria")
+        .select("id, criteria, user_id, client_id")
         .eq("is_active", true);
 
       if (error) throw error;
       
       if (!hotSheets || hotSheets.length === 0) {
-        setMatchCount(0);
+        setAgentCount(0);
+        setBuyerCount(0);
         return;
       }
 
@@ -220,7 +222,32 @@ const ListingCard = ({
         return true;
       });
 
-      setMatchCount(matchingSheets.length);
+      if (matchingSheets.length === 0) {
+        setAgentCount(0);
+        setBuyerCount(0);
+        return;
+      }
+
+      // Count unique agents
+      const uniqueAgents = new Set(matchingSheets.map(s => s.user_id));
+      setAgentCount(uniqueAgents.size);
+
+      // Count prospective buyers via hot_sheet_clients join table
+      const matchingSheetIds = matchingSheets.map(s => s.id);
+      const { data: hotSheetClients } = await supabase
+        .from("hot_sheet_clients")
+        .select("client_id, hot_sheet_id")
+        .in("hot_sheet_id", matchingSheetIds);
+
+      // Sheets that have linked clients via hot_sheet_clients
+      const sheetsWithClients = new Set((hotSheetClients || []).map(hsc => hsc.hot_sheet_id));
+      const uniqueClients = new Set((hotSheetClients || []).map(hsc => hsc.client_id));
+      
+      // Sheets with no linked clients (consumer-created) count as 1 buyer each
+      // Also count sheets with a direct client_id but no hot_sheet_clients entries
+      const sheetsWithNoClients = matchingSheets.filter(s => !sheetsWithClients.has(s.id)).length;
+
+      setBuyerCount(uniqueClients.size + sheetsWithNoClients);
     } catch (error) {
       console.error("Error loading match count:", error);
     } finally {
@@ -485,20 +512,21 @@ const ListingCard = ({
   const priceChangeBanner = getPriceChangeBanner();
   const openHouseBanner = getOpenHouseBanner();
 
-  // Color coding for match count
+  // Color coding for match count (based on buyer count)
+  const totalMatchCount = buyerCount;
   const getMatchButtonStyle = () => {
-    if (matchCount === 0) {
+    if (totalMatchCount === 0) {
       return {
         variant: "outline" as const,
         className: "border-muted-foreground/20 text-muted-foreground hover:bg-muted"
       };
-    } else if (matchCount >= 10) {
+    } else if (totalMatchCount >= 10) {
       // High demand - green
       return {
         variant: "default" as const,
         className: "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
       };
-    } else if (matchCount >= 5) {
+    } else if (totalMatchCount >= 5) {
       // Medium demand - yellow/amber
       return {
         variant: "default" as const,
@@ -511,6 +539,18 @@ const ListingCard = ({
         className: "border-border text-foreground hover:bg-muted"
       };
     }
+  };
+
+  // Build the match label for display
+  const getMatchLabel = () => {
+    if (loadingMatches) return "...";
+    if (buyerCount === 0) return "0 Matches";
+    const parts: string[] = [];
+    if (agentCount > 0) {
+      parts.push(`${agentCount} agent${agentCount !== 1 ? 's' : ''}`);
+    }
+    parts.push(`${buyerCount} buyer${buyerCount !== 1 ? 's' : ''}`);
+    return parts.join(', ');
   };
   const matchButtonStyle = getMatchButtonStyle();
   const getUnitNumber = () => {
@@ -666,7 +706,7 @@ const ListingCard = ({
             <div className="pt-2 border-t mt-2 space-y-2">
               <Button size="sm" variant={matchButtonStyle.variant} className={`w-full ${matchButtonStyle.className}`} onClick={() => setProspectDialogOpen(true)} disabled={loadingMatches}>
                 <Users className="h-3.5 w-3.5 mr-1.5" />
-                {loadingMatches ? "..." : `${matchCount} Match${matchCount !== 1 ? "es" : ""}`}
+                {getMatchLabel()}
               </Button>
               <div className="flex items-center gap-2 w-full">
                 <span className="text-2xl animate-pulse">🎈</span>
@@ -858,7 +898,7 @@ const ListingCard = ({
                 </div>
               )}
               
-              {(listing.status === LISTING_STATUS.ACTIVE || listing.status === LISTING_STATUS.COMING_SOON) && matchCount > 0 && (
+              {(listing.status === LISTING_STATUS.ACTIVE || listing.status === LISTING_STATUS.COMING_SOON) && buyerCount > 0 && (
                 <Button 
                   size="sm" 
                   variant={matchButtonStyle.variant} 
@@ -867,7 +907,7 @@ const ListingCard = ({
                   className={`text-xs ${matchButtonStyle.className}`}
                 >
                   <Users className="w-3 h-3 mr-1" />
-                  {loadingMatches ? "Loading..." : `${matchCount} ${matchCount === 1 ? 'match' : 'matches'}`}
+                  {getMatchLabel()}
                 </Button>
               )}
             </div>
@@ -956,7 +996,7 @@ const ListingCard = ({
             </span>{" "}
             {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {openHouseBanner.time}
           </div>}
-        <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} matchCount={matchCount} />
+        <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} agentCount={agentCount} buyerCount={buyerCount} />
         <MarketInsightsDialog open={marketInsightsOpen} onOpenChange={setMarketInsightsOpen} listing={{
         address: listing.address,
         city: listing.city,
@@ -965,7 +1005,7 @@ const ListingCard = ({
         price: listing.price,
         property_type: listing.property_type
       }} />
-      <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} matchCount={matchCount} />
+      <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} agentCount={agentCount} buyerCount={buyerCount} />
       <MarketInsightsDialog open={marketInsightsOpen} onOpenChange={setMarketInsightsOpen} listing={{
       address: listing.address,
       city: listing.city,
