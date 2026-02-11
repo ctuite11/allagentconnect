@@ -1,66 +1,92 @@
 
 
-# Auto-Remove Past Open Houses and Broker Tours
+# Reverse Prospecting: Dual Count (Agents + Prospective Buyers)
 
-## The Problem
+## Concept
 
-When an open house or broker tour's date and time passes, the event data stays in the system forever. It still shows on your My Listings cards, in the View Open Houses dialog, and clutters the database.
+The badge and dialog will show two numbers:
 
-## What Gets Built
+> **10 agents, 50 prospective buyers**
 
-### 1. Automatic Cleanup (Backend -- runs every 15 minutes)
+- **Agents**: Unique `user_id` values from matching `hot_sheets`
+- **Prospective buyers**: Unique clients from `hot_sheet_clients` linked to those matching hot sheets. For hot sheets with no linked clients (consumer-created), the hot sheet itself counts as 1 prospective buyer.
 
-Add a new section (Part 3) to the existing `update-listing-statuses` backend function that already runs on a 15-minute schedule. It will:
+## Data Model
 
-- Query all listings that have an `open_houses` array
-- For each listing, check every event's date + end_time against the current time
-- Remove any event where the end time has already passed
-- Update the listing with only the future events remaining
-- If all events have passed, set `open_houses` to an empty array
+```text
+hot_sheets
+  - user_id (agent or consumer who created it)
+  - criteria (matching filters)
 
-This means past events are automatically cleaned up within 15 minutes of ending -- no manual work needed.
+hot_sheet_clients (join table)
+  - hot_sheet_id --> hot_sheets.id
+  - client_id   --> clients.id
 
-### 2. Frontend Safety Net (Immediate filtering)
+clients
+  - agent_id, first_name, last_name, email
+```
 
-Even though the backend cleans up every 15 minutes, there could be a brief window where a past event still shows. To handle that:
+A hot sheet created by an agent may have 1-N clients via `hot_sheet_clients`. A hot sheet created by a consumer typically has zero `hot_sheet_clients` entries -- in that case, the consumer themselves is the prospective buyer.
 
-- **My Listings page**: Filter out past events before displaying the inline open house/broker tour lines, so agents never see stale events
-- **View Open Houses dialog**: Filter out past events from the list, so only upcoming events appear
+## Changes
 
-The search results pages already do this filtering, so no changes needed there.
+### 1. `src/components/ListingCard.tsx` -- Dual counts on badge
+
+- Add `user_id` to the hot_sheets select query
+- After filtering matching sheets, compute:
+  - `agentCount = new Set(matchingSheets.map(s => s.user_id)).size`
+  - Fetch `hot_sheet_clients` for matching sheet IDs to get total unique `client_id` values
+  - For sheets with no clients in `hot_sheet_clients`, count the sheet itself as 1 buyer
+  - `buyerCount = uniqueClients + sheetsWithNoClients`
+- Store both counts in state
+- Badge displays: "X agents, Y buyers" (or just "Y buyers" if only 1 agent)
+
+### 2. `src/components/ReverseProspectDialog.tsx` -- Full rewrite
+
+**Data loading:**
+- Query matching `hot_sheets` (same filter logic as ListingCard)
+- Join `hot_sheet_clients` and `clients` to get buyer names per sheet
+- Group by agent (`user_id`), look up agent info from `agent_profiles`
+
+**Display:**
+- Header: "Your listing matches X agents and Y prospective buyers"
+- Cards grouped by agent, each showing:
+  - Agent name and email
+  - List of matching client names under that agent
+- For consumer hot sheets (no agent profile), show "Direct buyer" with the hot sheet name
+
+**Send logic:**
+- One email per agent
+- Each email lists all their matching client names
+- For consumer hot sheets, email goes to the consumer (looked up via `profiles` table using `user_id`)
+
+### 3. `supabase/functions/send-reverse-prospecting/index.ts` -- Consolidated email
+
+- Accept `matchingClientNames: string[]` per recipient
+- Add a "Matching Clients" section to the email:
+  > This property matches criteria for:
+  > - Johnson Family Search
+  > - Smith Buyer
+  > - Downtown Condo Hunt
+
+## Badge Examples
+
+| Scenario | Badge Text |
+|----------|-----------|
+| 3 agents, 12 clients total | "3 agents, 12 buyers" |
+| 1 agent, 5 clients | "1 agent, 5 buyers" |
+| 0 agents, 2 consumer hot sheets | "2 buyers" |
+| 2 agents + 1 consumer, 8 clients total | "3 agents, 9 buyers" |
 
 ## Files Changed
 
-| File | What Changes |
-|------|-------------|
-| `supabase/functions/update-listing-statuses/index.ts` | Add Part 3: auto-remove past open house/broker tour events from the `open_houses` array |
-| `src/pages/MyListings.tsx` | Filter out past events before rendering inline event lines |
-| `src/components/ViewOpenHousesDialog.tsx` | Filter out past events from the displayed list |
+| File | Change |
+|------|--------|
+| `src/components/ListingCard.tsx` | Dual count logic, updated badge display |
+| `src/components/ReverseProspectDialog.tsx` | Replace `client_needs` with grouped `hot_sheets` + `hot_sheet_clients` logic |
+| `supabase/functions/send-reverse-prospecting/index.ts` | Add matching client names to email template |
 
-## What Does NOT Change
+## No Database Changes Required
 
-- How open houses are created (OpenHouseDialog stays the same)
-- Search result filtering (already works correctly)
-- Listing statuses or expiration logic
-- No new database tables or migrations needed
+All needed tables (`hot_sheets`, `hot_sheet_clients`, `clients`, `agent_profiles`) already exist.
 
-## Technical Details
-
-The cleanup logic in the backend function:
-
-```text
-For each listing with open_houses:
-  Filter events where: new Date(`${event.date}T${event.end_time}`) > now
-  If filtered array differs from original:
-    Update listing with filtered array
-    Log: "Removed X past event(s) from listing Y"
-```
-
-The frontend filter (applied in both MyListings and ViewOpenHousesDialog):
-
-```text
-const now = new Date();
-const upcomingEvents = events.filter(e => 
-  new Date(`${e.date}T${e.end_time}`) > now
-);
-```
