@@ -25,6 +25,7 @@ import { format, differenceInDays } from "date-fns";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
+import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { cn } from "@/lib/utils";
@@ -3239,13 +3240,73 @@ const AddListing = () => {
                         onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
                         onPlaceSelect={(place) => {
                           const normalized = normalizeGooglePlace(place);
+                          const normalizedState = normalized.state || formData.state;
+                          const normalizedCity = normalized.city || formData.city;
+                          const normalizedZip = normalized.zip || formData.zip_code;
+
+                          // Infer county from state+city when mapping data exists.
+                          let inferredCounty = "";
+                          if (normalizedState && normalizedCity && hasCountyCityMapping(normalizedState)) {
+                            const matchingCounties = getCountiesForState(normalizedState).filter((county) => {
+                              const countyCities = getCitiesForCounty(normalizedState, county);
+                              return countyCities.some(city => city.toLowerCase() === normalizedCity.toLowerCase());
+                            });
+
+                            if (matchingCounties.length === 1) {
+                              inferredCounty = matchingCounties[0];
+                            }
+                          }
+
+                          // Keep dropdown UI and formData in sync with a single place-selection update.
+                          isHydratingLocationRef.current = true;
+
+                          const didStateChange = Boolean(normalizedState && normalizedState !== selectedState);
+                          const nextCounty = inferredCounty || (didStateChange
+                            ? (normalizedState === "MA" ? "" : "all")
+                            : selectedCounty);
+
+                          if (normalizedState) {
+                            setSelectedState(normalizedState);
+                            setAvailableCounties(getCountiesForState(normalizedState));
+                          }
+
+                          // If state changed, clear stale county/city values before applying new location.
+                          if (didStateChange) {
+                            setSelectedCounty(normalizedState === "MA" ? "" : "all");
+                            setSelectedCity("");
+                            setCityChoice("");
+                            setAvailableCities([]);
+                            setAvailableZips([]);
+                          }
+
+                          setSelectedCounty(nextCounty);
+
+                          if (normalizedState) {
+                            setAvailableCities(getCitiesForStateAndCounty(normalizedState, nextCounty));
+                          }
+
+                          if (normalizedCity) {
+                            setSelectedCity(normalizedCity);
+                            setCityChoice(normalizedCity);
+                          }
+
+                          if (normalizedZip) {
+                            setAvailableZips([normalizedZip]);
+                            setSuggestedZips([normalizedZip]);
+                          }
+
                           setFormData(prev => ({
                             ...prev,
                             address: normalized.address_line1 || prev.address,
-                            city: normalized.city || prev.city,
-                            state: normalized.state || prev.state,
-                            zip_code: normalized.zip || prev.zip_code,
+                            city: normalizedCity,
+                            state: normalizedState,
+                            county: nextCounty !== "all" ? nextCounty : "",
+                            zip_code: normalizedZip,
                           }));
+
+                          setTimeout(() => {
+                            isHydratingLocationRef.current = false;
+                          }, 100);
                         }}
                         placeholder="Start typing an address..."
                         types={["address"]}
