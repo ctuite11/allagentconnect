@@ -8,7 +8,7 @@ import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig } from "@/constants/status";
+import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig, isComingSoon } from "@/constants/status";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -637,9 +637,11 @@ function MyListingsView({
                   {/* Right side - quiet metadata + overflow */}
                    <div className="absolute top-4 right-4 text-right space-y-0.5">
                      <ListingStatusBadge status={l.status} size="sm" />
-                     <div className="text-xs text-zinc-500 leading-tight">Listed: {listDate}</div>
+                      <div className="text-xs text-zinc-500 leading-tight">AAC List Date: {listDate}</div>
                     {expDate && (
-                      <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>
+                      <div className="text-xs text-zinc-500 leading-tight">
+                        {isComingSoon(l.status) ? "On MLS Date" : "Exp"}: {expDate}
+                      </div>
                     )}
                     <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
                     <DropdownMenu>
