@@ -1,48 +1,54 @@
 
 
-# Fix: AAC List Date Showing Tomorrow Instead of Today
+# Update: Off Market/Private Listings Include Expiration Date
 
-## Problem
+## Summary
 
-When creating a listing, `list_date` defaults to `new Date().toISOString().split('T')[0]`. The `.toISOString()` method converts to **UTC**, so if you're in a US timezone (e.g., EST at 8pm = UTC 1am next day), the default date becomes **tomorrow**.
+Two changes needed:
 
-## Fix
+1. **AddListing.tsx** (line 3137): Remove the `off_market` exclusion so the date section (AAC List Date + Expiration Date) is visible for off_market/private listings too.
+2. **MyListings.tsx** (lines 640-645): Restructure the date display for all three cases:
+   - **Coming Soon**: AAC List Date, On MLS Date (`go_live_date`), Expiration Date
+   - **Off Market / All other statuses**: AAC List Date, Expiration Date
 
-### File: `src/pages/AddListing.tsx` (line 179)
+## File: `src/pages/AddListing.tsx`
 
-Replace the UTC-based default:
+### Line 3137: Remove off_market gate
+
+Current:
+```tsx
+{formData.status !== 'off_market' && (
 ```
-list_date: new Date().toISOString().split('T')[0]
-```
 
-With a local-date default:
-```
-list_date: new Date().toLocaleDateString('en-CA')
-```
+New -- show for all statuses. The condition becomes unconditional (just remove the wrapper, keep the inner grid). The label "List Date (On MLS)" should also be renamed to "AAC List Date" for consistency.
 
-`en-CA` locale produces `YYYY-MM-DD` format (what HTML date inputs expect), using the user's **local** timezone.
+For Coming Soon, restructure to three equal columns:
+- Col 1: AAC List Date (`list_date`)
+- Col 2: On MLS Date (`go_live_date`) -- move from the separate bordered box above
+- Col 3: Expiration Date (`expiration_date`)
 
-### Also apply the same pattern in `formatDate` (MyListings.tsx lines 83-88)
+For all other statuses (including off_market): two columns as today, but always shown:
+- Col 1: AAC List Date (`list_date`)
+- Col 2: Expiration Date (`expiration_date`)
 
-The `formatDate` function also has a timezone issue: `new Date("2026-02-08")` parses date-only strings as UTC midnight, which can shift the displayed date. Add timezone offset correction:
+The separate `go_live_date` bordered box (lines 3102-3118) merges into the Coming Soon three-column layout.
 
-```
-function formatDate(value?: string | null) {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  // If date-only string (no time component), adjust for UTC parse
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
-  }
-  return d.toLocaleDateString();
-}
-```
+## File: `src/pages/MyListings.tsx`
+
+### Lines 640-645: Three-tier date display
+
+Current logic shows "On MLS Date" or "Exp" conditionally on the same `expiration_date` field.
+
+New logic:
+- **Coming Soon**: Show three lines using `go_live_date` for On MLS Date and `expiration_date` for Exp
+- **All others** (including off_market): Show AAC List Date + Exp (if exists)
+
+Add `go_live_date` formatting around line 553.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/AddListing.tsx` | Fix default `list_date` to use local date instead of UTC |
-| `src/pages/MyListings.tsx` | Fix `formatDate` to handle date-only strings without timezone shift |
+| `src/pages/AddListing.tsx` | Remove off_market exclusion from date section; merge go_live_date into 3-col layout for Coming Soon; rename label to "AAC List Date" |
+| `src/pages/MyListings.tsx` | Add `go_live_date` display for Coming Soon; show 3 date lines for Coming Soon, 2 for all others including off_market |
 
