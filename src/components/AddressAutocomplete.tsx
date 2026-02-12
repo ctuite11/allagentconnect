@@ -375,8 +375,9 @@ const AddressAutocomplete = ({
 
               const mapped = {
                 formatted_address: place.formattedAddress || "",
-                address_components:
-                  place.addressComponents.map(mapAddressComponent),
+                address_components: (place.addressComponents || []).map(
+                  mapAddressComponent,
+                ),
                 geometry: place.location
                   ? {
                       location: {
@@ -542,6 +543,19 @@ const AddressAutocomplete = ({
             }
           };
 
+          const emitSafeFallback = () => {
+            if (currentRequestId !== requestIdRef.current) {
+              return;
+            }
+
+            const fallbackAddress =
+              place.formatted_address || place.name || inputRef.current?.value;
+
+            if (fallbackAddress) {
+              onChange?.(fallbackAddress);
+            }
+          };
+
           if (hasAddressComponents) {
             callOnPlaceSelect(place);
             return;
@@ -584,6 +598,7 @@ const AddressAutocomplete = ({
                     place,
                   );
                 }
+                emitSafeFallback();
                 return;
               }
 
