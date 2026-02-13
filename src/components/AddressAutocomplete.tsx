@@ -15,7 +15,8 @@ interface AddressAutocompleteProps {
 
 const GMAPS_SCRIPT_ID = "google-maps-js";
 const GMAPS_KEY_STORAGE = "aac_gmaps_key";
-const DEBUG_PLACES = false;
+const DEBUG_PLACES =
+  String(import.meta.env.VITE_DEBUG_PLACES ?? "").toLowerCase() === "true";
 
 const debugLog = (...args: any[]) => {
   if (DEBUG_PLACES) {
@@ -587,6 +588,12 @@ const AddressAutocomplete = ({
               ],
             },
             (details: any, status: any) => {
+              debugLog("[AddressAutocomplete] PlacesService.getDetails status:", status);
+              debugLog(
+                "[AddressAutocomplete] PlacesService.getDetails formatted_address present:",
+                Boolean(details?.formatted_address),
+              );
+
               if (
                 status !== google.maps.places.PlacesServiceStatus.OK ||
                 !details
