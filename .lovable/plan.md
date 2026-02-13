@@ -1,52 +1,42 @@
 
 
-# Parking Section Reorganization
+# Replace Public Record Verification with Tax Information Section
 
-## File
-`src/pages/AddListing.tsx` (lines 4095-4223)
+## Summary
+Replace the current "Public Record Verification" section (which just shows ATTOM lookup buttons and status) with a **Tax Information** section containing four manual-entry fields. The ATTOM auto-fill button and status indicators will be removed from this location.
 
-## Current Layout
-1. Title "Parking"
-2. Total Parking Spaces + Garage Spaces (side by side)
-3. Parking Features checkboxes
-4. Parking Comments
-5. Garage Features checkboxes
-6. Garage Additional Features checkboxes (EV Charger, Workshop, High Ceiling, Loft Storage)
-7. Garage Comments
+## New Section Layout
 
-## New Layout
-1. **Title "Parking"**
-2. **# of Parking Spaces** (single numeric input)
-3. **Parking Features** checkboxes (unchanged list)
-4. **Parking Comments** textarea
-5. **# of Garage Spaces** (single numeric input, moved below parking comments)
-6. **Garage Features** checkboxes -- add "EV Charger" to this list (new list: Attached, Detached, Heated, Under, Oversized, Electric Door, Storage Above, EV Charger)
-7. **Remove "Garage Additional Features"** section entirely
-8. **Garage Comments** textarea
-9. **Total Parking** (read-only or numeric field showing sum of parking + garage spaces)
+**Title: "Tax Information"**
+
+1. **Taxes** -- currency input (maps to existing `annual_property_tax` column)
+2. **Assessed Value** -- currency input (maps to existing `assessed_value` column)
+3. **Fiscal Year** -- numeric input, 4-digit year (maps to existing `fiscal_year` column)
+4. **Residential Exemption** -- select dropdown with Yes / No / Unknown (maps to existing `residential_exemption` text column)
+
+Layout: Row 1 has Taxes + Assessed Value side by side; Row 2 has Fiscal Year + Residential Exemption side by side.
 
 ## Technical Details
 
-### UI changes (lines 4095-4223):
-- Split the current 2-column numeric row into two separate single fields in their new positions
-- Move "# of Parking Spaces" to top (rename from "Total Parking Spaces", reuse `total_parking_spaces` key but repurpose -- or add a new `parking_spaces` field)
-- Move "# of Garage Spaces" below Parking Comments
-- Add "EV Charger" to the garage features checkbox array
-- Remove the entire "Garage Additional Features" block (lines 4187-4210)
-- Add a "Total Parking" computed field at the bottom that sums parking + garage spaces
+### File: `src/pages/AddListing.tsx`
 
-### State changes:
-- Add `parking_spaces` to `formData` initial state (new field for non-garage parking count)
-- Repurpose `total_parking_spaces` as the computed total display
-- Remove `garageAdditionalFeatures` state usage (keep state var to avoid breaking hydration of old data, but remove UI)
-- On save: compute `total_parking_spaces` = parking_spaces + garage_spaces
+**1. Add fields to `formData` initial state (~line 223)**
+- `annual_property_tax: ""`
+- `assessed_value: ""`
+- `fiscal_year: ""`
+- `residential_exemption: ""`
 
-### Database:
-- Add `parking_spaces` numeric column to `listings` table (migration needed)
-- `total_parking_spaces` continues to store the combined total
+**2. Replace the "Public Record Verification" block (lines 3492-3545)**
+Remove the ATTOM button, placeholder, status indicator, and condo-unit warning. Replace with four input fields in a clean layout using the existing form patterns (Label + Input/Select).
 
-### Save/hydration updates:
-- Hydrate `parking_spaces` from DB
-- On save, set `total_parking_spaces` = Number(parking_spaces) + Number(garage_spaces)
-- Stop saving `garage_additional_features_list` for new listings (existing data preserved)
+**3. Hydration in `loadExistingListing`**
+Add the four new fields to the listing data hydration so they populate when editing an existing listing.
 
+**4. Save in `buildListingDataFromForm`**
+Map the four `formData` fields to their database column names when saving.
+
+### Database
+No migration needed -- the columns `annual_property_tax`, `assessed_value`, `fiscal_year`, and `residential_exemption` already exist in the `listings` table.
+
+### Display Side
+Update `ListingDetailSections.tsx` to show the tax fields in the existing (currently empty) "Tax Information" card by populating `taxInfoRows` with the new fields.
