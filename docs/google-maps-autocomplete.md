@@ -23,6 +23,14 @@ Set the following **build-time environment variable** in Netlify:
 VITE_GOOGLE_MAPS_API_KEY
 ```
 
+Optional debug env var:
+
+```
+VITE_DEBUG_PLACES=true
+```
+
+When enabled, the browser console includes Google Places lifecycle details, including `PlacesService.getDetails` status and whether `formatted_address` is present.
+
 **Important notes:**
 
 - `VITE_*` variables are baked into the frontend bundle at build time
@@ -123,6 +131,7 @@ Look for these exact errors in the browser console:
 | `BillingNotEnabledMapError` | Billing not enabled | Enable billing in Google Cloud |
 | `InvalidKeyMapError` | Bad/disabled key | Rotate or re-enable key |
 | `Google Maps script loaded but Places unavailable` | Partial API config | Check APIs + restrictions |
+| `PlacesService.getDetails status: REQUEST_DENIED` | Key referrer restriction mismatch (common on deploy previews) | Use a preview-allowed key (for example `https://*.netlify.app/*`) or pass a preview key via `?gmaps_key=` |
 
 If autocomplete is disabled, the UI will show:
 
