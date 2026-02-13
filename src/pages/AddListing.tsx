@@ -71,7 +71,7 @@ const listingSchema = z.object({
   city: z.string().trim().min(1, "City is required").max(200),
   state: z.string().trim().length(2, "State must be 2 characters"),
   zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code format"),
-  price: z.number().min(100, "Price must be at least $100").max(100000000),
+  price: z.number().min(100, "Price must be at least $100").max(100000000).optional(),
   property_type: z.string().optional(),
   bedrooms: z.number().int().min(0).max(50).optional(),
   bathrooms: z.number().min(0).max(50).optional(),
@@ -87,10 +87,18 @@ const listingSchema = z.object({
     (val) => (val === "" || val === null || val === undefined ? null : Number(val)),
     z.number().min(0, "Lot size must be 0 or more").max(10000, "Lot size must be less than 10,000 acres").nullable()
   ).optional(),
+  price_range_min: z.number().min(100).max(100000000).optional(),
+  price_range_max: z.number().min(100).max(100000000).optional(),
   description: z.string().max(5000).optional(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
-});
+}).refine(
+  (d) => d.price != null || d.price_range_min != null || d.price_range_max != null,
+  { message: "Please enter a Listing Price or a Price Range.", path: ["price"] }
+).refine(
+  (d) => d.price_range_min == null || d.price_range_max == null || d.price_range_min <= d.price_range_max,
+  { message: "Price Range Min must be <= Price Range Max.", path: ["price_range_min"] }
+);
 
 const AddListing = () => {
   const navigate = useNavigate();
@@ -2587,7 +2595,9 @@ const AddListing = () => {
         city: formData.city,
         state: formData.state,
         zip_code: formData.zip_code,
-        price: formData.listing_type === "for_sale" ? parseFloat(formData.price) : parseFloat(formData.monthly_rent),
+        price: (() => { const v = parseFloat(formData.listing_type === "for_sale" ? formData.price : formData.monthly_rent); return Number.isFinite(v) ? v : undefined; })(),
+        price_range_min: (() => { const v = parseFloat(formData.price_range_min); return Number.isFinite(v) ? v : undefined; })(),
+        price_range_max: (() => { const v = parseFloat(formData.price_range_max); return Number.isFinite(v) ? v : undefined; })(),
         property_type: formData.property_type || undefined,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : undefined,
