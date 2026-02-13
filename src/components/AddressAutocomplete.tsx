@@ -331,6 +331,26 @@ const AddressAutocomplete = ({
                 ],
               });
 
+              let fetchAttempts = 0;
+              while (
+                (!Array.isArray(place.addressComponents) ||
+                  place.addressComponents.length === 0) &&
+                fetchAttempts < 3
+              ) {
+                fetchAttempts += 1;
+                await new Promise((resolve) => setTimeout(resolve, 200));
+                await place.fetchFields({
+                  fields: [
+                    "formattedAddress",
+                    "addressComponents",
+                    "location",
+                    "viewport",
+                    "id",
+                    "displayName",
+                  ],
+                });
+              }
+
               if (currentRequestId !== requestIdRef.current) {
                 if (DEBUG_PLACES) {
                   console.debug(
@@ -347,15 +367,13 @@ const AddressAutocomplete = ({
                 place.addressComponents.length > 0;
 
               if (!hasAddressComponents) {
-                if (DEBUG_PLACES) {
-                  console.debug(
-                    "[AddressAutocomplete] Partial place received from gmp-placeselect",
-                    {
-                      hasAddressComponents,
-                      place,
-                    },
-                  );
-                }
+                console.warn(
+                  "[AddressAutocomplete] Place selected but addressComponents remained empty after retries",
+                  {
+                    attempts: fetchAttempts + 1,
+                    place,
+                  },
+                );
                 return;
               }
 
