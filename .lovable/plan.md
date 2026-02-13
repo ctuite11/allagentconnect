@@ -1,42 +1,56 @@
 
 
-# Replace Public Record Verification with Tax Information Section
+# Allow Publishing with Price Range
 
 ## Summary
-Replace the current "Public Record Verification" section (which just shows ATTOM lookup buttons and status) with a **Tax Information** section containing four manual-entry fields. The ATTOM auto-fill button and status indicators will be removed from this location.
+Update the Zod validation in `src/pages/AddListing.tsx` so agents can publish with either an exact price OR a price range (min/max). Currently, the exact `price` field is required, causing validation failure when only a price range is entered.
 
-## New Section Layout
+## Changes (single file: `src/pages/AddListing.tsx`)
 
-**Title: "Tax Information"**
+### 1. Update Zod schema (lines 70-93)
 
-1. **Taxes** -- currency input (maps to existing `annual_property_tax` column)
-2. **Assessed Value** -- currency input (maps to existing `assessed_value` column)
-3. **Fiscal Year** -- numeric input, 4-digit year (maps to existing `fiscal_year` column)
-4. **Residential Exemption** -- select dropdown with Yes / No / Unknown (maps to existing `residential_exemption` text column)
+Make `price` optional and add `price_range_min` / `price_range_max` fields. Add two refinements:
+- At least one pricing method must be provided
+- If both range ends exist, min must be less than or equal to max
 
-Layout: Row 1 has Taxes + Assessed Value side by side; Row 2 has Fiscal Year + Residential Exemption side by side.
+### 2. Update `dataToValidate` (lines 2585-2601)
+
+Replace the current `price` line with safe parsing that avoids `NaN`:
+- Only pass `price` when the raw string parses to a finite number
+- Add `price_range_min` and `price_range_max` with the same safe parsing
 
 ## Technical Details
 
-### File: `src/pages/AddListing.tsx`
+**Schema (line 74, then after line 93):**
+```typescript
+// Line 74: change to optional
+price: z.number().min(100).max(100000000).optional(),
 
-**1. Add fields to `formData` initial state (~line 223)**
-- `annual_property_tax: ""`
-- `assessed_value: ""`
-- `fiscal_year: ""`
-- `residential_exemption: ""`
+// After lot_size, add:
+price_range_min: z.number().min(100).max(100000000).optional(),
+price_range_max: z.number().min(100).max(100000000).optional(),
 
-**2. Replace the "Public Record Verification" block (lines 3492-3545)**
-Remove the ATTOM button, placeholder, status indicator, and condo-unit warning. Replace with four input fields in a clean layout using the existing form patterns (Label + Input/Select).
+// Change closing to add refinements:
+}).refine(
+  (d) => d.price != null || d.price_range_min != null || d.price_range_max != null,
+  { message: "Please enter a Listing Price or a Price Range.", path: ["price"] }
+).refine(
+  (d) => d.price_range_min == null || d.price_range_max == null || d.price_range_min <= d.price_range_max,
+  { message: "Price Range Min must be <= Price Range Max.", path: ["price_range_min"] }
+);
+```
 
-**3. Hydration in `loadExistingListing`**
-Add the four new fields to the listing data hydration so they populate when editing an existing listing.
+**dataToValidate (line 2590):**
+```typescript
+const rawPrice = formData.listing_type === "for_sale"
+  ? parseFloat(formData.price) : parseFloat(formData.monthly_rent);
+const minNum = parseFloat(formData.price_range_min);
+const maxNum = parseFloat(formData.price_range_max);
 
-**4. Save in `buildListingDataFromForm`**
-Map the four `formData` fields to their database column names when saving.
+// In the object:
+price: Number.isFinite(rawPrice) ? rawPrice : undefined,
+price_range_min: Number.isFinite(minNum) ? minNum : undefined,
+price_range_max: Number.isFinite(maxNum) ? maxNum : undefined,
+```
 
-### Database
-No migration needed -- the columns `annual_property_tax`, `assessed_value`, `fiscal_year`, and `residential_exemption` already exist in the `listings` table.
-
-### Display Side
-Update `ListingDetailSections.tsx` to show the tax fields in the existing (currently empty) "Tax Information" card by populating `taxInfoRows` with the new fields.
+No database or other file changes needed.
