@@ -1,30 +1,107 @@
 
 
-# Add Member Login Link + Session Redirect to Landing Page
+# Fix AddressAutocomplete: Init-Once + Legacy Fallback for Full Address
 
-## Single File Change: `src/pages/LandingPage.tsx`
+## Summary
 
-### 1. Add imports
+Refactor `src/components/AddressAutocomplete.tsx` to fix two bugs: the "works on second click" freeze caused by re-initialization on every keystroke, and the partial address storage (e.g. "16 N Mead" instead of "16 N Mead St, Charlestown, MA 02129").
 
-Add `useEffect` from React and `supabase` from `@/integrations/supabase/client` at the top of the file.
+Single file change. No new dependencies. No backend changes.
 
-### 2. Session redirect on mount
+---
 
-Inside the `LandingPage` component, add a `useEffect` that calls `supabase.auth.getSession()`. If a session exists, redirect to `/home` with `replace: true`.
+## Changes
 
-### 3. Member Login link in header
+### 1. Stable callback refs
 
-Replace the comment at line 49 (`{/* No login link - funnel goes through /register only */}`) with a visible text link:
+Add refs for `onPlaceSelect`, `onChange`, `onError` and sync them with a dependency-guarded effect:
 
+```typescript
+const onPlaceSelectRef = useRef(onPlaceSelect);
+const onChangeRef = useRef(onChange);
+const onErrorRef = useRef(onError);
+
+useEffect(() => {
+  onPlaceSelectRef.current = onPlaceSelect;
+  onChangeRef.current = onChange;
+  onErrorRef.current = onError;
+}, [onPlaceSelect, onChange, onError]);
 ```
-Member Login →
+
+All event handlers reference these refs instead of closure-captured values.
+
+### 2. Init-once guard
+
+Add `initializedRef = useRef(false)`. The main `useEffect` becomes `[]` deps and guards with:
+
+```typescript
+useEffect(() => {
+  if (initializedRef.current) return;
+  initializedRef.current = true;
+  // ... load script + initAutocomplete using refs for callbacks
+  return () => {
+    // Remove listeners, null refs -- but do NOT reset initializedRef
+    // (avoids double-init in StrictMode / route transitions)
+  };
+}, []);
 ```
 
-Styled with zinc palette (`text-zinc-500 hover:text-zinc-900`), no button chrome, positioned on the right side of the header. Links to `/home` via `navigate()`.
+This eliminates the current dependency on `[onPlaceSelect, onChange, placeholder, typesKey, value]` which causes teardown/reinit on every keystroke.
 
-## No other changes
+### 3. Lightweight prop updater (no teardown)
 
-- No backend, auth, or routing modifications
-- No new files or components
-- Single-file edit to `src/pages/LandingPage.tsx`
+Separate effect to push `placeholder` and `types` changes to the existing autocomplete instance:
+
+```typescript
+useEffect(() => {
+  if (!autocompleteRef.current) return;
+  const parsed = JSON.parse(typesKey);
+  if (autocompleteRef.current.setOptions) {
+    autocompleteRef.current.setOptions({ types: parsed });
+  }
+  try { autocompleteRef.current.types = parsed; } catch {}
+  // update placeholder similarly
+}, [typesKey, placeholder]);
+```
+
+### 4. Deterministic legacy fallback in new-API path
+
+After `fetchFields` returns empty `addressComponents`, instead of silently returning, call `PlacesService.getDetails`:
+
+```typescript
+if (!hasAddressComponents) {
+  const placeId = place.id;
+  if (placeId && google.maps.places.PlacesService) {
+    const svc = new google.maps.places.PlacesService(document.createElement("div"));
+    svc.getDetails(
+      { placeId, fields: ["formatted_address","address_components","geometry","name","place_id"] },
+      (details, status) => {
+        if (currentRequestId !== requestIdRef.current) return;
+        if (status === google.maps.places.PlacesServiceStatus.OK && details) {
+          onPlaceSelectRef.current?.(details);
+        }
+      }
+    );
+    return;
+  }
+}
+```
+
+### 5. Add `place_id` to all field requests
+
+Both the legacy Autocomplete creation and `getDetails` calls get `"place_id"` added to their `fields` arrays. This supports the fallback path.
+
+### 6. Debug logging
+
+Add guarded `debugLog` calls (behind existing `VITE_DEBUG_PLACES`) right before `onPlaceSelectRef.current?.(...)` in both paths, logging `formatted_address`, composed `address_line1`, `place_id`, and source (`"new-api"` / `"legacy"` / `"legacy-fallback"`).
+
+---
+
+## Expected Results
+
+- Typing no longer freezes the preview (no re-init per keystroke)
+- First click selects and populates the full address
+- `address_line1` becomes "16 N Mead St" (with route suffix)
+- City, state, zip all populated on first selection
+- Verifiable instantly with `VITE_DEBUG_PLACES=true`
 
