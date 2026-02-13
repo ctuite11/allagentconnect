@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { ArrowRight, Share2, Users, Megaphone, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand";
+import { supabase } from "@/integrations/supabase/client";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 import VersionStamp from "@/components/VersionStamp";
 
@@ -37,6 +39,12 @@ function ModuleCard({
 const LandingPage = () => {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate('/home', { replace: true });
+    });
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Minimal header - NOT sticky, part of page flow */}
@@ -46,7 +54,12 @@ const LandingPage = () => {
             <div className="flex items-center gap-3 -ml-1">
               <Logo size="3xl" />
             </div>
-            {/* No login link - funnel goes through /register only */}
+            <button
+              onClick={() => navigate('/home')}
+              className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+            >
+              Member Login &rarr;
+            </button>
           </div>
         </div>
       </header>
