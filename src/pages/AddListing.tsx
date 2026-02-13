@@ -213,6 +213,7 @@ const AddListing = () => {
     laundry_type: "none",
     pets_comment: "",
     // Parking fields
+    parking_spaces: "",
     total_parking_spaces: "",
     garage_spaces: "",
     parking_comments: "",
@@ -437,6 +438,7 @@ const AddListing = () => {
           video_url: cloned.video_url || "",
           virtual_tour_url: cloned.virtual_tour_url || "",
           property_website_url: cloned.property_website_url || "",
+          parking_spaces: (cloned as any).parking_spaces?.toString() || "",
           total_parking_spaces: cloned.total_parking_spaces?.toString() || "",
           garage_spaces: cloned.garage_spaces?.toString() || "",
           parking_comments: cloned.parking_comments || "",
@@ -726,6 +728,9 @@ const AddListing = () => {
         }
         
         // Load parking fields
+        if ((data as any).parking_spaces != null) {
+          setFormData(prev => ({ ...prev, parking_spaces: String((data as any).parking_spaces) }));
+        }
         if (data.total_parking_spaces != null) {
           setFormData(prev => ({ ...prev, total_parking_spaces: String(data.total_parking_spaces) }));
         }
@@ -2095,7 +2100,8 @@ const AddListing = () => {
     price_range_max: formData.price_range_max ? parseFloat(formData.price_range_max) : null,
     
     // Parking & Garage
-    total_parking_spaces: (() => { const n = Number(formData.total_parking_spaces); return Number.isFinite(n) ? n : null; })(),
+    parking_spaces: (() => { const n = Number(formData.parking_spaces); return Number.isFinite(n) ? n : null; })(),
+    total_parking_spaces: (() => { const p = Number(formData.parking_spaces) || 0; const g = Number(formData.garage_spaces) || 0; const t = p + g; return t > 0 ? t : null; })(),
     garage_spaces: (() => { const n = Number(formData.garage_spaces); return Number.isFinite(n) ? n : null; })(),
     parking_features_list: parkingFeatures.length > 0 ? parkingFeatures : null,
     garage_features_list: garageFeatures.length > 0 ? garageFeatures : null,
@@ -4096,30 +4102,17 @@ const AddListing = () => {
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-xl font-semibold">Parking</Label>
                   
-                  {/* Numeric Inputs */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
-                    <div className="space-y-2">
-                      <Label htmlFor="total_parking_spaces">Total Parking Spaces</Label>
-                      <Input
-                        id="total_parking_spaces"
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={formData.total_parking_spaces}
-                        onChange={(e) => setFormData(prev => ({ ...prev, total_parking_spaces: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="garage_spaces">Garage Spaces</Label>
-                      <Input
-                        id="garage_spaces"
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={formData.garage_spaces}
-                        onChange={(e) => setFormData(prev => ({ ...prev, garage_spaces: e.target.value }))}
-                      />
-                    </div>
+                  {/* # of Parking Spaces */}
+                  <div className="space-y-2 max-w-xs">
+                    <Label htmlFor="parking_spaces"># of Parking Spaces</Label>
+                    <Input
+                      id="parking_spaces"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={formData.parking_spaces}
+                      onChange={(e) => setFormData(prev => ({ ...prev, parking_spaces: e.target.value }))}
+                    />
                   </div>
 
                   {/* Parking Features */}
@@ -4159,11 +4152,24 @@ const AddListing = () => {
                     />
                   </div>
 
+                  {/* # of Garage Spaces */}
+                  <div className="space-y-2 max-w-xs border-t pt-4">
+                    <Label htmlFor="garage_spaces"># of Garage Spaces</Label>
+                    <Input
+                      id="garage_spaces"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={formData.garage_spaces}
+                      onChange={(e) => setFormData(prev => ({ ...prev, garage_spaces: e.target.value }))}
+                    />
+                  </div>
+
                   {/* Garage Features */}
-                  <div className="space-y-3 border-t pt-4">
+                  <div className="space-y-3">
                     <Label className="text-base font-medium">Garage Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {["Attached", "Detached", "Heated", "Under", "Oversized", "Electric Door", "Storage Above"].map((feature) => (
+                      {["Attached", "Detached", "Heated", "Under", "Oversized", "Electric Door", "Storage Above", "EV Charger"].map((feature) => (
                         <div key={feature} className="flex items-center space-x-2">
                           <Checkbox
                             id={`garage-${feature}`}
@@ -4184,31 +4190,6 @@ const AddListing = () => {
                     </div>
                   </div>
 
-                  {/* Garage Additional Features */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-medium">Garage Additional Features</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {["EV Charger", "Workshop", "High Ceiling", "Loft Storage"].map((feature) => (
-                        <div key={feature} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`garage-extra-${feature}`}
-                            checked={garageAdditionalFeatures.includes(feature)}
-                            onCheckedChange={(isChecked) => {
-                              if (isChecked === true) {
-                                setGarageAdditionalFeatures(prev => Array.from(new Set([...prev, feature])));
-                              } else {
-                                setGarageAdditionalFeatures(prev => prev.filter(f => f !== feature));
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`garage-extra-${feature}`} className="font-normal cursor-pointer">
-                            {feature}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Garage Comments */}
                   <div className="space-y-2">
                     <Label htmlFor="garage_comments">Garage Comments (optional)</Label>
@@ -4218,6 +4199,18 @@ const AddListing = () => {
                       value={formData.garage_comments}
                       onChange={(e) => setFormData(prev => ({ ...prev, garage_comments: e.target.value }))}
                       rows={2}
+                    />
+                  </div>
+
+                  {/* Total Parking (computed) */}
+                  <div className="space-y-2 max-w-xs border-t pt-4">
+                    <Label htmlFor="total_parking">Total Parking</Label>
+                    <Input
+                      id="total_parking"
+                      type="number"
+                      readOnly
+                      className="bg-muted"
+                      value={(Number(formData.parking_spaces) || 0) + (Number(formData.garage_spaces) || 0) || ""}
                     />
                   </div>
                 </div>
