@@ -3427,58 +3427,6 @@ const AddListing = () => {
                   )}
                 </div>
 
-                {/* Commission & Compensation - For Sale only */}
-                {formData.listing_type === "for_sale" && (
-                  <div className="space-y-4 border-t pt-6">
-                    <Label className="text-xl font-semibold">Commission & Compensation</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="commission_type">Commission Type</Label>
-                        <Select
-                          value={formData.commission_type}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="percentage">Percentage</SelectItem>
-                            <SelectItem value="flat_fee">Flat Fee</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="commission_rate">
-                          {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
-                        </Label>
-                        <Input
-                          id="commission_rate"
-                          name="buyer_agent_commission_rate"
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
-                          min="0"
-                          max={formData.commission_type === 'percentage' ? "100" : undefined}
-                          placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
-                          value={formData.commission_rate}
-                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
-                          autoComplete="off"
-                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="commission_notes">Commission Notes</Label>
-                        <Input
-                          id="commission_notes"
-                          placeholder="Additional commission details"
-                          value={formData.commission_notes}
-                          onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Property Details */}
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-lg font-semibold">Property Details</Label>
@@ -4364,6 +4312,58 @@ const AddListing = () => {
                   </div>
                 </div>
 
+                {/* Buyer Agent Compensation - For Sale only */}
+                {formData.listing_type === "for_sale" && (
+                  <div className="space-y-4 border-t pt-6">
+                    <Label className="text-xl font-semibold">Buyer Agent Compensation</Label>
+                    <p className="text-sm text-muted-foreground -mt-2">Offered from the seller</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_type">Compensation Type</Label>
+                        <Select
+                          value={formData.commission_type}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage</SelectItem>
+                            <SelectItem value="flat_fee">Flat Fee</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_rate">
+                          {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
+                        </Label>
+                        <Input
+                          id="commission_rate"
+                          name="buyer_agent_commission_rate"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min="0"
+                          max={formData.commission_type === 'percentage' ? "100" : undefined}
+                          placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                          value={formData.commission_rate}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
+                          autoComplete="off"
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="commission_notes">Compensation Notes</Label>
+                        <Input
+                          id="commission_notes"
+                          placeholder="Additional compensation details"
+                          value={formData.commission_notes}
+                          onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Showing Instructions */}
                 <div className="space-y-4 border-t pt-6">
