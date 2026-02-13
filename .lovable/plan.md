@@ -1,36 +1,30 @@
 
 
-# Wire Existing Address Autocomplete into Add Listing Page
+# Add Member Login Link + Session Redirect to Landing Page
 
-## Clarification
+## Single File Change: `src/pages/LandingPage.tsx`
 
-The `AddressAutocomplete` component and `normalizeGooglePlace` utility already exist and work on three other pages (Agent Match, Profile Editor, Manage Team). The Add Listing page has never had this wired up — so this is connecting existing, proven components to the listing form, not building anything new.
+### 1. Add imports
 
-## What Will Change
+Add `useEffect` from React and `supabase` from `@/integrations/supabase/client` at the top of the file.
 
-**Single file: `src/pages/AddListing.tsx`**
+### 2. Session redirect on mount
 
-1. **Add two imports** at the top of the file:
-   - `AddressAutocomplete` from `@/components/AddressAutocomplete`
-   - `normalizeGooglePlace` from `@/lib/google-address`
+Inside the `LandingPage` component, add a `useEffect` that calls `supabase.auth.getSession()`. If a session exists, redirect to `/home` with `replace: true`.
 
-2. **Add a handler function** (`handleAddressPlaceSelect`) that:
-   - Takes the Google place result
-   - Runs it through `normalizeGooglePlace()` (same pattern used in AgentMatch.tsx)
-   - Auto-fills `address`, `city`, `state`, and `zip_code` in the form state
+### 3. Member Login link in header
 
-3. **Replace the plain text input** for Street Address with the `AddressAutocomplete` component, keeping manual typing as a fallback (identical to how it works on other pages)
+Replace the comment at line 49 (`{/* No login link - funnel goes through /register only */}`) with a visible text link:
 
-## Expected Behavior After Fix
+```
+Member Login →
+```
 
-1. User types in the Street Address field
-2. Google autocomplete suggestions appear
-3. User selects an address
-4. City, State, Zip auto-populate
-5. Existing ATTOM auto-fetch triggers to verify the property
-6. If no suggestion is selected, user can still type manually
+Styled with zinc palette (`text-zinc-500 hover:text-zinc-900`), no button chrome, positioned on the right side of the header. Links to `/home` via `navigate()`.
 
-## No New Files or Components
+## No other changes
 
-Everything needed already exists. This is purely a wiring change in one file.
+- No backend, auth, or routing modifications
+- No new files or components
+- Single-file edit to `src/pages/LandingPage.tsx`
 
