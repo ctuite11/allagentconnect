@@ -157,7 +157,12 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
   
   const displayedPropertyRows = showAllPropertyDetails ? propertyDetailRows : propertyDetailRows.slice(0, DETAIL_ROWS_LIMIT);
 
-  const taxInfoRows: { label: string; value: any }[] = [];
+  const taxInfoRows: { label: string; value: any }[] = [
+    { label: "Taxes", value: listing.annual_property_tax ? `$${Number(listing.annual_property_tax).toLocaleString()}` : null },
+    { label: "Assessed Value", value: listing.assessed_value ? `$${Number(listing.assessed_value).toLocaleString()}` : null },
+    { label: "Fiscal Year", value: listing.fiscal_year },
+    { label: "Residential Exemption", value: listing.residential_exemption },
+  ].filter(row => row.value);
 
 
   // Market info rows (always fully open since typically few rows)

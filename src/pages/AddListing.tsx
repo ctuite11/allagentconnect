@@ -221,6 +221,11 @@ const AddListing = () => {
     // Price range fields
     price_range_min: "",
     price_range_max: "",
+    // Tax information fields
+    annual_property_tax: "",
+    assessed_value: "",
+    fiscal_year: "",
+    residential_exemption: "",
   });
 
   // Multi-family units state
@@ -615,6 +620,10 @@ const AddListing = () => {
           disclosures_other: data.disclosures_other || "",
           price_range_min: (data as any).price_range_min?.toString() || "",
           price_range_max: (data as any).price_range_max?.toString() || "",
+          annual_property_tax: (data as any).annual_property_tax?.toString() || "",
+          assessed_value: (data as any).assessed_value?.toString() || "",
+          fiscal_year: (data as any).fiscal_year?.toString() || "",
+          residential_exemption: (data as any).residential_exemption || "",
         }));
         
         // Load photos from database
@@ -2109,6 +2118,12 @@ const AddListing = () => {
     parking_comments: formData.parking_comments?.trim() || null,
     garage_comments: formData.garage_comments?.trim() || null,
     
+    // Tax Information
+    annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+    assessed_value: formData.assessed_value ? parseFloat(formData.assessed_value) : null,
+    fiscal_year: formData.fiscal_year ? parseInt(formData.fiscal_year) : null,
+    residential_exemption: formData.residential_exemption || null,
+    
     // Disclosures (lead_paint is stored as string, not array)
     lead_paint: leadPaint.length > 0 ? leadPaint.join(', ') : null,
     handicap_accessible: handicapAccessible || null,
@@ -3489,59 +3504,61 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Public Record Verification Section - Tax UI removed */}
+                {/* Tax Information Section */}
                 <div className="space-y-4 border-t pt-6">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-lg font-semibold">Public Record Verification</Label>
-                    {publicRecordStatus !== 'success' && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleManualAttomLookup}
-                        disabled={!ATTOM_ENABLED || autoFillLoading || !formData.address || !formData.city || !formData.state}
-                        className="gap-2"
-                      >
-                        {autoFillLoading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            <Cloud className="h-4 w-4" />
-                            Load from Public Records
-                          </>
-                        )}
-                      </Button>
-                    )}
+                  <Label className="text-xl font-semibold">Tax Information</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="annual_property_tax">Taxes</Label>
+                      <FormattedInput
+                        id="annual_property_tax"
+                        format="currency"
+                        value={formData.annual_property_tax}
+                        onChange={(val) => setFormData(prev => ({ ...prev, annual_property_tax: val }))}
+                        placeholder="$0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="assessed_value">Assessed Value</Label>
+                      <FormattedInput
+                        id="assessed_value"
+                        format="currency"
+                        value={formData.assessed_value}
+                        onChange={(val) => setFormData(prev => ({ ...prev, assessed_value: val }))}
+                        placeholder="$0"
+                      />
+                    </div>
                   </div>
-                  
-                  {/* Show placeholder when no ATTOM data loaded */}
-                  {publicRecordStatus !== 'success' && (
-                    <div className="p-4 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/20">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Cloud className="h-4 w-4" />
-                        Verify with ATTOM to load public record data.
-                      </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="fiscal_year">Fiscal Year</Label>
+                      <Input
+                        id="fiscal_year"
+                        type="number"
+                        value={formData.fiscal_year}
+                        onChange={(e) => setFormData(prev => ({ ...prev, fiscal_year: e.target.value }))}
+                        placeholder="2025"
+                        min="1900"
+                        max="2100"
+                      />
                     </div>
-                  )}
-                  
-                  {/* ATTOM status indicator */}
-                  {publicRecordStatus === 'success' && !isAttomVerificationStale && !isCondoMissingUnit && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Public record data verified</span>
+                    <div>
+                      <Label htmlFor="residential_exemption">Residential Exemption</Label>
+                      <Select
+                        value={formData.residential_exemption}
+                        onValueChange={(val) => setFormData(prev => ({ ...prev, residential_exemption: val }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                          <SelectItem value="Unknown">Unknown</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
-                  
-                  {/* Condo missing unit warning */}
-                  {isCondoMissingUnit && (
-                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                      <AlertCircle className="h-4 w-4" />
-                      <span>Enter unit number above to load condo-specific data</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Multi-Family FOR SALE Fields */}
