@@ -2361,6 +2361,8 @@ export type Database = {
           pets_comment: string | null
           photos: Json | null
           price: number
+          price_range_max: number | null
+          price_range_min: number | null
           property_features: Json | null
           property_styles: Json | null
           property_type: string | null
@@ -2478,6 +2480,8 @@ export type Database = {
           pets_comment?: string | null
           photos?: Json | null
           price: number
+          price_range_max?: number | null
+          price_range_min?: number | null
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
@@ -2595,6 +2599,8 @@ export type Database = {
           pets_comment?: string | null
           photos?: Json | null
           price?: number
+          price_range_max?: number | null
+          price_range_min?: number | null
           property_features?: Json | null
           property_styles?: Json | null
           property_type?: string | null
