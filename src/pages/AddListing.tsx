@@ -217,6 +217,9 @@ const AddListing = () => {
     garage_spaces: "",
     parking_comments: "",
     garage_comments: "",
+    // Price range fields
+    price_range_min: "",
+    price_range_max: "",
   });
 
   // Multi-family units state
@@ -608,6 +611,8 @@ const AddListing = () => {
           virtual_tour_url: data.virtual_tour_url || "",
           video_url: data.video_url || "",
           disclosures_other: data.disclosures_other || "",
+          price_range_min: (data as any).price_range_min?.toString() || "",
+          price_range_max: (data as any).price_range_max?.toString() || "",
         }));
         
         // Load photos from database
@@ -2086,6 +2091,8 @@ const AddListing = () => {
     video_url: formData.video_url || null,
     listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
     attom_id: attomId,
+    price_range_min: formData.price_range_min ? parseFloat(formData.price_range_min) : null,
+    price_range_max: formData.price_range_max ? parseFloat(formData.price_range_max) : null,
     
     // Parking & Garage
     total_parking_spaces: (() => { const n = Number(formData.total_parking_spaces); return Number.isFinite(n) ? n : null; })(),
@@ -3209,79 +3216,80 @@ const AddListing = () => {
                     </div>
                   </div>
 
-                  {/* Row 3: ZIP Code + County */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="zip_code">ZIP Code *</Label>
-                      <Input
-                        id="zip_code"
-                        type="text"
-                        placeholder="Enter ZIP code"
-                        value={formData.zip_code}
-                        onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>County {selectedState === "MA" && "*"}</Label>
-                      {!selectedState || availableCounties.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          {!selectedState ? "Select a state first" : "No counties available"}
-                        </p>
-                      ) : (
-                        <Select
-                          value={selectedCounty}
-                          onValueChange={(value) => {
-                            setSelectedCounty(value);
-                            setFormData(prev => ({ ...prev, county: value }));
-                          }}
-                        >
-                          <SelectTrigger className="bg-white border-neutral-200">
-                            <SelectValue placeholder={selectedState === "MA" ? "Select county..." : "All Counties"} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50 max-h-[300px]">
-                            {selectedState !== "MA" && (
-                              <SelectItem value="all">All Counties</SelectItem>
-                            )}
-                            {availableCounties.map((county) => (
-                              <SelectItem key={county} value={county}>
-                                {county}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Row 4: Neighborhood/Area */}
+                  {/* Row 3: ZIP Code + County + Neighborhood */}
                   {(() => {
                     const neighborhoods = getNeighborhoodsForLocation({
                       city: formData.city,
                       state: formData.state,
                       county: selectedCounty !== 'all' ? selectedCounty : undefined
                     });
+                    const showNeighborhoods = neighborhoods.length > 0;
                     
-                    return neighborhoods.length > 0 && (
-                      <div className="space-y-2">
-                        <Label htmlFor="neighborhood">Neighborhood/Area</Label>
-                        <Select
-                          value={formData.neighborhood}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
-                        >
-                          <SelectTrigger className="bg-white border-neutral-200">
-                            <SelectValue placeholder="Select neighborhood..." />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50 max-h-[300px]">
-                            {neighborhoods.map((neighborhood) => (
-                              <SelectItem key={neighborhood} value={neighborhood}>
-                                {neighborhood}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    return (
+                      <div className={cn("grid grid-cols-1 gap-4", showNeighborhoods ? "md:grid-cols-3" : "md:grid-cols-2")}>
+                        <div className="space-y-2">
+                          <Label htmlFor="zip_code">ZIP Code *</Label>
+                          <Input
+                            id="zip_code"
+                            type="text"
+                            placeholder="Enter ZIP code"
+                            value={formData.zip_code}
+                            onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>County {selectedState === "MA" && "*"}</Label>
+                          {!selectedState || availableCounties.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                              {!selectedState ? "Select a state first" : "No counties available"}
+                            </p>
+                          ) : (
+                            <Select
+                              value={selectedCounty}
+                              onValueChange={(value) => {
+                                setSelectedCounty(value);
+                                setFormData(prev => ({ ...prev, county: value }));
+                              }}
+                            >
+                              <SelectTrigger className="bg-white border-neutral-200">
+                                <SelectValue placeholder={selectedState === "MA" ? "Select county..." : "All Counties"} />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50 max-h-[300px]">
+                                {selectedState !== "MA" && (
+                                  <SelectItem value="all">All Counties</SelectItem>
+                                )}
+                                {availableCounties.map((county) => (
+                                  <SelectItem key={county} value={county}>
+                                    {county}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                        {showNeighborhoods && (
+                          <div className="space-y-2">
+                            <Label htmlFor="neighborhood">Neighborhood/Area</Label>
+                            <Select
+                              value={formData.neighborhood}
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, neighborhood: value }))}
+                            >
+                              <SelectTrigger className="bg-white border-neutral-200">
+                                <SelectValue placeholder="Select neighborhood..." />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50 max-h-[300px]">
+                                {neighborhoods.map((neighborhood) => (
+                                  <SelectItem key={neighborhood} value={neighborhood}>
+                                    {neighborhood}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
                       </div>
-                      );
+                    );
                   })()}
 
                   {/* Building / Complex Name - hidden for single-family */}
@@ -3303,23 +3311,47 @@ const AddListing = () => {
                 <div className="space-y-4 border-t pt-6">
                   <Label className="text-lg font-semibold">{formData.listing_type === "for_rent" ? "Pricing & Deposits" : "Pricing"}</Label>
                   {formData.listing_type === "for_sale" ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="price">Listing Price *</Label>
-                      <FormattedInput
-                        id="price"
-                        format="currency"
-                        placeholder="500000"
-                        value={formData.price}
-                        onChange={(value) => setFormData(prev => ({ ...prev, price: value }))}
-                        decimals={0}
-                        required
-                        disabled={formData.status === 'cancelled' || formData.status === 'sold'}
-                      />
-                      {(formData.status === 'cancelled' || formData.status === 'sold') && (
-                        <p className="text-xs text-muted-foreground">
-                          Price cannot be changed for {formData.status} listings.
-                        </p>
-                      )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="price">Listing Price *</Label>
+                        <FormattedInput
+                          id="price"
+                          format="currency"
+                          placeholder="500000"
+                          value={formData.price}
+                          onChange={(value) => setFormData(prev => ({ ...prev, price: value }))}
+                          decimals={0}
+                          required
+                          disabled={formData.status === 'cancelled' || formData.status === 'sold'}
+                        />
+                        {(formData.status === 'cancelled' || formData.status === 'sold') && (
+                          <p className="text-xs text-muted-foreground">
+                            Price cannot be changed for {formData.status} listings.
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Price Range (optional)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <FormattedInput
+                            id="price_range_min"
+                            format="currency"
+                            placeholder="Min"
+                            value={formData.price_range_min}
+                            onChange={(value) => setFormData(prev => ({ ...prev, price_range_min: value }))}
+                            decimals={0}
+                          />
+                          <FormattedInput
+                            id="price_range_max"
+                            format="currency"
+                            placeholder="Max"
+                            value={formData.price_range_max}
+                            onChange={(value) => setFormData(prev => ({ ...prev, price_range_max: value }))}
+                            decimals={0}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">For listings without an exact price yet</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
