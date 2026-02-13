@@ -24,7 +24,7 @@ import { z } from "zod";
 import { format, differenceInDays } from "date-fns";
 import listingIcon from "@/assets/listing-creation-icon.png";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
-import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
+// ZIP code data imports removed — AddListing uses simple text input now
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
 import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
@@ -264,20 +264,10 @@ const AddListing = () => {
   // Address dropdown state
   const [selectedState, setSelectedState] = useState<string>("");
   const [selectedCounty, setSelectedCounty] = useState<string>("all");
-  const [selectedCity, setSelectedCity] = useState<string>("");
-  const [cityChoice, setCityChoice] = useState<string>("");
-  const [customCity, setCustomCity] = useState<string>("");
-  const [openCityCombo, setOpenCityCombo] = useState(false);
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<CityOption[]>([]);
-  const [availableZips, setAvailableZips] = useState<string[]>([]);
-  const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
-  const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
-  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [locationValidation, setLocationValidation] = useState<{ isValid: boolean; message?: string }>({ isValid: true });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [citySearch, setCitySearch] = useState("");
-  const [showCityList, setShowCityList] = useState(true);
   
   // Flag to prevent cascading useEffects from clearing values during initial data load
   const isHydratingLocationRef = useRef(false);
@@ -299,10 +289,7 @@ const AddListing = () => {
       } else {
         setSelectedCounty("all");
       }
-      setCityChoice("");
-      setCustomCity("");
       setAvailableCities([]);
-      setAvailableZips([]);
       setFormData(prev => ({ ...prev, city: "", state: selectedState, zip_code: "", county: "" }));
     }
   }, [selectedState]);
@@ -318,18 +305,16 @@ const AddListing = () => {
         return;
       }
       
-      // Clear city choice if it's not in the new filtered list
+      // Clear city if it's not in the new filtered list
       const currentCityExists = cityOptions.some(
-        c => c.name.toLowerCase() === cityChoice?.toLowerCase()
+        c => c.name.toLowerCase() === formData.city?.toLowerCase()
       );
       
-      if (cityChoice && !currentCityExists) {
-        setCityChoice("");
+      if (formData.city && !currentCityExists) {
         setFormData(prev => ({ ...prev, city: "" }));
       }
       
       setAvailableCities(cityOptions);
-      setAvailableZips([]);
     }
   }, [selectedState, selectedCounty]);
 
@@ -378,143 +363,6 @@ const AddListing = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  // Fetch ZIP codes when city changes - uses static data, edge function, and Zippopotam.us fallback
-  useEffect(() => {
-    const fetchZipCodes = async () => {
-      // Use cityChoice directly (no more "Other" option)
-      const actualCity = cityChoice;
-      
-      if (selectedState && actualCity) {
-        setSuggestedZipsLoading(true);
-        try {
-          // Preserve existing ZIP code from database when editing
-          const existingZip = formData.zip_code;
-          
-          // Try static data first
-          if (hasZipCodeData(actualCity, selectedState)) {
-            const staticZips = getZipCodesForCity(actualCity, selectedState);
-            // Include existing ZIP if not in list (for edit mode)
-            const allZips = existingZip && !staticZips.includes(existingZip) 
-              ? [...staticZips, existingZip] 
-              : staticZips;
-            setSuggestedZips(allZips);
-            setAvailableZips(allZips);
-            // Don't clear ZIP in edit mode
-            if (!existingZip) {
-              setFormData(prev => ({ ...prev, city: actualCity }));
-            }
-            setSuggestedZipsLoading(false);
-            return;
-          }
-          
-          // Try edge function second
-          try {
-            const { data, error } = await supabase.functions.invoke('get-city-zips', {
-              body: { state: selectedState, city: actualCity }
-            });
-            if (!error && data?.zips?.length > 0) {
-              const allZips = existingZip && !data.zips.includes(existingZip)
-                ? [...data.zips, existingZip]
-                : data.zips;
-              setSuggestedZips(allZips);
-              setAvailableZips(allZips);
-              if (!existingZip) {
-                setFormData(prev => ({ ...prev, city: actualCity }));
-              }
-              setSuggestedZipsLoading(false);
-              return;
-            }
-          } catch (edgeFnError) {
-            console.log("Edge function failed, trying Zippopotam.us fallback:", edgeFnError);
-          }
-          
-          // Fallback to Zippopotam.us API
-          try {
-            const response = await fetch(`https://api.zippopotam.us/us/${selectedState}/${encodeURIComponent(actualCity)}`);
-            if (response.ok) {
-              const data = await response.json();
-              const zips = data.places?.map((place: any) => place['post code']) || [];
-              if (zips.length > 0) {
-                const allZips = existingZip && !zips.includes(existingZip)
-                  ? [...zips, existingZip]
-                  : zips;
-                setSuggestedZips(allZips);
-                setAvailableZips(allZips);
-                if (!existingZip) {
-                  setFormData(prev => ({ ...prev, city: actualCity }));
-                }
-                setSuggestedZipsLoading(false);
-                return;
-              }
-            }
-          } catch (zippopotamError) {
-            console.log("Zippopotam.us fallback failed:", zippopotamError);
-          }
-          
-          // No ZIPs found - allow manual entry without error
-          // But preserve existing ZIP if we have one
-          if (existingZip) {
-            setSuggestedZips([existingZip]);
-            setAvailableZips([existingZip]);
-          } else {
-            setSuggestedZips([]);
-            setAvailableZips([]);
-            setFormData(prev => ({ ...prev, city: actualCity }));
-          }
-        } catch (error) {
-          console.error("Error fetching ZIP codes:", error);
-          // Don't show error toast - just allow manual entry
-          // Preserve existing ZIP if we have one
-          if (formData.zip_code) {
-            setSuggestedZips([formData.zip_code]);
-            setAvailableZips([formData.zip_code]);
-          } else {
-            setSuggestedZips([]);
-            setAvailableZips([]);
-          }
-        } finally {
-          setSuggestedZipsLoading(false);
-        }
-      } else {
-        setSuggestedZips([]);
-        // Don't clear ZIP if we have one (edit mode)
-        if (!formData.zip_code) {
-          setFormData(prev => ({ ...prev, zip_code: "" }));
-        }
-      }
-    };
-    fetchZipCodes();
-  }, [selectedState, cityChoice]);
-
-  const toggleCityExpansion = (city: string) => {
-    setExpandedCities(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(city)) {
-        newSet.delete(city);
-      } else {
-        newSet.add(city);
-      }
-      return newSet;
-    });
-  };
-
-  const handleCitySelect = (value: string) => {
-    if (value.includes('-')) {
-      const [city, neighborhood] = value.split('-');
-      setSelectedCity(city);
-      setFormData(prev => ({ ...prev, city, neighborhood, zip_code: '' }));
-    } else {
-      setSelectedCity(value);
-      setFormData(prev => ({ ...prev, city: value, neighborhood: '', zip_code: '' }));
-    }
-    setShowCityList(false);
-    setValidationErrors([]);
-  };
-
-  const handleZipSelect = (zip: string) => {
-    setFormData(prev => ({ ...prev, zip_code: zip }));
-    setValidationErrors([]);
-  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -552,13 +400,8 @@ const AddListing = () => {
         }
         if (cloned.county) setSelectedCounty(cloned.county);
         if (cloned.city) {
-          setCityChoice(cloned.city);
           const cityOptions = getCitiesForStateAndCounty(cloned.state || "", cloned.county || "all");
           setAvailableCities(cityOptions);
-        }
-        if (cloned.zip_code) {
-          setSuggestedZips([cloned.zip_code]);
-          setAvailableZips([cloned.zip_code]);
         }
 
         setTimeout(() => { isHydratingLocationRef.current = false; }, 100);
@@ -698,15 +541,9 @@ const AddListing = () => {
           setSelectedCounty(data.county);
         }
         if (data.city) {
-          setCityChoice(data.city);
           // Populate cities for this state/county immediately
           const cityOptions = getCitiesForStateAndCounty(data.state || "", data.county || "all");
           setAvailableCities(cityOptions);
-        }
-        if (data.zip_code) {
-          // Ensure ZIP is in the available list
-          setSuggestedZips([data.zip_code]);
-          setAvailableZips([data.zip_code]);
         }
         
         // Clear the hydration flag after a tick to allow useEffects to run
@@ -1256,8 +1093,6 @@ const AddListing = () => {
       
       if (matchedBoston) {
         // This is actually a Boston neighborhood, not a city
-        setCityChoice("Boston");
-        setCustomCity("");
         finalCity = "Boston";
         finalNeighborhood = matchedBoston;
       } else {
@@ -1268,13 +1103,7 @@ const AddListing = () => {
           selectedCounty !== 'all' ? selectedCounty : undefined
         );
         
-        if (normalizedCity) {
-          setCityChoice(normalizedCity);
-          finalCity = normalizedCity;
-        } else {
-          setCityChoice(attomCity);
-          finalCity = attomCity;
-        }
+        finalCity = normalizedCity || attomCity;
       }
     }
     
@@ -3301,26 +3130,13 @@ const AddListing = () => {
                           // If state changed, clear stale county/city values before applying new location.
                           if (didStateChange) {
                             setSelectedCounty(normalizedState === "MA" ? "" : "all");
-                            setSelectedCity("");
-                            setCityChoice("");
                             setAvailableCities([]);
-                            setAvailableZips([]);
                           }
 
                           setSelectedCounty(nextCounty);
 
                           if (normalizedState) {
                             setAvailableCities(getCitiesForStateAndCounty(normalizedState, nextCounty));
-                          }
-
-                          if (normalizedCity) {
-                            setSelectedCity(normalizedCity);
-                            setCityChoice(normalizedCity);
-                          }
-
-                          if (normalizedZip) {
-                            setAvailableZips([normalizedZip]);
-                            setSuggestedZips([normalizedZip]);
                           }
 
                           setFormData(prev => ({
@@ -3357,8 +3173,19 @@ const AddListing = () => {
                     )}
                   </div>
 
-                  {/* State, County */}
+                  {/* Row 2: City + State */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City/Town *</Label>
+                      <Input
+                        id="city"
+                        type="text"
+                        placeholder="Enter city"
+                        value={formData.city}
+                        onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                        required
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">State *</Label>
                       <Select
@@ -3380,136 +3207,12 @@ const AddListing = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
 
+                  {/* Row 3: ZIP Code + County */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>County {selectedState === "MA" && "*"}</Label>
-                      {!selectedState || availableCounties.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          {!selectedState ? "Select a state first" : "No counties available"}
-                        </p>
-                      ) : (
-                        <>
-                          <Select
-                            value={selectedCounty}
-                            onValueChange={(value) => {
-                              setSelectedCounty(value);
-                              setFormData(prev => ({ ...prev, county: value }));
-                            }}
-                          >
-                            <SelectTrigger className="bg-white border-neutral-200">
-                              <SelectValue placeholder={selectedState === "MA" ? "Select county..." : "All Counties"} />
-                            </SelectTrigger>
-                            <SelectContent className="bg-popover z-50 max-h-[300px]">
-                              {selectedState !== "MA" && (
-                                <SelectItem value="all">All Counties</SelectItem>
-                              )}
-                              {availableCounties.map((county) => (
-                                <SelectItem key={county} value={county}>
-                                  {county}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* City/Town Dropdown */}
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City/Town *</Label>
-                    <Popover open={openCityCombo} onOpenChange={setOpenCityCombo}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openCityCombo}
-                          className="w-full justify-between bg-background"
-                          disabled={selectedState === "MA" && !selectedCounty}
-                        >
-                          {cityChoice || (selectedState === "MA" && !selectedCounty ? "Select county first" : "Select city...")}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search city..." />
-                          <CommandList>
-                            <CommandEmpty>No city found.</CommandEmpty>
-                            <CommandGroup>
-                              {availableCities.map((cityOption) => (
-                                <CommandItem
-                                  key={cityOption.name}
-                                  value={cityOption.name}
-                                  onSelect={(currentValue) => {
-                                    setCityChoice(currentValue === cityChoice ? "" : currentValue);
-                                    setFormData(prev => ({ ...prev, city: currentValue }));
-                                    setOpenCityCombo(false);
-                                  }}
-                                >
-                                  {cityOption.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    
-                  </div>
-
-
-                  {/* ZIP Code Picker */}
-                  <div className="space-y-2">
-                    <Label htmlFor="zip_code">ZIP Code *</Label>
-                    {suggestedZipsLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Loading ZIP codes...
-                      </div>
-                    ) : suggestedZips.length > 0 ? (
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          Select a ZIP code below (even if there is only one option):
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {suggestedZips.map((zip) => (
-                            <Button
-                              key={zip}
-                              type="button"
-                              variant={formData.zip_code === zip ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handleZipSelect(zip)}
-                            >
-                              {zip}
-                            </Button>
-                          ))}
-                        </div>
-                        {formData.zip_code && (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between gap-2 p-2 bg-neutral-100 border border-neutral-300 rounded text-sm text-foreground">
-                              <span>Selected: {formData.zip_code}</span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setFormData(prev => ({ ...prev, zip_code: "" }))}
-                                className="h-6 w-6 p-0 hover:bg-destructive/10"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <Input
-                              type="text"
-                              placeholder="Or type ZIP code manually"
-                              value={formData.zip_code}
-                              onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
-                              className="text-sm"
-                            />
-                          </div>
-                        )}
-                      </div>
-                     ) : (
+                      <Label htmlFor="zip_code">ZIP Code *</Label>
                       <Input
                         id="zip_code"
                         type="text"
@@ -3518,10 +3221,40 @@ const AddListing = () => {
                         onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
                         required
                       />
-                    )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>County {selectedState === "MA" && "*"}</Label>
+                      {!selectedState || availableCounties.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          {!selectedState ? "Select a state first" : "No counties available"}
+                        </p>
+                      ) : (
+                        <Select
+                          value={selectedCounty}
+                          onValueChange={(value) => {
+                            setSelectedCounty(value);
+                            setFormData(prev => ({ ...prev, county: value }));
+                          }}
+                        >
+                          <SelectTrigger className="bg-white border-neutral-200">
+                            <SelectValue placeholder={selectedState === "MA" ? "Select county..." : "All Counties"} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50 max-h-[300px]">
+                            {selectedState !== "MA" && (
+                              <SelectItem value="all">All Counties</SelectItem>
+                            )}
+                            {availableCounties.map((county) => (
+                              <SelectItem key={county} value={county}>
+                                {county}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Neighborhood/Area - Enabled for all states with data */}
+                  {/* Row 4: Neighborhood/Area */}
                   {(() => {
                     const neighborhoods = getNeighborhoodsForLocation({
                       city: formData.city,
