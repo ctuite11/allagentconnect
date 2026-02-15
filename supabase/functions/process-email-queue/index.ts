@@ -129,9 +129,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;l
         <p>We found ${variables.matchCount} new listings matching your Hot Sheet "${variables.hotSheetName}":</p>
         ${variables.listingsHtml || ""}`);
 
+    case "hot-sheet-agent-reply":
+      return wrapHtml(`
+        <h2>New Update in Your Hot Sheet</h2>
+        <p>Hi ${variables.clientName},</p>
+        <p><strong>${variables.agentName}</strong> posted an update about
+           <strong>${variables.listingAddress}</strong> in
+           "${variables.hotSheetName}":</p>
+        <div style="background:#f5f5f5;padding:16px;border-radius:8px;
+             margin:16px 0;border-left:4px solid #2754C5;">
+          <p style="margin:0;">"${variables.commentPreview}"</p>
+        </div>
+        <p>Log in to view the full conversation.</p>`);
+
     case "hot-sheet-comment":
       return wrapHtml(`
-        <h2>New Client Comment</h2>
+        <h2>New Comment on Your Hot Sheet</h2>
         <p>Hi ${variables.agentName},</p>
         <p><strong>${variables.clientName}</strong> left a comment on a listing in your Hot Sheet "<strong>${variables.hotSheetName}</strong>":</p>
         <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #2754C5;">
