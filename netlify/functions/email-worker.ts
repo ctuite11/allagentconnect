@@ -151,6 +151,18 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
         ${variables.listingsHtml || ""}
       `);
 
+    case "hot-sheet-comment":
+      return wrapHtml(`
+        <h2>New Client Comment</h2>
+        <p>Hi ${variables.agentName},</p>
+        <p><strong>${variables.clientName}</strong> left a comment on a listing in your Hot Sheet "<strong>${variables.hotSheetName}</strong>":</p>
+        <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #2754C5;">
+          <p style="margin: 0 0 8px 0; font-size: 13px; color: #666;">Re: ${variables.listingAddress}</p>
+          <p style="margin: 0;">"${variables.commentPreview}"</p>
+        </div>
+        <p>Log in to your dashboard to view and respond.</p>
+      `);
+
     default:
       // Fallback: use html from variables or a simple message
       return wrapHtml(variables.contentHtml || variables.message || `<p>Email template: ${template}</p>`);

@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { DASHBOARD_FILTER_STATUSES, LISTING_STATUS_LABELS } from "@/constants/status";
 import { humanizeSnakeCase } from "@/lib/format";
+import { useAgentPresence } from "@/hooks/useAgentPresence";
 interface Listing {
   id: string;
   address: string;
@@ -46,6 +47,7 @@ interface Listing {
   };
 }
 const AgentDashboard = () => {
+  useAgentPresence();
   const navigate = useNavigate();
   const location = useLocation();
   const listingsSectionRef = useRef<HTMLDivElement>(null);

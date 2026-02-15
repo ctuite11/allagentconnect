@@ -45,6 +45,7 @@ import MyClients from "./pages/MyClients";
 import ClientHotSheet from "./pages/ClientHotSheet";
 import ClientHotsheetPage from "./pages/ClientHotsheetPage";
 import ClientInvitationSetup from "./pages/ClientInvitationSetup";
+import AgentClientFavorites from "./pages/AgentClientFavorites";
 import ListingAnalytics from "./pages/ListingAnalytics";
 import MarketInsights from "./pages/MarketInsights";
 import VendorDashboard from "./pages/VendorDashboard";
@@ -183,6 +184,7 @@ const App = () => (
                 <Route path="/agent/off-market" element={<Navigate to="/agent/listings?status=off_market" replace />} />
                 <Route path="/hot-sheets/:id/review" element={<RouteGuard requireRole="agent"><HotSheetReview /></RouteGuard>} />
                 <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
+                <Route path="/my-clients/:clientId/favorites" element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>} />
                 <Route path="/messages" element={<RouteGuard requireRole="agent"><Messages /></RouteGuard>} />
                 <Route path="/messages/:id" element={<RouteGuard requireRole="agent"><Conversation /></RouteGuard>} />
                 <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
