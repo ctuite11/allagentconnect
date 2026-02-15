@@ -248,6 +248,21 @@ const Auth = () => {
           }
           // ═══════════════════════════════════════════════════════════════════════
 
+          // PRIORITY 2: Check buyer role
+          const { data: isBuyer } = await supabase.rpc("has_role", {
+            _user_id: session.user.id,
+            _role: "buyer",
+          });
+
+          if (isBuyer === true) {
+            authDebug("handleSession BUYER_REDIRECT", { action: "terminal_redirect" });
+            if (mounted) {
+              didNavigate.current = true;
+              navigate("/client/dashboard", { replace: true });
+            }
+            return;
+          }
+
           setExistingSession(true);
           
           // Fetch agent status to determine UI for non-admin users

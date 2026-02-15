@@ -304,7 +304,20 @@ const AuthCallback = () => {
       }
       // ═══════════════════════════════════════════════════════════════════════
 
-      // PRIORITY 2: Check agent status for non-admin users
+      // PRIORITY 2: Check buyer role
+      const { data: isBuyer } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "buyer",
+      });
+
+      if (isBuyer === true) {
+        authDebug("routeUser BUYER_REDIRECT", { action: "terminal_redirect" });
+        didNavigate.current = true;
+        navigate("/client/dashboard", { replace: true });
+        return;
+      }
+
+      // PRIORITY 3: Check agent status for non-admin users
       const agentResult = await getAgentStatus(userId);
       authDebug("routeUser agent status", { userId, status: agentResult.status, error: agentResult.error });
       
