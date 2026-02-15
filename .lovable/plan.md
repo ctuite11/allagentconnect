@@ -1,56 +1,29 @@
 
 
-# Allow Publishing with Price Range
+# Fix: Update FROM Email to Use Verified Resend Domain
 
-## Summary
-Update the Zod validation in `src/pages/AddListing.tsx` so agents can publish with either an exact price OR a price range (min/max). Currently, the exact `price` field is required, causing validation failure when only a price range is entered.
+## Problem
 
-## Changes (single file: `src/pages/AddListing.tsx`)
+The `process-email-queue` edge function sends from `hello@allagentconnect.com`, but only `mail.allagentconnect.com` is verified in Resend. This causes a 403 error on every send attempt.
 
-### 1. Update Zod schema (lines 70-93)
+## Fix
 
-Make `price` optional and add `price_range_min` / `price_range_max` fields. Add two refinements:
-- At least one pricing method must be provided
-- If both range ends exist, min must be less than or equal to max
+One-line change in `supabase/functions/process-email-queue/index.ts` (line 164):
 
-### 2. Update `dataToValidate` (lines 2585-2601)
-
-Replace the current `price` line with safe parsing that avoids `NaN`:
-- Only pass `price` when the raw string parses to a finite number
-- Add `price_range_min` and `price_range_max` with the same safe parsing
-
-## Technical Details
-
-**Schema (line 74, then after line 93):**
-```typescript
-// Line 74: change to optional
-price: z.number().min(100).max(100000000).optional(),
-
-// After lot_size, add:
-price_range_min: z.number().min(100).max(100000000).optional(),
-price_range_max: z.number().min(100).max(100000000).optional(),
-
-// Change closing to add refinements:
-}).refine(
-  (d) => d.price != null || d.price_range_min != null || d.price_range_max != null,
-  { message: "Please enter a Listing Price or a Price Range.", path: ["price"] }
-).refine(
-  (d) => d.price_range_min == null || d.price_range_max == null || d.price_range_min <= d.price_range_max,
-  { message: "Price Range Min must be <= Price Range Max.", path: ["price_range_min"] }
-);
+Change the default FROM email from:
+```
+hello@allagentconnect.com
+```
+to:
+```
+hello@mail.allagentconnect.com
 ```
 
-**dataToValidate (line 2590):**
-```typescript
-const rawPrice = formData.listing_type === "for_sale"
-  ? parseFloat(formData.price) : parseFloat(formData.monthly_rent);
-const minNum = parseFloat(formData.price_range_min);
-const maxNum = parseFloat(formData.price_range_max);
+This matches the verified Resend sending domain. No other files need changes.
 
-// In the object:
-price: Number.isFinite(rawPrice) ? rawPrice : undefined,
-price_range_min: Number.isFinite(minNum) ? minNum : undefined,
-price_range_max: Number.isFinite(maxNum) ? maxNum : undefined,
-```
+## After Deployment
 
-No database or other file changes needed.
+- The 2 stuck jobs (currently retrying) will succeed on the next cron tick
+- All future emails will send from `hello@mail.allagentconnect.com`
+- Reply-to addresses remain unaffected
+
