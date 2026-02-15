@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
+import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
@@ -53,15 +54,62 @@ const HotSheetReview = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
-  const [commentMap, setCommentMap] = useState<Record<string, string>>({});
-const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
-const [sortBy, setSortBy] = useState("newest");
+  const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>({});
+  const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState("newest");
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [chatListingId, setChatListingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
       fetchHotSheetAndListings();
     }
   }, [id]);
+
+  // Realtime subscription for new messages
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`hotsheet-chat-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "hot_sheet_comments",
+          filter: `hot_sheet_id=eq.${id}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as ChatMessage;
+          setMessagesMap((prev) => {
+            const lid = newMsg.listing_id;
+            const existing = prev[lid] || [];
+            // Dedupe by id
+            if (existing.some((m) => m.id === newMsg.id)) return prev;
+            return { ...prev, [lid]: [...existing, newMsg] };
+          });
+          // Toast for client messages
+          if (newMsg.sender_role === "client") {
+            const listing = listings.find((l) => l.id === newMsg.listing_id);
+            const addr = listing ? `${listing.address}, ${listing.city}` : "a listing";
+            toast.info(`New message — ${addr}`);
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, listings]);
+
+  const handleNewMessage = useCallback((msg: ChatMessage) => {
+    setMessagesMap((prev) => {
+      const lid = msg.listing_id;
+      const existing = prev[lid] || [];
+      if (existing.some((m) => m.id === msg.id)) return prev;
+      return { ...prev, [lid]: [...existing, msg] };
+    });
+  }, []);
 
   const buildSearchUrl = () => {
     if (!hotSheet) return "";
@@ -119,17 +167,20 @@ if (agentIds.length > 0) {
   setAgentMap(map);
 }
 
-// Fetch client comments for this hot sheet
+// Fetch all chat messages for this hot sheet
 const { data: comments } = await supabase
   .from("hot_sheet_comments")
-  .select("listing_id, comment")
-  .eq("hot_sheet_id", id as string);
+  .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
+  .eq("hot_sheet_id", id as string)
+  .order("created_at", { ascending: true });
 if (comments && comments.length > 0) {
-  const cMap: Record<string, string> = {};
+  const grouped: Record<string, ChatMessage[]> = {};
   comments.forEach((c: any) => {
-    if (c.listing_id) cMap[c.listing_id] = c.comment;
+    if (!c.listing_id) return;
+    if (!grouped[c.listing_id]) grouped[c.listing_id] = [];
+    grouped[c.listing_id].push(c as ChatMessage);
   });
-  setCommentMap(cMap);
+  setMessagesMap(grouped);
 }
     } catch (error: any) {
       console.error("Error fetching data:", error);
@@ -506,13 +557,36 @@ if (comments && comments.length > 0) {
                         }
                       : null
                   }
-                  clientComment={commentMap[listing.id]}
+                  chatMessages={messagesMap[listing.id]}
+                  hotSheetId={id}
+                  onNewMessage={handleNewMessage}
+                  onOpenChat={() => {
+                    setChatListingId(listing.id);
+                    setChatDrawerOpen(true);
+                  }}
                 />
               ))}
             </div>
           )}
         </div>
       </main>
+
+      {/* Chat Drawer */}
+      {chatListingId && (
+        <ListingChatDrawer
+          open={chatDrawerOpen}
+          onOpenChange={setChatDrawerOpen}
+          hotSheetId={id!}
+          listingId={chatListingId}
+          listingAddress={
+            listings.find((l) => l.id === chatListingId)
+              ? `${listings.find((l) => l.id === chatListingId)!.address}, ${listings.find((l) => l.id === chatListingId)!.city}`
+              : ""
+          }
+          messages={messagesMap[chatListingId] || []}
+          onNewMessage={handleNewMessage}
+        />
+      )}
 
       <Footer />
     </div>
