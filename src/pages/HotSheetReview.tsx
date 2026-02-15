@@ -209,6 +209,17 @@ if (agentIds.length > 0) {
         } else {
           const token = crypto.randomUUID();
 
+          // Look up client email and agent name in parallel
+          const [clientResult, agentResult] = await Promise.all([
+            supabase.from("clients").select("email, first_name").eq("id", client_id).maybeSingle(),
+            supabase.from("agent_profiles").select("first_name, last_name").eq("id", user.id).maybeSingle(),
+          ]);
+
+          const clientEmail = clientResult.data?.email;
+          const agentName = agentResult.data
+            ? `${agentResult.data.first_name} ${agentResult.data.last_name}`.trim()
+            : "Your agent";
+
           const { data: tokenRow, error: tokenError } = await supabase
             .from("share_tokens")
             .insert({
@@ -218,6 +229,7 @@ if (agentIds.length > 0) {
                 type: "client_hotsheet_invite",
                 client_id,
                 hot_sheet_id: hotSheet.id,
+                client_email: clientEmail,
               },
             })
             .select()
@@ -227,6 +239,25 @@ if (agentIds.length > 0) {
             console.error("Error creating share token", tokenError);
           } else {
             console.log("Created share token", tokenRow);
+
+            // Send invitation email
+            if (clientEmail) {
+              const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${token}&email=${encodeURIComponent(clientEmail)}&agent_id=${user.id}&client_id=${client_id}`;
+              
+              supabase.functions.invoke("send-hot-sheet-invite", {
+                body: {
+                  invitedEmail: clientEmail,
+                  inviterName: agentName,
+                  hotSheetName: hotSheet.name,
+                  hotSheetLink,
+                },
+              }).then(({ error: emailError }) => {
+                if (emailError) console.error("Error sending hot sheet invite email", emailError);
+                else console.log("Hot sheet invite email sent to", clientEmail);
+              });
+            } else {
+              console.warn("No client email found, skipping invitation email");
+            }
           }
         }
       }
