@@ -1,91 +1,61 @@
 
 
-# Listing Chat: One Message, Two Outcomes
+# Fix: Add Buyer Role Check to Auth Routing
 
-## Overview
-Transform `hot_sheet_comments` from a single-comment system into a threaded chat. One `INSERT` per send. The chat drawer and toast notification are both derived from that single row via Supabase Realtime.
+## Problem
+Both `routeUser()` and `handleSession()` check for admin role, then fall through to agent-only logic. Buyers get treated as unverified agents.
 
-## 1. Database Migration
+## Changes
 
-### Add columns to `hot_sheet_comments`
-```sql
-ALTER TABLE hot_sheet_comments
-  ADD COLUMN sender_role text NOT NULL DEFAULT 'client',
-  ADD COLUMN sender_id uuid;
+### 1. `src/pages/AuthCallback.tsx` — `routeUser()` (after line 304)
 
--- Enable realtime so INSERT events push to subscribers
-ALTER PUBLICATION supabase_realtime ADD TABLE hot_sheet_comments;
-```
-No new tables. No notification table. Existing RLS policies already allow insert/select.
+Insert buyer check between the admin hard-stop and the agent status check:
 
-## 2. New Component: `ListingChatDrawer.tsx`
+```typescript
+// PRIORITY 2: Check buyer role
+const { data: isBuyer } = await supabase.rpc("has_role", {
+  _user_id: userId,
+  _role: "buyer",
+});
 
-A `Sheet` (side drawer) showing the full thread for one `(hot_sheet_id, listing_id)` pair.
+if (isBuyer === true) {
+  authDebug("routeUser BUYER_REDIRECT", { action: "terminal_redirect" });
+  didNavigate.current = true;
+  navigate("/client/dashboard", { replace: true });
+  return;
+}
 
-- **Message list**: All `hot_sheet_comments` rows ordered by `created_at ASC`
-  - Client messages: left-aligned, muted background
-  - Agent messages: right-aligned, primary background
-- **Input + Send button**: Inserts a single row with `sender_role = 'agent'` and `sender_id = auth.uid()`
-- **Realtime subscription**: Listens for `INSERT` on `hot_sheet_comments` filtered by `hot_sheet_id` and `listing_id`. New rows append to the list automatically -- no refetch needed.
-- Auto-scroll to bottom on new message.
-
-## 3. Update `ListingCard.tsx`
-
-Replace the static comment block with a clickable chat preview:
-
-- Show last message with sender label ("Client:" or "You:")
-- Show message count badge
-- Clicking opens `ListingChatDrawer`
-- New props: `chatMessages` (array), `hotSheetId`, `onNewMessage` callback
-
-```text
-+--------------------------------------+
-| [MessageSquare] Client: "I like..." |
-|                  2 messages  >       |
-+--------------------------------------+
+// PRIORITY 3: Check agent status (existing code, renumbered)
 ```
 
-## 4. Update `HotSheetReview.tsx`
+### 2. `src/pages/Auth.tsx` — `handleSession()` (after line 248)
 
-- Fetch ALL comments for the hotsheet (with `sender_role`, `sender_id`, `created_at`)
-- Group by `listing_id` into `Record<string, Comment[]>`
-- Pass grouped array to each `ListingCard`
-- Subscribe to Realtime `INSERT` on `hot_sheet_comments` for this hotsheet
-  - On new row: update the grouped comments state (UI updates everywhere)
-  - If `sender_role = 'client'`: show toast "New message -- [address]"
-- No separate notification storage. Toast is ephemeral UI only.
+Insert buyer check between admin hard-stop and agent status fetch:
 
-## 5. Data Flow
+```typescript
+// PRIORITY 2: Check buyer role
+const { data: isBuyer } = await supabase.rpc("has_role", {
+  _user_id: session.user.id,
+  _role: "buyer",
+});
 
-```text
-Agent clicks Send
-       |
-       v
-INSERT 1 row into hot_sheet_comments
-  (sender_role='agent', sender_id=uid)
-       |
-       +---> Realtime broadcast
-       |         |
-       |         +---> Client's chat drawer updates (new row appears)
-       |         +---> Client's listing card "last message" updates
-       |         +---> Client sees toast: "New message - 123 Main St"
-       |
-       +---> Agent's local state updates immediately (optimistic)
+if (isBuyer === true) {
+  authDebug("handleSession BUYER_REDIRECT", { action: "terminal_redirect" });
+  if (mounted) {
+    didNavigate.current = true;
+    navigate("/client/dashboard", { replace: true });
+  }
+  return;
+}
 ```
 
-Same flow in reverse when client sends.
+## Files Modified
 
-## Files
-
-| File | Action |
+| File | Change |
 |------|--------|
-| Database migration | Add `sender_role`, `sender_id` columns; enable realtime |
-| `src/components/ListingChatDrawer.tsx` | **New** -- chat thread UI + send + realtime subscription |
-| `src/components/ListingCard.tsx` | Update comment block to clickable preview, open drawer |
-| `src/pages/HotSheetReview.tsx` | Fetch all comments, group by listing, realtime subscription + toast |
+| `src/pages/AuthCallback.tsx` | Add `has_role(buyer)` check in `routeUser()` after admin check |
+| `src/pages/Auth.tsx` | Add `has_role(buyer)` check in `handleSession()` after admin check |
 
-## What is NOT happening
-- No separate notification table or row
-- No duplicate inserts
-- No second "notification message"
-- Toast is ephemeral UI derived from the same Realtime event
+## No database changes needed
+The `user_roles` table already has the correct buyer role. This is purely a routing fix.
+
