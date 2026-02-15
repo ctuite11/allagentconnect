@@ -14,7 +14,7 @@ import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search } f
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
-import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface Listing {
@@ -256,73 +256,101 @@ if (comments && comments.length > 0) {
 
       toast.success(`Sent ${selectedListings.size} listings to client`);
 
-      // Automatically create share token if client is attached via hot_sheet_clients
+      // Generate share tokens + send invites for ALL clients on this hot sheet
       const { data: hscRows, error: hscError } = await supabase
         .from("hot_sheet_clients")
         .select("client_id")
-        .eq("hot_sheet_id", hotSheet.id)
-        .limit(1);
+        .eq("hot_sheet_id", hotSheet.id);
 
-      if (hscError || !hscRows || hscRows.length === 0) {
-        console.warn("No client attached in hot_sheet_clients for this hotsheet");
-      } else {
-        const client_id = hscRows[0].client_id;
-        
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (!user || userError) {
-          console.error("No authenticated user for share token", userError);
-        } else {
-          const token = crypto.randomUUID();
-
-          // Look up client email and agent name in parallel
-          const [clientResult, agentResult] = await Promise.all([
-            supabase.from("clients").select("email, first_name").eq("id", client_id).maybeSingle(),
-            supabase.from("agent_profiles").select("first_name, last_name").eq("id", user.id).maybeSingle(),
-          ]);
-
-          const clientEmail = clientResult.data?.email;
-          const agentName = agentResult.data
-            ? `${agentResult.data.first_name} ${agentResult.data.last_name}`.trim()
+      if (!hscError && hscRows && hscRows.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: agentProfile } = await supabase
+            .from("agent_profiles")
+            .select("first_name, last_name")
+            .eq("id", user.id)
+            .maybeSingle();
+          const agentName = agentProfile
+            ? `${agentProfile.first_name} ${agentProfile.last_name}`.trim()
             : "Your agent";
 
-          const { data: tokenRow, error: tokenError } = await supabase
-            .from("share_tokens")
-            .insert({
-              token,
-              agent_id: user.id,
-              payload: {
-                type: "client_hotsheet_invite",
-                client_id,
-                hot_sheet_id: hotSheet.id,
-                client_email: clientEmail,
-              },
-            })
-            .select()
-            .single();
+          for (const row of hscRows) {
+            const clientId = row.client_id;
 
-          if (tokenError) {
-            console.error("Error creating share token", tokenError);
-          } else {
-            console.log("Created share token", tokenRow);
+            // Skip if active relationship already exists
+            const { data: existingRel } = await supabase
+              .from("client_agent_relationships")
+              .select("id")
+              .eq("agent_id", user.id)
+              .eq("client_id", clientId)
+              .eq("status", "active")
+              .maybeSingle();
 
-            // Send invitation email
-            if (clientEmail) {
-              const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${token}&email=${encodeURIComponent(clientEmail)}&agent_id=${user.id}&client_id=${client_id}`;
-              
-              supabase.functions.invoke("send-hot-sheet-invite", {
-                body: {
-                  invitedEmail: clientEmail,
-                  inviterName: agentName,
-                  hotSheetName: hotSheet.name,
-                  hotSheetLink,
-                },
-              }).then(({ error: emailError }) => {
-                if (emailError) console.error("Error sending hot sheet invite email", emailError);
-                else console.log("Hot sheet invite email sent to", clientEmail);
-              });
-            } else {
-              console.warn("No client email found, skipping invitation email");
+            if (existingRel) {
+              console.log(`[send-first-batch] Skipping client ${clientId} -- active relationship`);
+              continue;
             }
+
+            // Skip if token already exists for this client+hotsheet
+            const { data: existingToken } = await supabase
+              .from("share_tokens")
+              .select("token")
+              .eq("agent_id", user.id)
+              .contains("payload", {
+                type: "client_hotsheet_invite",
+                client_id: clientId,
+                hot_sheet_id: hotSheet.id,
+              })
+              .maybeSingle();
+
+            if (existingToken) {
+              console.log(`[send-first-batch] Token already exists for client ${clientId}`);
+              continue;
+            }
+
+            // Look up client email
+            const { data: clientData } = await supabase
+              .from("clients")
+              .select("email")
+              .eq("id", clientId)
+              .maybeSingle();
+
+            if (!clientData?.email) continue;
+
+            const token = crypto.randomUUID();
+
+            const { error: tokenError } = await supabase
+              .from("share_tokens")
+              .insert({
+                token,
+                agent_id: user.id,
+                payload: {
+                  type: "client_hotsheet_invite",
+                  client_id: clientId,
+                  hot_sheet_id: hotSheet.id,
+                  client_email: clientData.email,
+                },
+              });
+
+            if (tokenError) {
+              console.error(`[send-first-batch] Token error for ${clientId}:`, tokenError);
+              continue;
+            }
+
+            // Send invite email
+            const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${token}&email=${encodeURIComponent(clientData.email)}&agent_id=${user.id}&client_id=${clientId}`;
+
+            supabase.functions.invoke("send-hot-sheet-invite", {
+              body: {
+                invitedEmail: clientData.email,
+                inviterName: agentName,
+                hotSheetName: hotSheet.name,
+                hotSheetLink,
+              },
+            }).then(({ error: emailErr }) => {
+              if (emailErr) console.error(`[send-first-batch] Email error:`, emailErr);
+              else console.log(`[send-first-batch] Invite sent to ${clientData.email}`);
+            });
           }
         }
       }
@@ -501,10 +529,6 @@ if (comments && comments.length > 0) {
                   >
                     Keep Selected ({selectedListings.size})
                   </Button>
-                  <BulkShareListingsDialog 
-                    listingIds={Array.from(selectedListings)}
-                    listingCount={selectedListings.size}
-                  />
                 </>
               )}
               <Select value={sortBy} onValueChange={setSortBy}>
