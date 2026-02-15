@@ -61,6 +61,7 @@ import AdminApprovals from "./pages/AdminApprovals";
 import AdminDebugAuth from "./pages/AdminDebugAuth";
 import AdminMatches from "./pages/AdminMatches";
 
+import ClientDashboard from "./pages/ClientDashboard";
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
@@ -203,7 +204,7 @@ const App = () => (
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
-                <Route path="/client/dashboard" element={<Navigate to="/auth" replace />} />
+                <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
                 <Route path="/client/hotsheets/new" element={<Navigate to="/auth" replace />} />
                 <Route path="/client/favorites" element={<Navigate to="/auth" replace />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
