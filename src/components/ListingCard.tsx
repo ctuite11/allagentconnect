@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User } from "lucide-react";
+import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +64,7 @@ interface ListingCardProps {
     name: string;
     company?: string | null;
   } | null;
+  clientComment?: string;
 }
 const ListingCard = ({
   listing,
@@ -73,7 +74,8 @@ const ListingCard = ({
   showActions = true,
   onSelect,
   isSelected = false,
-  agentInfo = null
+  agentInfo = null,
+  clientComment
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const [agentCount, setAgentCount] = useState<number>(0);
@@ -693,6 +695,14 @@ const ListingCard = ({
               <span className="font-medium">
                 {nextOpenHouse.event_type === 'broker_tour' ? 'Broker Tour' : 'Open House'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} - {formatTime(nextOpenHouse.end_time)}
               </span>
+            </div>
+          )}
+          
+          {/* Client Comment */}
+          {clientComment && (
+            <div className="flex items-start gap-2 text-sm p-2 rounded-md mt-2 bg-muted/60 border border-border">
+              <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <p className="text-foreground italic text-sm leading-snug">"{clientComment}"</p>
             </div>
           )}
           
