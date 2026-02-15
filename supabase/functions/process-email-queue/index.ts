@@ -161,7 +161,7 @@ async function sendEmail(
   job: EmailJob,
   resendApiKey: string,
 ): Promise<void> {
-  const FROM_EMAIL = Deno.env.get("RESEND_FROM") || "hello@allagentconnect.com";
+  const FROM_EMAIL = Deno.env.get("RESEND_FROM") || "hello@mail.allagentconnect.com";
   const FROM_NAME =
     Deno.env.get("RESEND_FROM_NAME") || "All Agent Connect";
 
