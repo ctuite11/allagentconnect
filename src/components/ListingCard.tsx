@@ -65,6 +65,18 @@ interface ListingCardProps {
     company?: string | null;
   } | null;
   clientComment?: string;
+  chatMessages?: Array<{
+    id: string;
+    hot_sheet_id: string;
+    listing_id: string;
+    comment: string;
+    sender_role: string;
+    sender_id: string | null;
+    created_at: string;
+  }>;
+  hotSheetId?: string;
+  onNewMessage?: (msg: any) => void;
+  onOpenChat?: () => void;
 }
 const ListingCard = ({
   listing,
@@ -75,7 +87,11 @@ const ListingCard = ({
   onSelect,
   isSelected = false,
   agentInfo = null,
-  clientComment
+  clientComment,
+  chatMessages,
+  hotSheetId,
+  onNewMessage,
+  onOpenChat,
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const [agentCount, setAgentCount] = useState<number>(0);
@@ -698,11 +714,45 @@ const ListingCard = ({
             </div>
           )}
           
-          {/* Client Comment */}
-          {clientComment && (
-            <div className="flex items-start gap-2 text-sm p-2 rounded-md mt-2 bg-muted/60 border border-border">
+          {/* Chat Preview */}
+          {chatMessages && chatMessages.length > 0 && (
+            <div
+              className="flex items-start gap-2 text-sm p-2 rounded-md mt-2 bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenChat?.();
+              }}
+            >
               <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <p className="text-foreground italic text-sm leading-snug">"{clientComment}"</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-foreground text-sm leading-snug truncate">
+                  <span className="font-medium">
+                    {chatMessages[chatMessages.length - 1].sender_role === "agent" ? "You" : "Client"}:
+                  </span>{" "}
+                  "{chatMessages[chatMessages.length - 1].comment}"
+                </p>
+                <p className="text-muted-foreground text-xs mt-0.5">
+                  {chatMessages.length} message{chatMessages.length !== 1 ? "s" : ""} ›
+                </p>
+              </div>
+            </div>
+          )}
+          {/* Fallback: single clientComment without chat array */}
+          {!chatMessages?.length && clientComment && (
+            <div
+              className="flex items-start gap-2 text-sm p-2 rounded-md mt-2 bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenChat?.();
+              }}
+            >
+              <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-foreground italic text-sm leading-snug truncate">
+                  Client: "{clientComment}"
+                </p>
+                <p className="text-muted-foreground text-xs mt-0.5">1 message ›</p>
+              </div>
             </div>
           )}
           

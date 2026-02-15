@@ -1816,6 +1816,8 @@ export type Database = {
           hot_sheet_id: string
           id: string
           listing_id: string
+          sender_id: string | null
+          sender_role: string
           updated_at: string | null
         }
         Insert: {
@@ -1824,6 +1826,8 @@ export type Database = {
           hot_sheet_id: string
           id?: string
           listing_id: string
+          sender_id?: string | null
+          sender_role?: string
           updated_at?: string | null
         }
         Update: {
@@ -1832,6 +1836,8 @@ export type Database = {
           hot_sheet_id?: string
           id?: string
           listing_id?: string
+          sender_id?: string | null
+          sender_role?: string
           updated_at?: string | null
         }
         Relationships: [
