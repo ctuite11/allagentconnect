@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, User, Building, FileText } from "lucide-react";
+import { Loader2, User, Building, FileText, Users, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-
 interface AgentData {
   id: string;
   aac_id: string;
@@ -57,6 +57,12 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
     license_state: "",
   });
 
+  // Client deletion state
+  const [agentClients, setAgentClients] = useState<{ id: string; first_name: string; last_name: string; email: string }[]>([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+  const [deleteClientTarget, setDeleteClientTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deletingClient, setDeletingClient] = useState(false);
+
   useEffect(() => {
     if (agent) {
       setFormData({
@@ -69,8 +75,37 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
         license_number: agent.license_number || "",
         license_state: agent.license_state || "",
       });
+      // Load agent's clients
+      loadAgentClients(agent.id);
     }
   }, [agent]);
+
+  async function loadAgentClients(agentId: string) {
+    setLoadingClients(true);
+    const { data } = await supabase
+      .from("clients")
+      .select("id, first_name, last_name, email")
+      .eq("agent_id", agentId)
+      .order("last_name");
+    setAgentClients(data || []);
+    setLoadingClients(false);
+  }
+
+  async function handleDeleteClient() {
+    if (!deleteClientTarget) return;
+    setDeletingClient(true);
+    const { error } = await supabase.rpc("admin_delete_client", {
+      p_client_id: deleteClientTarget.id,
+    });
+    if (error) {
+      toast.error("Failed to delete client: " + error.message);
+    } else {
+      toast.success(`Client "${deleteClientTarget.name}" deleted`);
+      if (agent) loadAgentClients(agent.id);
+    }
+    setDeletingClient(false);
+    setDeleteClientTarget(null);
+  }
 
   const handleSave = async () => {
     if (!agent) return;
@@ -263,6 +298,44 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
               </div>
             </div>
           </div>
+
+          {/* Clients Section */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-xl bg-[#F7F6F3] border border-slate-200">
+                <Users className="h-4 w-4 text-slate-600" />
+              </div>
+              <h3 className="font-semibold text-foreground">Clients</h3>
+              <span className="text-xs text-muted-foreground ml-auto">{agentClients.length}</span>
+            </div>
+
+            {loadingClients ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : agentClients.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No clients</p>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {agentClients.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/50 text-sm">
+                    <div className="min-w-0">
+                      <span className="font-medium text-foreground">{c.first_name} {c.last_name}</span>
+                      <span className="text-muted-foreground ml-2 text-xs">{c.email}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteClientTarget({ id: c.id, name: `${c.first_name} ${c.last_name}` })}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <SheetFooter className="mt-6 pt-4 border-t border-slate-200">
@@ -283,6 +356,29 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
           </Button>
         </SheetFooter>
       </SheetContent>
+
+      {/* Delete client confirmation */}
+      <AlertDialog open={!!deleteClientTarget} onOpenChange={(o) => !o && setDeleteClientTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete client?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Delete <strong>{deleteClientTarget?.name}</strong>? This removes them from all hotsheets and relationships. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingClient}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClient}
+              disabled={deletingClient}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingClient && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

@@ -3484,6 +3484,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
       auto_activate_listings: { Args: never; Returns: undefined }
       check_client_has_other_agent: {
         Args: { p_client_email: string }
