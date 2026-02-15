@@ -53,6 +53,7 @@ const HotSheetReview = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
+  const [commentMap, setCommentMap] = useState<Record<string, string>>({});
 const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
 const [sortBy, setSortBy] = useState("newest");
 
@@ -116,6 +117,19 @@ if (agentIds.length > 0) {
     map[a.id] = { fullName: `${a.first_name} ${a.last_name}`.trim(), company: a.company };
   });
   setAgentMap(map);
+}
+
+// Fetch client comments for this hot sheet
+const { data: comments } = await supabase
+  .from("hot_sheet_comments")
+  .select("listing_id, comment")
+  .eq("hot_sheet_id", id as string);
+if (comments && comments.length > 0) {
+  const cMap: Record<string, string> = {};
+  comments.forEach((c: any) => {
+    if (c.listing_id) cMap[c.listing_id] = c.comment;
+  });
+  setCommentMap(cMap);
 }
     } catch (error: any) {
       console.error("Error fetching data:", error);
@@ -492,6 +506,7 @@ if (agentIds.length > 0) {
                         }
                       : null
                   }
+                  clientComment={commentMap[listing.id]}
                 />
               ))}
             </div>
