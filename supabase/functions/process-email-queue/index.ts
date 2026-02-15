@@ -43,17 +43,40 @@ function renderEmailTemplate(
 <!DOCTYPE html><html><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333}
-.container{max-width:600px;margin:0 auto;padding:20px}
-.header{background:#0F172A;color:white;padding:20px;text-align:center}
-.content{padding:20px}
-.footer{background:#f5f5f5;padding:20px;text-align:center;font-size:12px;color:#666}
-.button{display:inline-block;background:#2754C5;color:white;padding:12px 24px;text-decoration:none;border-radius:4px}
-</style></head><body><div class="container">
-<div class="header"><h1>All Agent Connect</h1></div>
+body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#27272a;background:#f4f4f5;}
+.outer{max-width:600px;margin:0 auto;padding:24px 16px;}
+.card{background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e4e4e7;}
+.header{padding:28px 24px 20px;text-align:center;border-bottom:1px solid #e4e4e7;}
+.wordmark{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.01em;}
+.wordmark-blue{color:#0E56F5;}
+.wordmark-gray{color:#94A3B8;}
+.blue-line{display:block;width:48px;height:3px;background:#0E56F5;border-radius:2px;margin:12px auto 0;}
+.content{padding:28px 24px 32px;}
+.content h2{font-size:20px;font-weight:600;color:#18181b;margin:0 0 16px;}
+.content p{margin:0 0 12px;color:#3f3f46;}
+.cta-wrap{margin:28px 0 0;text-align:center;}
+.cta{display:inline-block;padding:14px 28px;background:#0F172A;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;border-radius:10px;letter-spacing:0.01em;}
+.cta-dot{display:inline-block;width:8px;height:8px;background:#10B981;border-radius:50%;margin-right:8px;vertical-align:middle;}
+.cta-arrow{margin-left:8px;vertical-align:middle;}
+.quote-block{background:#f4f4f5;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #0E56F5;}
+.quote-block p{margin:0;color:#3f3f46;font-style:italic;}
+.footer{padding:20px 24px;text-align:center;font-size:12px;color:#71717a;border-top:1px solid #e4e4e7;}
+.footer a{color:#0E56F5;text-decoration:none;}
+.footer p{margin:4px 0;}
+</style></head><body>
+<div class="outer"><div class="card">
+<div class="header">
+  <span class="wordmark"><span class="wordmark-blue">All Agent </span><span class="wordmark-gray">Connect</span></span>
+  <span class="blue-line"></span>
+</div>
 <div class="content">${content}</div>
-<div class="footer"><p>All Agent Connect – Revolutionizing Real Estate Through Complete Transparency</p></div>
-</div></body></html>`;
+<div class="footer">
+  <p>All Agent Connect – Complete Transparency in Real Estate</p>
+  <p>Questions? <a href="mailto:hello@allagentconnect.com">hello@allagentconnect.com</a></p>
+  <p style="margin-top:8px;"><a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account">Remove my account</a></p>
+</div>
+</div></div>
+</body></html>`;
 
   switch (template) {
     case "listing-share":
@@ -79,14 +102,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;l
       return wrapHtml(`
         <h2>You've Been Invited to View a Hot Sheet</h2>
         <p>${variables.inviterName} has shared their Hot Sheet "${variables.hotSheetName}" with you.</p>
-        <p><a href="${variables.hotSheetLink}" class="button">View Hot Sheet</a></p>`);
+        <div class="cta-wrap"><a href="${variables.hotSheetLink}" class="cta"><span class="cta-dot"></span>View Hot Sheet<span class="cta-arrow">&rarr;</span></a></div>`);
 
     case "favorites-share":
       return wrapHtml(`
         <h2>Favorite Properties Shared With You</h2>
         <p>${variables.senderName} wants to share some properties they've been looking at:</p>
         ${variables.propertiesHtml || ""}
-        <p><a href="${variables.shareLink}" class="button">View All Properties</a></p>`);
+        <div class="cta-wrap"><a href="${variables.shareLink}" class="cta"><span class="cta-dot"></span>View All Properties<span class="cta-arrow">&rarr;</span></a></div>`);
 
     case "buyer-alert":
       return wrapHtml(`
@@ -114,7 +137,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;l
         <p>Hi ${variables.agentName},</p>
         <p>A new property submission matches your Hot Sheet criteria:</p>
         ${variables.propertyHtml || ""}
-        <p><a href="${variables.viewLink}" class="button">View Property</a></p>`);
+        <div class="cta-wrap"><a href="${variables.viewLink}" class="cta"><span class="cta-dot"></span>View Property<span class="cta-arrow">&rarr;</span></a></div>`);
 
     case "reverse-prospecting":
       return wrapHtml(`<h2>Reverse Prospecting Alert</h2><p>${variables.contentHtml || ""}</p>`);
@@ -136,12 +159,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;l
         <p><strong>${variables.agentName}</strong> posted an update about
            <strong>${variables.listingAddress}</strong> in
            "${variables.hotSheetName}":</p>
-        <div style="background:#f5f5f5;padding:16px;border-radius:8px;
-             margin:16px 0;border-left:4px solid #2754C5;">
-          <p style="margin:0;">"${variables.commentPreview}"</p>
+        <div class="quote-block">
+          <p>"${variables.commentPreview}"</p>
         </div>
-        ${variables.conversationUrl ? `<p style="margin:24px 0 0;"><a href="${variables.conversationUrl}" style="display:inline-block;padding:12px 24px;border-radius:10px;background:#2754C5;color:#fff;text-decoration:none;font-weight:600;">View Conversation</a></p>` : '<p>Log in to view the full conversation.</p>'}`);
-
+        ${variables.conversationUrl ? `<div class="cta-wrap"><a href="${variables.conversationUrl}" class="cta"><span class="cta-dot"></span>View Conversation<span class="cta-arrow">&rarr;</span></a></div>` : '<p>Log in to view the full conversation.</p>'}`);
     case "hot-sheet-comment":
       return wrapHtml(`
         <h2>New Comment on Your Hot Sheet</h2>
@@ -149,11 +170,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;l
         <p><strong>${variables.clientName}</strong> commented on
            <strong>${variables.listingAddress}</strong> in
            "${variables.hotSheetName}":</p>
-        <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #2754C5;">
-          <p style="margin:0;">"${variables.commentPreview}"</p>
+        <div class="quote-block">
+          <p>"${variables.commentPreview}"</p>
         </div>
-        ${variables.conversationUrl ? `<p style="margin:24px 0 0;"><a href="${variables.conversationUrl}" style="display:inline-block;padding:12px 24px;border-radius:10px;background:#2754C5;color:#fff;text-decoration:none;font-weight:600;">View Conversation</a></p>` : '<p>Log in to your dashboard to view and respond.</p>'}`);
-
+        ${variables.conversationUrl ? `<div class="cta-wrap"><a href="${variables.conversationUrl}" class="cta"><span class="cta-dot"></span>View Conversation<span class="cta-arrow">&rarr;</span></a></div>` : '<p>Log in to your dashboard to view and respond.</p>'}`);
     default:
       return wrapHtml(
         variables.contentHtml ||
