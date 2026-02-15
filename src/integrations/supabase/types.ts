@@ -3485,6 +3485,10 @@ export type Database = {
     }
     Functions: {
       auto_activate_listings: { Args: never; Returns: undefined }
+      check_client_has_other_agent: {
+        Args: { p_client_email: string }
+        Returns: boolean
+      }
       check_hot_sheet_matches: {
         Args: { p_hot_sheet_id: string }
         Returns: {

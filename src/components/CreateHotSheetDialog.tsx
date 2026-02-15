@@ -247,11 +247,23 @@ export function CreateHotSheetDialog({
     return () => clearTimeout(timer);
   }, [clientSearchQuery, userId, open]);
 
-  const handleSelectClient = (client: any) => {
+  const handleSelectClient = async (client: any) => {
     // Check if client is already selected
     if (selectedClients.some(c => c.id === client.id)) {
       toast.error("This client is already added");
       return;
+    }
+
+    // Check if client is already registered with another agent
+    const email = (client.email || "").trim();
+    if (email) {
+      const { data, error } = await supabase.rpc("check_client_has_other_agent", {
+        p_client_email: email,
+      });
+      if (!error && data === true) {
+        toast.error("This client is already registered with another agent.");
+        return;
+      }
     }
     
     // Add to selected clients
