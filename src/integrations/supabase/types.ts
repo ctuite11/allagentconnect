@@ -623,6 +623,39 @@ export type Database = {
           },
         ]
       }
+      agent_notifications: {
+        Row: {
+          agent_id: string
+          body: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          read_at: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          agent_id: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          agent_id?: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       agent_profiles: {
         Row: {
           aac_id: string
@@ -775,6 +808,7 @@ export type Database = {
           early_access: boolean
           email_frequency: string
           hide_from_directory: boolean
+          last_seen_at: string | null
           last_verification_attempt_at: string | null
           license_last_name: string | null
           license_number: string | null
@@ -811,6 +845,7 @@ export type Database = {
           early_access?: boolean
           email_frequency?: string
           hide_from_directory?: boolean
+          last_seen_at?: string | null
           last_verification_attempt_at?: string | null
           license_last_name?: string | null
           license_number?: string | null
@@ -847,6 +882,7 @@ export type Database = {
           early_access?: boolean
           email_frequency?: string
           hide_from_directory?: boolean
+          last_seen_at?: string | null
           last_verification_attempt_at?: string | null
           license_last_name?: string | null
           license_number?: string | null
@@ -3492,6 +3528,24 @@ export type Database = {
       }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
+      get_client_favorites_for_agent: {
+        Args: { p_client_id: string }
+        Returns: {
+          address: string
+          bathrooms: number
+          bedrooms: number
+          city: string
+          created_at: string
+          id: string
+          listing_id: string
+          photos: Json
+          price: number
+          property_type: string
+          square_feet: number
+          state: string
+          zip_code: string
+        }[]
+      }
       get_verified_agent_ids: {
         Args: never
         Returns: {
