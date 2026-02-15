@@ -140,18 +140,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;l
              margin:16px 0;border-left:4px solid #2754C5;">
           <p style="margin:0;">"${variables.commentPreview}"</p>
         </div>
-        <p>Log in to view the full conversation.</p>`);
+        ${variables.conversationUrl ? `<p style="margin:24px 0 0;"><a href="${variables.conversationUrl}" style="display:inline-block;padding:12px 24px;border-radius:10px;background:#2754C5;color:#fff;text-decoration:none;font-weight:600;">View Conversation</a></p>` : '<p>Log in to view the full conversation.</p>'}`);
 
     case "hot-sheet-comment":
       return wrapHtml(`
         <h2>New Comment on Your Hot Sheet</h2>
         <p>Hi ${variables.agentName},</p>
-        <p><strong>${variables.clientName}</strong> left a comment on a listing in your Hot Sheet "<strong>${variables.hotSheetName}</strong>":</p>
+        <p><strong>${variables.clientName}</strong> commented on
+           <strong>${variables.listingAddress}</strong> in
+           "${variables.hotSheetName}":</p>
         <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #2754C5;">
-          <p style="margin:0 0 8px 0;font-size:13px;color:#666;">Re: ${variables.listingAddress}</p>
           <p style="margin:0;">"${variables.commentPreview}"</p>
         </div>
-        <p>Log in to your dashboard to view and respond.</p>`);
+        ${variables.conversationUrl ? `<p style="margin:24px 0 0;"><a href="${variables.conversationUrl}" style="display:inline-block;padding:12px 24px;border-radius:10px;background:#2754C5;color:#fff;text-decoration:none;font-weight:600;">View Conversation</a></p>` : '<p>Log in to your dashboard to view and respond.</p>'}`);
 
     default:
       return wrapHtml(

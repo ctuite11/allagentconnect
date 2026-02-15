@@ -4,7 +4,7 @@ import React from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
@@ -94,6 +94,13 @@ import Disclosures from "./pages/legal/Disclosures";
 // Messaging
 import Messages from "./pages/Messages";
 import Conversation from "./pages/Conversation";
+
+// Legacy redirect for /client-hot-sheet/:token → /client/hotsheet/:token
+function LegacyClientHotSheetRedirect() {
+  const { token } = useParams();
+  const location = useLocation();
+  return <Navigate to={`/client/hotsheet/${token}${location.search}`} replace />;
+}
 
 
 const queryClient = new QueryClient({
@@ -190,7 +197,7 @@ const App = () => (
                 <Route path="/messages/:id" element={<RouteGuard requireRole="agent"><Conversation /></RouteGuard>} />
                 <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
-                <Route path="/client-hot-sheet/:token" element={<ClientHotSheet />} />
+                <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
                 <Route path="/analytics" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
                 <Route path="/analytics/:id" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
