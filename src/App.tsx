@@ -62,6 +62,7 @@ import AdminDebugAuth from "./pages/AdminDebugAuth";
 import AdminMatches from "./pages/AdminMatches";
 
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
@@ -212,8 +213,8 @@ const App = () => (
                 <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
                 <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
-                <Route path="/client/hotsheets/new" element={<Navigate to="/auth" replace />} />
-                <Route path="/client/favorites" element={<Navigate to="/auth" replace />} />
+                <Route path="/client/hotsheets/new" element={<RouteGuard requireAuth><ClientCreateHotsheetNew /></RouteGuard>} />
+                <Route path="/client/favorites" element={<RouteGuard requireAuth><Favorites /></RouteGuard>} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />

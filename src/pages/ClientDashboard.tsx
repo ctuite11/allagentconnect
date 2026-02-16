@@ -36,7 +36,6 @@ interface HotSheet {
   criteria: any;
   created_at: string;
   is_active: boolean;
-  access_token: string | null;
 }
 
 interface Favorite {
@@ -59,6 +58,7 @@ export default function ClientDashboard() {
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [relationshipId, setRelationshipId] = useState<string | null>(null);
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
+  const [shareTokenByHotSheetId, setShareTokenByHotSheetId] = useState<Record<string, string>>({});
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
 
@@ -99,15 +99,45 @@ export default function ClientDashboard() {
   };
 
   const loadHotSheets = async (userId: string) => {
-    const { data } = await supabase
-      .from("hot_sheets")
-      .select("id, name, criteria, created_at, is_active, access_token")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    // 1) Pull sheets via join table (clients are linked, not owners)
+    const { data: rows, error: joinErr } = await supabase
+      .from("hot_sheet_clients")
+      .select(`
+        hot_sheet_id,
+        hot_sheets (
+          id,
+          name,
+          criteria,
+          created_at,
+          is_active
+        )
+      `)
+      .eq("client_id", userId);
 
-    if (data) {
-      setHotSheets(data);
+    if (joinErr) {
+      console.error("Failed to load hot sheets (join)", joinErr);
+      setHotSheets([]);
+      return;
     }
+
+    const sheets = (rows || [])
+      .map((r: any) => r.hot_sheets)
+      .filter(Boolean);
+    setHotSheets(sheets);
+
+    // 2) Pull ALL accepted tokens for this user once (public SELECT on share_tokens)
+    const { data: tokenRows } = await supabase
+      .from("share_tokens")
+      .select("token, payload")
+      .eq("accepted_by_user_id", userId);
+
+    // 3) Build token map: hot_sheet_id -> token
+    const tokenMap: Record<string, string> = {};
+    for (const t of tokenRows || []) {
+      const hsId = (t?.payload as any)?.hot_sheet_id;
+      if (hsId && t.token) tokenMap[String(hsId)] = t.token;
+    }
+    setShareTokenByHotSheetId(tokenMap);
   };
 
   const loadFavorites = async (userId: string) => {
@@ -278,18 +308,20 @@ export default function ClientDashboard() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            if (sheet.access_token) {
-                              navigate(`/client-hot-sheet/${sheet.access_token}`);
-                            }
-                          }}
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View
-                        </Button>
+                        {shareTokenByHotSheetId[sheet.id] ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/client/hotsheet/${shareTokenByHotSheetId[sheet.id]}`)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic self-center">
+                            Invite pending
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
