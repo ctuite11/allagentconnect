@@ -112,7 +112,7 @@ export default function ClientDashboard() {
           is_active
         )
       `)
-      .eq("client_id", userId);
+      ;
 
     if (joinErr) {
       console.error("Failed to load hot sheets (join)", joinErr);
