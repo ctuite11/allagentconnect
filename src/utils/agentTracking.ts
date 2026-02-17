@@ -14,3 +14,10 @@ export function getPrimaryAgentId(): string | null {
 
   return cookie.split("=")[1] || null;
 }
+
+export function clearPrimaryAgentId(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem("primary_agent_id");
+  document.cookie = "primary_agent_id=; path=/; max-age=0";
+  document.cookie = "primary_agent_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+}

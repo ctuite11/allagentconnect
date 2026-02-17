@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, Bell, User, Mail, Phone, Plus, Edit, Eye, UserX } from "lucide-react";
+import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -171,6 +172,7 @@ export default function ClientDashboard() {
     }
 
     toast.success("Relationship ended");
+    clearPrimaryAgentId();
     setAgent(null);
     setRelationshipId(null);
     setShowEndDialog(false);
