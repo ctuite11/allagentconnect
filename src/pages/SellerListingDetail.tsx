@@ -286,7 +286,7 @@ const SellerListingDetail = () => {
         {/* Price & Commission */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           <div className="p-6 bg-zinc-50 rounded-xl">
-            <p className="text-sm text-zinc-500 mb-1">Asking Price</p>
+            <p className="text-sm text-zinc-500 mb-1">Estimated Home Value</p>
             <p className="text-3xl font-bold text-zinc-900">{formatPrice(submission.asking_price)}</p>
           </div>
           <div className="p-6 bg-blue-50 rounded-xl border border-blue-100">

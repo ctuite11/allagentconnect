@@ -600,7 +600,7 @@ const AgentMatch = () => {
               </div>
 
               <div>
-                <Label htmlFor="price">Asking Price *</Label>
+                <Label htmlFor="price">Estimated Home Value *</Label>
                 <FormattedInput
                   id="price"
                   format="currency"
