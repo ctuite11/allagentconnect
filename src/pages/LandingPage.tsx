@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Share2, Users, Megaphone, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -38,12 +38,36 @@ function ModuleCard({
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate('/home', { replace: true });
-    });
+    let alive = true;
+
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+
+        if (!alive) return;
+
+        if (session) {
+          navigate('/home', { replace: true });
+          return;
+        }
+
+        setCheckingSession(false);
+      } catch {
+        if (!alive) return;
+        setCheckingSession(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
   }, [navigate]);
+
+  if (checkingSession) return null;
 
   return (
     <div className="min-h-screen bg-white">
