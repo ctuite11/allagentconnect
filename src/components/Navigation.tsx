@@ -277,7 +277,7 @@ const Navigation = () => {
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               
-              {user && (
+              {user && role === "agent" && (
                 <>
                   <DropdownMenuSeparator className="bg-slate-200" />
                   <DropdownMenuLabel className="text-slate-500 text-xs">Agent Tools</DropdownMenuLabel>
