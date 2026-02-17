@@ -98,11 +98,24 @@ body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
         ${variables.listingsHtml || ""}
         <p>Don't miss out on these opportunities!</p>`);
 
-    case "hot-sheet-invite":
+    case "hot-sheet-invite": {
+      const teasers = Array.isArray(variables.teasers) ? variables.teasers.slice(0, 6) : [];
+      const teaserHtml = teasers.map((teaser: any) => `
+        <div style="margin: 0 0 16px; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
+          ${teaser.photoUrl ? `<img src="${teaser.photoUrl}" alt="Listing preview" style="display:block;width:100%;height:160px;object-fit:cover;" />` : ""}
+          <div style="padding: 12px 14px;">
+            <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#111827;">${teaser.price || "Price unavailable"}</p>
+            <p style="margin:0;color:#4b5563;">${teaser.cityState || "Location unavailable"}${teaser.bedsBaths ? ` • ${teaser.bedsBaths}` : ""}</p>
+          </div>
+        </div>
+      `).join("");
+
       return wrapHtml(`
         <h2>You've Been Invited to View a Hot Sheet</h2>
         <p>${variables.inviterName} has shared their Hot Sheet "${variables.hotSheetName}" with you.</p>
-        <div class="cta-wrap"><a href="${variables.hotSheetLink}" class="cta"><span class="cta-dot"></span>View Hot Sheet<span class="cta-arrow">&rarr;</span></a></div>`);
+        ${teaserHtml ? `<p>Here are a few matching homes to preview:</p>${teaserHtml}` : ""}
+        <div class="cta-wrap"><a href="${variables.hotSheetLink}" class="cta"><span class="cta-dot"></span>Accept Invite & View Matches<span class="cta-arrow">&rarr;</span></a></div>`);
+    }
 
     case "favorites-share":
       return wrapHtml(`
@@ -147,10 +160,11 @@ body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 
     case "new-match-notification":
       return wrapHtml(`
-        <h2>New Matching Listings!</h2>
+        <h2>New matches in your Hot Sheet</h2>
         <p>Hi ${variables.userName},</p>
-        <p>We found ${variables.matchCount} new listings matching your Hot Sheet "${variables.hotSheetName}":</p>
-        ${variables.listingsHtml || ""}`);
+        <p>We found ${variables.matchCount} new listings matching "${variables.hotSheetName}":</p>
+        ${variables.listingsHtml || ""}
+        ${variables.hotSheetLink ? `<div class="cta-wrap"><a href="${variables.hotSheetLink}" class="cta"><span class="cta-dot"></span>Open Hot Sheet<span class="cta-arrow">&rarr;</span></a></div>` : ""}`);
 
     case "hot-sheet-agent-reply":
       return wrapHtml(`
