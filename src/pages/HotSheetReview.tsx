@@ -346,6 +346,7 @@ if (comments && comments.length > 0) {
                 inviterName: agentName,
                 hotSheetName: hotSheet.name,
                 hotSheetLink,
+                hotSheetId: hotSheet.id,
               },
             }).then(({ error: emailErr }) => {
               if (emailErr) console.error(`[send-first-batch] Email error:`, emailErr);

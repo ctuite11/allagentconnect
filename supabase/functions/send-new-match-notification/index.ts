@@ -17,10 +17,10 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch active hot sheets with notification preferences
+    // Fetch active hot sheets with owner details
     const { data: hotSheets, error: fetchError } = await supabase
       .from("hot_sheets")
-      .select(`*, user:profiles!user_id(email, first_name)`)
+      .select("id, user_id, name")
       .eq("is_active", true);
 
     if (fetchError) throw fetchError;
@@ -52,7 +52,64 @@ serve(async (req) => {
         .select("*")
         .in("id", matchingListings.map((m: any) => m.listing_id));
 
-      if (!listings?.length || !hotSheet.user?.email) continue;
+      if (!listings?.length) continue;
+
+      // Pull assigned recipients for this hot sheet
+      const { data: hotSheetClients, error: clientsError } = await supabase
+        .from("hot_sheet_clients")
+        .select("client_id, clients(email, first_name)")
+        .eq("hot_sheet_id", hotSheet.id);
+
+      if (clientsError || !hotSheetClients?.length) continue;
+
+      // Pull accepted invite tokens for this hot sheet
+      const { data: acceptedTokens, error: tokenError } = await supabase
+        .from("share_tokens")
+        .select("accepted_at, payload")
+        .eq("agent_id", hotSheet.user_id)
+        .eq("payload->>type", "client_hotsheet_invite")
+        .eq("payload->>hot_sheet_id", hotSheet.id)
+        .not("accepted_at", "is", null);
+
+      if (tokenError || !acceptedTokens?.length) {
+        console.log(`[send-new-match-notification] Skipping ${hotSheet.id}: no accepted invite tokens`);
+        continue;
+      }
+
+      const acceptedClientIds = new Set(
+        acceptedTokens
+          .map((token: any) => token?.payload?.client_id)
+          .filter(Boolean)
+          .map((id: string) => String(id)),
+      );
+
+      const acceptedEmails = new Set(
+        acceptedTokens
+          .map((token: any) => token?.payload?.client_email)
+          .filter(Boolean)
+          .map((email: string) => String(email).toLowerCase()),
+      );
+
+      const acceptedRecipients = hotSheetClients
+        .map((row: any) => {
+          const client = Array.isArray(row.clients) ? row.clients[0] : row.clients;
+          return {
+            clientId: row.client_id ? String(row.client_id) : null,
+            email: client?.email ? String(client.email).toLowerCase() : null,
+            firstName: client?.first_name || "",
+          };
+        })
+        .filter((recipient: any) => {
+          if (!recipient.email) return false;
+          const hasAcceptedById = recipient.clientId && acceptedClientIds.has(recipient.clientId);
+          const hasAcceptedByEmail = acceptedEmails.has(recipient.email);
+          return Boolean(hasAcceptedById || hasAcceptedByEmail);
+        });
+
+      if (!acceptedRecipients.length) {
+        console.log(`[send-new-match-notification] Skipping ${hotSheet.id}: recipients not accepted yet`);
+        continue;
+      }
 
       // Build listings HTML
       const listingsHtml = listings.map((listing: any) => `
@@ -67,24 +124,33 @@ serve(async (req) => {
         </div>
       `).join("");
 
-      // Enqueue email job
-      const { error: insertError } = await supabase.from("email_jobs").insert({
-        payload: {
-          provider: "resend",
-          template: "new-match-notification",
-          to: hotSheet.user.email,
-          subject: `New Match Alert: ${listings.length} new ${listings.length === 1 ? 'property matches' : 'properties match'} "${hotSheet.name}"`,
-          variables: {
-            userName: hotSheet.user.first_name || "",
-            hotSheetName: hotSheet.name,
-            matchCount: listings.length,
-            listingsHtml,
-          },
-        },
-      });
+      const appBaseUrl = Deno.env.get("APP_BASE_URL") || Deno.env.get("SITE_URL") || "http://localhost:5173";
+      let queuedForHotSheet = 0;
 
-      if (!insertError) {
-        jobsQueued++;
+      for (const recipient of acceptedRecipients) {
+        const { error: insertError } = await supabase.from("email_jobs").insert({
+          payload: {
+            provider: "resend",
+            template: "new-match-notification",
+            to: recipient.email,
+            subject: `New matches in your Hot Sheet: ${hotSheet.name}`,
+            variables: {
+              userName: recipient.firstName || "there",
+              hotSheetName: hotSheet.name,
+              matchCount: listings.length,
+              listingsHtml,
+              hotSheetLink: `${appBaseUrl}/client-dashboard`,
+            },
+          },
+        });
+
+        if (!insertError) {
+          jobsQueued++;
+          queuedForHotSheet++;
+        }
+      }
+
+      if (queuedForHotSheet > 0) {
         
         // Record in hot_sheet_sent_listings (canonical dedup source)
         const sentRecords = matchingListings.map((match: any) => ({
