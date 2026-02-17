@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Users, CheckCircle2, Lock, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -29,24 +28,18 @@ const AgentMatchResultsPanel = ({
   isProcessing,
   onTriggerAuth,
 }: AgentMatchResultsPanelProps) => {
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [messageToAgents, setMessageToAgents] = useState(
     "I'm interested in connecting with buyer agents who have clients looking for a home like mine."
   );
 
   const handleProceedToPayment = async () => {
-    if (!acceptedTerms) {
-      toast.error("Please accept the terms to continue");
-      return;
-    }
-
     if (!isAuthenticated) {
       onTriggerAuth();
       return;
     }
 
-    // Placeholder: In production, this would integrate with Stripe
-    toast.info("Payment integration coming soon! Your submission has been saved.");
+    // TEST MODE — payment bypassed
+    toast.success("Test mode: Listing activated (payment bypassed)");
   };
 
   const formatPrice = (price: string) => {
@@ -182,7 +175,7 @@ const AgentMatchResultsPanel = ({
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-zinc-900">Ready to connect?</h2>
             <p className="text-sm text-zinc-600">
-              For a one-time fee of <strong>$29.99</strong>, we'll introduce your property to all {matchCount} matched agents privately.
+              (Testing mode — payment bypassed.) We'll introduce your property to all {matchCount} matched agents privately.
             </p>
 
             <div className="space-y-2 p-4 bg-zinc-50 rounded-xl">
@@ -201,36 +194,23 @@ const AgentMatchResultsPanel = ({
             </div>
           </div>
 
-          {/* Terms */}
-          <div className="p-4 border border-zinc-200 rounded-xl">
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="terms"
-                checked={acceptedTerms}
-                onCheckedChange={(checked) => setAcceptedTerms(!!checked)}
-              />
-              <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-                I agree to pay the <strong>{propertyData.buyer_agent_commission}</strong> buyer agent commission upon successful sale and the <strong>$29.99</strong> Agent Match delivery fee.
-              </Label>
-            </div>
-          </div>
 
           {/* CTA */}
           <Button
             onClick={handleProceedToPayment}
-            disabled={!acceptedTerms || isProcessing}
+            disabled={isProcessing}
             className="w-full bg-black hover:bg-zinc-800 text-white h-12 text-base"
           >
             {isProcessing ? (
               "Processing..."
             ) : isAuthenticated ? (
               <>
-                Proceed to Payment — $29.99
+                Submit Listing
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             ) : (
               <>
-                Create Account & Pay — $29.99
+                Create Account & Submit
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
@@ -256,7 +236,7 @@ const AgentMatchResultsPanel = ({
       <div className="flex items-start gap-3 pt-4 border-t">
         <Lock className="h-4 w-4 text-zinc-400 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-zinc-500">
-          Your property details are never shared publicly. Agent identities are revealed only after you complete payment.
+          Your property details are never shared publicly. Agent identities are revealed only after submission.
         </p>
       </div>
     </div>
