@@ -1,35 +1,23 @@
 
 
-# Full Wipe of tuite.chris@gmail.com
+# Change "Asking Price" to "Estimated Home Value" on Seller Match Form
 
-Delete every record associated with this email so you can start completely fresh — new client, new invite, new everything.
+## What Changes
 
-## Records to Delete (in order)
+Two files need a label update (the underlying database column `asking_price` stays the same -- this is a display-only change):
 
-1. **hot_sheet_clients** — 2 rows linking the client to hot sheets "test" and "test3"
-2. **share_tokens** — 3 invite tokens referencing `tuite.chris@gmail.com`
-3. **clients** — 1 CRM record (`e277c72d-5bd2-46ec-86d3-93ace2aeca88`)
+### 1. `src/pages/AgentMatch.tsx` (the input form)
+- **Line 603**: Change the label from `Asking Price *` to `Estimated Home Value *`
+- **Line 609**: Update placeholder from `$650,000` to `$650,000` (keep as-is, still appropriate)
 
-The auth user and profile were already removed in the previous cleanup.
+### 2. `src/pages/SellerListingDetail.tsx` (the detail view)
+- **Line 289**: Change the display label from `Asking Price` to `Estimated Home Value`
 
-## SQL (executed in dependency order)
+## What Does NOT Change
+- The database column name (`asking_price`) remains unchanged
+- Validation logic remains the same
+- No other files are affected
 
-```sql
--- 1. Remove hot sheet links
-DELETE FROM hot_sheet_clients
-WHERE client_id = 'e277c72d-5bd2-46ec-86d3-93ace2aeca88';
-
--- 2. Remove invite tokens
-DELETE FROM share_tokens
-WHERE payload->>'client_email' = 'tuite.chris@gmail.com';
-
--- 3. Remove the client record
-DELETE FROM clients
-WHERE id = 'e277c72d-5bd2-46ec-86d3-93ace2aeca88';
-```
-
-## After This
-
-- Zero traces of `tuite.chris@gmail.com` in the database
-- You can re-add the client from scratch in My Contacts, create a new hot sheet, and send a fresh invite
+## Technical Detail
+Both edits are single-line string replacements. The field name in state (`asking_price`) and the database column are untouched -- only the user-facing label text changes.
 
