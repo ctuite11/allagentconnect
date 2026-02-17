@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, Mail, Phone, UserX } from "lucide-react";
+import { clearPrimaryAgentId } from "@/utils/agentTracking";
 
 const ClientAgentSettings = () => {
   const navigate = useNavigate();
@@ -84,6 +85,7 @@ const ClientAgentSettings = () => {
       if (error) throw error;
 
       toast.success("Relationship ended successfully");
+      clearPrimaryAgentId();
       setAgent(null);
       setRelationshipId(null);
     } catch (error: any) {
