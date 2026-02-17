@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -76,6 +76,7 @@ export function CreateHotSheetDialog({
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const clientSearchInputRef = useRef<HTMLInputElement>(null);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -252,6 +253,14 @@ export function CreateHotSheetDialog({
     return () => clearTimeout(timer);
   }, [clientSearchQuery, userId, open]);
 
+  useEffect(() => {
+    if (showClientPicker) {
+      setTimeout(() => {
+        clientSearchInputRef.current?.focus();
+      }, 0);
+    }
+  }, [showClientPicker]);
+
   const handleSelectClient = async (client: any) => {
     // Check if client is already selected
     if (selectedClients.some(c => c.id === client.id)) {
@@ -288,6 +297,7 @@ export function CreateHotSheetDialog({
     setClientPhone("");
     setExistingClient(null);
     setShowClientDropdown(false);
+    setShowClientPicker(false);
     
     toast.success(`Added client: ${client.first_name} ${client.last_name}`);
   };
@@ -1034,14 +1044,16 @@ export function CreateHotSheetDialog({
                   >
                     {selectedClients.length > 0 ? "Select / Change Contact" : "Select Contact"}
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowClientPicker(true)}
-                  >
-                    Add Additional Contact
-                  </Button>
+                  {selectedClients.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowClientPicker(true)}
+                    >
+                      Add Additional Contact
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -1092,6 +1104,7 @@ export function CreateHotSheetDialog({
                     <Label htmlFor="client-search">Search Existing Contact</Label>
                     <Input
                       id="client-search"
+                      ref={clientSearchInputRef}
                       placeholder="Search by name or email..."
                       value={clientSearchQuery}
                       onChange={(e) => setClientSearchQuery(e.target.value)}
@@ -1229,6 +1242,17 @@ export function CreateHotSheetDialog({
                     >
                       <Check className="w-4 h-4 mr-2" />
                       Add This Contact
+                    </Button>
+                  )}
+
+                  {selectedClients.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setShowClientPicker(false)}
+                    >
+                      Done
                     </Button>
                   )}
                 </>
