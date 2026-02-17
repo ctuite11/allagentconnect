@@ -160,14 +160,19 @@ export function CreateHotSheetDialog({
   const [criteriaOpen, setCriteriaOpen] = useState(true);
   const [addressOpen, setAddressOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
-  const [clientInfoOpen, setClientInfoOpen] = useState(true);
+  const [showClientPicker, setShowClientPicker] = useState(false);
   const [townsOpen, setTownsOpen] = useState(false);
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   
-  // Add another contact modal
-  const [showAddAnotherContactModal, setShowAddAnotherContactModal] = useState(false);
-  const [createdHotSheetId, setCreatedHotSheetId] = useState<string | null>(null);
+  const resetDialogState = () => {
+    setShowCreateClientDialog(false);
+    setShowConfirmDialog(false);
+    setShowClientPicker(false);
+    setShowClientDropdown(false);
+    setClientSearchQuery("");
+    setClientSearchResults([]);
+  };
 
   // Initialize from preSelectedClients when dialog opens (only once on open)
   useEffect(() => {
@@ -688,8 +693,7 @@ export function CreateHotSheetDialog({
     setExistingClient(null);
     setClientSearchQuery("");
     
-    // Collapse client info
-    setClientInfoOpen(false);
+    setShowClientPicker(false);
   };
 
   const handleCreateClient = async () => {
@@ -738,8 +742,7 @@ export function CreateHotSheetDialog({
       setExistingClient(null);
       setClientSearchQuery("");
       
-      // Collapse client info
-      setClientInfoOpen(false);
+      setShowClientPicker(false);
     } catch (error: any) {
       console.error("Error creating client:", error);
       toast.error(error?.message || "Failed to create client");
@@ -846,8 +849,9 @@ export function CreateHotSheetDialog({
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
-          onSuccess(hotSheetId);
+          resetDialogState();
           onOpenChange(false);
+          onSuccess(hotSheetId);
           resetForm();
         }, 1500);
       } else {
@@ -885,11 +889,12 @@ export function CreateHotSheetDialog({
 
         toast.success("Hot sheet created successfully!");
         setShowSuccess(true);
-        setCreatedHotSheetId(createdHotSheet.id);
-        // Show add another contact modal
         setTimeout(() => {
           setShowSuccess(false);
-          setShowAddAnotherContactModal(true);
+          resetDialogState();
+          onOpenChange(false);
+          onSuccess(createdHotSheet.id);
+          resetForm();
         }, 1000);
       }
     } catch (error: any) {
@@ -911,7 +916,7 @@ export function CreateHotSheetDialog({
     setClientSearchQuery("");
     setClientSearchResults([]);
     setShowClientDropdown(false);
-    setClientInfoOpen(true);
+    setShowClientPicker(false);
     setSelectedClients([]);
     setShowCreateClientDialog(false);
     setCreatingClient(false);
@@ -1014,36 +1019,41 @@ export function CreateHotSheetDialog({
           </div>
 
           {/* Contact Information */}
-          <Collapsible open={clientInfoOpen} onOpenChange={setClientInfoOpen}>
-            <Card className="border border-zinc-200">
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">
-                      Contact Information <span className="text-[#0E56F5]">*</span>
-                      {selectedClients.length > 0 && (
-                        <span className="ml-2 text-sm font-normal text-zinc-500">
-                          ✓ {selectedClients.length} {selectedClients.length === 1 ? 'contact' : 'contacts'}
-                        </span>
-                      )}
-                    </CardTitle>
-                    {clientInfoOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-              {/* Selected Contacts List */}
-              {selectedClients.length > 0 && (
+          <Card className="border border-zinc-200">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-base">
+                  Contact Information <span className="text-[#0E56F5]">*</span>
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowClientPicker(true)}
+                  >
+                    {selectedClients.length > 0 ? "Select / Change Contact" : "Select Contact"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowClientPicker(true)}
+                  >
+                    Add Additional Contact
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedClients.length > 0 ? (
                 <div className="space-y-2">
-                  <Label>Selected Contacts ({selectedClients.length})</Label>
+                  <Label>Selected Contacts</Label>
                   <div className="space-y-2 p-3 bg-white rounded-md border border-neutral-200">
                     {selectedClients.map((client) => (
                       <div key={client.id} className="flex items-center justify-between p-2 bg-white rounded border border-neutral-200">
                         <div className="flex-1">
-                          <div className="font-medium text-sm">
-                            {client.first_name} {client.last_name}
-                          </div>
+                          <div className="font-medium text-sm">{client.first_name} {client.last_name}</div>
                           <div className="text-xs text-muted-foreground">{client.email}</div>
                           {client.phone && (
                             <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
@@ -1062,163 +1072,169 @@ export function CreateHotSheetDialog({
                     ))}
                   </div>
                 </div>
+              ) : (
+                <div className="rounded-md border border-dashed border-neutral-300 p-4 text-sm text-muted-foreground">
+                  <p>No contacts selected yet.</p>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 mt-2"
+                    onClick={() => setShowClientPicker(true)}
+                  >
+                    Select Contact
+                  </Button>
+                </div>
               )}
 
-              {/* Contact Search */}
-              <div className="space-y-2 relative">
-                <Label htmlFor="client-search">Search Existing Contact</Label>
-                <Input
-                  id="client-search"
-                  placeholder="Search by name or email..."
-                  value={clientSearchQuery}
-                  onChange={(e) => setClientSearchQuery(e.target.value)}
-                  onFocus={() => {
-                    if (clientSearchResults.length > 0) {
-                      setShowClientDropdown(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    // Delay to allow click on dropdown items
-                    setTimeout(() => setShowClientDropdown(false), 200);
-                  }}
-                />
-                {showClientDropdown && clientSearchResults.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {clientSearchResults.map((client) => (
-                      <button
-                        key={client.id}
-                        type="button"
-                        onClick={() => handleSelectClient(client)}
-                        className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b last:border-b-0"
-                      >
-                        <div className="font-medium text-sm">
-                          {client.first_name} {client.last_name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{client.email}</div>
-                        {client.phone && (
-                          <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
-                        )}
-                      </button>
-                    ))}
+              {showClientPicker && (
+                <>
+                  <div className="space-y-2 relative">
+                    <Label htmlFor="client-search">Search Existing Contact</Label>
+                    <Input
+                      id="client-search"
+                      placeholder="Search by name or email..."
+                      value={clientSearchQuery}
+                      onChange={(e) => setClientSearchQuery(e.target.value)}
+                      onFocus={() => {
+                        if (clientSearchResults.length > 0) {
+                          setShowClientDropdown(true);
+                        }
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => setShowClientDropdown(false), 200);
+                      }}
+                    />
+                    {showClientDropdown && clientSearchResults.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {clientSearchResults.map((client) => (
+                          <button
+                            key={client.id}
+                            type="button"
+                            onClick={() => handleSelectClient(client)}
+                            className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b last:border-b-0"
+                          >
+                            <div className="font-medium text-sm">{client.first_name} {client.last_name}</div>
+                            <div className="text-xs text-muted-foreground">{client.email}</div>
+                            {client.phone && (
+                              <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {existingClient && (
+                      <p className="text-sm text-muted-foreground">Found existing contact - fields auto-filled</p>
+                    )}
                   </div>
-                )}
-                {existingClient && (
-                  <p className="text-sm text-muted-foreground">
-                    Found existing contact - fields auto-filled
-                  </p>
-                )}
-              </div>
 
-              <Separator />
+                  <Separator />
 
-              <p className="text-sm text-muted-foreground">Or add a new contact manually:</p>
+                  <p className="text-sm text-muted-foreground">Or add a new contact manually:</p>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="client-first-name">First Name *</Label>
-                  <Input
-                    id="client-first-name"
-                    placeholder="John"
-                    value={clientFirstName}
-                    onChange={(e) => {
-                      setClientFirstName(e.target.value);
-                      if (errors.clientFirstName) {
-                        setErrors(prev => ({ ...prev, clientFirstName: undefined }));
-                      }
-                    }}
-                    className={errors.clientFirstName ? "border-destructive" : ""}
-                  />
-                  {existingClient && (
-                    <p className="text-sm text-emerald-600 flex items-center gap-1">
-                      <Check className="w-4 h-4" />
-                      Existing contact found
-                    </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="client-first-name">First Name *</Label>
+                      <Input
+                        id="client-first-name"
+                        placeholder="John"
+                        value={clientFirstName}
+                        onChange={(e) => {
+                          setClientFirstName(e.target.value);
+                          if (errors.clientFirstName) {
+                            setErrors(prev => ({ ...prev, clientFirstName: undefined }));
+                          }
+                        }}
+                        className={errors.clientFirstName ? "border-destructive" : ""}
+                      />
+                      {existingClient && (
+                        <p className="text-sm text-emerald-600 flex items-center gap-1">
+                          <Check className="w-4 h-4" />
+                          Existing contact found
+                        </p>
+                      )}
+                      {errors.clientFirstName && (
+                        <p className="text-sm text-destructive">{errors.clientFirstName}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="client-last-name">Last Name *</Label>
+                      <Input
+                        id="client-last-name"
+                        placeholder="Doe"
+                        value={clientLastName}
+                        onChange={(e) => {
+                          setClientLastName(e.target.value);
+                          if (errors.clientLastName) {
+                            setErrors(prev => ({ ...prev, clientLastName: undefined }));
+                          }
+                        }}
+                        className={errors.clientLastName ? "border-destructive" : ""}
+                      />
+                      {errors.clientLastName && (
+                        <p className="text-sm text-destructive">{errors.clientLastName}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="client-email">Email *</Label>
+                    <Input
+                      id="client-email"
+                      type="email"
+                      placeholder="john@example.com"
+                      value={clientEmail}
+                      onChange={(e) => {
+                        setClientEmail(e.target.value);
+                        if (errors.clientEmail) {
+                          setErrors(prev => ({ ...prev, clientEmail: undefined }));
+                        }
+                      }}
+                      className={errors.clientEmail ? "border-destructive" : ""}
+                    />
+                    {errors.clientEmail && (
+                      <p className="text-sm text-destructive">{errors.clientEmail}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="client-phone">Phone (Optional)</Label>
+                    <FormattedInput
+                      id="client-phone"
+                      format="phone"
+                      placeholder="1234567890"
+                      value={clientPhone}
+                      onChange={(value) => {
+                        setClientPhone(value);
+                        if (errors.clientPhone) {
+                          setErrors(prev => ({ ...prev, clientPhone: undefined }));
+                        }
+                      }}
+                      className={errors.clientPhone ? "border-destructive" : ""}
+                    />
+                    {errors.clientPhone && (
+                      <p className="text-sm text-destructive">{errors.clientPhone}</p>
+                    )}
+                  </div>
+
+                  {(clientFirstName || clientLastName || clientEmail || clientPhone) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (!existingClient) {
+                          setShowCreateClientDialog(true);
+                        } else {
+                          handleSelectClient(existingClient);
+                        }
+                      }}
+                      className="w-full"
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Add This Contact
+                    </Button>
                   )}
-                  {errors.clientFirstName && (
-                    <p className="text-sm text-destructive">{errors.clientFirstName}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="client-last-name">Last Name *</Label>
-                  <Input
-                    id="client-last-name"
-                    placeholder="Doe"
-                    value={clientLastName}
-                    onChange={(e) => {
-                      setClientLastName(e.target.value);
-                      if (errors.clientLastName) {
-                        setErrors(prev => ({ ...prev, clientLastName: undefined }));
-                      }
-                    }}
-                    className={errors.clientLastName ? "border-destructive" : ""}
-                  />
-                  {errors.clientLastName && (
-                    <p className="text-sm text-destructive">{errors.clientLastName}</p>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="client-email">Email *</Label>
-                <Input
-                  id="client-email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={clientEmail}
-                  onChange={(e) => {
-                    setClientEmail(e.target.value);
-                    if (errors.clientEmail) {
-                      setErrors(prev => ({ ...prev, clientEmail: undefined }));
-                    }
-                  }}
-                  className={errors.clientEmail ? "border-destructive" : ""}
-                />
-                {errors.clientEmail && (
-                  <p className="text-sm text-destructive">{errors.clientEmail}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="client-phone">Phone (Optional)</Label>
-                <FormattedInput
-                  id="client-phone"
-                  format="phone"
-                  placeholder="1234567890"
-                  value={clientPhone}
-                  onChange={(value) => {
-                    setClientPhone(value);
-                    if (errors.clientPhone) {
-                      setErrors(prev => ({ ...prev, clientPhone: undefined }));
-                    }
-                  }}
-                  className={errors.clientPhone ? "border-destructive" : ""}
-                />
-                {errors.clientPhone && (
-                  <p className="text-sm text-destructive">{errors.clientPhone}</p>
-                )}
-              </div>
-
-              {/* Add Contact Button */}
-              {(clientFirstName || clientLastName || clientEmail || clientPhone) && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    if (!existingClient) {
-                      setShowCreateClientDialog(true);
-                    } else {
-                      handleSelectClient(existingClient);
-                    }
-                  }}
-                  className="w-full"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Add This Contact
-                </Button>
+                </>
               )}
-
             </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+          </Card>
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
@@ -1898,40 +1914,6 @@ export function CreateHotSheetDialog({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Add Another Contact Modal */}
-      <AlertDialog open={showAddAnotherContactModal} onOpenChange={setShowAddAnotherContactModal}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Would you like to add another contact to this same Hot Sheet?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You can add more contacts who will receive alerts for this Hot Sheet, or finish and view your results.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={() => {
-                setShowAddAnotherContactModal(false);
-                if (createdHotSheetId) {
-                  onSuccess(createdHotSheetId);
-                }
-                onOpenChange(false);
-                resetForm();
-              }}
-            >
-              Continue
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                setShowAddAnotherContactModal(false);
-                setClientInfoOpen(true);
-              }}
-              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800"
-            >
-              Add Another Contact
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 }
