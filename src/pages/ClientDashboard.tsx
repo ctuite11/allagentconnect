@@ -159,23 +159,40 @@ export default function ClientDashboard() {
   };
 
   const handleEndRelationship = async () => {
-    if (!relationshipId) return;
+    if (!relationshipId) {
+      console.error("End relationship: relationshipId is null");
+      toast.error("No active relationship to end");
+      return;
+    }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("client_agent_relationships")
       .update({ status: "inactive", ended_at: new Date().toISOString() })
-      .eq("id", relationshipId);
+      .eq("id", relationshipId)
+      .select("id, status, ended_at");
 
     if (error) {
+      console.error("End relationship error:", error);
       toast.error("Failed to end relationship");
       return;
     }
 
+    if (!data?.length) {
+      console.error("End relationship updated 0 rows", { relationshipId });
+      toast.error("End relationship failed — no rows updated");
+      return;
+    }
+
+    console.log("End relationship success:", data[0]);
     toast.success("Relationship ended");
     clearPrimaryAgentId();
     setAgent(null);
     setRelationshipId(null);
     setShowEndDialog(false);
+
+    // Force-refresh to ensure UI is in sync with DB
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await loadAgentRelationship(user.id);
   };
 
   const formatCriteriaSummary = (criteria: any) => {
