@@ -40,6 +40,7 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
+  const isAgentOrAdmin = role === "agent" || role === "admin";
   const { unreadCount } = useUnreadConversations();
 
 
@@ -265,7 +266,7 @@ const Navigation = () => {
                   <Users className="mr-2 h-4 w-4" />
                   Find an Agent
                 </DropdownMenuItem>
-                {user && role === "agent" && (
+                {user && isAgentOrAdmin && (
                   <DropdownMenuItem onClick={() => navigate("/our-members")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                     <Users className="mr-2 h-4 w-4" />
                     Referrals
@@ -277,7 +278,7 @@ const Navigation = () => {
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               
-              {user && role === "agent" && (
+              {user && isAgentOrAdmin && (
                 <>
                   <DropdownMenuSeparator className="bg-slate-200" />
                   <DropdownMenuLabel className="text-slate-500 text-xs">Agent Tools</DropdownMenuLabel>
@@ -360,7 +361,7 @@ const Navigation = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {user && role === "agent" && (
+          {user && isAgentOrAdmin && (
             <button
               onClick={() => navigate("/agent-dashboard")}
               className="hover:text-emerald-600 transition-colors"
@@ -374,7 +375,7 @@ const Navigation = () => {
         <div className="hidden md:flex items-center gap-2 relative top-[1px]">
           {user ? (
             <>
-              {role === "agent" && (
+              {isAgentOrAdmin && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors">
@@ -491,14 +492,14 @@ const Navigation = () => {
                 {user.email}
               </span>
               <button 
-                onClick={() => navigate(role === "agent" ? "/listing-search" : "/browse")}
+                onClick={() => navigate(isAgentOrAdmin ? "/listing-search" : "/browse")}
                 className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
               >
                 <Search className="w-4 h-4 mr-2" />
-                {role === "agent" ? "Search" : "Search Homes"}
+                {isAgentOrAdmin ? "Search" : "Search Homes"}
               </button>
               {/* Messages icon with unread badge */}
-              {role === "agent" && (
+              {isAgentOrAdmin && (
                 <button 
                   onClick={() => navigate("/messages")}
                   className="relative inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
@@ -572,13 +573,13 @@ const Navigation = () => {
           </button>
           <button
             onClick={() => {
-              navigate(role === "agent" ? "/listing-search" : "/browse");
+              navigate(isAgentOrAdmin ? "/listing-search" : "/browse");
               setIsMenuOpen(false);
             }}
             className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
           >
             <Search className="w-4 h-4" />
-            {role === "agent" ? "Listing Search" : "Search Homes"}
+            {isAgentOrAdmin ? "Listing Search" : "Search Homes"}
           </button>
           <button
             onClick={() => {
@@ -600,7 +601,7 @@ const Navigation = () => {
             <Users className="w-4 h-4" />
             Find an Agent
           </button>
-          {user && role === "agent" && (
+          {user && isAgentOrAdmin && (
             <button
               onClick={() => {
                 navigate("/our-members");
