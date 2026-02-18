@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { setPrimaryAgentId } from "@/utils/agentTracking";
 
 interface AgentChoiceDialogProps {
   open: boolean;
@@ -38,6 +39,7 @@ export function AgentChoiceDialog({
 
       if (error) throw error;
 
+      setPrimaryAgentId(newAgent.id);
       toast.success(`You're now working with ${newAgent.first_name}`);
       onChoice(true);
     } catch (error: any) {

@@ -1,3 +1,9 @@
+export function setPrimaryAgentId(agentId: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem("primary_agent_id", agentId);
+  document.cookie = `primary_agent_id=${agentId}; path=/; max-age=7776000`;
+}
+
 export function getPrimaryAgentId(): string | null {
   if (typeof window === "undefined") return null;
 
