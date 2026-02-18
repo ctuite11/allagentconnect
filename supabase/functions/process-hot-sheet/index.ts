@@ -72,6 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: hotSheetClients, error: clientsError } = await adminClient
       .from("hot_sheet_clients")
       .select(`
+        client_id,
         clients (
           first_name,
           last_name,
@@ -81,6 +82,41 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("hot_sheet_id", hotSheetId);
 
     console.log("Fetched clients for hot sheet:", hotSheetClients?.length || 0);
+
+    // Fetch accepted tokens for this hot sheet (gate: only accepted clients get match emails)
+    const { data: acceptedTokens, error: tokenErr } = await adminClient
+      .from("share_tokens")
+      .select("client_id, client_email, payload, accepted_at")
+      .eq("type", "client_hotsheet_invite")
+      .eq("agent_id", hotSheet.user_id)
+      .not("accepted_at", "is", null);
+
+    if (tokenErr) {
+      console.warn("Warning: could not fetch accepted tokens:", tokenErr.message);
+    }
+
+    const hotSheetIdStr = String(hotSheet.id);
+
+    const acceptedForThisHotSheet = (acceptedTokens ?? []).filter((t: any) => {
+      const p = t.payload ?? {};
+      return String(p.hot_sheet_id ?? "") === hotSheetIdStr;
+    });
+
+    const acceptedClientIds = new Set(
+      acceptedForThisHotSheet
+        .map((t: any) => t.client_id ?? t.payload?.client_id)
+        .filter(Boolean)
+        .map((x: any) => String(x))
+    );
+
+    const acceptedEmails = new Set(
+      acceptedForThisHotSheet
+        .map((t: any) => t.client_email ?? t.payload?.client_email)
+        .filter(Boolean)
+        .map((e: string) => e.toLowerCase().trim())
+    );
+
+    console.log(`Accepted clients for hot sheet ${hotSheetIdStr}: IDs=${[...acceptedClientIds].join(",") || "none"}, emails=${[...acceptedEmails].join(",") || "none"}`);
 
     console.log("Hot sheet criteria:", hotSheet.criteria);
 
@@ -252,18 +288,31 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       if (hotSheet.notify_client_email) {
-        // Get client emails from criteria first
+        // Gate: only send match emails to clients who have ACCEPTED their invite for this hot sheet
+
+        // Get client emails from criteria first (legacy path)
         if (hotSheet.criteria?.clientEmail) {
-          recipientSet.add(hotSheet.criteria.clientEmail.toLowerCase().trim());
-          console.log("Added client email from criteria:", hotSheet.criteria.clientEmail);
+          const email = hotSheet.criteria.clientEmail.toLowerCase().trim();
+          if (acceptedEmails.has(email)) {
+            recipientSet.add(email);
+            console.log("Added accepted client email from criteria:", email);
+          } else {
+            console.log("Skipping criteria.clientEmail (invite not yet accepted):", email);
+          }
         }
         
-        // Also add clients from junction table
+        // Add clients from junction table — only if they have an accepted invite
         if (hotSheetClients && hotSheetClients.length > 0) {
           hotSheetClients.forEach((hsc: any) => {
-            if (hsc.clients?.email) {
-              recipientSet.add(hsc.clients.email.toLowerCase().trim());
-              console.log("Added client email from junction:", hsc.clients.email);
+            const email = hsc.clients?.email?.toLowerCase().trim();
+            if (!email) return;
+            const hasAcceptedById = hsc.client_id && acceptedClientIds.has(String(hsc.client_id));
+            const hasAcceptedByEmail = acceptedEmails.has(email);
+            if (hasAcceptedById || hasAcceptedByEmail) {
+              recipientSet.add(email);
+              console.log("Added accepted client email from junction:", email);
+            } else {
+              console.log("Skipping client (invite not yet accepted):", email);
             }
           });
         }
