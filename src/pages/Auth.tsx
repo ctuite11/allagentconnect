@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import { Logo } from "@/components/brand";
-import { authDebug, checkIsAdmin, getAgentStatus } from "@/lib/authDebug";
+import { authDebug } from "@/lib/authDebug";
+import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 
 // NOTE: This is generic only when it declares <T> and returns Promise<T>.
 // Timeout wrapper - truly generic + typed for PromiseLike
@@ -245,50 +246,30 @@ const Auth = () => {
           
           authDebug("handleSession existing session", { userId: session.user.id, email: session.user.email });
           
-          // ═══════════════════════════════════════════════════════════════════════
-          // PRIORITY 1 (HARD GATE): Admin check using has_role RPC
-          // Admin users MUST route to /admin/approvals and TERMINATE immediately.
-          // Do NOT run agent_settings queries, polling, or verification logic.
-          // ═══════════════════════════════════════════════════════════════════════
-          const adminResult = await checkIsAdmin(session.user.id);
-          authDebug("handleSession has_role(admin)", { 
-            isAdmin: adminResult.isAdmin, 
-            error: adminResult.error 
+          // Single RPC: resolve role with enforced priority (admin > buyer > agent > unknown)
+          const resolved = await resolveUserRole(session.user.id);
+          authDebug("handleSession resolved role", {
+            userId: session.user.id,
+            role: resolved.role,
+            is_verified_agent: resolved.is_verified_agent,
           });
 
-          if (adminResult.isAdmin === true) {
-            authDebug("handleSession ADMIN_REDIRECT", { action: "terminal_redirect" });
+          // Admin and buyer go immediately — no agent_settings polling
+          if (resolved.role === "admin" || resolved.role === "buyer") {
+            const target = getRouteForRole(resolved);
+            authDebug("handleSession terminal_redirect", { role: resolved.role, target });
             if (mounted) {
               didNavigate.current = true;
-              navigate('/admin/approvals', { replace: true });
-            }
-            return; // ═══ HARD STOP ═══ Admin NEVER touches agent logic
-          }
-          // ═══════════════════════════════════════════════════════════════════════
-
-          // PRIORITY 2: Check buyer role
-          const { data: isBuyer } = await supabase.rpc("has_role", {
-            _user_id: session.user.id,
-            _role: "buyer",
-          });
-
-          if (isBuyer === true) {
-            authDebug("handleSession BUYER_REDIRECT", { action: "terminal_redirect" });
-            if (mounted) {
-              didNavigate.current = true;
-              navigate("/client/dashboard", { replace: true });
+              navigate(target, { replace: true });
             }
             return;
           }
 
           setExistingSession(true);
-          
-          // Fetch agent status to determine UI for non-admin users
-          const agentResult = await getAgentStatus(session.user.id);
-          authDebug("handleSession agent status", { status: agentResult.status, error: agentResult.error });
-          
-          if (mounted && agentResult.status) {
-            setAgentStatus(agentResult.status);
+
+          // For agents: surface verification status to UI
+          if (resolved.role === "agent") {
+            setAgentStatus(resolved.is_verified_agent ? "verified" : "pending");
           }
         }
         setCheckingSession(false);

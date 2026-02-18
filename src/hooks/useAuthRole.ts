@@ -1,73 +1,49 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveUserRole } from "@/lib/resolveUserRole";
+import type { ResolvedRole } from "@/lib/resolveUserRole";
 import type { User } from "@supabase/supabase-js";
 
-type Role = "agent" | "admin" | "buyer" | null;
+type Role = ResolvedRole | null;
 
 interface AuthRoleState {
   user: User | null;
   role: Role;
   loading: boolean;
   isAdmin: boolean;
+  isVerifiedAgent: boolean;
 }
 
 export function useAuthRole(): AuthRoleState {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isVerifiedAgent, setIsVerifiedAgent] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
 
-  // Load role for a given user using has_role RPC (SECURITY DEFINER - bulletproof)
   async function loadRoleForUser(userId: string) {
-    // PRIORITY 1: Check for admin role using has_role RPC (not table select)
-    const { data: hasAdminRole, error: adminError } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
-
-    if (!adminError && hasAdminRole === true) {
-      setRole("admin");
-      setIsAdmin(true);
-      return;
-    }
-
-    // PRIORITY 2: Check for agent role using has_role RPC
-    const { data: hasAgentRole } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "agent",
-    });
-
-    if (hasAgentRole === true) {
-      setRole("agent");
-      setIsAdmin(false);
-      return;
-    }
-
-    // Fallback: no recognized role
-    setRole(null);
-    setIsAdmin(false);
+    const result = await resolveUserRole(userId);
+    setRole(result.role === "unknown" ? null : result.role);
+    setIsAdmin(result.role === "admin");
+    setIsVerifiedAgent(result.is_verified_agent);
   }
 
   useEffect(() => {
-    // Initial load - only this sets loading=true
     async function initialLoad() {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
 
       if (error || !user) {
-        // Stale/invalid/deleted user token guard: always clear local session.
-        // Wrapped in try/catch so a network flake on signOut() can't hang loading state.
+        // Stale/invalid session — purge and reset
         try {
           await supabase.auth.signOut();
         } catch (e) {
-          console.warn("[AUTH] signOut failed during stale session cleanup, continuing:", e);
+          console.warn("[AUTH] signOut failed during stale session cleanup:", e);
         }
         setUser(null);
         setRole(null);
         setIsAdmin(false);
+        setIsVerifiedAgent(false);
         setLoading(false);
         initialLoadDone.current = true;
         return;
@@ -81,25 +57,20 @@ export function useAuthRole(): AuthRoleState {
 
     initialLoad();
 
-    // Auth state change listener - does NOT set loading=true
-    // This prevents component unmounting when switching tabs
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      // Only update state after initial load is complete
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!initialLoadDone.current) return;
 
       const newUser = session?.user ?? null;
       setUser(newUser);
 
       if (newUser) {
-        // Defer role fetch to avoid deadlock
         setTimeout(() => {
           loadRoleForUser(newUser.id);
         }, 0);
       } else {
         setRole(null);
         setIsAdmin(false);
+        setIsVerifiedAgent(false);
       }
     });
 
@@ -108,5 +79,5 @@ export function useAuthRole(): AuthRoleState {
     };
   }, []);
 
-  return { user, role, loading, isAdmin };
+  return { user, role, loading, isAdmin, isVerifiedAgent };
 }
