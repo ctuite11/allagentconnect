@@ -3490,6 +3490,10 @@ export type Database = {
       }
     }
     Functions: {
+      activate_agent_relationship: {
+        Args: { _agent_id: string }
+        Returns: string
+      }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
       auto_activate_listings: { Args: never; Returns: undefined }
       check_client_has_other_agent: {

@@ -31,30 +31,18 @@ export function AgentChoiceDialog({
     try {
       setProcessing(true);
 
-      // End existing relationship
-      const { error: endError } = await supabase
-        .from("client_agent_relationships")
-        .update({
-          status: "inactive",
-          ended_at: new Date().toISOString(),
-        })
-        .eq("id", existingRelationshipId);
+      // Atomically end any existing active relationship and activate the new agent
+      const { error } = await supabase.rpc("activate_agent_relationship", {
+        _agent_id: newAgent.id,
+      });
 
-      if (endError) throw endError;
-
-      // Activate new relationship
-      const { error: activateError } = await supabase
-        .from("client_agent_relationships")
-        .update({ status: "active" })
-        .eq("id", newRelationshipId);
-
-      if (activateError) throw activateError;
+      if (error) throw error;
 
       toast.success(`You're now working with ${newAgent.first_name}`);
       onChoice(true);
     } catch (error: any) {
       console.error("Error switching agents:", error);
-      toast.error("Failed to switch agents");
+      toast.error(error?.message ?? "Failed to switch agents");
     } finally {
       setProcessing(false);
     }

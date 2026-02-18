@@ -141,24 +141,11 @@ const ClientInvitationSetup = () => {
         // Don't fail the whole process if this fails
       }
 
-      // Check for existing active relationship
+      // Atomically end any existing active relationship and create a new active one
       if (agentId) {
-        const { data: existingRel } = await supabase
-          .from("client_agent_relationships")
-          .select("agent_id")
-          .eq("client_id", authData.user.id)
-          .eq("status", "active")
-          .maybeSingle();
-
-        // Create relationship with appropriate status
-        const { error: relationshipError } = await supabase
-          .from("client_agent_relationships")
-          .insert({
-            client_id: authData.user.id,
-            agent_id: agentId,
-            invitation_token: invitationToken,
-            status: existingRel ? "pending" : "active",
-          });
+        const { error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
+          _agent_id: agentId,
+        });
 
         if (relationshipError) {
           console.error("Error creating relationship:", relationshipError);
