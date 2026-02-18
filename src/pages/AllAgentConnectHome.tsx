@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import PageShell from "@/components/layout/PageShell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,79 +21,7 @@ import {
   BarChart3,
   Inbox,
 } from "lucide-react";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface AgentProfile {
-  first_name: string;
-  last_name: string;
-  headshot_url: string | null;
-  company: string | null;
-  title: string | null;
-}
-
-interface SnapshotMetrics {
-  pendingInvites: number;
-  activeHotSheets: number;
-  activeBuyers: number;
-  unreadMessages: number;
-}
-
-interface NeedsAttentionItem {
-  id: string;
-  type: "invite" | "message" | "hotsheet" | "listing";
-  label: string;
-  sub: string;
-  path: string;
-  count?: number;
-}
-
-interface ListingSummary {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  status: string;
-  photos: string[] | null;
-  price: number | null;
-  view_count: number;
-  showing_request_count: number;
-}
-
-interface HotSheetSummary {
-  id: string;
-  name: string;
-  buyerCount: number;
-  pendingInvites: number;
-  lastUpdated: string;
-}
-
-interface BuyerSummary {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-  status: "active" | "pending";
-  hotSheetCount: number;
-  lastActivity: string | null;
-  hasUnread: boolean;
-}
-
-interface ConversationPreview {
-  conversation_id: string;
-  last_message_preview: string | null;
-  last_message_at: string;
-  is_unread: boolean;
-  other_user_id: string | null;
-  other_name: string | null;
-}
-
-interface ActivityEvent {
-  id: string;
-  description: string;
-  timestamp: string;
-  icon: "invite" | "match" | "message" | "listing";
-}
+import { useSuccessHubData, SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -204,395 +130,9 @@ function SectionHeader({
 
 const AllAgentConnectHome = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [agentId, setAgentId] = useState<string | null>(null);
-
-  // Section data
-  const [profile, setProfile] = useState<AgentProfile | null>(null);
-  const [metrics, setMetrics] = useState<SnapshotMetrics>({
-    pendingInvites: 0,
-    activeHotSheets: 0,
-    activeBuyers: 0,
-    unreadMessages: 0,
-  });
-  const [attentionItems, setAttentionItems] = useState<NeedsAttentionItem[]>([]);
-  const [listings, setListings] = useState<ListingSummary[]>([]);
-  const [hotSheets, setHotSheets] = useState<HotSheetSummary[]>([]);
-  const [buyers, setBuyers] = useState<BuyerSummary[]>([]);
-  const [conversations, setConversations] = useState<ConversationPreview[]>([]);
-  const [activity, setActivity] = useState<ActivityEvent[]>([]);
-
-  useEffect(() => {
-    loadAll();
-  }, []);
+  const { summary, loading } = useSuccessHubData();
 
   const nav = (path: string) => navigate(path);
-
-  // ── Data loader ────────────────────────────────────────────────────────────
-
-  const loadAll = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/auth"); return; }
-      setAgentId(user.id);
-
-      await Promise.all([
-        loadProfile(user.id),
-        loadMetricsAndAttention(user.id),
-        loadListings(user.id),
-        loadHotSheets(user.id),
-        loadBuyers(user.id),
-        loadConversations(user.id),
-        loadActivity(user.id),
-      ]);
-    } catch (err) {
-      console.error("Success Hub load error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadProfile = async (uid: string) => {
-    const { data } = await supabase
-      .from("agent_profiles")
-      .select("first_name, last_name, headshot_url, company, title")
-      .eq("id", uid)
-      .single();
-    if (data) setProfile(data as AgentProfile);
-  };
-
-  const loadMetricsAndAttention = async (uid: string) => {
-    const items: NeedsAttentionItem[] = [];
-
-    // Pending invites (share_tokens not yet accepted)
-    const { count: pendingInvites } = await supabase
-      .from("share_tokens")
-      .select("*", { count: "exact", head: true })
-      .eq("agent_id", uid)
-      .is("accepted_at", null);
-
-    if ((pendingInvites || 0) > 0) {
-      items.push({
-        id: "pending-invites",
-        type: "invite",
-        label: "Pending buyer invites",
-        sub: `${pendingInvites} buyer${pendingInvites! > 1 ? "s" : ""} haven't accepted yet`,
-        path: "/hot-sheets",
-        count: pendingInvites || 0,
-      });
-    }
-
-    // Active hot sheets count
-    const { count: activeHS } = await supabase
-      .from("hot_sheets")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", uid)
-      .eq("is_active", true);
-
-    // Active buyers (via client_agent_relationships)
-    const { count: activeBuyers } = await supabase
-      .from("client_agent_relationships")
-      .select("*", { count: "exact", head: true })
-      .eq("agent_id", uid)
-      .eq("status", "active");
-
-    // Unread messages (conversation_inbox)
-    const { count: unreadMessages } = await supabase
-      .from("conversation_inbox")
-      .select("*", { count: "exact", head: true })
-      .eq("is_unread", true);
-
-    if ((unreadMessages || 0) > 0) {
-      items.push({
-        id: "unread-messages",
-        type: "message",
-        label: "Unread messages",
-        sub: `${unreadMessages} conversation${unreadMessages! > 1 ? "s" : ""} waiting`,
-        path: "/communications",
-        count: unreadMessages || 0,
-      });
-    }
-
-    setMetrics({
-      pendingInvites: pendingInvites || 0,
-      activeHotSheets: activeHS || 0,
-      activeBuyers: activeBuyers || 0,
-      unreadMessages: unreadMessages || 0,
-    });
-    setAttentionItems(items);
-  };
-
-  const loadListings = async (uid: string) => {
-    const { data } = await supabase
-      .from("listings")
-      .select(`
-        id, address, city, state, status, photos, price,
-        listing_stats (view_count, showing_request_count)
-      `)
-      .eq("agent_id", uid)
-      .in("status", ["active", "pending", "coming_soon", "off_market"])
-      .order("created_at", { ascending: false })
-      .limit(6);
-
-    if (data) {
-      setListings(
-        data.map((l: any) => ({
-          id: l.id,
-          address: l.address,
-          city: l.city,
-          state: l.state,
-          status: l.status,
-          photos: l.photos,
-          price: l.price,
-          view_count: l.listing_stats?.[0]?.view_count ?? l.listing_stats?.view_count ?? 0,
-          showing_request_count:
-            l.listing_stats?.[0]?.showing_request_count ??
-            l.listing_stats?.showing_request_count ??
-            0,
-        }))
-      );
-    }
-  };
-
-  const loadHotSheets = async (uid: string) => {
-    const { data: hsData } = await supabase
-      .from("hot_sheets")
-      .select("id, name, updated_at")
-      .eq("user_id", uid)
-      .eq("is_active", true)
-      .order("updated_at", { ascending: false })
-      .limit(5);
-
-    if (!hsData || hsData.length === 0) {
-      setHotSheets([]);
-      return;
-    }
-
-    const hsIds = hsData.map((h) => h.id);
-
-    // Count buyers per hot sheet
-    const { data: clientRows } = await supabase
-      .from("hot_sheet_clients")
-      .select("hot_sheet_id, client_id")
-      .in("hot_sheet_id", hsIds);
-
-    // Count pending invites per hot sheet
-    const { data: tokenRows } = await supabase
-      .from("share_tokens")
-      .select("payload, accepted_at")
-      .eq("agent_id", uid)
-      .is("accepted_at", null);
-
-    const pendingByHs = new Map<string, number>();
-    (tokenRows || []).forEach((t: any) => {
-      const hsId = String(t.payload?.hot_sheet_id ?? "");
-      if (hsId) pendingByHs.set(hsId, (pendingByHs.get(hsId) ?? 0) + 1);
-    });
-
-    const buyersByHs = new Map<string, number>();
-    (clientRows || []).forEach((r: any) => {
-      buyersByHs.set(r.hot_sheet_id, (buyersByHs.get(r.hot_sheet_id) ?? 0) + 1);
-    });
-
-    setHotSheets(
-      hsData.map((hs) => ({
-        id: hs.id,
-        name: hs.name,
-        buyerCount: buyersByHs.get(hs.id) ?? 0,
-        pendingInvites: pendingByHs.get(hs.id) ?? 0,
-        lastUpdated: hs.updated_at,
-      }))
-    );
-  };
-
-  const loadBuyers = async (uid: string) => {
-    const { data: relationships } = await supabase
-      .from("client_agent_relationships")
-      .select("client_id, status, created_at")
-      .eq("agent_id", uid)
-      .order("created_at", { ascending: false })
-      .limit(8);
-
-    if (!relationships || relationships.length === 0) {
-      // Fallback: load from clients table
-      const { data: clientsData } = await supabase
-        .from("clients")
-        .select("id, first_name, last_name, email, created_at")
-        .eq("agent_id", uid)
-        .order("created_at", { ascending: false })
-        .limit(8);
-
-      if (clientsData) {
-        setBuyers(
-          clientsData.map((c) => ({
-            id: c.id,
-            first_name: c.first_name,
-            last_name: c.last_name,
-            email: c.email,
-            status: "active" as const,
-            hotSheetCount: 0,
-            lastActivity: c.created_at,
-            hasUnread: false,
-          }))
-        );
-      }
-      return;
-    }
-
-    const clientIds = relationships.map((r) => r.client_id);
-
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, first_name, last_name, email")
-      .in("id", clientIds);
-
-    // Count hot sheets per buyer
-    const { data: hscRows } = await supabase
-      .from("hot_sheet_clients")
-      .select("client_id, hot_sheet_id")
-      .in("client_id", clientIds);
-
-    const hsByClient = new Map<string, number>();
-    (hscRows || []).forEach((r: any) => {
-      hsByClient.set(r.client_id, (hsByClient.get(r.client_id) ?? 0) + 1);
-    });
-
-    // Pending invites per buyer
-    const { data: pendingTokens } = await supabase
-      .from("share_tokens")
-      .select("payload, accepted_at")
-      .eq("agent_id", uid)
-      .is("accepted_at", null);
-
-    const pendingClientEmails = new Set(
-      (pendingTokens || []).map((t: any) =>
-        String(t.payload?.client_email ?? "").toLowerCase()
-      )
-    );
-
-    setBuyers(
-      relationships.map((rel) => {
-        const prof = profiles?.find((p) => p.id === rel.client_id);
-        const isPending = prof?.email
-          ? pendingClientEmails.has(prof.email.toLowerCase())
-          : false;
-        return {
-          id: rel.client_id,
-          first_name: prof?.first_name ?? null,
-          last_name: prof?.last_name ?? null,
-          email: prof?.email ?? "",
-          status: (rel.status === "active" && !isPending ? "active" : "pending") as
-            | "active"
-            | "pending",
-          hotSheetCount: hsByClient.get(rel.client_id) ?? 0,
-          lastActivity: rel.created_at,
-          hasUnread: false,
-        };
-      })
-    );
-  };
-
-  const loadConversations = async (_uid: string) => {
-    const { data } = await supabase
-      .from("conversation_inbox")
-      .select(
-        "conversation_id, last_message_preview, last_message_at, is_unread, other_user_id"
-      )
-      .order("last_message_at", { ascending: false })
-      .limit(3);
-
-    if (!data) { setConversations([]); return; }
-
-    // Fetch other-user names
-    const otherIds = [...new Set(data.map((d: any) => d.other_user_id).filter(Boolean))];
-    let nameMap = new Map<string, string>();
-    if (otherIds.length > 0) {
-      const { data: agentNames } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name")
-        .in("id", otherIds);
-      (agentNames || []).forEach((a: any) => {
-        nameMap.set(a.id, `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim());
-      });
-    }
-
-    setConversations(
-      data.map((d: any) => ({
-        conversation_id: d.conversation_id,
-        last_message_preview: d.last_message_preview,
-        last_message_at: d.last_message_at,
-        is_unread: d.is_unread,
-        other_user_id: d.other_user_id,
-        other_name: d.other_user_id ? (nameMap.get(d.other_user_id) || "Agent") : "Agent",
-      }))
-    );
-  };
-
-  const loadActivity = async (uid: string) => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const events: ActivityEvent[] = [];
-
-    // Accepted invites
-    const { data: acceptedInvites } = await supabase
-      .from("share_tokens")
-      .select("accepted_at, payload")
-      .eq("agent_id", uid)
-      .not("accepted_at", "is", null)
-      .gte("accepted_at", thirtyDaysAgo.toISOString())
-      .order("accepted_at", { ascending: false })
-      .limit(5);
-
-    (acceptedInvites || []).forEach((inv: any) => {
-      const hsName = inv.payload?.hotsheet_name ?? inv.payload?.hot_sheet_name ?? "a Hot Sheet";
-      const clientName = inv.payload?.client_name ?? inv.payload?.client_email ?? "A buyer";
-      events.push({
-        id: `inv-${inv.accepted_at}`,
-        description: `${clientName} accepted invite to '${hsName}'`,
-        timestamp: inv.accepted_at,
-        icon: "invite",
-      });
-    });
-
-    // Recent clients added
-    const { data: recentClients } = await supabase
-      .from("clients")
-      .select("first_name, last_name, created_at")
-      .eq("agent_id", uid)
-      .gte("created_at", thirtyDaysAgo.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    (recentClients || []).forEach((c: any) => {
-      events.push({
-        id: `client-${c.created_at}`,
-        description: `${c.first_name ?? ""} ${c.last_name ?? ""} added as a contact`.trim(),
-        timestamp: c.created_at,
-        icon: "invite",
-      });
-    });
-
-    // Recent messages
-    const { data: recentMsgs } = await supabase
-      .from("conversation_messages")
-      .select("created_at, body, recipient_agent_id")
-      .eq("recipient_agent_id", uid)
-      .gte("created_at", thirtyDaysAgo.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(3);
-
-    (recentMsgs || []).forEach((m: any) => {
-      events.push({
-        id: `msg-${m.created_at}`,
-        description: `New message received`,
-        timestamp: m.created_at,
-        icon: "message",
-      });
-    });
-
-    events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    setActivity(events.slice(0, 8));
-  };
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -612,7 +152,23 @@ const AllAgentConnectHome = () => {
     );
   }
 
-  const ActivityIcon = ({ type }: { type: ActivityEvent["icon"] }) => {
+  // Convenience aliases — all null-safe with empty fallbacks
+  const profile = summary?.profile ?? null;
+  const metrics = summary?.metrics ?? {
+    pendingInviteCount: 0,
+    activeHotSheetCount: 0,
+    activeBuyerCount: 0,
+    unreadMessageCount: 0,
+  };
+  const attentionItems = summary?.attentionItems ?? [];
+  const listings = summary?.listings ?? [];
+  const hotSheets = summary?.hotSheets ?? [];
+  const buyers = summary?.buyers ?? [];
+  const conversations = summary?.conversations ?? [];
+  const activity = summary?.activity ?? [];
+
+  type ActivityIcon = SuccessHubSummary["activity"][number]["icon"];
+  const ActivityIcon = ({ type }: { type: ActivityIcon }) => {
     const cls = "h-3.5 w-3.5";
     if (type === "invite") return <CheckCircle2 className={`${cls} text-accent`} />;
     if (type === "message") return <MessageSquare className={`${cls} text-primary`} />;
@@ -661,7 +217,7 @@ const AllAgentConnectHome = () => {
             <MetricChip
               icon={Bell}
               label="Pending Invites"
-              value={metrics.pendingInvites}
+              value={metrics.pendingInviteCount}
               path="/hot-sheets"
               highlight
               onClick={nav}
@@ -669,21 +225,21 @@ const AllAgentConnectHome = () => {
             <MetricChip
               icon={FileStack}
               label="Active Hot Sheets"
-              value={metrics.activeHotSheets}
+              value={metrics.activeHotSheetCount}
               path="/hot-sheets"
               onClick={nav}
             />
             <MetricChip
               icon={Users}
               label="Active Buyers"
-              value={metrics.activeBuyers}
+              value={metrics.activeBuyerCount}
               path="/my-clients"
               onClick={nav}
             />
             <MetricChip
               icon={MessageSquare}
               label="Unread Messages"
-              value={metrics.unreadMessages}
+              value={metrics.unreadMessageCount}
               path="/communications"
               highlight
               onClick={nav}
@@ -830,9 +386,9 @@ const AllAgentConnectHome = () => {
                         <span className="text-xs text-muted-foreground">
                           {hs.buyerCount} buyer{hs.buyerCount !== 1 ? "s" : ""}
                         </span>
-                        {hs.pendingInvites > 0 && (
+                        {hs.pendingInviteCount > 0 && (
                           <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                            {hs.pendingInvites} pending
+                            {hs.pendingInviteCount} pending
                           </span>
                         )}
                         <span className="text-xs text-muted-foreground">
