@@ -58,6 +58,11 @@ export function useAuthRole(): AuthRoleState {
       } = await supabase.auth.getUser();
 
       if (error || !user) {
+        // Stale/invalid/deleted user token guard: always clear local session.
+        // getUser() hitting an error (e.g. 403 "user does not exist") or returning
+        // null user means the cached JWT is invalid — signOut() purges localStorage.
+        // This is idempotent and safe even when there's no active session.
+        await supabase.auth.signOut();
         setUser(null);
         setRole(null);
         setIsAdmin(false);

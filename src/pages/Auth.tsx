@@ -222,6 +222,20 @@ const Auth = () => {
         if (!mounted) return;
         
         if (session?.user) {
+          // STALE AUTH GUARD: getSession() reads localStorage only (no server hit).
+          // Validate the token is still live on the server before running role checks.
+          // This handles the "deleted user + cached JWT = infinite broken login" case.
+          const { error: userError } = await supabase.auth.getUser();
+          if (userError) {
+            console.warn('[AUTH] stale session detected; forcing sign out:', userError.message);
+            await supabase.auth.signOut();
+            if (mounted) {
+              setCheckingSession(false);
+              setExistingSession(false);
+            }
+            return;
+          }
+
           // Store session email for mismatch detection
           setSessionEmail(session.user.email || null);
           
