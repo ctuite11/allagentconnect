@@ -60,6 +60,7 @@ import ManageListingPhotos from "./pages/ManageListingPhotos";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminDebugAuth from "./pages/AdminDebugAuth";
 import AdminMatches from "./pages/AdminMatches";
+import AdminConsumers from "./pages/AdminConsumers";
 
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
@@ -219,6 +220,7 @@ const App = () => (
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />
                 <Route path="/admin/matches" element={<AdminMatches />} />
+                <Route path="/admin/consumers" element={<AdminConsumers />} />
                 <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                 {/* Legal pages */}
                 <Route path="/privacy" element={<PrivacyPolicy />} />
