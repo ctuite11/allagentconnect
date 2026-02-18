@@ -46,6 +46,7 @@ export function getRouteForRole(result: ResolvedRoleResult): string {
     case "agent":
       return result.is_verified_agent ? "/agent-dashboard" : "/pending-verification";
     default:
-      return "/auth";
+      // /access-error prevents auth→unknown→auth bounce loops
+      return "/access-error";
   }
 }
