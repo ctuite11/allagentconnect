@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { User } from "@supabase/supabase-js";
@@ -744,9 +745,9 @@ const ClientHotSheet = () => {
                             </a>
                           )}
                           {(agentProfile.phone || agentProfile.cell_phone) && (
-                            <a href={`tel:${agentProfile.phone || agentProfile.cell_phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                            <a href={`tel:${(agentProfile.phone || agentProfile.cell_phone || "").replace(/\D/g, "")}`} className="flex items-center gap-1 hover:text-primary transition-colors">
                               <Phone className="w-3.5 h-3.5" />
-                              {agentProfile.phone || agentProfile.cell_phone}
+                              {formatPhoneNumber(agentProfile.phone || agentProfile.cell_phone || "")}
                             </a>
                           )}
                         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,9 +261,9 @@ export default function ClientDashboard() {
                           {agent.email}
                         </a>
                         {agent.phone && (
-                          <a href={`tel:${agent.phone}`} className="flex items-center gap-2 text-sm hover:text-primary">
+                          <a href={`tel:${(agent.phone ?? "").replace(/\D/g, "")}`} className="flex items-center gap-2 text-sm hover:text-primary">
                             <Phone className="w-4 h-4" />
-                            {agent.phone}
+                            {formatPhoneNumber(agent.phone ?? "")}
                           </a>
                         )}
                       </div>

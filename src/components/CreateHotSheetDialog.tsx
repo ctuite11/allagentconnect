@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Check, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Check, Loader2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
@@ -1038,20 +1038,22 @@ export function CreateHotSheetDialog({
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
-                    variant="outline"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                     size="sm"
                     onClick={() => setShowClientPicker(true)}
                   >
-                    {selectedClients.length > 0 ? "Select / Change Contact" : "Select Contact"}
+                    <UserPlus className="mr-1.5 h-4 w-4" />
+                    {selectedClients.length > 0 ? "Select / Change Contact" : "Add Contact"}
                   </Button>
                   {selectedClients.length > 0 && (
                     <Button
                       type="button"
-                      variant="outline"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                       size="sm"
                       onClick={() => setShowClientPicker(true)}
                     >
-                      Add Additional Contact
+                      <UserPlus className="mr-1.5 h-4 w-4" />
+                      Add Another Contact
                     </Button>
                   )}
                 </div>
@@ -1086,14 +1088,15 @@ export function CreateHotSheetDialog({
                 </div>
               ) : (
                 <div className="rounded-md border border-dashed border-neutral-300 p-4 text-sm text-muted-foreground">
-                  <p>No contacts selected yet.</p>
+                  <p>Add a client to receive Hot Sheet matches by email.</p>
                   <Button
                     type="button"
-                    variant="link"
-                    className="h-auto p-0 mt-2"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm mt-2"
+                    size="sm"
                     onClick={() => setShowClientPicker(true)}
                   >
-                    Select Contact
+                    <UserPlus className="mr-1.5 h-4 w-4" />
+                    Add Contact
                   </Button>
                 </div>
               )}
