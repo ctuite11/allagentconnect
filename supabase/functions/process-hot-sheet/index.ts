@@ -84,10 +84,11 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Fetched clients for hot sheet:", hotSheetClients?.length || 0);
 
     // Fetch accepted tokens for this hot sheet (gate: only accepted clients get match emails)
+    // NOTE: share_tokens has NO top-level 'type', 'client_id', or 'client_email' columns.
+    // Those fields only exist inside the payload JSONB. Filter by payload.type in JS below.
     const { data: acceptedTokens, error: tokenErr } = await adminClient
       .from("share_tokens")
-      .select("client_id, client_email, payload, accepted_at")
-      .eq("type", "client_hotsheet_invite")
+      .select("payload, accepted_at")
       .eq("agent_id", hotSheet.user_id)
       .not("accepted_at", "is", null);
 
@@ -99,19 +100,31 @@ const handler = async (req: Request): Promise<Response> => {
 
     const acceptedForThisHotSheet = (acceptedTokens ?? []).filter((t: any) => {
       const p = t.payload ?? {};
-      return String(p.hot_sheet_id ?? "") === hotSheetIdStr;
+      // Belt+suspenders: warn on malformed tokens
+      if (!p.type) {
+        console.warn("[process-hot-sheet] Token missing payload.type:", p);
+      }
+      if (p.type === "client_hotsheet_invite" && !p.hot_sheet_id) {
+        console.warn("[process-hot-sheet] Hotsheet invite token missing payload.hot_sheet_id:", p);
+      }
+      // Filter by type in JS (not a top-level column) and hot_sheet_id match
+      return (
+        p.type === "client_hotsheet_invite" &&
+        String(p.hot_sheet_id ?? "") === hotSheetIdStr
+      );
     });
 
+    // client_id and client_email are NOT top-level columns — read exclusively from payload
     const acceptedClientIds = new Set(
       acceptedForThisHotSheet
-        .map((t: any) => t.client_id ?? t.payload?.client_id)
+        .map((t: any) => t.payload?.client_id)
         .filter(Boolean)
         .map((x: any) => String(x))
     );
 
     const acceptedEmails = new Set(
       acceptedForThisHotSheet
-        .map((t: any) => t.client_email ?? t.payload?.client_email)
+        .map((t: any) => t.payload?.client_email)
         .filter(Boolean)
         .map((e: string) => e.toLowerCase().trim())
     );
