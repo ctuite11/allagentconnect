@@ -9,6 +9,7 @@ import { toast } from "sonner";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { setPrimaryAgentId } from "@/utils/agentTracking";
 
 const ClientInvitationSetup = () => {
   const [searchParams] = useSearchParams();
@@ -166,6 +167,9 @@ const ClientInvitationSetup = () => {
         console.error("Error updating token:", tokenUpdateError);
         // Don't fail the whole process if this fails
       }
+
+      // Sync tracking so banner + any downstream logic reflects the new agent
+      if (agentId) setPrimaryAgentId(agentId);
 
       // Show success phase
       setPhase("success");
