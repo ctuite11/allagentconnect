@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -391,7 +392,7 @@ const ClientHotsheetPage = () => {
                 <div className="text-sm text-muted-foreground flex flex-wrap gap-2">
                   {agent.email && <span>{agent.email}</span>}
                   {agent.email && agent.phone && <span>·</span>}
-                  {agent.phone && <span>{agent.phone}</span>}
+                  {agent.phone && <span>{formatPhoneNumber(agent.phone ?? "")}</span>}
                   {(agent.email || agent.phone) && agent.company && <span>·</span>}
                   {agent.company && <span>{agent.company}</span>}
                 </div>

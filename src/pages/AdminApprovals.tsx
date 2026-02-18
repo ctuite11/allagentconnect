@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { checkIsAdminRole } from "@/lib/auth/roles";
@@ -877,7 +878,7 @@ export default function AdminApprovals() {
                         {agent.phone && (
                           <>
                             <span className="text-zinc-300">•</span>
-                            <span className="text-zinc-500">{agent.phone}</span>
+                            <span className="text-zinc-500">{formatPhoneNumber(agent.phone ?? "")}</span>
                           </>
                         )}
                         {agent.license_state && agent.license_number && (
