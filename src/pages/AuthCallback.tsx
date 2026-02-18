@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { authDebug, getAgentStatus } from "@/lib/authDebug";
-import { AGENT_STATUS } from "@/constants/status";
+import { authDebug } from "@/lib/authDebug";
+import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -279,60 +279,20 @@ const AuthCallback = () => {
         return;
       }
 
-      // ═══════════════════════════════════════════════════════════════════════
-      // PRIORITY 1 (HARD GATE): Admin check using has_role RPC
-      // Admin users MUST route to /admin/approvals and TERMINATE immediately.
-      // Do NOT run agent_settings queries, polling, or verification logic.
-      // ═══════════════════════════════════════════════════════════════════════
-      const { data: isAdmin, error: adminError } = await supabase.rpc("has_role", {
-        _user_id: userId,
-        _role: "admin",
-      });
+      // Single RPC resolves role with enforced priority: admin > buyer > agent > unknown
+      const resolved = await resolveUserRole(userId);
+      const target = getRouteForRole(resolved);
 
-      authDebug("routeUser has_role(admin)", {
+      authDebug("routeUser resolved", {
         email: session?.user?.email ?? null,
         userId,
-        isAdmin,
-        adminError: adminError?.message ?? null,
+        role: resolved.role,
+        is_verified_agent: resolved.is_verified_agent,
+        target,
       });
 
-      if (isAdmin === true) {
-        authDebug("routeUser ADMIN_REDIRECT", { action: "terminal_redirect" });
-        didNavigate.current = true;
-        navigate("/admin/approvals", { replace: true });
-        return; // ═══ HARD STOP ═══ Admin NEVER touches agent logic
-      }
-      // ═══════════════════════════════════════════════════════════════════════
-
-      // PRIORITY 2: Check buyer role
-      const { data: isBuyer } = await supabase.rpc("has_role", {
-        _user_id: userId,
-        _role: "buyer",
-      });
-
-      if (isBuyer === true) {
-        authDebug("routeUser BUYER_REDIRECT", { action: "terminal_redirect" });
-        didNavigate.current = true;
-        navigate("/client/dashboard", { replace: true });
-        return;
-      }
-
-      // PRIORITY 3: Check agent status for non-admin users
-      const agentResult = await getAgentStatus(userId);
-      authDebug("routeUser agent status", { userId, status: agentResult.status, error: agentResult.error });
-      
-      const status = agentResult.status || AGENT_STATUS.PENDING;
-      
-      if (status === AGENT_STATUS.VERIFIED) {
-        authDebug("routeUser", { action: "dashboard_redirect" });
-        didNavigate.current = true;
-        navigate('/agent-dashboard', { replace: true });
-      } else {
-        // pending, unverified, or no status -> pending verification
-        authDebug("routeUser", { action: "pending_redirect", status });
-        didNavigate.current = true;
-        navigate('/pending-verification', { replace: true });
-      }
+      didNavigate.current = true;
+      navigate(target, { replace: true });
 
     } catch (err) {
       console.error("[AuthCallback] Route error:", err);

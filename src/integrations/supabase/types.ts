@@ -3587,6 +3587,7 @@ export type Database = {
         Returns: Json
       }
       rate_limits_cleanup: { Args: never; Returns: undefined }
+      resolve_user_role: { Args: { _user_id: string }; Returns: Json }
     }
     Enums: {
       agent_status:
