@@ -228,7 +228,11 @@ const Auth = () => {
           const { error: userError } = await supabase.auth.getUser();
           if (userError) {
             console.warn('[AUTH] stale session detected; forcing sign out:', userError.message);
-            await supabase.auth.signOut();
+            try {
+              await supabase.auth.signOut();
+            } catch (e) {
+              console.warn('[AUTH] signOut failed during stale session cleanup, continuing:', e);
+            }
             if (mounted) {
               setCheckingSession(false);
               setExistingSession(false);
