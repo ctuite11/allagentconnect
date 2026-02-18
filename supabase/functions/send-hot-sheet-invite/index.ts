@@ -58,11 +58,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     const authHeader = req.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
-      const anonSupabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-      const token = authHeader.replace("Bearer ", "");
-      const { data: claimsData } = await anonSupabase.auth.getClaims(token);
-      if (claimsData?.claims?.sub) {
-        verifiedActorUserId = claimsData.claims.sub;
+      const authedClient = createClient(
+        supabaseUrl,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+
+      const { data: { user }, error: userError } = await authedClient.auth.getUser();
+      if (!userError && user?.id) {
+        verifiedActorUserId = user.id;
       }
     }
 
