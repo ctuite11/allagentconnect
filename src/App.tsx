@@ -63,6 +63,7 @@ import AdminDebugAuth from "./pages/AdminDebugAuth";
 import AdminMatches from "./pages/AdminMatches";
 import AdminConsumers from "./pages/AdminConsumers";
 import AdminInviteAudit from "./pages/AdminInviteAudit";
+import NetworkIntelligence from "./pages/NetworkIntelligence";
 
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
@@ -156,6 +157,7 @@ const App = () => (
                 
                 {/* Agent routes - ALL require verification by default via RouteGuard */}
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
+                <Route path="/network" element={<RouteGuard requireRole="agent"><NetworkIntelligence /></RouteGuard>} />
                 <Route path="/success-hub/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests/></RouteGuard>} />
 
 
