@@ -7,8 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Bell, User, Mail, Phone, Plus, Edit, Eye, UserX } from "lucide-react";
+import { Heart, FileText, User, Mail, Phone, Eye, UserX } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import {
@@ -38,6 +39,11 @@ interface HotSheet {
   criteria: any;
   created_at: string;
   is_active: boolean;
+  agent?: {
+    first_name: string;
+    last_name: string;
+    company: string | null;
+  } | null;
 }
 
 interface Favorite {
@@ -103,20 +109,29 @@ export default function ClientDashboard() {
   };
 
   const loadHotSheets = async (userId: string) => {
-    // 1) Pull sheets via join table (clients are linked, not owners)
+    // Get buyer profile email for fallback matching
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .maybeSingle();
+    const buyerEmail = profile?.email?.toLowerCase().trim() ?? "";
+
+    // Query A: hot sheets linked to this buyer via junction table, include agent profile
     const { data: rows, error: joinErr } = await supabase
       .from("hot_sheet_clients")
       .select(`
+        client_id,
         hot_sheet_id,
         hot_sheets (
           id,
           name,
           criteria,
           created_at,
-          is_active
+          is_active,
+          user_id
         )
-      `)
-      ;
+      `);
 
     if (joinErr) {
       console.error("Failed to load hot sheets (join)", joinErr);
@@ -124,23 +139,65 @@ export default function ClientDashboard() {
       return;
     }
 
-    const sheets = (rows || [])
-      .map((r: any) => r.hot_sheets)
-      .filter(Boolean);
-    setHotSheets(sheets);
+    const rawSheets = (rows || [])
+      .map((r: any) => ({ ...(r.hot_sheets || {}), _client_id: r.client_id }))
+      .filter((s: any) => s.id);
 
-    // 2) Pull ALL accepted tokens for this user once (public SELECT on share_tokens)
-    const { data: tokenRows } = await supabase
-      .from("share_tokens")
-      .select("token, payload")
-      .eq("accepted_by_user_id", userId);
-
-    // 3) Build token map: hot_sheet_id -> token
-    const tokenMap: Record<string, string> = {};
-    for (const t of tokenRows || []) {
-      const hsId = (t?.payload as any)?.hot_sheet_id;
-      if (hsId && t.token) tokenMap[String(hsId)] = t.token;
+    if (!rawSheets.length) {
+      setHotSheets([]);
+      setShareTokenByHotSheetId({});
+      return;
     }
+
+    // Query B: fetch accepted tokens for this buyer (by user_id)
+    const { data: acceptedTokenRows } = await (supabase as any)
+      .from("share_tokens")
+      .select("token, payload, accepted_at")
+      .eq("type", "client_hotsheet_invite")
+      .not("accepted_at", "is", null)
+      .eq("accepted_by_user_id", userId) as { data: any[] | null };
+
+    // Build sets of accepted hot_sheet_ids for this buyer (by client_id or email in payload)
+    const acceptedHotSheetIds = new Set<string>();
+    const tokenMap: Record<string, string> = {};
+
+    for (const t of acceptedTokenRows || []) {
+      const p = (t.payload as any) ?? {};
+      const hsId = String(p.hot_sheet_id ?? "");
+      if (!hsId) continue;
+
+      const tokenClientId = String((p as any).client_id ?? "");
+      const tokenEmail = String((p as any).client_email ?? "").toLowerCase().trim();
+
+      const matchById = tokenClientId && rawSheets.some((s: any) => String(s._client_id) === tokenClientId && String(s.id) === hsId);
+      const matchByEmail = buyerEmail && tokenEmail === buyerEmail;
+
+      if (matchById || matchByEmail) {
+        acceptedHotSheetIds.add(hsId);
+        if (t.token) tokenMap[hsId] = t.token;
+      }
+    }
+
+    // Only show hot sheets with an accepted invite
+    const acceptedSheets = rawSheets.filter((s: any) => acceptedHotSheetIds.has(String(s.id)));
+
+    // Fetch agent profiles for attribution
+    const agentIds = [...new Set(acceptedSheets.map((s: any) => s.user_id).filter(Boolean))];
+    let agentMap: Record<string, any> = {};
+    if (agentIds.length) {
+      const { data: agents } = await supabase
+        .from("agent_profiles")
+        .select("id, first_name, last_name, company")
+        .in("id", agentIds);
+      for (const a of agents || []) agentMap[a.id] = a;
+    }
+
+    const sheetsWithAgent = acceptedSheets.map((s: any) => ({
+      ...s,
+      agent: agentMap[s.user_id] ?? null,
+    }));
+
+    setHotSheets(sheetsWithAgent);
     setShareTokenByHotSheetId(tokenMap);
   };
 
@@ -223,7 +280,7 @@ export default function ClientDashboard() {
           <div>
             <PageTitle className="mb-2">My Dashboard</PageTitle>
             <p className="text-muted-foreground">
-              Manage your saved searches, favorites, and agent relationship
+              Manage your hot sheets, favorites, and agent relationship
             </p>
           </div>
 
@@ -292,24 +349,16 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
 
-          {/* Saved Searches (Hotsheets) */}
+          {/* Hot Sheets */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="w-5 h-5" />
-                    Your Saved Searches
-                  </CardTitle>
-                  <CardDescription>
-                    Manage your property search alerts
-                  </CardDescription>
-                </div>
-                <Button onClick={() => navigate("/client/hotsheets/new")}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Search
-                </Button>
-              </div>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Your Hot Sheets
+              </CardTitle>
+              <CardDescription>
+                Property search alerts shared by your agent
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {hotSheets.length > 0 ? (
@@ -319,43 +368,48 @@ export default function ClientDashboard() {
                       key={sheet.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
                     >
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{sheet.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {formatCriteriaSummary(sheet.criteria)}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-semibold">{sheet.name}</h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {sheet.is_active ? "Active" : "Paused"}
+                          </Badge>
+                        </div>
+                        {sheet.agent && (
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            From {sheet.agent.first_name} {sheet.agent.last_name}
+                            {sheet.agent.company ? ` · ${sheet.agent.company}` : ""}
+                          </p>
+                        )}
+                        {formatCriteriaSummary(sheet.criteria) && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {formatCriteriaSummary(sheet.criteria)}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground mt-1">
-                          Created {new Date(sheet.created_at).toLocaleDateString()}
+                          Shared {new Date(sheet.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        {shareTokenByHotSheetId[sheet.id] ? (
+                      <div className="flex gap-2 ml-4 shrink-0">
+                        {shareTokenByHotSheetId[sheet.id] && (
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => navigate(`/client/hotsheet/${shareTokenByHotSheetId[sheet.id]}`)}
                           >
                             <Eye className="w-4 h-4 mr-2" />
-                            View
+                            Open
                           </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic self-center">
-                            Invite pending
-                          </span>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    You haven't created any saved searches yet
+                <div className="text-center py-10">
+                  <FileText className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+                  <p className="text-muted-foreground">
+                    If your agent shares a Hot Sheet with you, it will appear here.
                   </p>
-                  <Button onClick={() => navigate("/client/hotsheets/new")}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Your First Search
-                  </Button>
                 </div>
               )}
             </CardContent>
