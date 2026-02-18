@@ -320,7 +320,7 @@ export default function NetworkIntelligence() {
               />
               <StatChip
                 icon={DollarSign}
-                label="Price Changes"
+                label="Tracked price changes"
                 value={summary?.marketSignals.priceChangeCount7d ?? 0}
                 sub="recorded reductions"
               />

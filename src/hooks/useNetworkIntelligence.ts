@@ -34,7 +34,7 @@ export interface ActiveHotSheetItem {
   name: string;
   matchCount: number;
   pendingInviteCount: number;
-  pendingTokenIds: string[]; // for resend: first one
+  pendingTokenIds: string[];
   pendingInvitedEmails: string[];
   lastActivity: string | null;
 }
@@ -44,23 +44,6 @@ export interface NetworkIntelligenceSummary {
   buyerDemand: BuyerDemand;
   activeHotSheets: ActiveHotSheetItem[];
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function daysAgoISO(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString();
-}
-
-const PRICE_BANDS: Array<{ label: string; min: number; max: number | null }> = [
-  { label: "Under $300K", min: 0, max: 300_000 },
-  { label: "$300K–$500K", min: 300_000, max: 500_000 },
-  { label: "$500K–$750K", min: 500_000, max: 750_000 },
-  { label: "$750K–$1M", min: 750_000, max: 1_000_000 },
-  { label: "$1M–$2M", min: 1_000_000, max: 2_000_000 },
-  { label: "$2M+", min: 2_000_000, max: null },
-];
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -90,50 +73,13 @@ export function useNetworkIntelligence(): {
       if (authErr || !user) throw new Error("Not authenticated");
 
       const agentId = user.id;
-      const since7d = daysAgoISO(7);
 
-      // ── Wave 1 — all parallel ────────────────────────────────────────────────
-      const [
-        relistRes,
-        priceChangeRes,
-        backOnMarketRes,
-        avgDaysRes,
-        hotSheetsRes,
-        unacceptedTokensRes,
-        clientNeedsRes,
-        allHotSheetsForDemandRes,
-      ] = await Promise.all([
-        // Relisted listings network-wide (last 7d)
-        supabase
-          .from("listings")
-          .select("id", { count: "exact", head: true })
-          .eq("is_relisting", true)
-          .gte("created_at", since7d),
+      // ── Wave 1 — edge fn (network aggregates) + agent-owned data in parallel ─
+      const [aggregatesResult, hotSheetsRes, unacceptedTokensRes] = await Promise.all([
+        // Network-wide aggregates via service-role edge function (RLS-safe)
+        supabase.functions.invoke("network-intelligence-aggregates"),
 
-        // Price changes (last 7d) — from favorite_price_history (network-wide)
-        supabase
-          .from("favorite_price_history")
-          .select("id", { count: "exact", head: true })
-          .gte("changed_at", since7d),
-
-        // Back-on-market (status = 'active' where is_relisting=false but recently reactivated)
-        // proxy: listings with status='active' and active_date in last 7d that are NOT new
-        supabase
-          .from("listings")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "active")
-          .gte("active_date", since7d)
-          .eq("is_relisting", false),
-
-        // Avg days between relists (network-wide) — pull data and compute in JS
-        supabase
-          .from("listings")
-          .select("created_at, cancelled_at")
-          .eq("is_relisting", true)
-          .not("cancelled_at", "is", null)
-          .limit(200),
-
-        // Agent's active hot sheets
+        // Agent's active hot sheets (client-side, RLS-scoped to agent)
         supabase
           .from("hot_sheets")
           .select("id, name, updated_at, created_at")
@@ -142,115 +88,44 @@ export function useNetworkIntelligence(): {
           .order("updated_at", { ascending: false })
           .limit(10),
 
-        // Agent's unaccepted tokens (for pending invite count per hot sheet)
+        // Agent's unaccepted tokens (client-side, RLS-scoped to agent)
         supabase
           .from("share_tokens")
           .select("id, payload, created_at, accepted_at")
           .eq("agent_id", agentId)
           .is("accepted_at", null),
-
-        // New buyer needs (last 7d, network-wide count only — no PII)
-        supabase
-          .from("client_needs")
-          .select("id, state, city, max_price, created_at", { count: "exact" })
-          .gte("created_at", since7d)
-          .limit(500),
-
-        // All network hot sheets (active) for buyer demand extraction
-        supabase
-          .from("hot_sheets")
-          .select("criteria, updated_at")
-          .eq("is_active", true)
-          .limit(500),
       ]);
 
       if (!mountedRef.current || loadIdRef.current !== myId) return;
 
-      // ── Market Signals ───────────────────────────────────────────────────────
-
-      const relistCount7d = (relistRes.count as number | null) ?? 0;
-      const priceChangeCount7d = (priceChangeRes.count as number | null) ?? 0;
-      const backOnMarketCount7d = (backOnMarketRes.count as number | null) ?? 0;
-
-      // Avg days between relists: compute from pairs
-      let avgDaysBetweenRelists: number | null = null;
-      const relistRows = (avgDaysRes.data ?? []) as any[];
-      if (relistRows.length > 0) {
-        const deltas: number[] = [];
-        for (const r of relistRows) {
-          if (r.cancelled_at && r.created_at) {
-            const cancelledMs = new Date(r.cancelled_at).getTime();
-            const createdMs = new Date(r.created_at).getTime();
-            const days = Math.max(0, Math.floor((createdMs - cancelledMs) / 86_400_000));
-            if (days >= 0 && days <= 365) deltas.push(days);
-          }
-        }
-        if (deltas.length > 0) {
-          avgDaysBetweenRelists = Math.round(
-            deltas.reduce((a, b) => a + b, 0) / deltas.length
-          );
-        }
+      if (aggregatesResult.error) {
+        throw new Error(aggregatesResult.error.message ?? "Failed to load network aggregates");
       }
 
-      // ── Buyer Demand ─────────────────────────────────────────────────────────
+      // ── Unpack aggregates from edge function ─────────────────────────────────
+      const agg = aggregatesResult.data as {
+        marketSignals: {
+          relistCount7d: number;
+          backOnMarketCount7d: number;
+          priceChangeCount7d: number;
+          avgDaysBetweenRelists: number | null;
+        };
+        buyerDemand: {
+          newNeedsCount7d: number;
+          topTowns: BuyerDemandTown[];
+          topPriceBands: BuyerDemandBand[];
+        };
+      };
 
-      const newNeedsCount7d = (clientNeedsRes.count as number | null) ?? 0;
+      const relistCount7d = agg.marketSignals.relistCount7d;
+      const backOnMarketCount7d = agg.marketSignals.backOnMarketCount7d;
+      const priceChangeCount7d = agg.marketSignals.priceChangeCount7d;
+      const avgDaysBetweenRelists = agg.marketSignals.avgDaysBetweenRelists;
+      const newNeedsCount7d = agg.buyerDemand.newNeedsCount7d;
+      const topTowns: BuyerDemandTown[] = agg.buyerDemand.topTowns;
+      const topPriceBands: BuyerDemandBand[] = agg.buyerDemand.topPriceBands;
 
-      // Extract top towns from all active hot sheets criteria
-      const townCounts = new Map<string, { count: number; state: string }>();
-      const hsRows = (allHotSheetsForDemandRes.data ?? []) as any[];
-
-      for (const hs of hsRows) {
-        const criteria = hs.criteria ?? {};
-        const cities: string[] = Array.isArray(criteria.cities) ? criteria.cities : [];
-        const state: string = typeof criteria.state === "string" ? criteria.state : "";
-        for (const city of cities) {
-          if (!city?.trim()) continue;
-          const key = `${city.trim().toLowerCase()}|${state.trim().toUpperCase()}`;
-          const existing = townCounts.get(key);
-          if (existing) {
-            existing.count += 1;
-          } else {
-            townCounts.set(key, { count: 1, state: state.trim().toUpperCase() });
-          }
-        }
-      }
-
-      const topTowns: BuyerDemandTown[] = Array.from(townCounts.entries())
-        .sort((a, b) => b[1].count - a[1].count)
-        .slice(0, 6)
-        .map(([key, v]) => ({
-          town: key.split("|")[0].replace(/\b\w/g, (c) => c.toUpperCase()),
-          state: v.state,
-          count: v.count,
-        }));
-
-      // Extract price bands from hot sheets
-      const bandCounts = new Map<string, number>(
-        PRICE_BANDS.map((b) => [b.label, 0])
-      );
-
-      for (const hs of hsRows) {
-        const criteria = hs.criteria ?? {};
-        const maxPrice = criteria.maxPrice ? Number(criteria.maxPrice) : null;
-        if (!maxPrice) continue;
-        for (const band of PRICE_BANDS) {
-          if (maxPrice > band.min && (band.max === null || maxPrice <= band.max)) {
-            bandCounts.set(band.label, (bandCounts.get(band.label) ?? 0) + 1);
-            break;
-          }
-        }
-      }
-
-      const topPriceBands: BuyerDemandBand[] = PRICE_BANDS.map((b) => ({
-        ...b,
-        count: bandCounts.get(b.label) ?? 0,
-      }))
-        .filter((b) => b.count > 0)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 4);
-
-      // ── Active Hot Sheets ────────────────────────────────────────────────────
+      // ── Active Hot Sheets (agent-owned, client-side) ─────────────────────────
 
       const agentHotSheets = (hotSheetsRes.data ?? []) as any[];
       const unacceptedTokens = (unacceptedTokensRes.data ?? []) as any[];
