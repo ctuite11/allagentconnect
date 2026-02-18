@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.process-hot-sheet]
 verify_jwt = true
+
+[functions.network-intelligence-aggregates]
+verify_jwt = false
