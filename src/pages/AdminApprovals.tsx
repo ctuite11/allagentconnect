@@ -608,6 +608,15 @@ export default function AdminApprovals() {
           </span>
           <div className="flex items-center gap-2">
             <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/admin/consumers')}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Consumers
+            </Button>
+            <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
               className="bg-emerald-600 hover:bg-emerald-700"
