@@ -17,6 +17,7 @@ const ClientAgentSettings = () => {
   const [agent, setAgent] = useState<any>(null);
   const [relationshipId, setRelationshipId] = useState<string | null>(null);
   const [ending, setEnding] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -30,6 +31,7 @@ const ClientAgentSettings = () => {
       return;
     }
 
+    setCurrentUserId(user.id);
     loadAgentRelationship(user.id);
   };
 
@@ -102,11 +104,14 @@ const ClientAgentSettings = () => {
       setRelationshipId(null);
 
       // Force-refresh to ensure UI is in sync with DB
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) await loadAgentRelationship(user.id);
+      if (currentUserId) {
+        await loadAgentRelationship(currentUserId);
+      } else {
+        console.warn("End relationship: currentUserId is null, skipping refresh");
+      }
     } catch (error: any) {
       console.error("Error ending relationship:", error);
-      toast.error("Failed to end relationship");
+      toast.error(error?.message ?? "Failed to end relationship");
     } finally {
       setEnding(false);
     }

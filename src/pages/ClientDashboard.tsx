@@ -62,6 +62,7 @@ export default function ClientDashboard() {
   const [shareTokenByHotSheetId, setShareTokenByHotSheetId] = useState<Record<string, string>>({});
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -73,6 +74,7 @@ export default function ClientDashboard() {
       navigate("/consumer/auth");
       return;
     }
+    setCurrentUserId(user.id);
     await Promise.all([loadAgentRelationship(user.id), loadHotSheets(user.id), loadFavorites(user.id)]);
     setLoading(false);
   };
@@ -173,7 +175,7 @@ export default function ClientDashboard() {
 
     if (error) {
       console.error("End relationship error:", error);
-      toast.error("Failed to end relationship");
+      toast.error(error?.message ?? "Failed to end relationship");
       return;
     }
 
@@ -191,8 +193,11 @@ export default function ClientDashboard() {
     setShowEndDialog(false);
 
     // Force-refresh to ensure UI is in sync with DB
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) await loadAgentRelationship(user.id);
+    if (currentUserId) {
+      await loadAgentRelationship(currentUserId);
+    } else {
+      console.warn("End relationship: currentUserId is null, skipping refresh");
+    }
   };
 
   const formatCriteriaSummary = (criteria: any) => {
