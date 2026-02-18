@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,11 +7,19 @@ const corsHeaders = {
 };
 
 interface HotSheetInviteRequest {
+  /** Client email address */
   invitedEmail: string;
   inviterName: string;
   hotSheetName: string;
   hotSheetLink: string;
   hotSheetId?: string;
+  /** The UUID of the share_token row — used for idempotency + audit */
+  tokenId?: string;
+  /** actor agent user_id — used for audit logging */
+  actorUserId?: string;
+  clientId?: string;
+  /** 'initial' | 'resend' — controls audit event type */
+  mode?: "initial" | "resend";
 }
 
 interface ListingTeaser {
@@ -31,15 +39,54 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { invitedEmail, inviterName, hotSheetName, hotSheetLink, hotSheetId }: HotSheetInviteRequest = await req.json();
+    const body: HotSheetInviteRequest = await req.json();
+    const {
+      invitedEmail,
+      inviterName,
+      hotSheetName,
+      hotSheetLink,
+      hotSheetId,
+      tokenId,
+      actorUserId,
+      clientId,
+      mode = "initial",
+    } = body;
 
+    // B6 guardrail: client email is required
+    if (!invitedEmail || !invitedEmail.trim()) {
+      console.error("[send-hot-sheet-invite] Missing invitedEmail — aborting");
+      return new Response(JSON.stringify({ error: "invitedEmail is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // --- Resend cooldown gate (2 minutes per token) ---
+    if (mode === "resend" && tokenId) {
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      const { data: recentJob } = await supabase
+        .from("email_jobs")
+        .select("id, created_at")
+        .eq("idempotency_key", `hot_sheet_invite:${tokenId}:resend`)
+        .gte("created_at", twoMinutesAgo)
+        .maybeSingle();
+
+      if (recentJob) {
+        console.log("[send-hot-sheet-invite] Resend cooldown active for token:", tokenId);
+        return new Response(
+          JSON.stringify({ success: true, skipped: true, reason: "cooldown" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
+
+    // --- Fetch listing teasers ---
     let teasers: ListingTeaser[] = [];
-
     if (hotSheetId) {
       const { data: matchingListings } = await supabase
         .rpc("check_hot_sheet_matches", { p_hot_sheet_id: hotSheetId });
 
-      const listingIds = (matchingListings || []).slice(0, 3).map((match: any) => match.listing_id);
+      const listingIds = (matchingListings || []).slice(0, 3).map((m: any) => m.listing_id);
 
       if (listingIds.length > 0) {
         const { data: listings } = await supabase
@@ -59,21 +106,78 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log("[send-hot-sheet-invite] Enqueuing job for:", invitedEmail);
+    // --- Idempotency key ---
+    // For initial sends: one job per token ever.
+    // For resends: one job per token per minute-bucket (2-min cooldown enforced above).
+    const minuteBucket = mode === "resend"
+      ? `resend`  // already gated by 2-min cooldown query above
+      : "v1";
+    const idempotencyKey = tokenId
+      ? `hot_sheet_invite:${tokenId}:${minuteBucket}`
+      : null; // no token = no idempotency (legacy call)
 
-    const { error: insertError } = await supabase.from("email_jobs").insert({
-      payload: {
-        provider: "resend",
-        template: "hot-sheet-invite",
-        to: invitedEmail,
-        subject: `${inviterName} shared a Hot Sheet with you`,
-        variables: { inviterName, hotSheetName, hotSheetLink, teasers },
-      },
-    });
+    console.log("[send-hot-sheet-invite] Enqueuing job for:", invitedEmail, "mode:", mode);
 
-    if (insertError) throw insertError;
+    const jobPayload = {
+      provider: "resend",
+      template: "hot-sheet-invite",
+      to: invitedEmail,
+      subject: `${inviterName} shared a Hot Sheet with you`,
+      variables: { inviterName, hotSheetName, hotSheetLink, teasers },
+    };
 
-    return new Response(JSON.stringify({ success: true }), {
+    // Build insert row — include idempotency_key if we have one
+    const insertRow: Record<string, unknown> = { payload: jobPayload };
+    if (idempotencyKey) insertRow.idempotency_key = idempotencyKey;
+
+    const { data: jobRow, error: insertError } = await supabase
+      .from("email_jobs")
+      .insert(insertRow)
+      .select("id")
+      .maybeSingle();
+
+    if (insertError) {
+      // Unique violation = duplicate — treat as success (idempotent)
+      if (insertError.code === "23505") {
+        console.log("[send-hot-sheet-invite] Duplicate job suppressed (idempotency):", idempotencyKey);
+        return new Response(JSON.stringify({ success: true, skipped: true, reason: "idempotent" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      throw insertError;
+    }
+
+    // --- Audit log: email_enqueued or invite_resent ---
+    if (tokenId) {
+      const eventType = mode === "resend" ? "invite_resent" : "email_enqueued";
+      await supabase.from("invite_events").insert({
+        token_id: tokenId,
+        hot_sheet_id: hotSheetId || null,
+        client_id: clientId || null,
+        client_email: invitedEmail,
+        event_type: eventType,
+        email_job_id: jobRow?.id || null,
+        actor_user_id: actorUserId || null,
+        meta: { mode, inviterName, hotSheetName },
+      });
+
+      // If resend, also log email_enqueued as a separate entry for clarity
+      if (mode === "resend" && jobRow?.id) {
+        await supabase.from("invite_events").insert({
+          token_id: tokenId,
+          hot_sheet_id: hotSheetId || null,
+          client_id: clientId || null,
+          client_email: invitedEmail,
+          event_type: "email_enqueued",
+          email_job_id: jobRow.id,
+          actor_user_id: actorUserId || null,
+          meta: { mode: "resend", inviterName, hotSheetName },
+        });
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, jobId: jobRow?.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

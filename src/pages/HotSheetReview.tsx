@@ -8,14 +8,198 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
+import { format } from "date-fns";
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+
+// ─── Pending Invites section ────────────────────────────────────────────────
+
+interface PendingInvite {
+  token: string;
+  token_id: string;
+  client_email: string;
+  client_name: string;
+  sent_at: string | null;
+  accepted_at: string | null;
+  resending: boolean;
+  cooldownUntil: number | null; // epoch ms
+}
+
+function PendingInvitesSection({
+  hotSheetId,
+  hotSheetName,
+  agentName,
+  agentUserId,
+}: {
+  hotSheetId: string;
+  hotSheetName: string;
+  agentName: string;
+  agentUserId: string;
+}) {
+  const [invites, setInvites] = useState<PendingInvite[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    // Fetch all share tokens for this hot sheet owned by this agent
+    const { data: tokens, error } = await supabase
+      .from("share_tokens")
+      .select("id, token, payload, accepted_at, created_at")
+      .eq("agent_id", agentUserId);
+
+    if (error || !tokens) { setLoading(false); return; }
+
+    // Filter by hot_sheet_id in payload (JS-side per arch spec)
+    const matching = tokens.filter(
+      (t: any) =>
+        t.payload?.type === "client_hotsheet_invite" &&
+        t.payload?.hot_sheet_id === hotSheetId
+    );
+
+    // For each token, try to get the latest email_job created_at for cooldown
+    const results: PendingInvite[] = await Promise.all(
+      matching.map(async (t: any) => {
+        const clientEmail: string = t.payload?.client_email || "";
+
+        // Look up client name
+        let clientName = clientEmail;
+        if (t.payload?.client_id) {
+          const { data: c } = await supabase
+            .from("clients")
+            .select("first_name, last_name")
+            .eq("id", t.payload.client_id)
+            .maybeSingle();
+          if (c) clientName = `${c.first_name} ${c.last_name}`.trim() || clientEmail;
+        }
+
+        // Find most recent email job for cooldown check
+        const { data: lastJob } = await supabase
+          .from("email_jobs")
+          .select("created_at")
+          .eq("idempotency_key", `hot_sheet_invite:${t.id}:resend`)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const lastSentMs = lastJob ? new Date(lastJob.created_at).getTime() : null;
+        const cooldownUntil = lastSentMs ? lastSentMs + 2 * 60 * 1000 : null;
+
+        return {
+          token: t.token,
+          token_id: t.id,
+          client_email: clientEmail,
+          client_name: clientName,
+          sent_at: t.created_at,
+          accepted_at: t.accepted_at,
+          resending: false,
+          cooldownUntil,
+        };
+      })
+    );
+
+    setInvites(results);
+    setLoading(false);
+  }, [hotSheetId, agentUserId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleResend = async (invite: PendingInvite) => {
+    setInvites((prev) =>
+      prev.map((i) => i.token_id === invite.token_id ? { ...i, resending: true } : i)
+    );
+
+    const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${invite.token}&email=${encodeURIComponent(invite.client_email)}&agent_id=${agentUserId}`;
+
+    const { error } = await supabase.functions.invoke("send-hot-sheet-invite", {
+      body: {
+        invitedEmail: invite.client_email,
+        inviterName: agentName,
+        hotSheetName,
+        hotSheetLink,
+        hotSheetId,
+        tokenId: invite.token_id,
+        actorUserId: agentUserId,
+        mode: "resend",
+      },
+    });
+
+    if (error) {
+      toast.error("Failed to resend invite");
+    } else {
+      toast.success(`Invite resent to ${invite.client_email}`);
+    }
+
+    // Set local cooldown regardless
+    const cooldownUntil = Date.now() + 2 * 60 * 1000;
+    setInvites((prev) =>
+      prev.map((i) =>
+        i.token_id === invite.token_id ? { ...i, resending: false, cooldownUntil } : i
+      )
+    );
+  };
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading invites…</p>;
+  if (invites.length === 0) return null;
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle className="text-base">Client Invites</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="divide-y divide-border">
+          {invites.map((inv) => {
+            const isAccepted = !!inv.accepted_at;
+            const inCooldown = inv.cooldownUntil !== null && Date.now() < inv.cooldownUntil;
+            return (
+              <div key={inv.token_id} className="flex items-center justify-between py-3 gap-4">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{inv.client_name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{inv.client_email}</p>
+                  {inv.sent_at && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Sent {format(new Date(inv.sent_at), "MMM d, yyyy")}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {isAccepted ? (
+                    <Badge variant="default" className="flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" /> Accepted
+                    </Badge>
+                  ) : (
+                    <>
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> Pending
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={inv.resending || inCooldown}
+                        onClick={() => handleResend(inv)}
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${inv.resending ? "animate-spin" : ""}`} />
+                        {inv.resending ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 interface Listing {
   id: string;
@@ -51,6 +235,8 @@ const HotSheetReview = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
+  const [agentUserId, setAgentUserId] = useState<string | null>(null);
+  const [agentDisplayName, setAgentDisplayName] = useState("Your agent");
   const [listings, setListings] = useState<Listing[]>([]);
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
@@ -132,7 +318,19 @@ const HotSheetReview = () => {
   const fetchHotSheetAndListings = async () => {
     try {
       setLoading(true);
-      
+
+      // Resolve current agent identity
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setAgentUserId(user.id);
+        const { data: ap } = await supabase
+          .from("agent_profiles")
+          .select("first_name, last_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (ap) setAgentDisplayName(`${ap.first_name} ${ap.last_name}`.trim());
+      }
+
       // Fetch hot sheet
       const { data: hotSheetData, error: hotSheetError } = await supabase
         .from("hot_sheets")
@@ -319,7 +517,8 @@ if (comments && comments.length > 0) {
 
             const token = crypto.randomUUID();
 
-            const { error: tokenError } = await supabase
+            // B6 guardrail: client_email always in payload
+            const { data: newTokenRow, error: tokenError } = await supabase
               .from("share_tokens")
               .insert({
                 token,
@@ -328,16 +527,32 @@ if (comments && comments.length > 0) {
                   type: "client_hotsheet_invite",
                   client_id: clientId,
                   hot_sheet_id: hotSheet.id,
-                  client_email: clientData.email,
+                  client_email: clientData.email,  // always present
                 },
-              });
+              })
+              .select("id")
+              .maybeSingle();
 
             if (tokenError) {
               console.error(`[send-first-batch] Token error for ${clientId}:`, tokenError);
               continue;
             }
 
-            // Send invite email
+            const tokenId = newTokenRow?.id;
+
+            // Log token_created audit event
+            if (tokenId) {
+              supabase.from("invite_events").insert({
+                token_id: tokenId,
+                hot_sheet_id: hotSheet.id,
+                client_id: clientId,
+                client_email: clientData.email,
+                event_type: "token_created",
+                actor_user_id: user.id,
+              }).then(() => {});
+            }
+
+            // Send invite email (fire-and-forget; idempotency + audit inside edge fn)
             const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${token}&email=${encodeURIComponent(clientData.email)}&agent_id=${user.id}&client_id=${clientId}`;
 
             supabase.functions.invoke("send-hot-sheet-invite", {
@@ -347,6 +562,10 @@ if (comments && comments.length > 0) {
                 hotSheetName: hotSheet.name,
                 hotSheetLink,
                 hotSheetId: hotSheet.id,
+                tokenId,
+                actorUserId: user.id,
+                clientId,
+                mode: "initial",
               },
             }).then(({ error: emailErr }) => {
               if (emailErr) console.error(`[send-first-batch] Email error:`, emailErr);
@@ -467,6 +686,16 @@ if (comments && comments.length > 0) {
               />
             </div>
           </div>
+
+          {/* Pending Invites */}
+          {agentUserId && id && (
+            <PendingInvitesSection
+              hotSheetId={id}
+              hotSheetName={hotSheet.name}
+              agentName={agentDisplayName}
+              agentUserId={agentUserId}
+            />
+          )}
 
           {/* Search Criteria */}
           <Card className="mb-8">

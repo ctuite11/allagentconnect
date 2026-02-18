@@ -1532,6 +1532,7 @@ export type Database = {
           attempts: number
           created_at: string
           id: string
+          idempotency_key: string | null
           last_error: string | null
           max_attempts: number
           payload: Json
@@ -1542,6 +1543,7 @@ export type Database = {
           attempts?: number
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           last_error?: string | null
           max_attempts?: number
           payload: Json
@@ -1552,6 +1554,7 @@ export type Database = {
           attempts?: number
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           last_error?: string | null
           max_attempts?: number
           payload?: Json
@@ -2100,6 +2103,60 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invite_events: {
+        Row: {
+          actor_user_id: string | null
+          client_email: string | null
+          client_id: string | null
+          created_at: string
+          email_job_id: string | null
+          event_type: string
+          hot_sheet_id: string | null
+          id: string
+          meta: Json
+          token_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          created_at?: string
+          email_job_id?: string | null
+          event_type: string
+          hot_sheet_id?: string | null
+          id?: string
+          meta?: Json
+          token_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          created_at?: string
+          email_job_id?: string | null
+          event_type?: string
+          hot_sheet_id?: string | null
+          id?: string
+          meta?: Json
+          token_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_events_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_events_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "share_tokens"
             referencedColumns: ["id"]
           },
         ]
@@ -3528,6 +3585,7 @@ export type Database = {
           attempts: number
           created_at: string
           id: string
+          idempotency_key: string | null
           last_error: string | null
           max_attempts: number
           payload: Json
