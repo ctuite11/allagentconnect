@@ -55,6 +55,7 @@ import VendorDirectory from "./pages/VendorDirectory";
 import PasswordReset from "./pages/PasswordReset";
 import PendingVerification from "./pages/PendingVerification";
 import NotFound from "./pages/NotFound";
+import AccessError from "./pages/AccessError";
 import MyListings from "./pages/MyListings";
 import ManageListingPhotos from "./pages/ManageListingPhotos";
 import AdminApprovals from "./pages/AdminApprovals";
@@ -139,6 +140,7 @@ const App = () => (
                 <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
                 <Route path="/pending-verification" element={<PendingVerification />} />
                 <Route path="/password-reset" element={<PasswordReset />} />
+                <Route path="/access-error" element={<AccessError />} />
                 
                 {/* Legacy redirects - all go to /auth */}
                 <Route path="/choose" element={<Navigate to="/auth?mode=register" replace />} />
