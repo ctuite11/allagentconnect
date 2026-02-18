@@ -47,36 +47,63 @@ const handler = async (req: Request): Promise<Response> => {
       hotSheetLink,
       hotSheetId,
       tokenId,
-      actorUserId,
       clientId,
       mode = "initial",
     } = body;
 
-    // B6 guardrail: client email is required
-    if (!invitedEmail || !invitedEmail.trim()) {
-      console.error("[send-hot-sheet-invite] Missing invitedEmail — aborting");
-      return new Response(JSON.stringify({ error: "invitedEmail is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    // --- Server-side JWT authorization ---
+    // For resend mode, verify the caller owns the token and it is unaccepted.
+    // actorUserId from the request body is IGNORED — we derive it from the JWT.
+    let verifiedActorUserId: string | null = null;
+
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const anonSupabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claimsData } = await anonSupabase.auth.getClaims(token);
+      if (claimsData?.claims?.sub) {
+        verifiedActorUserId = claimsData.claims.sub;
+      }
     }
 
-    // --- Resend cooldown gate (2 minutes per token) ---
-    if (mode === "resend" && tokenId) {
-      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-      const { data: recentJob } = await supabase
-        .from("email_jobs")
-        .select("id, created_at")
-        .eq("idempotency_key", `hot_sheet_invite:${tokenId}:resend`)
-        .gte("created_at", twoMinutesAgo)
-        .maybeSingle();
+    // For resend: caller MUST be authenticated and own the token
+    if (mode === "resend") {
+      if (!verifiedActorUserId) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
 
-      if (recentJob) {
-        console.log("[send-hot-sheet-invite] Resend cooldown active for token:", tokenId);
-        return new Response(
-          JSON.stringify({ success: true, skipped: true, reason: "cooldown" }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
+      if (tokenId) {
+        const { data: tokenRow, error: tokenErr } = await supabase
+          .from("share_tokens")
+          .select("agent_id, accepted_at, accepted_by_user_id")
+          .eq("id", tokenId)
+          .maybeSingle();
+
+        if (tokenErr || !tokenRow) {
+          return new Response(JSON.stringify({ error: "Token not found" }), {
+            status: 404,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+
+        // Must own the token
+        if (tokenRow.agent_id !== verifiedActorUserId) {
+          return new Response(JSON.stringify({ error: "Forbidden" }), {
+            status: 403,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+
+        // Must be unaccepted
+        if (tokenRow.accepted_at || tokenRow.accepted_by_user_id) {
+          return new Response(JSON.stringify({ error: "Token already accepted" }), {
+            status: 409,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
       }
     }
 
@@ -106,14 +133,26 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // --- B6 guardrail: client email is required ---
+    if (!invitedEmail || !invitedEmail.trim()) {
+      console.error("[send-hot-sheet-invite] Missing invitedEmail — aborting");
+      return new Response(JSON.stringify({ error: "invitedEmail is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     // --- Idempotency key ---
-    // For initial sends: one job per token ever.
-    // For resends: one job per token per minute-bucket (2-min cooldown enforced above).
-    const minuteBucket = mode === "resend"
-      ? `resend`  // already gated by 2-min cooldown query above
-      : "v1";
+    // Initial sends: one job per token, ever.
+    // Resends: one job per token per 2-minute time bucket.
+    //   Using floor(epoch / 120) gives a new bucket every 120 seconds,
+    //   so a resend can succeed once per 2-minute window without being
+    //   permanently blocked by the "resend" static key used previously.
+    const twoMinBucket = Math.floor(Date.now() / 1000 / 120);
     const idempotencyKey = tokenId
-      ? `hot_sheet_invite:${tokenId}:${minuteBucket}`
+      ? mode === "resend"
+        ? `hot_sheet_invite:${tokenId}:resend:${twoMinBucket}`
+        : `hot_sheet_invite:${tokenId}:v1`
       : null; // no token = no idempotency (legacy call)
 
     console.log("[send-hot-sheet-invite] Enqueuing job for:", invitedEmail, "mode:", mode);
@@ -149,6 +188,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- Audit log: email_enqueued or invite_resent ---
+    // actor_user_id is always taken from the verified JWT, never from the request body.
     if (tokenId) {
       const eventType = mode === "resend" ? "invite_resent" : "email_enqueued";
       await supabase.from("invite_events").insert({
@@ -158,7 +198,7 @@ const handler = async (req: Request): Promise<Response> => {
         client_email: invitedEmail,
         event_type: eventType,
         email_job_id: jobRow?.id || null,
-        actor_user_id: actorUserId || null,
+        actor_user_id: verifiedActorUserId,
         meta: { mode, inviterName, hotSheetName },
       });
 
@@ -171,7 +211,7 @@ const handler = async (req: Request): Promise<Response> => {
           client_email: invitedEmail,
           event_type: "email_enqueued",
           email_job_id: jobRow.id,
-          actor_user_id: actorUserId || null,
+          actor_user_id: verifiedActorUserId,
           meta: { mode: "resend", inviterName, hotSheetName },
         });
       }
