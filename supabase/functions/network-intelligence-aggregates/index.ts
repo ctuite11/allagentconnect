@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const PRICE_BANDS: Array<{ label: string; min: number; max: number | null }> = [
@@ -26,25 +26,24 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // ── Auth gate (anon client → server-side user verification) ─────────────────
+  // ── Auth gate ────────────────────────────────────────────────────────────────
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const authHeader = req.headers.get("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
-  if (!authHeader?.startsWith("Bearer ")) {
+  if (!token) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
-  const authedClient = createClient(
-    supabaseUrl,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-
-  const { data: { user }, error: userErr } = await authedClient.auth.getUser();
+  // Verify JWT by passing the raw token directly to getUser()
+  const authedClient = createClient(supabaseUrl, supabaseAnonKey);
+  const { data: { user }, error: userErr } = await authedClient.auth.getUser(token);
   if (userErr || !user?.id) {
+    console.error("[network-intelligence-aggregates] Auth error:", userErr?.message);
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json", ...corsHeaders },
