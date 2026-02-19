@@ -116,8 +116,6 @@ const AddRentalListing = () => {
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availableZips, setAvailableZips] = useState<string[]>([]);
-  const [suggestedZips, setSuggestedZips] = useState<string[]>([]);
-  const [suggestedZipsLoading, setSuggestedZipsLoading] = useState(false);
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
@@ -195,72 +193,53 @@ const AddRentalListing = () => {
   useEffect(() => {
     const fetchZipCodes = async () => {
       if (selectedState && selectedCity) {
-        setSuggestedZipsLoading(true);
         try {
-          // Try static data first
           if (hasZipCodeData(selectedCity, selectedState)) {
             const staticZips = getZipCodesForCity(selectedCity, selectedState);
-            setSuggestedZips(staticZips);
             setAvailableZips(staticZips);
             setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
-            setSuggestedZipsLoading(false);
             return;
           }
-          
-          // Try edge function second
           try {
             const { data, error } = await supabase.functions.invoke('get-city-zips', {
               body: { state: selectedState, city: selectedCity }
             });
             if (!error && data?.zips?.length > 0) {
-              setSuggestedZips(data.zips);
               setAvailableZips(data.zips);
               setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
-              setSuggestedZipsLoading(false);
               return;
             }
           } catch (edgeFnError) {
             console.log("Edge function failed, trying Zippopotam.us fallback:", edgeFnError);
           }
-          
-          // Fallback to Zippopotam.us API
           try {
             const response = await fetch(`https://api.zippopotam.us/us/${selectedState}/${encodeURIComponent(selectedCity)}`);
             if (response.ok) {
               const data = await response.json();
               const zips = data.places?.map((place: any) => place['post code']) || [];
               if (zips.length > 0) {
-                setSuggestedZips(zips);
                 setAvailableZips(zips);
                 setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
-                setSuggestedZipsLoading(false);
                 return;
               }
             }
           } catch (zippopotamError) {
             console.log("Zippopotam.us fallback failed:", zippopotamError);
           }
-          
-          // No ZIPs found - allow manual entry without error
-          setSuggestedZips([]);
           setAvailableZips([]);
           setFormData(prev => ({ ...prev, city: selectedCity, zip_code: "" }));
         } catch (error) {
           console.error("Error fetching ZIP codes:", error);
-          // Don't show error toast - just allow manual entry
-          setSuggestedZips([]);
           setAvailableZips([]);
-        } finally {
-          setSuggestedZipsLoading(false);
         }
       } else {
-        setSuggestedZips([]);
+        setAvailableZips([]);
         setFormData(prev => ({ ...prev, zip_code: "" }));
       }
     };
-
     fetchZipCodes();
   }, [selectedState, selectedCity]);
+
 
   const toggleCityExpansion = (city: string) => {
     setExpandedCities(prev => {

@@ -93,9 +93,9 @@ export const RouteGuard: React.FC<Props> = ({
     return <LoadingScreen message="Checking your session..." />;
   }
 
+  // loading is false + no user → effect already fired navigate("/auth"); render null to avoid flash
   if (requireAuth && !user) {
-    // Still loading auth — show spinner, never flash the wrong screen
-    return <LoadingScreen message="Checking your session..." />;
+    return null;
   }
 
   // Admin bypasses all checks
