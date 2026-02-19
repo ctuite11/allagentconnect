@@ -92,9 +92,21 @@ export default function ShowingRequests() {
 
         {error && <div className="px-4 py-4 text-sm text-red-600">Error: {error}</div>}
 
+        {loading && (
+          <div className="divide-y">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="px-4 py-4 space-y-2">
+                <div className="h-4 w-32 bg-neutral-100 rounded animate-pulse" />
+                <div className="h-3 w-64 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        )}
+
         {!loading && !error && rows.length === 0 && (
-          <div className="px-4 py-10 text-center text-sm text-slate-500">
-            No showing requests yet.
+          <div className="px-4 py-12 text-center space-y-2">
+            <p className="text-sm font-medium text-slate-600">No showing requests yet.</p>
+            <p className="text-xs text-slate-400">Requests submitted via listing pages will appear here.</p>
           </div>
         )}
 

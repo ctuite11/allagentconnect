@@ -94,7 +94,8 @@ export const RouteGuard: React.FC<Props> = ({
   }
 
   if (requireAuth && !user) {
-    return <LoadingScreen message="Redirecting to sign in..." />;
+    // Still loading auth — show spinner, never flash the wrong screen
+    return <LoadingScreen message="Checking your session..." />;
   }
 
   // Admin bypasses all checks

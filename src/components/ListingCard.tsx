@@ -864,7 +864,7 @@ const ListingCard = ({
   }
   if (viewMode === 'list') {
     return <Card className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary">
-        <div className="flex gap-3 p-3">
+        <div className="flex gap-4 p-4">
           {/* Photo with Banners */}
           <div className="relative w-40 h-40 flex-shrink-0">
             {photoUrl ? <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover rounded" /> : <div className="w-full h-full bg-muted rounded flex items-center justify-center">
@@ -983,7 +983,7 @@ const ListingCard = ({
                 </div>}
             </div>
 
-            <div className="col-span-2 flex flex-col gap-1 justify-center">
+            <div className="col-span-2 flex flex-col gap-1.5 justify-center pt-1">
               <Button variant="outline" size="sm" onClick={() => navigate(`/agent/listings/edit/${listing.id}`)} className="w-full">
                 <Edit className="w-3 h-3 mr-1" />
                 Edit

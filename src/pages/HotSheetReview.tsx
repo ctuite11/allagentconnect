@@ -634,9 +634,14 @@ if (comments && comments.length > 0) {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col pt-20">
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-muted-foreground">Loading hot sheet...</p>
+        <main className="flex-1 bg-background">
+          <div className="container mx-auto px-4 py-8 max-w-5xl">
+            <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
+              ))}
+            </div>
           </div>
         </main>
       </div>
@@ -778,7 +783,7 @@ if (comments && comments.length > 0) {
                   disabled={sending || selectedListings.size === 0}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Send First Batch ({selectedListings.size})
+                  {sending ? "Sending…" : `Send Invites (${selectedListings.size})`}
                 </Button>
               )}
             </div>
@@ -787,10 +792,12 @@ if (comments && comments.length > 0) {
           {/* Listings Grid */}
           {listings.length === 0 ? (
             <Card className="p-12">
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  No listings match the search criteria
-                </p>
+              <div className="text-center space-y-3">
+                <p className="text-muted-foreground font-medium">No listings match this hot sheet's criteria.</p>
+                <p className="text-sm text-muted-foreground">Try widening the price range, location, or property type.</p>
+                <Button variant="outline" size="sm" onClick={() => navigate("/hot-sheets")}>
+                  Edit Hot Sheet
+                </Button>
               </div>
             </Card>
           ) : (

@@ -942,50 +942,16 @@ const AddRentalListing = () => {
                     )}
                   </div>
 
-                  {/* ZIP Code Picker */}
+                  {/* ZIP Code */}
                   <div className="space-y-2">
                     <Label htmlFor="zip_code">ZIP Code *</Label>
-                    {suggestedZipsLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Loading ZIP codes...
-                      </div>
-                    ) : suggestedZips.length > 0 ? (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          {suggestedZips.map((zip) => (
-                            <Button
-                              key={zip}
-                              type="button"
-                              variant={formData.zip_code === zip ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handleZipSelect(zip)}
-                            >
-                              {zip}
-                            </Button>
-                          ))}
-                        </div>
-                        {formData.zip_code && (
-                          <p className="text-sm text-muted-foreground">
-                            Selected: <span className="font-medium">{formData.zip_code}</span>
-                          </p>
-                        )}
-                      </div>
-                    ) : selectedCity ? (
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          No ZIP codes available for this city - enter manually below
-                        </p>
-                        <Input
-                          id="zip_code_manual"
-                          value={formData.zip_code}
-                          onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
-                          placeholder="02134"
-                        />
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Select a city to see ZIP code options</p>
-                    )}
+                    <Input
+                      id="zip_code"
+                      value={formData.zip_code}
+                      onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
+                      placeholder="02134"
+                      maxLength={10}
+                    />
                   </div>
 
                   {/* Street Address */}
