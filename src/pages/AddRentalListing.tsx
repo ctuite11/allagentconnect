@@ -282,11 +282,6 @@ const AddRentalListing = () => {
     setFormData(prev => ({ ...prev, neighborhood }));
   };
 
-  const handleZipSelect = (zip: string) => {
-    setFormData(prev => ({ ...prev, zip_code: zip }));
-    setValidationErrors([]);
-  };
-
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
