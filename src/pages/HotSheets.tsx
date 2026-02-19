@@ -224,8 +224,10 @@ const HotSheets = () => {
   if (loading) {
     return (
       <PageShell>
-        <div className="flex items-center justify-center py-24">
-          <p className="text-zinc-500">Loading hot sheets...</p>
+        <div className="flex flex-col gap-3 mt-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 rounded-2xl border border-neutral-200 bg-neutral-100 animate-pulse" />
+          ))}
         </div>
       </PageShell>
     );
