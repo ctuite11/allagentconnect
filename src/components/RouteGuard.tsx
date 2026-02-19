@@ -93,8 +93,11 @@ export const RouteGuard: React.FC<Props> = ({
     return <LoadingScreen message="Checking your session..." />;
   }
 
-  // loading is false + no user → effect already fired navigate("/auth"); render null to avoid flash
+  // loading is false + no user → effect fired navigate("/auth"); show neutral placeholder, not a blank white screen
   if (requireAuth && !user) {
+    if (location.pathname !== "/auth") {
+      return <LoadingScreen message="Redirecting..." />;
+    }
     return null;
   }
 
