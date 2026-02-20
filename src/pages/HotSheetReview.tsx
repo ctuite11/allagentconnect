@@ -353,15 +353,15 @@ const HotSheetReview = () => {
 
       // Check if invites already sent (tokens exist for this hot sheet)
       if (hotSheetData && user) {
-        const { data: existingTokens } = await supabase
+        const { count: tokenCount, error: tokenCountErr } = await supabase
           .from("share_tokens")
-          .select("id")
+          .select("id", { count: "exact", head: true })
           .eq("agent_id", user.id)
           .contains("payload", {
             type: "client_hotsheet_invite",
             hot_sheet_id: hotSheetData.id,
           });
-        setInvitesSent((existingTokens?.length ?? 0) > 0);
+        if (!tokenCountErr) setInvitesSent((tokenCount ?? 0) > 0);
       }
 
       // Build query using unified search utility
@@ -463,6 +463,7 @@ if (comments && comments.length > 0) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // ── 1) Fetch all client IDs in one query ──────────────────────────────
       const { data: hscRows, error: hscErr } = await supabase
         .from("hot_sheet_clients")
         .select("client_id")
@@ -474,60 +475,68 @@ if (comments && comments.length > 0) {
         return;
       }
 
-      const { data: agentProfile } = await supabase
-        .from("agent_profiles")
-        .select("first_name, last_name")
-        .eq("id", user.id)
-        .maybeSingle();
-      const agentName = agentProfile
-        ? `${agentProfile.first_name} ${agentProfile.last_name}`.trim()
-        : "Your agent";
+      const recipientClientIds = hscRows.map((r: any) => r.client_id);
 
-      const invitePromises: Promise<any>[] = [];
-
-      for (const row of hscRows) {
-        const clientId = row.client_id;
-
-        // Skip if active relationship already exists
-        const { data: existingRel } = await supabase
-          .from("client_agent_relationships")
-          .select("id")
-          .eq("agent_id", user.id)
-          .eq("client_id", clientId)
-          .eq("status", "active")
-          .maybeSingle();
-
-        if (existingRel) {
-          console.log(`[handleSendInvites] Skipping client ${clientId} -- active relationship`);
-          continue;
-        }
-
-        // Skip if token already exists for this client+hotsheet
-        const { data: existingToken } = await supabase
+      // ── 2) Batch-fetch agent name, client emails, existing tokens ─────────
+      const [agentProfileRes, clientsRes, existingTokensRes] = await Promise.all([
+        supabase
+          .from("agent_profiles")
+          .select("first_name, last_name")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("clients")
+          .select("id, email, first_name, last_name")
+          .in("id", recipientClientIds),
+        supabase
           .from("share_tokens")
-          .select("token")
+          .select("id, token, payload")
           .eq("agent_id", user.id)
           .contains("payload", {
             type: "client_hotsheet_invite",
-            client_id: clientId,
             hot_sheet_id: hotSheet.id,
-          })
-          .maybeSingle();
+          }),
+      ]);
 
-        if (existingToken) {
-          console.log(`[handleSendInvites] Token already exists for client ${clientId}`);
+      const agentName = agentProfileRes.data
+        ? `${agentProfileRes.data.first_name} ${agentProfileRes.data.last_name}`.trim()
+        : agentDisplayName;
+
+      // Map client data by id for O(1) lookup
+      const clientMap = new Map<string, { email: string; name: string }>();
+      for (const c of (clientsRes.data ?? [])) {
+        if (c.email) {
+          clientMap.set(c.id, {
+            email: c.email,
+            name: `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.email,
+          });
+        }
+      }
+
+      // Map existing tokens by client_id for O(1) lookup (JS-side per arch spec)
+      const existingTokenByClientId = new Map<string, { id: string; token: string }>();
+      for (const t of (existingTokensRes.data ?? [])) {
+        const payload = t.payload as Record<string, unknown> | null;
+        const cid = typeof payload?.client_id === "string" ? payload.client_id : null;
+        if (cid) existingTokenByClientId.set(cid, { id: t.id, token: t.token });
+      }
+
+      // ── 3) Build invite list (create tokens for clients that don't have one) ─
+      const invitePromises: Promise<any>[] = [];
+      let skippedCount = 0;
+
+      for (const clientId of recipientClientIds) {
+        const clientData = clientMap.get(clientId);
+        if (!clientData?.email) { skippedCount++; continue; }
+
+        // If token already exists for this client → skip (resend is handled separately)
+        if (existingTokenByClientId.has(clientId)) {
+          console.log(`[handleSendInvites] Token already exists for client ${clientId} — skipping`);
+          skippedCount++;
           continue;
         }
 
-        // Look up client email
-        const { data: clientData } = await supabase
-          .from("clients")
-          .select("email")
-          .eq("id", clientId)
-          .maybeSingle();
-
-        if (!clientData?.email) continue;
-
+        // Generate token (UUID is the established format in this app)
         const token = crypto.randomUUID();
 
         const { data: newTokenRow, error: tokenError } = await supabase
@@ -538,32 +547,33 @@ if (comments && comments.length > 0) {
             payload: {
               type: "client_hotsheet_invite",
               client_id: clientId,
-              hot_sheet_id: hotSheet.id,
               client_email: clientData.email,
+              hot_sheet_id: hotSheet.id,
             },
           })
-          .select("id")
-          .maybeSingle();
+          .select("id, token")
+          .single();
 
         if (tokenError) {
-          console.error(`[handleSendInvites] Token error for ${clientId}:`, tokenError);
+          console.error(`[handleSendInvites] Token insert error for ${clientId}:`, tokenError);
+          skippedCount++;
           continue;
         }
 
-        const tokenId = newTokenRow?.id;
+        const tokenId = newTokenRow.id;
+        const finalToken = newTokenRow.token ?? token;
 
-        if (tokenId) {
-          supabase.from("invite_events").insert({
-            token_id: tokenId,
-            hot_sheet_id: hotSheet.id,
-            client_id: clientId,
-            client_email: clientData.email,
-            event_type: "token_created",
-            actor_user_id: user.id,
-          }).then(() => {});
-        }
+        // Audit log (fire-and-forget — non-critical)
+        supabase.from("invite_events").insert({
+          token_id: tokenId,
+          hot_sheet_id: hotSheet.id,
+          client_id: clientId,
+          client_email: clientData.email,
+          event_type: "token_created",
+          actor_user_id: user.id,
+        }).then(() => {});
 
-        const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${token}&email=${encodeURIComponent(clientData.email)}&agent_id=${user.id}&client_id=${clientId}`;
+        const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${finalToken}&email=${encodeURIComponent(clientData.email)}&agent_id=${user.id}&client_id=${clientId}`;
 
         invitePromises.push(
           supabase.functions.invoke("send-hot-sheet-invite", {
@@ -574,7 +584,6 @@ if (comments && comments.length > 0) {
               hotSheetLink,
               hotSheetId: hotSheet.id,
               tokenId,
-              actorUserId: user.id,
               clientId,
               mode: "initial",
             },
@@ -583,19 +592,30 @@ if (comments && comments.length > 0) {
       }
 
       if (invitePromises.length === 0) {
-        toast.info("All clients already have invites or active relationships.");
+        toast.info(
+          skippedCount > 0
+            ? "All clients already have invites — use Resend to re-send."
+            : "No clients with valid emails found."
+        );
         setInvitesSent(true);
         return;
       }
 
-      // CRITICAL: await all sends before returning (no fire-and-forget)
+      // ── 4) Await all sends; collect partial failures ──────────────────────
       const results = await Promise.all(invitePromises);
-      for (const r of results) {
-        if (r.error) throw r.error;
+      const failures = results.filter((r) => r.error);
+
+      if (failures.length > 0) {
+        console.error("[handleSendInvites] Partial failures:", failures.map((f) => f.error));
+        toast.error(
+          `Sent ${results.length - failures.length}, failed ${failures.length}. Check console for details.`
+        );
+        // Don't set invitesSent if any failed — let agent retry
+        return;
       }
 
       setInvitesSent(true);
-      toast.success(`Invites sent (${invitePromises.length} client${invitePromises.length !== 1 ? "s" : ""})`);
+      toast.success(`Invites sent (${results.length} client${results.length !== 1 ? "s" : ""})`);
     } catch (e: any) {
       console.error("[HotSheetReview] handleSendInvites error", e);
       toast.error(e?.message ?? "Failed to send invites");
@@ -605,29 +625,22 @@ if (comments && comments.length > 0) {
   };
 
   const handleSendFirstBatch = async () => {
+    if (selectedListings.size === 0) return;
     try {
       setSending(true);
 
-      // If listings selected, process them via edge function
-      if (selectedListings.size > 0) {
-        const { error } = await supabase.functions.invoke("process-hot-sheet", {
-          body: {
-            hotSheetId: id,
-            sendInitialBatch: true,
-            selectedListingIds: Array.from(selectedListings),
-          },
-        });
-        if (error) throw error;
-        toast.success(`Sent ${selectedListings.size} listing${selectedListings.size !== 1 ? "s" : ""} to client`);
-      }
-
-      // Always send invites (awaited — no fire-and-forget)
-      await handleSendInvites();
-
-      navigate("/hot-sheets");
+      const { error } = await supabase.functions.invoke("process-hot-sheet", {
+        body: {
+          hotSheetId: id,
+          sendInitialBatch: true,
+          selectedListingIds: Array.from(selectedListings),
+        },
+      });
+      if (error) throw error;
+      toast.success(`Sent ${selectedListings.size} listing${selectedListings.size !== 1 ? "s" : ""} to client`);
     } catch (error: any) {
-      console.error("Error sending:", error);
-      toast.error("Failed to send");
+      console.error("Error sending listings:", error);
+      toast.error("Failed to send listings");
     } finally {
       setSending(false);
     }
