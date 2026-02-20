@@ -225,26 +225,15 @@ export default function ClientDashboard() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("client_agent_relationships")
-      .update({ status: "inactive", ended_at: new Date().toISOString() })
-      .eq("client_id", currentUserId)
-      .eq("status", "active")
-      .select("id, status, ended_at");
+    const { error } = await supabase.rpc('end_client_relationship');
 
     if (error) {
-      console.error("End relationship error:", error);
-      toast.error(error?.message ?? "Failed to end relationship");
+      console.error("End relationship RPC error:", error);
+      toast.error(error.message ?? "Failed to end relationship");
       return;
     }
 
-    if (!data?.length) {
-      console.error("End relationship: no active row found", { currentUserId });
-      toast.error("No active relationship found to end");
-      return;
-    }
-
-    console.log("End relationship success:", data[0]);
+    console.log("End relationship success via RPC");
     toast.success("Relationship ended");
     clearPrimaryAgentId();
     setAgent(null);
