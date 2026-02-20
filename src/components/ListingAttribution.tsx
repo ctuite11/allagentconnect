@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole, type UserRole } from "@/hooks/useUserRole";
-import { getPrimaryAgentId } from "@/utils/agentTracking";
+import { syncStickyFromDB } from "@/utils/agentTracking";
 import type { User } from "@supabase/supabase-js";
 
 interface ListingAttributionProps {
@@ -50,19 +50,22 @@ export function ListingAttribution({
     if (externalStickyName) return;
     if (role !== "buyer") return;
 
-    const agentId = getPrimaryAgentId();
-    if (!agentId) return;
+    const resolve = async () => {
+      const agentId = await syncStickyFromDB();
+      if (!agentId) return;
 
-    supabase
-      .from("agent_profiles")
-      .select("first_name, last_name")
-      .eq("id", agentId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setStickyName(`${data.first_name} ${data.last_name}`);
-        }
-      });
+      const { data } = await supabase
+        .from("agent_profiles")
+        .select("first_name, last_name")
+        .eq("id", agentId)
+        .maybeSingle();
+
+      if (data) {
+        setStickyName(`${data.first_name} ${data.last_name}`);
+      }
+    };
+
+    resolve();
   }, [role, externalStickyName]);
 
   // While loading role (only when doing own lookup), render nothing to avoid flicker
