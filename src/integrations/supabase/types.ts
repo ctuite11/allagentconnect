@@ -3554,6 +3554,10 @@ export type Database = {
       admin_delete_agent: { Args: { p_agent_id: string }; Returns: undefined }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
       admin_delete_consumer: { Args: { p_user_id: string }; Returns: undefined }
+      agent_end_client_relationship: {
+        Args: { p_client_id: string }
+        Returns: number
+      }
       auto_activate_listings: { Args: never; Returns: undefined }
       check_client_has_other_agent: {
         Args: { p_client_email: string }
@@ -3601,6 +3605,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      end_client_relationship: { Args: never; Returns: number }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
       get_client_favorites_for_agent: {
