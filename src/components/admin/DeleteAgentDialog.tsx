@@ -36,120 +36,51 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
     try {
       // EARLY ACCESS BRANCH: Simple delete from agent_early_access only
       if (agent.is_early_access) {
-        const { error, count } = await supabase
+        const { error } = await supabase
           .from("agent_early_access")
           .delete()
           .eq("id", agent.id);
+        if (error) throw error;
 
-        if (error) {
-          console.error("Error deleting early access record:", error);
-          throw error;
-        }
-
-        // Also remove any auth account tied to this email
         await supabase.functions.invoke("delete-users", {
           body: { emails: [agent.email] },
         });
 
-        console.log(`[DeleteAgentDialog] Deleted early access record and auth user: ${agent.id}`);
         toast.success(`${agent.first_name} ${agent.last_name} (early access) has been deleted`);
         onDeleted();
         onOpenChange(false);
         return;
       }
 
-      // REAL AGENT BRANCH: Full deletion flow
-      // First, get current user for deleted_by field
+      // REAL AGENT BRANCH: Server-side RPC handles full cleanup
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-      // Fetch full agent profile data for archival
+      // Archive before deletion
       const { data: agentProfile } = await supabase
         .from("agent_profiles")
         .select("*")
         .eq("id", agent.id)
         .single();
 
-      const { data: agentSettings } = await supabase
-        .from("agent_settings")
-        .select("*")
-        .eq("user_id", agent.id)
-        .single();
+      await supabase.from("deleted_users").insert({
+        original_user_id: agent.id,
+        email: agent.email,
+        first_name: agent.first_name,
+        last_name: agent.last_name,
+        phone: agentProfile?.phone || null,
+        company: agentProfile?.company || null,
+        deleted_by: currentUser?.id || null,
+        deletion_reason: "Admin deletion",
+        original_data: { agent_profile: agentProfile },
+      });
 
-      // Archive the user to deleted_users table
-      const { error: archiveError } = await supabase
-        .from("deleted_users")
-        .insert({
-          original_user_id: agent.id,
-          email: agent.email,
-          first_name: agent.first_name,
-          last_name: agent.last_name,
-          phone: agentProfile?.phone || null,
-          company: agentProfile?.company || null,
-          deleted_by: currentUser?.id || null,
-          deletion_reason: "Admin deletion",
-          original_data: {
-            agent_profile: agentProfile,
-            agent_settings: agentSettings,
-          },
-        });
+      // Single RPC cleans all DB records
+      const { error: rpcErr } = await supabase.rpc("admin_delete_agent", {
+        p_agent_id: agent.id,
+      });
+      if (rpcErr) throw rpcErr;
 
-      if (archiveError) {
-        console.error("Error archiving user:", archiveError);
-        // Continue with deletion even if archiving fails
-      }
-
-      // Delete in order to avoid FK constraints:
-      // 1. Delete from agent_settings
-      await supabase.from("agent_settings").delete().eq("user_id", agent.id);
-      
-      // 2. Delete from user_roles
-      await supabase.from("user_roles").delete().eq("user_id", agent.id);
-      
-      // 3. Delete from notification_preferences
-      await supabase.from("notification_preferences").delete().eq("user_id", agent.id);
-      
-      // 4. Delete from agent_buyer_coverage_areas
-      await supabase.from("agent_buyer_coverage_areas").delete().eq("agent_id", agent.id);
-      
-      // 5. Delete from agent_county_preferences
-      await supabase.from("agent_county_preferences").delete().eq("agent_id", agent.id);
-      
-      // 6. Delete from agent_state_preferences
-      await supabase.from("agent_state_preferences").delete().eq("agent_id", agent.id);
-      
-      // 7. Delete from testimonials
-      await supabase.from("testimonials").delete().eq("agent_id", agent.id);
-      
-      // 8. Delete from email_templates
-      await supabase.from("email_templates").delete().eq("agent_id", agent.id);
-      
-      // 9. Delete from clients
-      await supabase.from("clients").delete().eq("agent_id", agent.id);
-      
-      // 10. Delete from hot_sheets
-      await supabase.from("hot_sheets").delete().eq("user_id", agent.id);
-      
-      // 11. Delete from favorites
-      await supabase.from("favorites").delete().eq("user_id", agent.id);
-      
-      // 12. Delete from listing_drafts
-      await supabase.from("listing_drafts").delete().eq("user_id", agent.id);
-      
-      // 13. Delete listings (this will cascade to listing-related tables)
-      await supabase.from("listings").delete().eq("agent_id", agent.id);
-
-      // 14. Delete from profiles table
-      await supabase.from("profiles").delete().eq("id", agent.id);
-      
-      // 15. Finally delete from agent_profiles
-      const { error: profileError } = await supabase
-        .from("agent_profiles")
-        .delete()
-        .eq("id", agent.id);
-
-      if (profileError) throw profileError;
-
-      // 16. Delete auth user via edge function
+      // Purge auth user last
       const { error: authError } = await supabase.functions.invoke("delete-users", {
         body: { userIds: [agent.id] },
       });
@@ -157,12 +88,10 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
       if (authError) {
         console.error("Error deleting auth user:", authError);
         toast.warning(`${agent.first_name} ${agent.last_name} profile deleted, but auth account removal failed`);
-        onDeleted();
-        onOpenChange(false);
-        return;
+      } else {
+        toast.success(`${agent.first_name} ${agent.last_name} has been permanently deleted and archived`);
       }
 
-      toast.success(`${agent.first_name} ${agent.last_name} has been permanently deleted and archived`);
       onDeleted();
       onOpenChange(false);
     } catch (error: any) {

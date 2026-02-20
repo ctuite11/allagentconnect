@@ -59,10 +59,8 @@ export function BulkDeleteAgentsDialog({
             .from("agent_early_access")
             .delete()
             .eq("id", agent.id);
-
           if (error) throw error;
 
-          // Also remove any auth account tied to this email
           await supabase.functions.invoke("delete-users", {
             body: { emails: [agent.email] },
           });
@@ -71,56 +69,32 @@ export function BulkDeleteAgentsDialog({
           continue;
         }
 
-        // REAL AGENT BRANCH: Full deletion flow
-        // Fetch full agent profile data for archival
+        // REAL AGENT BRANCH: Archive then RPC
         const { data: agentProfile } = await supabase
           .from("agent_profiles")
           .select("*")
           .eq("id", agent.id)
           .single();
 
-        const { data: agentSettings } = await supabase
-          .from("agent_settings")
-          .select("*")
-          .eq("user_id", agent.id)
-          .single();
+        await supabase.from("deleted_users").insert({
+          original_user_id: agent.id,
+          email: agent.email,
+          first_name: agent.first_name,
+          last_name: agent.last_name,
+          phone: agentProfile?.phone || null,
+          company: agentProfile?.company || null,
+          deleted_by: currentUser?.id || null,
+          deletion_reason: "Bulk admin deletion",
+          original_data: { agent_profile: agentProfile },
+        });
 
-        // Archive the user
-        await supabase
-          .from("deleted_users")
-          .insert({
-            original_user_id: agent.id,
-            email: agent.email,
-            first_name: agent.first_name,
-            last_name: agent.last_name,
-            phone: agentProfile?.phone || null,
-            company: agentProfile?.company || null,
-            deleted_by: currentUser?.id || null,
-            deletion_reason: "Bulk admin deletion",
-            original_data: {
-              agent_profile: agentProfile,
-              agent_settings: agentSettings,
-            },
-          });
+        // Single RPC cleans all DB records
+        const { error: rpcErr } = await supabase.rpc("admin_delete_agent", {
+          p_agent_id: agent.id,
+        });
+        if (rpcErr) throw rpcErr;
 
-        // Delete in order to avoid FK constraints
-        await supabase.from("agent_settings").delete().eq("user_id", agent.id);
-        await supabase.from("user_roles").delete().eq("user_id", agent.id);
-        await supabase.from("notification_preferences").delete().eq("user_id", agent.id);
-        await supabase.from("agent_buyer_coverage_areas").delete().eq("agent_id", agent.id);
-        await supabase.from("agent_county_preferences").delete().eq("agent_id", agent.id);
-        await supabase.from("agent_state_preferences").delete().eq("agent_id", agent.id);
-        await supabase.from("testimonials").delete().eq("agent_id", agent.id);
-        await supabase.from("email_templates").delete().eq("agent_id", agent.id);
-        await supabase.from("clients").delete().eq("agent_id", agent.id);
-        await supabase.from("hot_sheets").delete().eq("user_id", agent.id);
-        await supabase.from("favorites").delete().eq("user_id", agent.id);
-        await supabase.from("listing_drafts").delete().eq("user_id", agent.id);
-        await supabase.from("listings").delete().eq("agent_id", agent.id);
-        await supabase.from("profiles").delete().eq("id", agent.id);
-        await supabase.from("agent_profiles").delete().eq("id", agent.id);
-
-        // Delete auth user
+        // Purge auth user
         await supabase.functions.invoke("delete-users", {
           body: { userIds: [agent.id] },
         });

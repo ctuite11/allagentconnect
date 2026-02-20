@@ -183,29 +183,19 @@ export default function AdminConsumers() {
     setDeletingId(user.id);
     setConfirmUser(null);
     try {
-      // Step 1: CRM cleanup (if client record exists)
-      if (user.client_id) {
-        const { error: rpcErr } = await supabase.rpc("admin_delete_client", {
-          p_client_id: user.client_id,
-        });
-        if (rpcErr) throw rpcErr;
-      }
+      // Single RPC cleans all DB records (CRM, roles, profiles, etc.)
+      const { error: rpcErr } = await supabase.rpc("admin_delete_consumer", {
+        p_user_id: user.id,
+      });
+      if (rpcErr) throw rpcErr;
 
-      // Step 2: Remove user_roles (idempotent)
-      const { error: rolesErr } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", user.id);
-      if (rolesErr) throw rolesErr;
-
-      // Step 3: Purge Auth user (and cascades profiles)
+      // Purge Auth user last
       const { error: fnErr } = await supabase.functions.invoke("delete-users", {
         body: user.email ? { emails: [user.email] } : { userIds: [user.id] },
       });
       if (fnErr) throw fnErr;
 
       toast.success(`${user.email} deleted successfully`);
-      // Refresh current page
       fetchPage(page);
     } catch (err: any) {
       console.error("[AdminConsumers] delete error:", err);

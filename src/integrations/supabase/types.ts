@@ -3551,7 +3551,9 @@ export type Database = {
         Args: { _agent_id: string }
         Returns: string
       }
+      admin_delete_agent: { Args: { p_agent_id: string }; Returns: undefined }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
+      admin_delete_consumer: { Args: { p_user_id: string }; Returns: undefined }
       auto_activate_listings: { Args: never; Returns: undefined }
       check_client_has_other_agent: {
         Args: { p_client_email: string }

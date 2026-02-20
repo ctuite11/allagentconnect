@@ -245,6 +245,7 @@ const HotSheetReview = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [chatListingId, setChatListingId] = useState<string | null>(null);
+  const [clientCount, setClientCount] = useState<number>(0);
 
   useEffect(() => {
     if (id) {
@@ -331,15 +332,23 @@ const HotSheetReview = () => {
         if (ap) setAgentDisplayName(`${ap.first_name} ${ap.last_name}`.trim());
       }
 
-      // Fetch hot sheet
-      const { data: hotSheetData, error: hotSheetError } = await supabase
-        .from("hot_sheets")
-        .select("id, name, criteria, last_sent_at, client_id")
-        .eq("id", id)
-        .maybeSingle();
+      // Fetch hot sheet + client count in parallel
+      const [{ data: hotSheetData, error: hotSheetError }, { count: hscCount, error: hscErr }] =
+        await Promise.all([
+          supabase
+            .from("hot_sheets")
+            .select("id, name, criteria, last_sent_at, client_id")
+            .eq("id", id)
+            .maybeSingle(),
+          supabase
+            .from("hot_sheet_clients")
+            .select("client_id", { count: "exact", head: true })
+            .eq("hot_sheet_id", id!),
+        ]);
 
       if (hotSheetError) throw hotSheetError;
       setHotSheet(hotSheetData);
+      if (!hscErr) setClientCount(hscCount ?? 0);
 
       // Build query using unified search utility
       const criteria = hotSheetData.criteria as any;
@@ -780,10 +789,14 @@ if (comments && comments.length > 0) {
               {!hotSheet?.last_sent_at && (
                 <Button
                   onClick={handleSendFirstBatch}
-                  disabled={sending || selectedListings.size === 0}
+                  disabled={sending || selectedListings.size === 0 || clientCount === 0}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  {sending ? "Sending…" : `Send Invites (${selectedListings.size})`}
+                  {sending
+                    ? "Sending…"
+                    : clientCount > 0
+                      ? `Send Invites (${clientCount} client${clientCount !== 1 ? "s" : ""})`
+                      : "Send Invites"}
                 </Button>
               )}
             </div>
