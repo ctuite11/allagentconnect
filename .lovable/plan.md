@@ -1,68 +1,118 @@
 
 
-# Listing Attribution: Hide Listing Agent from Client Views
+# Fix: End Relationship RLS Block + Add RPCs
 
-## Problem
-Client-facing views currently leak listing agent identity ("Listed by Chris Tuite") in two components. The sticky agent system correctly tracks *who* the client's agent is, but the UI doesn't enforce it -- it still renders the per-listing agent name/company.
+## Root Cause
+The `client_agent_relationships` table has **no UPDATE RLS policy**. When the client calls `.update({ status: 'inactive' })`, RLS silently blocks it -- the call returns zero affected rows, and the relationship stays `active` in the database.
 
-## Patch Targets (3 locations across 2 files)
+## Plan
 
-| File | Lines | What it renders |
-|------|-------|----------------|
-| `ClientHotsheetPage.tsx` | 545-549 | `Listed by {agent.fullName} . {agent.company}` |
-| `ListingCard.tsx` | 701-704 | `agentInfo.name . agentInfo.company` (compact/list view) |
-| `ListingCard.tsx` | 1348-1365 | Agent avatar + `agentInfo.name` + `agentInfo.company` (grid view footer) |
+### 1. Create two SECURITY DEFINER RPCs (database migration)
 
-## Implementation
+**`end_client_relationship()`** -- called by client to end their own relationship:
+- Uses `auth.uid()` as `client_id`
+- Updates `client_agent_relationships` SET `status = 'inactive'`, `ended_at = now()` WHERE `client_id = auth.uid()` AND `status = 'active'`
+- Returns row count; raises exception if zero rows affected
 
-### Step 1: Create `src/components/ListingAttribution.tsx`
+**`agent_end_client_relationship(p_client_id uuid)`** -- called by agent to end a specific client:
+- Uses `auth.uid()` as `agent_id`
+- Updates `client_agent_relationships` SET `status = 'inactive'`, `ended_at = now()` WHERE `agent_id = auth.uid()` AND `client_id = p_client_id` AND `status = 'active'`
+- Returns row count; raises exception if zero rows affected
 
-A small shared component with this logic:
+Both bypass RLS via SECURITY DEFINER, so no UPDATE policy is needed.
 
+### 2. Update client-side handlers to call RPCs
+
+**`src/pages/ClientDashboard.tsx`** (`handleEndRelationship`):
+- Replace direct `.update()` call with `supabase.rpc('end_client_relationship')`
+- On error, show `error.message` in toast
+- On success, call `clearPrimaryAgentId()`, reset state, reload
+
+**`src/pages/ClientAgentSettings.tsx`** (`handleEndRelationship`):
+- Same change: replace `.update()` with `supabase.rpc('end_client_relationship')`
+- Keep existing `clearPrimaryAgentId()` and state reset logic
+
+### 3. No other changes needed
+
+- `syncStickyFromDB()` already handles the "agent ended it server-side" case on next page load
+- `ActiveAgentBanner` and `ListingAttribution` already use `syncStickyFromDB()`
+- No new tables, no new UI components
+
+## Technical Details
+
+### Migration SQL
+
+```text
+-- Client ends their own relationship
+CREATE OR REPLACE FUNCTION public.end_client_relationship()
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  rows_affected bigint;
+BEGIN
+  UPDATE public.client_agent_relationships
+  SET status = 'inactive', ended_at = now()
+  WHERE client_id = auth.uid() AND status = 'active';
+
+  GET DIAGNOSTICS rows_affected = ROW_COUNT;
+
+  IF rows_affected = 0 THEN
+    RAISE EXCEPTION 'No active relationship found for user % to end.', auth.uid();
+  END IF;
+
+  RETURN rows_affected;
+END;
+$$;
+
+-- Agent ends a specific client relationship
+CREATE OR REPLACE FUNCTION public.agent_end_client_relationship(p_client_id uuid)
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  rows_affected bigint;
+BEGIN
+  UPDATE public.client_agent_relationships
+  SET status = 'inactive', ended_at = now()
+  WHERE agent_id = auth.uid() AND client_id = p_client_id AND status = 'active';
+
+  GET DIAGNOSTICS rows_affected = ROW_COUNT;
+
+  IF rows_affected = 0 THEN
+    RAISE EXCEPTION 'No active relationship found for agent % with client % to end.', auth.uid(), p_client_id;
+  END IF;
+
+  RETURN rows_affected;
+END;
+$$;
 ```
-Props:
-  - listingAgentName?: string
-  - listingAgentCompany?: string
 
-Internal logic:
-  1. Get current user via supabase.auth.getUser()
-  2. Get role via useUserRole(user)
-  3. If role is "buyer" (client):
-     a. Read sticky agent ID from getPrimaryAgentId()
-     b. Fetch agent_profiles for that ID (first_name, last_name)
-     c. Render: "Your agent {FirstName} {LastName}"
-  4. If role is "agent" or "admin" (or no role / anonymous):
-     - Render the standard attribution using the passed-in props
-     - e.g. "Listed by {listingAgentName}" + company
+### Handler change pattern (both files)
+
+Replace:
+```text
+const { data, error } = await supabase
+  .from("client_agent_relationships")
+  .update({ status: "inactive", ended_at: new Date().toISOString() })
+  .eq("client_id", currentUserId)
+  .eq("status", "active")
+  .select("id, status, ended_at");
 ```
 
-### Step 2: Patch `ClientHotsheetPage.tsx` (lines 545-549)
-
-Replace the hardcoded `Listed by {agent.fullName}` block with `<ListingAttribution>`.
-
-Since `ClientHotsheetPage` is inherently a client view (accessed via share token), this component can simply **hide** the listing agent line entirely and show the sticky agent (already rendered in the agent header above). Alternatively, use the shared component for consistency.
-
-### Step 3: Patch `ListingCard.tsx` (2 locations)
-
-**Compact/list view (lines 701-704):** Replace `agentInfo.name` / `agentInfo.company` with `<ListingAttribution listingAgentName={agentInfo.name} listingAgentCompany={agentInfo.company} />`.
-
-**Grid view footer (lines 1348-1365):** Same replacement -- wrap the avatar + name block with the shared component so clients see "Your agent {name}" and agents/admins see the existing listing agent info.
-
-### Step 4: Add a `viewerRole` prop to `ListingCard` (optional optimization)
-
-If the parent already knows the viewer role, pass it down to avoid redundant role-check RPCs inside each card. The component can accept an optional `viewerRole` prop and fall back to its own lookup if not provided.
-
-## Role Detection Strategy
-
-- Use the existing `useUserRole` hook (which calls `has_role` RPC)
-- For unauthenticated users on client hotsheet pages (share-token access), treat as "client" by default since the page is client-only
-- Cache the sticky agent name at the page level and pass it down to avoid N+1 fetches
+With:
+```text
+const { data, error } = await supabase.rpc('end_client_relationship');
+if (error) throw error;
+```
 
 ## Acceptance Criteria
-
-- Client (buyer role) sees **zero** listing agent names, companies, or contact info anywhere
-- Client always sees "Your agent {StickyAgentName}" in attribution spots
-- Agent and admin views remain completely unchanged
-- No new database tables or migrations required
-- Uses existing `getPrimaryAgentId()` utility and `useUserRole` hook
+- Client clicks "End Relationship" -- DB row becomes `inactive`, sticky clears immediately
+- Agent calls `agent_end_client_relationship` -- DB row becomes `inactive`, client sticky clears on next page load via `syncStickyFromDB()`
+- No silent failures: RPC raises exception if no active row found
+- No UPDATE RLS policy needed (SECURITY DEFINER bypasses RLS)
 
