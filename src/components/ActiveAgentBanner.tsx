@@ -1,32 +1,29 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPrimaryAgentId } from "@/utils/agentTracking";
+import { syncStickyFromDB } from "@/utils/agentTracking";
 
 export function ActiveAgentBanner() {
   const [agent, setAgent] = useState<any | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      // Check if current user is an agent
+      // DB is the source of truth — sync sticky first
+      const agentId = await syncStickyFromDB();
+      if (!agentId) return;
+
+      // Check if current user is an agent (agents don't see the banner)
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
         const { data: agentProfile } = await supabase
           .from("agent_profiles")
-          .select("*")
+          .select("id")
           .eq("id", user.id)
           .maybeSingle();
-        
-        // If logged-in user is an agent, don't show banner
-        if (agentProfile) {
-          return;
-        }
+
+        if (agentProfile) return;
       }
 
-      // Proceed with existing logic for non-agent users
-      const agentId = getPrimaryAgentId();
-      if (!agentId) return;
-
+      // Fetch the sticky agent's display info
       const { data, error } = await supabase
         .from("agent_profiles")
         .select("*")
