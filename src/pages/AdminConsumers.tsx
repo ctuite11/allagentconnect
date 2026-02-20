@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { checkIsAdminRole } from "@/lib/auth/roles";
@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 const PAGE_SIZE = 25;
+const SEARCH_DEBOUNCE_MS = 300;
 
 interface ConsumerRow {
   id: string;
@@ -42,8 +43,10 @@ export default function AdminConsumers() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmUser, setConfirmUser] = useState<ConsumerRow | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Admin gate
   useEffect(() => {
@@ -57,29 +60,73 @@ export default function AdminConsumers() {
     })();
   }, []);
 
-  const fetchPage = async (pageIndex: number) => {
+  // Debounce search input
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+      setPage(0);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [search]);
+
+  const fetchPage = useCallback(async (pageIndex: number, searchTerm: string) => {
     setLoading(true);
     try {
       const from = pageIndex * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      // 1. Paged buyer user_ids
-      const { data: roles, count, error: rolesErr } = await supabase
-        .from("user_roles")
-        .select("user_id", { count: "exact" })
-        .eq("role", "buyer")
-        .range(from, to);
+      let buyerIds: string[];
+      let count: number | null;
 
-      if (rolesErr) throw rolesErr;
+      if (searchTerm) {
+        // Server-side search: find matching profiles first, then intersect with buyer roles
+        const { data: matchingProfiles, error: profSearchErr } = await supabase
+          .from("profiles")
+          .select("id")
+          .or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+
+        if (profSearchErr) throw profSearchErr;
+
+        const matchingIds = (matchingProfiles ?? []).map((p: any) => p.id);
+        if (matchingIds.length === 0) {
+          setRows([]);
+          setTotalCount(0);
+          setLoading(false);
+          return;
+        }
+
+        // Get buyer roles intersected with matching profile IDs
+        const { data: roles, count: roleCount, error: rolesErr } = await supabase
+          .from("user_roles")
+          .select("user_id", { count: "exact" })
+          .eq("role", "buyer")
+          .in("user_id", matchingIds)
+          .range(from, to);
+
+        if (rolesErr) throw rolesErr;
+        count = roleCount;
+        buyerIds = (roles ?? []).map((r: any) => r.user_id);
+      } else {
+        // No search: original flow — get paged buyer roles
+        const { data: roles, count: roleCount, error: rolesErr } = await supabase
+          .from("user_roles")
+          .select("user_id", { count: "exact" })
+          .eq("role", "buyer")
+          .range(from, to);
+
+        if (rolesErr) throw rolesErr;
+        count = roleCount;
+        buyerIds = (roles ?? []).map((r: any) => r.user_id);
+      }
+
       setTotalCount(count ?? 0);
 
-      if (!roles || roles.length === 0) {
+      if (buyerIds.length === 0) {
         setRows([]);
         setLoading(false);
         return;
       }
-
-      const buyerIds = roles.map((r: any) => r.user_id);
 
       // 2. Profiles
       const { data: profiles, error: profErr } = await supabase
@@ -95,7 +142,7 @@ export default function AdminConsumers() {
         .map((e: string) => e.toLowerCase());
 
       // 3. Client records by email
-      let clientByEmail: Record<string, string> = {}; // email -> client_id
+      let clientByEmail: Record<string, string> = {};
       if (emails.length > 0) {
         const { data: clients } = await supabase
           .from("clients")
@@ -109,7 +156,7 @@ export default function AdminConsumers() {
 
       // 4. Active relationships by client_id
       const clientIds = Object.values(clientByEmail);
-      let relByClientId: Record<string, string> = {}; // client_id -> agent_id
+      let relByClientId: Record<string, string> = {};
       if (clientIds.length > 0) {
         const { data: rels } = await supabase
           .from("client_agent_relationships")
@@ -161,42 +208,30 @@ export default function AdminConsumers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (isAdmin) fetchPage(page);
-  }, [isAdmin, page]);
+    if (isAdmin) fetchPage(page, debouncedSearch);
+  }, [isAdmin, page, debouncedSearch, fetchPage]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-
-  const filteredRows = useMemo(() => {
-    if (!search.trim()) return rows;
-    const q = search.toLowerCase();
-    return rows.filter((r) =>
-      r.email.toLowerCase().includes(q) ||
-      (r.first_name ?? "").toLowerCase().includes(q) ||
-      (r.last_name ?? "").toLowerCase().includes(q)
-    );
-  }, [rows, search]);
 
   const handleDelete = async (user: ConsumerRow) => {
     setDeletingId(user.id);
     setConfirmUser(null);
     try {
-      // Single RPC cleans all DB records (CRM, roles, profiles, etc.)
       const { error: rpcErr } = await supabase.rpc("admin_delete_consumer", {
         p_user_id: user.id,
       });
       if (rpcErr) throw rpcErr;
 
-      // Purge Auth user last
       const { error: fnErr } = await supabase.functions.invoke("delete-users", {
         body: user.email ? { emails: [user.email] } : { userIds: [user.id] },
       });
       if (fnErr) throw fnErr;
 
       toast.success(`${user.email} deleted successfully`);
-      fetchPage(page);
+      fetchPage(page, debouncedSearch);
     } catch (err: any) {
       console.error("[AdminConsumers] delete error:", err);
       toast.error(err?.message ?? "Failed to delete consumer");
@@ -261,9 +296,9 @@ export default function AdminConsumers() {
         <div className="rounded-3xl border border-gray-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] overflow-hidden mb-4">
           {loading ? (
             <div className="p-12 text-center text-slate-400 text-sm">Loading…</div>
-          ) : filteredRows.length === 0 ? (
+          ) : rows.length === 0 ? (
             <div className="p-12 text-center text-slate-400 text-sm">
-              {search ? "No consumers match your search." : "No consumer accounts found."}
+              {debouncedSearch ? "No consumers match your search." : "No consumer accounts found."}
             </div>
           ) : (
             <table className="w-full text-sm">
@@ -278,7 +313,7 @@ export default function AdminConsumers() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((row) => (
+                {rows.map((row) => (
                   <tr key={row.id} className="border-b border-gray-50 hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 font-medium text-slate-900">
                       {[row.first_name, row.last_name].filter(Boolean).join(" ") || "—"}
