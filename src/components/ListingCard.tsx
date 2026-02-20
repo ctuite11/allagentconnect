@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
 import ContactAgentDialog from "./ContactAgentDialog";
+import { ListingAttribution } from "./ListingAttribution";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -699,8 +700,10 @@ const ListingCard = ({
             </div>
             
             {agentInfo && <div className="text-xs text-right">
-                <span className="text-foreground font-medium">{agentInfo.name}</span>
-                {agentInfo.company && <span className="text-muted-foreground"> • {agentInfo.company}</span>}
+                <ListingAttribution
+                  listingAgentName={agentInfo.name}
+                  listingAgentCompany={agentInfo.company}
+                />
               </div>}
           </div>
           
@@ -1353,14 +1356,11 @@ const ListingCard = ({
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-foreground truncate">
-                {agentInfo.name}
-              </div>
-              {agentInfo.company && (
-                <div className="text-xs text-muted-foreground truncate">
-                  {agentInfo.company}
-                </div>
-              )}
+              <ListingAttribution
+                listingAgentName={agentInfo.name}
+                listingAgentCompany={agentInfo.company}
+                variant="block"
+              />
             </div>
           </div>
         ) : (
