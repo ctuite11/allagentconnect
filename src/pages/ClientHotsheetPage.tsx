@@ -15,6 +15,7 @@ import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
+import { ListingAttribution } from "@/components/ListingAttribution";
 
 interface Listing {
   id: string;
@@ -542,10 +543,14 @@ const ClientHotsheetPage = () => {
                           </div>
                         )}
                       </div>
-                      {agent && (
+                      {agentProfile && (
                         <p className="text-xs text-muted-foreground border-t pt-2">
-                          Listed by {agent.fullName}
-                          {agent.company && ` • ${agent.company}`}
+                          <ListingAttribution
+                            listingAgentName={agent?.fullName}
+                            listingAgentCompany={agent?.company}
+                            viewerRole="buyer"
+                            stickyAgentName={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                          />
                         </p>
                       )}
                     </CardContent>
