@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +26,8 @@ import { BuyerAgentShowcase } from "./BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "./BuyerCompensationInfoModal";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { findOrCreateConversation } from "@/lib/startConversation";
+import { syncStickyFromDB } from "@/utils/agentTracking";
+import { supabase } from "@/integrations/supabase/client";
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
@@ -111,6 +113,31 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   };
 
   const compensationDisplay = getCompensationDisplay();
+
+  // ========== Sticky agent resolution for buyer masking ==========
+  const [stickyAgent, setStickyAgent] = useState<{ id: string; first_name: string; last_name: string } | null>(null);
+  const [stickyLoaded, setStickyLoaded] = useState(false);
+  const isBuyer = role !== "agent" && role !== "admin" && !isAgentView;
+
+  useEffect(() => {
+    if (!isBuyer || isAgentView) {
+      setStickyLoaded(true);
+      return;
+    }
+    const resolve = async () => {
+      const agentId = await syncStickyFromDB();
+      if (agentId) {
+        const { data } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name")
+          .eq("id", agentId)
+          .maybeSingle();
+        if (data) setStickyAgent(data);
+      }
+      setStickyLoaded(true);
+    };
+    resolve();
+  }, [isBuyer, isAgentView]);
 
   // ========== AGENT VIEW: Sticky Agent Panel ==========
   if (isAgentView) {
@@ -273,8 +300,25 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   // ========== CLIENT/PUBLIC VIEW ==========
   return (
     <div className="space-y-6">
-      {/* Listing Agent Card */}
-      {agent && (
+      {/* Listing Agent Card — masked for buyers with active sticky */}
+      {isBuyer && stickyAgent ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Your Agent</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="font-semibold text-lg">
+              {stickyAgent.first_name} {stickyAgent.last_name}
+            </p>
+            <Button
+              className="w-full"
+              onClick={() => navigate(`/agent/${stickyAgent.id}`)}
+            >
+              View Your Agent's Profile
+            </Button>
+          </CardContent>
+        </Card>
+      ) : agent && (
         <Card>
           {/* Logo Section - Top of Panel */}
           <div className="p-4 border-b flex justify-center">

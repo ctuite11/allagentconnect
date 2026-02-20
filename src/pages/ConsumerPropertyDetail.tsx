@@ -26,6 +26,7 @@ import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { syncStickyFromDB } from "@/utils/agentTracking";
 
 interface AgentProfile {
   id: string;
@@ -100,6 +101,12 @@ const ConsumerPropertyDetail = () => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isAgent, setIsAgent] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
+
+  // Resolve sticky agent for buyer masking
+  useEffect(() => {
+    syncStickyFromDB().then(setStickyAgentId);
+  }, []);
 
   // Track listing view
   useListingView(id);
@@ -436,13 +443,23 @@ const ConsumerPropertyDetail = () => {
                 listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
               />
             )}
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate(`/agent/${listing.agent_id}`)}
-            >
-              View Agent Profile
-            </Button>
+            {stickyAgentId ? (
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate(`/agent/${stickyAgentId}`)}
+              >
+                View Your Agent
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate(`/agent/${listing.agent_id}`)}
+              >
+                View Agent Profile
+              </Button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

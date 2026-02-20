@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { MapPin, Bed, Bath, Square, Heart, Building2, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getPrimaryAgentId } from "@/utils/agentTracking";
+import { syncStickyFromDB } from "@/utils/agentTracking";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface PropertyCardProps {
@@ -43,22 +43,15 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
       
-      // Check if user is a client with a primary agent
+      // Check if user is a client with a primary agent (DB is source of truth)
       if (user && role !== 'agent') {
-        // Try to get agent from client_agent_relationships
-        const { data: relationship } = await supabase
-          .from("client_agent_relationships")
-          .select("agent_id")
-          .eq("client_id", user.id)
-          .maybeSingle();
+        const agentId = await syncStickyFromDB();
         
-        let resolvedAgentId = relationship?.agent_id || getPrimaryAgentId();
-        
-        if (resolvedAgentId) {
+        if (agentId) {
           const { data: agentData } = await supabase
             .from("agent_profiles")
             .select("*")
-            .eq("id", resolvedAgentId)
+            .eq("id", agentId)
             .maybeSingle();
           
           if (agentData) {
