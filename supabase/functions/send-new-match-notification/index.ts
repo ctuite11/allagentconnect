@@ -76,34 +76,58 @@ serve(async (req) => {
         continue;
       }
 
-      const acceptedClientIds = new Set(
-        acceptedTokens
-          .map((token: any) => token?.payload?.client_id)
-          .filter(Boolean)
-          .map((id: string) => String(id)),
-      );
+      type AcceptanceMeta = { acceptedAt: string; suppressInitial: boolean };
 
-      const acceptedEmails = new Set(
-        acceptedTokens
-          .map((token: any) => token?.payload?.client_email)
-          .filter(Boolean)
-          .map((email: string) => String(email).toLowerCase()),
-      );
+      const acceptedByClientId = new Map<string, AcceptanceMeta>();
+      const acceptedByEmail = new Map<string, AcceptanceMeta>();
+
+      for (const token of acceptedTokens as any[]) {
+        const acceptedAt = token?.accepted_at ? String(token.accepted_at) : null;
+        if (!acceptedAt) continue;
+
+        const payload = token?.payload ?? {};
+        const suppressInitial = Boolean(payload?.suppress_initial_matches);
+
+        const cid = payload?.client_id ? String(payload.client_id) : null;
+        const email = payload?.client_email ? String(payload.client_email).toLowerCase() : null;
+
+        if (cid) {
+          const prev = acceptedByClientId.get(cid);
+          if (!prev || new Date(acceptedAt).getTime() > new Date(prev.acceptedAt).getTime()) {
+            acceptedByClientId.set(cid, { acceptedAt, suppressInitial });
+          }
+        }
+
+        if (email) {
+          const prev = acceptedByEmail.get(email);
+          if (!prev || new Date(acceptedAt).getTime() > new Date(prev.acceptedAt).getTime()) {
+            acceptedByEmail.set(email, { acceptedAt, suppressInitial });
+          }
+        }
+      }
 
       const acceptedRecipients = hotSheetClients
         .map((row: any) => {
           const client = Array.isArray(row.clients) ? row.clients[0] : row.clients;
+          const clientId = row.client_id ? String(row.client_id) : null;
+          const email = client?.email ? String(client.email).toLowerCase() : null;
+
+          const meta =
+            (clientId && acceptedByClientId.get(clientId)) ||
+            (email && acceptedByEmail.get(email)) ||
+            null;
+
           return {
-            clientId: row.client_id ? String(row.client_id) : null,
-            email: client?.email ? String(client.email).toLowerCase() : null,
+            clientId,
+            email,
             firstName: client?.first_name || "",
+            acceptedAt: meta?.acceptedAt || null,
+            suppressInitial: meta?.suppressInitial || false,
           };
         })
         .filter((recipient: any) => {
           if (!recipient.email) return false;
-          const hasAcceptedById = recipient.clientId && acceptedClientIds.has(recipient.clientId);
-          const hasAcceptedByEmail = acceptedEmails.has(recipient.email);
-          return Boolean(hasAcceptedById || hasAcceptedByEmail);
+          return Boolean(recipient.acceptedAt);
         });
 
       if (!acceptedRecipients.length) {
@@ -128,6 +152,36 @@ serve(async (req) => {
       let queuedForHotSheet = 0;
 
       for (const recipient of acceptedRecipients) {
+        // Suppress matches that predate acceptance for invite_only tokens
+        let recipientListings = listings;
+        if (recipient.suppressInitial && recipient.acceptedAt) {
+          const cutoff = new Date(recipient.acceptedAt).getTime();
+          recipientListings = listings.filter((l: any) => {
+            const ts = l.created_at || l.updated_at;
+            if (!ts) return false;
+            return new Date(ts).getTime() > cutoff;
+          });
+        }
+
+        if (!recipientListings.length) {
+          console.log(
+            `[send-new-match-notification] Skipping ${hotSheet.id} for ${recipient.email}: suppressInitial filtered all matches`
+          );
+          continue;
+        }
+
+        const recipientListingsHtml = recipientListings.map((listing: any) => `
+          <div style="margin-bottom: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+            <h3 style="margin: 0 0 8px;">$${listing.price.toLocaleString()}</h3>
+            <p style="margin: 0 0 12px; color: #6b7280;">${listing.address}, ${listing.city}, ${listing.state}</p>
+            <div style="display: flex; gap: 16px;">
+              ${listing.bedrooms ? `<span>${listing.bedrooms} beds</span>` : ""}
+              ${listing.bathrooms ? `<span>${listing.bathrooms} baths</span>` : ""}
+              ${listing.square_feet ? `<span>${listing.square_feet.toLocaleString()} sqft</span>` : ""}
+            </div>
+          </div>
+        `).join("");
+
         const { error: insertError } = await supabase.from("email_jobs").insert({
           payload: {
             provider: "resend",
@@ -137,8 +191,8 @@ serve(async (req) => {
             variables: {
               userName: recipient.firstName || "there",
               hotSheetName: hotSheet.name,
-              matchCount: listings.length,
-              listingsHtml,
+              matchCount: recipientListings.length,
+              listingsHtml: recipientListingsHtml,
               hotSheetLink: `${appBaseUrl}/client-dashboard`,
             },
           },
