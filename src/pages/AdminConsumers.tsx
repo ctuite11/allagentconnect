@@ -269,8 +269,8 @@ export default function AdminConsumers() {
         </div>
 
         <PageHeader
-          title="Consumers"
-          subtitle={`${totalCount} buyer-role users`}
+          title="Registered Buyers"
+          subtitle={`${totalCount} registered buyers`}
           className="mb-8"
         />
 
