@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check, UserX } from "lucide-react";
 import ContactQuickActions from "@/components/ContactQuickActions";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -98,6 +98,10 @@ const MyClients = () => {
   
   // Bulk hot sheet state
   const [bulkHotSheetDialogOpen, setBulkHotSheetDialogOpen] = useState(false);
+  
+  // End relationship state
+  const [endRelClient, setEndRelClient] = useState<Client | null>(null);
+  const [endingRelationship, setEndingRelationship] = useState(false);
   
   // Typeahead autocomplete state
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -332,6 +336,27 @@ const MyClients = () => {
       toast.error("Failed to remove contacts");
     } finally {
       setRemovingBulk(false);
+    }
+  };
+
+  // End relationship handler
+  const handleEndRelationship = async () => {
+    if (!endRelClient) return;
+    setEndingRelationship(true);
+    try {
+      const { error } = await supabase.rpc("agent_end_client_relationship", {
+        p_client_id: endRelClient.id,
+      });
+      if (error) throw error;
+      toast.success("Relationship ended");
+      setClients((prev) => prev.filter((c) => c.id !== endRelClient.id));
+      setEndRelClient(null);
+      fetchClients(user.id);
+    } catch (error: any) {
+      console.error("[MyClients] agent_end_client_relationship error", error);
+      toast.error(error.message || "Failed to end relationship");
+    } finally {
+      setEndingRelationship(false);
     }
   };
 
@@ -916,6 +941,25 @@ const MyClients = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="px-2 group"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEndRelClient(client);
+                                }}
+                              >
+                                <UserX className="h-4 w-4 text-zinc-400 group-hover:text-destructive transition-colors" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent sideOffset={8}>
+                              <p>End Relationship</p>
+                            </TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 className="px-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1095,6 +1139,32 @@ const MyClients = () => {
         }}
         preSelectedClients={getSelectedClientsForHotSheet()}
       />
+
+      {/* End Relationship Confirmation */}
+      <AlertDialog open={!!endRelClient} onOpenChange={(open) => { if (!open) setEndRelClient(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End Relationship</AlertDialogTitle>
+            <AlertDialogDescription>
+              End your relationship with{" "}
+              <span className="font-medium text-foreground">
+                {endRelClient ? `${toTitleCase(endRelClient.first_name)} ${toTitleCase(endRelClient.last_name)}` : "this client"}
+              </span>
+              ? They will lose access to your Hot Sheets and future match emails.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={endingRelationship}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEndRelationship}
+              disabled={endingRelationship}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {endingRelationship ? "Ending…" : "End Relationship"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 };
