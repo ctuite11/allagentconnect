@@ -24,6 +24,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 interface PendingInvite {
   token: string;
   token_id: string;
+  client_id: string | null;
   client_email: string;
   client_name: string;
   sent_at: string | null;
@@ -94,6 +95,7 @@ function PendingInvitesSection({
         return {
           token: t.token,
           token_id: t.id,
+          client_id: t.payload?.client_id || null,
           client_email: clientEmail,
           client_name: clientName,
           sent_at: t.created_at,
@@ -115,7 +117,12 @@ function PendingInvitesSection({
       prev.map((i) => i.token_id === invite.token_id ? { ...i, resending: true } : i)
     );
 
-    const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${invite.token}&email=${encodeURIComponent(invite.client_email)}&agent_id=${agentUserId}`;
+    const hotSheetLink =
+      `${window.location.origin}/client-invite` +
+      `?invitation_token=${encodeURIComponent(invite.token)}` +
+      `&email=${encodeURIComponent(invite.client_email)}` +
+      `&agent_id=${encodeURIComponent(agentUserId)}` +
+      (invite.client_id ? `&client_id=${encodeURIComponent(invite.client_id)}` : "");
 
     const { error } = await supabase.functions.invoke("send-hot-sheet-invite", {
       body: {
@@ -599,7 +606,12 @@ if (comments && comments.length > 0) {
           actor_user_id: user.id,
         }).then(() => {});
 
-        const hotSheetLink = `${window.location.origin}/client-invite?invitation_token=${finalToken}&email=${encodeURIComponent(clientData.email)}&agent_id=${user.id}&client_id=${clientId}`;
+        const hotSheetLink =
+          `${window.location.origin}/client-invite` +
+          `?invitation_token=${encodeURIComponent(finalToken)}` +
+          `&email=${encodeURIComponent(clientData.email)}` +
+          `&agent_id=${encodeURIComponent(user.id)}` +
+          `&client_id=${encodeURIComponent(clientId)}`;
 
         invitePromises.push(
           supabase.functions.invoke("send-hot-sheet-invite", {
