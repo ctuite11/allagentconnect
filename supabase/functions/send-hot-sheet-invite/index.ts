@@ -192,8 +192,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- Audit log: email_enqueued or invite_resent ---
+    // Only log if the job was actually created (jobRow.id proves the insert succeeded).
     // actor_user_id is always taken from the verified JWT, never from the request body.
-    if (tokenId) {
+    if (tokenId && jobRow?.id) {
       const eventType = mode === "resend" ? "invite_resent" : "email_enqueued";
       await supabase.from("invite_events").insert({
         token_id: tokenId,
@@ -201,13 +202,13 @@ const handler = async (req: Request): Promise<Response> => {
         client_id: clientId || null,
         client_email: invitedEmail,
         event_type: eventType,
-        email_job_id: jobRow?.id || null,
+        email_job_id: jobRow.id,
         actor_user_id: verifiedActorUserId,
         meta: { mode, inviterName, hotSheetName },
       });
 
       // If resend, also log email_enqueued as a separate entry for clarity
-      if (mode === "resend" && jobRow?.id) {
+      if (mode === "resend") {
         await supabase.from("invite_events").insert({
           token_id: tokenId,
           hot_sheet_id: hotSheetId || null,
