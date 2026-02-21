@@ -19,7 +19,7 @@ interface HotSheetInviteRequest {
   actorUserId?: string;
   clientId?: string;
   /** 'initial' | 'resend' — controls audit event type */
-  mode?: "initial" | "resend";
+  mode?: "initial" | "resend" | "invite_only";
 }
 
 interface ListingTeaser {
@@ -48,8 +48,10 @@ const handler = async (req: Request): Promise<Response> => {
       hotSheetId,
       tokenId,
       clientId,
-      mode = "initial",
+      mode = "invite_only",
     } = body;
+
+    const inviteOnly = mode === "invite_only";
 
     // --- Server-side JWT authorization ---
     // For resend mode, verify the caller owns the token and it is unaccepted.
@@ -113,7 +115,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // --- Fetch listing teasers ---
     let teasers: ListingTeaser[] = [];
-    if (hotSheetId) {
+
+    if (!inviteOnly && hotSheetId) {
       const { data: matchingListings } = await supabase
         .rpc("check_hot_sheet_matches", { p_hot_sheet_id: hotSheetId });
 
