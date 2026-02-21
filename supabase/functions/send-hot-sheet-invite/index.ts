@@ -183,6 +183,34 @@ const handler = async (req: Request): Promise<Response> => {
       // Unique violation = duplicate — treat as success (idempotent)
       if (insertError.code === "23505") {
         console.log("[send-hot-sheet-invite] Duplicate job suppressed (idempotency):", idempotencyKey);
+
+        // Ensure invite_events coverage even on idempotent skip
+        if (tokenId && idempotencyKey) {
+          const { data: existingJob, error: existingErr } = await supabase
+            .from("email_jobs")
+            .select("id")
+            .eq("idempotency_key", idempotencyKey)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!existingErr && existingJob?.id) {
+            const eventType = mode === "resend" ? "invite_resent" : "email_enqueued";
+            await supabase.from("invite_events").insert({
+              token_id: tokenId,
+              hot_sheet_id: hotSheetId || null,
+              client_id: clientId || null,
+              client_email: invitedEmail,
+              event_type: eventType,
+              email_job_id: existingJob.id,
+              actor_user_id: verifiedActorUserId,
+              meta: { mode, inviterName, hotSheetName, idempotent: true },
+            });
+          } else {
+            console.error("[send-hot-sheet-invite] idempotent but failed to fetch job by key", existingErr);
+          }
+        }
+
         return new Response(JSON.stringify({ success: true, skipped: true, reason: "idempotent" }), {
           status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -207,19 +235,7 @@ const handler = async (req: Request): Promise<Response> => {
         meta: { mode, inviterName, hotSheetName },
       });
 
-      // If resend, also log email_enqueued as a separate entry for clarity
-      if (mode === "resend") {
-        await supabase.from("invite_events").insert({
-          token_id: tokenId,
-          hot_sheet_id: hotSheetId || null,
-          client_id: clientId || null,
-          client_email: invitedEmail,
-          event_type: "email_enqueued",
-          email_job_id: jobRow.id,
-          actor_user_id: verifiedActorUserId,
-          meta: { mode: "resend", inviterName, hotSheetName },
-        });
-      }
+      // Resend only logs invite_resent (no redundant email_enqueued)
     }
 
     return new Response(JSON.stringify({ success: true, jobId: jobRow?.id }), {
