@@ -378,7 +378,8 @@ const handler = async (req: Request): Promise<Response> => {
               type: "client_hotsheet_invite",
               client_id: hotSheet.client_id || null,
               hot_sheet_id: hotSheet.id,
-              client_email: clientEmail
+              client_email: clientEmail,
+              suppress_initial_matches: true,
             },
             expires_at: null
           })
