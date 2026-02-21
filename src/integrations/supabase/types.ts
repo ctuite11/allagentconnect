@@ -1804,6 +1804,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "hot_sheet_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_with_relationship_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "hot_sheet_clients_hot_sheet_id_fkey"
             columns: ["hot_sheet_id"]
             isOneToOne: false
@@ -2103,6 +2110,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_with_relationship_status"
             referencedColumns: ["id"]
           },
         ]
@@ -3469,6 +3483,25 @@ export type Database = {
         Update: {
           agent_status?: Database["public"]["Enums"]["agent_status"] | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      clients_with_relationship_status: {
+        Row: {
+          agent_id: string | null
+          client_type: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string | null
+          is_favorite: boolean | null
+          last_name: string | null
+          notes: string | null
+          phone: string | null
+          relationship_created_at: string | null
+          relationship_ended_at: string | null
+          relationship_status: string | null
+          updated_at: string | null
         }
         Relationships: []
       }
