@@ -351,17 +351,43 @@ const HotSheetReview = () => {
       setHotSheet(hotSheetData);
       if (!hscErr) setClientCount(hscCount ?? 0);
 
-      // Check if invites already sent (tokens exist for this hot sheet)
+      // Check if invites already sent: ALL eligible clients have an email_enqueued/invite_resent event
       if (hotSheetData && user) {
-        const { count: tokenCount, error: tokenCountErr } = await supabase
-          .from("share_tokens")
-          .select("id", { count: "exact", head: true })
-          .eq("agent_id", user.id)
-          .contains("payload", {
-            type: "client_hotsheet_invite",
-            hot_sheet_id: hotSheetData.id,
-          });
-        if (!tokenCountErr) setInvitesSent((tokenCount ?? 0) > 0);
+        const { data: hscRows, error: hscErr2 } = await supabase
+          .from("hot_sheet_clients")
+          .select("client_id")
+          .eq("hot_sheet_id", hotSheetData.id);
+
+        if (!hscErr2 && hscRows && hscRows.length > 0) {
+          const clientIds = hscRows.map((r: any) => r.client_id);
+
+          const { data: clientsRows } = await supabase
+            .from("clients")
+            .select("id, email")
+            .in("id", clientIds);
+
+          const eligibleClientIds = (clientsRows ?? [])
+            .filter((c: any) => !!c.email)
+            .map((c: any) => c.id);
+
+          if (eligibleClientIds.length === 0) {
+            setInvitesSent(false);
+          } else {
+            const { data: eventRows, error: eventErr } = await supabase
+              .from("invite_events")
+              .select("client_id")
+              .eq("hot_sheet_id", hotSheetData.id)
+              .in("event_type", ["email_enqueued", "invite_resent"])
+              .in("client_id", eligibleClientIds);
+
+            if (!eventErr) {
+              const sentSet = new Set((eventRows ?? []).map((e: any) => e.client_id));
+              setInvitesSent(sentSet.size === eligibleClientIds.length);
+            }
+          }
+        } else {
+          setInvitesSent(false);
+        }
       }
 
       // Build query using unified search utility
