@@ -58,6 +58,9 @@ interface Client {
   is_favorite?: boolean;
   created_at: string;
   updated_at: string;
+  relationship_status?: "active" | "ended" | "none";
+  relationship_ended_at?: string | null;
+  relationship_created_at?: string | null;
 }
 
 const MyClients = () => {
@@ -85,6 +88,7 @@ const MyClients = () => {
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [clientTypeFilter, setClientTypeFilter] = useState<string>("all");
+  const [relationshipFilter, setRelationshipFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   
@@ -142,7 +146,7 @@ const MyClients = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("clients")
+        .from("clients_with_relationship_status" as any)
         .select("*")
         .eq("agent_id", userId)
         .order("created_at", { ascending: false });
@@ -349,7 +353,14 @@ const MyClients = () => {
       });
       if (error) throw error;
       toast.success("Relationship ended");
-      setClients((prev) => prev.filter((c) => c.id !== endRelClient.id));
+      // Keep CRM contact row; update relationship status locally
+      setClients((prev) =>
+        prev.map((c) =>
+          c.id === endRelClient.id
+            ? { ...c, relationship_status: "ended" as const, relationship_ended_at: new Date().toISOString() }
+            : c
+        )
+      );
       setEndRelClient(null);
       fetchClients(user.id);
     } catch (error: any) {
@@ -471,8 +482,12 @@ const MyClients = () => {
     const matchesType = clientTypeFilter === "all" || 
       (clientTypeFilter === "none" && !client.client_type) ||
       client.client_type === clientTypeFilter;
+
+    // Apply relationship filter
+    const matchesRelationship = relationshipFilter === "all" ||
+      (client.relationship_status || "none") === relationshipFilter;
     
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesType && matchesRelationship;
   });
 
   const sortedClients = [...filteredClients].sort((a, b) => {
@@ -499,7 +514,7 @@ const MyClients = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, clientTypeFilter, sortBy]);
+  }, [searchTerm, clientTypeFilter, relationshipFilter, sortBy]);
 
   if (loading) {
     return (
@@ -758,6 +773,17 @@ const MyClients = () => {
                         <SelectItem value="none">No Type Set</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Select value={relationshipFilter} onValueChange={setRelationshipFilter}>
+                      <SelectTrigger className="w-[180px] bg-white border-zinc-200">
+                        <SelectValue placeholder="Relationship" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50">
+                        <SelectItem value="all">All Contacts</SelectItem>
+                        <SelectItem value="active">Active Relationships</SelectItem>
+                        <SelectItem value="ended">Ended</SelectItem>
+                        <SelectItem value="none">No Relationship</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                       <SelectTrigger className="w-[200px] bg-white border-zinc-200">
                         <span className="text-sm text-zinc-900">Sort by</span>
@@ -788,7 +814,7 @@ const MyClients = () => {
                     </div>
                   </div>
                   <div className="mt-2">
-                    {(searchTerm || clientTypeFilter !== "all") && (
+                    {(searchTerm || clientTypeFilter !== "all" || relationshipFilter !== "all") && (
                       <p className="text-sm text-zinc-600">
                         Found {filteredClients.length} of {clients.length} contacts
                       </p>
@@ -869,6 +895,7 @@ const MyClients = () => {
                         <TableHead>Name</TableHead>
                         <TableHead>Contact</TableHead>
                         <TableHead>Client Type</TableHead>
+                        <TableHead>Relationship</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -907,6 +934,17 @@ const MyClients = () => {
                           {client.client_type || "—"}
                         </p>
                       </TableCell>
+                      <TableCell>
+                        {client.relationship_status === "active" && (
+                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">Active</Badge>
+                        )}
+                        {client.relationship_status === "ended" && (
+                          <Badge variant="outline" className="bg-zinc-100 text-zinc-500 border-zinc-200 text-[10px]">Ended</Badge>
+                        )}
+                        {(!client.relationship_status || client.relationship_status === "none") && (
+                          <Badge variant="outline" className="bg-zinc-50 text-zinc-400 border-zinc-100 text-[10px]">—</Badge>
+                        )}
+                      </TableCell>
                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-end items-center gap-1">
                           <ContactQuickActions
@@ -936,24 +974,26 @@ const MyClients = () => {
                             </TooltipContent>
                           </Tooltip>
                           
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="px-2 group"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEndRelClient(client);
-                                }}
-                              >
-                                <UserX className="h-4 w-4 text-zinc-400 group-hover:text-destructive transition-colors" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent sideOffset={8}>
-                              <p>End Relationship</p>
-                            </TooltipContent>
-                          </Tooltip>
+                          {client.relationship_status === "active" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="px-2 group"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEndRelClient(client);
+                                  }}
+                                >
+                                  <UserX className="h-4 w-4 text-zinc-400 group-hover:text-destructive transition-colors" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent sideOffset={8}>
+                                <p>End Relationship</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
 
                           <Tooltip>
                             <TooltipTrigger asChild>
