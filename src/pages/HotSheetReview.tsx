@@ -582,6 +582,7 @@ if (comments && comments.length > 0) {
               client_id: clientId,
               client_email: clientData.email,
               hot_sheet_id: hotSheet.id,
+              suppress_initial_matches: true,
             },
           })
           .select("id, token")
