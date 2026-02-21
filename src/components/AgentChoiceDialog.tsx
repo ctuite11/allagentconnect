@@ -35,6 +35,7 @@ export function AgentChoiceDialog({
       // Atomically end any existing active relationship and activate the new agent
       const { error } = await supabase.rpc("activate_agent_relationship", {
         _agent_id: newAgent.id,
+        _crm_client_id: null,
       });
 
       if (error) throw error;

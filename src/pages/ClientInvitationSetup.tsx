@@ -146,6 +146,7 @@ const ClientInvitationSetup = () => {
       if (agentId) {
         const { error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
           _agent_id: agentId,
+          _crm_client_id: clientId || null,
         });
 
         if (relationshipError) {
