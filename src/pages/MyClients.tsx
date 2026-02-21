@@ -348,8 +348,9 @@ const MyClients = () => {
     if (!endRelClient) return;
     setEndingRelationship(true);
     try {
+      const idToEnd = (endRelClient as any).relationship_user_id || endRelClient.id;
       const { error } = await supabase.rpc("agent_end_client_relationship", {
-        p_client_id: endRelClient.id,
+        p_client_id: idToEnd,
       });
       if (error) throw error;
       toast.success("Relationship ended");

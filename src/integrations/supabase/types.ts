@@ -1076,6 +1076,7 @@ export type Database = {
           agent_id: string
           client_id: string
           created_at: string | null
+          crm_client_id: string | null
           ended_at: string | null
           id: string
           invitation_token: string | null
@@ -1085,6 +1086,7 @@ export type Database = {
           agent_id: string
           client_id: string
           created_at?: string | null
+          crm_client_id?: string | null
           ended_at?: string | null
           id?: string
           invitation_token?: string | null
@@ -1094,12 +1096,27 @@ export type Database = {
           agent_id?: string
           client_id?: string
           created_at?: string | null
+          crm_client_id?: string | null
           ended_at?: string | null
           id?: string
           invitation_token?: string | null
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "client_agent_relationships_crm_client_id_fkey"
+            columns: ["crm_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_agent_relationships_crm_client_id_fkey"
+            columns: ["crm_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_with_relationship_status"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "client_agent_relationships_invitation_token_fkey"
             columns: ["invitation_token"]
@@ -3501,6 +3518,7 @@ export type Database = {
           relationship_created_at: string | null
           relationship_ended_at: string | null
           relationship_status: string | null
+          relationship_user_id: string | null
           updated_at: string | null
         }
         Relationships: []
@@ -3580,10 +3598,12 @@ export type Database = {
       }
     }
     Functions: {
-      activate_agent_relationship: {
-        Args: { _agent_id: string }
-        Returns: string
-      }
+      activate_agent_relationship:
+        | { Args: { _agent_id: string }; Returns: string }
+        | {
+            Args: { _agent_id: string; _crm_client_id?: string }
+            Returns: string
+          }
       admin_delete_agent: { Args: { p_agent_id: string }; Returns: undefined }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
       admin_delete_consumer: { Args: { p_user_id: string }; Returns: undefined }
