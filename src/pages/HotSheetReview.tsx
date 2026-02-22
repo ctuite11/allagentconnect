@@ -11,11 +11,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { format } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
@@ -254,6 +260,8 @@ const HotSheetReview = () => {
   const [chatListingId, setChatListingId] = useState<string | null>(null);
   const [clientCount, setClientCount] = useState<number>(0);
   const [invitesSent, setInvitesSent] = useState(false);
+  const [unacceptedCount, setUnacceptedCount] = useState(0);
+  const [acceptedCount, setAcceptedCount] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -392,8 +400,76 @@ const HotSheetReview = () => {
               setInvitesSent(sentSet.size === eligibleClientIds.length);
             }
           }
+
+          // --- Token-based accepted/unaccepted counts (canonical payload keys) ---
+          try {
+            const emailByClientId = new Map<string, string>();
+            for (const c of clientsRows ?? []) {
+              if (c?.id && c?.email) emailByClientId.set(c.id, String(c.email).toLowerCase());
+            }
+
+            const { data: stRows, error: stErr } = await supabase
+              .from("share_tokens")
+              .select("id, token, payload, accepted_at, created_at")
+              .eq("agent_id", user.id);
+
+            if (stErr) throw stErr;
+
+            const tokensForThisHotSheet = (stRows ?? []).filter((t: any) => {
+              return (
+                t?.payload?.type === "client_hotsheet_invite" &&
+                t?.payload?.hot_sheet_id === hotSheetData.id
+              );
+            });
+
+            const tokensByClientId = new Map<string, any[]>();
+            const tokensByEmail = new Map<string, any[]>();
+
+            for (const t of tokensForThisHotSheet) {
+              const cid = (t as any)?.payload?.client_id ?? null;
+              const email = (t as any)?.payload?.client_email ?? null;
+              if (cid) {
+                const arr = tokensByClientId.get(cid) ?? [];
+                arr.push(t);
+                tokensByClientId.set(cid, arr);
+              }
+              if (email) {
+                const key = String(email).toLowerCase();
+                const arr = tokensByEmail.get(key) ?? [];
+                arr.push(t);
+                tokensByEmail.set(key, arr);
+              }
+            }
+
+            let accepted = 0;
+            let unaccepted = 0;
+
+            for (const hscRow of hscRows) {
+              const clientId = (hscRow as any)?.client_id ?? null;
+              const clientEmail =
+                (clientId && emailByClientId.get(clientId)) ||
+                ((hscRow as any)?.client_email ? String((hscRow as any).client_email).toLowerCase() : null);
+
+              const byId = clientId ? (tokensByClientId.get(clientId) ?? []) : [];
+              const byEmail = clientEmail ? (tokensByEmail.get(clientEmail) ?? []) : [];
+              const tokens = [...byId, ...byEmail];
+              const hasAccepted = tokens.some((t) => Boolean(t?.accepted_at));
+
+              if (hasAccepted) accepted += 1;
+              else unaccepted += 1;
+            }
+
+            setAcceptedCount(accepted);
+            setUnacceptedCount(unaccepted);
+          } catch (e) {
+            console.warn("Token count computation failed:", e);
+            setAcceptedCount(0);
+            setUnacceptedCount(hscRows?.length ?? 0);
+          }
         } else {
           setInvitesSent(false);
+          setAcceptedCount(0);
+          setUnacceptedCount(0);
         }
       }
 
@@ -685,6 +761,31 @@ if (comments && comments.length > 0) {
     }
   };
 
+  const handleNotifyWithMatches = async () => {
+    try {
+      setSending(true);
+      const { error } = await supabase.functions.invoke("process-hot-sheet", {
+        body: { hotSheetId: id, sendInitialBatch: true },
+      });
+      if (error) throw error;
+      toast.success("Current matches sent to accepted clients.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? "Failed to notify clients.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleNotifyUpdate = async () => {
+    try {
+      setSending(true);
+      toast.info("Message-only updates are coming soon. Use 'Send current matches' for now.");
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const getCriteriaDisplay = () => {
     if (!hotSheet?.criteria) return [];
@@ -878,27 +979,30 @@ if (comments && comments.length > 0) {
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                 </SelectContent>
               </Select>
-              {selectedListings.size > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={handleSendFirstBatch}
-                  disabled={sending || clientCount === 0}
-                >
+              {unacceptedCount > 0 ? (
+                <Button onClick={handleSendInvites} disabled={sending || clientCount === 0}>
                   <Send className="h-4 w-4 mr-2" />
-                  {sending ? "Sending…" : `Send Listings (${selectedListings.size})`}
+                  {sending ? "Sending…" : `Invite Clients (${unacceptedCount})`}
                 </Button>
-              )}
-              {!invitesSent && (
-                <Button
-                  onClick={handleSendInvites}
-                  disabled={sending || clientCount === 0}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {sending
-                    ? "Sending…"
-                    : `Send Invites (${clientCount} client${clientCount !== 1 ? "s" : ""})`}
-                </Button>
-              )}
+              ) : acceptedCount > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={sending}>
+                      <Send className="h-4 w-4 mr-2" />
+                      Notify Clients ({acceptedCount})
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleNotifyUpdate}>
+                      Send update (message only)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleNotifyWithMatches}>
+                      Send current matches
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
             </div>
           </div>
 
