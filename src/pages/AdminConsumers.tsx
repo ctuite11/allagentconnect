@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Trash2, Search, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { UserX, Search, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -216,11 +216,11 @@ export default function AdminConsumers() {
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  const handleDelete = async (user: ConsumerRow) => {
+  const handleDeactivate = async (user: ConsumerRow) => {
     setDeletingId(user.id);
     setConfirmUser(null);
     try {
-      const { error: rpcErr } = await supabase.rpc("admin_delete_consumer", {
+      const { error: rpcErr } = await supabase.rpc("admin_deactivate_buyer" as any, {
         p_user_id: user.id,
       });
       if (rpcErr) throw rpcErr;
@@ -230,11 +230,11 @@ export default function AdminConsumers() {
       });
       if (fnErr) throw fnErr;
 
-      toast.success(`${user.email} deleted successfully`);
+      toast.success(`${user.email} deactivated`);
       fetchPage(page, debouncedSearch);
     } catch (err: any) {
-      console.error("[AdminConsumers] delete error:", err);
-      toast.error(err?.message ?? "Failed to delete consumer");
+      console.error("[AdminConsumers] deactivate error:", err);
+      toast.error(err?.message ?? "Failed to deactivate buyer");
     } finally {
       setDeletingId(null);
     }
@@ -350,7 +350,7 @@ export default function AdminConsumers() {
                         disabled={deletingId === row.id}
                         onClick={() => setConfirmUser(row)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <UserX className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>
@@ -392,21 +392,22 @@ export default function AdminConsumers() {
       <AlertDialog open={!!confirmUser} onOpenChange={(open) => { if (!open) setConfirmUser(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Consumer Account</AlertDialogTitle>
+            <AlertDialogTitle>Deactivate Buyer Account</AlertDialogTitle>
             <AlertDialogDescription>
-              This deletes CRM records, relationships, roles, and the Auth user for{" "}
+              Disables login and ends relationships for{" "}
               <span className="font-semibold">{confirmUser?.email}</span>.
+              Agent CRM contacts are not removed.
               <br /><br />
-              <span className="text-red-600 font-medium">Irreversible.</span> The user may re-register with the same email after deletion.
+              <span className="text-red-600 font-medium">The user's auth account will be removed.</span> They may re-register with the same email.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => confirmUser && handleDelete(confirmUser)}
+              onClick={() => confirmUser && handleDeactivate(confirmUser)}
             >
-              Delete Permanently
+              Deactivate Account
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
