@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
@@ -30,9 +32,18 @@ interface HotSheetShare {
   created_at: string;
 }
 
+interface BuyerSummary {
+  clientId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  hotSheetCount: number;
+}
+
 const HotSheets = () => {
   const navigate = useNavigate();
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
+  const [buyers, setBuyers] = useState<BuyerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -56,6 +67,7 @@ const HotSheets = () => {
     }
     setUser(user);
     fetchHotSheets(user.id);
+    fetchBuyers(user.id);
   };
 
   const fetchHotSheets = async (userId: string) => {
@@ -96,6 +108,57 @@ const HotSheets = () => {
       toast.error("Failed to load hot sheets");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBuyers = async (userId: string) => {
+    try {
+      const { data: hsData } = await supabase
+        .from("hot_sheets")
+        .select("id")
+        .eq("user_id", userId);
+
+      if (!hsData?.length) { setBuyers([]); return; }
+
+      const hotSheetIds = hsData.map((h: any) => h.id);
+
+      const { data: hscData } = await supabase
+        .from("hot_sheet_clients")
+        .select("client_id, hot_sheet_id")
+        .in("hot_sheet_id", hotSheetIds);
+
+      if (!hscData?.length) { setBuyers([]); return; }
+
+      // Dedupe by client_id and count hot sheets per buyer
+      const countMap = new Map<string, number>();
+      for (const row of hscData) {
+        countMap.set(row.client_id, (countMap.get(row.client_id) || 0) + 1);
+      }
+
+      const clientIds = Array.from(countMap.keys());
+      const { data: clientsData } = await supabase
+        .from("clients")
+        .select("id, first_name, last_name, email")
+        .in("id", clientIds);
+
+      const result: BuyerSummary[] = (clientsData || []).map((c: any) => ({
+        clientId: c.id,
+        firstName: c.first_name || "",
+        lastName: c.last_name || "",
+        email: c.email || "",
+        hotSheetCount: countMap.get(c.id) || 0,
+      }));
+
+      result.sort((a, b) => {
+        const nameA = `${a.firstName} ${a.lastName}`.trim().toLowerCase();
+        const nameB = `${b.firstName} ${b.lastName}`.trim().toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+
+      setBuyers(result);
+    } catch (e) {
+      console.error("Error fetching buyers:", e);
+      setBuyers([]);
     }
   };
 
@@ -283,6 +346,46 @@ const HotSheets = () => {
             ))}
           </div>
         )}
+
+        {/* Your Buyers */}
+        <div className="mt-10">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-muted-foreground" />
+            Your Buyers
+          </h2>
+          {buyers.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No buyers linked to your hot sheets yet.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {buyers.map((buyer) => (
+                <Card
+                  key={buyer.clientId}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate(`/hot-sheets/buyer/${buyer.clientId}`)}
+                >
+                  <CardContent className="flex items-center justify-between py-3 px-4">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {buyer.firstName || buyer.lastName
+                          ? `${buyer.firstName} ${buyer.lastName}`.trim()
+                          : buyer.email || "Unknown"}
+                      </p>
+                      {buyer.email && (
+                        <p className="text-xs text-muted-foreground truncate">{buyer.email}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge variant="secondary" className="text-xs">
+                        {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
+                      </Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </PageShell>
 
       {/* Share Dialog */}
