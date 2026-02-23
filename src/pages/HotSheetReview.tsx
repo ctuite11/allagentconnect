@@ -11,7 +11,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
@@ -258,6 +268,7 @@ const HotSheetReview = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [chatListingId, setChatListingId] = useState<string | null>(null);
+  const [confirmInviteOpen, setConfirmInviteOpen] = useState(false);
   const [clientCount, setClientCount] = useState<number>(0);
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
@@ -877,18 +888,13 @@ if (comments && comments.length > 0) {
                 subtitle={getClientDisplay() ? `Client: ${getClientDisplay()}` : undefined}
                 backTo="/hot-sheets"
                 actions={
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(buildSearchUrl())}
-                    >
-                      <Search className="h-4 w-4 mr-2" />
-                      View in Search
-                    </Button>
-                    <Button onClick={() => navigate("/agent-dashboard")}>
-                      Done
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => toast.info("Activity log coming soon")}
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    Activity Log
+                  </Button>
                 }
               />
             </div>
@@ -980,7 +986,17 @@ if (comments && comments.length > 0) {
                 </SelectContent>
               </Select>
               {unacceptedCount > 0 ? (
-                <Button onClick={handleSendInvites} disabled={sending || clientCount === 0}>
+                <Button
+                  onClick={() => {
+                    // Gate: if matches exist but none selected, confirm first
+                    if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
+                      setConfirmInviteOpen(true);
+                    } else {
+                      handleSendInvites();
+                    }
+                  }}
+                  disabled={sending || clientCount === 0}
+                >
                   <Send className="h-4 w-4 mr-2" />
                   {sending ? "Sending…" : `Invite Clients (${unacceptedCount})`}
                 </Button>
@@ -1065,6 +1081,24 @@ if (comments && comments.length > 0) {
           onNewMessage={handleNewMessage}
         />
       )}
+
+      {/* Confirm Invite Modal */}
+      <AlertDialog open={confirmInviteOpen} onOpenChange={setConfirmInviteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send invite without selected listings?</AlertDialogTitle>
+            <AlertDialogDescription>
+              There are current matches, but you haven't selected any listings to include. You can still invite the client to view matches after accepting.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go Back and Select Listings</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmInviteOpen(false); handleSendInvites(); }}>
+              Send Invite Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>
