@@ -96,17 +96,22 @@ function PendingInvitesSection({
           if (c) clientName = `${c.first_name} ${c.last_name}`.trim() || clientEmail;
         }
 
-        // Find most recent email job for cooldown check
-        const { data: lastJob } = await supabase
-          .from("email_jobs")
-          .select("created_at")
-          .eq("idempotency_key", `hot_sheet_invite:${t.id}:resend`)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        const lastSentMs = lastJob ? new Date(lastJob.created_at).getTime() : null;
-        const cooldownUntil = lastSentMs ? lastSentMs + 2 * 60 * 1000 : null;
+        // Find most recent invite event for cooldown check (RLS-safe, replaces email_jobs)
+        const clientId = t.payload?.client_id || null;
+        let cooldownUntil: number | null = null;
+        if (clientId) {
+          const { data: lastEvent } = await supabase
+            .from("invite_events")
+            .select("created_at")
+            .eq("hot_sheet_id", hotSheetId)
+            .eq("client_id", clientId)
+            .in("event_type", ["email_enqueued", "invite_resent"])
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const lastSentMs = lastEvent ? new Date(lastEvent.created_at).getTime() : null;
+          cooldownUntil = lastSentMs ? lastSentMs + 10 * 60 * 1000 : null;
+        }
 
         return {
           token: t.token,
@@ -209,7 +214,7 @@ function PendingInvitesSection({
                         onClick={() => handleResend(inv)}
                       >
                         <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${inv.resending ? "animate-spin" : ""}`} />
-                        {inv.resending ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
+                        {inv.resending ? "Sending…" : inCooldown ? "Wait 10 min" : "Resend"}
                       </Button>
                     </>
                   )}
@@ -888,13 +893,31 @@ if (comments && comments.length > 0) {
                 subtitle={getClientDisplay() ? `Client: ${getClientDisplay()}` : undefined}
                 backTo="/hot-sheets"
                 actions={
-                  <Button
-                    variant="outline"
-                    onClick={() => toast.info("Activity log coming soon")}
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    Activity Log
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    {clientCount > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {acceptedCount > 0 && (
+                          <span className="inline-flex items-center gap-1 mr-3">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                            Accepted: {acceptedCount}
+                          </span>
+                        )}
+                        {unacceptedCount > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                            Pending: {unacceptedCount}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => toast.info("Activity log coming soon")}
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      Activity Log
+                    </Button>
+                  </div>
                 }
               />
             </div>
