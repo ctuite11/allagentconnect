@@ -48,19 +48,19 @@ export default function SuccessHubDashboard() {
       <PageHeader title="Success Hub" />
 
       {/* ── Metric Tiles ──────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-14">
         {metricItems.map((m) => (
           <Card key={m.label} className="border border-border bg-card">
-            <CardContent className="flex flex-col items-center justify-center py-6 px-4">
-              <span className="text-3xl font-semibold text-foreground tracking-tight">{m.value}</span>
-              <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mt-1.5">{m.label}</span>
+            <CardContent className="flex flex-col items-center justify-center py-8 px-5">
+              <span className="text-4xl font-bold text-foreground tracking-tight">{m.value}</span>
+              <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mt-2">{m.label}</span>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* ── My Listings ────────────────────────────────── */}
-      <section className="mb-10">
+      <section className="mb-14">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-foreground">My Listings</h2>
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => navigate("/success-hub/listings")}>
@@ -78,10 +78,10 @@ export default function SuccessHubDashboard() {
                 <div className="min-w-0">
                   <p className="font-medium text-sm text-foreground">{l.address}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{l.city}, {l.state}</p>
-                  <p className="text-base font-semibold text-foreground mt-1.5">{formatPrice(l.price)}</p>
+                  <p className="text-lg font-bold text-foreground mt-1.5">{formatPrice(l.price)}</p>
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <Badge variant={statusVariant[l.status]} className="text-[10px]">{l.status.replace("_", " ")}</Badge>
+                  <Badge variant={statusVariant[l.status]} className="text-[10px] opacity-70">{l.status.replace("_", " ")}</Badge>
                   <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
               </CardContent>
@@ -91,14 +91,14 @@ export default function SuccessHubDashboard() {
       </section>
 
       {/* ── My Buyers ──────────────────────────────────── */}
-      <section className="mb-10">
+      <section className="mb-14">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-foreground">My Buyers</h2>
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => navigate("/success-hub/buyers")}>
             View All <ChevronRight className="h-4 w-4 ml-0.5" />
           </Button>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           {mockBuyers.slice(0, 4).map((b) => (
             <Card
               key={b.buyerId}
@@ -111,7 +111,7 @@ export default function SuccessHubDashboard() {
                   <p className="text-xs text-muted-foreground mt-0.5">{b.email}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <Badge variant={statusVariant[b.status]} className="text-[10px]">{b.status}</Badge>
+                  <Badge variant={statusVariant[b.status]} className="text-[10px] opacity-70">{b.status}</Badge>
                   <span className="text-[11px] text-muted-foreground">{b.hotSheets} HS</span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
@@ -122,7 +122,7 @@ export default function SuccessHubDashboard() {
       </section>
 
       {/* ── Communications Center ──────────────────────── */}
-      <section className="mb-16">
+      <section className="mb-20">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-semibold text-foreground">Communications</h2>
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => navigate("/communications")}>
@@ -130,7 +130,7 @@ export default function SuccessHubDashboard() {
           </Button>
         </div>
         <Card className="border border-border bg-card">
-          <CardContent className="p-0 divide-y divide-border">
+          <CardContent className="p-0 divide-y divide-border/60">
             {mockCommunications.slice(0, 5).map((item) => (
               <div key={item.feedId} className="flex items-center gap-3 px-5 py-3.5">
                 {feedIcon[item.type]}
