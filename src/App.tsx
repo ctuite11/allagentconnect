@@ -89,6 +89,14 @@ import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import Navigation from "./components/Navigation";
 import VersionStamp from "./components/VersionStamp";
 
+// Success Hub v2
+import SuccessHubDashboard from "./pages/success-hub/SuccessHubDashboard";
+import BuyersList from "./pages/success-hub/BuyersList";
+import BuyerAccount from "./pages/success-hub/BuyerAccount";
+import ListingsList from "./pages/success-hub/ListingsList";
+import ListingPerformance from "./pages/success-hub/ListingPerformance";
+import CommunicationsHub from "./pages/success-hub/CommunicationsHub";
+
 // Legal pages
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -160,6 +168,14 @@ const App = () => (
                 <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
                 <Route path="/network" element={<RouteGuard requireRole="agent"><NetworkIntelligence /></RouteGuard>} />
                 <Route path="/success-hub/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests/></RouteGuard>} />
+
+                {/* Success Hub v2 */}
+                <Route path="/success-hub" element={<RouteGuard requireRole="agent"><SuccessHubDashboard /></RouteGuard>} />
+                <Route path="/success-hub/buyers" element={<RouteGuard requireRole="agent"><BuyersList /></RouteGuard>} />
+                <Route path="/success-hub/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
+                <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
+                <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
+                <Route path="/communications" element={<RouteGuard requireRole="agent"><CommunicationsHub /></RouteGuard>} />
 
 
                 <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
