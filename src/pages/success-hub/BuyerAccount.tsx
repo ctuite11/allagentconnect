@@ -5,8 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Heart, Clock, Send, Home } from "lucide-react";
+import { Heart, Send, Home } from "lucide-react";
 import { toast } from "sonner";
 import {
   mockBuyers,
@@ -38,30 +37,37 @@ export default function BuyerAccount() {
 
   const hotSheets = mockBuyerHotSheets[buyer.buyerId] ?? [];
   const activity = mockBuyerActivity[buyer.buyerId] ?? [];
-  // Mock favorites: first 4 listings
   const favorites = mockListings.slice(0, 4);
-  // Mock conversations: first 2 threads
   const threads = mockMessages.slice(0, 2);
 
   return (
-    <PageShell>
+    <PageShell className="bg-secondary/40">
       <PageHeader title={buyer.name} backTo="/success-hub/buyers" />
 
       {/* ── Header Card ────────────────────────────────── */}
-      <Card className="mb-6">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between flex-wrap gap-3">
+      <Card className="mb-8 border border-border bg-card">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-xl font-semibold text-foreground">{buyer.name}</h2>
-                <Badge variant={statusVariant[buyer.status]}>{buyer.status}</Badge>
+              <div className="flex items-center gap-2.5 mb-1">
+                <h2 className="text-xl font-semibold text-foreground tracking-tight">{buyer.name}</h2>
+                <Badge variant={statusVariant[buyer.status]} className="text-[10px]">{buyer.status}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">{buyer.email}</p>
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>{buyer.hotSheets} hot sheets</span>
-              <span>{buyer.favorites} favorites</span>
-              <span>Last active: {buyer.lastActive}</span>
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <p className="text-lg font-semibold text-foreground">{buyer.hotSheets}</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Hot Sheets</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-foreground">{buyer.favorites}</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Favorites</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">{buyer.lastActive}</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Last Active</p>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -69,33 +75,34 @@ export default function BuyerAccount() {
 
       {/* ── Tabs ───────────────────────────────────────── */}
       <Tabs defaultValue="hotsheets">
-        <TabsList className="mb-4">
-          <TabsTrigger value="hotsheets">Hot Sheets</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites</TabsTrigger>
-          <TabsTrigger value="conversations">Conversations</TabsTrigger>
+        <TabsList className="mb-6 bg-transparent border-b border-border rounded-none p-0 gap-0">
+          <TabsTrigger value="hotsheets" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-2.5 text-sm">Hot Sheets</TabsTrigger>
+          <TabsTrigger value="activity" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-2.5 text-sm">Activity</TabsTrigger>
+          <TabsTrigger value="favorites" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-2.5 text-sm">Favorites</TabsTrigger>
+          <TabsTrigger value="conversations" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-2.5 text-sm">Conversations</TabsTrigger>
         </TabsList>
 
         {/* Hot Sheets */}
         <TabsContent value="hotsheets">
           {hotSheets.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">No hot sheets for this buyer yet.</p>
+            <p className="text-muted-foreground text-sm py-6">No hot sheets for this buyer yet.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {hotSheets.map((hs) => (
-                <Card key={hs.id}>
-                  <CardContent className="flex items-center justify-between p-4">
+                <Card key={hs.id} className="border border-border bg-card">
+                  <CardContent className="flex items-center justify-between p-5">
                     <div>
                       <p className="font-medium text-sm text-foreground">{hs.name}</p>
-                      <p className="text-xs text-muted-foreground">{hs.criteria}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Last sent: {hs.lastSent}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{hs.criteria}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">Last sent {hs.lastSent}</p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
+                      className="shrink-0"
                       onClick={() => toast.info("Coming soon")}
                     >
-                      <Send className="h-3.5 w-3.5 mr-1" /> Resend
+                      <Send className="h-3.5 w-3.5 mr-1.5" /> Resend
                     </Button>
                   </CardContent>
                 </Card>
@@ -107,16 +114,14 @@ export default function BuyerAccount() {
         {/* Activity */}
         <TabsContent value="activity">
           {activity.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">No activity recorded yet.</p>
+            <p className="text-muted-foreground text-sm py-6">No activity recorded yet.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="relative pl-5 border-l border-border">
               {activity.map((ev) => (
-                <div key={ev.id} className="flex items-start gap-3 py-2">
-                  <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm text-foreground">{ev.label}</p>
-                    <p className="text-xs text-muted-foreground">{ev.date}</p>
-                  </div>
+                <div key={ev.id} className="relative pb-5 last:pb-0">
+                  <div className="absolute -left-[11px] top-1 h-[7px] w-[7px] rounded-full bg-muted-foreground/40" />
+                  <p className="text-sm text-foreground">{ev.label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{ev.date}</p>
                 </div>
               ))}
             </div>
@@ -127,14 +132,14 @@ export default function BuyerAccount() {
         <TabsContent value="favorites">
           <div className="grid gap-3 sm:grid-cols-2">
             {favorites.map((l) => (
-              <Card key={l.listingId}>
-                <CardContent className="flex items-center gap-3 p-4">
-                  <Home className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <div className="flex-1">
+              <Card key={l.listingId} className="border border-border bg-card">
+                <CardContent className="flex items-center gap-3 p-5">
+                  <Home className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-foreground">{l.address}</p>
                     <p className="text-xs text-muted-foreground">{l.city}, {l.state} · ${l.price.toLocaleString()}</p>
                   </div>
-                  <Heart className="h-4 w-4 text-destructive" />
+                  <Heart className="h-4 w-4 text-destructive shrink-0" />
                 </CardContent>
               </Card>
             ))}
@@ -144,18 +149,18 @@ export default function BuyerAccount() {
         {/* Conversations */}
         <TabsContent value="conversations">
           {threads.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">No conversations yet.</p>
+            <p className="text-muted-foreground text-sm py-6">No conversations yet.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {threads.map((t) => (
-                <Card key={t.threadId} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => toast.info("Coming soon")}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
+                <Card key={t.threadId} className="cursor-pointer border border-border bg-card hover:border-muted-foreground/30 transition-colors" onClick={() => toast.info("Coming soon")}>
+                  <CardContent className="flex items-center justify-between p-5">
+                    <div className="min-w-0">
                       <p className="font-medium text-sm text-foreground">{t.contactName}</p>
-                      <p className="text-xs text-muted-foreground truncate max-w-[300px]">{t.lastMessage}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[300px] mt-0.5">{t.lastMessage}</p>
                     </div>
                     {t.unread > 0 && (
-                      <Badge variant="default">{t.unread}</Badge>
+                      <Badge variant="default" className="text-[10px]">{t.unread}</Badge>
                     )}
                   </CardContent>
                 </Card>

@@ -16,7 +16,7 @@ export default function BuyersList() {
   const navigate = useNavigate();
 
   return (
-    <PageShell>
+    <PageShell className="bg-secondary/40">
       <PageHeader
         title="Your Buyers"
         subtitle="Select a buyer to manage their hot sheets, favorites, and activity."
@@ -26,24 +26,27 @@ export default function BuyersList() {
       {mockBuyers.length === 0 ? (
         <p className="text-muted-foreground text-sm">No buyers yet.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {mockBuyers.map((b) => (
             <Card
               key={b.buyerId}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className="cursor-pointer border border-border bg-card hover:border-muted-foreground/30 transition-colors"
               onClick={() => navigate(`/success-hub/buyers/${b.buyerId}`)}
             >
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium text-foreground">{b.name}</p>
-                  <p className="text-sm text-muted-foreground">{b.email}</p>
+              <CardContent className="flex items-center justify-between p-5">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm text-foreground">{b.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{b.email}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant={statusVariant[b.status]}>{b.status}</Badge>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                <div className="flex items-center gap-3 shrink-0">
+                  <Badge variant={statusVariant[b.status]} className="text-[10px]">{b.status}</Badge>
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                     {b.hotSheets} hot sheet{b.hotSheets !== 1 ? "s" : ""}
                   </span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                    Last active {b.lastActive}
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
               </CardContent>
             </Card>
