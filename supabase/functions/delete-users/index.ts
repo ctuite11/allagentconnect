@@ -108,11 +108,14 @@ serve(async (req) => {
       }
     }
 
+    const allSucceeded = deletedAuthUsers.length === userIds.length;
     return new Response(JSON.stringify({
-      success: true,
+      success: allSucceeded,
+      deleted: deletedAuthUsers.length,
       message: `Deleted ${deletedAuthUsers.length} of ${userIds.length} auth accounts`,
       deletedUserIds: deletedAuthUsers,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
+      error: !allSucceeded ? `Failed to delete ${errors.length} of ${userIds.length} auth accounts` : undefined
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
