@@ -220,15 +220,20 @@ export default function AdminConsumers() {
     setDeletingId(user.id);
     setConfirmUser(null);
     try {
+      // Step 1: Delete auth user FIRST — if this fails, don't proceed
+      const { data: fnData, error: fnErr } = await supabase.functions.invoke("delete-users", {
+        body: user.email ? { emails: [user.email] } : { userIds: [user.id] },
+      });
+      if (fnErr) throw fnErr;
+      if (!fnData || fnData.success !== true) {
+        throw new Error(fnData?.error || "Auth account removal failed");
+      }
+
+      // Step 2: Only soft-deactivate after auth is confirmed deleted
       const { error: rpcErr } = await supabase.rpc("admin_deactivate_buyer" as any, {
         p_user_id: user.id,
       });
       if (rpcErr) throw rpcErr;
-
-      const { error: fnErr } = await supabase.functions.invoke("delete-users", {
-        body: user.email ? { emails: [user.email] } : { userIds: [user.id] },
-      });
-      if (fnErr) throw fnErr;
 
       toast.success(`${user.email} deactivated`);
       fetchPage(page, debouncedSearch);
