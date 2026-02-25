@@ -27,9 +27,13 @@ const PasswordReset = () => {
   const [isValidSession, setIsValidSession] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [samePasswordError, setSamePasswordError] = useState(false);
+  const [isSetupFlow, setIsSetupFlow] = useState(false);
 
-  // Detect setup (approval) vs reset flow
-  const isSetupFlow = sessionStorage.getItem("aac_password_setup_flow") === "1";
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsSetupFlow(sessionStorage.getItem("aac_password_setup_flow") === "1");
+    }
+  }, []);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -88,8 +92,10 @@ const PasswordReset = () => {
       });
 
       if (error) {
-        // Handle same_password error gracefully
-        if (error.message.includes("same_password") || error.code === "same_password" || error.message.includes("different from the old password")) {
+        // Handle same_password error gracefully — resilient detection
+        const errCode = (error as any)?.code || (error as any)?.error_code || "";
+        const errMsg = (error.message || "").toLowerCase();
+        if (errCode === "same_password" || errMsg.includes("same_password") || errMsg.includes("different from the old password")) {
           setSamePasswordError(true);
           setLoading(false);
           return;

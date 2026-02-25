@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -13,36 +13,37 @@ const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // CRITICAL: Capture recovery context SYNCHRONOUSLY on first render
-  // This MUST happen BEFORE any useEffect runs or Supabase auth events fire
+  // Parse recovery context from URL (pure computation — no side effects)
   // ═══════════════════════════════════════════════════════════════════════════
-  const { isRecoveryContext, recoveryMarkerSet, isApprovalFlow } = useMemo(() => {
+  const recoveryInfo = useMemo(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const typeFromHash = hashParams.get("type");
     const typeFromQuery = searchParams.get("type");
-    
     const isRecovery = typeFromHash === "recovery" || typeFromQuery === "recovery";
-
-    // Detect approval-initiated vs user-initiated reset
     const flowParam = searchParams.get("flow");
     const isApproval = flowParam === "approval";
-    
-    // Set the correct marker IMMEDIATELY during render phase (synchronous)
-    if (isRecovery && typeof window !== 'undefined') {
-      if (isApproval) {
-        sessionStorage.setItem("aac_password_setup_flow", "1");
-        sessionStorage.removeItem("aac_recovery_flow");
-      } else {
-        sessionStorage.setItem("aac_recovery_flow", "1");
-        sessionStorage.removeItem("aac_password_setup_flow");
-      }
-      if (import.meta.env.DEV) {
-        console.log("[AuthCallback] Recovery context captured SYNCHRONOUSLY, flow:", isApproval ? "approval" : "reset");
-      }
-    }
-    
-    return { isRecoveryContext: isRecovery, recoveryMarkerSet: isRecovery, isApprovalFlow: isApproval };
+    return { isRecovery, isApproval };
   }, [searchParams]);
+
+  const isRecoveryContext = recoveryInfo.isRecovery;
+  const isApprovalFlow = recoveryInfo.isApproval;
+
+  // Set sessionStorage markers in useLayoutEffect (before paint, but not in render)
+  useLayoutEffect(() => {
+    if (!recoveryInfo.isRecovery || typeof window === "undefined") return;
+
+    if (recoveryInfo.isApproval) {
+      sessionStorage.setItem("aac_password_setup_flow", "1");
+      sessionStorage.removeItem("aac_recovery_flow");
+    } else {
+      sessionStorage.setItem("aac_recovery_flow", "1");
+      sessionStorage.removeItem("aac_password_setup_flow");
+    }
+
+    if (import.meta.env.DEV) {
+      console.log("[AuthCallback] Recovery context captured, flow:", recoveryInfo.isApproval ? "approval" : "reset");
+    }
+  }, [recoveryInfo.isRecovery, recoveryInfo.isApproval]);
   // ═══════════════════════════════════════════════════════════════════════════
 
   useEffect(() => {
@@ -71,7 +72,7 @@ const AuthCallback = () => {
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
         isRecoveryContext,
-        recoveryMarkerSet,
+        isApprovalFlow,
         typeFromHash,
         typeFromQuery,
         tokenKey: hasStableTokenKey ? tokenKey.substring(0, 8) + "..." : "unknown",
