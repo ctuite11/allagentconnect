@@ -38,14 +38,9 @@ type RegisterStep = "creating_account" | "saving_profile" | "saving_license" | "
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
-// Password rules
-const passwordRules = [
-  { id: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
-  { id: 'uppercase', label: 'One uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
-  { id: 'lowercase', label: 'One lowercase letter', test: (p: string) => /[a-z]/.test(p) },
-  { id: 'number', label: 'One number', test: (p: string) => /[0-9]/.test(p) },
-  { id: 'symbol', label: 'One symbol (!@#$%^&*)', test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
-];
+// Password policy — imported from shared module
+import { validatePassword } from "@/lib/passwordPolicy";
+import { PasswordChecklist } from "@/components/PasswordChecklist";
 
 // US States for license dropdown
 const US_STATES = [
@@ -146,14 +141,10 @@ const Auth = () => {
   };
 
   // Password validation for register mode
-  const passwordValidation = useMemo(() => {
-    return passwordRules.map(rule => ({
-      ...rule,
-      valid: rule.test(password)
-    }));
-  }, [password]);
-
-  const allPasswordRulesPass = passwordValidation.every(r => r.valid);
+  const { results: passwordValidation, allPass: allPasswordRulesPass } = useMemo(
+    () => validatePassword(password),
+    [password]
+  );
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
   // Sync mode state from URL parameter
@@ -291,18 +282,32 @@ const Auth = () => {
     };
   }, [searchParams]);
 
+  // Suppress auth routing during register-mode sign-out cleanup
+  const suppressAuthRoutingRef = useRef(false);
+
+  // When register mode initializes, sign out and suppress routing events
+  useEffect(() => {
+    const modeParam = searchParams.get("mode");
+    if (modeParam !== "register") return;
+
+    suppressAuthRoutingRef.current = true;
+
+    supabase.auth.signOut().finally(() => {
+      setTimeout(() => {
+        suppressAuthRoutingRef.current = false;
+      }, 0);
+    });
+  }, [searchParams]);
+
   // Listen for auth state changes (for sign in success)
   useEffect(() => {
     let mounted = true;
-
-    // Suppress auth routing during register-mode sign-out cleanup
-    const suppressAuthRouting = searchParams.get("mode") === "register";
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
         // Don't redirect during register init — sign-out emits events that would strip ?mode=register
-        if (suppressAuthRouting && !isRegistering.current) return;
+        if (suppressAuthRoutingRef.current) return;
         
         if (event === 'SIGNED_IN' && session?.user && !didNavigate.current && !isRegistering.current) {
           didNavigate.current = true;
@@ -1097,19 +1102,8 @@ const Auth = () => {
 
               {/* Password rules checklist - only for register mode */}
               {mode === "register" && password.length > 0 && (
-                <div className="bg-neutral-50 rounded-lg p-3 space-y-1.5">
-                  {passwordValidation.map((rule) => (
-                    <div key={rule.id} className="flex items-center gap-2 text-sm">
-                      {rule.valid ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Circle className="h-4 w-4 text-neutral-400" />
-                      )}
-                      <span className={rule.valid ? "text-accent" : "text-neutral-500"}>
-                        {rule.label}
-                      </span>
-                    </div>
-                  ))}
+                <div className="bg-neutral-50 rounded-lg p-3">
+                  <PasswordChecklist password={password} />
                 </div>
               )}
 

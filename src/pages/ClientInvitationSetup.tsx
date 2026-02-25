@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import Footer from "@/components/Footer";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { setPrimaryAgentId } from "@/utils/agentTracking";
+import { validatePassword } from "@/lib/passwordPolicy";
+import { PasswordChecklist } from "@/components/PasswordChecklist";
 
 const ClientInvitationSetup = () => {
   const [searchParams] = useSearchParams();
@@ -94,8 +96,9 @@ const ClientInvitationSetup = () => {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    const { allPass } = validatePassword(password);
+    if (!allPass) {
+      toast.error("Password does not meet all requirements");
       return;
     }
 
@@ -137,17 +140,18 @@ const ClientInvitationSetup = () => {
       }
 
       // Persist first/last name to profiles (upsert in case trigger already created row)
+      const profilePayload = {
+        id: authData.user.id,
+        email,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+      };
+
       const { error: profileError } = await supabase
         .from("profiles")
-        .upsert(
-          { id: authData.user.id, email, first_name: firstName.trim(), last_name: lastName.trim() },
-          { onConflict: "id" }
-        );
+        .upsert([profilePayload], { onConflict: "id" });
 
-      if (profileError) {
-        console.error("Error upserting profile:", profileError);
-        // Don't fail the whole process if this fails
-      }
+      if (profileError) throw profileError;
 
       // Assign buyer role
       const { error: roleError } = await supabase
@@ -314,12 +318,11 @@ const ClientInvitationSetup = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Create a secure password"
-                      minLength={6}
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Must be at least 6 characters
-                    </p>
+                    <div className="mt-2">
+                      <PasswordChecklist password={password} />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -330,9 +333,11 @@ const ClientInvitationSetup = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm your password"
-                      minLength={6}
                       required
                     />
+                    {confirmPassword.length > 0 && (
+                      <PasswordChecklist password={password} confirmPassword={confirmPassword} showMatch />
+                    )}
                   </div>
 
                   <Button

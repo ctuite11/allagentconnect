@@ -8,16 +8,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
-import { Check, X, AlertTriangle } from "lucide-react";
-
-// Password validation rules
-const passwordRules = [
-  { id: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
-  { id: 'uppercase', label: 'One uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
-  { id: 'lowercase', label: 'One lowercase letter', test: (p: string) => /[a-z]/.test(p) },
-  { id: 'number', label: 'One number', test: (p: string) => /[0-9]/.test(p) },
-  { id: 'symbol', label: 'One symbol (!@#$%^&*)', test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
-];
+import { AlertTriangle } from "lucide-react";
+import { validatePassword } from "@/lib/passwordPolicy";
+import { PasswordChecklist } from "@/components/PasswordChecklist";
 
 const PasswordReset = () => {
   const navigate = useNavigate();
@@ -61,14 +54,10 @@ const PasswordReset = () => {
   }, []);
 
   // Live validation state
-  const validationResults = useMemo(() => {
-    return passwordRules.map(rule => ({
-      ...rule,
-      valid: rule.test(password)
-    }));
-  }, [password]);
-
-  const allRulesPass = validationResults.every(r => r.valid);
+  const { results: validationResults, allPass: allRulesPass } = useMemo(
+    () => validatePassword(password),
+    [password]
+  );
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
   const canSubmit = allRulesPass && passwordsMatch && !loading;
 
@@ -266,22 +255,8 @@ const PasswordReset = () => {
                     />
                     
                     {/* Password rules checklist */}
-                    <div className="mt-3 space-y-1.5">
-                      {validationResults.map((rule) => (
-                        <div 
-                          key={rule.id} 
-                          className={`flex items-center gap-2 text-xs ${
-                            rule.valid ? 'text-green-600' : 'text-muted-foreground'
-                          }`}
-                        >
-                          {rule.valid ? (
-                            <Check className="h-3.5 w-3.5" />
-                          ) : (
-                            <X className="h-3.5 w-3.5" />
-                          )}
-                          <span>{rule.label}</span>
-                        </div>
-                      ))}
+                    <div className="mt-3">
+                      <PasswordChecklist password={password} />
                     </div>
                   </div>
                   
@@ -297,16 +272,7 @@ const PasswordReset = () => {
                       disabled={loading}
                     />
                     {confirmPassword.length > 0 && (
-                      <div className={`flex items-center gap-2 text-xs ${
-                        passwordsMatch ? 'text-green-600' : 'text-destructive'
-                      }`}>
-                        {passwordsMatch ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <X className="h-3.5 w-3.5" />
-                        )}
-                        <span>{passwordsMatch ? 'Passwords match' : 'Passwords do not match'}</span>
-                      </div>
+                      <PasswordChecklist password={password} confirmPassword={confirmPassword} showMatch />
                     )}
                   </div>
                   
