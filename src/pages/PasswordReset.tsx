@@ -26,15 +26,18 @@ const PasswordReset = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isValidSession, setIsValidSession] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [samePasswordError, setSamePasswordError] = useState(false);
+
+  // Detect setup (approval) vs reset flow
+  const isSetupFlow = sessionStorage.getItem("aac_password_setup_flow") === "1";
 
   useEffect(() => {
-    // Check if we have a valid recovery session
     const checkSession = async () => {
-      // CRITICAL: Require recovery flow marker from AuthCallback
       const isRecoveryFlow = sessionStorage.getItem("aac_recovery_flow") === "1";
+      const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
       
-      if (!isRecoveryFlow) {
-        console.log("[PasswordReset] No recovery flow marker found");
+      if (!isRecoveryFlow && !isSetup) {
+        console.log("[PasswordReset] No recovery/setup flow marker found");
         setSessionError("Invalid or expired reset link. Please request a new password reset.");
         return;
       }
@@ -42,7 +45,7 @@ const PasswordReset = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        console.log("[PasswordReset] Valid session found for recovery");
+        console.log("[PasswordReset] Valid session found for", isSetup ? "setup" : "recovery");
         setIsValidSession(true);
       } else {
         console.log("[PasswordReset] No session found");
@@ -85,10 +88,17 @@ const PasswordReset = () => {
       });
 
       if (error) {
+        // Handle same_password error gracefully
+        if (error.message.includes("same_password") || error.code === "same_password" || error.message.includes("different from the old password")) {
+          setSamePasswordError(true);
+          setLoading(false);
+          return;
+        }
         // Check for specific token-related errors
         if (error.message.includes("token") || error.message.includes("expired") || error.message.includes("invalid")) {
           toast.error("Your reset link has expired. Please request a new one.");
           sessionStorage.removeItem("aac_recovery_flow");
+          sessionStorage.removeItem("aac_password_setup_flow");
           navigate("/auth?mode=forgot-password", { replace: true });
           return;
         }
@@ -122,6 +132,7 @@ const PasswordReset = () => {
 
       // Clear recovery state
       sessionStorage.removeItem("aac_recovery_flow");
+      sessionStorage.removeItem("aac_password_setup_flow");
       
       // Clear recovery URL state before redirecting
       window.history.replaceState(null, "", "/password-reset");
@@ -143,7 +154,14 @@ const PasswordReset = () => {
 
   const handleRequestNewLink = () => {
     sessionStorage.removeItem("aac_recovery_flow");
+    sessionStorage.removeItem("aac_password_setup_flow");
     navigate("/auth?mode=forgot-password", { replace: true });
+  };
+
+  const handleGoToSignIn = () => {
+    sessionStorage.removeItem("aac_recovery_flow");
+    sessionStorage.removeItem("aac_password_setup_flow");
+    navigate("/auth", { replace: true });
   };
 
   // Show error state if session is invalid
@@ -186,85 +204,116 @@ const PasswordReset = () => {
       <div className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Reset Your Password</CardTitle>
+            <CardTitle>{isSetupFlow ? "Set Your Password" : "Reset Your Password"}</CardTitle>
             <CardDescription>
-              Create a strong new password for your account
+              {isSetupFlow
+                ? "Choose a password to finish activating your agent account."
+                : "Create a strong new password for your account"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* One-time link warning */}
-            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
-              <p className="text-xs text-amber-800 dark:text-amber-200">
-                <strong>Important:</strong> This link works once. If you've already opened it or refreshed this page, you may need to request a new reset link.
-              </p>
-            </div>
-
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-                
-                {/* Password rules checklist */}
-                <div className="mt-3 space-y-1.5">
-                  {validationResults.map((rule) => (
-                    <div 
-                      key={rule.id} 
-                      className={`flex items-center gap-2 text-xs ${
-                        rule.valid ? 'text-green-600' : 'text-muted-foreground'
-                      }`}
-                    >
-                      {rule.valid ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        <X className="h-3.5 w-3.5" />
-                      )}
-                      <span>{rule.label}</span>
-                    </div>
-                  ))}
+            {/* Same password error state */}
+            {samePasswordError ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-md border">
+                  <p className="text-sm text-foreground font-medium mb-1">
+                    That's already your current password.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    You set this password during registration. You can sign in directly, or choose a different password below.
+                  </p>
                 </div>
+                <Button
+                  onClick={handleGoToSignIn}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+                >
+                  Sign In →
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setSamePasswordError(false); setPassword(""); setConfirmPassword(""); }}
+                  className="w-full"
+                >
+                  Choose a Different Password
+                </Button>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-                {confirmPassword.length > 0 && (
-                  <div className={`flex items-center gap-2 text-xs ${
-                    passwordsMatch ? 'text-green-600' : 'text-destructive'
-                  }`}>
-                    {passwordsMatch ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      <X className="h-3.5 w-3.5" />
-                    )}
-                    <span>{passwordsMatch ? 'Passwords match' : 'Passwords do not match'}</span>
+            ) : (
+              <>
+                {/* One-time link warning */}
+                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
+                  <p className="text-xs text-amber-800 dark:text-amber-200">
+                    <strong>Important:</strong> This link works once. If you've already opened it or refreshed this page, you may need to request a new reset link.
+                  </p>
+                </div>
+
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="password">New Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                    
+                    {/* Password rules checklist */}
+                    <div className="mt-3 space-y-1.5">
+                      {validationResults.map((rule) => (
+                        <div 
+                          key={rule.id} 
+                          className={`flex items-center gap-2 text-xs ${
+                            rule.valid ? 'text-green-600' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {rule.valid ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <X className="h-3.5 w-3.5" />
+                          )}
+                          <span>{rule.label}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                )}
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
-                disabled={!canSubmit}
-              >
-                {loading ? "Updating password..." : "Update Password"}
-              </Button>
-            </form>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                    {confirmPassword.length > 0 && (
+                      <div className={`flex items-center gap-2 text-xs ${
+                        passwordsMatch ? 'text-green-600' : 'text-destructive'
+                      }`}>
+                        {passwordsMatch ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <X className="h-3.5 w-3.5" />
+                        )}
+                        <span>{passwordsMatch ? 'Passwords match' : 'Passwords do not match'}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
+                    disabled={!canSubmit}
+                  >
+                    {loading ? "Updating password..." : isSetupFlow ? "Set Password & Activate" : "Update Password"}
+                  </Button>
+                </form>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

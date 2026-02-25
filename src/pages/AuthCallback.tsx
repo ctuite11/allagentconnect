@@ -16,22 +16,32 @@ const AuthCallback = () => {
   // CRITICAL: Capture recovery context SYNCHRONOUSLY on first render
   // This MUST happen BEFORE any useEffect runs or Supabase auth events fire
   // ═══════════════════════════════════════════════════════════════════════════
-  const { isRecoveryContext, recoveryMarkerSet } = useMemo(() => {
+  const { isRecoveryContext, recoveryMarkerSet, isApprovalFlow } = useMemo(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const typeFromHash = hashParams.get("type");
     const typeFromQuery = searchParams.get("type");
     
     const isRecovery = typeFromHash === "recovery" || typeFromQuery === "recovery";
+
+    // Detect approval-initiated vs user-initiated reset
+    const flowParam = searchParams.get("flow");
+    const isApproval = flowParam === "approval";
     
-    // Set recovery marker IMMEDIATELY during render phase (synchronous)
+    // Set the correct marker IMMEDIATELY during render phase (synchronous)
     if (isRecovery && typeof window !== 'undefined') {
-      sessionStorage.setItem("aac_recovery_flow", "1");
+      if (isApproval) {
+        sessionStorage.setItem("aac_password_setup_flow", "1");
+        sessionStorage.removeItem("aac_recovery_flow");
+      } else {
+        sessionStorage.setItem("aac_recovery_flow", "1");
+        sessionStorage.removeItem("aac_password_setup_flow");
+      }
       if (import.meta.env.DEV) {
-        console.log("[AuthCallback] Recovery context captured SYNCHRONOUSLY");
+        console.log("[AuthCallback] Recovery context captured SYNCHRONOUSLY, flow:", isApproval ? "approval" : "reset");
       }
     }
     
-    return { isRecoveryContext: isRecovery, recoveryMarkerSet: isRecovery };
+    return { isRecoveryContext: isRecovery, recoveryMarkerSet: isRecovery, isApprovalFlow: isApproval };
   }, [searchParams]);
   // ═══════════════════════════════════════════════════════════════════════════
 
