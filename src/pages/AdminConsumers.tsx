@@ -226,7 +226,22 @@ export default function AdminConsumers() {
       });
       if (fnErr) throw fnErr;
       if (!fnData || fnData.success !== true) {
-        throw new Error(fnData?.error || "Auth account removal failed");
+        // Build actionable error message from blockers + errors
+        let detail = fnData?.error || "Auth account removal failed";
+        if (fnData?.errors?.length) {
+          const errMsgs = fnData.errors.map((e: any) => {
+            let msg = e.error;
+            if (e.blockers) {
+              const blockerList = Object.entries(e.blockers)
+                .map(([k, v]) => `${k} (${v})`)
+                .join(", ");
+              msg += ` — blocked by: ${blockerList}`;
+            }
+            return msg;
+          });
+          detail = errMsgs.join("; ");
+        }
+        throw new Error(detail);
       }
 
       // Step 2: Only soft-deactivate after auth is confirmed deleted
@@ -239,7 +254,7 @@ export default function AdminConsumers() {
       fetchPage(page, debouncedSearch);
     } catch (err: any) {
       console.error("[AdminConsumers] deactivate error:", err);
-      toast.error(err?.message ?? "Failed to deactivate buyer");
+      toast.error(err?.message ?? "Failed to deactivate buyer", { duration: 8000 });
     } finally {
       setDeletingId(null);
     }
