@@ -79,6 +79,7 @@ serve(async (req: Request): Promise<Response> => {
 
     if (approved && recipientEmail) {
       try {
+        console.log("[send-agent-approval-email] generateLink type: magiclink — deployed version confirmed");
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
           type: "magiclink",
           email: recipientEmail,
