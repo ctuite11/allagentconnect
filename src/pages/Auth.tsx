@@ -295,9 +295,14 @@ const Auth = () => {
   useEffect(() => {
     let mounted = true;
 
+    // Suppress auth routing during register-mode sign-out cleanup
+    const suppressAuthRouting = searchParams.get("mode") === "register";
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+        // Don't redirect during register init — sign-out emits events that would strip ?mode=register
+        if (suppressAuthRouting && !isRegistering.current) return;
         
         if (event === 'SIGNED_IN' && session?.user && !didNavigate.current && !isRegistering.current) {
           didNavigate.current = true;

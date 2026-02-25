@@ -22,6 +22,8 @@ const ClientInvitationSetup = () => {
   
   const [phase, setPhase] = useState<"form" | "success">("form");
   const [email, setEmail] = useState(initialEmail);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,6 +89,11 @@ const ClientInvitationSetup = () => {
       return;
     }
 
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("Please enter your first and last name.");
+      return;
+    }
+
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
@@ -127,6 +134,19 @@ const ClientInvitationSetup = () => {
 
       if (!authData.user) {
         throw new Error("Account creation failed");
+      }
+
+      // Persist first/last name to profiles (upsert in case trigger already created row)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(
+          { id: authData.user.id, email, first_name: firstName.trim(), last_name: lastName.trim() },
+          { onConflict: "id" }
+        );
+
+      if (profileError) {
+        console.error("Error upserting profile:", profileError);
+        // Don't fail the whole process if this fails
       }
 
       // Assign buyer role
@@ -259,6 +279,31 @@ const ClientInvitationSetup = () => {
                         Email provided by {agentFirstName || "your agent"}
                       </p>
                     )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="First name"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Last name"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
