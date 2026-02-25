@@ -209,6 +209,10 @@ function buildApprovedHtml(name: string, passwordUrl: string): string {
                 </tr>
               </table>
               
+              <p style="font-size: 13px; color: #94a3b8; margin: 0 0 20px 0;">
+                This link works once. If you've already opened it, sign in from the <a href="https://allagentconnect.com/auth" style="color: #334155; text-decoration: underline;">login page</a>.
+              </p>
+              
               <!-- Fallback URL -->
               <p style="font-size: 13px; color: #64748b; margin: 0 0 8px 0;">
                 Or copy and paste this link:
