@@ -80,10 +80,10 @@ serve(async (req: Request): Promise<Response> => {
     if (approved && recipientEmail) {
       try {
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-          type: "recovery",
+          type: "magiclink",
           email: recipientEmail,
           options: {
-            redirectTo: "https://allagentconnect.com/auth/callback?flow=approval",
+            redirectTo: "https://allagentconnect.com/auth/callback",
           },
         });
 
@@ -114,7 +114,7 @@ serve(async (req: Request): Promise<Response> => {
         reply_to: "hello@allagentconnect.com",
         to: [recipientEmail],
         subject: approved 
-          ? "You've Been Accepted — Set Up Your Account"
+          ? "You've Been Accepted — Sign In to Your Account"
           : "AllAgentConnect - Verification Update",
         html: approved ? approvedHtml : rejectedHtml,
       }),
@@ -193,8 +193,8 @@ function buildApprovedHtml(name: string, passwordUrl: string): string {
                 <span style="color: #059669; font-weight: 600;">✓</span> Your license has been verified
               </p>
               
-              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 28px 0;">
-                You've been accepted into AllAgentConnect. Create your password below to activate your account.
+               <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 28px 0;">
+                You've been accepted into AllAgentConnect. Sign in below to access your agent dashboard.
               </p>
               
               <!-- CTA Button -->
@@ -202,7 +202,7 @@ function buildApprovedHtml(name: string, passwordUrl: string): string {
                 <tr>
                   <td align="center" style="background-color: #0F172A; border-radius: 10px;">
                     <a href="${passwordUrl}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
-                      <span style="color: #10B981;">●</span>&nbsp;&nbsp;Create Your Password&nbsp;&nbsp;→
+                      <span style="color: #10B981;">●</span>&nbsp;&nbsp;Sign In to Your Account&nbsp;&nbsp;→
                     </a>
                   </td>
                 </tr>
