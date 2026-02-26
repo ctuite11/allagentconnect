@@ -149,33 +149,42 @@ export default function ClientDashboard() {
       return;
     }
 
-    // Query B: fetch accepted tokens for this buyer (by user_id)
-    const { data: acceptedTokenRows } = await (supabase as any)
+    // Query B: fetch all accepted tokens ("type" lives in JSONB payload, not a column)
+    const { data: acceptedTokenRows } = await supabase
       .from("share_tokens")
-      .select("token, payload, accepted_at")
-      .eq("type", "client_hotsheet_invite")
-      .not("accepted_at", "is", null)
-      .eq("accepted_by_user_id", userId) as { data: any[] | null };
+      .select("token, payload, accepted_at, accepted_by_user_id")
+      .not("accepted_at", "is", null);
 
-    // Build sets of accepted hot_sheet_ids for this buyer (by client_id or email in payload)
+    // Build sets of accepted hot_sheet_ids for this buyer
     const acceptedHotSheetIds = new Set<string>();
     const tokenMap: Record<string, string> = {};
+    const buyerEmailNorm = (buyerEmail ?? "").toLowerCase().trim();
 
     for (const t of acceptedTokenRows || []) {
       const p = (t.payload as any) ?? {};
+
+      // Must be a hot sheet invite token
+      if (p.type !== "client_hotsheet_invite") continue;
+
       const hsId = String(p.hot_sheet_id ?? "");
       if (!hsId) continue;
 
-      const tokenClientId = String((p as any).client_id ?? "");
-      const tokenEmail = String((p as any).client_email ?? "").toLowerCase().trim();
+      // Match by accepted_by_user_id (new tokens) OR email (legacy tokens)
+      const matchByUserId = t.accepted_by_user_id === userId;
+      const tokenEmail = String(p.client_email ?? "").toLowerCase().trim();
+      const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
 
-      const matchById = tokenClientId && rawSheets.some((s: any) => String(s._client_id) === tokenClientId && String(s.id) === hsId);
-      const matchByEmail = buyerEmail && tokenEmail === buyerEmail;
-
-      if (matchById || matchByEmail) {
+      if (matchByUserId || matchByEmail) {
         acceptedHotSheetIds.add(hsId);
         if (t.token) tokenMap[hsId] = t.token;
       }
+    }
+
+    if (import.meta.env.DEV) {
+      console.log("[ClientDashboard] token scan:", {
+        total: (acceptedTokenRows || []).length,
+        matched: acceptedHotSheetIds.size,
+      });
     }
 
     // Only show hot sheets with an accepted invite
