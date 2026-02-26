@@ -139,19 +139,25 @@ const ClientInvitationSetup = () => {
         throw new Error("Account creation failed");
       }
 
-      // Persist first/last name to profiles (upsert in case trigger already created row)
-      const profilePayload = {
-        id: authData.user.id,
-        email,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-      };
+      // Persist first/last name to profiles — update-first, fallback insert
+      // Do NOT include email; the auth trigger or existing row owns that field.
+      const userId = authData.user.id;
+      const nameFields = { first_name: firstName.trim(), last_name: lastName.trim() };
 
-      const { error: profileError } = await supabase
+      const { error: updateError, count } = await supabase
         .from("profiles")
-        .upsert([profilePayload], { onConflict: "id" });
+        .update(nameFields)
+        .eq("id", userId);
 
-      if (profileError) throw profileError;
+      // If no row existed yet (trigger hasn't fired), insert minimally
+      if (!updateError && count === 0) {
+        const { error: insertError } = await supabase
+          .from("profiles")
+          .insert([{ id: userId, email, ...nameFields }]);
+        if (insertError) throw insertError;
+      } else if (updateError) {
+        throw updateError;
+      }
 
       // Assign buyer role
       const { error: roleError } = await supabase

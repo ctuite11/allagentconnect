@@ -10,7 +10,7 @@ export interface ResolvedRoleResult {
 /**
  * Single authoritative role resolver.
  * Calls the SECURITY DEFINER resolve_user_role RPC — one round-trip, no UI guessing.
- * Priority order (enforced server-side): admin > buyer > agent > unknown
+ * Priority order (enforced server-side): admin > agent > buyer > unknown
  */
 export async function resolveUserRole(userId: string): Promise<ResolvedRoleResult> {
   const { data, error } = await supabase.rpc("resolve_user_role", {
