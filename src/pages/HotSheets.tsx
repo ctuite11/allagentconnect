@@ -67,7 +67,6 @@ const HotSheets = () => {
     }
     setUser(user);
     fetchHotSheets(user.id);
-    fetchBuyers(user.id);
   };
 
   const fetchHotSheets = async (userId: string) => {
@@ -300,8 +299,8 @@ const HotSheets = () => {
     <>
       <PageShell className="pb-8">
         <PageHeader
-          title="Your Buyer Hot Sheets"
-          subtitle="Open a buyer to view their hot sheets, favorites, and activity."
+          title="Hot Sheets"
+          subtitle="Create and manage property alert sheets for your buyers."
           className="mb-8"
           actions={
             <Button variant="ghost" onClick={() => setCreateDialogOpen(true)} className="!bg-black hover:!bg-zinc-900 !text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 !shadow-none hover:!shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
@@ -311,12 +310,12 @@ const HotSheets = () => {
           }
         />
 
-        {buyers.length === 0 ? (
+        {hotSheets.length === 0 ? (
           <div className="aac-card p-12 text-center">
             <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No buyers yet</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No hot sheets yet</h3>
             <p className="text-muted-foreground mb-6">
-              No buyers linked to your hot sheets yet.
+              Create your first hot sheet to start matching properties for your buyers.
             </p>
             <Button variant="ghost" onClick={() => setCreateDialogOpen(true)} className="!bg-black hover:!bg-zinc-900 !text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 py-2 !shadow-none hover:!shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all">
               <Plus className="h-4 w-4 mr-2" />
@@ -325,31 +324,19 @@ const HotSheets = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {buyers.map((buyer) => (
-              <Card
-                key={buyer.clientId}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => navigate(`/hot-sheets/buyer/${buyer.clientId}`)}
-              >
-                <CardContent className="flex items-center justify-between py-3 px-4">
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {buyer.firstName || buyer.lastName
-                        ? `${buyer.firstName} ${buyer.lastName}`.trim()
-                        : buyer.email || "Unknown"}
-                    </p>
-                    {buyer.email && (
-                      <p className="text-xs text-muted-foreground truncate">{buyer.email}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Badge variant="secondary" className="text-xs">
-                      {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
-                    </Badge>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </CardContent>
-              </Card>
+            {hotSheets.map((sheet: any) => (
+              <HotSheetCard
+                key={sheet.id}
+                id={sheet.id}
+                name={sheet.name}
+                criteria={sheet.criteria}
+                clients={getClientsForSheet(sheet)}
+                lastSentAt={sheet.last_sent_at}
+                onEdit={handleEdit}
+                onShare={(id) => setShareDialogOpen(id)}
+                onComments={(id) => setCommentsDialogOpen(id)}
+                onDelete={handleDeleteHotSheet}
+              />
             ))}
           </div>
         )}
