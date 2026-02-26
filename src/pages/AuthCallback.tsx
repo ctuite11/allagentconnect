@@ -290,7 +290,7 @@ const AuthCallback = () => {
         return;
       }
 
-      // Single RPC resolves role with enforced priority: admin > buyer > agent > unknown
+      // Single RPC resolves role with enforced priority: admin > agent > buyer > unknown
       const resolved = await resolveUserRole(userId);
       const target = getRouteForRole(resolved);
 
