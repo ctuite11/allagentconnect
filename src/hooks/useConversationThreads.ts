@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
 
 interface ConversationThread {
   id: string;
@@ -46,16 +47,9 @@ export function useConversationThreads() {
         return;
       }
 
-      // Get profiles for all other users in one query
+      // Resolve profiles for all other users (agents + buyers)
       const otherUserIds = inboxData.map((row: any) => row.other_user_id);
-      const { data: profiles } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name, email")
-        .in("id", otherUserIds);
-
-      const profileMap = new Map(
-        (profiles || []).map((p) => [p.id, p])
-      );
+      const profileMap = await resolveDisplayProfiles(otherUserIds);
 
       // Map to thread format
       const formattedThreads: ConversationThread[] = inboxData.map((row: any) => {
@@ -64,8 +58,8 @@ export function useConversationThreads() {
           id: row.conversation_id,
           otherUserId: row.other_user_id,
           otherUserName: profile
-            ? `${profile.first_name} ${profile.last_name}`
-            : "Unknown Agent",
+            ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown User"
+            : "Unknown User",
           otherUserEmail: profile?.email || "",
           lastMessagePreview: row.last_message_preview?.substring(0, 100) || null,
           lastMessageAt: row.last_message_at,
