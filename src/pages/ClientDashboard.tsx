@@ -117,59 +117,31 @@ export default function ClientDashboard() {
       .maybeSingle();
     const buyerEmail = profile?.email?.toLowerCase().trim() ?? "";
 
-    // Query A: hot sheets linked to this buyer via junction table, include agent profile
-    const { data: rows, error: joinErr } = await supabase
-      .from("hot_sheet_clients")
-      .select(`
-        client_id,
-        hot_sheet_id,
-        hot_sheets (
-          id,
-          name,
-          criteria,
-          created_at,
-          is_active,
-          user_id
-        )
-      `);
-
-    if (joinErr) {
-      console.error("Failed to load hot sheets (join)", joinErr);
-      setHotSheets([]);
-      return;
-    }
-
-    const rawSheets = (rows || [])
-      .map((r: any) => ({ ...(r.hot_sheets || {}), _client_id: r.client_id }))
-      .filter((s: any) => s.id);
-
-    if (!rawSheets.length) {
-      setHotSheets([]);
-      setShareTokenByHotSheetId({});
-      return;
-    }
-
-    // Query B: fetch all accepted tokens ("type" lives in JSONB payload, not a column)
-    const { data: acceptedTokenRows } = await supabase
+    // Primary source of truth: accepted share_tokens for this buyer
+    // This avoids RLS issues with hot_sheet_clients (CRM ID != auth ID)
+    const { data: acceptedTokenRows, error: tokenErr } = await supabase
       .from("share_tokens")
       .select("token, payload, accepted_at, accepted_by_user_id")
       .not("accepted_at", "is", null);
 
-    // Build sets of accepted hot_sheet_ids for this buyer
+    if (tokenErr) {
+      console.error("Failed to load accepted tokens", tokenErr);
+      setHotSheets([]);
+      return;
+    }
+
+    // Filter tokens for this buyer and extract hot_sheet_ids
     const acceptedHotSheetIds = new Set<string>();
     const tokenMap: Record<string, string> = {};
     const buyerEmailNorm = (buyerEmail ?? "").toLowerCase().trim();
 
     for (const t of acceptedTokenRows || []) {
       const p = (t.payload as any) ?? {};
-
-      // Must be a hot sheet invite token
       if (p.type !== "client_hotsheet_invite") continue;
 
       const hsId = String(p.hot_sheet_id ?? "");
       if (!hsId) continue;
 
-      // Match by accepted_by_user_id (new tokens) OR email (legacy tokens)
       const matchByUserId = t.accepted_by_user_id === userId;
       const tokenEmail = String(p.client_email ?? "").toLowerCase().trim();
       const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
@@ -187,11 +159,29 @@ export default function ClientDashboard() {
       });
     }
 
-    // Only show hot sheets with an accepted invite
-    const acceptedSheets = rawSheets.filter((s: any) => acceptedHotSheetIds.has(String(s.id)));
+    if (!acceptedHotSheetIds.size) {
+      setHotSheets([]);
+      setShareTokenByHotSheetId({});
+      return;
+    }
+
+    // Fetch hot sheet details directly by IDs
+    const hsIds = [...acceptedHotSheetIds];
+    const { data: sheetRows, error: sheetErr } = await supabase
+      .from("hot_sheets")
+      .select("id, name, criteria, created_at, is_active, user_id")
+      .in("id", hsIds);
+
+    if (sheetErr) {
+      console.error("Failed to load hot sheets by ID", sheetErr);
+      setHotSheets([]);
+      return;
+    }
+
+    const rawSheets = (sheetRows || []).filter((s: any) => s.id);
 
     // Fetch agent profiles for attribution
-    const agentIds = [...new Set(acceptedSheets.map((s: any) => s.user_id).filter(Boolean))];
+    const agentIds = [...new Set(rawSheets.map((s: any) => s.user_id).filter(Boolean))];
     let agentMap: Record<string, any> = {};
     if (agentIds.length) {
       const { data: agents } = await supabase
@@ -201,7 +191,7 @@ export default function ClientDashboard() {
       for (const a of agents || []) agentMap[a.id] = a;
     }
 
-    const sheetsWithAgent = acceptedSheets.map((s: any) => ({
+    const sheetsWithAgent = rawSheets.map((s: any) => ({
       ...s,
       agent: agentMap[s.user_id] ?? null,
     }));
