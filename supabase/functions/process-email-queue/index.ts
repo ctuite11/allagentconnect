@@ -199,7 +199,7 @@ body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
       const preview = (messageBodyRaw || "").replace(/\s+/g, " ").trim().slice(0, 90);
 
       const escapeHtml = (s: string) =>
-        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 
       const safeBody = escapeHtml(messageBodyRaw).replace(/\n/g, "<br>");
       const safeSender = escapeHtml(senderName);
@@ -211,8 +211,10 @@ body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
         .map((p: string) => p[0]?.toUpperCase() || "")
         .join("") || "?";
 
-      const appUrl = Deno.env.get("APP_URL") || "https://allagentconnect.lovable.app";
-      const ctaHref = `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`;
+      const appUrl = Deno.env.get("APP_URL") || "https://allagentconnect.com";
+      const ctaHref = ctaUrl.startsWith("http")
+        ? ctaUrl
+        : `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`;
       const preheader = escapeHtml(preview || "You have a new message.");
       const contextLine = listingAddress
         ? `About: ${escapeHtml(listingAddress)}`
