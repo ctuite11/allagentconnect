@@ -501,8 +501,23 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button className="w-full">Request a Tour</Button>
-              <Button variant="outline" className="w-full">Contact Agent</Button>
+              <Button
+                className="w-full"
+                onClick={handleMessageListingAgent}
+                disabled={isStartingChat}
+                aria-busy={isStartingChat}
+              >
+                {isStartingChat ? "Opening…" : "Request a Tour"}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleMessageListingAgent}
+                disabled={isStartingChat}
+                aria-busy={isStartingChat}
+              >
+                {isStartingChat ? "Opening…" : "Contact Agent"}
+              </Button>
             </div>
             
             {/* Message about this listing button - agents/admins only */}
