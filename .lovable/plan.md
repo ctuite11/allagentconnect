@@ -1,41 +1,63 @@
 
 
-## Re-activate Buyer: tuite.chris@gmail.com
+## Problem
 
-Run three SQL statements to restore this user's access:
+`buildCommsUrl()` in `PropertyDetailRightColumn.tsx` generates `/comms?...` — a route that does not exist. All actual messaging routes (`/messages`, `/messages/:id`, `/communications`) are agent-gated via `RouteGuard requireRole="agent"`, so buyers are blocked.
 
-1. **Restore buyer role** -- re-insert the `buyer` role into `user_roles` so login resolves to `/client/dashboard` instead of `/access-error`
-2. **Clear deactivation flag** -- set `profiles.deactivated_at = NULL` so the account is no longer soft-deactivated
-3. **Re-activate agent relationship** -- restore the active link to agent `1fc50da1-...` so the client dashboard shows their agent
+## Fix Plan
 
-### SQL to execute
+### 1. Open `/messages` and `/messages/:id` to buyers
 
-```text
--- 1) Restore buyer role
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('ce6abb12-674b-447b-b2b0-852502599545', 'buyer')
-ON CONFLICT (user_id, role) DO NOTHING;
+In `src/App.tsx`, change the two message routes from `requireRole="agent"` to allow both agents and buyers:
 
--- 2) Clear deactivation flag
-UPDATE public.profiles
-SET deactivated_at = NULL
-WHERE id = 'ce6abb12-674b-447b-b2b0-852502599545';
+```tsx
+// Before:
+<Route path="/messages" element={<RouteGuard requireRole="agent"><Messages /></RouteGuard>} />
+<Route path="/messages/:id" element={<RouteGuard requireRole="agent"><Conversation /></RouteGuard>} />
 
--- 3) Re-activate agent relationship
-UPDATE public.client_agent_relationships
-SET status = 'active', ended_at = NULL
-WHERE client_id = 'ce6abb12-674b-447b-b2b0-852502599545'
-  AND agent_id = '1fc50da1-2664-4931-8cab-64e24dc5ed8c';
+// After:
+<Route path="/messages" element={<RouteGuard requireRole={["agent","buyer"]}><Messages /></RouteGuard>} />
+<Route path="/messages/:id" element={<RouteGuard requireRole={["agent","buyer"]}><Conversation /></RouteGuard>} />
 ```
 
-### Expected result after execution
+*(Need to verify `RouteGuard` supports array — if not, a small update to accept `string | string[]`.)*
 
-- User can log in and routes to `/client/dashboard`
-- User appears in Admin > Registered Buyers
-- Hot sheet and CRM data remain intact (no changes needed)
-- Agent relationship restored with original agent
+### 2. Rewrite `buildCommsUrl()` to use `findOrCreateConversation` directly
 
-### Technical note
+In `PropertyDetailRightColumn.tsx`, replace the URL-builder with the same pattern `ClientDashboard` already uses — call `findOrCreateConversation` and navigate to `/messages/${convId}`:
 
-These are data-only operations (no schema changes). The `ON CONFLICT DO NOTHING` on the role insert is safe if the role already exists.
+```typescript
+const handleContactAgent = async () => {
+  if (isStartingChat) return;
+  setIsStartingChat(true);
+  try {
+    if (stickyAgent?.id && viewerId) {
+      const convId = await findOrCreateConversation(viewerId, stickyAgent.id, {
+        listingId: listing?.id ?? null,
+      });
+      if (convId) { navigate(`/messages/${convId}`); return; }
+    }
+    // Fallback: no sticky agent → support email flow or dashboard
+    navigate("/client/dashboard");
+  } catch {
+    toast.error("Couldn't start message. Please try again.");
+  } finally {
+    setIsStartingChat(false);
+  }
+};
+```
+
+Remove `buildCommsUrl()` entirely. Update all three Button `onClick` handlers (sticky-agent card, generic fallback, bottom fallback) to call `handleContactAgent`.
+
+### 3. Verify `RouteGuard` accepts array roles
+
+Quick check of `RouteGuard.tsx` — if `requireRole` only accepts a string, update the type to `string | string[]` and the check to `Array.isArray(requireRole) ? requireRole.includes(role) : requireRole === role`.
+
+### Files touched
+
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Open `/messages` routes to buyers |
+| `src/components/RouteGuard.tsx` | Accept array of roles (if needed) |
+| `src/components/PropertyDetailRightColumn.tsx` | Replace `buildCommsUrl()` with `handleContactAgent` using `findOrCreateConversation` |
 
