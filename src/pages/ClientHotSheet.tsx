@@ -749,10 +749,10 @@ const ClientHotSheet = () => {
                         )}
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mb-2">
                           {agentProfile.email && (
-                            <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                            <span className="flex items-center gap-1">
                               <Mail className="w-3.5 h-3.5" />
                               {agentProfile.email}
-                            </a>
+                            </span>
                           )}
                           {(agentProfile.phone || agentProfile.cell_phone) && (
                             <a href={`tel:${(agentProfile.phone || agentProfile.cell_phone || "").replace(/\D/g, "")}`} className="flex items-center gap-1 hover:text-primary transition-colors">
