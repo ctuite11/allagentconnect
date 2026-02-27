@@ -39,20 +39,9 @@ export default function ClientCreateHotsheetNew() {
       return;
     }
 
-    // Check for active agent relationship (RPC handles resolution server-side)
-    const { data: relationship } = await supabase
-      .from("client_agent_relationships")
-      .select("agent_id")
-      .eq("client_id", user.id)
-      .eq("status", "active")
-      .maybeSingle();
-
-    if (relationship) {
-      setHasActiveAgent(true);
-    } else {
-      toast.error("You need an active agent relationship to create saved searches");
-      navigate("/client/dashboard");
-    }
+    // We only gate on login here.
+    // Relationship + CRM client are enforced by the RPC (source of truth).
+    setHasActiveAgent(true);
   };
 
   const generateAutoName = () => {
@@ -82,7 +71,10 @@ export default function ClientCreateHotsheetNew() {
     setLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     // Convert criteria to hotsheet format
     const hotsheetCriteria = {
@@ -92,13 +84,10 @@ export default function ClientCreateHotsheetNew() {
       showAreas: criteria.showAreas,
       propertyTypes: criteria.propertyTypes,
       statuses: criteria.statuses,
-      minPrice: criteria.minPrice ? parseFloat(criteria.minPrice) : undefined,
-      maxPrice: criteria.maxPrice ? parseFloat(criteria.maxPrice) : undefined,
-      bedrooms: criteria.bedrooms ? parseInt(criteria.bedrooms) : undefined,
-      bathrooms: criteria.bathrooms ? parseFloat(criteria.bathrooms) : undefined,
-      zipCode: criteria.zipCode || undefined,
-      minSqft: criteria.minLivingArea ? parseFloat(criteria.minLivingArea) : undefined,
-      maxSqft: criteria.maxLivingArea ? parseFloat(criteria.maxLivingArea) : undefined,
+      minPrice: criteria.minPrice ? parseFloat(criteria.minPrice) : null,
+      maxPrice: criteria.maxPrice ? parseFloat(criteria.maxPrice) : null,
+      bedrooms: criteria.bedrooms ? parseInt(criteria.bedrooms) : null,
+      bathrooms: criteria.bathrooms ? parseFloat(criteria.bathrooms) : null,
     };
 
     const name = hotsheetName || generateAutoName();
@@ -114,7 +103,7 @@ export default function ClientCreateHotsheetNew() {
       console.error("create_buyer_hot_sheet error:", error);
       if (error.message?.includes("No active agent relationship")) {
         toast.error("No active agent relationship found");
-      } else if (error.message?.includes("No CRM client record")) {
+      } else if (error.message?.includes("CRM client record")) {
         toast.error("Your agent hasn't added you as a client yet. Please ask them to add you first.");
       } else {
         toast.error("Failed to create saved search");
@@ -123,7 +112,7 @@ export default function ClientCreateHotsheetNew() {
     }
 
     toast.success("Saved search created!");
-    navigate("/client/dashboard");
+    navigate(`/client/hot-sheets/${data}`);
   };
 
   return (
