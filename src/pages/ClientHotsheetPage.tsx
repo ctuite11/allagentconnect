@@ -373,6 +373,17 @@ const ClientHotsheetPage = () => {
     <div className="min-h-screen flex flex-col pt-20">
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
+          {/* Back to Dashboard */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/client/dashboard")}
+          >
+            <MapPin className="w-4 h-4" />
+            ← Back to Dashboard
+          </Button>
+
           {/* Agent Header */}
           {agent && (
             <div className="mb-6 p-4 border rounded-lg bg-muted flex items-center gap-4">
