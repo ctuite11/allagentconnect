@@ -695,6 +695,16 @@ const ClientHotSheet = () => {
     <div className="min-h-screen flex flex-col pt-20">
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
+          {/* Back to Dashboard */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/client/dashboard")}
+          >
+            ← Back to Dashboard
+          </Button>
+
           {/* Agent Banner */}
           {agentProfile && (
             <Card className="mb-6 border-neutral-200 bg-gradient-to-r from-neutral-50 to-neutral-100">

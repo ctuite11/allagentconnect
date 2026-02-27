@@ -434,7 +434,7 @@ const ConsumerPropertyDetail = () => {
             />
             <ContactAgentDialog 
               listingId={listing.id}
-              agentId={listing.agent_id}
+              agentId={stickyAgentId || listing.agent_id}
               listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
             />
             {isAgent && (

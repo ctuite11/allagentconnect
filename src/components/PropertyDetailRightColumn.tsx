@@ -115,7 +115,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   const compensationDisplay = getCompensationDisplay();
 
   // ========== Sticky agent resolution for buyer masking ==========
-  const [stickyAgent, setStickyAgent] = useState<{ id: string; first_name: string; last_name: string } | null>(null);
+  const [stickyAgent, setStickyAgent] = useState<{ id: string; first_name: string; last_name: string; headshot_url: string | null; company: string | null; email: string; phone: string | null; cell_phone: string | null } | null>(null);
   const [stickyLoaded, setStickyLoaded] = useState(false);
   const isBuyer = role !== "agent" && role !== "admin" && !isAgentView;
 
@@ -129,7 +129,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
       if (agentId) {
         const { data } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name")
+          .select("id, first_name, last_name, headshot_url, company, email, phone, cell_phone")
           .eq("id", agentId)
           .maybeSingle();
         if (data) setStickyAgent(data);
@@ -307,15 +307,54 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             <CardTitle className="text-lg">Your Agent</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="font-semibold text-lg">
-              {stickyAgent.first_name} {stickyAgent.last_name}
-            </p>
-            <Button
-              className="w-full"
-              onClick={() => navigate(`/agent/${stickyAgent.id}`)}
-            >
-              View Your Agent's Profile
-            </Button>
+            <div className="flex items-center gap-3">
+              <Avatar className="w-14 h-14">
+                {stickyAgent.headshot_url ? (
+                  <AvatarImage src={stickyAgent.headshot_url} alt={`${stickyAgent.first_name} ${stickyAgent.last_name}`} />
+                ) : (
+                  <AvatarFallback className="text-lg">
+                    {stickyAgent.first_name[0]}{stickyAgent.last_name[0]}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-lg">
+                  {stickyAgent.first_name} {stickyAgent.last_name}
+                </p>
+                {stickyAgent.company && (
+                  <p className="text-sm text-muted-foreground">{stickyAgent.company}</p>
+                )}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              {(stickyAgent.cell_phone || stickyAgent.phone) && (
+                <a
+                  href={`tel:${stickyAgent.cell_phone || stickyAgent.phone}`}
+                  className="flex items-center gap-3 text-sm hover:text-primary transition"
+                >
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <span>{formatPhoneNumber(stickyAgent.cell_phone || stickyAgent.phone)}</span>
+                </a>
+              )}
+              {stickyAgent.email && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <span className="break-all">{stickyAgent.email}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 pt-2">
+              <Button
+                className="w-full"
+                onClick={() => navigate(`/agent/${stickyAgent.id}`)}
+              >
+                Contact {stickyAgent.first_name}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : agent && (
