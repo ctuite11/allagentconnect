@@ -4,6 +4,7 @@ interface SearchCriteria {
   statuses?: string[];
   propertyTypes?: string[];
   cities?: string[];
+  neighborhoods?: string[];
   state?: string;
   zipCode?: string;
   minPrice?: number;
@@ -59,6 +60,7 @@ export function buildListingsQuery(
     statuses: rawCriteria.statuses?.length ? rawCriteria.statuses : ["active", "coming_soon"],
     propertyTypes: rawCriteria.propertyTypes || [],
     cities: rawCriteria.cities || [],
+    neighborhoods: rawCriteria.neighborhoods || [],
     state: rawCriteria.state || "",
     zipCode: rawCriteria.zipCode || "",
     minPrice: rawCriteria.minPrice || 0,
@@ -167,6 +169,13 @@ export function buildListingsQuery(
       
       query = query.or(segments.join(','));
     }
+  }
+
+  // Neighborhood filter (standalone, applied on top of city filter)
+  if (criteria.neighborhoods.length > 0) {
+    const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
+    const hoodSegments = criteria.neighborhoods.map(n => `neighborhood.ilike.${wild(n)}`);
+    query = query.or(hoodSegments.join(','));
   }
 
   // Zip code filter

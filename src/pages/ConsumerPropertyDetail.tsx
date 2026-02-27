@@ -311,11 +311,23 @@ const ConsumerPropertyDetail = () => {
               {/* Overlay buttons */}
               <div className="absolute top-4 left-4 flex gap-2 z-10">
                 <button
-                  onClick={() => navigate("/browse")}
+                  onClick={() => {
+                    const lastSearch = sessionStorage.getItem("buyer_last_search_url");
+                    navigate(lastSearch || "/browse");
+                  }}
                   className="p-2 rounded-md bg-white/90 hover:bg-white transition-colors text-muted-foreground hover:text-foreground shadow-md"
-                  aria-label="Go back"
+                  aria-label="Back to results"
+                  title="Back to Results"
                 >
                   <ArrowLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => navigate("/client/dashboard")}
+                  className="p-2 rounded-md bg-white/90 hover:bg-white transition-colors text-muted-foreground hover:text-foreground shadow-md"
+                  aria-label="Back to dashboard"
+                  title="Back to Dashboard"
+                >
+                  <Home className="h-5 w-5" />
                 </button>
               </div>
 
