@@ -88,6 +88,7 @@ import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import Navigation from "./components/Navigation";
 import VersionStamp from "./components/VersionStamp";
+import { NewMessageToastListener } from "./components/NewMessageToastListener";
 
 // Success Hub v2
 import SuccessHubDashboard from "./pages/success-hub/SuccessHubDashboard";
@@ -138,6 +139,7 @@ const App = () => (
             <>
               <ActiveAgentBanner />
               <Navigation />
+              <NewMessageToastListener />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/register" element={<Register />} />

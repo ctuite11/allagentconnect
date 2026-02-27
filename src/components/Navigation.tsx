@@ -37,6 +37,7 @@ const Navigation = () => {
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [agentStatusLoading, setAgentStatusLoading] = useState(false);
   const [hasSellerSubmission, setHasSellerSubmission] = useState(false);
+  const [hasStickyAgent, setHasStickyAgent] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { role, loading: roleLoading } = useUserRole(user);
@@ -90,8 +91,29 @@ const Navigation = () => {
       setAgentStatus(null);
       setAgentStatusLoading(false);
       setHasSellerSubmission(false);
+      setHasStickyAgent(false);
     }
   }, [user]);
+
+  // Check sticky agent for buyers
+  useEffect(() => {
+    let cancelled = false;
+    const checkSticky = async () => {
+      if (!user || role !== "buyer") {
+        setHasStickyAgent(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("client_agent_relationships")
+        .select("agent_id")
+        .eq("client_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!cancelled) setHasStickyAgent(!!data?.agent_id);
+    };
+    checkSticky();
+    return () => { cancelled = true; };
+  }, [user, role]);
 
   // Check if user has a seller submission
   useEffect(() => {
@@ -251,13 +273,17 @@ const Navigation = () => {
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator className="bg-slate-200" />
-                  <DropdownMenuLabel className="text-slate-500 text-xs">Agents</DropdownMenuLabel>
-                  <DropdownMenuGroup>
-                   <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                      <Users className="mr-2 h-4 w-4" />
-                      Find an Agent
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
+                  {!hasStickyAgent && (
+                    <>
+                      <DropdownMenuLabel className="text-slate-500 text-xs">Agents</DropdownMenuLabel>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                          <Users className="mr-2 h-4 w-4" />
+                          Find an Agent
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </>
+                  )}
                   <DropdownMenuSeparator className="bg-slate-200" />
                   <DropdownMenuLabel className="text-slate-500 text-xs">Communication</DropdownMenuLabel>
                   <DropdownMenuGroup>
@@ -630,16 +656,18 @@ const Navigation = () => {
               Agent Search
             </button>
           )}
-          <button
-            onClick={() => {
-              navigate("/find-agent");
-              setIsMenuOpen(false);
-            }}
-            className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
-          >
-            <Users className="w-4 h-4" />
-            Find an Agent
-          </button>
+          {!(role === "buyer" && hasStickyAgent) && (
+            <button
+              onClick={() => {
+                navigate("/find-agent");
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+            >
+              <Users className="w-4 h-4" />
+              Find an Agent
+            </button>
+          )}
           {user && isAgentOrAdmin && (
             <button
               onClick={() => {
