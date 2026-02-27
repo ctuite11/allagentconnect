@@ -58,12 +58,20 @@ const BrowsePropertiesNew = () => {
     if (params.has("state")) urlCriteria.state = params.get("state")!;
     if (params.has("county")) urlCriteria.county = params.get("county")!;
     if (params.has("towns")) urlCriteria.towns = params.get("towns")!.split("|");
+    if (params.has("neighborhoods")) urlCriteria.neighborhoods = params.get("neighborhoods")!.split("|");
     if (params.has("showAreas")) urlCriteria.showAreas = params.get("showAreas") === "yes";
 
     if (Object.keys(urlCriteria).length > 0) {
       setCriteria({ ...criteria, ...urlCriteria });
     }
   }, []);
+
+  // Persist buyer search URL for back navigation from listing detail
+  useEffect(() => {
+    const params = buildQueryParams();
+    const searchUrl = `/browse?${params.toString()}`;
+    sessionStorage.setItem("buyer_last_search_url", searchUrl);
+  }, [criteria]);
 
   // Fetch listings when criteria changes
   useEffect(() => {
@@ -82,6 +90,7 @@ const BrowsePropertiesNew = () => {
         zipCode: criteria.zipCode,
         state: criteria.state,
         cities: criteria.towns,
+        neighborhoods: criteria.neighborhoods,
       };
 
       // Convert string prices to numbers
@@ -135,6 +144,7 @@ const BrowsePropertiesNew = () => {
     if (criteria.state) params.set("state", criteria.state);
     if (criteria.county) params.set("county", criteria.county);
     if (criteria.towns?.length) params.set("towns", criteria.towns.join("|"));
+    if (criteria.neighborhoods?.length) params.set("neighborhoods", criteria.neighborhoods.join("|"));
     if (criteria.showAreas) params.set("showAreas", criteria.showAreas ? "yes" : "no");
     return params;
   };

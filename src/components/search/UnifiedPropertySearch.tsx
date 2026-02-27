@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, Home, Building2, Users, MapPin, DollarSign, Bed, Bath, Calendar, Waves, Eye } from "lucide-react";
 import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
 import { cn } from "@/lib/utils";
+import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import {
   PROPERTY_TYPES as STATUS_PROPERTY_TYPES,
   AGENT_SEARCH_STATUSES,
@@ -27,6 +28,7 @@ export interface SearchCriteria {
   state?: string;
   county?: string;
   towns?: string[];
+  neighborhoods?: string[];
   zipCode?: string;
   showAreas?: boolean;
   
@@ -126,7 +128,19 @@ export const UnifiedPropertySearch = ({
   const [isStatusOpen, setIsStatusOpen] = useState(true);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isKeywordsOpen, setIsKeywordsOpen] = useState(false);
+  const [neighborhoodSearch, setNeighborhoodSearch] = useState("");
 
+  // Compute available neighborhoods from selected towns + state
+  const availableNeighborhoods = useMemo(() => {
+    const towns = criteria.towns || [];
+    const state = criteria.state || "MA";
+    const allHoods = new Set<string>();
+    for (const town of towns) {
+      const areas = getAreasForCity(town, state);
+      areas.forEach(a => allHoods.add(a));
+    }
+    return Array.from(allHoods).sort();
+  }, [criteria.towns, criteria.state]);
   // Initialize default statuses if not set
   useEffect(() => {
     if (!criteria.statuses || criteria.statuses.length === 0) {
@@ -262,6 +276,59 @@ export const UnifiedPropertySearch = ({
           />
         </div>
       </div>
+
+      {/* Neighborhoods */}
+      {availableNeighborhoods.length > 0 && (
+        <Collapsible defaultOpen={(criteria.neighborhoods?.length ?? 0) > 0}>
+          <div className="bg-card rounded-lg shadow-sm border">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-sm">NEIGHBORHOODS</h3>
+                {(criteria.neighborhoods?.length ?? 0) > 0 && (
+                  <Badge variant="secondary" className="text-xs">{criteria.neighborhoods!.length}</Badge>
+                )}
+              </div>
+              <ChevronDown className="h-4 w-4" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 space-y-3 border-t">
+                <Input
+                  placeholder="Search neighborhoods..."
+                  value={neighborhoodSearch}
+                  onChange={(e) => setNeighborhoodSearch(e.target.value)}
+                  className="h-8 text-sm"
+                />
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {availableNeighborhoods
+                    .filter(n => n.toLowerCase().includes(neighborhoodSearch.toLowerCase()))
+                    .map((hood) => (
+                      <div key={hood} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`hood-${hood}`}
+                          checked={(criteria.neighborhoods || []).includes(hood)}
+                          onCheckedChange={() => {
+                            const current = criteria.neighborhoods || [];
+                            const updated = current.includes(hood)
+                              ? current.filter(n => n !== hood)
+                              : [...current, hood];
+                            updateCriteria({ neighborhoods: updated });
+                          }}
+                        />
+                        <label htmlFor={`hood-${hood}`} className="text-sm cursor-pointer">{hood}</label>
+                      </div>
+                    ))}
+                </div>
+                {(criteria.neighborhoods?.length ?? 0) > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => updateCriteria({ neighborhoods: [] })} className="text-xs">
+                    Clear neighborhoods
+                  </Button>
+                )}
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )}
 
       {/* Property Type */}
       <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>

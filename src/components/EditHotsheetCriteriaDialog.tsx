@@ -21,11 +21,11 @@ export function EditHotsheetCriteriaDialog({
   onUpdate,
 }: EditHotsheetCriteriaDialogProps) {
   const [criteria, setCriteria] = useState<SearchCriteria>(() => {
-    // Convert hotsheet criteria to UnifiedPropertySearch format
     return {
       state: initialCriteria.state || "MA",
       county: initialCriteria.county || "all",
       towns: initialCriteria.cities || [],
+      neighborhoods: initialCriteria.neighborhoods || [],
       showAreas: initialCriteria.showAreas !== false,
       propertyTypes: initialCriteria.propertyTypes || [],
       statuses: initialCriteria.statuses || ["new", "coming_soon", "active", "back_on_market"],
@@ -47,6 +47,7 @@ export function EditHotsheetCriteriaDialog({
         state: criteria.state,
         county: criteria.county,
         cities: criteria.towns,
+        neighborhoods: criteria.neighborhoods,
         showAreas: criteria.showAreas,
         propertyTypes: criteria.propertyTypes,
         statuses: criteria.statuses,
