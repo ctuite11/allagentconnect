@@ -253,9 +253,17 @@ const Navigation = () => {
                   <DropdownMenuSeparator className="bg-slate-200" />
                   <DropdownMenuLabel className="text-slate-500 text-xs">Agents</DropdownMenuLabel>
                   <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                   <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
                       <Users className="mr-2 h-4 w-4" />
                       Find an Agent
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator className="bg-slate-200" />
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Communication</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/messages")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Messages
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                 </>
@@ -528,7 +536,7 @@ const Navigation = () => {
                 {isAgentOrAdmin ? "Search" : "Search Homes"}
               </button>
               {/* Messages icon with unread badge */}
-              {isAgentOrAdmin && (
+              {(isAgentOrAdmin || role === "buyer") && (
                 <button 
                   onClick={() => navigate("/messages")}
                   className="relative inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors"
@@ -797,6 +805,23 @@ const Navigation = () => {
                     >
                       <Search className="w-4 h-4" />
                       Search Homes
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/messages");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center justify-between w-full py-2 text-slate-700 hover:text-slate-900 transition"
+                    >
+                      <span className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        Messages
+                      </span>
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
                     </button>
                   </>
                 )}
