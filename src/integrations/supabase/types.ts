@@ -3638,6 +3638,10 @@ export type Database = {
         }
         Returns: number
       }
+      create_buyer_hot_sheet: {
+        Args: { p_criteria: Json; p_name: string }
+        Returns: string
+      }
       delete_draft_listing: {
         Args: { p_listing_id: string }
         Returns: undefined
