@@ -163,6 +163,162 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
         <p>Log in to your dashboard to view and respond.</p>
       `);
 
+    case "new-message-notification": {
+      const senderName = String(variables.sender_name || "Someone");
+      const messageBodyRaw = String(variables.message_body || "");
+      const ctaUrl = String(variables.cta_url || "/messages");
+      const listingAddress = variables.listing_address ? String(variables.listing_address) : "";
+      const listingId = variables.listing_id ? String(variables.listing_id) : "";
+      const preview = (messageBodyRaw || "").replace(/\s+/g, " ").trim().slice(0, 90);
+
+      const escapeHtml = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+      const safeBody = escapeHtml(messageBodyRaw).replace(/\n/g, "<br>");
+      const safeSender = escapeHtml(senderName);
+
+      const initials = safeSender
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p) => p[0]?.toUpperCase() || "")
+        .join("") || "?";
+
+      const appUrl = process.env.APP_URL || "https://allagentconnect.com";
+      const ctaHref = `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`;
+      const preheader = escapeHtml(preview || "You have a new message.");
+      const contextLine = listingAddress
+        ? `About: ${escapeHtml(listingAddress)}`
+        : listingId
+          ? `About listing #${escapeHtml(listingId)}`
+          : "";
+
+      return `<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>New message from ${safeSender}</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .bg { background:#0b1220 !important; }
+      .card { background:#0f172a !important; }
+      .text { color:#e5e7eb !important; }
+      .muted { color:#94a3b8 !important; }
+      .border { border-color:#1f2937 !important; }
+      .quote { background:#0b1220 !important; border-color:#1f2937 !important; }
+      .chip { background:#0b1220 !important; border-color:#1f2937 !important; color:#cbd5e1 !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <!-- Preheader -->
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+    ${preheader}
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg" style="background:#f8fafc;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+
+          <!-- Wordmark Header -->
+          <tr>
+            <td style="padding:0 0 24px 0; text-align:center;">
+              <span style="font-size:18px; font-weight:800; letter-spacing:-0.03em;">
+                <span style="color:#0E56F5;">All Agent</span><span style="color:#94A3B8;">&nbsp;Connect</span>
+              </span>
+              <div style="width:40px; height:3px; background:#0E56F5; margin:8px auto 0; border-radius:2px;"></div>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td class="card" style="background:#ffffff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+                <!-- Sender row -->
+                <tr>
+                  <td style="padding:24px 24px 16px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="width:44px; vertical-align:top;">
+                          <div style="width:44px; height:44px; border-radius:50%; background:#0E56F5; color:#ffffff; font-size:16px; font-weight:700; line-height:44px; text-align:center;">
+                            ${escapeHtml(initials)}
+                          </div>
+                        </td>
+                        <td style="padding-left:14px; vertical-align:center;">
+                          <div class="text" style="font-size:16px; font-weight:700; color:#0f172a; line-height:1.3;">
+                            New message from ${safeSender}
+                          </div>
+                          ${contextLine ? `<div class="muted" style="font-size:13px; color:#64748b; margin-top:2px;">${contextLine}</div>` : ``}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Message body -->
+                <tr>
+                  <td style="padding:0 24px 20px;">
+                    <div class="quote" style="background:#f8fafc; border-left:4px solid #0E56F5; border-radius:0 8px 8px 0; padding:16px; font-size:15px; line-height:1.6; color:#334155;">
+                      ${safeBody || escapeHtml("You have a new message.")}
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- CTA -->
+                <tr>
+                  <td style="padding:0 24px 28px; text-align:center;">
+                    <a href="${ctaHref}" target="_blank" style="display:inline-block; background:#0F172A; color:#ffffff; font-size:15px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none; letter-spacing:0.01em;">
+                      <span style="color:#10B981; font-size:10px; vertical-align:middle;">&#9679;</span>&nbsp;&nbsp;View Conversation&nbsp;&nbsp;&rarr;
+                    </a>
+                    <div class="muted" style="font-size:11px; color:#94a3b8; margin-top:10px; word-break:break-all;">
+                      If the button doesn&rsquo;t work, open: ${escapeHtml(ctaHref)}
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Footer inside card -->
+                <tr>
+                  <td class="border" style="border-top:1px solid #e5e7eb; padding:20px 24px;">
+                    <div class="muted" style="font-size:12px; color:#94a3b8; text-align:center; line-height:1.6;">
+                      All Agent Connect &mdash; Private Agent Network<br>
+                      Questions? <a href="mailto:hello@allagentconnect.com" style="color:#0E56F5; font-weight:700;">hello@allagentconnect.com</a>
+                    </div>
+                    <div style="text-align:center; margin-top:10px;">
+                      <a href="mailto:hello@allagentconnect.com?subject=Remove%20my%20account" style="font-size:11px; color:#94a3b8; text-decoration:underline;">
+                        Remove my account
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Copyright -->
+          <tr>
+            <td style="padding:20px 0 0; text-align:center;">
+              <div class="muted" style="font-size:11px; color:#94a3b8;">
+                &copy; ${new Date().getFullYear()} All Agent Connect
+              </div>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+    }
+
     default:
       // Fallback: use html from variables or a simple message
       return wrapHtml(variables.contentHtml || variables.message || `<p>Email template: ${template}</p>`);
