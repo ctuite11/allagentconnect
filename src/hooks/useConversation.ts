@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
 
 interface Message {
   id: string;
@@ -47,20 +48,6 @@ export function useConversation(conversationId: string | undefined) {
 
       const otherUserId = convo.agent_a_id === user.id ? convo.agent_b_id : convo.agent_a_id;
 
-      // Get other user's profile
-      const { data: profile } = await supabase
-        .from("agent_profiles")
-        .select("first_name, last_name")
-        .eq("id", otherUserId)
-        .maybeSingle();
-
-      setDetails({
-        id: convo.id,
-        otherUserId,
-        otherUserName: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown Agent",
-        listingId: convo.listing_id,
-      });
-
       // Get messages
       const { data: msgs, error: msgsError } = await supabase
         .from("conversation_messages")
@@ -74,25 +61,35 @@ export function useConversation(conversationId: string | undefined) {
         return;
       }
 
-      // Get sender profiles for all unique senders
+      // Resolve all participant names (agents + buyers) in one pass
       const senderIds = [...new Set((msgs || []).map((m) => m.sender_agent_id))];
-      const { data: senderProfiles } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name")
-        .in("id", senderIds);
+      const allUserIds = [...new Set([otherUserId, ...senderIds])];
+      const profileMap = await resolveDisplayProfiles(allUserIds);
 
-      const senderMap = new Map(
-        (senderProfiles || []).map((p) => [p.id, `${p.first_name} ${p.last_name}`])
-      );
+      const otherProfile = profileMap.get(otherUserId);
+      setDetails({
+        id: convo.id,
+        otherUserId,
+        otherUserName: otherProfile
+          ? `${otherProfile.first_name ?? ""} ${otherProfile.last_name ?? ""}`.trim() || "Unknown User"
+          : "Unknown User",
+        listingId: convo.listing_id,
+      });
 
-      const formattedMessages: Message[] = (msgs || []).map((m) => ({
-        id: m.id,
-        senderId: m.sender_agent_id,
-        senderName: senderMap.get(m.sender_agent_id) || "Unknown",
-        body: m.body,
-        createdAt: m.created_at,
-        isOwn: m.sender_agent_id === user.id,
-      }));
+      const formattedMessages: Message[] = (msgs || []).map((m) => {
+        const profile = profileMap.get(m.sender_agent_id);
+        const name = profile
+          ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown User"
+          : "Unknown User";
+        return {
+          id: m.id,
+          senderId: m.sender_agent_id,
+          senderName: name,
+          body: m.body,
+          createdAt: m.created_at,
+          isOwn: m.sender_agent_id === user.id,
+        };
+      });
 
       setMessages(formattedMessages);
 
@@ -130,17 +127,17 @@ export function useConversation(conversationId: string | undefined) {
         async (payload) => {
           const newMsg = payload.new as any;
 
-          // Get sender profile
-          const { data: profile } = await supabase
-            .from("agent_profiles")
-            .select("first_name, last_name")
-            .eq("id", newMsg.sender_agent_id)
-            .maybeSingle();
+          // Resolve sender name (agent or buyer)
+          const profileMap = await resolveDisplayProfiles([newMsg.sender_agent_id]);
+          const profile = profileMap.get(newMsg.sender_agent_id);
+          const name = profile
+            ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown User"
+            : "Unknown User";
 
           const message: Message = {
             id: newMsg.id,
             senderId: newMsg.sender_agent_id,
-            senderName: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown",
+            senderName: name,
             body: newMsg.body,
             createdAt: newMsg.created_at,
             isOwn: newMsg.sender_agent_id === user.id,
