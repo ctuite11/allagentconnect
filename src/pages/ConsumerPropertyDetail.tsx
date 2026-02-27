@@ -387,6 +387,7 @@ const ConsumerPropertyDetail = () => {
 
           {/* Action Bar */}
           <div className="flex flex-wrap gap-2 mb-6">
+            <FavoriteButton listingId={listing.id} size="sm" variant="outline" />
             <Button variant="outline" size="sm" onClick={handleShareLink} className="gap-2">
               <Share2 className="w-4 h-4" />
               Share
