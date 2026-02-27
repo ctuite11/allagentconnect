@@ -8,17 +8,29 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-function calculateBackoff(attempts: number): number {
-  return Math.min(3600, 30 * Math.pow(2, attempts));
+function json(body: unknown, init: ResponseInit = {}) {
+  return new Response(JSON.stringify(body), {
+    ...init,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+      ...(init.headers ?? {}),
+    },
+  });
 }
 
-/* ------------------------------------------------------------------ */
-/*  Main handler                                                       */
-/* ------------------------------------------------------------------ */
+function toErrorMessage(err: unknown) {
+  if (err instanceof Error) return err.message;
+  try {
+    return typeof err === "string" ? err : JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
+function computeBackoffSeconds(attemptsSoFar: number) {
+  return Math.min(3600, 30 * Math.pow(2, Math.max(0, attemptsSoFar)));
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,16 +43,73 @@ Deno.serve(async (req) => {
 
   if (!RESEND_API_KEY || !SUPABASE_URL || !SERVICE_KEY) {
     console.error("[process-email-queue] Missing env vars");
-    return new Response(JSON.stringify({ error: "config" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: "config" }, { status: 500 });
   }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+  // Best-effort event logger: never throws.
+  const logEvent = async (
+    jobId: string,
+    event: string,
+    detail: Record<string, unknown>,
+  ) => {
+    const { error } = await supabase.from("email_events").insert({
+      job_id: jobId,
+      event,
+      detail,
+    });
+
+    if (error) {
+      console.error(
+        `[process-email-queue] email_events insert failed (job ${jobId}, ${event}):`,
+        error,
+      );
+
+      try {
+        await supabase.from("email_events").insert({
+          job_id: jobId,
+          event: "event_insert_failed",
+          detail: {
+            original_event: event,
+            insert_error: error.message ?? error,
+            original_detail: detail,
+          },
+        });
+      } catch {
+        // swallow — console is the last resort
+      }
+    }
+  };
+
+  const safeUpdateJob = async (
+    jobId: string,
+    patch: Record<string, unknown>,
+    context: Record<string, unknown>,
+  ) => {
+    const { error } = await supabase
+      .from("email_jobs")
+      .update(patch)
+      .eq("id", jobId);
+
+    if (error) {
+      console.error(
+        `[process-email-queue] email_jobs update failed (job ${jobId}):`,
+        error,
+      );
+
+      await logEvent(jobId, "job_update_failed", {
+        patch,
+        update_error: error.message ?? error,
+        ...context,
+      });
+
+      return false;
+    }
+    return true;
+  };
+
   try {
-    // Claim jobs
     const { data: jobs, error: claimErr } = await supabase.rpc(
       "email_jobs_claim",
       { p_limit: 50 },
@@ -48,87 +117,130 @@ Deno.serve(async (req) => {
 
     if (claimErr) throw claimErr;
     if (!jobs || jobs.length === 0) {
-      return new Response(
-        JSON.stringify({ processed: 0, sent: 0, failed: 0 }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return json({ processed: 0, sent: 0, failed: 0, retried: 0 });
     }
 
     console.log(`[process-email-queue] Claimed ${jobs.length} jobs`);
 
     let sent = 0;
     let failed = 0;
+    let retried = 0;
     const CONCURRENCY = 5;
 
     for (let i = 0; i < jobs.length; i += CONCURRENCY) {
-      const batch = jobs.slice(i, i + CONCURRENCY);
+      const batch = (jobs as EmailJob[]).slice(i, i + CONCURRENCY);
 
       await Promise.all(
-        batch.map(async (job: EmailJob) => {
+        batch.map(async (job) => {
+          const startedAt = Date.now();
+
+          const template = job.payload?.template;
+          const to = job.payload?.to;
+
+          await logEvent(job.id, "processing_started", {
+            template,
+            to,
+            attempts: job.attempts,
+            max_attempts: job.max_attempts,
+          });
+
+          // Payload sanity check
+          if (!template || !to) {
+            const msg = `Invalid email payload: missing ${!to ? "to" : ""}${
+              !to && !template ? " and " : ""
+            }${!template ? "template" : ""}`;
+
+            await safeUpdateJob(
+              job.id,
+              { status: "failed", last_error: msg },
+              { stage: "payload_validation" },
+            );
+
+            await logEvent(job.id, "failed", {
+              error: msg,
+              template,
+              to,
+              attempts: job.attempts,
+              max_attempts: job.max_attempts,
+              duration_ms: Date.now() - startedAt,
+            });
+
+            failed++;
+            return;
+          }
+
           try {
             await sendEmail(job, RESEND_API_KEY);
 
-            await supabase
-              .from("email_jobs")
-              .update({ status: "sent" })
-              .eq("id", job.id);
+            await safeUpdateJob(
+              job.id,
+              { status: "sent" },
+              { stage: "mark_sent" },
+            );
 
-            await supabase.from("email_events").insert({
-              job_id: job.id,
-              event: "sent",
-              detail: {
-                to: job.payload.to,
-                template: job.payload.template,
-              },
+            await logEvent(job.id, "sent", {
+              template,
+              to,
+              duration_ms: Date.now() - startedAt,
             });
 
             sent++;
-          } catch (err: any) {
-            const msg = err.message || String(err);
-            console.error(`[process-email-queue] Job ${job.id} failed:`, msg);
+          } catch (err) {
+            const msg = toErrorMessage(err);
 
-            if (job.attempts < job.max_attempts) {
-              const backoff = calculateBackoff(job.attempts);
+            const attemptsSoFar = job.attempts ?? 0;
+            const nextAttempt = attemptsSoFar + 1;
+            const maxAttempts = job.max_attempts ?? 1;
+
+            console.error(
+              `[process-email-queue] Job ${job.id} failed:`,
+              msg,
+            );
+
+            if (nextAttempt < maxAttempts) {
+              const backoffSec = computeBackoffSeconds(attemptsSoFar);
               const runAfter = new Date(
-                Date.now() + backoff * 1000,
+                Date.now() + backoffSec * 1000,
               ).toISOString();
 
-              await supabase
-                .from("email_jobs")
-                .update({
-                  status: "queued",
-                  run_after: runAfter,
-                  last_error: msg,
-                })
-                .eq("id", job.id);
+              await safeUpdateJob(
+                job.id,
+                { status: "queued", run_after: runAfter, last_error: msg },
+                { stage: "schedule_retry" },
+              );
 
-              await supabase.from("email_events").insert({
-                job_id: job.id,
-                event: "retry_scheduled",
-                detail: {
-                  error: msg,
-                  attempt: job.attempts,
-                  next_run: runAfter,
-                },
+              await logEvent(job.id, "retry_scheduled", {
+                error: msg,
+                template,
+                to,
+                attempts: attemptsSoFar,
+                next_attempt: nextAttempt,
+                max_attempts: maxAttempts,
+                backoff_seconds: backoffSec,
+                run_after: runAfter,
+                duration_ms: Date.now() - startedAt,
               });
+
+              retried++;
             } else {
-              await supabase
-                .from("email_jobs")
-                .update({ status: "failed", last_error: msg })
-                .eq("id", job.id);
+              await safeUpdateJob(
+                job.id,
+                { status: "failed", last_error: msg },
+                { stage: "terminal_fail" },
+              );
 
-              await supabase.from("email_events").insert({
-                job_id: job.id,
-                event: "failed",
-                detail: {
-                  error: msg,
-                  attempts: job.attempts,
-                  max_attempts: job.max_attempts,
-                },
+              await logEvent(job.id, "failed", {
+                error: msg,
+                template,
+                to,
+                attempts: attemptsSoFar,
+                next_attempt: nextAttempt,
+                max_attempts: maxAttempts,
+                duration_ms: Date.now() - startedAt,
               });
-            }
 
-            failed++;
+              failed++;
+            }
           }
         }),
       );
@@ -139,18 +251,12 @@ Deno.serve(async (req) => {
     }
 
     console.log(
-      `[process-email-queue] Done: ${sent} sent, ${failed} failed/retried`,
+      `[process-email-queue] Done: ${sent} sent, ${failed} failed, ${retried} retried`,
     );
 
-    return new Response(
-      JSON.stringify({ processed: jobs.length, sent, failed }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  } catch (err: any) {
+    return json({ processed: jobs.length, sent, failed, retried });
+  } catch (err) {
     console.error("[process-email-queue] Error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: toErrorMessage(err) }, { status: 500 });
   }
 });
