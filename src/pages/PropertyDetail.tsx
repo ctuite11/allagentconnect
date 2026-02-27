@@ -154,6 +154,14 @@ const PropertyDetail = () => {
   const { user, role, loading: roleLoading } = useAuthRole();
   const isAgent = role === "agent";
   const isAdmin = role === "admin";
+  const isBuyer = role === "buyer";
+
+  // Redirect buyers to the buyer-safe detail page
+  useEffect(() => {
+    if (!roleLoading && isBuyer && id) {
+      navigate(`/consumer-property/${id}`, { replace: true });
+    }
+  }, [roleLoading, isBuyer, id, navigate]);
   
   // Check for client mode via URL query param or path suffix
   const searchParams = new URLSearchParams(location.search);

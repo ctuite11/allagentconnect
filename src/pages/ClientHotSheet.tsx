@@ -1028,7 +1028,7 @@ const ClientHotSheet = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedListings.map((listing) => (
                 <Card key={listing.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
-                  <div className="relative" onClick={() => navigate(`/consumer/property/${listing.id}`)}>
+                  <div className="relative" onClick={() => navigate(`/consumer-property/${listing.id}`)}>
                     <div className="absolute top-4 left-4 z-10" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedListings.has(listing.id)}
