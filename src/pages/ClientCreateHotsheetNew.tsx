@@ -13,7 +13,7 @@ import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/Unifi
 export default function ClientCreateHotsheetNew() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [agentId, setAgentId] = useState<string | null>(null);
+  const [hasActiveAgent, setHasActiveAgent] = useState(false);
   const [hotsheetName, setHotsheetName] = useState("");
   const [criteria, setCriteria] = useState<SearchCriteria>({
     state: "MA",
@@ -39,7 +39,7 @@ export default function ClientCreateHotsheetNew() {
       return;
     }
 
-    // Get client's primary agent from active relationship
+    // Check for active agent relationship (RPC handles resolution server-side)
     const { data: relationship } = await supabase
       .from("client_agent_relationships")
       .select("agent_id")
@@ -48,7 +48,7 @@ export default function ClientCreateHotsheetNew() {
       .maybeSingle();
 
     if (relationship) {
-      setAgentId(relationship.agent_id);
+      setHasActiveAgent(true);
     } else {
       toast.error("You need an active agent relationship to create saved searches");
       navigate("/client/dashboard");
@@ -74,7 +74,7 @@ export default function ClientCreateHotsheetNew() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agentId) {
+    if (!hasActiveAgent) {
       toast.error("No active agent found");
       return;
     }
@@ -103,23 +103,22 @@ export default function ClientCreateHotsheetNew() {
 
     const name = hotsheetName || generateAutoName();
 
-    const { data, error } = await supabase
-      .from("hot_sheets")
-      .insert({
-        user_id: agentId,
-        client_id: user.id,
-        name,
-        criteria: hotsheetCriteria,
-        is_active: true,
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc("create_buyer_hot_sheet", {
+      p_name: name,
+      p_criteria: hotsheetCriteria,
+    });
 
     setLoading(false);
 
     if (error) {
-      toast.error("Failed to create saved search");
-      console.error(error);
+      console.error("create_buyer_hot_sheet error:", error);
+      if (error.message?.includes("No active agent relationship")) {
+        toast.error("No active agent relationship found");
+      } else if (error.message?.includes("No CRM client record")) {
+        toast.error("Your agent hasn't added you as a client yet. Please ask them to add you first.");
+      } else {
+        toast.error("Failed to create saved search");
+      }
       return;
     }
 
@@ -165,7 +164,7 @@ export default function ClientCreateHotsheetNew() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button type="submit" disabled={loading || !agentId}>
+                  <Button type="submit" disabled={loading || !hasActiveAgent}>
                     {loading ? "Creating..." : "Create Saved Search"}
                   </Button>
                   <Button
