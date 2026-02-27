@@ -226,11 +226,11 @@ const App = () => (
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
                 <Route path="/analytics" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
                 <Route path="/analytics/:id" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
-                <Route path="/market-insights" element={<MarketInsights />} />
-                <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-                <Route path="/vendor/setup" element={<VendorSetup />} />
-                <Route path="/vendor/packages" element={<VendorPackages />} />
-                <Route path="/vendor/directory" element={<VendorDirectory />} />
+                <Route path="/market-insights" element={<RouteGuard requireRole="agent"><MarketInsights /></RouteGuard>} />
+                <Route path="/vendor/dashboard" element={<RouteGuard requireRole="agent"><VendorDashboard /></RouteGuard>} />
+                <Route path="/vendor/setup" element={<RouteGuard requireRole="agent"><VendorSetup /></RouteGuard>} />
+                <Route path="/vendor/packages" element={<RouteGuard requireRole="agent"><VendorPackages /></RouteGuard>} />
+                <Route path="/vendor/directory" element={<RouteGuard requireRole="agent"><VendorDirectory /></RouteGuard>} />
                 {/* Legacy consumer routes - redirect to auth */}
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />

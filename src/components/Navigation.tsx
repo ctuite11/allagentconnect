@@ -237,46 +237,71 @@ const Navigation = () => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.08)] rounded-xl z-[100]">
-              <DropdownMenuLabel className="text-slate-500 text-xs">Properties</DropdownMenuLabel>
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => navigate("/browse")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                  <Search className="mr-2 h-4 w-4" />
-                  Search
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/idx/search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                  <Search className="mr-2 h-4 w-4" />
-                  MLS Search
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/market-insights")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Market Insights
-                </DropdownMenuItem>
-                {user && (
-                  <DropdownMenuItem onClick={() => navigate("/favorites")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                    <Heart className="mr-2 h-4 w-4" />
-                    Favorites
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
-              
-              <DropdownMenuSeparator className="bg-slate-200" />
-              <DropdownMenuLabel className="text-slate-500 text-xs">Agents</DropdownMenuLabel>
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                  <Users className="mr-2 h-4 w-4" />
-                  Find an Agent
-                </DropdownMenuItem>
-                {user && isAgentOrAdmin && (
-                  <DropdownMenuItem onClick={() => navigate("/our-members")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                    <Users className="mr-2 h-4 w-4" />
-                    Referrals
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => navigate("/agent-search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                  <Search className="mr-2 h-4 w-4" />
-                  Agent Search
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
+              {role === "buyer" ? (
+                <>
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Properties</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/browse")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Search className="mr-2 h-4 w-4" />
+                      Search Homes
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/client/favorites")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Heart className="mr-2 h-4 w-4" />
+                      Favorites
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator className="bg-slate-200" />
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Agents</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Users className="mr-2 h-4 w-4" />
+                      Find an Agent
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Properties</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/browse")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Search className="mr-2 h-4 w-4" />
+                      Search
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/idx/search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Search className="mr-2 h-4 w-4" />
+                      MLS Search
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/market-insights")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Market Insights
+                    </DropdownMenuItem>
+                    {user && (
+                      <DropdownMenuItem onClick={() => navigate("/favorites")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                        <Heart className="mr-2 h-4 w-4" />
+                        Favorites
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator className="bg-slate-200" />
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Agents</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/find-agent")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Users className="mr-2 h-4 w-4" />
+                      Find an Agent
+                    </DropdownMenuItem>
+                    {user && isAgentOrAdmin && (
+                      <DropdownMenuItem onClick={() => navigate("/our-members")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                        <Users className="mr-2 h-4 w-4" />
+                        Referrals
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => navigate("/agent-search")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Search className="mr-2 h-4 w-4" />
+                      Agent Search
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              )}
               
               {user && isAgentOrAdmin && (
                 <>
@@ -338,26 +363,30 @@ const Navigation = () => {
                 </>
               )}
 
-              <DropdownMenuSeparator className="bg-slate-200" />
-              <DropdownMenuLabel className="text-slate-500 text-xs">Vendors</DropdownMenuLabel>
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => navigate("/vendor/directory")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                  <Building2 className="mr-2 h-4 w-4" />
-                  Vendor Directory
-                </DropdownMenuItem>
-                {user && (
-                  <>
-                    <DropdownMenuItem onClick={() => navigate("/vendor/packages")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                      <List className="mr-2 h-4 w-4" />
-                      Ad Packages
+              {role !== "buyer" && (
+                <>
+                  <DropdownMenuSeparator className="bg-slate-200" />
+                  <DropdownMenuLabel className="text-slate-500 text-xs">Vendors</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/vendor/directory")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                      <Building2 className="mr-2 h-4 w-4" />
+                      Vendor Directory
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/vendor/dashboard")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Vendor Dashboard
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuGroup>
+                    {user && (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate("/vendor/packages")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                          <List className="mr-2 h-4 w-4" />
+                          Ad Packages
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/vendor/dashboard")} className="text-slate-700 hover:text-slate-900 hover:bg-slate-50">
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          Vendor Dashboard
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuGroup>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -581,16 +610,18 @@ const Navigation = () => {
             <Search className="w-4 h-4" />
             {isAgentOrAdmin ? "Listing Search" : "Search Homes"}
           </button>
-          <button
-            onClick={() => {
-              navigate("/agent-search");
-              setIsMenuOpen(false);
-            }}
-            className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
-          >
-            <Search className="w-4 h-4" />
-            Agent Search
-          </button>
+          {role !== "buyer" && (
+            <button
+              onClick={() => {
+                navigate("/agent-search");
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full py-2 text-slate-700 hover:text-slate-900 transition"
+            >
+              <Search className="w-4 h-4" />
+              Agent Search
+            </button>
+          )}
           <button
             onClick={() => {
               navigate("/find-agent");
