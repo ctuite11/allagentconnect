@@ -4,10 +4,12 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "./LoadingScreen";
 import { authDebug } from "@/lib/authDebug";
 
+type AllowedRole = "agent" | "admin" | "buyer";
+
 type Props = {
   children: React.ReactElement;
   requireAuth?: boolean;
-  requireRole?: "agent" | "admin";
+  requireRole?: AllowedRole | AllowedRole[];
   requireVerified?: boolean;
 };
 
@@ -58,7 +60,8 @@ export const RouteGuard: React.FC<Props> = ({
     }
 
     // Role mismatch → route to correct dashboard
-    if (user && requireRole && role && role !== requireRole && role !== "admin") {
+    const roleAllowed = Array.isArray(requireRole) ? requireRole.includes(role as AllowedRole) : role === requireRole;
+    if (user && requireRole && role && !roleAllowed && role !== "admin") {
       if (role === "agent") {
         navigate("/agent-dashboard", { replace: true });
       } else if (role === "buyer") {
@@ -107,7 +110,8 @@ export const RouteGuard: React.FC<Props> = ({
   }
 
   // Role mismatch — navigated in effect
-  if (requireRole && role && user && role !== requireRole && role !== "admin") {
+  const roleMatchesRender = Array.isArray(requireRole) ? requireRole.includes(role as AllowedRole) : role === requireRole;
+  if (requireRole && role && user && !roleMatchesRender && role !== "admin") {
     return null;
   }
 

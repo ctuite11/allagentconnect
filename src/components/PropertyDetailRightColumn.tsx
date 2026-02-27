@@ -315,18 +315,31 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
     );
   }
 
-  const buildCommsUrl = () => {
-    const params = new URLSearchParams();
-    params.set("context", "listing");
-    if (listing?.id) params.set("listingId", listing.id);
-    if (listing?.address) params.set("address", listing.address);
-    if (stickyAgent?.id) {
-      params.set("toAgentId", stickyAgent.id);
-    } else {
-      params.set("toSupport", "1");
-      params.set("supportEmail", "hello@allagentconnect.com");
+  const handleContactAgent = async () => {
+    if (isStartingChat) return;
+    if (!viewerId) {
+      navigate("/auth");
+      return;
     }
-    return `/comms?${params.toString()}`;
+    setIsStartingChat(true);
+    try {
+      const supportUserId = import.meta.env.VITE_SUPPORT_USER_ID as string | undefined;
+      const recipientId = stickyAgent?.id ?? supportUserId;
+      if (!recipientId) {
+        toast.error("Support is not configured yet.");
+        navigate("/client/dashboard");
+        return;
+      }
+      const convId = await findOrCreateConversation(viewerId, recipientId, {
+        listingId: listing?.id ?? null,
+      });
+      if (!convId) throw new Error("No conversation id returned");
+      navigate(`/messages/${convId}`);
+    } catch {
+      toast.error("Couldn't start a message. Please try again.");
+    } finally {
+      setIsStartingChat(false);
+    }
   };
 
   return (
@@ -381,9 +394,10 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             <div className="grid grid-cols-1 gap-2 pt-2">
               <Button
                 className="w-full"
-                onClick={() => navigate(`/agent/${stickyAgent.id}`)}
+                onClick={handleContactAgent}
+                disabled={isStartingChat}
               >
-                Contact {stickyAgent.first_name}
+                {isStartingChat ? "Opening…" : `Message ${stickyAgent.first_name}`}
               </Button>
             </div>
           </CardContent>
@@ -399,8 +413,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             <p className="text-sm text-muted-foreground">
               Message your agent through the platform for details or to schedule a showing.
             </p>
-            <Button className="w-full" onClick={() => navigate(buildCommsUrl())}>
-              Message Support
+            <Button className="w-full" onClick={handleContactAgent} disabled={isStartingChat}>
+              {isStartingChat ? "Opening…" : "Message Your Agent"}
             </Button>
           </CardContent>
         </Card>
@@ -554,8 +568,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                   Message your agent through the platform for details or to schedule a showing.
                 </p>
                 <div className="grid grid-cols-1 gap-2">
-                  <Button className="w-full" onClick={() => navigate(buildCommsUrl())}>
-                    Message Your Agent
+                  <Button className="w-full" onClick={handleContactAgent} disabled={isStartingChat}>
+                    {isStartingChat ? "Opening…" : "Message Your Agent"}
                   </Button>
                   <Button variant="outline" className="w-full" onClick={() => navigate("/client/dashboard")}>
                     Back to Dashboard

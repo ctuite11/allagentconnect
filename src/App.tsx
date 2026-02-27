@@ -218,8 +218,8 @@ const App = () => (
                 <Route path="/hot-sheets/buyer/:clientId" element={<RouteGuard requireRole="agent"><HotSheetBuyerDetail /></RouteGuard>} />
                 <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
                 <Route path="/my-clients/:clientId/favorites" element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>} />
-                <Route path="/messages" element={<RouteGuard requireRole="agent"><Messages /></RouteGuard>} />
-                <Route path="/messages/:id" element={<RouteGuard requireRole="agent"><Conversation /></RouteGuard>} />
+                <Route path="/messages" element={<RouteGuard requireRole={["agent", "buyer"]}><Messages /></RouteGuard>} />
+                <Route path="/messages/:id" element={<RouteGuard requireRole={["agent", "buyer"]}><Conversation /></RouteGuard>} />
                 <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
