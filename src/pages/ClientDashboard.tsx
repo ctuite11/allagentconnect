@@ -266,11 +266,17 @@ export default function ClientDashboard() {
     <div className="min-h-screen bg-background pt-24">
       <main className="container mx-auto px-4 pb-12">
         <div className="max-w-6xl mx-auto space-y-8">
-          <div>
-            <PageTitle className="mb-2">My Dashboard</PageTitle>
-            <p className="text-muted-foreground">
-              Manage your hot sheets, favorites, and agent relationship
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <PageTitle className="mb-2">My Dashboard</PageTitle>
+              <p className="text-muted-foreground">
+                Manage your hot sheets, favorites, and agent relationship
+              </p>
+            </div>
+            <Button className="w-full sm:w-auto" onClick={() => navigate("/messages")}>
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Messages
+            </Button>
           </div>
 
           {/* Agent Card */}
