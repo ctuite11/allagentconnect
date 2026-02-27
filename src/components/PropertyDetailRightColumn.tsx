@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { 
   Phone, 
@@ -117,7 +118,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   // ========== Sticky agent resolution for buyer masking ==========
   const [stickyAgent, setStickyAgent] = useState<{ id: string; first_name: string; last_name: string; headshot_url: string | null; company: string | null; email: string; phone: string | null; cell_phone: string | null } | null>(null);
   const [stickyLoaded, setStickyLoaded] = useState(false);
-  const isBuyer = role !== "agent" && role !== "admin" && !isAgentView;
+  const isBuyer = role === "buyer" && !isAgentView;
 
   useEffect(() => {
     if (!isBuyer || isAgentView) {
@@ -298,9 +299,39 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   }
 
   // ========== CLIENT/PUBLIC VIEW ==========
+
+  // Loading guard — prevent listing-agent flash while sticky resolves
+  if (isBuyer && !stickyLoaded) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="py-8">
+            <Skeleton className="h-14 w-14 rounded-full mx-auto mb-4" />
+            <Skeleton className="h-4 w-32 mx-auto mb-2" />
+            <Skeleton className="h-4 w-24 mx-auto" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const buildCommsUrl = () => {
+    const params = new URLSearchParams();
+    params.set("context", "listing");
+    if (listing?.id) params.set("listingId", listing.id);
+    if (listing?.address) params.set("address", listing.address);
+    if (stickyAgent?.id) {
+      params.set("toAgentId", stickyAgent.id);
+    } else {
+      params.set("toSupport", "1");
+      params.set("supportEmail", "hello@allagentconnect.com");
+    }
+    return `/comms?${params.toString()}`;
+  };
+
   return (
     <div className="space-y-6">
-      {/* Listing Agent Card — masked for buyers with active sticky */}
+      {/* Agent Card — three-way branch */}
       {isBuyer && stickyAgent ? (
         <Card>
           <CardHeader>
@@ -355,6 +386,22 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                 Contact {stickyAgent.first_name}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      ) : isBuyer ? (
+        /* Generic fallback — buyer has no sticky agent, still hide listing agent */
+        <Card>
+          <CardContent className="py-6 text-center space-y-3">
+            <Avatar className="w-14 h-14 mx-auto">
+              <AvatarFallback className="text-lg">?</AvatarFallback>
+            </Avatar>
+            <p className="font-semibold text-lg">Need help with this property?</p>
+            <p className="text-sm text-muted-foreground">
+              Message your agent through the platform for details or to schedule a showing.
+            </p>
+            <Button className="w-full" onClick={() => navigate(buildCommsUrl())}>
+              Message Support
+            </Button>
           </CardContent>
         </Card>
       ) : agent && (
@@ -501,10 +548,28 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             <CardTitle className="text-lg">Interested in this property?</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Contact the listing agent for more information or to schedule a showing.
-            </p>
-            <Button className="w-full">Contact Agent</Button>
+            {isBuyer ? (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Message your agent through the platform for details or to schedule a showing.
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  <Button className="w-full" onClick={() => navigate(buildCommsUrl())}>
+                    Message Your Agent
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => navigate("/client/dashboard")}>
+                    Back to Dashboard
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Contact the listing agent for more information or to schedule a showing.
+                </p>
+                <Button className="w-full">Contact Agent</Button>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
