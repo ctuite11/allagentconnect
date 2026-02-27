@@ -169,9 +169,7 @@ const ClientAgentSettings = () => {
                     {agent.email && (
                       <div className="flex items-center gap-2 text-sm">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a href={`mailto:${agent.email}`} className="hover:underline">
-                          {agent.email}
-                        </a>
+                        <span>{agent.email}</span>
                       </div>
                     )}
                     {(agent.phone || agent.cell_phone) && (

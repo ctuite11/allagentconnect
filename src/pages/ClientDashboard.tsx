@@ -9,9 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, FileText, User, Mail, Phone, Eye, UserX } from "lucide-react";
+import { Heart, FileText, User, Mail, Phone, Eye, UserX, Plus, MessageSquare } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
+import { findOrCreateConversation } from "@/lib/startConversation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -301,10 +302,10 @@ export default function ClientDashboard() {
                         <p className="text-sm text-muted-foreground">{agent.company}</p>
                       )}
                       <div className="flex flex-col gap-1 mt-2">
-                        <a href={`mailto:${agent.email}`} className="flex items-center gap-2 text-sm hover:text-primary">
+                        <span className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Mail className="w-4 h-4" />
                           {agent.email}
-                        </a>
+                        </span>
                         {agent.phone && (
                           <a href={`tel:${(agent.phone ?? "").replace(/\D/g, "")}`} className="flex items-center gap-2 text-sm hover:text-primary">
                             <Phone className="w-4 h-4" />
@@ -315,7 +316,20 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Button onClick={() => window.location.href = `mailto:${agent.email}`}>
+                    <Button onClick={async () => {
+                      if (!currentUserId || !agent) return;
+                      try {
+                        const convId = await findOrCreateConversation(currentUserId, agent.id);
+                        if (convId) {
+                          navigate(`/messages/${convId}`);
+                        } else {
+                          toast.error("Couldn't start message. Please try again.");
+                        }
+                      } catch {
+                        toast.error("Couldn't start message. Please try again.");
+                      }
+                    }}>
+                      <MessageSquare className="w-4 h-4 mr-2" />
                       Contact {agent.first_name}
                     </Button>
                     <Button variant="outline" onClick={() => setShowEndDialog(true)}>
@@ -340,13 +354,24 @@ export default function ClientDashboard() {
           {/* Hot Sheets */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Your Hot Sheets
-              </CardTitle>
-              <CardDescription>
-                Property search alerts shared by your agent
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    My Hot Sheets
+                    {hotSheets.length > 0 && (
+                      <Badge variant="secondary" className="ml-1">{hotSheets.length}</Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Property search alerts shared by your agent
+                  </CardDescription>
+                </div>
+                <Button size="sm" onClick={() => navigate("/client/create-hotsheet")}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Hot Sheet
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {hotSheets.length > 0 ? (
@@ -395,9 +420,13 @@ export default function ClientDashboard() {
               ) : (
                 <div className="text-center py-10">
                   <FileText className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
-                  <p className="text-muted-foreground">
-                    If your agent shares a Hot Sheet with you, it will appear here.
+                  <p className="text-muted-foreground mb-4">
+                    No hot sheets yet. Create one to get property alerts, or ask your agent to share one.
                   </p>
+                  <Button onClick={() => navigate("/client/create-hotsheet")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Hot Sheet
+                  </Button>
                 </div>
               )}
             </CardContent>
