@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.network-intelligence-aggregates]
 verify_jwt = false
+
+[functions.kick-email-queue]
+verify_jwt = false

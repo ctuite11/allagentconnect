@@ -180,6 +180,9 @@ export function useConversation(conversationId: string | undefined) {
           return false;
         }
 
+        // Fire-and-forget: kick the email queue so notification goes out immediately
+        supabase.functions.invoke("kick-email-queue").catch(() => {});
+
         return true;
       } catch (error) {
         console.error("Error sending message:", error);
