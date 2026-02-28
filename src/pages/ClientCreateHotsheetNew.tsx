@@ -112,7 +112,7 @@ export default function ClientCreateHotsheetNew() {
     }
 
     toast.success("Saved search created!");
-    navigate(`/client/hot-sheets/${data}`);
+    navigate("/client/dashboard");
   };
 
   return (
