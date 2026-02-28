@@ -240,6 +240,8 @@ const App = () => (
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
                 <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
                 <Route path="/client/hotsheets/new" element={<RouteGuard requireAuth><ClientCreateHotsheetNew /></RouteGuard>} />
+                <Route path="/client/create-hotsheet" element={<Navigate to="/client/hotsheets/new" replace />} />
+                <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/client/favorites" element={<RouteGuard requireAuth><Favorites /></RouteGuard>} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />

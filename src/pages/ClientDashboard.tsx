@@ -373,7 +373,7 @@ export default function ClientDashboard() {
                     Property search alerts shared by your agent
                   </CardDescription>
                 </div>
-                <Button size="sm" onClick={() => navigate("/client/create-hotsheet")}>
+                <Button size="sm" onClick={() => navigate("/client/hotsheets/new")}>
                   <Plus className="w-4 h-4 mr-2" />
                   Create Hot Sheet
                 </Button>
@@ -429,7 +429,7 @@ export default function ClientDashboard() {
                   <p className="text-muted-foreground mb-4">
                     No hot sheets yet. Create one to get property alerts, or ask your agent to share one.
                   </p>
-                  <Button onClick={() => navigate("/client/create-hotsheet")}>
+                  <Button onClick={() => navigate("/client/hotsheets/new")}>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Hot Sheet
                   </Button>
