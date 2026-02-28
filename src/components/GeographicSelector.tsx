@@ -301,7 +301,7 @@ export function GeographicSelector({
 
                     return (
                       <div key={city}>
-                        <div className="flex items-center space-x-2 py-1.5 px-1 rounded hover:bg-accent">
+                        <div className="flex items-center space-x-2 py-1.5 px-1 rounded hover:bg-zinc-50">
                           {hasNeighborhoods ? (
                             <button
                               type="button"
@@ -309,7 +309,7 @@ export function GeographicSelector({
                                 e.stopPropagation();
                                 toggleCityExpand(city);
                               }}
-                              className="p-0.5 hover:bg-accent rounded"
+                              className="p-0.5 hover:bg-zinc-50 rounded"
                             >
                               <ChevronRight className={cn(
                                 "h-4 w-4 transition-transform",
@@ -346,7 +346,7 @@ export function GeographicSelector({
                               return (
                                 <div 
                                   key={`${city}-${neighborhood}`}
-                                  className="flex items-center space-x-2 py-1 px-1 rounded hover:bg-accent"
+                                  className="flex items-center space-x-2 py-1 px-1 rounded hover:bg-zinc-50"
                                 >
                                   <Checkbox
                                     id={`neighborhood-${city}-${neighborhood}`}

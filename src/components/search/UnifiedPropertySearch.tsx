@@ -369,7 +369,7 @@ export const UnifiedPropertySearch = ({
                       key={type.value}
                       onClick={() => togglePropertyType(type.value)}
                       className={cn(
-                        "flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all",
+                        "flex items-center gap-2 p-3 rounded-2xl border-2 cursor-pointer transition-all",
                         isSelected
                           ? "border-zinc-400 bg-zinc-50"
                           : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
