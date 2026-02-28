@@ -1,63 +1,43 @@
 
+Goal: eliminate remaining client hot sheet 404s by adding legacy route compatibility and normalizing client-side navigation paths.
 
-## Problem
+Implementation steps:
+1) Update client dashboard create-entry links to current route
+- File: `src/pages/ClientDashboard.tsx`
+- Replace both `navigate("/client/create-hotsheet")` calls with `navigate("/client/hotsheets/new")`.
+- Keep existing post-create redirect to `"/client/dashboard"` in `ClientCreateHotsheetNew.tsx`.
 
-`buildCommsUrl()` in `PropertyDetailRightColumn.tsx` generates `/comms?...` — a route that does not exist. All actual messaging routes (`/messages`, `/messages/:id`, `/communications`) are agent-gated via `RouteGuard requireRole="agent"`, so buyers are blocked.
+2) Add legacy create-route redirect in router
+- File: `src/App.tsx`
+- Add a compatibility route:
+  - `path="/client/create-hotsheet"` → `<Navigate to="/client/hotsheets/new" replace />`
+- Place it near existing client routes so old bookmarks/external links no longer 404.
 
-## Fix Plan
+3) Add legacy detail-route redirect for old UUID path
+- File: `src/App.tsx`
+- Add redirect route for stale URLs:
+  - `path="/client/hot-sheets/:id"` → `<Navigate to="/client/dashboard" replace />`
+- This safely handles previously generated bad links and avoids exposing/guessing token-based detail routes.
 
-### 1. Open `/messages` and `/messages/:id` to buyers
+4) Verify all client hot sheet navigation sources
+- Search and normalize any remaining usage of:
+  - `/client/create-hotsheet`
+  - `/client/hot-sheets/`
+- Ensure only these active destinations remain:
+  - create: `/client/hotsheets/new`
+  - open detail (token): `/client/hotsheet/:token`
+  - post-create fallback: `/client/dashboard`
 
-In `src/App.tsx`, change the two message routes from `requireRole="agent"` to allow both agents and buyers:
+5) End-to-end validation checklist
+- From `/client/dashboard`, click both “Create Hot Sheet” buttons (header + empty state) → lands on `/client/hotsheets/new`.
+- Submit create form successfully → lands on `/client/dashboard` with no 404.
+- Manually open legacy URLs:
+  - `/client/create-hotsheet` → redirected to `/client/hotsheets/new`
+  - `/client/hot-sheets/<anything>` → redirected to `/client/dashboard`
+- Confirm no NotFound page appears in this flow.
 
-```tsx
-// Before:
-<Route path="/messages" element={<RouteGuard requireRole="agent"><Messages /></RouteGuard>} />
-<Route path="/messages/:id" element={<RouteGuard requireRole="agent"><Conversation /></RouteGuard>} />
-
-// After:
-<Route path="/messages" element={<RouteGuard requireRole={["agent","buyer"]}><Messages /></RouteGuard>} />
-<Route path="/messages/:id" element={<RouteGuard requireRole={["agent","buyer"]}><Conversation /></RouteGuard>} />
-```
-
-*(Need to verify `RouteGuard` supports array — if not, a small update to accept `string | string[]`.)*
-
-### 2. Rewrite `buildCommsUrl()` to use `findOrCreateConversation` directly
-
-In `PropertyDetailRightColumn.tsx`, replace the URL-builder with the same pattern `ClientDashboard` already uses — call `findOrCreateConversation` and navigate to `/messages/${convId}`:
-
-```typescript
-const handleContactAgent = async () => {
-  if (isStartingChat) return;
-  setIsStartingChat(true);
-  try {
-    if (stickyAgent?.id && viewerId) {
-      const convId = await findOrCreateConversation(viewerId, stickyAgent.id, {
-        listingId: listing?.id ?? null,
-      });
-      if (convId) { navigate(`/messages/${convId}`); return; }
-    }
-    // Fallback: no sticky agent → support email flow or dashboard
-    navigate("/client/dashboard");
-  } catch {
-    toast.error("Couldn't start message. Please try again.");
-  } finally {
-    setIsStartingChat(false);
-  }
-};
-```
-
-Remove `buildCommsUrl()` entirely. Update all three Button `onClick` handlers (sticky-agent card, generic fallback, bottom fallback) to call `handleContactAgent`.
-
-### 3. Verify `RouteGuard` accepts array roles
-
-Quick check of `RouteGuard.tsx` — if `requireRole` only accepts a string, update the type to `string | string[]` and the check to `Array.isArray(requireRole) ? requireRole.includes(role) : requireRole === role`.
-
-### Files touched
-
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Open `/messages` routes to buyers |
-| `src/components/RouteGuard.tsx` | Accept array of roles (if needed) |
-| `src/components/PropertyDetailRightColumn.tsx` | Replace `buildCommsUrl()` with `handleContactAgent` using `findOrCreateConversation` |
-
+Technical details:
+- Root cause found: `ClientDashboard.tsx` still uses legacy path `/client/create-hotsheet` (not defined in routes), which triggers NotFound.
+- Current valid create route in `App.tsx`: `/client/hotsheets/new`.
+- Current valid client detail route is token-based only: `/client/hotsheet/:token`.
+- A UUID-style client detail URL (`/client/hot-sheets/:id`) is not currently resolvable; redirecting it is the minimal safe fix for today.
