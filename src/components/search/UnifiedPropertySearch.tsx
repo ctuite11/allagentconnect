@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp, Home, Building2, Users, MapPin, DollarSign, Bed
 import { GeographicSelector, GeographicSelection } from "@/components/GeographicSelector";
 import { cn } from "@/lib/utils";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
+import { aacStyles } from "@/ui/aacStyles";
 import {
   PROPERTY_TYPES as STATUS_PROPERTY_TYPES,
   AGENT_SEARCH_STATUSES,
@@ -87,6 +88,9 @@ interface UnifiedPropertySearchProps {
   mode?: "agent" | "consumer";
 }
 
+// AAC zinc card class (static, no hover lift for filter sections)
+const sectionCard = "bg-white rounded-2xl border border-zinc-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
+
 // Map property types to icons
 const PROPERTY_TYPES = [
   { value: "Single Family", label: "Single Family", icon: Home },
@@ -141,6 +145,7 @@ export const UnifiedPropertySearch = ({
     }
     return Array.from(allHoods).sort();
   }, [criteria.towns, criteria.state]);
+
   // Initialize default statuses if not set
   useEffect(() => {
     if (!criteria.statuses || criteria.statuses.length === 0) {
@@ -216,9 +221,9 @@ export const UnifiedPropertySearch = ({
     <div className="space-y-3">
       {/* Results Count */}
       {showResultsCount && resultsCount !== undefined && (
-        <div className="flex items-center justify-between p-4 bg-card rounded-lg border">
+        <div className={cn(sectionCard, "flex items-center justify-between p-4")}>
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary">{resultsCount}</span>
+            <span className="text-2xl font-bold text-zinc-900">{resultsCount}</span>
             <span className="text-muted-foreground">Results</span>
           </div>
           <div className="flex gap-2">
@@ -235,10 +240,10 @@ export const UnifiedPropertySearch = ({
       )}
 
       {/* Listing Type Toggle: For Sale / For Rent */}
-      <div className="bg-card rounded-lg shadow-sm border p-4">
+      <div className={cn(sectionCard, "p-4")}>
         <div className="flex items-center gap-2 mb-2">
-          <Home className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold text-sm">LISTING TYPE</h3>
+          <Home className="h-4 w-4 text-zinc-400" />
+          <h3 className="font-semibold text-sm text-zinc-900">Listing Type</h3>
         </div>
         <ToggleGroup
           type="single"
@@ -265,8 +270,8 @@ export const UnifiedPropertySearch = ({
         label="Location"
       />
 
-      {/* Zip Code - Separate input since GeographicSelector doesn't handle this */}
-      <div className="bg-card rounded-lg shadow-sm border p-4">
+      {/* Zip Code */}
+      <div className={cn(sectionCard, "p-4")}>
         <div className="space-y-2">
           <Label>Zip Code</Label>
           <Input
@@ -280,11 +285,11 @@ export const UnifiedPropertySearch = ({
       {/* Neighborhoods */}
       {availableNeighborhoods.length > 0 && (
         <Collapsible defaultOpen={(criteria.neighborhoods?.length ?? 0) > 0}>
-          <div className="bg-card rounded-lg shadow-sm border">
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+          <div className={sectionCard}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">NEIGHBORHOODS</h3>
+                <MapPin className="h-4 w-4 text-zinc-400" />
+                <h3 className="font-semibold text-sm text-zinc-900">Neighborhoods</h3>
                 {(criteria.neighborhoods?.length ?? 0) > 0 && (
                   <Badge variant="secondary" className="text-xs">{criteria.neighborhoods!.length}</Badge>
                 )}
@@ -292,7 +297,7 @@ export const UnifiedPropertySearch = ({
               <ChevronDown className="h-4 w-4" />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="p-4 space-y-3 border-t">
+              <div className="p-4 space-y-3 border-t border-zinc-200">
                 <Input
                   placeholder="Search neighborhoods..."
                   value={neighborhoodSearch}
@@ -332,16 +337,16 @@ export const UnifiedPropertySearch = ({
 
       {/* Property Type */}
       <Collapsible open={isPropertyTypeOpen} onOpenChange={setIsPropertyTypeOpen}>
-        <div className="bg-card rounded-lg shadow-sm border">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+        <div className={sectionCard}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
             <div className="flex items-center gap-2">
-              <Home className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">PROPERTY TYPE</h3>
+              <Home className="h-4 w-4 text-zinc-400" />
+              <h3 className="font-semibold text-sm text-zinc-900">Property Type</h3>
             </div>
             {isPropertyTypeOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="p-4 space-y-3 border-t">
+            <div className="p-4 space-y-3 border-t border-zinc-200">
               {/* Select All */}
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -366,8 +371,8 @@ export const UnifiedPropertySearch = ({
                       className={cn(
                         "flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all",
                         isSelected
-                          ? "border-neutral-400 bg-muted"
-                          : "border-border hover:border-neutral-400 hover:bg-muted"
+                          ? "border-zinc-400 bg-zinc-50"
+                          : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
                       )}
                     >
                       <Checkbox checked={isSelected} />
@@ -384,16 +389,16 @@ export const UnifiedPropertySearch = ({
 
       {/* Price */}
       <Collapsible open={isPriceOpen} onOpenChange={setIsPriceOpen}>
-        <div className="bg-card rounded-lg shadow-sm border">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+        <div className={sectionCard}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">PRICE</h3>
+              <DollarSign className="h-4 w-4 text-zinc-400" />
+              <h3 className="font-semibold text-sm text-zinc-900">Price</h3>
             </div>
             {isPriceOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="p-4 space-y-4 border-t">
+            <div className="p-4 space-y-4 border-t border-zinc-200">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Min Price</Label>
@@ -435,16 +440,16 @@ export const UnifiedPropertySearch = ({
 
       {/* Beds & Baths */}
       <Collapsible open={isBedsOpen} onOpenChange={setIsBedsOpen}>
-        <div className="bg-card rounded-lg shadow-sm border">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+        <div className={sectionCard}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
             <div className="flex items-center gap-2">
-              <Bed className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">BEDS & BATHS</h3>
+              <Bed className="h-4 w-4 text-zinc-400" />
+              <h3 className="font-semibold text-sm text-zinc-900">Beds & Baths</h3>
             </div>
             {isBedsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="p-4 space-y-4 border-t">
+            <div className="p-4 space-y-4 border-t border-zinc-200">
               {/* Bedrooms */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -491,15 +496,15 @@ export const UnifiedPropertySearch = ({
 
       {/* Status */}
       <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen}>
-        <div className="bg-card rounded-lg shadow-sm border">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+        <div className={sectionCard}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">STATUS</span>
+              <span className="text-sm font-semibold text-zinc-900">Status</span>
             </div>
             {isStatusOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="p-4 space-y-3 border-t">
+            <div className="p-4 space-y-3 border-t border-zinc-200">
               {/* Select All */}
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -538,16 +543,16 @@ export const UnifiedPropertySearch = ({
       {/* Agent-Only: List Date */}
       {mode === "agent" && (
         <Collapsible defaultOpen={false}>
-          <div className="bg-card rounded-lg shadow-sm border">
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+          <div className={sectionCard}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">LIST DATE</h3>
+                <Calendar className="h-4 w-4 text-zinc-400" />
+                <h3 className="font-semibold text-sm text-zinc-900">List Date</h3>
               </div>
               <ChevronDown className="h-4 w-4" />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="p-4 space-y-2 border-t">
+              <div className="p-4 space-y-2 border-t border-zinc-200">
                 <Label>Listed within</Label>
                 <Select
                   value={criteria.listDate || "any"}
@@ -573,16 +578,16 @@ export const UnifiedPropertySearch = ({
       {/* Agent-Only: Off-Market Window */}
       {mode === "agent" && (
         <Collapsible defaultOpen={false}>
-          <div className="bg-card rounded-lg shadow-sm border">
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+          <div className={sectionCard}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">OFF-MARKET WINDOW</h3>
+                <Calendar className="h-4 w-4 text-zinc-400" />
+                <h3 className="font-semibold text-sm text-zinc-900">Off-Market Window</h3>
               </div>
               <ChevronDown className="h-4 w-4" />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="p-4 space-y-2 border-t">
+              <div className="p-4 space-y-2 border-t border-zinc-200">
                 <Label>Sold/Expired within</Label>
                 <Select
                   value={criteria.offMarketWindow || "any"}
@@ -608,16 +613,16 @@ export const UnifiedPropertySearch = ({
       {/* Agent-Only: Open Houses */}
       {mode === "agent" && (
         <Collapsible defaultOpen={false}>
-          <div className="bg-card rounded-lg shadow-sm border">
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+          <div className={sectionCard}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
               <div className="flex items-center gap-2">
-                <Home className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">OPEN HOUSES</h3>
+                <Home className="h-4 w-4 text-zinc-400" />
+                <h3 className="font-semibold text-sm text-zinc-900">Open Houses</h3>
               </div>
               <ChevronDown className="h-4 w-4" />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="p-4 space-y-3 border-t">
+              <div className="p-4 space-y-3 border-t border-zinc-200">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="onlyOpenHouses"
@@ -656,16 +661,16 @@ export const UnifiedPropertySearch = ({
       {/* Agent-Only: Broker Tours */}
       {mode === "agent" && (
         <Collapsible defaultOpen={false}>
-          <div className="bg-card rounded-lg shadow-sm border">
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+          <div className={sectionCard}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-sm">BROKER TOURS</h3>
+                <Users className="h-4 w-4 text-zinc-400" />
+                <h3 className="font-semibold text-sm text-zinc-900">Broker Tours</h3>
               </div>
               <ChevronDown className="h-4 w-4" />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="p-4 space-y-3 border-t">
+              <div className="p-4 space-y-3 border-t border-zinc-200">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="onlyBrokerTours"
@@ -703,13 +708,13 @@ export const UnifiedPropertySearch = ({
 
       {/* Advanced Filters */}
       <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-        <div className="bg-card rounded-lg shadow-sm border">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
-            <h3 className="font-semibold text-sm">ADVANCED FILTERS</h3>
+        <div className={sectionCard}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
+            <h3 className="font-semibold text-sm text-zinc-900">Advanced Filters</h3>
             {isAdvancedOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="p-4 space-y-4 border-t">
+            <div className="p-4 space-y-4 border-t border-zinc-200">
               {/* Living Area */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
@@ -893,13 +898,13 @@ export const UnifiedPropertySearch = ({
 
       {/* Keywords */}
       <Collapsible open={isKeywordsOpen} onOpenChange={setIsKeywordsOpen}>
-        <div className="bg-card rounded-lg shadow-sm border">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
-            <h3 className="font-semibold text-sm">KEYWORD SEARCH</h3>
+        <div className={sectionCard}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
+            <h3 className="font-semibold text-sm text-zinc-900">Keyword Search</h3>
             {isKeywordsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="p-4 space-y-4 border-t">
+            <div className="p-4 space-y-4 border-t border-zinc-200">
               <div className="space-y-2">
                 <Label>Keywords</Label>
                 <Input
@@ -948,8 +953,8 @@ export const UnifiedPropertySearch = ({
       </Collapsible>
 
       {/* Map Placeholder */}
-      <div className="bg-card rounded-lg shadow-sm border p-6 text-center">
-        <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+      <div className={cn(sectionCard, "p-6 text-center")}>
+        <MapPin className="h-12 w-12 mx-auto mb-3 text-zinc-400" />
         <p className="text-sm text-muted-foreground">
           Map view will be available in future release.
         </p>

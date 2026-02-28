@@ -10,7 +10,7 @@
  */
 
 // Page Layout (prevents pt-* drift)
-export const page = "min-h-screen pt-20 px-6";
+export const page = "min-h-screen pt-24 px-6";
 export const pageInner = "mx-auto w-full max-w-6xl";
 
 // Page Container (legacy - prefer page + pageInner)

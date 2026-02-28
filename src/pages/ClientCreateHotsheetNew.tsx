@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
+import { PageShell } from "@/components/layout/PageShell";
+import { aacStyles } from "@/ui/aacStyles";
 
 export default function ClientCreateHotsheetNew() {
   const navigate = useNavigate();
@@ -38,9 +39,6 @@ export default function ClientCreateHotsheetNew() {
       navigate("/consumer/auth");
       return;
     }
-
-    // We only gate on login here.
-    // Relationship + CRM client are enforced by the RPC (source of truth).
     setHasActiveAgent(true);
   };
 
@@ -76,7 +74,6 @@ export default function ClientCreateHotsheetNew() {
       return;
     }
 
-    // Convert criteria to hotsheet format
     const hotsheetCriteria = {
       state: criteria.state,
       county: criteria.county,
@@ -116,60 +113,55 @@ export default function ClientCreateHotsheetNew() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-24">
-      <main className="container mx-auto px-4 pb-12">
-        <div className="max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New Saved Search</CardTitle>
-              <CardDescription>
-                Set up a saved search to receive notifications when matching properties
-                become available
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Search Name (optional)</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., Back Bay condos under $2M"
-                    value={hotsheetName}
-                    onChange={(e) => setHotsheetName(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Leave blank to auto-generate a name
-                  </p>
-                </div>
+    <PageShell>
+      <div className="max-w-4xl mx-auto pb-12">
+        <div className={aacStyles.card}>
+          <h2 className={aacStyles.sectionH2}>Create New Saved Search</h2>
+          <p className={`${aacStyles.cardDesc} mt-1 mb-6`}>
+            Set up a saved search to receive notifications when matching properties
+            become available
+          </p>
 
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-4">Search Criteria</h3>
-                  <UnifiedPropertySearch
-                    criteria={criteria}
-                    onCriteriaChange={setCriteria}
-                    showResultsCount={false}
-                    mode="consumer"
-                  />
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Search Name (optional)</Label>
+              <Input
+                id="name"
+                placeholder="e.g., Back Bay condos under $2M"
+                value={hotsheetName}
+                onChange={(e) => setHotsheetName(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank to auto-generate a name
+              </p>
+            </div>
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={loading || !hasActiveAgent}>
-                    {loading ? "Creating..." : "Create Saved Search"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate("/client/dashboard")}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+            <div className="border border-zinc-200 rounded-xl p-4">
+              <h3 className={`${aacStyles.settingsItemTitle} mb-4`}>Search Criteria</h3>
+              <UnifiedPropertySearch
+                criteria={criteria}
+                onCriteriaChange={setCriteria}
+                showResultsCount={false}
+                mode="consumer"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <button type="submit" disabled={loading || !hasActiveAgent} className={aacStyles.primaryButton}>
+                {loading ? "Creating..." : "Create Saved Search"}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/client/dashboard")}
+                className={aacStyles.neutralButton}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-      </main>
+      </div>
       <Footer />
-    </div>
+    </PageShell>
   );
 }

@@ -423,11 +423,11 @@ export function GeographicSelector({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className={className}>
-      <div className="bg-card rounded-lg shadow-sm border">
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-accent/50 transition-colors">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-zinc-50 transition-colors">
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
-            <h3 className="font-semibold text-sm">{label.toUpperCase()}</h3>
+            <MapPin className="h-4 w-4 text-zinc-400" />
+            <h3 className="font-semibold text-sm text-zinc-900">{label}</h3>
           </div>
           <div className="flex items-center gap-2">
             {!isOpen && (
@@ -437,7 +437,7 @@ export function GeographicSelector({
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className={cn("p-4 border-t", compact && "p-3")}>
+          <div className={cn("p-4 border-t border-zinc-200", compact && "p-3")}>
             {description && (
               <p className="text-sm text-muted-foreground mb-4">{description}</p>
             )}
