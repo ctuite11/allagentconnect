@@ -78,8 +78,11 @@ export default function Conversation() {
             <ArrowLeft className="w-5 h-5 text-zinc-600" />
           </button>
           <div
-            className="flex items-center gap-3 cursor-pointer hover:opacity-80"
-            onClick={() => details && navigate(`/agent/${details.otherUserId}`)}
+            className={cn(
+              "flex items-center gap-3",
+              details?.otherUserIsAgent && "cursor-pointer hover:opacity-80"
+            )}
+            onClick={() => details?.otherUserIsAgent && navigate(`/agent/${details.otherUserId}`)}
           >
             <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center">
               <User className="w-5 h-5 text-zinc-400" />

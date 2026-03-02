@@ -16,6 +16,7 @@ interface ConversationDetails {
   id: string;
   otherUserId: string;
   otherUserName: string;
+  otherUserIsAgent: boolean;
   listingId: string | null;
 }
 
@@ -80,6 +81,7 @@ export function useConversation(conversationId: string | undefined) {
         otherUserName: otherProfile
           ? `${otherProfile.first_name ?? ""} ${otherProfile.last_name ?? ""}`.trim() || "Unknown User"
           : "Unknown User",
+        otherUserIsAgent: otherProfile?.isAgent ?? false,
         listingId: convo.listing_id,
       });
 
