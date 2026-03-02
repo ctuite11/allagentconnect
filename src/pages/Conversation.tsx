@@ -12,22 +12,18 @@ import { cn } from "@/lib/utils";
 export default function Conversation() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { messages, details, loading, sending, sendMessage } = useConversation(id);
+  const { messages, details, loading, notFound, sending, sendMessage } = useConversation(id);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = async () => {
     if (!newMessage.trim()) return;
-
     const success = await sendMessage(newMessage.trim());
-    if (success) {
-      setNewMessage("");
-    }
+    if (success) setNewMessage("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -57,11 +53,11 @@ export default function Conversation() {
     );
   }
 
-  if (!details) {
+  if (notFound) {
     return (
       <PageShell>
         <div className="max-w-2xl mx-auto py-8 px-4 text-center">
-          <p className="text-slate-500">Conversation not found</p>
+          <p className="text-zinc-500">Conversation not found</p>
           <Button variant="outline" className="mt-4" onClick={() => navigate("/messages")}>
             Back to Messages
           </Button>
@@ -74,28 +70,28 @@ export default function Conversation() {
     <PageShell>
       <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
         {/* Header */}
-        <div className="flex items-center gap-3 py-4 px-4 border-b border-slate-200">
+        <div className="flex items-center gap-3 py-4 px-4 border-b border-zinc-200">
           <button
             onClick={() => navigate("/messages")}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-zinc-100 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <ArrowLeft className="w-5 h-5 text-zinc-600" />
           </button>
           <div
             className="flex items-center gap-3 cursor-pointer hover:opacity-80"
-            onClick={() => navigate(`/agent/${details.otherUserId}`)}
+            onClick={() => details && navigate(`/agent/${details.otherUserId}`)}
           >
-            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-              <User className="w-5 h-5 text-slate-400" />
+            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center">
+              <User className="w-5 h-5 text-zinc-400" />
             </div>
-            <span className="font-medium text-slate-900">{details.otherUserName}</span>
+            <span className="font-medium text-zinc-900">{details?.otherUserName}</span>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto py-4 px-4 space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-slate-400 py-8">
+            <div className="text-center text-zinc-400 py-8">
               No messages yet. Start the conversation!
             </div>
           ) : (
@@ -109,14 +105,14 @@ export default function Conversation() {
                     "max-w-[75%] rounded-2xl px-4 py-2.5",
                     msg.isOwn
                       ? "bg-emerald-600 text-white rounded-br-md"
-                      : "bg-slate-100 text-slate-900 rounded-bl-md"
+                      : "bg-zinc-100 text-zinc-900 rounded-bl-md"
                   )}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
                   <p
                     className={cn(
                       "text-xs mt-1",
-                      msg.isOwn ? "text-emerald-100" : "text-slate-400"
+                      msg.isOwn ? "text-emerald-100" : "text-zinc-400"
                     )}
                   >
                     {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
@@ -129,7 +125,7 @@ export default function Conversation() {
         </div>
 
         {/* Composer */}
-        <div className="p-4 border-t border-slate-200 bg-white">
+        <div className="p-4 border-t border-zinc-200 bg-white">
           <div className="flex items-end gap-2">
             <Textarea
               value={newMessage}

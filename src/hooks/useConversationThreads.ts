@@ -23,13 +23,11 @@ export function useConversationThreads() {
 
   const fetchThreads = useCallback(async () => {
     if (!user) {
-      setThreads([]);
-      setLoading(false);
+      // Don't set loading=false here — keep skeleton until auth resolves
       return;
     }
 
     try {
-      // Query the conversation_inbox view directly - no N+1!
       const { data: inboxData, error } = await supabase
         .from("conversation_inbox")
         .select("*")
@@ -47,11 +45,9 @@ export function useConversationThreads() {
         return;
       }
 
-      // Resolve profiles for all other users (agents + buyers)
       const otherUserIds = inboxData.map((row: any) => row.other_user_id);
       const profileMap = await resolveDisplayProfiles(otherUserIds);
 
-      // Map to thread format
       const formattedThreads: ConversationThread[] = inboxData.map((row: any) => {
         const profile = profileMap.get(row.other_user_id);
         return {
@@ -82,7 +78,7 @@ export function useConversationThreads() {
     fetchThreads();
   }, [fetchThreads]);
 
-  // Subscribe to realtime changes - only for messages where recipient is current user
+  // Subscribe to realtime changes
   useEffect(() => {
     if (!user) return;
 
