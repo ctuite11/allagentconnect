@@ -24,16 +24,24 @@ export function useConversation(conversationId: string | undefined) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [details, setDetails] = useState<ConversationDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [sending, setSending] = useState(false);
+
+  // Reset notFound when conversationId changes
+  useEffect(() => {
+    setNotFound(false);
+    setLoading(true);
+    setDetails(null);
+    setMessages([]);
+  }, [conversationId]);
 
   const fetchConversation = useCallback(async () => {
     if (!conversationId || !user) {
-      setLoading(false);
+      // Don't set loading=false here — keep skeleton until auth resolves
       return;
     }
 
     try {
-      // Get conversation details
       const { data: convo, error: convoError } = await supabase
         .from("conversations")
         .select("id, agent_a_id, agent_b_id, listing_id")
@@ -42,13 +50,13 @@ export function useConversation(conversationId: string | undefined) {
 
       if (convoError || !convo) {
         console.error("Error fetching conversation:", convoError);
+        setNotFound(true);
         setLoading(false);
         return;
       }
 
       const otherUserId = convo.agent_a_id === user.id ? convo.agent_b_id : convo.agent_a_id;
 
-      // Get messages
       const { data: msgs, error: msgsError } = await supabase
         .from("conversation_messages")
         .select("id, sender_agent_id, body, created_at")
@@ -61,7 +69,6 @@ export function useConversation(conversationId: string | undefined) {
         return;
       }
 
-      // Resolve all participant names (agents + buyers) in one pass
       const senderIds = [...new Set((msgs || []).map((m) => m.sender_agent_id))];
       const allUserIds = [...new Set([otherUserId, ...senderIds])];
       const profileMap = await resolveDisplayProfiles(allUserIds);
@@ -92,8 +99,9 @@ export function useConversation(conversationId: string | undefined) {
       });
 
       setMessages(formattedMessages);
+      setNotFound(false);
 
-      // Mark as read - update conversation_participants.last_read_at only
+      // Mark as read
       await supabase
         .from("conversation_participants")
         .update({ last_read_at: new Date().toISOString() })
@@ -127,7 +135,6 @@ export function useConversation(conversationId: string | undefined) {
         async (payload) => {
           const newMsg = payload.new as any;
 
-          // Resolve sender name (agent or buyer)
           const profileMap = await resolveDisplayProfiles([newMsg.sender_agent_id]);
           const profile = profileMap.get(newMsg.sender_agent_id);
           const name = profile
@@ -145,7 +152,6 @@ export function useConversation(conversationId: string | undefined) {
 
           setMessages((prev) => [...prev, message]);
 
-          // Mark as read if not own message - update only
           if (newMsg.sender_agent_id !== user.id) {
             await supabase
               .from("conversation_participants")
@@ -180,7 +186,6 @@ export function useConversation(conversationId: string | undefined) {
           return false;
         }
 
-        // Fire-and-forget: kick the email queue so notification goes out immediately
         supabase.functions.invoke("kick-email-queue").catch(() => {});
 
         return true;
@@ -194,5 +199,5 @@ export function useConversation(conversationId: string | undefined) {
     [conversationId, user, details, sending]
   );
 
-  return { messages, details, loading, sending, sendMessage, refetch: fetchConversation };
+  return { messages, details, loading, notFound, sending, sendMessage, refetch: fetchConversation };
 }
