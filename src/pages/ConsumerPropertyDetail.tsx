@@ -1,32 +1,67 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, Bed, Bath, Square, Calendar, ArrowLeft, Home, FileText, Video, Globe, AlertCircle, DollarSign, Phone, Mail, GraduationCap, Footprints, ChevronLeft, ChevronRight, Maximize2, Share2, Expand } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ArrowLeft,
+  MapPin,
+  Bed,
+  Bath,
+  Square,
+  Calendar,
+  Phone,
+  Mail,
+  Share2,
+  Home,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  Video,
+  Globe,
+  Maximize2,
+  Expand,
+  DollarSign,
+  Building2,
+  GraduationCap,
+  Footprints,
+  HelpCircle,
+} from "lucide-react";
 import { toast } from "sonner";
-import SocialShareMenu from "@/components/SocialShareMenu";
-import FavoriteButton from "@/components/FavoriteButton";
-import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
-import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
-import ContactAgentDialog from "@/components/ContactAgentDialog";
-import BuyerAgentCompensationInfo from "@/components/BuyerAgentCompensationInfo";
-import PropertyMap from "@/components/PropertyMap";
-import AdBanner from "@/components/AdBanner";
-import { buildDisplayAddress } from "@/lib/utils";
-import { ShareListingDialog } from "@/components/ShareListingDialog";
-import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
-
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
-import { PropertyDetailRightColumn } from "@/components/PropertyDetailRightColumn";
+import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
+import ContactAgentDialog from "@/components/ContactAgentDialog";
+import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
+import FavoriteButton from "@/components/FavoriteButton";
+import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
+// SaveToHotSheetDialog removed — requires search context props not available on single listing view
+import PropertyMap from "@/components/PropertyMap";
+import AdBanner from "@/components/AdBanner";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { getStatusConfig } from "@/constants/status";
 import { syncStickyFromDB } from "@/utils/agentTracking";
+
+const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
 interface AgentProfile {
   id: string;
@@ -40,67 +75,21 @@ interface AgentProfile {
   logo_url: string | null;
   company: string | null;
   office_name: string | null;
-}
-
-interface Listing {
-  id: string;
-  agent_id: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  latitude: number | null;
-  longitude: number | null;
-  property_type: string | null;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  square_feet: number | null;
-  lot_size: number | null;
-  year_built: number | null;
-  price: number;
-  description: string | null;
-  status: string;
-  listing_type: string;
-  commission_rate: number | null;
-  commission_type: string | null;
-  commission_notes: string | null;
-  disclosures: string[] | null;
-  property_features: string[] | null;
-  amenities: string[] | null;
-  additional_notes: string | null;
-  photos: any[] | null;
-  floor_plans: any[] | null;
-  attom_data: any;
-  walk_score_data: any;
-  schools_data: any;
-  value_estimate: any;
-  listing_number?: string | null;
-  created_at?: string;
-  active_date?: string | null;
-  condo_details?: any;
-  multi_family_details?: any;
-  commercial_details?: any;
-  annual_property_tax?: number | null;
-  tax_year?: number | null;
-  tax_assessment_value?: number | null;
-  num_fireplaces?: number | null;
-  garage_spaces?: number | null;
-  total_parking_spaces?: number | null;
-  neighborhood?: string | null;
-  video_url?: string | null;
-  virtual_tour_url?: string | null;
-  property_website_url?: string | null;
+  social_links?: {
+    website?: string;
+  };
 }
 
 const ConsumerPropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [listing, setListing] = useState<Listing | null>(null);
-  const [agent, setAgent] = useState<AgentProfile | null>(null);
+  const [listing, setListing] = useState<any | null>(null);
+  const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [isAgent, setIsAgent] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
 
   // Resolve sticky agent for buyer masking
@@ -114,47 +103,31 @@ const ConsumerPropertyDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Check if current user is an agent
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: agentProfile } = await supabase
-            .from("agent_profiles")
-            .select("id")
-            .eq("id", session.user.id)
-            .maybeSingle();
-          
-          setIsAgent(!!agentProfile);
-        }
-
-        const { data: listingData, error: listingError } = await supabase
+        const { data, error } = await supabase
           .from("listings")
           .select("*")
           .eq("id", id)
           .maybeSingle();
 
-        if (listingError) throw listingError;
-        
-        if (listingData) {
-          const listing = {
-            ...listingData,
-            disclosures: Array.isArray(listingData.disclosures) ? (listingData.disclosures as string[]) : [],
-            property_features: Array.isArray(listingData.property_features) ? (listingData.property_features as string[]) : [],
-            amenities: Array.isArray(listingData.amenities) ? (listingData.amenities as string[]) : [],
-            photos: Array.isArray(listingData.photos) ? (listingData.photos as any[]) : [],
-            floor_plans: Array.isArray(listingData.floor_plans) ? (listingData.floor_plans as any[]) : [],
-          } as Listing;
-          
-          setListing(listing);
+        if (error) throw error;
+
+        if (data) {
+          setListing({
+            ...data,
+            photos: Array.isArray(data.photos) ? data.photos as any[] : [],
+          });
 
           // Fetch agent profile
-          const { data: agentData, error: agentError } = await supabase
-            .from("agent_profiles")
-            .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url, logo_url")
-            .eq("id", listingData.agent_id)
-            .maybeSingle();
+          if (data.agent_id) {
+            const { data: profile } = await supabase
+              .from("agent_profiles")
+              .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url, logo_url, social_links")
+              .eq("id", data.agent_id)
+              .maybeSingle();
 
-          if (!agentError && agentData) {
-            setAgent(agentData as AgentProfile);
+            if (profile) {
+              setAgentProfile(profile as AgentProfile);
+            }
           }
         }
       } catch (error: any) {
@@ -165,14 +138,12 @@ const ConsumerPropertyDetail = () => {
       }
     };
 
-    if (id) {
-      fetchData();
-    }
+    if (id) fetchData();
   }, [id]);
 
   const handlePrevPhoto = () => {
     if (listing?.photos && listing.photos.length > 0) {
-      setCurrentPhotoIndex((prev) => 
+      setCurrentPhotoIndex((prev) =>
         prev === 0 ? listing.photos.length - 1 : prev - 1
       );
     }
@@ -180,43 +151,39 @@ const ConsumerPropertyDetail = () => {
 
   const handleNextPhoto = () => {
     if (listing?.photos && listing.photos.length > 0) {
-      setCurrentPhotoIndex((prev) => 
+      setCurrentPhotoIndex((prev) =>
         prev === listing.photos.length - 1 ? 0 : prev + 1
       );
     }
   };
 
-  const handleShareLink = async () => {
+  const handleMediaTabChange = (tab: 'photos' | 'video' | 'tour' | 'website') => {
+    setActiveMediaTab(tab);
+    if (tab === 'photos') setCurrentPhotoIndex(0);
+  };
+
+  const handleExpandGallery = () => setGalleryOpen(true);
+
+  const handleCopyLink = async () => {
     const shareUrl = getListingShareUrl(id!);
-    const { trackShare } = await import("@/lib/trackShare");
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: listing?.address || 'Property Listing',
-          text: `Check out this property: ${listing?.address}`,
-          url: shareUrl,
-        });
-        await trackShare(id!, 'native');
-        return;
-      } catch (error) {
-        // User cancelled or share failed, fall back to clipboard
-      }
-    }
-    
     navigator.clipboard.writeText(shareUrl);
     toast.success("Link copied to clipboard");
+    const { trackShare } = await import("@/lib/trackShare");
     await trackShare(id!, 'copy_link');
   };
 
+  const getStatusColor = (status: string) => {
+    const config = getStatusConfig(status, "listing");
+    return `${config.bg} ${config.text}`;
+  };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+  const getCompensationDisplay = () => {
+    if (!listing?.commission_rate) return null;
+    if (listing.commission_type === 'percentage') return `${listing.commission_rate}%`;
+    return `$${listing.commission_rate.toLocaleString()}`;
+  };
+
+  if (loading) return <LoadingScreen />;
 
   if (!listing) {
     return (
@@ -226,7 +193,7 @@ const ConsumerPropertyDetail = () => {
             <CardContent className="py-8">
               <p className="text-center text-muted-foreground">Listing not found</p>
               <div className="flex justify-center mt-4">
-                <Button onClick={() => navigate("/")}>Back to Home</Button>
+                <Button onClick={() => navigate("/browse")}>Back to Search</Button>
               </div>
             </CardContent>
           </Card>
@@ -235,19 +202,25 @@ const ConsumerPropertyDetail = () => {
     );
   }
 
-  // Helper to handle both string and object photo formats
   const getPhotoUrl = (photo: any): string => {
     if (typeof photo === 'string') return photo;
     return photo?.url || '/placeholder.svg';
   };
 
-  const mainPhoto = listing.photos && listing.photos.length > 0 
-    ? getPhotoUrl(listing.photos[currentPhotoIndex]) 
+  const mainPhoto = listing.photos && listing.photos.length > 0
+    ? getPhotoUrl(listing.photos[currentPhotoIndex])
     : '/placeholder.svg';
-  const canonicalUrl = getListingPublicUrl(id!);
+
+  const listDate = listing.active_date || listing.created_at;
+  const daysOnMarket = listDate
+    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const compensationDisplay = getCompensationDisplay();
+  const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
   return (
-    <div className="min-h-screen bg-background pt-16">
+    <div className="min-h-screen bg-background pt-20">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -260,952 +233,402 @@ const ConsumerPropertyDetail = () => {
         listingType={listing.listing_type}
         listingId={id!}
       />
-      <div className="container mx-auto px-4 py-8 pt-20" style={{ maxWidth: '1600px' }}>
-        <div className="mx-auto">
-          {/* Hero Image Section with Carousel Controls */}
-          <div className="relative mb-6">
-            <div className="relative h-[500px] rounded-lg overflow-hidden group">
-              <img 
-                src={mainPhoto} 
-                alt={listing.address} 
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={() => setGalleryOpen(true)}
-              />
-              
-              {/* Carousel Arrow Controls - Always Visible */}
-              {listing.photos && listing.photos.length > 1 && (
-                <>
-                  <button
-                    onClick={handlePrevPhoto}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-10"
-                    aria-label="Previous photo"
-                  >
-                    <ChevronLeft className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={handleNextPhoto}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-10"
-                    aria-label="Next photo"
-                  >
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
-                </>
-              )}
-              
-              {/* Expand Button */}
-              <button
-                onClick={() => setGalleryOpen(true)}
-                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all z-10"
-                aria-label="Expand gallery"
-              >
-                <Expand className="w-5 h-5" />
-              </button>
-              
-              {/* Photo Counter */}
-              {listing.photos && listing.photos.length > 0 && (
-                <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm z-10">
-                  {currentPhotoIndex + 1} / {listing.photos.length}
-                </div>
-              )}
-              
-              {/* Overlay buttons */}
-              <div className="absolute top-4 left-4 flex gap-2 z-10">
-                <button
-                  onClick={() => {
-                    const lastSearch = sessionStorage.getItem("buyer_last_search_url");
-                    navigate(lastSearch || "/browse");
-                  }}
-                  className="p-2 rounded-md bg-white/90 hover:bg-white transition-colors text-muted-foreground hover:text-foreground shadow-md"
-                  aria-label="Back to results"
-                  title="Back to Results"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => navigate("/client/dashboard")}
-                  className="p-2 rounded-md bg-white/90 hover:bg-white transition-colors text-muted-foreground hover:text-foreground shadow-md"
-                  aria-label="Back to dashboard"
-                  title="Back to Dashboard"
-                >
-                  <Home className="h-5 w-5" />
-                </button>
-              </div>
 
-              {/* Status and Property Type Badges */}
-              <div className="absolute bottom-4 left-4 flex gap-2">
-                <Badge className="bg-emerald-600 text-white text-base px-4 py-2">
-                  {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-                </Badge>
-                {listing.property_type && (
-                  <Badge variant="secondary" className="text-base px-4 py-2">
-                    {listing.property_type}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
+      {/* Back Button Row */}
+      <div className="mx-auto max-w-6xl px-4 pb-2 flex items-center gap-2">
+        <button
+          onClick={() => {
+            const lastSearch = sessionStorage.getItem("buyer_last_search_url");
+            navigate(lastSearch || "/browse");
+          }}
+          className="p-2 -ml-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => navigate("/client/dashboard")}
+          className="p-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
+          aria-label="Back to dashboard"
+        >
+          <Home className="h-5 w-5" />
+        </button>
+      </div>
 
-          {/* Address and Price */}
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex items-start gap-3">
-              <MapPin className="w-6 h-6 text-primary mt-1" />
-              <div>
-                <h1 className="text-3xl font-bold mb-1">{buildDisplayAddress(listing)}</h1>
-                <p className="text-xl text-muted-foreground">
-                  {listing.city}, {listing.state} {listing.zip_code}
-                </p>
-                {(listing.neighborhood || listing.attom_data?.neighborhood) && (
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="text-sm">
-                      {listing.neighborhood || listing.attom_data?.neighborhood}
+      <main className="flex-1">
+        {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="flex flex-col lg:flex-row gap-6">
+
+            {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
+            <div className="lg:w-[68%]">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]">
+                <div className="absolute inset-0 bg-neutral-950">
+                  {/* Media Content */}
+                  {activeMediaTab === 'photos' && (
+                    <img
+                      src={mainPhoto}
+                      alt={listing.address}
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={handleExpandGallery}
+                    />
+                  )}
+                  {activeMediaTab === 'video' && listing.video_url && (
+                    <iframe src={listing.video_url} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  )}
+                  {activeMediaTab === 'tour' && listing.virtual_tour_url && (
+                    <iframe src={listing.virtual_tour_url} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  )}
+                  {activeMediaTab === 'website' && listing.property_website_url && (
+                    <iframe src={listing.property_website_url} className="w-full h-full" />
+                  )}
+
+                  {/* Status Badge & AAC ID - Top Left */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2">
+                    {listing.listing_number && (
+                      <Badge variant="outline" className="font-mono text-xs bg-white/90 backdrop-blur-sm">
+                        AAC #{listing.listing_number}
+                      </Badge>
+                    )}
+                    <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
+                      {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
                     </Badge>
                   </div>
-                )}
-                <div className="flex items-center gap-2 mt-1">
-                  {listing.listing_number && (
-                    <p className="text-sm text-muted-foreground font-mono">
-                      Listing #{listing.listing_number}
-                    </p>
-                  )}
-                  {(listing.active_date || listing.created_at) && (
+
+                  {/* Share + Favorite - Top Right */}
+                  <div className="absolute top-4 right-4 flex items-center gap-2">
+                    <FavoriteButton listingId={listing.id} size="icon" variant="secondary" className="rounded-full bg-black/60 hover:bg-black/80 text-white border-0 h-11 w-11" />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Share property">
+                          <Share2 className="w-6 h-6" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Facebook</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Twitter</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">LinkedIn</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">WhatsApp</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(`mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Email</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">Copy Link</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {/* Carousel Arrows */}
+                  {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
                     <>
-                      {listing.listing_number && (
-                        <span className="text-sm text-muted-foreground">•</span>
-                      )}
-                      <Badge variant="outline" className="text-xs">
-                        {(() => {
-                          const marketDate = listing.active_date || listing.created_at;
-                          const activeDate = new Date(marketDate!);
-                          const today = new Date();
-                          const diffTime = Math.abs(today.getTime() - activeDate.getTime());
-                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                          return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} on market`;
-                        })()}
-                      </Badge>
+                      <button onClick={handlePrevPhoto} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Previous photo">
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                      <button onClick={handleNextPhoto} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Next photo">
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
                     </>
+                  )}
+
+                  {/* Photo Counter */}
+                  {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 0 && (
+                    <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                      {currentPhotoIndex + 1} / {listing.photos.length}
+                    </div>
+                  )}
+
+                  {/* Expand Button */}
+                  {activeMediaTab === 'photos' && (
+                    <button onClick={handleExpandGallery} className="absolute bottom-20 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm" aria-label="Expand gallery">
+                      <Expand className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Media Type Tabs */}
+              <div className="flex items-center justify-between gap-2 mt-6">
+                <div className="flex items-center gap-2">
+                  <Button variant={activeMediaTab === 'photos' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('photos')} className="rounded-full">
+                    <Home className="w-4 h-4 mr-2" />Photos
+                  </Button>
+                  {listing.video_url && (
+                    <Button variant={activeMediaTab === 'video' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('video')} className="rounded-full">
+                      <Video className="w-4 h-4 mr-2" />Video
+                    </Button>
+                  )}
+                  {listing.virtual_tour_url && (
+                    <Button variant={activeMediaTab === 'tour' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('tour')} className="rounded-full">
+                      <Maximize2 className="w-4 h-4 mr-2" />3D Tour
+                    </Button>
+                  )}
+                  {listing.property_website_url && (
+                    <Button variant={activeMediaTab === 'website' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('website')} className="rounded-full">
+                      <Globe className="w-4 h-4 mr-2" />Website
+                    </Button>
+                  )}
+                </div>
+
+                {/* Price */}
+                <div className="text-primary font-bold text-lg">
+                  ${listing.price.toLocaleString()}
+                  {listing.square_feet && (
+                    <span className="text-sm font-normal text-muted-foreground ml-1">
+                      · ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sq ft
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Address + Stats */}
+              <div className="mt-4">
+                <h1 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                  {buildDisplayAddress(listing)}
+                  {listing.listing_type === 'for_rent' && (
+                    <span className="text-sm text-muted-foreground font-normal ml-2">(For Rent)</span>
+                  )}
+                </h1>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
+                  {listing.bedrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bed className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
+                      <span className="text-xs text-muted-foreground">Beds</span>
+                    </div>
+                  )}
+                  {listing.bathrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bath className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
+                      <span className="text-xs text-muted-foreground">Baths</span>
+                    </div>
+                  )}
+                  {listing.square_feet && (
+                    <div className="flex items-center gap-1">
+                      <Square className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground">Sq Ft</span>
+                    </div>
+                  )}
+                  {daysOnMarket !== null && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{daysOnMarket}</span>
+                      <span className="text-xs text-muted-foreground">DOM</span>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-4xl font-bold text-primary">
-                ${listing.price.toLocaleString()}
-              </p>
-              {listing.listing_type === 'for_rent' && (
-                <p className="text-muted-foreground">/month</p>
-              )}
-            </div>
-          </div>
 
-          {/* Action Bar */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            <FavoriteButton listingId={listing.id} size="sm" variant="outline" />
-            <Button variant="outline" size="sm" onClick={handleShareLink} className="gap-2">
-              <Share2 className="w-4 h-4" />
-              Share
-            </Button>
-            {listing.video_url && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.open(listing.video_url!, '_blank')}
-                className="gap-2"
-              >
-                <Video className="w-4 h-4" />
-                Video
-              </Button>
-            )}
-            {listing.virtual_tour_url && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.open(listing.virtual_tour_url!, '_blank')}
-                className="gap-2"
-              >
-                <Maximize2 className="w-4 h-4" />
-                Virtual Tour
-              </Button>
-            )}
-            {listing.property_website_url && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.open(listing.property_website_url!, '_blank')}
-                className="gap-2"
-              >
-                <Globe className="w-4 h-4" />
-                Property Website
-              </Button>
-            )}
-          </div>
+            {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
+            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
 
-          {/* Call to Action Buttons */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <ScheduleShowingDialog 
-              listingId={listing.id}
-              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-            />
-            <ContactAgentDialog 
-              listingId={listing.id}
-              agentId={stickyAgentId || listing.agent_id}
-              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-            />
-            {isAgent && (
-              <ShareListingDialog 
-                listingId={listing.id}
-                listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-              />
-            )}
-            {stickyAgentId ? (
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => navigate(`/agent/${stickyAgentId}`)}
-              >
-                View Your Agent
-              </Button>
-            ) : (
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => navigate(`/agent/${listing.agent_id}`)}
-              >
-                View Agent Profile
-              </Button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Property Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {listing.bedrooms && (
-                      <div className="flex flex-col items-center">
-                        <Bed className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.bedrooms}</span>
-                        <span className="text-sm text-muted-foreground">Bedrooms</span>
-                      </div>
-                    )}
-                    {listing.bathrooms && (
-                      <div className="flex flex-col items-center">
-                        <Bath className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.bathrooms}</span>
-                        <span className="text-sm text-muted-foreground">Bathrooms</span>
-                      </div>
-                    )}
-                    {listing.square_feet && (
-                      <div className="flex flex-col items-center">
-                        <Square className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.square_feet.toLocaleString()}</span>
-                        <span className="text-sm text-muted-foreground">Sq Ft</span>
-                      </div>
-                    )}
-                    {listing.year_built && (
-                      <div className="flex flex-col items-center">
-                        <Calendar className="h-8 w-8 text-primary mb-2" />
-                        <span className="text-2xl font-bold">{listing.year_built}</span>
-                        <span className="text-sm text-muted-foreground">Year Built</span>
-                      </div>
-                    )}
-                  </div>
-                  {listing.lot_size && !(listing.property_type?.toLowerCase().includes("condo")) && (
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Lot Size:</span>
-                        <span className="font-semibold">{listing.lot_size} acres</span>
+              {/* Listing Agent Card */}
+              {agentProfile && (
+                <Card className="rounded-3xl shadow-md border-2">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-16 h-16 border-2 border-border">
+                        {agentProfile.headshot_url ? (
+                          <AvatarImage src={agentProfile.headshot_url} />
+                        ) : (
+                          <AvatarFallback className="text-lg font-semibold bg-muted">
+                            {agentProfile.first_name[0]}{agentProfile.last_name[0]}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing Agent</p>
+                        <p className="font-bold text-lg leading-tight">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
+                        </p>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
 
-              {/* Description */}
-              {listing.description && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Property Description</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{listing.description}</p>
+                    <div className="space-y-2.5 text-sm">
+                      {agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                          <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
+                          <span className="text-muted-foreground text-xs ml-auto">Mobile</span>
+                        </a>
+                      )}
+                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
+                          <span className="text-muted-foreground text-xs ml-auto">Office</span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                          <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium truncate">{agentProfile.email}</span>
+                        </a>
+                      )}
+                      {agentProfile.social_links?.website && (
+                        <a href={agentProfile.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-primary hover:underline">
+                          <Globe className="w-4 h-4 flex-shrink-0" />
+                          <span className="font-medium">Website</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={stickyAgentId || listing.agent_id}
+                      listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                    />
                   </CardContent>
                 </Card>
               )}
 
-              {/* Property Features - combined from property_features + amenities, deduplicated */}
-              {(() => {
-                const features = listing.property_features || [];
-                const amenities = listing.amenities || [];
-                const combined = [...new Set([...features, ...amenities])];
-                if (combined.length === 0) return null;
+              {/* Brokerage Strip */}
+              <Card className="rounded-2xl shadow-sm border">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <img
+                        src={agentLogo}
+                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
+                        className="h-full w-full object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL; }}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Listing courtesy of</p>
+                      <p className="text-sm font-medium truncate">{agentProfile?.company || "Brokerage"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Buyer Actions */}
+              <Card className="rounded-2xl">
+                <CardContent className="py-4 px-4 space-y-2">
+                  <ScheduleShowingDialog
+                    listingId={listing.id}
+                    listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                  />
+                  {/* SaveToHotSheet not available on single listing view */}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+        {/* END HERO GRID */}
+
+        {/* ========== MAIN CONTENT BELOW ========== */}
+        <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* LEFT COLUMN - Main Content */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Overview/Description with Read More */}
+              {listing.description && (() => {
+                const MAX_CHARS = 650;
+                const full = listing.description || '';
+                const isLong = full.length > MAX_CHARS;
+                const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
+
                 return (
-                  <Card>
+                  <Card className="rounded-3xl">
                     <CardHeader>
-                      <CardTitle>Property Features</CardTitle>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <FileText className="w-5 h-5" />
+                        Overview
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {combined.map((feature, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-primary" />
-                            <span className="text-sm">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
+                    <CardContent className="text-sm leading-relaxed text-foreground space-y-4">
+                      <p className="whitespace-pre-wrap">{visibleText}</p>
+                      {isLong && (
+                        <button
+                          type="button"
+                          onClick={() => setDescriptionExpanded(v => !v)}
+                          className="text-primary font-medium text-sm"
+                        >
+                          {descriptionExpanded ? 'Read less' : 'Read more'}
+                        </button>
+                      )}
                     </CardContent>
                   </Card>
                 );
               })()}
-              {/* Unit Features */}
-              {(listing.disclosures?.find((d: string) => d.startsWith('Floors:')) || 
-                (listing.num_fireplaces !== null && listing.num_fireplaces !== undefined) ||
-                (listing.condo_details?.hoa_fee)) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Unit Features</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.disclosures?.find((d: string) => d.startsWith('Floors:')) && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Number of Floors</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Floors:'))?.replace('Floors: ', '')}</p>
-                        </div>
-                      )}
-                      {listing.num_fireplaces !== null && listing.num_fireplaces !== undefined && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Fireplaces</p>
-                          <p className="font-semibold">{listing.num_fireplaces}</p>
-                        </div>
-                      )}
-                      {listing.condo_details?.hoa_fee && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">HOA/Condo Fee</p>
-                          <p className="font-semibold">
-                            ${parseFloat(listing.condo_details.hoa_fee).toLocaleString()}/{listing.condo_details.hoa_fee_frequency || 'monthly'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
-              {/* Property Tax */}
-              {(listing.annual_property_tax || listing.tax_year || listing.tax_assessment_value) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Property Tax</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.annual_property_tax && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Annual Property Tax</p>
-                          <p className="font-semibold">${parseFloat(listing.annual_property_tax.toString()).toLocaleString()}</p>
-                        </div>
-                      )}
-                      {listing.tax_assessment_value && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Assessed Value</p>
-                          <p className="font-semibold">${parseFloat(listing.tax_assessment_value.toString()).toLocaleString()}</p>
-                        </div>
-                      )}
-                      {listing.tax_year && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Fiscal Year</p>
-                          <p className="font-semibold">{listing.tax_year}</p>
-                        </div>
-                      )}
-                      {listing.disclosures?.find((d: string) => d.startsWith('Residential Exemption:')) && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Residential Exemption</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Residential Exemption:'))?.replace('Residential Exemption: ', '')}</p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Basement Details */}
-              {listing.disclosures?.some((d: string) => d.startsWith('Basement Type:') || d.startsWith('Basement Features:') || d.startsWith('Basement Floor Type:')) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Basement Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {listing.disclosures.find((d: string) => d.startsWith('Basement Type:')) && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Basement Type</p>
-                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Basement Type:'))?.replace('Basement Type: ', '')}</p>
-                      </div>
-                    )}
-                    {listing.disclosures.find((d: string) => d.startsWith('Basement Features:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Basement Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Basement Features:'))?.replace('Basement Features: ', '').split(', ').map((feature: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {listing.disclosures.find((d: string) => d.startsWith('Basement Floor Type:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Floor Type</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Basement Floor Type:'))?.replace('Basement Floor Type: ', '').split(', ').map((type: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{type}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Foundation & Building Details */}
-              {listing.disclosures?.some((d: string) => d.startsWith('Lead Paint:') || d.startsWith('Handicap Access:') || d.startsWith('Foundation:')) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Foundation & Building Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.disclosures.find((d: string) => d.startsWith('Lead Paint:')) && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Lead Paint</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Lead Paint:'))?.replace('Lead Paint: ', '')}</p>
-                        </div>
-                      )}
-                      {listing.disclosures.find((d: string) => d.startsWith('Handicap Access:')) && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Handicap Access</p>
-                          <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Handicap Access:'))?.replace('Handicap Access: ', '')}</p>
-                        </div>
-                      )}
-                    </div>
-                    {listing.disclosures.find((d: string) => d.startsWith('Foundation:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Foundation</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Foundation:'))?.replace('Foundation: ', '').split(', ').map((type: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{type}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Parking & Garage Information */}
-              {(listing.garage_spaces || listing.total_parking_spaces || listing.disclosures?.some((d: string) => d.startsWith('Parking Features:') || d.startsWith('Parking Comments:') || d.startsWith('Garage Features:') || d.startsWith('Garage Comments:'))) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Parking & Garage</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.total_parking_spaces && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Total Parking Spaces</p>
-                          <p className="font-semibold">{listing.total_parking_spaces}</p>
-                        </div>
-                      )}
-                      {listing.garage_spaces && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Garage Spaces</p>
-                          <p className="font-semibold">{listing.garage_spaces}</p>
-                        </div>
-                      )}
-                    </div>
-                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Comments:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Parking Comments</p>
-                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Parking Comments:'))?.replace('Parking Comments: ', '')}</p>
-                      </div>
-                    )}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Parking Features:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Parking Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Parking Features:'))?.replace('Parking Features: ', '').split(', ').map((feature: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Comments:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Garage Comments</p>
-                        <p className="text-sm">{listing.disclosures.find((d: string) => d.startsWith('Garage Comments:'))?.replace('Garage Comments: ', '')}</p>
-                      </div>
-                    )}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Garage Features:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Garage Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Garage Features:'))?.replace('Garage Features: ', '').split(', ').map((feature: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Lot Information */}
-              {!(listing.property_type?.toLowerCase().includes("condo")) && listing.disclosures?.some((d: string) => d.startsWith('Lot Size Source:') || d.startsWith('Lot Description:')) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Lot Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {listing.disclosures.find((d: string) => d.startsWith('Lot Size Source:')) && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Lot Size Source</p>
-                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Lot Size Source:'))?.replace('Lot Size Source: ', '')}</p>
-                      </div>
-                    )}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Lot Description:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Lot Description</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.disclosures.find((d: string) => d.startsWith('Lot Description:'))?.replace('Lot Description: ', '').split(', ').map((desc: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{desc}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Condominium Details */}
-              {listing.property_type === "Condominium" && listing.condo_details && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Condominium Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.condo_details.unit_number && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Unit Number</p>
-                          <p className="font-semibold">{listing.condo_details.unit_number}</p>
-                        </div>
-                      )}
-                      {listing.condo_details.floor_level && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Floor Level</p>
-                          <p className="font-semibold">{listing.condo_details.floor_level}</p>
-                        </div>
-                      )}
-                      {listing.condo_details.total_units && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Total Units</p>
-                          <p className="font-semibold">{listing.condo_details.total_units}</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {listing.condo_details.hoa_fee && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">HOA Fee</p>
-                        <p className="font-semibold">
-                          ${parseFloat(listing.condo_details.hoa_fee).toLocaleString()}/{listing.condo_details.hoa_fee_frequency || 'month'}
-                        </p>
-                      </div>
-                    )}
-
-                    {listing.condo_details.pet_policy && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Pet Policy</p>
-                        <p className="font-semibold capitalize">{listing.condo_details.pet_policy.replace('_', ' ')}</p>
-                      </div>
-                    )}
-
-                    {listing.condo_details.building_amenities && listing.condo_details.building_amenities.length > 0 && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Building Amenities</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.condo_details.building_amenities.map((amenity: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{amenity}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Multi-Family Details */}
-              {listing.property_type === "Multi-Family" && listing.multi_family_details && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Multi-Family Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.multi_family_details.number_of_units && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Number of Units</p>
-                          <p className="font-semibold">{listing.multi_family_details.number_of_units}</p>
-                        </div>
-                      )}
-                      {listing.multi_family_details.parking_per_unit && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Parking Per Unit</p>
-                          <p className="font-semibold">{listing.multi_family_details.parking_per_unit}</p>
-                        </div>
-                      )}
-                      {listing.multi_family_details.occupancy_status && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Occupancy Status</p>
-                          <p className="font-semibold capitalize">{listing.multi_family_details.occupancy_status.replace('_', ' ')}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {listing.multi_family_details.unit_breakdown && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Unit Breakdown</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.multi_family_details.unit_breakdown}</p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                      {listing.multi_family_details.current_monthly_income && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Current Monthly Income</p>
-                          <p className="font-semibold text-green-600">
-                            ${parseFloat(listing.multi_family_details.current_monthly_income).toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-                      {listing.multi_family_details.potential_monthly_income && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Potential Monthly Income</p>
-                          <p className="font-semibold text-blue-600">
-                            ${parseFloat(listing.multi_family_details.potential_monthly_income).toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {listing.multi_family_details.laundry_type && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Laundry</p>
-                        <p className="font-semibold capitalize">{listing.multi_family_details.laundry_type.replace('_', ' ')}</p>
-                      </div>
-                    )}
-
-                    {listing.multi_family_details.separate_utilities && listing.multi_family_details.separate_utilities.length > 0 && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Separate Utilities</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.multi_family_details.separate_utilities.map((utility: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{utility}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Commercial Details */}
-              {listing.property_type === "Commercial" && listing.commercial_details && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Commercial Property Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {listing.commercial_details.space_type && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Space Type</p>
-                          <p className="font-semibold capitalize">{listing.commercial_details.space_type.replace('_', ' ')}</p>
-                        </div>
-                      )}
-                      {listing.commercial_details.lease_type && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Lease Type</p>
-                          <p className="font-semibold capitalize">{listing.commercial_details.lease_type.replace('_', ' ')}</p>
-                        </div>
-                      )}
-                      {listing.commercial_details.zoning && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Zoning</p>
-                          <p className="font-semibold">{listing.commercial_details.zoning}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {listing.commercial_details.lease_rate && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Lease Rate</p>
-                        <p className="font-semibold text-lg text-primary">
-                          ${parseFloat(listing.commercial_details.lease_rate).toLocaleString()} 
-                          {listing.commercial_details.lease_rate_per && 
-                            ` ${listing.commercial_details.lease_rate_per.replace('_', ' ')}`}
-                        </p>
-                      </div>
-                    )}
-
-                    {(listing.commercial_details.lease_term_min || listing.commercial_details.lease_term_max) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Lease Term</p>
-                        <p className="font-semibold">
-                          {listing.commercial_details.lease_term_min && listing.commercial_details.lease_term_max 
-                            ? `${listing.commercial_details.lease_term_min} - ${listing.commercial_details.lease_term_max} months`
-                            : listing.commercial_details.lease_term_min 
-                            ? `${listing.commercial_details.lease_term_min}+ months`
-                            : `Up to ${listing.commercial_details.lease_term_max} months`}
-                        </p>
-                      </div>
-                    )}
-
-                    {listing.commercial_details.current_tenant && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Current Tenant</p>
-                        <p className="font-semibold">{listing.commercial_details.current_tenant}</p>
-                      </div>
-                    )}
-
-                    {listing.commercial_details.lease_expiration && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">Lease Expiration</p>
-                        <p className="font-semibold">
-                          {new Date(listing.commercial_details.lease_expiration).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t">
-                      {listing.commercial_details.ceiling_height && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Ceiling Height</p>
-                          <p className="font-semibold">{listing.commercial_details.ceiling_height} ft</p>
-                        </div>
-                      )}
-                      {listing.commercial_details.loading_docks !== null && listing.commercial_details.loading_docks !== undefined && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Loading Docks</p>
-                          <p className="font-semibold">{listing.commercial_details.loading_docks}</p>
-                        </div>
-                      )}
-                      {listing.commercial_details.power_available && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Power Available</p>
-                          <p className="font-semibold">{listing.commercial_details.power_available}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {listing.commercial_details.allowed_business_types && listing.commercial_details.allowed_business_types.length > 0 && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Allowed Business Types</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.commercial_details.allowed_business_types.map((type: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{type}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {listing.commercial_details.tenant_responsibilities && listing.commercial_details.tenant_responsibilities.length > 0 && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Tenant Responsibilities</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {listing.commercial_details.tenant_responsibilities.map((resp: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{resp}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {listing.commercial_details.additional_features && listing.commercial_details.additional_features.length > 0 && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Additional Features</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {listing.commercial_details.additional_features.map((feature: string, index: number) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-sm">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Disclosures & Legal Information */}
-              {(listing.disclosures?.some((d: string) => d.startsWith('Seller Disclosure:') || d.startsWith('Disclosures:') || d.startsWith('Exclusions:')) || listing.additional_notes) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5" />
-                      Disclosures & Important Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {listing.disclosures?.find((d: string) => d.startsWith('Seller Disclosure:')) && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Seller Disclosure</p>
-                        <p className="font-semibold">{listing.disclosures.find((d: string) => d.startsWith('Seller Disclosure:'))?.replace('Seller Disclosure: ', '')}</p>
-                      </div>
-                    )}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Disclosures:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Additional Disclosures</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.disclosures.find((d: string) => d.startsWith('Disclosures:'))?.replace('Disclosures: ', '')}</p>
-                      </div>
-                    )}
-                    {listing.disclosures?.find((d: string) => d.startsWith('Exclusions:')) && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Exclusions</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.disclosures.find((d: string) => d.startsWith('Exclusions:'))?.replace('Exclusions: ', '')}</p>
-                      </div>
-                    )}
-                    {listing.additional_notes?.includes('Broker Comments:') && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">Broker Comments</p>
-                        <p className="text-sm whitespace-pre-wrap">{listing.additional_notes.split('Broker Comments:')[1]?.trim()}</p>
-                      </div>
-                    )}
-                    {listing.disclosures && listing.disclosures.filter((d: string) => 
-                      !d.startsWith('Seller Disclosure:') && 
-                      !d.startsWith('Disclosures:') && 
-                      !d.startsWith('Exclusions:') &&
-                      !d.startsWith('Residential Exemption:') &&
-                      !d.startsWith('Floors:') &&
-                      !d.startsWith('Basement Type:') &&
-                      !d.startsWith('Basement Features:') &&
-                      !d.startsWith('Basement Floor Type:') &&
-                      !d.startsWith('Lead Paint:') &&
-                      !d.startsWith('Handicap Access:') &&
-                      !d.startsWith('Foundation:') &&
-                      !d.startsWith('Parking Features:') &&
-                      !d.startsWith('Parking Comments:') &&
-                      !d.startsWith('Garage Features:') &&
-                      !d.startsWith('Garage Comments:') &&
-                      !d.startsWith('Lot Size Source:') &&
-                      !d.startsWith('Lot Description:')
-                    ).length > 0 && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">Other Disclosures</p>
-                        <div className="space-y-2">
-                          {listing.disclosures.filter((d: string) => 
-                            !d.startsWith('Seller Disclosure:') && 
-                            !d.startsWith('Disclosures:') && 
-                            !d.startsWith('Exclusions:') &&
-                            !d.startsWith('Residential Exemption:') &&
-                            !d.startsWith('Floors:') &&
-                            !d.startsWith('Basement Type:') &&
-                            !d.startsWith('Basement Features:') &&
-                            !d.startsWith('Basement Floor Type:') &&
-                            !d.startsWith('Lead Paint:') &&
-                            !d.startsWith('Handicap Access:') &&
-                            !d.startsWith('Foundation:') &&
-                            !d.startsWith('Parking Features:') &&
-                            !d.startsWith('Parking Comments:') &&
-                            !d.startsWith('Garage Features:') &&
-                            !d.startsWith('Garage Comments:') &&
-                            !d.startsWith('Lot Size Source:') &&
-                            !d.startsWith('Lot Description:')
-                          ).map((disclosure, index) => (
-                            <div key={index} className="flex items-start gap-2 text-sm">
-                              <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                              <span>{disclosure}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Additional Notes */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Additional Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{listing.additional_notes || "N/A"}</p>
-                </CardContent>
-              </Card>
-
-              {/* MLS-Style Detail Sections */}
-              <ListingDetailSections 
-                listing={listing} 
-                agent={agent}
+              {/* MLS-Style Detail Sections (shared component) */}
+              <ListingDetailSections
+                listing={listing}
+                agent={agentProfile}
                 isAgentView={false}
               />
 
               {/* Map */}
-              <Card>
+              <Card className="rounded-3xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <MapPin className="h-5 w-5" />
                     Location
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PropertyMap 
+                  <PropertyMap
                     address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
                     latitude={listing.latitude}
                     longitude={listing.longitude}
                   />
                 </CardContent>
               </Card>
+            </div>
+
+            {/* RIGHT COLUMN - Consumer content */}
+            <div className="space-y-6">
+              {/* Buyer Agent Compensation */}
+              {compensationDisplay && (
+                <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                      <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                        Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+                      </span>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="text-emerald-600 hover:text-emerald-800 ml-auto">
+                            <HelpCircle className="w-4 h-4" />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <DollarSign className="w-5 h-5 text-emerald-600" />
+                              Buyer Agent Compensation
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                            <p>This compensation is <strong className="text-foreground">paid by the seller</strong> and offered to buyer agents who bring qualified buyers.</p>
+                            <p><strong className="text-foreground">Is this negotiable?</strong><br />Yes, compensation terms may be negotiable. Discuss with the listing agent for details.</p>
+                            <p><strong className="text-foreground">Note:</strong> Actual compensation may vary based on your buyer representation agreement. Ask your agent about their fee structure.</p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Buyer Agent Showcase */}
+              <BuyerAgentShowcase
+                listingZip={listing.zip_code}
+                listingId={listing.id}
+              />
 
               {/* ATTOM Property Data */}
               {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
-                <Card>
+                <Card className="rounded-2xl">
                   <CardHeader>
-                    <CardTitle>Property Details</CardTitle>
+                    <CardTitle className="text-base">Property Data</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {listing.attom_data.property_type && (
@@ -1238,9 +661,9 @@ const ConsumerPropertyDetail = () => {
 
               {/* Schools */}
               {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
-                <Card>
+                <Card className="rounded-2xl">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
                       <GraduationCap className="h-5 w-5" />
                       Nearby Schools
                     </CardTitle>
@@ -1250,34 +673,20 @@ const ConsumerPropertyDetail = () => {
                       <div key={index} className="pb-3 border-b last:border-0 last:pb-0">
                         <div className="flex justify-between items-start mb-1">
                           <h4 className="font-semibold text-sm">{school.name}</h4>
-                          {school.rating && (
-                            <Badge variant="secondary">{school.rating}/10</Badge>
-                          )}
+                          {school.rating && <Badge variant="secondary">{school.rating}/10</Badge>}
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {school.level} • {school.distance} mi
-                        </p>
+                        <p className="text-xs text-muted-foreground">{school.level} • {school.distance} mi</p>
                       </div>
                     ))}
                   </CardContent>
                 </Card>
               )}
-            </div>
 
-            {/* Sidebar - Right Column */}
-            <PropertyDetailRightColumn 
-              listing={listing} 
-              agent={agent}
-              isAgentView={false}
-            />
-            
-            {/* Additional Sidebar Items */}
-            <div className="space-y-6">
               {/* Walk Score */}
               {listing.walk_score_data && (
-                <Card>
+                <Card className="rounded-2xl">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
                       <Footprints className="h-5 w-5" />
                       Walk Score
                     </CardTitle>
@@ -1312,12 +721,25 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Vendor Advertisement */}
+              {/* Fallback if no agent */}
+              {!agentProfile && (
+                <Card className="rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Interested in this property?</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">Contact the listing agent for more information or to schedule a showing.</p>
+                    <Button className="w-full">Contact Agent</Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Ad Banner */}
               <AdBanner placementZone="listing_sidebar" className="mt-4" />
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Photo Gallery Dialog */}
       {listing && listing.photos && (
