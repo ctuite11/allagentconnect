@@ -91,10 +91,23 @@ const ConsumerPropertyDetail = () => {
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
+  const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
 
   // Resolve sticky agent for buyer masking
   useEffect(() => {
-    syncStickyFromDB().then(setStickyAgentId);
+    syncStickyFromDB().then(async (agentId) => {
+      setStickyAgentId(agentId);
+      if (!agentId) {
+        setStickyAgentProfile(null);
+        return;
+      }
+      const { data } = await supabase
+        .from("agent_profiles")
+        .select("id, first_name, last_name, email, phone, cell_phone, title, headshot_url, logo_url, company, office_name, social_links")
+        .eq("id", agentId)
+        .maybeSingle();
+      setStickyAgentProfile(data as AgentProfile | null);
+    });
   }, []);
 
   // Track listing view
@@ -423,54 +436,54 @@ const ConsumerPropertyDetail = () => {
             {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
             <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
 
-              {/* Listing Agent Card */}
-              {agentProfile && (
+              {/* Your Agent Card (attribution masking) */}
+              {stickyAgentProfile ? (
                 <Card className="rounded-3xl shadow-md border-2">
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-4">
                       <Avatar className="w-16 h-16 border-2 border-border">
-                        {agentProfile.headshot_url ? (
-                          <AvatarImage src={agentProfile.headshot_url} />
+                        {stickyAgentProfile.headshot_url ? (
+                          <AvatarImage src={stickyAgentProfile.headshot_url} />
                         ) : (
                           <AvatarFallback className="text-lg font-semibold bg-muted">
-                            {agentProfile.first_name[0]}{agentProfile.last_name[0]}
+                            {stickyAgentProfile.first_name[0]}{stickyAgentProfile.last_name[0]}
                           </AvatarFallback>
                         )}
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing Agent</p>
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Your Agent</p>
                         <p className="font-bold text-lg leading-tight">
-                          {agentProfile.first_name} {agentProfile.last_name}
+                          {stickyAgentProfile.first_name} {stickyAgentProfile.last_name}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
+                          {stickyAgentProfile.title || 'Realtor'} · {stickyAgentProfile.company || "Brokerage"}
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-2.5 text-sm">
-                      {agentProfile.cell_phone && (
-                        <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                      {stickyAgentProfile.cell_phone && (
+                        <a href={`tel:${stickyAgentProfile.cell_phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
                           <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
+                          <span className="font-medium">{formatPhoneNumber(stickyAgentProfile.cell_phone)}</span>
                           <span className="text-muted-foreground text-xs ml-auto">Mobile</span>
                         </a>
                       )}
-                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
-                        <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                      {stickyAgentProfile.phone && stickyAgentProfile.phone !== stickyAgentProfile.cell_phone && (
+                        <a href={`tel:${stickyAgentProfile.phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
                           <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
+                          <span className="font-medium">{formatPhoneNumber(stickyAgentProfile.phone)}</span>
                           <span className="text-muted-foreground text-xs ml-auto">Office</span>
                         </a>
                       )}
-                      {agentProfile.email && (
-                        <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                      {stickyAgentProfile.email && (
+                        <a href={`mailto:${stickyAgentProfile.email}`} className="flex items-center gap-2.5 hover:text-primary transition">
                           <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <span className="font-medium truncate">{agentProfile.email}</span>
+                          <span className="font-medium truncate">{stickyAgentProfile.email}</span>
                         </a>
                       )}
-                      {agentProfile.social_links?.website && (
-                        <a href={agentProfile.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-primary hover:underline">
+                      {stickyAgentProfile.social_links?.website && (
+                        <a href={stickyAgentProfile.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-primary hover:underline">
                           <Globe className="w-4 h-4 flex-shrink-0" />
                           <span className="font-medium">Website</span>
                         </a>
@@ -484,27 +497,48 @@ const ConsumerPropertyDetail = () => {
                     />
                   </CardContent>
                 </Card>
+              ) : (
+                <Card className="rounded-3xl shadow-md border-2">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                        <HelpCircle className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Need help?</p>
+                        <p className="font-bold text-lg leading-tight">Contact support</p>
+                      </div>
+                    </div>
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={stickyAgentId || listing.agent_id}
+                      listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                    />
+                  </CardContent>
+                </Card>
               )}
 
               {/* Brokerage Strip */}
-              <Card className="rounded-2xl shadow-sm border">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                      <img
-                        src={agentLogo}
-                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
-                        className="h-full w-full object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL; }}
-                      />
+              {stickyAgentProfile && (
+                <Card className="rounded-2xl shadow-sm border">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img
+                          src={stickyAgentProfile.logo_url || DEFAULT_BROKERAGE_LOGO_URL}
+                          alt={`${stickyAgentProfile.company || 'Brokerage'} logo`}
+                          className="h-full w-full object-contain"
+                          onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL; }}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Courtesy of</p>
+                        <p className="text-sm font-medium truncate">{stickyAgentProfile.company || "Brokerage"}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Listing courtesy of</p>
-                      <p className="text-sm font-medium truncate">{agentProfile?.company || "Brokerage"}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Buyer Actions */}
               <Card className="rounded-2xl">
