@@ -1071,6 +1071,54 @@ export type Database = {
           },
         ]
       }
+      client_agent_messages: {
+        Row: {
+          agent_id: string
+          client_id: string
+          created_at: string
+          email_job_id: string | null
+          id: string
+          message: string
+          sender_user_id: string
+          subject: string
+        }
+        Insert: {
+          agent_id: string
+          client_id: string
+          created_at?: string
+          email_job_id?: string | null
+          id?: string
+          message: string
+          sender_user_id: string
+          subject: string
+        }
+        Update: {
+          agent_id?: string
+          client_id?: string
+          created_at?: string
+          email_job_id?: string | null
+          id?: string
+          message?: string
+          sender_user_id?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_agent_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_agent_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_with_relationship_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_agent_relationships: {
         Row: {
           agent_id: string
