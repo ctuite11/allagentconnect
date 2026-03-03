@@ -996,10 +996,54 @@ const PropertyDetail = () => {
                     <Send className="w-4 h-4 mr-2" />
                     Message All Matches
                   </Button>
-                </div>
               </div>
-              
-              {/* 50/50 Two-Column Layout - Equal Height Cards */}
+            </div>
+
+            {/* Buyer Agent Compensation - Green Box (moved up) */}
+            {compensationDisplay && (
+              <Card className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                      Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+                    </span>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="text-emerald-600 hover:text-emerald-800 ml-auto">
+                          <HelpCircle className="w-4 h-4" />
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <DollarSign className="w-5 h-5 text-emerald-600" />
+                            Buyer Agent Compensation
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                          <p>
+                            This compensation is <strong className="text-foreground">paid by the seller</strong> and 
+                            offered to buyer agents who bring qualified buyers.
+                          </p>
+                          <p>
+                            <strong className="text-foreground">Is this negotiable?</strong><br />
+                            Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
+                          </p>
+                          {listing.commission_notes && (
+                            <p className="bg-muted p-2 rounded text-foreground/80">
+                              <strong>Notes:</strong> {listing.commission_notes}
+                            </p>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* 50/50 Two-Column Layout - Equal Height Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* LEFT COLUMN (Blue): Showing Instructions */}
                 <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 h-full">
@@ -1111,49 +1155,6 @@ const PropertyDetail = () => {
                 </Card>
               </div>
 
-              {/* Buyer Agent Compensation - Green Box */}
-              {compensationDisplay && (
-                <Card className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
-                  <CardContent className="py-3 px-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                      <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
-                        Buyer Agent Compensation: {compensationDisplay} (paid by seller)
-                      </span>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button className="text-emerald-600 hover:text-emerald-800 ml-auto">
-                            <HelpCircle className="w-4 h-4" />
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <DollarSign className="w-5 h-5 text-emerald-600" />
-                              Buyer Agent Compensation
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-3 py-4 text-sm text-muted-foreground">
-                            <p>
-                              This compensation is <strong className="text-foreground">paid by the seller</strong> and 
-                              offered to buyer agents who bring qualified buyers.
-                            </p>
-                            <p>
-                              <strong className="text-foreground">Is this negotiable?</strong><br />
-                              Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
-                            </p>
-                            {listing.commission_notes && (
-                              <p className="bg-muted p-2 rounded text-foreground/80">
-                                <strong>Notes:</strong> {listing.commission_notes}
-                              </p>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </div>
         )}
