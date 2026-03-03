@@ -42,6 +42,7 @@ import {
   GraduationCap,
   Footprints,
   HelpCircle,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -60,6 +61,7 @@ import AdBanner from "@/components/AdBanner";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { getStatusConfig } from "@/constants/status";
 import { syncStickyFromDB } from "@/utils/agentTracking";
+import { findOrCreateConversation } from "@/lib/startConversation";
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
@@ -92,6 +94,39 @@ const ConsumerPropertyDetail = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
+
+  const handleMessageYourAgent = async () => {
+    try {
+      if (!stickyAgentId || !listing?.id) return;
+
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("auth.getUser error:", error);
+        return;
+      }
+
+      const userId = data?.user?.id;
+      if (!userId) {
+        navigate("/login");
+        return;
+      }
+
+      const conversationId = await findOrCreateConversation(
+        userId,
+        stickyAgentId,
+        { listingId: listing.id }
+      );
+
+      if (!conversationId) {
+        console.error("findOrCreateConversation returned no id");
+        return;
+      }
+
+      navigate(`/messages/${conversationId}`);
+    } catch (err) {
+      console.error("Failed to start conversation:", err);
+    }
+  };
 
   // Resolve sticky agent for buyer masking
   useEffect(() => {
@@ -490,11 +525,22 @@ const ConsumerPropertyDetail = () => {
                       )}
                     </div>
 
-                    <ContactAgentDialog
-                      listingId={listing.id}
-                      agentId={stickyAgentId || listing.agent_id}
-                      listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-                    />
+                    <div className="flex flex-col gap-2">
+                      <ContactAgentDialog
+                        listingId={listing.id}
+                        agentId={stickyAgentId!}
+                        listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                      />
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="w-full gap-2"
+                        onClick={handleMessageYourAgent}
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                        Message your agent
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ) : (
@@ -509,11 +555,6 @@ const ConsumerPropertyDetail = () => {
                         <p className="font-bold text-lg leading-tight">Contact support</p>
                       </div>
                     </div>
-                    <ContactAgentDialog
-                      listingId={listing.id}
-                      agentId={stickyAgentId || listing.agent_id}
-                      listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-                    />
                   </CardContent>
                 </Card>
               )}
