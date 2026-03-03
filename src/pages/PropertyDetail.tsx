@@ -166,7 +166,7 @@ const PropertyDetail = () => {
   // Check for client mode via URL query param or path suffix
   const searchParams = new URLSearchParams(location.search);
   const isClientMode = searchParams.get('view') === 'client' || location.pathname.endsWith('/client');
-  const isAgentView = isAgent && !isClientMode;
+  const isAgentView = (isAgent || isAdmin) && !isClientMode;
 
   // Can current user message the listing agent?
   const viewerId = user?.id;
