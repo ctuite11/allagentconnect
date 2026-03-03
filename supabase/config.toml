@@ -88,4 +88,6 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.kick-email-queue]
+
+[functions.send-client-agent-message]
 verify_jwt = false

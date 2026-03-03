@@ -273,6 +273,31 @@ export function renderEmailTemplate(
 </html>`;
     }
 
+    case "client-agent-message": {
+      const agentName = variables.agentName || "Agent";
+      const clientName = variables.clientName || "Your client";
+      const clientEmail = variables.clientEmail || "";
+      const msgSubject = variables.subject || "Message from your client via AllAgentConnect";
+      const msgBody = variables.message || "";
+
+      return wrapHtml(`
+        <h2>Message from Your Client</h2>
+        <p>Hi ${agentName},</p>
+        <p>${clientName}${clientEmail ? ` (${clientEmail})` : ""} sent you a message:</p>
+        <p><strong>Subject:</strong> ${msgSubject}</p>
+        <div class="quote-block">
+          <p>${String(msgBody).replace(/\n/g, "<br>")}</p>
+        </div>
+        <div class="cta-wrap">
+          <a href="mailto:${clientEmail}?subject=Re: ${encodeURIComponent(msgSubject)}" class="cta">
+            <span class="cta-dot"></span>Reply to Client<span class="cta-arrow">&rarr;</span>
+          </a>
+        </div>
+        <p style="font-size:13px;color:#71717a;margin-top:16px;">
+          Tip: You can also reply directly to this email to respond.
+        </p>`);
+    }
+
     default:
       return wrapHtml(
         variables.contentHtml ||

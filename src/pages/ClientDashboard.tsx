@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, FileText, User, Mail, Phone, Eye, UserX, Plus, MessageSquare } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
-import { findOrCreateConversation } from "@/lib/startConversation";
+import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,6 +71,8 @@ export default function ClientDashboard() {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [crmClientId, setCrmClientId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -105,6 +107,25 @@ export default function ClientDashboard() {
 
       if (agentData) {
         setAgent(agentData);
+
+        // Resolve CRM client ID via email bridge for Contact My Agent
+        const { data: buyerProfile } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", userId)
+          .maybeSingle();
+
+        const buyerEmail = buyerProfile?.email?.trim();
+        if (buyerEmail) {
+          const { data: crmRow } = await supabase
+            .from("clients")
+            .select("id")
+            .eq("agent_id", agentData.id)
+            .ilike("email", buyerEmail)
+            .maybeSingle();
+
+          setCrmClientId(crmRow?.id ?? null);
+        }
       }
     }
   };
@@ -322,20 +343,14 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Button onClick={async () => {
-                      if (!currentUserId || !agent) return;
-                      try {
-                        const convId = await findOrCreateConversation(currentUserId, agent.id);
-                        if (convId) {
-                          navigate(`/messages/${convId}`);
-                        } else {
-                          toast.error("Couldn't start message. Please try again.");
-                        }
-                      } catch {
-                        toast.error("Couldn't start message. Please try again.");
+                    <Button onClick={() => {
+                      if (!crmClientId) {
+                        toast.error("Unable to connect to your agent record.");
+                        return;
                       }
+                      setContactOpen(true);
                     }}>
-                      <MessageSquare className="w-4 h-4 mr-2" />
+                      <Mail className="w-4 h-4 mr-2" />
                       Contact {agent.first_name}
                     </Button>
                     <Button variant="outline" onClick={() => setShowEndDialog(true)}>
@@ -513,6 +528,16 @@ export default function ClientDashboard() {
           </Card>
         </div>
       </main>
+
+      {/* Contact My Agent Dialog */}
+      {crmClientId && (
+        <ContactMyAgentDialog
+          open={contactOpen}
+          onOpenChange={setContactOpen}
+          crmClientId={crmClientId}
+          agentDisplayName={agent?.first_name || "your agent"}
+        />
+      )}
 
       {/* End Relationship Dialog */}
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
