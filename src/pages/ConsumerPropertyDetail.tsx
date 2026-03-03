@@ -63,6 +63,29 @@ import { getStatusConfig } from "@/constants/status";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { findOrCreateConversation } from "@/lib/startConversation";
 
+// ATTRIBUTION MASKING (BUYER UI)
+// Buyers must NEVER contact listing.agent_id from this page.
+// Only the sticky agent is a valid recipient.
+type StickyAgentId = string & { __brand: "StickyAgentId" };
+
+function asStickyAgentId(id: string | null | undefined): StickyAgentId | null {
+  return id ? (id as StickyAgentId) : null;
+}
+
+function BuyerContactAgentDialog(props: {
+  listingId: string;
+  stickyAgentId: StickyAgentId;
+  listingAddress: string;
+}) {
+  return (
+    <ContactAgentDialog
+      listingId={props.listingId}
+      agentId={props.stickyAgentId}
+      listingAddress={props.listingAddress}
+    />
+  );
+}
+
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
 interface AgentProfile {
@@ -526,11 +549,16 @@ const ConsumerPropertyDetail = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <ContactAgentDialog
-                        listingId={listing.id}
-                        agentId={stickyAgentId!}
-                        listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-                      />
+                      {(() => {
+                        const stickyRecipient = asStickyAgentId(stickyAgentId);
+                        return stickyRecipient ? (
+                          <BuyerContactAgentDialog
+                            listingId={listing.id}
+                            stickyAgentId={stickyRecipient}
+                            listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                          />
+                        ) : null;
+                      })()}
                       <Button
                         variant="outline"
                         size="lg"
