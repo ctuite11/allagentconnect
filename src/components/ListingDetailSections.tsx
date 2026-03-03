@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Home, DollarSign, Building2, FileText, Calendar, Info } from "lucide-react";
+import { cleanBrokerComments } from "@/lib/listingFieldParsers";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
 
 interface ListingDetailSectionsProps {
@@ -331,20 +332,24 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
       )}
 
       {/* Agent-Only: Firm Remarks */}
-      {isAgentView && (
-        <Card className="rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base text-orange-900 dark:text-orange-100">
-              <FileText className="w-5 h-5" />
-              Firm Remarks
-              <Badge variant="outline" className="ml-2 text-xs">Agent Only</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap text-foreground/90">{listing.broker_comments || "N/A"}</p>
-          </CardContent>
-        </Card>
-      )}
+      {isAgentView && (() => {
+        const cleaned = cleanBrokerComments(listing.broker_comments);
+        if (!cleaned) return null;
+        return (
+          <Card className="rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base text-orange-900 dark:text-orange-100">
+                <FileText className="w-5 h-5" />
+                Firm Remarks
+                <Badge variant="outline" className="ml-2 text-xs">Agent Only</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-wrap text-foreground/90">{cleaned}</p>
+            </CardContent>
+          </Card>
+        );
+      })()}
     </>
   );
 };
