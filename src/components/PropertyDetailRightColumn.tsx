@@ -144,7 +144,65 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   if (isAgentView) {
     return (
       <div className="sticky top-24 space-y-4">
-        {/* Agent Actions Card */}
+        {/* 1. Listing Agent Contact Card */}
+        {agent && (
+          <Card>
+            <CardContent className="py-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-12 h-12">
+                  {agent.headshot_url ? (
+                    <AvatarImage src={agent.headshot_url} alt={`${agent.first_name} ${agent.last_name}`} />
+                  ) : (
+                    <AvatarFallback className="text-base">
+                      {agent.first_name?.[0]}{agent.last_name?.[0]}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-base">
+                    {agent.first_name} {agent.last_name}
+                  </p>
+                  {agent.title && <p className="text-xs text-muted-foreground">{agent.title}</p>}
+                  <p className="text-xs text-muted-foreground">{agent.company || "Brokerage"}</p>
+                </div>
+              </div>
+              <Separator />
+              <div className="space-y-1.5">
+                {(agent.cell_phone || agent.phone) && (
+                  <a href={`tel:${agent.cell_phone || agent.phone}`} className="flex items-center gap-2 text-sm hover:text-primary transition">
+                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>{formatPhoneNumber(agent.cell_phone || agent.phone)}</span>
+                  </a>
+                )}
+                {agent.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="break-all">{agent.email}</span>
+                  </div>
+                )}
+                {agent.social_links?.website && (
+                  <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary hover:underline">
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Visit Website</span>
+                  </a>
+                )}
+              </div>
+              {canMessageListingAgent && (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={handleMessageListingAgent}
+                  disabled={isStartingChat}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {isStartingChat ? "Opening…" : "Contact Agent"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 2. Agent Actions Card */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
           <CardContent className="py-4 space-y-3">
             <div className="grid grid-cols-1 gap-2">
@@ -176,30 +234,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </CardContent>
         </Card>
 
-        {/* Buyer Agent Compensation - Visible to Both */}
-        {compensationDisplay && (
-          <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base text-green-900 dark:text-green-100">
-                <DollarSign className="w-5 h-5" />
-                Buyer Agent Compensation
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">Visible to consumers</p>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                {compensationDisplay}
-              </p>
-              {listing.commission_notes && (
-                <p className="text-sm text-foreground/80 mt-2 border-t pt-2">
-                  {listing.commission_notes}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Showing Instructions - Agent Only */}
+        {/* 3. Showing Instructions - Agent Only */}
         <Card className="border-border bg-muted/50 dark:bg-muted/20 border-l-4 border-l-primary">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base text-foreground">
@@ -220,10 +255,22 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                 <p className="text-sm whitespace-pre-wrap">{listing.showing_instructions}</p>
               </div>
             )}
+            {canMessageListingAgent && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 mt-2"
+                onClick={handleMessageListingAgent}
+                disabled={isStartingChat}
+              >
+                <Phone className="w-3.5 h-3.5" />
+                {isStartingChat ? "Opening…" : "Contact Listing Agent"}
+              </Button>
+            )}
           </CardContent>
         </Card>
 
-        {/* Disclosures - Agent Only */}
+        {/* 4. Disclosures - Agent Only */}
         {listing.disclosures && (
           <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
             <CardHeader className="pb-2">
@@ -252,7 +299,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </Card>
         )}
 
-        {/* Listing Agreement Type - Agent Only */}
+        {/* 5. Listing Agreement Type - Agent Only */}
         {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
           <Card className="border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
             <CardHeader className="pb-2">
@@ -268,7 +315,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </Card>
         )}
 
-        {/* Activity Stats - Agent Only */}
+        {/* 6. Activity Stats - Agent Only */}
         <Card className="border-teal-200 bg-teal-50/50 dark:bg-teal-950/20">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base text-teal-900 dark:text-teal-100">
@@ -294,6 +341,29 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             </div>
           </CardContent>
         </Card>
+
+        {/* 7. Buyer Agent Compensation - Moved to bottom */}
+        {compensationDisplay && (
+          <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base text-green-900 dark:text-green-100">
+                <DollarSign className="w-5 h-5" />
+                Buyer Agent Compensation
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">Visible to consumers</p>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                {compensationDisplay}
+              </p>
+              {listing.commission_notes && (
+                <p className="text-sm text-foreground/80 mt-2 border-t pt-2">
+                  {listing.commission_notes}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
