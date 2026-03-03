@@ -3,14 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Phone, Mail, MessageSquare, MapPin, Building2, CheckCircle2, Gift, Percent, Handshake, DollarSign } from "lucide-react";
+import { Phone, Mail, MapPin, Building2, CheckCircle2, Gift, Percent, Handshake, DollarSign } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
-import { useAuthRole } from "@/hooks/useAuthRole";
-import { findOrCreateConversation } from "@/lib/startConversation";
-import { toast } from "sonner";
+
 
 interface Agent {
   id: string;
@@ -101,11 +98,6 @@ const getIncentiveBadge = (agent: Agent): { label: string; icon: React.ReactNode
 
 const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
-  const { user, role } = useAuthRole();
-  const [isStartingChat, setIsStartingChat] = useState(false);
-  
-  const viewerId = user?.id;
-  const canMessage = !!viewerId && (role === "agent" || role === "admin") && viewerId !== agent.id;
   
   const fullName = `${agent.first_name} ${agent.last_name}`;
   const initials = `${agent.first_name?.[0] || ""}${agent.last_name?.[0] || ""}`.toUpperCase();
@@ -131,25 +123,6 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
     }
   };
 
-  const handleMessageClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!viewerId || isStartingChat) return;
-    
-    setIsStartingChat(true);
-    try {
-      const convoId = await findOrCreateConversation(viewerId, agent.id);
-      if (convoId) {
-        navigate(`/messages/${convoId}`);
-      } else {
-        toast.error("Couldn't start message. Please try again.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Couldn't start message. Please try again.");
-    } finally {
-      setIsStartingChat(false);
-    }
-  };
 
   return (
     <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1 hover:border-neutral-300">
@@ -240,19 +213,6 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
           >
             <Mail className="h-4 w-4" />
           </Button>
-          {canMessage && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full bg-neutral-50 text-neutral-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none"
-              onClick={handleMessageClick}
-              disabled={isStartingChat}
-              aria-busy={isStartingChat}
-              title={isStartingChat ? "Opening…" : "Message"}
-            >
-              <MessageSquare className="h-4 w-4" />
-            </Button>
-          )}
         </div>
 
         {/* Primary CTA */}
