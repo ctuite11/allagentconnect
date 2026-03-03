@@ -1044,7 +1044,7 @@ const PropertyDetail = () => {
             )}
             
             {/* 50/50 Two-Column Layout - Equal Height Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                 {/* LEFT COLUMN (Blue): Showing Instructions */}
                 <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 h-full">
                   <CardHeader className="pb-2 pt-4 px-4">
