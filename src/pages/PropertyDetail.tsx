@@ -63,6 +63,7 @@ import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { parseDisclosures, cleanBrokerComments, isEmptyValue } from "@/lib/listingFieldParsers";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import {
   DropdownMenu,
@@ -862,20 +863,24 @@ const PropertyDetail = () => {
                         </button>
                       )}
                       
-                      {/* Agent-Only: Broker Remarks */}
-                      {isAgentView && (
-                        <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
-                              Broker Remarks
-                            </span>
-                            <Badge variant="outline" className="text-xs">Agent Only</Badge>
+                      {/* Agent-Only: Broker Remarks (cleaned & deduplicated) */}
+                      {isAgentView && (() => {
+                        const cleaned = cleanBrokerComments(listing.broker_comments);
+                        if (!cleaned) return null;
+                        return (
+                          <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-3">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                                Broker Remarks
+                              </span>
+                              <Badge variant="outline" className="text-xs">Agent Only</Badge>
+                            </div>
+                            <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
+                              {cleaned}
+                            </p>
                           </div>
-                          <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
-                            {listing.broker_comments || "N/A"}
-                          </p>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </CardContent>
                   </Card>
                 );
@@ -1051,17 +1056,26 @@ const PropertyDetail = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-3 text-sm">
-                    {listing.disclosures && (
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">Disclosures:</p>
-                        <p>
-                          {typeof listing.disclosures === 'string' 
-                            ? listing.disclosures 
-                            : formatArray(listing.disclosures) || 'None specified'}
-                        </p>
-                      </div>
-                    )}
-                    {listing.listing_exclusions && (
+                    {/* Structured disclosure fields - parsed & deduplicated */}
+                    {(() => {
+                      const parsed = parseDisclosures(listing.disclosures);
+                      const nonEmpty = parsed.filter(f => !isEmptyValue(f.value));
+                      if (nonEmpty.length === 0 && !listing.listing_exclusions && 
+                          !(listing.listing_agreement_types && formatArray(listing.listing_agreement_types))) {
+                        return <p className="text-muted-foreground">No disclosures on file</p>;
+                      }
+                      return (
+                        <div className="space-y-2">
+                          {nonEmpty.map((field, idx) => (
+                            <div key={idx} className="flex justify-between py-1.5 border-b last:border-0">
+                              <span className="text-muted-foreground">{field.label}</span>
+                              <span className="font-medium text-right">{field.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                    {listing.listing_exclusions && !isEmptyValue(listing.listing_exclusions) && (
                       <div className="pt-2 border-t">
                         <p className="text-xs font-semibold text-muted-foreground mb-1">Exclusions:</p>
                         <p>{listing.listing_exclusions}</p>
@@ -1079,14 +1093,20 @@ const PropertyDetail = () => {
                         <p className="text-primary">{listing.documents.length} document(s) available</p>
                       </div>
                     )}
-                    {/* Firm Remarks inside yellow card */}
-                    <div className="pt-2 border-t">
-                      <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                        Firm Remarks
-                        <Badge variant="outline" className="text-[10px] ml-1">Agent Only</Badge>
-                      </p>
-                      <p className="whitespace-pre-wrap leading-relaxed">{listing.broker_comments || "N/A"}</p>
-                    </div>
+                    {/* Firm Remarks - cleaned & deduplicated, agent only */}
+                    {(() => {
+                      const cleaned = cleanBrokerComments(listing.broker_comments);
+                      if (!cleaned) return null;
+                      return (
+                        <div className="pt-2 border-t">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                            Firm Remarks
+                            <Badge variant="outline" className="text-[10px] ml-1">Agent Only</Badge>
+                          </p>
+                          <p className="whitespace-pre-wrap leading-relaxed">{cleaned}</p>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
