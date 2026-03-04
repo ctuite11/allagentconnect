@@ -824,18 +824,9 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Fallback if no agent */}
-              {!agentProfile && (
-                <Card className="rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Interested in this property?</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">Contact the listing agent for more information or to schedule a showing.</p>
-                    <Button className="w-full">Contact Agent</Button>
-                  </CardContent>
-                </Card>
-              )}
+              {/* ATTRIBUTION MASKING (BUYER UI):
+                 Do not show "Contact listing agent" fallbacks.
+                 Buyer may only contact sticky agent or support. */}
 
               {/* Ad Banner */}
               <AdBanner placementZone="listing_sidebar" className="mt-4" />
