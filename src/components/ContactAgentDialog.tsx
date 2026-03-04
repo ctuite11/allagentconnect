@@ -139,15 +139,17 @@ const ContactAgentDialog = ({
             onClick={(e) => e.stopPropagation()}
           >
             <Mail className={buttonSize === "sm" ? "h-3.5 w-3.5" : "h-5 w-5"} />
-            {buttonSize === "sm" ? "Contact" : "Contact Agent"}
+            Contact
           </Button>
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[500px]">
+        {/* ATTRIBUTION MASKING: This modal is shared across buyer + agent views.
+            Do not use "listing agent" wording anywhere in buyer-facing copy. */}
         <DialogHeader>
           <DialogTitle>Listing Inquiry – {listingAddress}</DialogTitle>
           <DialogDescription>
-            Send a message to the listing agent
+            Send a message about this property
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
