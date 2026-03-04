@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,6 +97,7 @@ interface AgentProfile {
 const ConsumerPropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [listing, setListing] = useState<any | null>(null);
   const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,7 +135,9 @@ const ConsumerPropertyDetail = () => {
         return;
       }
 
-      navigate(`/messages/${conversationId}`);
+      navigate(`/messages/${conversationId}`, {
+        state: { from: location.pathname + location.search, fromLabel: "Back to listing" },
+      });
     } catch (err) {
       console.error("Failed to start conversation:", err);
     }
@@ -539,7 +542,7 @@ const ConsumerPropertyDetail = () => {
 
                     {/* ATTRIBUTION MASKING: Primary contact action is in-app messaging only.
                         Do not re-add email form (ContactAgentDialog) as buyer CTA. */}
-                    <div className="flex flex-col gap-2">
+                    <div className="grid gap-2">
                       <Button
                         size="lg"
                         className="w-full gap-2"
@@ -548,6 +551,19 @@ const ConsumerPropertyDetail = () => {
                         <MessageSquare className="h-5 w-5" />
                         Message your agent
                       </Button>
+                      {stickyAgentProfile.email && (
+                        <a
+                          className="inline-flex items-center justify-center w-full h-10 rounded-md border border-input bg-background hover:bg-accent transition text-sm font-medium"
+                          href={`mailto:${stickyAgentProfile.email}?subject=${encodeURIComponent(
+                            `Question about ${listing.address}, ${listing.city}`
+                          )}&body=${encodeURIComponent(
+                            `Hi ${stickyAgentProfile.first_name},\n\nI have a question about:\n${listing.address}, ${listing.city}, ${listing.state}\n\nLink: ${window.location.href}\n\nMessage:\n`
+                          )}`}
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Email your agent
+                        </a>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

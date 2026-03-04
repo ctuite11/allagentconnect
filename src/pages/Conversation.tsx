@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Send, User } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 export default function Conversation() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from as string | undefined;
+  const fromLabel = (location.state as any)?.fromLabel as string | undefined;
   const { messages, details, loading, notFound, sending, sendMessage } = useConversation(id);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -58,8 +61,8 @@ export default function Conversation() {
       <PageShell>
         <div className="max-w-2xl mx-auto py-8 px-4 text-center">
           <p className="text-zinc-500">Conversation not found</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/messages")}>
-            Back to Messages
+          <Button variant="outline" className="mt-4" onClick={() => from ? navigate(from) : navigate("/messages")}>
+            {fromLabel ?? "Back to Messages"}
           </Button>
         </div>
       </PageShell>
@@ -72,7 +75,7 @@ export default function Conversation() {
         {/* Header */}
         <div className="flex items-center gap-3 py-4 px-4 border-b border-zinc-200">
           <button
-            onClick={() => navigate("/messages")}
+            onClick={() => from ? navigate(from) : navigate("/messages")}
             className="p-2 hover:bg-zinc-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-zinc-600" />
