@@ -26,18 +26,18 @@ serve(async (req) => {
 
   // 1) Authenticate caller
   const authHeader = req.headers.get("Authorization") ?? "";
-  const jwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!jwt) return json({ success: false, error: "Missing auth token" }, 401);
+  if (!authHeader.startsWith("Bearer ")) return json({ success: false, error: "Missing auth token" }, 401);
 
   const supabaseUser = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: `Bearer ${jwt}` } },
+    global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: userData, error: userErr } = await supabaseUser.auth.getUser();
-  if (userErr || !userData?.user) return json({ success: false, error: "Unauthorized" }, 401);
+  const token = authHeader.slice(7);
+  const { data: claimsData, error: claimsErr } = await supabaseUser.auth.getClaims(token);
+  if (claimsErr || !claimsData?.claims) return json({ success: false, error: "Unauthorized" }, 401);
 
-  const userId = userData.user.id;
-  const buyerEmail = (userData.user.email ?? "").trim();
+  const userId = claimsData.claims.sub as string;
+  const buyerEmail = ((claimsData.claims.email as string) ?? "").trim();
   if (!buyerEmail) return json({ success: false, error: "Buyer email not found" }, 400);
 
   // 2) Parse body
