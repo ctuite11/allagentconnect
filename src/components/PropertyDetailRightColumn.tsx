@@ -640,38 +640,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         listingId={listing.id} 
       />
 
-      {/* Fallback if no agent */}
-      {!agent && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Interested in this property?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isBuyer ? (
-              <>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Message your agent through the platform for details or to schedule a showing.
-                </p>
-                <div className="grid grid-cols-1 gap-2">
-                  <Button className="w-full" onClick={handleContactAgent} disabled={isStartingChat}>
-                    {isStartingChat ? "Opening…" : "Message Your Agent"}
-                  </Button>
-                  <Button variant="outline" className="w-full" onClick={() => navigate("/client/dashboard")}>
-                    Back to Dashboard
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Contact the listing agent for more information or to schedule a showing.
-                </p>
-                <Button className="w-full">Contact Agent</Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* ATTRIBUTION MASKING: No "Contact listing agent" fallback.
+          Buyers redirect to /consumer-property/:id; non-agents see agent-only UI. */}
     </div>
   );
 };
