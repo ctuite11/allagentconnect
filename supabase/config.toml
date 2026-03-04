@@ -91,3 +91,6 @@ verify_jwt = false
 
 [functions.send-client-agent-message]
 verify_jwt = false
+
+[functions.send-buyer-agent-email]
+verify_jwt = false

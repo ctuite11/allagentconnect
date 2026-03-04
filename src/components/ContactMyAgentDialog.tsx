@@ -15,7 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  crmClientId: string;
+  /** @deprecated No longer required — kept for backward compat with CRM-based callers */
+  crmClientId?: string;
   agentDisplayName?: string | null;
   defaultSubject?: string;
 };
@@ -33,7 +34,7 @@ export function ContactMyAgentDialog({
   const [message, setMessage] = React.useState("");
   const [sending, setSending] = React.useState(false);
 
-  const canSend = crmClientId && message.trim().length > 0;
+  const canSend = message.trim().length > 0;
 
   React.useEffect(() => {
     if (open) {
@@ -51,10 +52,9 @@ export function ContactMyAgentDialog({
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke(
-        "send-client-agent-message",
+        "send-buyer-agent-email",
         {
           body: {
-            clientId: crmClientId,
             subject: subject.trim(),
             message: message.trim(),
           },
