@@ -1071,6 +1071,56 @@ export type Database = {
           },
         ]
       }
+      buyer_workspace_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "buyer_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyer_workspaces: {
+        Row: {
+          created_at: string | null
+          id: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
       client_agent_messages: {
         Row: {
           agent_id: string
@@ -3041,6 +3091,44 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          buyer_workspace_id: string
+          created_at: string | null
+          created_by: string
+          criteria: Json | null
+          id: string
+          name: string
+          search_url: string
+        }
+        Insert: {
+          buyer_workspace_id: string
+          created_at?: string | null
+          created_by: string
+          criteria?: Json | null
+          id?: string
+          name: string
+          search_url: string
+        }
+        Update: {
+          buyer_workspace_id?: string
+          created_at?: string | null
+          created_by?: string
+          criteria?: Json | null
+          id?: string
+          name?: string
+          search_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_searches_buyer_workspace_id_fkey"
+            columns: ["buyer_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "buyer_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_match_outcomes: {
         Row: {
           created_at: string
@@ -3747,6 +3835,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_buyer_workspace_member: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      is_buyer_workspace_owner: {
+        Args: { p_workspace_id: string }
         Returns: boolean
       }
       is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }
