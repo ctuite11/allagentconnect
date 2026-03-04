@@ -52,6 +52,7 @@ import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 // ContactAgentDialog removed — buyer CTA is in-app messaging only
+import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
@@ -107,6 +108,8 @@ const ConsumerPropertyDetail = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
+  const [crmClientId, setCrmClientId] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   const handleMessageYourAgent = async () => {
     try {
@@ -149,6 +152,7 @@ const ConsumerPropertyDetail = () => {
       setStickyAgentId(agentId);
       if (!agentId) {
         setStickyAgentProfile(null);
+        setCrmClientId(null);
         return;
       }
       const { data } = await supabase
@@ -157,6 +161,25 @@ const ConsumerPropertyDetail = () => {
         .eq("id", agentId)
         .maybeSingle();
       setStickyAgentProfile(data as AgentProfile | null);
+
+      // Resolve CRM client ID for in-app email
+      const { data: authData, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !authData?.user?.email) {
+        setCrmClientId(null);
+        return;
+      }
+      const { data: clientRow, error: clientErr } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("agent_id", agentId)
+        .ilike("email", authData.user.email)
+        .maybeSingle();
+      if (clientErr) {
+        console.error("clients lookup error:", clientErr);
+        setCrmClientId(null);
+        return;
+      }
+      setCrmClientId(clientRow?.id ?? null);
     });
   }, []);
 
@@ -551,18 +574,28 @@ const ConsumerPropertyDetail = () => {
                         <MessageSquare className="h-5 w-5" />
                         Message your agent
                       </Button>
-                      {stickyAgentProfile.email && (
-                        <a
-                          className="inline-flex items-center justify-center w-full h-10 rounded-md border border-input bg-background hover:bg-accent transition text-sm font-medium"
-                          href={`mailto:${stickyAgentProfile.email}?subject=${encodeURIComponent(
-                            `Question about ${listing.address}, ${listing.city}`
-                          )}&body=${encodeURIComponent(
-                            `Hi ${stickyAgentProfile.first_name},\n\nI have a question about:\n${listing.address}, ${listing.city}, ${listing.state}\n\nLink: ${window.location.href}\n\nMessage:\n`
-                          )}`}
-                        >
-                          <Mail className="h-4 w-4 mr-2" />
-                          Email your agent
-                        </a>
+                      {crmClientId && (
+                        <>
+                          <Button
+                            variant="outline"
+                            className="w-full gap-2"
+                            onClick={() => setEmailDialogOpen(true)}
+                          >
+                            <Mail className="h-4 w-4" />
+                            Email your agent
+                          </Button>
+                          <ContactMyAgentDialog
+                            open={emailDialogOpen}
+                            onOpenChange={setEmailDialogOpen}
+                            crmClientId={crmClientId}
+                            agentDisplayName={
+                              stickyAgentProfile
+                                ? `${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`.trim()
+                                : undefined
+                            }
+                            defaultSubject={`Question about ${listing.address}, ${listing.city}`}
+                          />
+                        </>
                       )}
                     </div>
                   </CardContent>
