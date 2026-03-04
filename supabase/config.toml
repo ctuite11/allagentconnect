@@ -94,3 +94,9 @@ verify_jwt = false
 
 [functions.send-buyer-agent-email]
 verify_jwt = false
+
+[functions.send-buyer-workspace-invite]
+verify_jwt = false
+
+[functions.accept-buyer-workspace-invite]
+verify_jwt = false

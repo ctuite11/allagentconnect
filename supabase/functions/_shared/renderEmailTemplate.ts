@@ -298,6 +298,19 @@ export function renderEmailTemplate(
         </p>`);
     }
 
+    case "buyer-workspace-invite": {
+      const friendName = variables.friendName || "there";
+      const inviterName = variables.inviterName || "Someone";
+      const inviteLink = variables.inviteLink || "#";
+
+      return wrapHtml(`
+        <h2>You're Invited to a Shared Home Search</h2>
+        <p>Hi ${friendName},</p>
+        <p><strong>${inviterName}</strong> wants to share their home search with you on All Agent Connect.</p>
+        <p>When you accept, you'll see the same favorites, hot sheets, saved searches, and messages — so you can search together.</p>
+        <div class="cta-wrap"><a href="${inviteLink}" class="cta"><span class="cta-dot"></span>Accept Invite<span class="cta-arrow">&rarr;</span></a></div>`);
+    }
+
     default:
       return wrapHtml(
         variables.contentHtml ||

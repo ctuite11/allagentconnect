@@ -9,10 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, FileText, User, Mail, Phone, Eye, UserX, Plus, MessageSquare } from "lucide-react";
+import { Heart, FileText, User, Mail, Phone, Eye, UserX, Plus, MessageSquare, UserPlus } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
+import { AddFriendDialog } from "@/components/AddFriendDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +74,7 @@ export default function ClientDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [crmClientId, setCrmClientId] = useState<string | null>(null);
+  const [addFriendOpen, setAddFriendOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -294,10 +296,16 @@ export default function ClientDashboard() {
                 Manage your hot sheets, favorites, and agent relationship
               </p>
             </div>
-            <Button className="w-full sm:w-auto" onClick={() => navigate("/messages")}>
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Messages
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setAddFriendOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add a Friend
+              </Button>
+              <Button onClick={() => navigate("/messages")}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Messages
+              </Button>
+            </div>
           </div>
 
           {/* Agent Card */}
@@ -561,6 +569,8 @@ export default function ClientDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddFriendDialog open={addFriendOpen} onOpenChange={setAddFriendOpen} />
 
       <Footer />
     </div>

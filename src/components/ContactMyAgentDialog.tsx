@@ -53,7 +53,7 @@ export function ContactMyAgentDialog({
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
-      console.log("session", token ? "HAS_TOKEN" : "NO_TOKEN");
+      
 
       const { data, error } = await supabase.functions.invoke(
         "send-buyer-agent-email",
