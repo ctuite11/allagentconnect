@@ -51,7 +51,7 @@ import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
-import ContactAgentDialog from "@/components/ContactAgentDialog";
+// ContactAgentDialog removed — buyer CTA is in-app messaging only
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
@@ -72,19 +72,8 @@ function asStickyAgentId(id: string | null | undefined): StickyAgentId | null {
   return id ? (id as StickyAgentId) : null;
 }
 
-function BuyerContactAgentDialog(props: {
-  listingId: string;
-  stickyAgentId: StickyAgentId;
-  listingAddress: string;
-}) {
-  return (
-    <ContactAgentDialog
-      listingId={props.listingId}
-      agentId={props.stickyAgentId}
-      listingAddress={props.listingAddress}
-    />
-  );
-}
+/* ATTRIBUTION MASKING: Primary contact action is in-app messaging only.
+   Do not re-add email form (ContactAgentDialog) as buyer CTA. */
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
@@ -548,19 +537,10 @@ const ConsumerPropertyDetail = () => {
                       )}
                     </div>
 
+                    {/* ATTRIBUTION MASKING: Primary contact action is in-app messaging only.
+                        Do not re-add email form (ContactAgentDialog) as buyer CTA. */}
                     <div className="flex flex-col gap-2">
-                      {(() => {
-                        const stickyRecipient = asStickyAgentId(stickyAgentId);
-                        return stickyRecipient ? (
-                          <BuyerContactAgentDialog
-                            listingId={listing.id}
-                            stickyAgentId={stickyRecipient}
-                            listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-                          />
-                        ) : null;
-                      })()}
                       <Button
-                        variant="outline"
                         size="lg"
                         className="w-full gap-2"
                         onClick={handleMessageYourAgent}
