@@ -169,6 +169,11 @@ const PropertyDetail = () => {
   const isClientMode = searchParams.get('view') === 'client' || location.pathname.endsWith('/client');
   const isAgentView = (isAgent || isAdmin) && !isClientMode;
 
+  // ATTRIBUTION MASKING: PropertyDetail is agent/admin-only UI.
+  // Non-agent visitors must not see any "contact listing agent" UI, even briefly.
+  // Buyers redirect to /consumer-property/:id (effect above).
+  const isNonAgentVisitor = !roleLoading && !isAgent && !isAdmin;
+
   // Can current user message the listing agent?
   const viewerId = user?.id;
   const listingAgentId = agentProfile?.id;
@@ -260,6 +265,15 @@ const PropertyDetail = () => {
       fetchListing();
     }
   }, [id]);
+
+  // ATTRIBUTION MASKING early return — after all hooks, before any JSX
+  if (isNonAgentVisitor) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        Redirecting…
+      </div>
+    );
+  }
 
   const handleShare = async () => {
     const shareUrl = getListingShareUrl(id!);
@@ -947,20 +961,8 @@ const PropertyDetail = () => {
                 />
               )}
 
-              {/* Fallback if no agent */}
-              {!agentProfile && !isAgentView && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Interested in this property?</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Contact the listing agent for more information or to schedule a showing.
-                    </p>
-                    <Button className="w-full">Contact Agent</Button>
-                  </CardContent>
-                </Card>
-              )}
+              {/* ATTRIBUTION MASKING: No "Contact listing agent" fallback.
+                  Buyers redirect to /consumer-property/:id; non-agents early-return above. */}
             </div>
           </div>
         </div>
