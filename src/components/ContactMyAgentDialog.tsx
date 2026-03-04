@@ -17,6 +17,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   crmClientId: string;
   agentDisplayName?: string | null;
+  defaultSubject?: string;
 };
 
 export function ContactMyAgentDialog({
@@ -24,6 +25,7 @@ export function ContactMyAgentDialog({
   onOpenChange,
   crmClientId,
   agentDisplayName,
+  defaultSubject,
 }: Props) {
   const [subject, setSubject] = React.useState(
     "Message from your client via AllAgentConnect"
@@ -35,10 +37,10 @@ export function ContactMyAgentDialog({
 
   React.useEffect(() => {
     if (open) {
-      setSubject("Message from your client via AllAgentConnect");
+      setSubject(defaultSubject || "Message from your client via AllAgentConnect");
       setMessage("");
     }
-  }, [open]);
+  }, [open, defaultSubject]);
 
   async function handleSend() {
     if (!canSend) {
