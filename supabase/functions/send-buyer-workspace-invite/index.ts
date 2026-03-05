@@ -31,11 +31,13 @@ serve(async (req) => {
 
   if (!authHeader.startsWith("Bearer ")) return json({ success: false, error: "Missing auth token" }, 401);
 
+  const jwt = authHeader.replace("Bearer ", "");
+
   const supabaseUser = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: { user }, error: userErr } = await supabaseUser.auth.getUser();
+  const { data: { user }, error: userErr } = await supabaseUser.auth.getUser(jwt);
   console.log("[send-invite] user lookup", { userId: user?.id ?? null, error: userErr?.message ?? null });
 
   if (userErr || !user) return json({ success: false, error: "Unauthorized" }, 401);
