@@ -33,11 +33,10 @@ serve(async (req) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const jwtToken = authHeader.slice(7);
-  const { data: claimsData, error: claimsErr } = await supabaseUser.auth.getClaims(jwtToken);
-  if (claimsErr || !claimsData?.claims) return json({ success: false, error: "Unauthorized" }, 401);
+  const { data: { user }, error: userErr } = await supabaseUser.auth.getUser();
+  if (userErr || !user) return json({ success: false, error: "Unauthorized" }, 401);
 
-  const userId = claimsData.claims.sub as string;
+  const userId = user.id;
 
   // Parse body
   let input: { firstName?: string; lastName?: string; email?: string };
