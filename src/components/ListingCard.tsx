@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare } from "lucide-react";
+import { ListingInterestSignals } from "./ListingInterestSignals";
+import type { ListingSignals } from "@/hooks/useListingInterestSignals";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,6 +80,7 @@ interface ListingCardProps {
   hotSheetId?: string;
   onNewMessage?: (msg: any) => void;
   onOpenChat?: () => void;
+  interestSignals?: ListingSignals | null;
 }
 const ListingCard = ({
   listing,
@@ -93,6 +96,7 @@ const ListingCard = ({
   hotSheetId,
   onNewMessage,
   onOpenChat,
+  interestSignals,
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const [agentCount, setAgentCount] = useState<number>(0);
@@ -706,6 +710,15 @@ const ListingCard = ({
                 />
               </div>}
           </div>
+          
+          {/* Buyer Interest Signals */}
+          {interestSignals && (
+            <ListingInterestSignals
+              savesCount={interestSignals.saves_count}
+              commentsCount={interestSignals.comments_count}
+              hotsheetMatchCount={interestSignals.hotsheet_match_count}
+            />
+          )}
           
           {/* Open House Info */}
           {nextOpenHouse && (

@@ -35,7 +35,7 @@ import {
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { HotSheetSubscribersSection } from "@/components/HotSheetSubscribersSection";
-
+import { useListingInterestSignals } from "@/hooks/useListingInterestSignals";
 // ─── Pending Invites section ────────────────────────────────────────────────
 
 interface PendingInvite {
@@ -279,6 +279,12 @@ const HotSheetReview = () => {
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
+
+  // Buyer interest signals for listing cards
+  const { signals: interestSignals } = useListingInterestSignals(
+    agentUserId,
+    listings.map((l) => l.id),
+  );
 
   useEffect(() => {
     if (id) {
@@ -1101,6 +1107,7 @@ if (comments && comments.length > 0) {
                     setChatListingId(listing.id);
                     setChatDrawerOpen(true);
                   }}
+                  interestSignals={interestSignals[listing.id] || null}
                 />
               ))}
             </div>
