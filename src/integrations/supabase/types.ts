@@ -1071,6 +1071,69 @@ export type Database = {
           },
         ]
       }
+      buyer_workspace_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          agent_id: string | null
+          buyer_email: string
+          buyer_first_name: string | null
+          buyer_last_name: string | null
+          buyer_user_id: string | null
+          created_at: string
+          created_by_user_id: string
+          expires_at: string | null
+          id: string
+          token: string
+          workspace_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          agent_id?: string | null
+          buyer_email: string
+          buyer_first_name?: string | null
+          buyer_last_name?: string | null
+          buyer_user_id?: string | null
+          created_at?: string
+          created_by_user_id: string
+          expires_at?: string | null
+          id?: string
+          token?: string
+          workspace_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          agent_id?: string | null
+          buyer_email?: string
+          buyer_first_name?: string | null
+          buyer_last_name?: string | null
+          buyer_user_id?: string | null
+          created_at?: string
+          created_by_user_id?: string
+          expires_at?: string | null
+          id?: string
+          token?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_workspace_invites_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyer_workspace_invites_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "buyer_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyer_workspace_members: {
         Row: {
           created_at: string | null

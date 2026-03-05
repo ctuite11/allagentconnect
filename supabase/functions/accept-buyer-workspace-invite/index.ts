@@ -51,35 +51,46 @@ serve(async (req) => {
 
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-  // Validate token
-  const { data: tokenRow, error: tokenErr } = await supabaseAdmin
-    .from("share_tokens")
-    .select("id, token, payload, accepted_at, accepted_by_user_id, expires_at")
+  // Validate invite token (service role — bypasses RLS)
+  const { data: invite, error: inviteErr } = await supabaseAdmin
+    .from("buyer_workspace_invites")
+    .select("id, token, workspace_id, agent_id, buyer_email, buyer_user_id, accepted_at, accepted_by_user_id, expires_at")
     .eq("token", inviteToken)
     .maybeSingle();
 
-  if (tokenErr || !tokenRow) {
+  if (inviteErr || !invite) {
     return json({ success: false, error: "Invalid invite token" }, 400);
   }
 
-  const payload = (tokenRow.payload as any) ?? {};
-
-  if (payload.type !== "buyer_workspace_invite") {
-    return json({ success: false, error: "Invalid token type" }, 400);
-  }
-
-  if (tokenRow.accepted_at) {
+  if (invite.accepted_at) {
     return json({ success: false, error: "This invite has already been accepted" }, 400);
   }
 
-  if (tokenRow.expires_at && new Date(tokenRow.expires_at) < new Date()) {
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
     return json({ success: false, error: "This invite has expired" }, 400);
   }
 
-  const workspaceId = payload.buyer_workspace_id;
-  if (!workspaceId) {
-    return json({ success: false, error: "Invalid invite: missing workspace" }, 400);
+  // Server-side recipient verification:
+  // buyer_user_id matches auth user, OR buyer_email matches auth user's email
+  if (invite.buyer_user_id && invite.buyer_user_id !== userId) {
+    return json({ success: false, error: "This invite was sent to a different user" }, 403);
   }
+
+  if (!invite.buyer_user_id && invite.buyer_email) {
+    // Resolve auth user's email for comparison
+    const { data: userProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const userEmail = userProfile?.email?.toLowerCase();
+    if (userEmail && userEmail !== invite.buyer_email.toLowerCase()) {
+      return json({ success: false, error: "This invite was sent to a different email address" }, 403);
+    }
+  }
+
+  const workspaceId = invite.workspace_id;
 
   // Check workspace exists
   const { data: workspace } = await supabaseAdmin
@@ -110,28 +121,28 @@ serve(async (req) => {
 
   if (memberErr) {
     if (memberErr.code === "23505") {
-      // Already a member — just mark token accepted
+      // Already a member — just mark invite accepted
     } else {
       console.error("Membership insert failed:", memberErr);
       return json({ success: false, error: "Failed to join workspace" }, 500);
     }
   }
 
-  // Mark token accepted
+  // Mark invite accepted (service role bypasses RLS)
   const { error: updateErr } = await supabaseAdmin
-    .from("share_tokens")
+    .from("buyer_workspace_invites")
     .update({
       accepted_at: new Date().toISOString(),
       accepted_by_user_id: userId,
     })
-    .eq("id", tokenRow.id);
+    .eq("id", invite.id);
 
   if (updateErr) {
-    console.error("Token update failed:", updateErr);
+    console.error("Invite update failed:", updateErr);
   }
 
   // If there's a sticky agent, create agent relationship for the friend
-  const stickyAgentId = payload.sticky_agent_id;
+  const stickyAgentId = invite.agent_id;
   if (stickyAgentId) {
     // Ensure buyer role exists for friend
     await supabaseAdmin
