@@ -107,10 +107,8 @@ export function PendingInvitesCard() {
 
       toast.success(extend ? "Invite resent & extended" : "Invite resent");
 
-      // Refresh list if we extended (expires_at changed)
-      if (extend) {
-        await loadInvites();
-      }
+      // Refresh list after every successful resend to reflect latest state
+      await loadInvites();
     } finally {
       setResendingId(null);
     }

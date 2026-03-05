@@ -79,16 +79,7 @@ serve(async (req) => {
     return json({ success: false, error: "This invite has already been accepted" }, 400);
   }
 
-  // Check expired — only reject if not extending
-  const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
-  if (isExpired && !extend) {
-    return json({ success: false, error: "This invite has expired. Use Resend + Extend to reactivate it." }, 400);
-  }
-
-  // Race-safe throttle: attempt atomic update of last_resent_at
-  // Only succeeds if last_resent_at is NULL or older than 60 seconds
-  const throttleCutoff = new Date(Date.now() - 60_000).toISOString();
-
+  // Race-safe throttle runs BEFORE expiry check to prevent spam on all resend attempts
   const { data: throttleResult, error: throttleErr } = await supabaseAdmin
     .rpc("rate_limit_consume", {
       p_key: `bwi_resend:${inviteId}`,
@@ -109,18 +100,18 @@ serve(async (req) => {
     return json({ success: false, error: `Please wait ${waitSecs}s before resending` }, 429);
   }
 
-  // If extending, update expires_at to 30 days from now
+  // Check expired — only reject if not extending
+  const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
+  if (isExpired && !extend) {
+    return json({ success: false, error: "This invite has expired. Use Resend + Extend to reactivate it." }, 400);
+  }
+
+  // If extending, update expires_at to 30 days from now (last_resent_at updated after email enqueue)
   if (extend && isExpired) {
     const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     await supabaseAdmin
       .from("buyer_workspace_invites")
-      .update({ expires_at: newExpiry, last_resent_at: new Date().toISOString() })
-      .eq("id", inviteId);
-  } else {
-    // Just update last_resent_at
-    await supabaseAdmin
-      .from("buyer_workspace_invites")
-      .update({ last_resent_at: new Date().toISOString() })
+      .update({ expires_at: newExpiry })
       .eq("id", inviteId);
   }
 
@@ -160,6 +151,12 @@ serve(async (req) => {
     console.error("Email enqueue failed:", emailErr);
     return json({ success: false, error: "Failed to resend invite email" }, 500);
   }
+
+  // Update last_resent_at only after email enqueue succeeds
+  await supabaseAdmin
+    .from("buyer_workspace_invites")
+    .update({ last_resent_at: new Date().toISOString() })
+    .eq("id", inviteId);
 
   return json({ success: true });
 });
