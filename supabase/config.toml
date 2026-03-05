@@ -106,3 +106,6 @@ verify_jwt = false
 
 [functions.unsubscribe-hotsheet]
 verify_jwt = false
+
+[functions.get-hotsheet-preview]
+verify_jwt = false

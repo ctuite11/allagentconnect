@@ -2247,6 +2247,7 @@ export type Database = {
           hot_sheet_id: string
           id: string
           last_name: string | null
+          preview_token: string
           status: string
           unsubscribe_token: string
           unsubscribed_at: string | null
@@ -2258,6 +2259,7 @@ export type Database = {
           hot_sheet_id: string
           id?: string
           last_name?: string | null
+          preview_token?: string
           status?: string
           unsubscribe_token?: string
           unsubscribed_at?: string | null
@@ -2269,6 +2271,7 @@ export type Database = {
           hot_sheet_id?: string
           id?: string
           last_name?: string | null
+          preview_token?: string
           status?: string
           unsubscribe_token?: string
           unsubscribed_at?: string | null

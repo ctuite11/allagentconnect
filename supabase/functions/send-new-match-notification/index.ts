@@ -207,7 +207,7 @@ serve(async (req) => {
       // ─── Email subscribers (no-account "Add a Friend") ───────────────
       const { data: subscribers } = await supabase
         .from("hot_sheet_subscribers" as any)
-        .select("id, email, first_name, unsubscribe_token")
+        .select("id, email, first_name, unsubscribe_token, preview_token")
         .eq("hot_sheet_id", hotSheet.id)
         .eq("status", "active");
 
@@ -227,6 +227,7 @@ serve(async (req) => {
                 hotSheetName: hotSheet.name,
                 matchCount: listings.length,
                 listingsHtml,
+                previewLink: `${appBaseUrl}/hotsheet-preview?token=${(sub as any).preview_token}`,
                 unsubscribeLink: `${appBaseUrl}/unsubscribe-hotsheet?token=${sub.unsubscribe_token}`,
               },
             },

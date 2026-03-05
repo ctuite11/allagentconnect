@@ -79,6 +79,7 @@ import DesignMockup from "./pages/DesignMockup";
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
 import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
+import HotSheetPreview from "./pages/HotSheetPreview";
 import DraftListings from "./pages/DraftListings";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
@@ -247,6 +248,7 @@ const App = () => (
                 <Route path="/client/favorites" element={<RouteGuard requireAuth><Favorites /></RouteGuard>} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
+                <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />
