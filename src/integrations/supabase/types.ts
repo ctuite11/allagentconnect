@@ -3936,6 +3936,15 @@ export type Database = {
           zip_code: string
         }[]
       }
+      get_listing_interest_signals: {
+        Args: { p_agent_id: string; p_listing_ids: string[] }
+        Returns: {
+          comments_count: number
+          hotsheet_match_count: number
+          listing_id: string
+          saves_count: number
+        }[]
+      }
       get_verified_agent_ids: {
         Args: never
         Returns: {
