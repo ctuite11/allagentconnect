@@ -14,6 +14,7 @@ import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
+import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -534,6 +535,9 @@ export default function ClientDashboard() {
               )}
             </CardContent>
           </Card>
+
+          {/* Pending Invites */}
+          <PendingInvitesCard />
         </div>
       </main>
 
