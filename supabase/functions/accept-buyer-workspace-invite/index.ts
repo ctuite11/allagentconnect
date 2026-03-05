@@ -77,14 +77,9 @@ serve(async (req) => {
   }
 
   if (!invite.buyer_user_id && invite.buyer_email) {
-    // Resolve auth user's email for comparison
-    const { data: userProfile } = await supabaseAdmin
-      .from("profiles")
-      .select("email")
-      .eq("id", userId)
-      .maybeSingle();
-
-    const userEmail = userProfile?.email?.toLowerCase();
+    // Resolve auth user's email (authoritative source, not profiles table)
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const userEmail = authUser?.user?.email?.toLowerCase() ?? "";
     if (userEmail && userEmail !== invite.buyer_email.toLowerCase()) {
       return json({ success: false, error: "This invite was sent to a different email address" }, 403);
     }
