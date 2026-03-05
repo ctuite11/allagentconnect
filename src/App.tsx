@@ -78,6 +78,7 @@ import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
+import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
 import DraftListings from "./pages/DraftListings";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
@@ -245,6 +246,7 @@ const App = () => (
                 <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/client/favorites" element={<RouteGuard requireAuth><Favorites /></RouteGuard>} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
+                <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />

@@ -204,6 +204,41 @@ serve(async (req) => {
         }
       }
 
+      // ─── Email subscribers (no-account "Add a Friend") ───────────────
+      const { data: subscribers } = await supabase
+        .from("hot_sheet_subscribers")
+        .select("id, email, first_name, unsubscribe_token")
+        .eq("hot_sheet_id", hotSheet.id)
+        .eq("status", "active");
+
+      if (subscribers?.length) {
+        for (const sub of subscribers) {
+          const dedupeKey = `hss:${sub.id}:hs:${hotSheet.id}:listings:${matchingListings.map((m: any) => m.listing_id).sort().join(",")}`;
+
+          const { error: subInsertError } = await supabase.from("email_jobs").insert({
+            idempotency_key: dedupeKey,
+            payload: {
+              provider: "resend",
+              template: "hot-sheet-subscriber-update",
+              to: sub.email,
+              subject: `New matches in ${hotSheet.name}`,
+              variables: {
+                userName: sub.first_name || "there",
+                hotSheetName: hotSheet.name,
+                matchCount: listings.length,
+                listingsHtml,
+                unsubscribeLink: `${appBaseUrl}/unsubscribe-hotsheet?token=${sub.unsubscribe_token}`,
+              },
+            },
+          });
+
+          if (!subInsertError) {
+            jobsQueued++;
+            queuedForHotSheet++;
+          }
+        }
+      }
+
       if (queuedForHotSheet > 0) {
         
         // Record in hot_sheet_sent_listings (canonical dedup source)

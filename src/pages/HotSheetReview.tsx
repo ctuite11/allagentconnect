@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { HotSheetSubscribersSection } from "@/components/HotSheetSubscribersSection";
 
 // ─── Pending Invites section ────────────────────────────────────────────────
 
@@ -930,6 +931,14 @@ if (comments && comments.length > 0) {
               hotSheetName={hotSheet.name}
               agentName={agentDisplayName}
               agentUserId={agentUserId}
+            />
+          )}
+
+          {/* Email Subscribers ("Add a Friend") */}
+          {agentUserId && id && (
+            <HotSheetSubscribersSection
+              hotSheetId={id}
+              agentId={agentUserId}
             />
           )}
 

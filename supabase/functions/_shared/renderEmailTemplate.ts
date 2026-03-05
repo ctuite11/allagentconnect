@@ -130,6 +130,17 @@ export function renderEmailTemplate(
     case "bulk-email":
       return wrapHtml(variables.contentHtml || variables.message || "");
 
+    case "hot-sheet-subscriber-update":
+      return wrapHtml(`
+        <h2>New matches in your Hot Sheet</h2>
+        <p>Hi ${variables.userName},</p>
+        <p>We found ${variables.matchCount} new listing${variables.matchCount !== 1 ? "s" : ""} matching "${variables.hotSheetName}":</p>
+        ${variables.listingsHtml || ""}
+        <p style="font-size:13px;color:#71717a;margin-top:24px;">
+          You're receiving this because someone added you to this Hot Sheet.
+          <a href="${variables.unsubscribeLink}" style="color:#0E56F5;">Unsubscribe</a>
+        </p>`);
+
     case "new-match-notification":
       return wrapHtml(`
         <h2>New matches in your Hot Sheet</h2>

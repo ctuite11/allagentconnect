@@ -2239,6 +2239,60 @@ export type Database = {
           },
         ]
       }
+      hot_sheet_subscribers: {
+        Row: {
+          agent_id: string
+          created_at: string
+          email: string
+          first_name: string | null
+          hot_sheet_id: string
+          id: string
+          last_name: string | null
+          status: string
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          email: string
+          first_name?: string | null
+          hot_sheet_id: string
+          id?: string
+          last_name?: string | null
+          status?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          hot_sheet_id?: string
+          id?: string
+          last_name?: string | null
+          status?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_subscribers_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_subscribers_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_sheets: {
         Row: {
           access_token: string | null
