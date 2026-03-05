@@ -33,8 +33,8 @@ serve(async (req) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const token = authHeader.slice(7);
-  const { data: claimsData, error: claimsErr } = await supabaseUser.auth.getClaims(token);
+  const jwtToken = authHeader.slice(7);
+  const { data: claimsData, error: claimsErr } = await supabaseUser.auth.getClaims(jwtToken);
   if (claimsErr || !claimsData?.claims) return json({ success: false, error: "Unauthorized" }, 401);
 
   const userId = claimsData.claims.sub as string;
@@ -71,28 +71,15 @@ serve(async (req) => {
 
   const workspaceId = membership.workspace_id;
 
-  // Check if already a member
-  const { data: existing } = await supabaseAdmin
-    .from("buyer_workspace_members")
+  // Check if email is already invited (pending invite in buyer_workspace_invites)
+  const { data: existingInvites } = await supabaseAdmin
+    .from("buyer_workspace_invites")
     .select("id")
     .eq("workspace_id", workspaceId)
-    .limit(10);
+    .eq("buyer_email", email)
+    .is("accepted_at", null);
 
-  // Check if email is already invited (pending token)
-  const { data: existingTokens } = await supabaseAdmin
-    .from("share_tokens")
-    .select("id, payload")
-    .eq("agent_id", userId);
-
-  const alreadyInvited = (existingTokens || []).some((t: any) => {
-    const p = t.payload ?? {};
-    return p.type === "buyer_workspace_invite" &&
-      p.buyer_workspace_id === workspaceId &&
-      p.invite_email?.toLowerCase() === email &&
-      !p.accepted_at;
-  });
-
-  if (alreadyInvited) {
+  if (existingInvites && existingInvites.length > 0) {
     return json({ success: false, error: "This person has already been invited." }, 400);
   }
 
@@ -116,30 +103,26 @@ serve(async (req) => {
 
   const stickyAgentId = agentRel?.agent_id ?? null;
 
-  // Create share token
-  const { data: tokenRow, error: tokenErr } = await supabaseAdmin
-    .from("share_tokens")
+  // Create invite in buyer_workspace_invites (service role bypasses RLS)
+  const { data: inviteRow, error: inviteErr } = await supabaseAdmin
+    .from("buyer_workspace_invites")
     .insert({
-      agent_id: stickyAgentId || userId, // use buyer as fallback agent_id (required FK)
-      payload: {
-        type: "buyer_workspace_invite",
-        buyer_workspace_id: workspaceId,
-        invite_email: email,
-        invite_first_name: firstName,
-        invite_last_name: lastName,
-        created_by_user_id: userId,
-        sticky_agent_id: stickyAgentId,
-      },
+      workspace_id: workspaceId,
+      agent_id: stickyAgentId,
+      created_by_user_id: userId,
+      buyer_email: email,
+      buyer_first_name: firstName,
+      buyer_last_name: lastName,
     })
     .select("token")
     .single();
 
-  if (tokenErr || !tokenRow) {
-    console.error("Token creation failed:", tokenErr);
-    return json({ success: false, error: "Failed to create invite token" }, 500);
+  if (inviteErr || !inviteRow) {
+    console.error("Invite creation failed:", inviteErr);
+    return json({ success: false, error: "Failed to create invite" }, 500);
   }
 
-  const inviteLink = `${appUrl}/accept-buyer-workspace-invite?token=${tokenRow.token}`;
+  const inviteLink = `${appUrl}/accept-buyer-workspace-invite?token=${inviteRow.token}`;
 
   // Enqueue email
   const { error: emailErr } = await supabaseAdmin
