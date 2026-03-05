@@ -4,7 +4,7 @@ import { SectionCard } from "@/components/ui/section-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, Trash2, UserPlus, Users } from "lucide-react";
+import { Copy, RefreshCw, Trash2, Users } from "lucide-react";
 
 interface Invite {
   id: string;
@@ -21,6 +21,7 @@ export function PendingInvitesCard() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadInvites();
@@ -82,6 +83,39 @@ export function PendingInvitesCard() {
     setInvites((prev) => prev.filter((i) => i.id !== inviteId));
   };
 
+  const handleResend = async (inviteId: string, extend = false) => {
+    try {
+      setResendingId(inviteId);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        toast.error("You must be signed in");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("resend-buyer-workspace-invite", {
+        body: { inviteId, extend },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (error || !data?.success) {
+        toast.error(data?.error || error?.message || "Failed to resend invite");
+        return;
+      }
+
+      toast.success(extend ? "Invite resent & extended" : "Invite resent");
+
+      // Refresh list if we extended (expires_at changed)
+      if (extend) {
+        await loadInvites();
+      }
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   if (loading) return null;
   if (!workspaceId || invites.length === 0) return null;
 
@@ -95,6 +129,7 @@ export function PendingInvitesCard() {
         {invites.map((invite) => {
           const status = getStatus(invite);
           const name = [invite.buyer_first_name, invite.buyer_last_name].filter(Boolean).join(" ");
+          const isResending = resendingId === invite.id;
 
           return (
             <div
@@ -135,11 +170,37 @@ export function PendingInvitesCard() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    className="h-8 w-8"
+                    onClick={() => handleResend(invite.id)}
+                    disabled={isResending}
+                    title="Resend invite"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isResending ? "animate-spin" : ""}`} />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     className="h-8 w-8 text-destructive hover:text-destructive"
                     onClick={() => handleRevoke(invite.id)}
                     title="Revoke invite"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+
+              {status === "expired" && (
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5"
+                    onClick={() => handleResend(invite.id, true)}
+                    disabled={isResending}
+                    title="Resend and extend invite by 30 days"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${isResending ? "animate-spin" : ""}`} />
+                    Resend + Extend
                   </Button>
                 </div>
               )}

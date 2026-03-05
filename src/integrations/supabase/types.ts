@@ -1084,6 +1084,7 @@ export type Database = {
           created_by_user_id: string
           expires_at: string | null
           id: string
+          last_resent_at: string | null
           token: string
           workspace_id: string
         }
@@ -1099,6 +1100,7 @@ export type Database = {
           created_by_user_id: string
           expires_at?: string | null
           id?: string
+          last_resent_at?: string | null
           token?: string
           workspace_id: string
         }
@@ -1114,6 +1116,7 @@ export type Database = {
           created_by_user_id?: string
           expires_at?: string | null
           id?: string
+          last_resent_at?: string | null
           token?: string
           workspace_id?: string
         }
