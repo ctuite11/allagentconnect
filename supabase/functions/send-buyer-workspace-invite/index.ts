@@ -119,6 +119,10 @@ serve(async (req) => {
 
   if (inviteErr || !inviteRow) {
     console.error("Invite creation failed:", inviteErr);
+    // Unique constraint violation = duplicate pending invite
+    if (inviteErr?.code === "23505") {
+      return json({ success: false, error: "This person has already been invited." }, 400);
+    }
     return json({ success: false, error: "Failed to create invite" }, 500);
   }
 
