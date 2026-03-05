@@ -2241,7 +2241,6 @@ export type Database = {
       }
       hot_sheet_subscribers: {
         Row: {
-          agent_id: string
           created_at: string
           email: string
           first_name: string | null
@@ -2253,7 +2252,6 @@ export type Database = {
           unsubscribed_at: string | null
         }
         Insert: {
-          agent_id: string
           created_at?: string
           email: string
           first_name?: string | null
@@ -2265,7 +2263,6 @@ export type Database = {
           unsubscribed_at?: string | null
         }
         Update: {
-          agent_id?: string
           created_at?: string
           email?: string
           first_name?: string | null
@@ -2277,13 +2274,6 @@ export type Database = {
           unsubscribed_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "hot_sheet_subscribers_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "hot_sheet_subscribers_hot_sheet_id_fkey"
             columns: ["hot_sheet_id"]

@@ -206,7 +206,7 @@ serve(async (req) => {
 
       // ─── Email subscribers (no-account "Add a Friend") ───────────────
       const { data: subscribers } = await supabase
-        .from("hot_sheet_subscribers")
+        .from("hot_sheet_subscribers" as any)
         .select("id, email, first_name, unsubscribe_token")
         .eq("hot_sheet_id", hotSheet.id)
         .eq("status", "active");
