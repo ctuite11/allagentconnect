@@ -103,3 +103,6 @@ verify_jwt = false
 
 [functions.resend-buyer-workspace-invite]
 verify_jwt = false
+
+[functions.unsubscribe-hotsheet]
+verify_jwt = false
