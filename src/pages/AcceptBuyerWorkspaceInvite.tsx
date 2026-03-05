@@ -35,14 +35,19 @@ export default function AcceptBuyerWorkspaceInvite() {
   const acceptInvite = async () => {
     setStatus("accepting");
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
+
+    if (!accessToken) {
+      setStatus("needs_auth");
+      return;
+    }
 
     const { data, error } = await supabase.functions.invoke(
       "accept-buyer-workspace-invite",
       {
         body: { token },
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
     );
 
