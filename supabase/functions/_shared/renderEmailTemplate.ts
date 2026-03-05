@@ -136,6 +136,9 @@ export function renderEmailTemplate(
         <p>Hi ${variables.userName},</p>
         <p>We found ${variables.matchCount} new listing${variables.matchCount !== 1 ? "s" : ""} matching "${variables.hotSheetName}":</p>
         ${variables.listingsHtml || ""}
+        <div class="cta-wrap">
+          <a href="${variables.previewLink}" class="cta"><span class="cta-dot"></span>Forward this Hot Sheet<span class="cta-arrow">&rarr;</span></a>
+        </div>
         <p style="font-size:13px;color:#71717a;margin-top:24px;">
           You're receiving this because someone added you to this Hot Sheet.
           <a href="${variables.unsubscribeLink}" style="color:#0E56F5;">Unsubscribe</a>
