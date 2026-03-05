@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, Mail } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -913,6 +913,18 @@ if (comments && comments.length > 0) {
                     )}
                     <Button
                       variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        document
+                          .getElementById("hot-sheet-add-friend")
+                          ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                      }
+                    >
+                      <Mail className="h-4 w-4 mr-2" />
+                      Share Updates
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={() => toast.info("Activity log coming soon")}
                     >
                       <Activity className="h-4 w-4 mr-2" />
@@ -934,11 +946,10 @@ if (comments && comments.length > 0) {
             />
           )}
 
-          {/* Email Subscribers ("Add a Friend") */}
-          {agentUserId && id && (
+          {/* Email Subscribers ("Share Updates") */}
+          {id && (
             <HotSheetSubscribersSection
               hotSheetId={id}
-              agentId={agentUserId}
             />
           )}
 

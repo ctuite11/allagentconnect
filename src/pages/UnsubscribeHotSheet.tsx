@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle } from "lucide-react";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function UnsubscribeHotSheet() {
   const [searchParams] = useSearchParams();
@@ -12,19 +12,20 @@ export default function UnsubscribeHotSheet() {
 
   useEffect(() => {
     if (!token) {
-      setStatus("success"); // idempotent — treat missing token as already done
+      setStatus("success");
       return;
     }
 
     (async () => {
       try {
-        const data = await invokeEdgeFunction("unsubscribe-hotsheet", { token }) as any;
-        if (data?.success) {
+        const { data, error } = await supabase.functions.invoke("unsubscribe-hotsheet", {
+          body: { token },
+        });
+        if (!error && data?.success) {
           setHotSheetName(data.hotSheetName as string || null);
         }
         setStatus("success");
       } catch {
-        // Still show success for idempotency — don't leak existence
         setStatus("success");
       }
     })();

@@ -22,10 +22,9 @@ interface Subscriber {
 
 interface HotSheetSubscribersSectionProps {
   hotSheetId: string;
-  agentId: string;
 }
 
-export function HotSheetSubscribersSection({ hotSheetId, agentId }: HotSheetSubscribersSectionProps) {
+export function HotSheetSubscribersSection({ hotSheetId }: HotSheetSubscribersSectionProps) {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -58,12 +57,12 @@ export function HotSheetSubscribersSection({ hotSheetId, agentId }: HotSheetSubs
 
     setAdding(true);
     try {
-      // Try to reactivate an existing unsubscribed row first
+      // Check for existing subscriber (exact match on lowercase email)
       const { data: existing } = await supabase
         .from("hot_sheet_subscribers")
         .select("id, status")
         .eq("hot_sheet_id", hotSheetId)
-        .ilike("email", trimmedEmail)
+        .eq("email", trimmedEmail)
         .maybeSingle();
 
       if (existing && existing.status === "active") {
@@ -86,12 +85,11 @@ export function HotSheetSubscribersSection({ hotSheetId, agentId }: HotSheetSubs
 
         if (error) throw error;
       } else {
-        // Insert new
+        // Insert new — no agent_id; RLS derives ownership from hot_sheets.user_id
         const { error } = await supabase
           .from("hot_sheet_subscribers")
           .insert({
             hot_sheet_id: hotSheetId,
-            agent_id: agentId,
             email: trimmedEmail,
             first_name: firstName.trim() || null,
             last_name: lastName.trim() || null,
@@ -130,14 +128,14 @@ export function HotSheetSubscribersSection({ hotSheetId, agentId }: HotSheetSubs
   const activeCount = subscribers.filter(s => s.status === "active").length;
 
   return (
-    <Card className="mb-8">
+    <Card className="mb-8" id="hot-sheet-add-friend">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <UserPlus className="h-5 w-5" />
-          Add a Friend (Email Updates)
+          Share This Hot Sheet
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-1">
-          They'll receive email updates for this Hot Sheet — no account needed.
+          Send listing updates to anyone by email. No login required.
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
