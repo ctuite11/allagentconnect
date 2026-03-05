@@ -27,6 +27,8 @@ serve(async (req) => {
 
   // Auth
   const authHeader = req.headers.get("Authorization") ?? "";
+  console.log("[send-invite] request start", { hasAuth: !!authHeader, startsWithBearer: authHeader.startsWith("Bearer ") });
+
   if (!authHeader.startsWith("Bearer ")) return json({ success: false, error: "Missing auth token" }, 401);
 
   const supabaseUser = createClient(supabaseUrl, anonKey, {
@@ -34,6 +36,8 @@ serve(async (req) => {
   });
 
   const { data: { user }, error: userErr } = await supabaseUser.auth.getUser();
+  console.log("[send-invite] user lookup", { userId: user?.id ?? null, error: userErr?.message ?? null });
+
   if (userErr || !user) return json({ success: false, error: "Unauthorized" }, 401);
 
   const userId = user.id;

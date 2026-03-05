@@ -91,7 +91,7 @@ export function PendingInvitesCard() {
       const token = session?.access_token;
 
       if (!token) {
-        toast.error("You must be signed in");
+        toast.error("Your session expired. Please sign in again.");
         return;
       }
 

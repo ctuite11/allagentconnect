@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { toast } from "sonner";
 import { ArrowRight, UserPlus } from "lucide-react";
 
@@ -52,32 +52,17 @@ export const AddFriendDialog = ({ open, onOpenChange }: AddFriendDialogProps) =>
 
     setIsSubmitting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-
-      const { data, error } = await supabase.functions.invoke(
-        "send-buyer-workspace-invite",
-        {
-          body: {
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: trimmedEmail,
-          },
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        }
-      );
-
-      if (error || !data?.success) {
-        const msg = data?.error || error?.message || "Failed to send invite";
-        toast.error(msg);
-        return;
-      }
+      await invokeEdgeFunction("send-buyer-workspace-invite", {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: trimmedEmail,
+      });
 
       toast.success("Invite sent!");
       handleClose();
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      toast.error("Something went wrong. Please try again.");
+    } catch (err: any) {
+      console.error("Invite send error:", err);
+      toast.error(err?.message || "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
