@@ -2240,7 +2240,7 @@ const AddListing = () => {
       
       if (!isAutoSave) {
         toast.success("Draft saved successfully!");
-        navigate(ROUTES.MY_LISTINGS);
+        navigate(`${ROUTES.MY_LISTINGS}?status=draft`);
       }
     } catch (error: any) {
       console.error("Error saving draft listing:", {
