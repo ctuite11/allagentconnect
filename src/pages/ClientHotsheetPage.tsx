@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { Heart, Bed, Bath, Maximize, MapPin, UserCircle2, MessageSquare, Mail, Phone, Building2 } from "lucide-react";
+import { Heart, Bed, Bath, Maximize, MapPin, UserCircle2, MessageSquare, Mail, Phone, Building2, ArrowLeft, UserPlus, Plus } from "lucide-react";
 import FavoriteButton from "@/components/FavoriteButton";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { ListingAttribution } from "@/components/ListingAttribution";
+import { AddFriendDialog } from "@/components/AddFriendDialog";
+import { LISTING_STATUS_LABELS } from "@/constants/status";
 
 interface Listing {
   id: string;
@@ -49,6 +51,7 @@ const ClientHotsheetPage = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showEditCriteria, setShowEditCriteria] = useState(false);
+  const [showAddFriend, setShowAddFriend] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -380,28 +383,67 @@ const ClientHotsheetPage = () => {
             className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
             onClick={() => navigate("/client/dashboard")}
           >
-            <MapPin className="w-4 h-4" />
-            ← Back to Dashboard
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
           </Button>
 
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
-              {hotSheet?.name || "Your Custom Hotsheet"}
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-lg font-medium">
+              Hotsheet Name:{" "}
+              <span className="text-[#0E56F5]">{hotSheet?.name || "Your Custom Hotsheet"}</span>
             </h1>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => navigate("/client/hotsheets/new")}
+            >
+              <Plus className="w-4 h-4" />
+              Create New Hot Sheet
+            </Button>
           </div>
 
-          {/* Search Criteria with Edit Button */}
+          {/* Search Criteria */}
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Search Criteria</CardTitle>
-                <Button onClick={() => setShowEditCriteria(true)} variant="outline">
-                  Edit Search
-                </Button>
+                <CardTitle className="text-base">Search Criteria</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setShowAddFriend(true)}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Add a Friend
+                  </Button>
+                  <Button onClick={() => setShowEditCriteria(true)} variant="outline" size="sm">
+                    Edit Search
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                {criteria.state && (
+                  <div>
+                    <span className="text-muted-foreground">State:</span>{" "}
+                    <span className="font-semibold">{criteria.state}</span>
+                  </div>
+                )}
+                {criteria.selectedCountyId && criteria.selectedCountyId !== "all" && (
+                  <div>
+                    <span className="text-muted-foreground">County:</span>{" "}
+                    <span className="font-semibold">{criteria.selectedCountyId}</span>
+                  </div>
+                )}
+                {criteria.county && criteria.county !== "all" && !criteria.selectedCountyId && (
+                  <div>
+                    <span className="text-muted-foreground">County:</span>{" "}
+                    <span className="font-semibold">{criteria.county}</span>
+                  </div>
+                )}
                 {criteria.minPrice && (
                   <div>
                     <span className="text-muted-foreground">Min Price:</span>{" "}
@@ -426,15 +468,58 @@ const ClientHotsheetPage = () => {
                     <span className="font-semibold">{criteria.bathrooms}</span>
                   </div>
                 )}
-                {criteria.cities && criteria.cities.length > 0 && (
+                {criteria.minSqft && (
+                  <div>
+                    <span className="text-muted-foreground">Min SqFt:</span>{" "}
+                    <span className="font-semibold">{parseFloat(criteria.minSqft).toLocaleString()}</span>
+                  </div>
+                )}
+                {criteria.maxSqft && (
+                  <div>
+                    <span className="text-muted-foreground">Max SqFt:</span>{" "}
+                    <span className="font-semibold">{parseFloat(criteria.maxSqft).toLocaleString()}</span>
+                  </div>
+                )}
+                {criteria.zipCode && (
+                  <div>
+                    <span className="text-muted-foreground">Zip Code:</span>{" "}
+                    <span className="font-semibold">{criteria.zipCode}</span>
+                  </div>
+                )}
+                {criteria.propertyTypes && criteria.propertyTypes.length > 0 && (
                   <div className="col-span-2 md:col-span-4">
-                    <span className="text-muted-foreground">Cities:</span>{" "}
+                    <span className="text-muted-foreground">Property Types:</span>{" "}
+                    <span className="font-semibold">
+                      {criteria.propertyTypes.map((t: string) => t.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())).join(", ")}
+                    </span>
+                  </div>
+                )}
+                {criteria.statuses && criteria.statuses.length > 0 && (
+                  <div className="col-span-2 md:col-span-4">
+                    <span className="text-muted-foreground">Statuses:</span>{" "}
+                    <span className="font-semibold">
+                      {criteria.statuses.map((s: string) => LISTING_STATUS_LABELS[s] || s.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())).join(", ")}
+                    </span>
+                  </div>
+                )}
+                {(criteria.cities && criteria.cities.length > 0) && (
+                  <div className="col-span-2 md:col-span-4">
+                    <span className="text-muted-foreground">Towns/Cities:</span>{" "}
                     <span className="font-semibold">{criteria.cities.join(", ")}</span>
+                  </div>
+                )}
+                {criteria.neighborhoods && criteria.neighborhoods.length > 0 && (
+                  <div className="col-span-2 md:col-span-4">
+                    <span className="text-muted-foreground">Neighborhoods:</span>{" "}
+                    <span className="font-semibold">{criteria.neighborhoods.join(", ")}</span>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
+
+          {/* Add Friend Dialog */}
+          <AddFriendDialog open={showAddFriend} onOpenChange={setShowAddFriend} />
 
           {/* Edit Criteria Dialog */}
           {hotSheet && (
