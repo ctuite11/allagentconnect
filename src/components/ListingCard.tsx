@@ -710,21 +710,21 @@ const ListingCard = ({
               </div>}
           </div>
 
-          {agentInfo && <div className="text-right mt-1">
+          <div className="flex items-center justify-between mt-1 gap-2">
+            {agentInfo && (
               <ListingAttribution
                 listingAgentName={agentInfo.name}
                 listingAgentCompany={agentInfo.company}
               />
-            </div>}
-          
-          {/* Buyer Interest Signals */}
-          {interestSignals && (
-            <ListingInterestSignals
-              savesCount={interestSignals.saves_count}
-              commentsCount={interestSignals.comments_count}
-              hotsheetMatchCount={interestSignals.hotsheet_match_count}
-            />
-          )}
+            )}
+            {interestSignals && (
+              <ListingInterestSignals
+                savesCount={interestSignals.saves_count}
+                commentsCount={interestSignals.comments_count}
+                hotsheetMatchCount={interestSignals.hotsheet_match_count}
+              />
+            )}
+          </div>
           
           {/* Open House Info */}
           {nextOpenHouse && (
