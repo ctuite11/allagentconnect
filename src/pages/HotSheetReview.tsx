@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { PageTitle } from "@/components/ui/page-title";
-import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate, useParams } from "react-router-dom";
-// Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, Mail, Share2 } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, ArrowLeft } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { HotSheetSubscribersSection } from "@/components/HotSheetSubscribersSection";
+// HotSheetSubscribersSection removed — sharing belongs in create/edit flow
 import { useListingInterestSignals } from "@/hooks/useListingInterestSignals";
 // ─── Pending Invites section ────────────────────────────────────────────────
 
@@ -178,34 +175,29 @@ function PendingInvitesSection({
   if (invites.length === 0) return null;
 
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle className="text-base">Client Invites</CardTitle>
+    <Card className="mb-6">
+      <CardHeader className="py-3 px-4">
+        <CardTitle className="text-sm">Client Invites</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-3 pt-0">
         <div className="divide-y divide-border">
           {invites.map((inv) => {
             const isAccepted = !!inv.accepted_at;
             const inCooldown = inv.cooldownUntil !== null && Date.now() < inv.cooldownUntil;
             return (
-              <div key={inv.token_id} className="flex items-center justify-between py-3 gap-4">
+              <div key={inv.token_id} className="flex items-center justify-between py-2 gap-3">
                 <div className="min-w-0">
                   <p className="font-medium text-sm truncate">{inv.client_name}</p>
                   <p className="text-xs text-muted-foreground truncate">{inv.client_email}</p>
-                  {inv.sent_at && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Sent {format(new Date(inv.sent_at), "MMM d, yyyy")}
-                    </p>
-                  )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {isAccepted ? (
-                    <Badge variant="default" className="flex items-center gap-1">
+                    <Badge variant="default" className="flex items-center gap-1 text-xs">
                       <CheckCircle2 className="h-3 w-3" /> Accepted
                     </Badge>
                   ) : (
                     <>
-                      <Badge variant="secondary" className="flex items-center gap-1">
+                      <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                         <Clock className="h-3 w-3" /> Pending
                       </Badge>
                       <Button
@@ -921,65 +913,32 @@ if (comments && comments.length > 0) {
     <div className="min-h-screen flex flex-col pt-20">
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
-          {/* Header with inline back button */}
-          <PageHeader
-            title={hotSheet.name}
-            backTo="/hot-sheets"
-            actions={
-              <div className="flex items-center gap-3">
-                {clientCount > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {acceptedCount > 0 && (
-                      <span className="inline-flex items-center gap-1 mr-3">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                        Accepted: {acceptedCount}
-                      </span>
-                    )}
-                    {unacceptedCount > 0 && (
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                        Pending: {unacceptedCount}
-                      </span>
-                    )}
-                  </span>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    document
-                      .getElementById("hot-sheet-add-friend")
-                      ?.scrollIntoView({ behavior: "smooth", block: "center" })
-                  }
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Share Updates
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => toast.info("Activity log coming soon")}
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Activity Log
-                </Button>
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/hot-sheets")}
+                className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div className="flex flex-col">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Hotsheet Name</p>
+                <h1 className="text-xl font-semibold" style={{ color: '#0E56F5' }}>
+                  {hotSheet.name}
+                </h1>
               </div>
-            }
-          />
+            </div>
+          </div>
 
-          {/* Pending Invites */}
+          {/* Client Invites */}
           {agentUserId && id && (
             <PendingInvitesSection
               hotSheetId={id}
               hotSheetName={hotSheet.name}
               agentName={agentDisplayName}
               agentUserId={agentUserId}
-            />
-          )}
-
-          {/* Email Subscribers ("Share Updates") */}
-          {id && (
-            <HotSheetSubscribersSection
-              hotSheetId={id}
             />
           )}
 
@@ -1021,7 +980,7 @@ if (comments && comments.length > 0) {
 
           {/* Controls */}
           <div className="flex flex-col gap-3 mb-6">
-            {/* Top row: Select All + Sort + Invite/Notify */}
+            {/* Top row: Select All + Sort */}
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <Checkbox
@@ -1030,7 +989,9 @@ if (comments && comments.length > 0) {
                   onCheckedChange={toggleSelectAll}
                 />
                 <label htmlFor="select-all" className="cursor-pointer font-medium">
-                  Select All ({listings.length} listings)
+                  {selectedListings.size === listings.length && listings.length > 0
+                    ? `Unselect All (${listings.length} listings)`
+                    : `Select All (${listings.length} listings)`}
                 </label>
               </div>
               <div className="flex items-center gap-3">
@@ -1045,7 +1006,8 @@ if (comments && comments.length > 0) {
                     <SelectItem value="price-low">Price: Low to High</SelectItem>
                   </SelectContent>
                 </Select>
-                {unacceptedCount > 0 ? (
+                {/* Invite/Notify CTA — hidden once invites have been sent */}
+                {!invitesSent && unacceptedCount > 0 ? (
                   <Button
                     onClick={() => {
                       if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
@@ -1059,7 +1021,7 @@ if (comments && comments.length > 0) {
                     <Send className="h-4 w-4 mr-2" />
                     {sending ? "Sending…" : `Invite Clients (${unacceptedCount})`}
                   </Button>
-                ) : acceptedCount > 0 ? (
+                ) : !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" disabled={sending}>
@@ -1093,12 +1055,6 @@ if (comments && comments.length > 0) {
                 </Button>
                 <Button size="sm" variant="outline" onClick={handleRemoveSelected}>
                   Remove Selected
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => {
-                  toast.info("Share selected listings coming soon");
-                }}>
-                  <Share2 className="h-3.5 w-3.5 mr-1.5" />
-                  Share
                 </Button>
               </div>
             )}
