@@ -1,11 +1,14 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { MessageSquare, ArrowLeft, User } from "lucide-react";
+import { MessageSquare, ArrowLeft, User, Plus, Building2 } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { PageShell } from "@/components/layout/PageShell";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { NewConversationDialog } from "@/components/NewConversationDialog";
 
 const cardClass =
   "bg-white rounded-2xl border border-zinc-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
@@ -13,6 +16,35 @@ const cardClass =
 export default function Messages() {
   const navigate = useNavigate();
   const { threads, loading } = useConversationThreads();
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
+
+  // Cache listing addresses: { [listingId]: addressString }
+  const [addressCache, setAddressCache] = useState<Record<string, string>>({});
+
+  // Hydrate listing addresses for threads that have listing_id
+  useEffect(() => {
+    if (loading || threads.length === 0) return;
+
+    const listingIds = threads
+      .map((t) => t.listingId)
+      .filter((id): id is string => !!id && !addressCache[id]);
+
+    const uniqueIds = [...new Set(listingIds)];
+    if (uniqueIds.length === 0) return;
+
+    supabase
+      .from("listings")
+      .select("id, address, city, state")
+      .in("id", uniqueIds)
+      .then(({ data }) => {
+        if (!data) return;
+        const newEntries: Record<string, string> = {};
+        data.forEach((l) => {
+          newEntries[l.id] = [l.address, l.city, l.state].filter(Boolean).join(", ");
+        });
+        setAddressCache((prev) => ({ ...prev, ...newEntries }));
+      });
+  }, [threads, loading]);
 
   /** Fire-and-forget prefetch to warm Supabase cache */
   const prefetch = (threadId: string) => {
@@ -24,20 +56,35 @@ export default function Messages() {
       .then(() => {});
   };
 
+  const getThreadContext = (thread: { listingId: string | null }) => {
+    if (!thread.listingId) return "General";
+    return addressCache[thread.listingId] || "Listing conversation";
+  };
+
   return (
     <PageShell>
       <div className="max-w-2xl mx-auto py-8 px-4">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-zinc-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-zinc-600" />
-          </button>
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-6 h-6 text-emerald-600" />
-            <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-zinc-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-zinc-600" />
+            </button>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-6 h-6 text-emerald-600" />
+              <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
+            </div>
           </div>
+          <Button
+            onClick={() => setNewMessageOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-700"
+            size="sm"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            New Message
+          </Button>
         </div>
 
         {loading ? (
@@ -58,9 +105,17 @@ export default function Messages() {
           <div className={cn(cardClass, "p-8 text-center")}>
             <MessageSquare className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-zinc-700 mb-2">No messages yet</h3>
-            <p className="text-zinc-500 text-sm">
+            <p className="text-zinc-500 text-sm mb-4">
               Your messages will appear here.
             </p>
+            <Button
+              onClick={() => setNewMessageOpen(true)}
+              variant="outline"
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              Start a Conversation
+            </Button>
           </div>
         ) : (
           <div className="space-y-2">
@@ -86,7 +141,7 @@ export default function Messages() {
                     <User className="w-5 h-5 text-zinc-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
                       <span
                         className={cn(
                           "font-medium text-zinc-900 truncate",
@@ -99,6 +154,15 @@ export default function Messages() {
                         {formatDistanceToNow(new Date(thread.lastMessageAt), {
                           addSuffix: true,
                         })}
+                      </span>
+                    </div>
+                    {/* Thread context: listing address or General */}
+                    <div className="flex items-center gap-1.5 mb-1">
+                      {thread.listingId ? (
+                        <Building2 className="w-3 h-3 text-zinc-400 flex-shrink-0" />
+                      ) : null}
+                      <span className="text-xs text-zinc-400 truncate">
+                        {getThreadContext(thread)}
                       </span>
                     </div>
                     {thread.lastMessagePreview && (
@@ -123,6 +187,11 @@ export default function Messages() {
           </div>
         )}
       </div>
+
+      <NewConversationDialog
+        open={newMessageOpen}
+        onOpenChange={setNewMessageOpen}
+      />
     </PageShell>
   );
 }

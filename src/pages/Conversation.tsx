@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, Send, User } from "lucide-react";
+import { ArrowLeft, Send, User, Building2 } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export default function Conversation() {
@@ -18,6 +19,27 @@ export default function Conversation() {
   const { messages, details, loading, notFound, sending, sendMessage } = useConversation(id);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [listingAddress, setListingAddress] = useState<string | null>(null);
+
+  // Hydrate listing address
+  useEffect(() => {
+    if (!details?.listingId) {
+      setListingAddress(null);
+      return;
+    }
+    supabase
+      .from("listings")
+      .select("address, city, state")
+      .eq("id", details.listingId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setListingAddress([data.address, data.city, data.state].filter(Boolean).join(", "));
+        } else {
+          setListingAddress("Listing conversation");
+        }
+      });
+  }, [details?.listingId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,25 +95,36 @@ export default function Conversation() {
     <PageShell>
       <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
         {/* Header */}
-        <div className="flex items-center gap-3 py-4 px-4 border-b border-zinc-200">
-          <button
-            onClick={() => from ? navigate(from) : navigate("/messages")}
-            className="p-2 hover:bg-zinc-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-zinc-600" />
-          </button>
-          <div
-            className={cn(
-              "flex items-center gap-3",
-              details?.otherUserIsAgent && "cursor-pointer hover:opacity-80"
-            )}
-            onClick={() => details?.otherUserIsAgent && navigate(`/agent/${details.otherUserId}`)}
-          >
-            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center">
-              <User className="w-5 h-5 text-zinc-400" />
+        <div className="py-4 px-4 border-b border-zinc-200">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => from ? navigate(from) : navigate("/messages")}
+              className="p-2 hover:bg-zinc-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-zinc-600" />
+            </button>
+            <div
+              className={cn(
+                "flex items-center gap-3",
+                details?.otherUserIsAgent && "cursor-pointer hover:opacity-80"
+              )}
+              onClick={() => details?.otherUserIsAgent && navigate(`/agent/${details.otherUserId}`)}
+            >
+              <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center">
+                <User className="w-5 h-5 text-zinc-400" />
+              </div>
+              <span className="font-medium text-zinc-900">{details?.otherUserName}</span>
             </div>
-            <span className="font-medium text-zinc-900">{details?.otherUserName}</span>
           </div>
+          {/* Listing context line */}
+          {details?.listingId && (
+            <div className="flex items-center gap-1.5 ml-[52px] mt-1">
+              <Building2 className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="text-xs text-zinc-400">
+                About: {listingAddress || "Listing conversation"}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Messages */}
