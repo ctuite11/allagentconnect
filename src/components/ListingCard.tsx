@@ -711,17 +711,17 @@ const ListingCard = ({
           </div>
 
           <div className="flex items-center justify-between mt-1 gap-2">
-            {agentInfo && (
-              <ListingAttribution
-                listingAgentName={agentInfo.name}
-                listingAgentCompany={agentInfo.company}
-              />
-            )}
             {interestSignals && (
               <ListingInterestSignals
                 savesCount={interestSignals.saves_count}
                 commentsCount={interestSignals.comments_count}
                 hotsheetMatchCount={interestSignals.hotsheet_match_count}
+              />
+            )}
+            {agentInfo && (
+              <ListingAttribution
+                listingAgentName={agentInfo.name}
+                listingAgentCompany={agentInfo.company}
               />
             )}
           </div>
