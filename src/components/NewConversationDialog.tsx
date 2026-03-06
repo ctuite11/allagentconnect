@@ -143,7 +143,7 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
   }, [recipients, search]);
 
   const agentRecipients = filteredRecipients.filter((r) => r.group === "agent");
-  const clientRecipients = filteredRecipients.filter((r) => r.group === "client");
+  const buyerRecipients = filteredRecipients.filter((r) => r.group === "client");
 
   const handleSend = async () => {
     if (!selectedRecipient) {
@@ -247,9 +247,31 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
               ) : (
                 <ScrollArea className="max-h-[280px]">
                   <div className="space-y-1">
-                    {agentRecipients.length > 0 && (
+                    {buyerRecipients.length > 0 && (
                       <>
                         <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider px-2 pt-2">
+                          My Buyers
+                        </p>
+                        {buyerRecipients.map((r) => (
+                          <button
+                            key={r.id}
+                            onClick={() => setSelectedRecipient(r)}
+                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-zinc-50 transition-colors text-left"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                              <User className="w-4 h-4 text-emerald-500" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-zinc-900 truncate">{r.name}</p>
+                              <p className="text-xs text-zinc-400 truncate">{r.email}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {agentRecipients.length > 0 && (
+                      <>
+                        <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider px-2 pt-3">
                           Agents
                         </p>
                         {agentRecipients.map((r) => (
@@ -269,29 +291,7 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
                         ))}
                       </>
                     )}
-                    {clientRecipients.length > 0 && (
-                      <>
-                        <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider px-2 pt-3">
-                          My Clients
-                        </p>
-                        {clientRecipients.map((r) => (
-                          <button
-                            key={r.id}
-                            onClick={() => setSelectedRecipient(r)}
-                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-zinc-50 transition-colors text-left"
-                          >
-                            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                              <User className="w-4 h-4 text-emerald-500" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-zinc-900 truncate">{r.name}</p>
-                              <p className="text-xs text-zinc-400 truncate">{r.email}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </>
-                    )}
-                    {agentRecipients.length === 0 && clientRecipients.length === 0 && (
+                    {agentRecipients.length === 0 && buyerRecipients.length === 0 && (
                       <p className="text-sm text-zinc-400 text-center py-6">No results found</p>
                     )}
                   </div>
