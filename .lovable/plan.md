@@ -1,31 +1,28 @@
 
 
-## Grep Results
+## Fix Hot Sheet Review Page — 3 Changes
 
-**"Contact the listing agent"** — found in **one** file: `src/components/PropertyDetailRightColumn.tsx` (line 667). Zero matches in `PropertyDetail.tsx` or `ConsumerPropertyDetail.tsx` — those are clean.
+### File: `src/pages/HotSheetReview.tsx`
 
-**"Interested in this property?"** — found in two files:
-- `src/components/PropertyDetailRightColumn.tsx` (line 647) — the unsafe fallback
-- `src/components/ContactAgentDialog.tsx` (line 196) — just placeholder text in a textarea, harmless
-
-## The Leak
-
-`PropertyDetailRightColumn.tsx` lines 643-674 contain the exact same unsafe fallback pattern you already deleted from `PropertyDetail.tsx`: a `!agent` card that says "Contact the listing agent" with a bare "Contact Agent" button.
-
-**However**, this component is not imported anywhere. It's dead code — exported but never used by any page. So it's not actively rendering, but it's still a landmine waiting for someone to re-import it.
-
-## Plan
-
-**Single file: `src/components/PropertyDetailRightColumn.tsx`**
-
-1. Delete lines 643-674 (the entire `{!agent && (...)}` fallback block)
-2. Replace with the standard regression guard comment:
-```
-{/* ATTRIBUTION MASKING: No "Contact listing agent" fallback.
-    Buyers redirect to /consumer-property/:id; non-agents see agent-only UI. */}
+**1. Header** — Replace stacked uppercase layout with inline format:
+```jsx
+<h1 className="text-xl font-semibold">
+  <span className="text-neutral-800">Hotsheet Name: </span>
+  <span style={{ color: '#0E56F5' }}>{hotSheet.name}</span>
+</h1>
 ```
 
-The `ContactAgentDialog.tsx` placeholder text ("I'm interested in this property and would like more information...") is fine — it's user-facing input placeholder inside a form that already uses the sticky agent ID, not listing-agent wording.
+**2. Controls row** — Flatten to one row, remove "Remove Selected":
+- Delete `handleRemoveSelected` function
+- Delete the separate bulk action bar div
+- Inline "N Selected" + "Keep Selected" into the Select All row (left side)
+- Rename CTA from "Invite Clients" to "Send First Batch"
 
-After this change, `grep -R "Contact the listing agent" src` will return zero results.
+### File: `src/components/ListingCard.tsx`
+
+**3. Listing agent attribution** — Move to its own bottom-right row (grid view)
+
+Currently (lines 714-719), the `ListingAttribution` is **inside** the beds/baths/sqft row (`flex items-center justify-between`). The screenshots show it belongs on its **own separate row below** the stats, right-aligned.
+
+Change: Move the `{agentInfo && ...}` block **out** of the stats div (line 698-720) and place it **after** that div as its own `<div className="text-right mt-1">` block, so attribution sits in the bottom-right corner of the card on its own line — matching the screenshot exactly.
 
