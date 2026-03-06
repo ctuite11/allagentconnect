@@ -695,29 +695,27 @@ const ListingCard = ({
               <p className="text-sm text-muted-foreground">{listing.property_type}</p>
             </div>}
           
-          <div className="flex items-center justify-between mt-1">
-            <div className="flex items-center gap-6 text-lg">
-              {listing.bedrooms && <div className="flex items-center gap-1.5">
-                  <Bed className="h-5 w-5 text-primary" />
-                  <span className="text-foreground font-semibold">{listing.bedrooms}</span>
-                </div>}
-              {listing.bathrooms && <div className="flex items-center gap-1.5">
-                  <Bath className="h-5 w-5 text-primary" />
-                  <span className="text-foreground font-semibold">{listing.bathrooms}</span>
-                </div>}
-              {listing.square_feet && <div className="flex items-center gap-1.5">
-                  <Maximize className="h-5 w-5 text-primary" />
-                  <span className="text-foreground font-semibold">{listing.square_feet.toLocaleString()}</span>
-                </div>}
-            </div>
-            
-            {agentInfo && <div className="text-xs text-right">
-                <ListingAttribution
-                  listingAgentName={agentInfo.name}
-                  listingAgentCompany={agentInfo.company}
-                />
+          <div className="flex items-center gap-6 text-lg mt-1">
+            {listing.bedrooms && <div className="flex items-center gap-1.5">
+                <Bed className="h-5 w-5 text-primary" />
+                <span className="text-foreground font-semibold">{listing.bedrooms}</span>
+              </div>}
+            {listing.bathrooms && <div className="flex items-center gap-1.5">
+                <Bath className="h-5 w-5 text-primary" />
+                <span className="text-foreground font-semibold">{listing.bathrooms}</span>
+              </div>}
+            {listing.square_feet && <div className="flex items-center gap-1.5">
+                <Maximize className="h-5 w-5 text-primary" />
+                <span className="text-foreground font-semibold">{listing.square_feet.toLocaleString()}</span>
               </div>}
           </div>
+
+          {agentInfo && <div className="text-right mt-1">
+              <ListingAttribution
+                listingAgentName={agentInfo.name}
+                listingAgentCompany={agentInfo.company}
+              />
+            </div>}
           
           {/* Buyer Interest Signals */}
           {interestSignals && (
