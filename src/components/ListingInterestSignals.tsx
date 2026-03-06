@@ -19,7 +19,7 @@ export function ListingInterestSignals({
   if (total === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 text-xs mt-2">
+    <div className="flex flex-wrap items-center gap-3 text-xs">
       {savesCount > 0 && (
         <span className="inline-flex items-center gap-1 text-orange-600 dark:text-orange-400 font-medium">
           <Flame className="h-3.5 w-3.5" />
