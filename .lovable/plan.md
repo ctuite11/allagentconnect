@@ -1,30 +1,23 @@
 
 
-## Fix: Listing Agent + Buyer Interest Signals — Same Row
+## Fix: Swap ListingAttribution and ListingInterestSignals sides
 
-### File: `src/components/ListingCard.tsx` (lines 713-727)
+### File: `src/components/ListingCard.tsx` (around line 713)
 
-The attribution and interest signals are currently on separate rows. The screenshot shows them **inline on the same row**: listing agent on the left, buyer signals on the right (or continuing inline).
+The current flex row has attribution on the left and interest signals on the right. User wants it reversed: **interest signals on the left, listing agent attribution on the right**.
 
-**Change**: Wrap both `ListingAttribution` and `ListingInterestSignals` in a single `flex items-center justify-between` row:
+Simply swap the order of the two children inside the existing `flex items-center justify-between` div:
 
 ```jsx
 <div className="flex items-center justify-between mt-1 gap-2">
-  {agentInfo && (
-    <ListingAttribution
-      listingAgentName={agentInfo.name}
-      listingAgentCompany={agentInfo.company}
-    />
-  )}
   {interestSignals && (
-    <ListingInterestSignals
-      savesCount={interestSignals.saves_count}
-      commentsCount={interestSignals.comments_count}
-      hotsheetMatchCount={interestSignals.hotsheet_match_count}
-    />
+    <ListingInterestSignals ... />
+  )}
+  {agentInfo && (
+    <ListingAttribution ... />
   )}
 </div>
 ```
 
-Remove the separate wrapping `<div className="text-right mt-1">` around attribution and the standalone `ListingInterestSignals` block. Both go into one flex row. The `mt-2` on `ListingInterestSignals` component itself should also be removed (change to `mt-0` or remove the outer margin since the parent now handles spacing).
+No other changes.
 
