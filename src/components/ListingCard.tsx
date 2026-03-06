@@ -613,6 +613,14 @@ const ListingCard = ({
                   </svg>}
               </div>
             </div>}
+          {/* Favorite heart indicator */}
+          {interestSignals && interestSignals.saves_count > 0 && (
+            <div className="absolute top-2 right-2 z-10">
+              <div className="w-7 h-7 rounded-full bg-background/90 backdrop-blur-sm shadow-md flex items-center justify-center">
+                <Heart className="w-4 h-4 fill-destructive text-destructive" />
+              </div>
+            </div>
+          )}
           {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && <div className="absolute bottom-2 right-2 z-10">
               <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-3 py-1.5 text-sm font-medium shadow-md backdrop-blur-sm">
                 {listing.neighborhood || (listing as any).attom_data?.neighborhood}
