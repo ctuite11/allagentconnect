@@ -23,10 +23,10 @@ import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/ui/page-header";
-type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled";
+type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled" | "draft";
 
 // Single source of truth for the active pipeline statuses
-const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market", "temporarily_withdrawn", "cancelled"];
+const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market", "temporarily_withdrawn", "cancelled", "draft"];
 
 interface Listing {
   id: string;
@@ -337,8 +337,8 @@ function MyListingsView({
         </Button>
         <Button
           variant="ghost"
-          onClick={() => navigate("/agent/listings/drafts")}
-          className="gap-2 text-zinc-600"
+          onClick={() => toggleStatus("draft")}
+          className={`gap-2 ${selectedStatuses.has("draft") ? "text-emerald-700" : "text-zinc-600"}`}
         >
           <FileText className="h-4 w-4" />
           Drafts
