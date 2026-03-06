@@ -336,6 +336,7 @@ const HotSheets = () => {
                 onShare={(id) => setShareDialogOpen(id)}
                 onComments={(id) => setCommentsDialogOpen(id)}
                 onDelete={handleDeleteHotSheet}
+                onAddFriend={(id) => setShareDialogOpen(id)}
               />
             ))}
           </div>

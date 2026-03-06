@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Share2, Trash2, MessageSquare, Pencil, Play } from "lucide-react";
+import { Share2, Trash2, MessageSquare, Pencil, Play, UserPlus } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { formatDistanceToNow } from "date-fns";
 
@@ -14,6 +14,7 @@ interface HotSheetCardProps {
   onShare: (id: string) => void;
   onComments: (id: string) => void;
   onDelete: (id: string) => void;
+  onAddFriend?: (id: string) => void;
 }
 
 export const HotSheetCard = ({
@@ -26,6 +27,7 @@ export const HotSheetCard = ({
   onShare,
   onComments,
   onDelete,
+  onAddFriend,
 }: HotSheetCardProps) => {
   const navigate = useNavigate();
   const primaryClient = clients[0];
@@ -90,8 +92,17 @@ export const HotSheetCard = ({
             </Button>
           </div>
 
-          {/* Icon Actions: Share, Message | Delete (separated) */}
+          {/* Icon Actions */}
           <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => { e.stopPropagation(); onAddFriend?.(id); }}
+              title="Add a Friend"
+            >
+              <UserPlus className="h-4 w-4 text-muted-foreground" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
