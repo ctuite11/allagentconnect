@@ -176,11 +176,25 @@ function MyListingsView({
   const navigate = useNavigate();
   const statusFromUrl = searchParams.get("status");
   
-  // Multi-select: parse comma-separated statuses from URL
+  // Detect if agent has only drafts (no published listings)
+  const nonDraftListings = useMemo(() => listings.filter(l => l.status !== "draft"), [listings]);
+  const hasOnlyDrafts = listings.length > 0 && nonDraftListings.length === 0;
+
+  // Multi-select: parse comma-separated statuses from URL, auto-select draft if only drafts exist
   const [selectedStatuses, setSelectedStatuses] = useState<Set<ListingStatus>>(() => {
-    if (!statusFromUrl) return new Set();
-    return new Set(statusFromUrl.split(",").filter(s => ALL_STATUSES.some(t => t.value === s)) as ListingStatus[]);
+    if (statusFromUrl) {
+      return new Set(statusFromUrl.split(",").filter(s => ALL_STATUSES.some(t => t.value === s)) as ListingStatus[]);
+    }
+    return new Set();
   });
+  
+  // Auto-select draft filter when agent has only drafts and no filter is active
+  useEffect(() => {
+    if (hasOnlyDrafts && selectedStatuses.size === 0 && !statusFromUrl) {
+      setSelectedStatuses(new Set(["draft"]));
+      setSearchParams({ status: "draft" });
+    }
+  }, [hasOnlyDrafts]);
   const [view, setView] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -485,6 +499,19 @@ function MyListingsView({
             <Trash2 className="h-3.5 w-3.5 mr-1.5" />
             Delete Selected
           </Button>
+        </div>
+      )}
+
+      {/* Auto-draft notice when agent has only drafts */}
+      {hasOnlyDrafts && selectedStatuses.has("draft") && (
+        <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+          Showing your drafts because you don't have any published listings yet. Continue editing a draft or{" "}
+          <button
+            className="text-primary hover:text-primary/80 underline"
+            onClick={() => onNewListing("new")}
+          >
+            create a new listing
+          </button>.
         </div>
       )}
 
