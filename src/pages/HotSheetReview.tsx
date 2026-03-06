@@ -580,17 +580,6 @@ if (comments && comments.length > 0) {
     toast.success(`Kept ${filtered.length} listings, removed ${listings.length - filtered.length}`);
   };
 
-  const handleRemoveSelected = () => {
-    if (selectedListings.size === 0) {
-      toast.error("No listings selected");
-      return;
-    }
-    const remaining = listings.filter(l => !selectedListings.has(l.id));
-    const removedCount = selectedListings.size;
-    setListings(remaining);
-    setSelectedListings(new Set());
-    toast.success(`Removed ${removedCount} listings`);
-  };
 
   const handleSendInvites = async () => {
     if (!hotSheet?.id) return;
@@ -923,12 +912,10 @@ if (comments && comments.length > 0) {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div className="flex flex-col">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Hotsheet Name</p>
-                <h1 className="text-xl font-semibold" style={{ color: '#0E56F5' }}>
-                  {hotSheet.name}
-                </h1>
-              </div>
+              <h1 className="text-xl font-semibold">
+                <span className="text-neutral-800">Hotsheet Name: </span>
+                <span style={{ color: '#0E56F5' }}>{hotSheet.name}</span>
+              </h1>
             </div>
           </div>
 
@@ -979,85 +966,76 @@ if (comments && comments.length > 0) {
           </Card>
 
           {/* Controls */}
-          <div className="flex flex-col gap-3 mb-6">
-            {/* Top row: Select All + Sort */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <Checkbox
-                  id="select-all"
-                  checked={selectedListings.size === listings.length && listings.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                />
-                <label htmlFor="select-all" className="cursor-pointer font-medium">
-                  {selectedListings.size === listings.length && listings.length > 0
-                    ? `Unselect All (${listings.length} listings)`
-                    : `Select All (${listings.length} listings)`}
-                </label>
-              </div>
-              <div className="flex items-center gap-3">
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest to Oldest</SelectItem>
-                    <SelectItem value="oldest">Oldest to Newest</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  </SelectContent>
-                </Select>
-                {/* Invite/Notify CTA — hidden once invites have been sent */}
-                {!invitesSent && unacceptedCount > 0 ? (
-                  <Button
-                    onClick={() => {
-                      if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
-                        setConfirmInviteOpen(true);
-                      } else {
-                        handleSendInvites();
-                      }
-                    }}
-                    disabled={sending || clientCount === 0}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {sending ? "Sending…" : `Invite Clients (${unacceptedCount})`}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-4">
+              <Checkbox
+                id="select-all"
+                checked={selectedListings.size === listings.length && listings.length > 0}
+                onCheckedChange={toggleSelectAll}
+              />
+              <label htmlFor="select-all" className="cursor-pointer font-medium">
+                {selectedListings.size === listings.length && listings.length > 0
+                  ? `Unselect All (${listings.length} listings)`
+                  : `Select All (${listings.length} listings)`}
+              </label>
+              {selectedListings.size > 0 && (
+                <>
+                  <div className="h-4 w-px bg-border" />
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedListings.size} Selected
+                  </span>
+                  <Button size="sm" onClick={handleKeepSelected}>
+                    Keep Selected
                   </Button>
-                ) : !invitesSent && acceptedCount > 0 ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" disabled={sending}>
-                        <Send className="h-4 w-4 mr-2" />
-                        Notify Clients ({acceptedCount})
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleNotifyUpdate}>
-                        Send update (message only)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleNotifyWithMatches}>
-                        Send current matches
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : null}
-              </div>
+                </>
+              )}
             </div>
-
-            {/* Bulk action bar — visible when selections exist */}
-            {selectedListings.size > 0 && (
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-muted border border-border rounded-xl">
-                <span className="text-sm font-medium text-foreground">
-                  {selectedListings.size} Selected
-                </span>
-                <div className="h-4 w-px bg-border" />
-                <Button size="sm" onClick={handleKeepSelected}>
-                  Keep Selected
+            <div className="flex items-center gap-3">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest to Oldest</SelectItem>
+                  <SelectItem value="oldest">Oldest to Newest</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                </SelectContent>
+              </Select>
+              {!invitesSent && unacceptedCount > 0 ? (
+                <Button
+                  onClick={() => {
+                    if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
+                      setConfirmInviteOpen(true);
+                    } else {
+                      handleSendInvites();
+                    }
+                  }}
+                  disabled={sending || clientCount === 0}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {sending ? "Sending…" : "Send First Batch"}
                 </Button>
-                <Button size="sm" variant="outline" onClick={handleRemoveSelected}>
-                  Remove Selected
-                </Button>
-              </div>
-            )}
+              ) : !invitesSent && acceptedCount > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={sending}>
+                      <Send className="h-4 w-4 mr-2" />
+                      Notify Clients ({acceptedCount})
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleNotifyUpdate}>
+                      Send update (message only)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleNotifyWithMatches}>
+                      Send current matches
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
           </div>
 
           {/* Listings Grid */}
