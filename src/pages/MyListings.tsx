@@ -462,7 +462,31 @@ function MyListingsView({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Draft bulk-select removed — drafts filtered out server-side */}
+      {/* Draft bulk-action toolbar */}
+      {selectedStatuses.has("draft") && draftListings.length > 0 && (
+        <div className="mt-4 flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5">
+          <Checkbox
+            checked={selectedDraftIds.size === draftListings.length}
+            onCheckedChange={selectAllDrafts}
+            aria-label="Select all drafts"
+          />
+          <span className="text-sm text-muted-foreground">
+            {selectedDraftIds.size > 0
+              ? `${selectedDraftIds.size} of ${draftListings.length} selected`
+              : `Select all (${draftListings.length})`}
+          </span>
+          <div className="flex-1" />
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={selectedDraftIds.size === 0}
+            onClick={() => setShowBulkDeleteConfirm(true)}
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
 
       {/* GRID VIEW */}
       {view === "grid" && (
@@ -475,8 +499,40 @@ function MyListingsView({
                 interactive
                 className="cursor-pointer"
               >
-              <div className="w-full h-48 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
+              <div className="relative w-full h-48 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
                 <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
+                {/* Draft: selection checkbox overlay */}
+                {l.status === "draft" && (
+                  <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedDraftIds.has(l.id)}
+                      onCheckedChange={() => toggleDraftSelection(l.id)}
+                      aria-label="Select draft"
+                      className="bg-white/90 shadow-sm"
+                    />
+                  </div>
+                )}
+                {/* Draft: 3-dot delete menu overlay */}
+                {l.status === "draft" && (
+                  <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1 rounded bg-white/90 shadow-sm hover:bg-white transition-colors text-zinc-500 hover:text-zinc-700">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem
+                          className="cursor-pointer text-sm text-destructive focus:text-destructive"
+                          onClick={() => setListingToDelete(l)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-2" />
+                          Delete Listing
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
               </div>
 
               <div className="p-4">
@@ -575,8 +631,18 @@ function MyListingsView({
                 key={l.id}
                 className="relative p-4"
               >
+                {/* Draft checkbox for list view */}
+                {l.status === "draft" && (
+                  <div className="absolute top-4 left-4 z-10">
+                    <Checkbox
+                      checked={selectedDraftIds.has(l.id)}
+                      onCheckedChange={() => toggleDraftSelection(l.id)}
+                      aria-label="Select draft"
+                    />
+                  </div>
+                )}
                 {/* Action row - tight, no vertical padding */}
-                <div className="mb-3 flex justify-between items-start">
+                <div className={`mb-3 flex justify-between items-start ${l.status === "draft" ? "ml-8" : ""}`}>
                   <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
                     <button
                       className="hover:text-emerald-700 transition"
@@ -637,7 +703,7 @@ function MyListingsView({
                     </button>
                   </div>
                   {/* Right side - quiet metadata + overflow */}
-                   <div className="absolute top-4 right-4 text-right space-y-0.5">
+                   <div className="absolute top-4 right-4 z-10 text-right space-y-0.5">
                      <ListingStatusBadge status={l.status} size="sm" />
                       <div className="text-xs text-zinc-500 leading-tight">AAC List Date: {listDate}</div>
                     {isComingSoon(l.status) ? (
