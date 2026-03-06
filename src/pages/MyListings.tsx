@@ -176,11 +176,25 @@ function MyListingsView({
   const navigate = useNavigate();
   const statusFromUrl = searchParams.get("status");
   
-  // Multi-select: parse comma-separated statuses from URL
+  // Detect if agent has only drafts (no published listings)
+  const nonDraftListings = useMemo(() => listings.filter(l => l.status !== "draft"), [listings]);
+  const hasOnlyDrafts = listings.length > 0 && nonDraftListings.length === 0;
+
+  // Multi-select: parse comma-separated statuses from URL, auto-select draft if only drafts exist
   const [selectedStatuses, setSelectedStatuses] = useState<Set<ListingStatus>>(() => {
-    if (!statusFromUrl) return new Set();
-    return new Set(statusFromUrl.split(",").filter(s => ALL_STATUSES.some(t => t.value === s)) as ListingStatus[]);
+    if (statusFromUrl) {
+      return new Set(statusFromUrl.split(",").filter(s => ALL_STATUSES.some(t => t.value === s)) as ListingStatus[]);
+    }
+    return new Set();
   });
+  
+  // Auto-select draft filter when agent has only drafts and no filter is active
+  useEffect(() => {
+    if (hasOnlyDrafts && selectedStatuses.size === 0 && !statusFromUrl) {
+      setSelectedStatuses(new Set(["draft"]));
+      setSearchParams({ status: "draft" });
+    }
+  }, [hasOnlyDrafts]);
   const [view, setView] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
   
