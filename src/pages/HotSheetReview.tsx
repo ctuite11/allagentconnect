@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, Mail } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, Mail, Share2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -584,7 +584,20 @@ if (comments && comments.length > 0) {
     }
     const filtered = listings.filter(l => selectedListings.has(l.id));
     setListings(filtered);
-    toast.success(`Showing ${filtered.length} selected listings`);
+    setSelectedListings(new Set());
+    toast.success(`Kept ${filtered.length} listings, removed ${listings.length - filtered.length}`);
+  };
+
+  const handleRemoveSelected = () => {
+    if (selectedListings.size === 0) {
+      toast.error("No listings selected");
+      return;
+    }
+    const remaining = listings.filter(l => !selectedListings.has(l.id));
+    const removedCount = selectedListings.size;
+    setListings(remaining);
+    setSelectedListings(new Set());
+    toast.success(`Removed ${removedCount} listings`);
   };
 
   const handleSendInvites = async () => {
@@ -816,31 +829,47 @@ if (comments && comments.length > 0) {
     const criteria = hotSheet.criteria as any;
     const parts = [];
 
-    if (criteria.propertyTypes?.length > 0) {
-      parts.push(`Property: ${criteria.propertyTypes.join(", ")}`);
-    }
-    if (criteria.minPrice || criteria.maxPrice) {
-      const min = criteria.minPrice ? `$${criteria.minPrice.toLocaleString()}` : "Any";
-      const max = criteria.maxPrice ? `$${criteria.maxPrice.toLocaleString()}` : "Any";
-      parts.push(`Price: ${min} - ${max}`);
-    }
-    if (criteria.bedrooms) {
-      parts.push(`${criteria.bedrooms}+ beds`);
-    }
-    if (criteria.bathrooms) {
-      parts.push(`${criteria.bathrooms}+ baths`);
-    }
-    if (criteria.cities?.length > 0) {
-      const cityList = criteria.cities.length > 5
-        ? `${criteria.cities.slice(0, 5).join(", ")} (+${criteria.cities.length - 5} more)`
-        : criteria.cities.join(", ");
-      parts.push(`Cities: ${cityList}`);
+    // Location: support both "cities" and "towns" keys
+    const towns = criteria.cities || criteria.towns || [];
+    if (towns.length > 0) {
+      const cityList = towns.length > 5
+        ? `${towns.slice(0, 5).join(", ")} (+${towns.length - 5} more)`
+        : towns.join(", ");
+      parts.push(`Location: ${cityList}`);
     }
     if (criteria.state) {
       parts.push(`State: ${criteria.state}`);
     }
+    if (criteria.county && criteria.county !== "all") {
+      parts.push(`County: ${criteria.county}`);
+    }
+    if (criteria.neighborhoods?.length > 0) {
+      parts.push(`Neighborhoods: ${criteria.neighborhoods.join(", ")}`);
+    }
     if (criteria.zipCode) {
       parts.push(`Zip: ${criteria.zipCode}`);
+    }
+    if (criteria.minPrice || criteria.maxPrice) {
+      const min = criteria.minPrice ? `$${Number(criteria.minPrice).toLocaleString()}` : "Any";
+      const max = criteria.maxPrice ? `$${Number(criteria.maxPrice).toLocaleString()}` : "Any";
+      parts.push(`Price: ${min} – ${max}`);
+    }
+    if (criteria.bedrooms) {
+      parts.push(`Beds: ${criteria.bedrooms}+`);
+    }
+    if (criteria.bathrooms) {
+      parts.push(`Baths: ${criteria.bathrooms}+`);
+    }
+    if (criteria.propertyTypes?.length > 0) {
+      parts.push(`Property: ${criteria.propertyTypes.join(", ")}`);
+    }
+    if (criteria.statuses?.length > 0) {
+      parts.push(`Status: ${criteria.statuses.join(", ")}`);
+    }
+    if (criteria.minSqft || criteria.maxSqft) {
+      const min = criteria.minSqft ? `${Number(criteria.minSqft).toLocaleString()}` : "Any";
+      const max = criteria.maxSqft ? `${Number(criteria.maxSqft).toLocaleString()}` : "Any";
+      parts.push(`Sqft: ${min} – ${max}`);
     }
 
     return parts;
@@ -893,54 +922,49 @@ if (comments && comments.length > 0) {
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Header with inline back button */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <PageHeader
-                title={hotSheet.name}
-                subtitle={getClientDisplay() ? `Client: ${getClientDisplay()}` : undefined}
-                backTo="/hot-sheets"
-                actions={
-                  <div className="flex items-center gap-3">
-                    {clientCount > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {acceptedCount > 0 && (
-                          <span className="inline-flex items-center gap-1 mr-3">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                            Accepted: {acceptedCount}
-                          </span>
-                        )}
-                        {unacceptedCount > 0 && (
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                            Pending: {unacceptedCount}
-                          </span>
-                        )}
+          <PageHeader
+            title={hotSheet.name}
+            backTo="/hot-sheets"
+            actions={
+              <div className="flex items-center gap-3">
+                {clientCount > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {acceptedCount > 0 && (
+                      <span className="inline-flex items-center gap-1 mr-3">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                        Accepted: {acceptedCount}
                       </span>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        document
-                          .getElementById("hot-sheet-add-friend")
-                          ?.scrollIntoView({ behavior: "smooth", block: "center" })
-                      }
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Share Updates
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => toast.info("Activity log coming soon")}
-                    >
-                      <Activity className="h-4 w-4 mr-2" />
-                      Activity Log
-                    </Button>
-                  </div>
-                }
-              />
-            </div>
-          </div>
+                    {unacceptedCount > 0 && (
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        Pending: {unacceptedCount}
+                      </span>
+                    )}
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    document
+                      .getElementById("hot-sheet-add-friend")
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                  }
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Share Updates
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast.info("Activity log coming soon")}
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  Activity Log
+                </Button>
+              </div>
+            }
+          />
 
           {/* Pending Invites */}
           {agentUserId && id && (
@@ -996,79 +1020,88 @@ if (comments && comments.length > 0) {
           </Card>
 
           {/* Controls */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
-              <Checkbox
-                id="select-all"
-                checked={selectedListings.size === listings.length && listings.length > 0}
-                onCheckedChange={toggleSelectAll}
-              />
-              <label htmlFor="select-all" className="cursor-pointer font-medium">
-                Select All ({listings.length} listings)
-              </label>
-              {selectedListings.size > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  {selectedListings.size} selected
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              {selectedListings.size > 0 && (
-                <>
+          <div className="flex flex-col gap-3 mb-6">
+            {/* Top row: Select All + Sort + Invite/Notify */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedListings.size === listings.length && listings.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                />
+                <label htmlFor="select-all" className="cursor-pointer font-medium">
+                  Select All ({listings.length} listings)
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest to Oldest</SelectItem>
+                    <SelectItem value="oldest">Oldest to Newest</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  </SelectContent>
+                </Select>
+                {unacceptedCount > 0 ? (
                   <Button
-                    onClick={handleKeepSelected}
-                    disabled={selectedListings.size === 0}
+                    onClick={() => {
+                      if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
+                        setConfirmInviteOpen(true);
+                      } else {
+                        handleSendInvites();
+                      }
+                    }}
+                    disabled={sending || clientCount === 0}
                   >
-                    Keep Selected ({selectedListings.size})
+                    <Send className="h-4 w-4 mr-2" />
+                    {sending ? "Sending…" : `Invite Clients (${unacceptedCount})`}
                   </Button>
-                </>
-              )}
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest to Oldest</SelectItem>
-                  <SelectItem value="oldest">Oldest to Newest</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                </SelectContent>
-              </Select>
-              {unacceptedCount > 0 ? (
-                <Button
-                  onClick={() => {
-                    // Gate: if matches exist but none selected, confirm first
-                    if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
-                      setConfirmInviteOpen(true);
-                    } else {
-                      handleSendInvites();
-                    }
-                  }}
-                  disabled={sending || clientCount === 0}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {sending ? "Sending…" : `Invite Clients (${unacceptedCount})`}
-                </Button>
-              ) : acceptedCount > 0 ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" disabled={sending}>
-                      <Send className="h-4 w-4 mr-2" />
-                      Notify Clients ({acceptedCount})
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleNotifyUpdate}>
-                      Send update (message only)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleNotifyWithMatches}>
-                      Send current matches
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
+                ) : acceptedCount > 0 ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" disabled={sending}>
+                        <Send className="h-4 w-4 mr-2" />
+                        Notify Clients ({acceptedCount})
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleNotifyUpdate}>
+                        Send update (message only)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleNotifyWithMatches}>
+                        Send current matches
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
             </div>
+
+            {/* Bulk action bar — visible when selections exist */}
+            {selectedListings.size > 0 && (
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-muted border border-border rounded-xl">
+                <span className="text-sm font-medium text-foreground">
+                  {selectedListings.size} Selected
+                </span>
+                <div className="h-4 w-px bg-border" />
+                <Button size="sm" onClick={handleKeepSelected}>
+                  Keep Selected
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleRemoveSelected}>
+                  Remove Selected
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => {
+                  toast.info("Share selected listings coming soon");
+                }}>
+                  <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                  Share
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Listings Grid */}

@@ -338,6 +338,8 @@ export function CreateHotSheetDialog({
       setPricePerSqft(criteria.pricePerSqft?.toString() || "");
       setZipCode(criteria.zipCode || "");
       setSelectedCities(criteria.cities || []);
+      // Load county
+      setSelectedCountyId(criteria.selectedCountyId || criteria.county || "all");
       // Normalize loaded state to 2-letter code, default to MA
       const loadedState = criteria.state as string | undefined;
       const normalizedState = loadedState && loadedState.length > 2

@@ -124,12 +124,6 @@ export default function HotSheetPreview() {
         <div className="container mx-auto px-4 py-8 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Hot Sheet Preview</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{hotSheetName}</h1>
-          {agentName && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Curated by <span className="font-medium text-foreground">{agentName}</span>
-              {agentCompany && <span> · {agentCompany}</span>}
-            </p>
-          )}
           <p className="text-sm text-muted-foreground mt-1">
             {listings.length} listing{listings.length !== 1 ? "s" : ""} matching this search
           </p>
