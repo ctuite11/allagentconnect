@@ -502,6 +502,19 @@ function MyListingsView({
         </div>
       )}
 
+      {/* Auto-draft notice when agent has only drafts */}
+      {hasOnlyDrafts && selectedStatuses.has("draft") && (
+        <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+          Showing your drafts because you don't have any published listings yet. Continue editing a draft or{" "}
+          <button
+            className="text-primary hover:text-primary/80 underline"
+            onClick={() => onNewListing("new")}
+          >
+            create a new listing
+          </button>.
+        </div>
+      )}
+
       {/* GRID VIEW */}
       {view === "grid" && (
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
