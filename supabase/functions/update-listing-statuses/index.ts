@@ -160,9 +160,81 @@ Deno.serve(async (req) => {
 
     console.log(`Open house cleanup: removed ${removedEventsTotal} past event(s) from ${cleanedCount} listing(s).`);
 
+    // ========== PART 4: Auto-revert back_on_market → active after 48 hours ==========
+    console.log('Checking for back_on_market listings to revert...');
+
+    const { data: bomListings, error: bomQueryError } = await supabase
+      .from('listings')
+      .select('id, address, status')
+      .eq('status', 'back_on_market');
+
+    if (bomQueryError) {
+      console.error('Error querying back_on_market listings:', bomQueryError);
+    }
+
+    const revertedIds: string[] = [];
+    const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+
+    if (bomListings && bomListings.length > 0) {
+      console.log(`Found ${bomListings.length} listing(s) in back_on_market status.`);
+
+      for (const listing of bomListings) {
+        // Get the most recent history row where this listing entered back_on_market
+        const { data: historyRows, error: histError } = await supabase
+          .from('listing_status_history')
+          .select('id, created_at')
+          .eq('listing_id', listing.id)
+          .eq('new_status', 'back_on_market')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (histError) {
+          console.error(`Error querying history for listing ${listing.id}:`, histError);
+          continue;
+        }
+
+        if (!historyRows || historyRows.length === 0) {
+          console.log(`No back_on_market history found for listing ${listing.id}, skipping.`);
+          continue;
+        }
+
+        const enteredAt = historyRows[0].created_at;
+        if (enteredAt > cutoff) {
+          // Not yet 48 hours old
+          continue;
+        }
+
+        // Revert to active
+        const { error: updateError } = await supabase
+          .from('listings')
+          .update({ status: 'active' })
+          .eq('id', listing.id)
+          .eq('status', 'back_on_market'); // extra guard: only update if still back_on_market
+
+        if (updateError) {
+          console.error(`Error reverting listing ${listing.id}:`, updateError);
+          continue;
+        }
+
+        revertedIds.push(listing.id);
+
+        await supabase.from('listing_status_history').insert({
+          listing_id: listing.id,
+          old_status: 'back_on_market',
+          new_status: 'active',
+          changed_by: null,
+          notes: 'Auto-reverted from Back on Market after 48 hours',
+        });
+
+        console.log(`Reverted listing ${listing.id} (${listing.address}) from back_on_market → active`);
+      }
+    }
+
+    console.log(`Back on Market revert: ${revertedIds.length} listing(s) reverted to active.`);
+
     return new Response(
       JSON.stringify({ 
-        message: `Processed ${activatedIds.length} activation(s), ${expiredIds.length} expiration(s), and cleaned ${removedEventsTotal} past event(s)`,
+        message: `Processed ${activatedIds.length} activation(s), ${expiredIds.length} expiration(s), cleaned ${removedEventsTotal} past event(s), and reverted ${revertedIds.length} back_on_market listing(s)`,
         activated: {
           count: activatedIds.length,
           ids: activatedIds
@@ -174,6 +246,10 @@ Deno.serve(async (req) => {
         open_house_cleanup: {
           listings_cleaned: cleanedCount,
           events_removed: removedEventsTotal
+        },
+        back_on_market_reverted: {
+          count: revertedIds.length,
+          ids: revertedIds
         }
       }),
       { 
