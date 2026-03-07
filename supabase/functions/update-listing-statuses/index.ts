@@ -198,8 +198,8 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const enteredAt = historyRows[0].created_at;
-        if (enteredAt > cutoff) {
+        const enteredAtMs = new Date(historyRows[0].created_at).getTime();
+        if (enteredAtMs > cutoffTime) {
           // Not yet 48 hours old
           continue;
         }
@@ -218,13 +218,17 @@ Deno.serve(async (req) => {
 
         revertedIds.push(listing.id);
 
-        await supabase.from('listing_status_history').insert({
+        const { error: historyInsertError } = await supabase.from('listing_status_history').insert({
           listing_id: listing.id,
           old_status: 'back_on_market',
           new_status: 'active',
           changed_by: null,
           notes: 'Auto-reverted from Back on Market after 48 hours',
         });
+
+        if (historyInsertError) {
+          console.error(`Error inserting revert history for listing ${listing.id}:`, historyInsertError);
+        }
 
         console.log(`Reverted listing ${listing.id} (${listing.address}) from back_on_market → active`);
       }
