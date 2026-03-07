@@ -722,13 +722,13 @@ function MyListingsView({
                       Social
                     </button>
                     <span className="text-zinc-300">•</span>
-                    <span className="flex items-center gap-1 text-zinc-500">
-                      <Eye className="h-3.5 w-3.5" /> {views}
-                    </span>
-                    <span className="text-zinc-300">•</span>
-                    <span className="flex items-center gap-1 text-zinc-500">
-                      <Heart className="h-3.5 w-3.5" /> {favorites}
-                    </span>
+                     <span className="flex items-center gap-0.5 text-zinc-400 hover:text-zinc-600 transition-colors">
+                       <Eye className="h-3.5 w-3.5" />{views}
+                     </span>
+                     <span className="text-zinc-300">•</span>
+                     <span className="flex items-center gap-0.5 text-zinc-400 hover:text-zinc-600 transition-colors">
+                       <Heart className="h-3.5 w-3.5" />{favorites}
+                     </span>
                     <span className="text-zinc-300">•</span>
                     <button
                       className="hover:text-emerald-700 transition"
