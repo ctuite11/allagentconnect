@@ -106,7 +106,7 @@ export const LISTING_STATUS_LABELS: Record<string, string> = {
   [LISTING_STATUS.CANCELLED]: "Cancelled",
   [LISTING_STATUS.CANCELED]: "Canceled",
   [LISTING_STATUS.DRAFT]: "Draft",
-  [LISTING_STATUS.OFF_MARKET]: "Off-Market",
+  [LISTING_STATUS.OFF_MARKET]: "Off Market",
 };
 
 // MLSPIN code mappings for Hot Sheet dialog
@@ -151,7 +151,7 @@ export const LISTING_STATUS_CONFIG: Record<string, { bg: string; text: string; l
   [LISTING_STATUS.CANCELLED]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Cancelled" },
   [LISTING_STATUS.CANCELED]: { bg: "bg-neutral-100", text: "text-neutral-500", label: "Canceled" },
   [LISTING_STATUS.DRAFT]: { bg: "bg-neutral-100", text: "text-neutral-600", label: "Draft" },
-  [LISTING_STATUS.OFF_MARKET]: { bg: "bg-rose-50", text: "text-rose-700", label: "Off-Market" },
+  [LISTING_STATUS.OFF_MARKET]: { bg: "bg-rose-50", text: "text-rose-700", label: "Off Market" },
 };
 
 // Statuses considered "off market" for banner logic
@@ -286,7 +286,7 @@ export const PROPERTY_TYPES = [
 export const MLSPIN_FILTER_STATUSES = [
   { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
   { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
-  { value: LISTING_STATUS.OFF_MARKET, label: "Off-Market (Private)" },
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off Market" },
   { value: LISTING_STATUS.PENDING, label: LISTING_STATUS_LABELS[LISTING_STATUS.PENDING] },
   { value: LISTING_STATUS.SOLD, label: LISTING_STATUS_LABELS[LISTING_STATUS.SOLD] },
 ];
@@ -302,7 +302,7 @@ export const LISTING_SEARCH_STATUSES = [
   { value: LISTING_STATUS.EXTENDED, label: LISTING_STATUS_LABELS[LISTING_STATUS.EXTENDED] },
   { value: LISTING_STATUS.REACTIVATED, label: LISTING_STATUS_LABELS[LISTING_STATUS.REACTIVATED] },
   { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
-  { value: LISTING_STATUS.OFF_MARKET, label: "Private" },
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off Market" },
   { value: LISTING_STATUS.UNDER_AGREEMENT, label: LISTING_STATUS_LABELS[LISTING_STATUS.UNDER_AGREEMENT] },
   { value: LISTING_STATUS.PENDING, label: LISTING_STATUS_LABELS[LISTING_STATUS.PENDING] },
   { value: LISTING_STATUS.CONTINGENT, label: LISTING_STATUS_LABELS[LISTING_STATUS.CONTINGENT] },
@@ -410,7 +410,7 @@ export const AGENT_LISTINGS_TAB_STATUSES = [
  * Add Listing form - CREATE mode statuses
  */
 export const ADD_LISTING_CREATE_STATUSES = [
-  { value: LISTING_STATUS.OFF_MARKET, label: "Off-Market (Private)" },
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off Market" },
   { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
   { value: LISTING_STATUS.NEW, label: "New (Active)" },
 ];
@@ -419,7 +419,7 @@ export const ADD_LISTING_CREATE_STATUSES = [
  * Add Listing form - EDIT mode statuses
  */
 export const ADD_LISTING_EDIT_STATUSES = [
-  { value: LISTING_STATUS.OFF_MARKET, label: "Off-Market (Private)" },
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off Market" },
   { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
   { value: LISTING_STATUS.NEW, label: LISTING_STATUS_LABELS[LISTING_STATUS.NEW] },
   { value: LISTING_STATUS.ACTIVE, label: LISTING_STATUS_LABELS[LISTING_STATUS.ACTIVE] },
