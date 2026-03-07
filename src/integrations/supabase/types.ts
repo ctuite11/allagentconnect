@@ -2177,18 +2177,21 @@ export type Database = {
           id: string
           listing_id: string
           sent_at: string | null
+          status_at_send: string
         }
         Insert: {
           hot_sheet_id: string
           id?: string
           listing_id: string
           sent_at?: string | null
+          status_at_send: string
         }
         Update: {
           hot_sheet_id?: string
           id?: string
           listing_id?: string
           sent_at?: string | null
+          status_at_send?: string
         }
         Relationships: [
           {
