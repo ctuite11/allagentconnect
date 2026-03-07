@@ -742,22 +742,24 @@ function MyListingsView({
                       expDate && <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>
                     )}
                     <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="mt-1 p-1 rounded hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem
-                          className="cursor-pointer text-sm text-destructive focus:text-destructive"
-                          onClick={() => setListingToDelete(l)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-2" />
-                          Delete Listing
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {l.status === "draft" && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="mt-1 p-1 rounded hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem
+                            className="cursor-pointer text-sm text-destructive focus:text-destructive"
+                            onClick={() => setListingToDelete(l)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />
+                            Delete Listing
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </div>
 
