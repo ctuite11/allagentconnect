@@ -243,14 +243,24 @@ serve(async (req) => {
       if (queuedForHotSheet > 0) {
         
         // Record in hot_sheet_sent_listings (canonical dedup source)
+        // Get listing statuses for status_at_send
+        const listingIds = matchingListings.map((m: any) => m.listing_id);
+        const { data: listingStatuses } = await supabase
+          .from("listings")
+          .select("id, status")
+          .in("id", listingIds);
+
+        const statusMap = new Map((listingStatuses || []).map((l: any) => [l.id, l.status]));
+
         const sentRecords = matchingListings.map((match: any) => ({
           hot_sheet_id: hotSheet.id,
           listing_id: match.listing_id,
+          status_at_send: statusMap.get(match.listing_id) || 'active',
         }));
 
         await supabase
           .from("hot_sheet_sent_listings")
-          .upsert(sentRecords, { onConflict: "hot_sheet_id,listing_id" });
+          .upsert(sentRecords, { onConflict: "hot_sheet_id,listing_id,status_at_send" });
 
         // Also record in hot_sheet_notifications (audit/logging)
         const notificationRecords = matchingListings.map((match: any) => ({

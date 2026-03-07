@@ -163,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
       query = query.in("status", criteria.statuses);
     } else {
       // Default to match pipeline statuses
-      query = query.in("status", ["active", "new", "coming_soon", "off_market"]);
+      query = query.in("status", ["active", "new", "coming_soon", "off_market", "back_on_market"]);
     }
     if (criteria.minPrice) {
       query = query.gte("price", criteria.minPrice);
@@ -492,6 +492,7 @@ const handler = async (req: Request): Promise<Response> => {
     const sentRecords = newListings.map(listing => ({
       hot_sheet_id: hotSheetId,
       listing_id: listing.id,
+      status_at_send: listing.status || 'active',
     }));
 
     if (sentRecords.length > 0) {
