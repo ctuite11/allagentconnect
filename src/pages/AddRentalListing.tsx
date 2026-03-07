@@ -24,6 +24,7 @@ import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities"
 import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 import { cn } from "@/lib/utils";
 import { RENTAL_STATUS_OPTIONS } from "@/constants/status";
+import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
 
 interface FileWithPreview {
   file: File;
@@ -593,6 +594,25 @@ const AddRentalListing = () => {
 
       // Validate data with Zod
       const validatedData = listingSchema.parse(dataToValidate);
+
+      // --- Duplicate listing check (only for live statuses) ---
+      const targetStatus = publishNow ? formData.status : "draft";
+      if (isLiveStatus(targetStatus)) {
+        const dupResult = await checkDuplicateListing({
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip_code,
+        });
+        if (dupResult.found) {
+          const statusLabel = (dupResult.status || "").replace(/_/g, " ");
+          toast.error(
+            `A listing at this address is already "${statusLabel}". You cannot create a duplicate. If the existing listing is expired, canceled, sold, rented, or withdrawn, you may proceed.`
+          );
+          setSubmitting(false);
+          return;
+        }
+      }
 
       // Upload files first
       toast.info("Uploading files...");
