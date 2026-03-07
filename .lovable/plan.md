@@ -31,3 +31,8 @@
 - **`notify_matching_buyers_on_new_listing` trigger**: Changed from `AFTER INSERT` to `AFTER INSERT OR UPDATE`; fires for `active` and `back_on_market`; guards against unchanged status on UPDATE
 - **`process-hot-sheet/index.ts`**: Added `back_on_market` to default status filter; writes `status_at_send` when recording sent listings
 - **`send-new-match-notification/index.ts`**: Fetches listing statuses and writes `status_at_send` on upsert; updated onConflict to include `status_at_send`
+
+### 7. Duplicate Listing Detection
+- **`src/lib/checkDuplicateListing.ts`** (new): Reusable helper that queries `listings` for matching normalized address+city+state+zip in blocking statuses (`active`, `new`, `coming_soon`, `off_market`, `back_on_market`, `price_changed`, `extended`, `reactivated`, `under_agreement`, `pending`, `contingent`). Normalizes via trim + lowercase + collapse spaces. Excludes self via `excludeListingId` param for edit mode. `isLiveStatus()` helper determines when to run the check.
+- **`AddListing.tsx`**: Duplicate check wired into both `handleSaveChanges` (after validation, before file uploads) and `handleSubmit` (after Zod validation, before file uploads). Only runs when target status is a live/published status. Excludes `listingId || draftId` in edit mode.
+- **`AddRentalListing.tsx`**: Same duplicate check wired into `handleSubmit` after Zod validation, before file uploads. Only runs for live statuses.

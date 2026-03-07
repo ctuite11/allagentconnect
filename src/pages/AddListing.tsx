@@ -43,6 +43,7 @@ import {
 } from "@/constants/status";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
+import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -2334,6 +2335,25 @@ const AddListing = () => {
     }
     // --- End validation ---
 
+    // --- Duplicate listing check (only for live statuses) ---
+    if (isLiveStatus(formData.status)) {
+      const dupResult = await checkDuplicateListing({
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip_code,
+        excludeListingId: listingId || draftId || undefined,
+      });
+      if (dupResult.found) {
+        const statusLabel = (dupResult.status || "").replace(/_/g, " ");
+        toast.error(
+          `A listing at this address is already "${statusLabel}". You cannot create a duplicate. If the existing listing is expired, canceled, sold, rented, or withdrawn, you may proceed.`
+        );
+        setSubmitting(false);
+        return;
+      }
+    }
+
     try {
       // Upload any new files
       let uploaded: { photos: { url: string; name: string }[]; floorPlans: { url: string; name: string }[]; documents: { url: string; name: string; documentType: string }[] } = {
@@ -2612,6 +2632,28 @@ const AddListing = () => {
 
       // Validate data with Zod
       const validatedData = listingSchema.parse(dataToValidate);
+
+      // --- Duplicate listing check (only for live statuses) ---
+      const targetStatus = publishNow
+        ? (formData.status === "draft" || !formData.status ? "new" : formData.status)
+        : "draft";
+      if (isLiveStatus(targetStatus)) {
+        const dupResult = await checkDuplicateListing({
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip_code,
+          excludeListingId: listingId || draftId || undefined,
+        });
+        if (dupResult.found) {
+          const statusLabel = (dupResult.status || "").replace(/_/g, " ");
+          toast.error(
+            `A listing at this address is already "${statusLabel}". You cannot create a duplicate. If the existing listing is expired, canceled, sold, rented, or withdrawn, you may proceed.`
+          );
+          setSubmitting(false);
+          return;
+        }
+      }
 
       // Upload files first
       toast.info("Uploading files...");
