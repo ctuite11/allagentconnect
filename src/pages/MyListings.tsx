@@ -722,15 +722,19 @@ function MyListingsView({
                       Social
                     </button>
                     <span className="text-zinc-300">•</span>
-                     <span className="flex items-center gap-0.5 hover:opacity-80 transition-opacity">
-                       <Eye className="h-3.5 w-3.5 text-sky-600" />
-                       <span className="text-zinc-700 font-medium">{views}</span>
-                     </span>
-                     <span className="text-zinc-300">•</span>
-                     <span className="flex items-center gap-0.5 hover:opacity-80 transition-opacity">
-                       <Heart className="h-3.5 w-3.5 text-rose-500" />
-                       <span className="text-zinc-700 font-medium">{favorites}</span>
-                     </span>
+                    <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
+                      <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-sky-100">
+                        <Eye className="h-3 w-3 text-sky-600" strokeWidth={2.2} />
+                      </span>
+                      <span className="text-[13px] leading-none text-zinc-800 font-medium">{views}</span>
+                    </span>
+                    <span className="text-zinc-300">•</span>
+                    <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
+                      <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-rose-100">
+                        <Heart className="h-3 w-3 text-rose-500 fill-rose-500" strokeWidth={2.2} />
+                      </span>
+                      <span className="text-[13px] leading-none text-zinc-800 font-medium">{favorites}</span>
+                    </span>
                     <span className="text-zinc-300">•</span>
                     <button
                       className="hover:text-emerald-700 transition"
