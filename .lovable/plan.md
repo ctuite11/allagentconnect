@@ -36,3 +36,15 @@
 - **`src/lib/checkDuplicateListing.ts`** (new): Reusable helper that queries `listings` for matching normalized address+city+state+zip in blocking statuses (`active`, `new`, `coming_soon`, `off_market`, `back_on_market`, `price_changed`, `extended`, `reactivated`, `under_agreement`, `pending`, `contingent`). Normalizes via trim + lowercase + collapse spaces. Excludes self via `excludeListingId` param for edit mode. `isLiveStatus()` helper determines when to run the check.
 - **`AddListing.tsx`**: Duplicate check wired into both `handleSaveChanges` (after validation, before file uploads) and `handleSubmit` (after Zod validation, before file uploads). Only runs when target status is a live/published status. Excludes `listingId || draftId` in edit mode.
 - **`AddRentalListing.tsx`**: Same duplicate check wired into `handleSubmit` after Zod validation, before file uploads. Only runs for live statuses.
+
+### 8. Database-Level Duplicate Listing Protection
+- Added `address_normalized` column to `listings` table
+- Created `BEFORE INSERT OR UPDATE` trigger to auto-populate via `lower(trim(regexp_replace(...)))`
+- Created partial unique index `listings_unique_live_address` on `(address_normalized, city, state, zip_code)` for live statuses only
+- Backfilled all existing rows
+
+### 9. Stronger Address Normalization (MLS-Grade)
+- **`normalize_listing_address_text(input text)`** (new SQL function): Deterministic normalization with street suffix mapping (street→st, avenue→ave, etc.), unit marker normalization (apt/suite/#→unit), punctuation stripping, word-boundary-aware regex (`\y`), NULL/empty safety
+- **`normalize_listing_address()` trigger**: Updated to call `normalize_listing_address_text()` instead of inline logic
+- **Backfill**: All existing `address_normalized` values recalculated with stronger normalization
+- No frontend or index changes
