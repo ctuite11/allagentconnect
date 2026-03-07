@@ -1,23 +1,16 @@
 
 
-## Fix: Swap ListingAttribution and ListingInterestSignals sides
+## Remove Delete Option from Non-Draft Listings
 
-### File: `src/components/ListingCard.tsx` (around line 713)
+Grid view (lines 542-562) is already correct — the 3-dot menu only renders when `l.status === "draft"`.
 
-The current flex row has attribution on the left and interest signals on the right. User wants it reversed: **interest signals on the left, listing agent attribution on the right**.
+List view (lines 745-760) is the problem — the `DropdownMenu` with "Delete Listing" renders for **every** listing regardless of status.
 
-Simply swap the order of the two children inside the existing `flex items-center justify-between` div:
+### Change
 
-```jsx
-<div className="flex items-center justify-between mt-1 gap-2">
-  {interestSignals && (
-    <ListingInterestSignals ... />
-  )}
-  {agentInfo && (
-    <ListingAttribution ... />
-  )}
-</div>
-```
+**`src/pages/MyListings.tsx` — lines 745-760**
 
-No other changes.
+Wrap the existing `DropdownMenu` block in a `{l.status === "draft" && (...)}` conditional, so the 3-dot delete menu only appears on draft rows in list view.
+
+Single change, single file. No other modifications needed.
 
