@@ -363,8 +363,8 @@ const ListingCard = ({
     }).format(price);
   };
   const formatPriceRange = () => {
-    const min = (listing as any).price_range_min;
-    const max = (listing as any).price_range_max;
+    const min = listing.price_range_min;
+    const max = listing.price_range_max;
     if (min && max) return `${formatPrice(min)} – ${formatPrice(max)}`;
     if (min) return `From ${formatPrice(min)}`;
     if (max) return `Up to ${formatPrice(max)}`;
