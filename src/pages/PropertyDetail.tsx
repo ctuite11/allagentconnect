@@ -90,6 +90,8 @@ interface Listing {
   lot_size: number | null;
   year_built: number | null;
   price: number;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   description: string | null;
   status: string;
   listing_type: string;
@@ -624,11 +626,25 @@ const PropertyDetail = () => {
                 
                 {/* Price - Right aligned */}
                 <div className="text-primary font-bold text-lg">
-                  ${listing.price.toLocaleString()}
-                  {listing.square_feet && (
-                    <span className="text-sm font-normal text-muted-foreground ml-1">
-                      · ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sq ft
-                    </span>
+                  {listing.price ? (
+                    <>
+                      ${listing.price.toLocaleString()}
+                      {listing.square_feet && (
+                        <span className="text-sm font-normal text-muted-foreground ml-1">
+                          · ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sq ft
+                        </span>
+                      )}
+                    </>
+                  ) : listing.price_range_min || listing.price_range_max ? (
+                    <>
+                      {listing.price_range_min && listing.price_range_max
+                        ? `$${listing.price_range_min.toLocaleString()} – $${listing.price_range_max.toLocaleString()}`
+                        : listing.price_range_min
+                          ? `From $${listing.price_range_min.toLocaleString()}`
+                          : `Up to $${listing.price_range_max!.toLocaleString()}`}
+                    </>
+                  ) : (
+                    '$0'
                   )}
                 </div>
               </div>

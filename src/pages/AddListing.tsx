@@ -2878,10 +2878,15 @@ const AddListing = () => {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Saving...
                       </>
+                    ) : originalStatusRef.current === "draft" && formData.status !== "draft" ? (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        Publish
+                      </>
                     ) : (
                       <>
                         <Save className="w-5 h-5" />
-                        Save Changes
+                        {originalStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                       </>
                     )}
                   </Button>
@@ -4744,10 +4749,15 @@ const AddListing = () => {
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Saving...
                           </>
+                        ) : originalStatusRef.current === "draft" && formData.status !== "draft" ? (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Publish
+                          </>
                         ) : (
                           <>
                             <Save className="w-4 h-4 mr-2" />
-                            Save Changes
+                            {originalStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                           </>
                         )}
                       </Button>

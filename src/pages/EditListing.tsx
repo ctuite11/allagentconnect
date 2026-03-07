@@ -669,7 +669,7 @@ const EditListing: React.FC = () => {
                     type="submit"
                     disabled={saving}
                   >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? "Saving..." : originalStatus === "draft" && status !== "draft" ? "Publish" : originalStatus === "draft" ? "Save Draft" : "Save Changes"}
                   </Button>
                   <Button
                     type="button"

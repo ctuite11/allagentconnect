@@ -1,23 +1,17 @@
+## Completed Changes
 
+### 1. Add Expired to My Listings filters
+- Added `"expired"` to `PIPELINE_STATUSES` and `ListingStatus` type in `MyListings.tsx`
+- Expired now appears in filter tabs and is searchable
 
-## Fix: Swap ListingAttribution and ListingInterestSignals sides
+### 2. "Save Changes" → "Publish" for draft edits
+- `AddListing.tsx`: Both desktop and mobile save buttons now show "Publish" with Upload icon when original status is draft and current status is non-draft; "Save Draft" when status remains draft
+- `EditListing.tsx`: Same logic applied to save button label
 
-### File: `src/components/ListingCard.tsx` (around line 713)
+### 3. Price range display for Coming Soon / Off Market
+- `ListingCard.tsx`: Added `price_range_min` / `price_range_max` to interface; `displayPrice` falls back to range when price is 0/null
+- `PropertyDetail.tsx`: Added range fields to interface; price display falls back to range
 
-The current flex row has attribution on the left and interest signals on the right. User wants it reversed: **interest signals on the left, listing agent attribution on the right**.
-
-Simply swap the order of the two children inside the existing `flex items-center justify-between` div:
-
-```jsx
-<div className="flex items-center justify-between mt-1 gap-2">
-  {interestSignals && (
-    <ListingInterestSignals ... />
-  )}
-  {agentInfo && (
-    <ListingAttribution ... />
-  )}
-</div>
-```
-
-No other changes.
-
+### 4. Relabel "Private" → "Off Market"
+- `status.ts`: All 6 instances of "Private", "Off-Market", "Off-Market (Private)" normalized to "Off Market"
+- `MyListings.tsx`: Removed hardcoded "Private" override, now uses centralized label

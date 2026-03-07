@@ -23,10 +23,10 @@ import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/ui/page-header";
-type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled" | "draft";
+type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
 
 // Single source of truth for the active pipeline statuses
-const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market", "temporarily_withdrawn", "cancelled", "draft"];
+const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market", "temporarily_withdrawn", "cancelled", "expired", "draft"];
 
 interface Listing {
   id: string;
@@ -64,7 +64,7 @@ interface Listing {
 
 // Status filter options restricted to active pipeline
 const ALL_STATUSES: { label: string; value: ListingStatus }[] = PIPELINE_STATUSES.map(s => ({
-  label: s === "off_market" ? "Private" : (LISTING_STATUS_LABELS[s] || s),
+  label: LISTING_STATUS_LABELS[s] || s,
   value: s,
 }));
 
