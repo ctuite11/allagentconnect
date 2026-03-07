@@ -56,6 +56,8 @@ interface ListingCardProps {
     };
     neighborhood?: string | null;
     agent_id?: string;
+    price_range_min?: number | null;
+    price_range_max?: number | null;
   };
   onReactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
