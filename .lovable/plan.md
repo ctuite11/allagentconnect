@@ -15,3 +15,12 @@
 ### 4. Relabel "Private" → "Off Market"
 - `status.ts`: All 6 instances of "Private", "Off-Market", "Off-Market (Private)" normalized to "Off Market"
 - `MyListings.tsx`: Removed hardcoded "Private" override, now uses centralized label
+
+### 5. Auto-revert Back on Market → Active after 48 hours
+- `supabase/functions/update-listing-statuses/index.ts`: Added Part 4 logic
+- Queries listings with `status = 'back_on_market'`
+- Finds latest `listing_status_history` row where `new_status = 'back_on_market'`
+- If `created_at` is older than 48 hours, reverts to `active` with `.eq('status', 'back_on_market')` guard
+- Logs transition in `listing_status_history` with system note
+- Response payload includes `back_on_market_reverted` with count and IDs
+- No migration needed; UI badge in ListingCard is history-driven (14-day window) and unaffected
