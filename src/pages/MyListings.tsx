@@ -723,16 +723,17 @@ function MyListingsView({
                     </button>
                     <span className="text-zinc-300">•</span>
                     <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-sky-100">
-                        <Eye className="h-3 w-3 text-sky-600" strokeWidth={2.2} />
-                      </span>
+                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 text-sky-600 fill-current">
+                        <path d="M8 3C4.5 3 1.6 5.1.3 8c1.3 2.9 4.2 5 7.7 5s6.4-2.1 7.7-5C14.4 5.1 11.5 3 8 3Z" />
+                        <circle cx="8" cy="8" r="2.2" />
+                      </svg>
                       <span className="text-[13px] leading-none text-zinc-800 font-medium">{views}</span>
                     </span>
                     <span className="text-zinc-300">•</span>
                     <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-rose-100">
-                        <Heart className="h-3 w-3 text-rose-500 fill-rose-500" strokeWidth={2.2} />
-                      </span>
+                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 text-rose-500 fill-current">
+                        <path d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z" />
+                      </svg>
                       <span className="text-[13px] leading-none text-zinc-800 font-medium">{favorites}</span>
                     </span>
                     <span className="text-zinc-300">•</span>
