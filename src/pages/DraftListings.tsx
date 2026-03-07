@@ -136,11 +136,9 @@ export default function DraftListings() {
   const handleDelete = async () => {
     if (!listingToDelete || listingToDelete.status !== "draft") return;
     setIsDeleting(true);
-    const { error } = await supabase
-      .from("listings")
-      .delete()
-      .eq("id", listingToDelete.id)
-      .eq("status", "draft");
+    const { error } = await supabase.rpc("delete_draft_listing", {
+      p_listing_id: listingToDelete.id,
+    });
 
     if (error) {
       toast.error("Failed to delete draft");
