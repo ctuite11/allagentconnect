@@ -3979,6 +3979,10 @@ export type Database = {
         Returns: boolean
       }
       is_verified_agent: { Args: never; Returns: boolean }
+      normalize_listing_address_text: {
+        Args: { input: string }
+        Returns: string
+      }
       owns_submission: { Args: { p_submission_id: string }; Returns: boolean }
       rate_limit_consume: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
