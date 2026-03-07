@@ -1006,7 +1006,7 @@ const ListingCard = ({
 
             <div className="col-span-2 text-right">
               <div className="text-base font-bold text-primary mb-0.5">
-                {formatPrice(listing.price)}
+                {displayPrice}
               </div>
               <div className="text-xs text-muted-foreground">
                 {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
@@ -1297,7 +1297,7 @@ const ListingCard = ({
           {/* Right Column - Price (stacked, right-aligned) */}
           <div className="text-right flex-shrink-0">
             <div className="text-lg font-bold text-primary">
-              {formatPrice(listing.price)}
+              {displayPrice}
             </div>
             {pricePerSqft && (
               <div className="text-xs text-muted-foreground mt-0.5">
