@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
     }
 
     const revertedIds: string[] = [];
-    const cutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+    const cutoffTime = now.getTime() - 48 * 60 * 60 * 1000;
 
     if (bomListings && bomListings.length > 0) {
       console.log(`Found ${bomListings.length} listing(s) in back_on_market status.`);
