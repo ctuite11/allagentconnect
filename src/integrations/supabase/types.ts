@@ -2626,6 +2626,7 @@ export type Database = {
           active_date: string | null
           additional_notes: string | null
           address: string
+          address_normalized: string | null
           agent_id: string
           amenities: Json | null
           annual_property_tax: number | null
@@ -2746,6 +2747,7 @@ export type Database = {
           active_date?: string | null
           additional_notes?: string | null
           address: string
+          address_normalized?: string | null
           agent_id: string
           amenities?: Json | null
           annual_property_tax?: number | null
@@ -2866,6 +2868,7 @@ export type Database = {
           active_date?: string | null
           additional_notes?: string | null
           address?: string
+          address_normalized?: string | null
           agent_id?: string
           amenities?: Json | null
           annual_property_tax?: number | null
