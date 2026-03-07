@@ -362,6 +362,15 @@ const ListingCard = ({
       maximumFractionDigits: 0
     }).format(price);
   };
+  const formatPriceRange = () => {
+    const min = (listing as any).price_range_min;
+    const max = (listing as any).price_range_max;
+    if (min && max) return `${formatPrice(min)} – ${formatPrice(max)}`;
+    if (min) return `From ${formatPrice(min)}`;
+    if (max) return `Up to ${formatPrice(max)}`;
+    return null;
+  };
+  const displayPrice = listing.price ? formatPrice(listing.price) : (formatPriceRange() || formatPrice(0));
   const getPhotoByIndex = (index: number) => {
     if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
       const photo = listing.photos[index];
@@ -673,7 +682,7 @@ const ListingCard = ({
         <CardContent className="p-2.5">
           <div className="flex items-start justify-between mb-1.5">
             <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-primary cursor-pointer text-lg">
-              ${listing.price.toLocaleString()}
+              {displayPrice}
             </p>
             <div className="text-right">
               <p className="text-xs text-muted-foreground">
