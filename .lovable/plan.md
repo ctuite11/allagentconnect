@@ -24,3 +24,10 @@
 - Logs transition in `listing_status_history` with system note
 - Response payload includes `back_on_market_reverted` with count and IDs
 - No migration needed; UI badge in ListingCard is history-driven (14-day window) and unaffected
+
+### 6. Status-aware Hot Sheet alerts for Back on Market → Active
+- **`hot_sheet_sent_listings`**: Added `status_at_send text NOT NULL` column; backfilled from listings; replaced unique index `(hot_sheet_id, listing_id)` → `(hot_sheet_id, listing_id, status_at_send)` — allows same listing to be sent under different statuses
+- **`check_hot_sheet_matches`**: Added `back_on_market` to default pipeline statuses; added status-criteria matching (respects `criteria->'statuses'` when set); dedup now checks `status_at_send = l.status`
+- **`notify_matching_buyers_on_new_listing` trigger**: Changed from `AFTER INSERT` to `AFTER INSERT OR UPDATE`; fires for `active` and `back_on_market`; guards against unchanged status on UPDATE
+- **`process-hot-sheet/index.ts`**: Added `back_on_market` to default status filter; writes `status_at_send` when recording sent listings
+- **`send-new-match-notification/index.ts`**: Fetches listing statuses and writes `status_at_send` on upsert; updated onConflict to include `status_at_send`
