@@ -6,7 +6,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
+import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal, Eye, Heart } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig, isComingSoon } from "@/constants/status";
 
@@ -721,6 +721,14 @@ function MyListingsView({
                     >
                       Social
                     </button>
+                    <span className="text-zinc-300">•</span>
+                    <span className="flex items-center gap-1 text-zinc-500">
+                      <Eye className="h-3.5 w-3.5" /> {views}
+                    </span>
+                    <span className="text-zinc-300">•</span>
+                    <span className="flex items-center gap-1 text-zinc-500">
+                      <Heart className="h-3.5 w-3.5" /> {favorites}
+                    </span>
                     <span className="text-zinc-300">•</span>
                     <button
                       className="hover:text-emerald-700 transition"
