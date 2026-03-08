@@ -6,14 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
 import { toast } from "sonner";
-import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, FileSpreadsheet, X } from "lucide-react";
+import { ArrowLeft, List, CheckSquare, FileSpreadsheet, X } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SectionCard } from "@/components/ui/section-card";
-import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
-import SaveSearchDialog from "@/components/SaveSearchDialog";
 
 
 const ListingSearchResults = () => {
