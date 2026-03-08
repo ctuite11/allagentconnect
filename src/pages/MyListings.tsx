@@ -6,7 +6,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { Grid, List as ListIcon, Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
+import { Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig, isComingSoon } from "@/constants/status";
 
@@ -195,7 +195,6 @@ function MyListingsView({
       setSearchParams({ status: "draft" });
     }
   }, [hasOnlyDrafts]);
-  const [view, setView] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
   
   // Sync URL param with state for multi-select
@@ -401,25 +400,6 @@ function MyListingsView({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* View toggle */}
-            <div className="inline-flex items-center border border-zinc-200 rounded-lg p-0.5 bg-white">
-              <button
-                onClick={() => setView("grid")}
-                className={`p-1.5 rounded-md transition-colors ${
-                  view === "grid" ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
-                }`}
-              >
-                <Grid size={16} />
-              </button>
-              <button
-                onClick={() => setView("list")}
-                className={`p-1.5 rounded-md transition-colors ${
-                  view === "list" ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
-                }`}
-              >
-                <ListIcon size={16} />
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -507,118 +487,8 @@ function MyListingsView({
         </div>
       )}
 
-      {/* GRID VIEW */}
-      {view === "grid" && (
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredListings.map((l) => {
-            const thumbnail = getThumbnailUrl(l);
-            return (
-              <CardSurface
-                key={l.id}
-                interactive
-                className="cursor-pointer"
-              >
-              <div className="relative w-full h-48 bg-zinc-100 overflow-hidden cursor-pointer" onClick={() => onPreview(l.id)}>
-                <img src={thumbnail || "/placeholder.svg"} alt={l.address} className="w-full h-full object-cover" />
-                {/* Draft: selection checkbox overlay */}
-                {l.status === "draft" && (
-                  <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={selectedDraftIds.has(l.id)}
-                      onCheckedChange={() => toggleDraftSelection(l.id)}
-                      aria-label="Select draft"
-                      className="bg-white/90 shadow-sm"
-                    />
-                  </div>
-                )}
-                {/* Draft: 3-dot delete menu overlay */}
-                {l.status === "draft" && (
-                  <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1 rounded bg-white/90 shadow-sm hover:bg-white transition-colors text-zinc-500 hover:text-zinc-700">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem
-                          className="cursor-pointer text-sm text-destructive focus:text-destructive"
-                          onClick={() => setListingToDelete(l)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-2" />
-                          Delete Listing
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-4">
-                {/* Address */}
-                <div className="font-semibold text-base text-zinc-900">
-                  {formatAddressWithUnit(l)}
-                </div>
-                {/* Location - secondary */}
-                <div className="text-zinc-500 text-sm mt-0.5">
-                  {l.state} {l.zip_code}
-                </div>
-                {/* Status + Listing # as secondary metadata */}
-                <div className="flex items-center gap-2 mt-2">
-                  <ListingStatusBadge status={l.status} size="lg" />
-                  {l.listing_type && (
-                    <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-                      {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
-                    </span>
-                  )}
-                  {l.listing_number && (
-                    <span className="text-xs text-zinc-500">#{l.listing_number}</span>
-                  )}
-                </div>
-                {/* Price */}
-                <div className="text-zinc-600 text-sm mt-2 font-medium">${l.price.toLocaleString()}</div>
-
-                {/* Action text links - matching list view */}
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onEdit(l.id)}
-                  >
-                    Edit
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onPreview(l.id)}
-                  >
-                    View
-                  </button>
-                  <span className="text-zinc-300">•</span>
-                  <button
-                    className="text-zinc-600 hover:text-emerald-700 transition"
-                    onClick={() => onShare(l.id)}
-                  >
-                    Share
-                  </button>
-                </div>
-              </div>
-            </CardSurface>
-          );
-        })}
-
-        {filteredListings.length === 0 && (
-          <div className="col-span-full text-center text-zinc-500 text-sm py-10">
-            No listings match your filters yet.
-          </div>
-        )}
-        </div>
-      )}
-
-      {/* LIST VIEW – with MLS-style quick tools + quick edit */}
-      {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
-      {/* LIST VIEW – MLS-style tools + quick edit near price/status */}
-      {view === "list" && (
-        <div className="mt-6 space-y-4">
+      {/* LIST VIEW */}
+      <div className="mt-6 space-y-4">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
@@ -950,7 +820,6 @@ function MyListingsView({
             <div className="text-center text-zinc-500 text-sm py-10">No listings match your filters yet.</div>
           )}
         </div>
-      )}
     </>
   );
 }
