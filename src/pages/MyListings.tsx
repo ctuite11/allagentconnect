@@ -5,6 +5,8 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
+import { ListingCardShell } from "@/components/ListingCardShell";
+import { Badge } from "@/components/ui/badge";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
