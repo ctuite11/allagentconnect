@@ -226,6 +226,7 @@ export const SearchListingCard = ({
           daysOnMarket={daysOnMarket}
           unitNumber={unitNumber}
           statusBanner={statusBanner}
+          priceChangeBanner={priceChangeBanner}
           openHouseBanner={openHouseBanner}
           nextOpenHouse={nextOpenHouse}
           dateDisplay={listing.list_date ? format(new Date(listing.list_date), "MM/dd/yy") : null}

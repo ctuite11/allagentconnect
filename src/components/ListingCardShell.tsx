@@ -1,9 +1,17 @@
 /**
  * ListingCardShell — Canonical desktop list-view layout.
  *
- * This is the SINGLE visual source of truth for horizontal listing cards.
- * Both ListingCard (agent management) and SearchListingCard (search results)
- * consume this shell and inject their own actions/metadata via slots.
+ * ┌──────────────────────────────────────────────────────────────────┐
+ * │  CANONICAL SOURCE OF TRUTH                                      │
+ * │                                                                  │
+ * │  ListingCard (My Listings) defines the canonical desktop layout. │
+ * │  All other consumers (SearchListingCard, etc.) MUST match the    │
+ * │  same visual structure: image block, grid, spacing, padding,     │
+ * │  typography hierarchy, badge placement, metrics row.             │
+ * │                                                                  │
+ * │  Only actions and context-specific labels may differ.            │
+ * │  DO NOT add competing layout paths.                              │
+ * └──────────────────────────────────────────────────────────────────┘
  *
  * Layout: Card → flex → [Photo w-40 h-40] + [grid-cols-12 info]
  *   Col 1-6: address, location, stats, metadataSlot
