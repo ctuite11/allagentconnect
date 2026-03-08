@@ -9,7 +9,7 @@ import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import SaveSearchDialog from "@/components/SaveSearchDialog";
-import { ListingResultCard } from "@/components/listing-search/ListingResultCard";
+import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
 
 
 interface Listing {
