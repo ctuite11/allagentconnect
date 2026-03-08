@@ -821,7 +821,6 @@ function MyListingsView({
             <div className="text-center text-zinc-500 text-sm py-10">No listings match your filters yet.</div>
           )}
         </div>
-      )}
     </>
   );
 }
