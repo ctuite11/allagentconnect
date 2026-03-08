@@ -250,6 +250,9 @@ const Navigation = () => {
   // This prevents any flash of navigation on funnel pages
   if (HIDE_NAV_ROUTES.includes(location.pathname)) return null;
 
+  // Hide global navigation on sidebar-managed routes (AppShell provides nav)
+  if (SIDEBAR_MANAGED_PREFIXES.some(prefix => location.pathname.startsWith(prefix))) return null;
+
   // ---- Render gate: Navigation should not "change on its own" ----
   // Wait for auth; if user exists, wait for role; if agent, also wait for agent_status
   const navLoading =
