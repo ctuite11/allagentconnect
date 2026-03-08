@@ -9,7 +9,7 @@ import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import SaveSearchDialog from "@/components/SaveSearchDialog";
-import { ListingResultCard } from "@/components/listing-search/ListingResultCard";
+import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
 
 
 interface Listing {
@@ -266,7 +266,7 @@ const ListingResultsTable = ({
       {/* MOBILE: Card List (< md) */}
       <div className="md:hidden space-y-3">
         {displayedListings.map((listing) => (
-          <ListingResultCard
+          <SearchListingCard
             key={listing.id}
             listing={listing}
             isSelected={selectedRows.has(listing.id)}
@@ -280,7 +280,7 @@ const ListingResultsTable = ({
       {/* DESKTOP: Card Stack (md+) */}
       <div className="hidden md:block px-5 pb-6 space-y-3">
         {displayedListings.map((listing) => (
-          <ListingResultCard
+          <SearchListingCard
             key={listing.id}
             listing={listing}
             isSelected={selectedRows.has(listing.id)}
