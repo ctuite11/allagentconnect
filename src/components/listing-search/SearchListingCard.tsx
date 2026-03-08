@@ -128,10 +128,19 @@ const calculateDaysOnMarket = (listing: SearchListing) => {
   return Math.ceil(Math.abs(today.getTime() - activeDate.getTime()) / (1000 * 60 * 60 * 24));
 };
 
+/**
+ * Status banner — excludes PRICE_CHANGED, which routes to priceChangeBanner
+ * to match the canonical ListingCard (My Listings) behavior.
+ */
 const getStatusChangeBanner = (status: string): BannerData | null => {
   if (isComingSoon(status)) return { text: "COMING SOON", color: "bg-purple-600", iconType: "sparkles" };
   if (status === LISTING_STATUS.NEW) return { text: "NEW LISTING", color: "bg-blue-600", iconType: "sparkles" };
   if (status === LISTING_STATUS.BACK_ON_MARKET) return { text: "BACK ON MARKET", color: "bg-orange-600", iconType: "refresh" };
+  return null;
+};
+
+/** Price-change banner — mirrors the canonical ListingCard's priceChangeBanner prop. */
+const getPriceChangeBanner = (status: string): BannerData | null => {
   if (status === LISTING_STATUS.PRICE_CHANGED) return { text: "PRICE REDUCED", color: "bg-red-600", iconType: "trendingDown" };
   return null;
 };
