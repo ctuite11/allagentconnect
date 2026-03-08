@@ -48,3 +48,29 @@
 - **`normalize_listing_address()` trigger**: Updated to call `normalize_listing_address_text()` instead of inline logic
 - **Backfill**: All existing `address_normalized` values recalculated with stronger normalization
 - No frontend or index changes
+
+### 10. AppShell + Sidebar Navigation (Phase 1)
+- Created `src/components/layout/AppShell.tsx` with collapsible sidebar + compact header
+- Created `src/components/layout/SidebarNavigation.tsx` with grouped nav links
+- Wrapped all authenticated agent/admin routes in `AgentLayout` → `AppShell`
+- Public, auth, consumer, and legal pages remain outside the shell
+- Fixed Navigation.tsx prefix-based hiding to use specific sub-paths (not broad `/agent/`)
+
+### 11. ListingCardShell — Canonical Horizontal Card (Phase 2)
+- Created `src/components/ListingCardShell.tsx` as single visual source of truth for desktop list-view listing cards
+- Refactored `ListingCard.tsx` to use shell for `list` viewMode
+- Refactored `SearchListingCard.tsx` to use shell for desktop view
+- Deleted `ListingResultCard.tsx` (537 lines, zero external imports — confirmed dead code)
+
+#### Listing Surface Classification
+| Surface | Component | Card Class |
+|---|---|---|
+| My Listings | ListingCard (list mode) | canonical horizontal via shell |
+| Listing Search / Results | SearchListingCard → shell | canonical horizontal via shell |
+| Agent Dashboard | ListingCard (list mode) | canonical horizontal via shell |
+| Hot Sheet Review | ListingCard (list mode) | canonical horizontal via shell |
+| Browse Properties | ListingCard (compact/grid) | intentional grid card |
+| Search Results (consumer) | ListingCard (compact/grid) | intentional grid card |
+| IDX Search | IDXListingCard | IDX-specific separate system |
+
+Rule: ListingCardShell is the single source of truth for all desktop horizontal listing cards. Grid mode and IDX remain intentionally separate.
