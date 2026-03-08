@@ -371,8 +371,8 @@ function MyListingsView({
                   onClick={() => toggleStatus(tab.value)}
                   className={`shrink-0 text-sm px-3 py-1.5 rounded-full font-medium transition-colors border ${
                     selectedStatuses.has(tab.value)
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-800"
+                      ? "bg-zinc-900 border-zinc-900 text-white"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-800"
                   }`}
                 >
                   {tab.label}
