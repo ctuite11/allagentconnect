@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Check, ExternalLink, Mail } from "lucide-react";
+import { Check, ExternalLink, Mail, Bed, Bath, Home, Sparkles, RefreshCw, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import { LISTING_STATUS, isComingSoon } from "@/constants/status";
+import { format } from "date-fns";
 
 interface Listing {
   id: string;
@@ -28,6 +31,7 @@ interface Listing {
   total_parking_spaces?: number;
   property_type?: string;
   property_styles?: any;
+  open_houses?: any[];
 }
 
 interface ListingResultCardProps {
@@ -37,6 +41,8 @@ interface ListingResultCardProps {
   onRowClick: (listing: Listing) => void;
   fromPath?: string;
 }
+
+// ── Formatters ──────────────────────────────────────────────────────────────
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("en-US", {
@@ -70,6 +76,8 @@ const getPropertyStyle = (listing: Listing) => {
   }
   return listing.property_type || null;
 };
+
+// ── Location helpers ────────────────────────────────────────────────────────
 
 const BOSTON_NEIGHBORHOODS = new Set(
   [
@@ -112,6 +120,104 @@ const getLocation = (listing: Listing) => {
   return { street, city, state, zip, neighborhood: neighborhood ? titleCase(neighborhood) : "", showNeighborhood };
 };
 
+// ── DOM calculator ──────────────────────────────────────────────────────────
+
+const calculateDaysOnMarket = (listDate?: string) => {
+  if (!listDate) return null;
+  const start = new Date(listDate);
+  const today = new Date();
+  const diffDays = Math.ceil(Math.abs(today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
+// ── Open house helpers ──────────────────────────────────────────────────────
+
+const formatTime = (time: string): string => {
+  const [hours, minutes] = time.split(":");
+  const hour = parseInt(hours, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${minutes} ${ampm}`;
+};
+
+const getNextOpenHouse = (openHouses?: any[]) => {
+  if (!openHouses || !Array.isArray(openHouses)) return null;
+  const now = new Date();
+  const upcoming = openHouses
+    .filter((oh: any) => {
+      const ohEnd = new Date(`${oh.date}T${oh.end_time}:00`);
+      return ohEnd > now;
+    })
+    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return upcoming[0] || null;
+};
+
+// ── Status banner logic (status-driven, no DB fetch) ────────────────────────
+
+const getStatusBanner = (status: string) => {
+  if (isComingSoon(status)) {
+    return { text: "COMING SOON", color: "bg-purple-600", icon: Sparkles };
+  }
+  if (status === LISTING_STATUS.NEW) {
+    return { text: "NEW LISTING", color: "bg-blue-600", icon: Sparkles };
+  }
+  if (status === LISTING_STATUS.BACK_ON_MARKET) {
+    return { text: "BACK ON MARKET", color: "bg-orange-600", icon: RefreshCw };
+  }
+  if (status === LISTING_STATUS.PRICE_CHANGED) {
+    return { text: "PRICE REDUCED", color: "bg-red-600", icon: Sparkles };
+  }
+  return null;
+};
+
+// ── Photo Banners Sub-component ─────────────────────────────────────────────
+
+const PhotoBanners = ({ listing }: { listing: Listing }) => {
+  const statusBanner = getStatusBanner(listing.status);
+  const nextOH = getNextOpenHouse(listing.open_houses);
+
+  if (!statusBanner && !nextOH) return null;
+
+  return (
+    <div className="absolute top-0 left-0 right-0 flex flex-col gap-0.5 z-[5]">
+      {statusBanner && (
+        <div className={`${statusBanner.color} text-white text-[10px] font-bold tracking-wider px-2 py-1 flex items-center gap-1`}>
+          <statusBanner.icon className="h-3 w-3" />
+          {statusBanner.text}
+        </div>
+      )}
+      {nextOH && (
+        <div className="bg-green-600 text-white text-[10px] font-bold tracking-wider px-2 py-1 flex items-center gap-1">
+          <Calendar className="h-3 w-3" />
+          OPEN HOUSE · {format(new Date(nextOH.date), "MMM d")}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Stats Row Sub-component ─────────────────────────────────────────────────
+
+const StatsRow = ({ listing, pricePerSqFt }: { listing: Listing; pricePerSqFt: number | null }) => (
+  <div className="flex items-center gap-3 flex-wrap">
+    <span className="text-base font-bold text-zinc-900">
+      {listing.price > 0 ? formatPrice(listing.price) : "Price TBD"}
+    </span>
+    {pricePerSqFt && <span className="text-xs text-zinc-500">${pricePerSqFt}/sqft</span>}
+    <span className="flex items-center gap-1 text-sm text-zinc-600">
+      <Bed className="h-3.5 w-3.5" /> {listing.bedrooms ?? "-"}
+    </span>
+    <span className="flex items-center gap-1 text-sm text-zinc-600">
+      <Bath className="h-3.5 w-3.5" /> {listing.bathrooms ?? "-"}
+    </span>
+    <span className="flex items-center gap-1 text-sm text-zinc-600">
+      <Home className="h-3.5 w-3.5" /> {listing.square_feet?.toLocaleString() ?? "-"} sqft
+    </span>
+  </div>
+);
+
+// ── Main Component ──────────────────────────────────────────────────────────
+
 export const ListingResultCard = ({
   listing,
   isSelected,
@@ -125,6 +231,8 @@ export const ListingResultCard = ({
   const photoCount = getPhotoCount(listing);
   const pricePerSqFt = getPricePerSqFt(listing.price, listing.square_feet);
   const [contactOpen, setContactOpen] = useState(false);
+  const dom = calculateDaysOnMarket(listing.list_date);
+  const nextOH = getNextOpenHouse(listing.open_houses);
 
   // Build micro-facts (only: year built, parking, property type)
   const microFacts: string[] = [];
@@ -140,6 +248,39 @@ export const ListingResultCard = ({
 
   const fullAddress = `${loc.street}${listing.unit_number ? ` #${listing.unit_number}` : ""}, ${loc.city}, ${loc.state}`;
 
+  // ── Shared UI fragments ───────────────────────────────────────────────────
+
+  const checkboxButton = (size: "sm" | "md") => (
+    <button
+      onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
+      className={`absolute left-2 top-2 z-10 ${size === "sm" ? "h-5 w-5" : "h-5 w-5"} rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center`}
+      aria-label="Select listing"
+    >
+      {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
+    </button>
+  );
+
+  const actionButtons = (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 transition hover:text-emerald-600"
+      >
+        <ExternalLink className="h-4 w-4" />
+        View
+      </button>
+      {listing.agent_id && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 transition hover:text-emerald-600"
+        >
+          <Mail className="h-4 w-4" />
+          Contact
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div
       onClick={handleCardClick}
@@ -149,21 +290,17 @@ export const ListingResultCard = ({
       <div className="hidden md:flex gap-4">
         {/* Photo area */}
         <div className="relative flex-shrink-0">
-          <button
-            onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-            className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
-            aria-label="Select listing"
-          >
-            {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
-          </button>
+          {checkboxButton("md")}
           <div className={`relative h-[140px] w-[200px] overflow-hidden rounded-xl bg-zinc-50 ${isSelected ? "ring-2 ring-emerald-300/30 border border-emerald-400" : "border border-zinc-200/70"}`}>
             {thumbnail ? (
               <img src={thumbnail} alt="" className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs text-zinc-400">No photo</div>
             )}
+            {/* Status + Open House banners */}
+            <PhotoBanners listing={listing} />
             {photoCount > 0 && (
-              <div className="absolute bottom-1.5 right-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white font-medium">
+              <div className="absolute bottom-1.5 right-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white font-medium z-[5]">
                 {photoCount}
               </div>
             )}
@@ -181,19 +318,25 @@ export const ListingResultCard = ({
             {loc.showNeighborhood && ` · ${loc.neighborhood}`}
           </div>
 
-          {/* Row 2: Status + Listing # */}
-          <div className="mt-1.5 flex items-center gap-2">
+          {/* Row 2: Status + Listing # + DOM + List Date */}
+          <div className="mt-1.5 flex items-center gap-2 flex-wrap">
             <ListingStatusBadge status={listing.status} size="sm" />
             <span className="text-[11px] font-mono text-zinc-500">#{listing.listing_number}</span>
+            {dom !== null && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium text-zinc-500 border-zinc-200">
+                {dom} DOM
+              </Badge>
+            )}
+            {listing.list_date && (
+              <span className="text-[11px] text-zinc-400">
+                Listed {format(new Date(listing.list_date), "MMM d, yyyy")}
+              </span>
+            )}
           </div>
 
-          {/* Row 3: Price + Stats */}
-          <div className="mt-2 flex items-baseline gap-4">
-            <span className="text-base font-bold text-zinc-900">{formatPrice(listing.price)}</span>
-            {pricePerSqFt && <span className="text-xs text-zinc-500">${pricePerSqFt}/sqft</span>}
-            <span className="text-sm text-zinc-600">{listing.bedrooms || "-"} bd</span>
-            <span className="text-sm text-zinc-600">{listing.bathrooms || "-"} ba</span>
-            <span className="text-sm text-zinc-600">{listing.square_feet?.toLocaleString() || "-"} sqft</span>
+          {/* Row 3: Price + Stats with icons */}
+          <div className="mt-2">
+            <StatsRow listing={listing} pricePerSqFt={pricePerSqFt} />
           </div>
 
           {/* Row 4: Micro-facts */}
@@ -203,7 +346,15 @@ export const ListingResultCard = ({
             </div>
           )}
 
-          {/* Row 5: Agent */}
+          {/* Row 5: Open house info row (compact, below micro-facts) */}
+          {nextOH && (
+            <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-green-700 font-medium">
+              <Calendar className="h-3 w-3" />
+              Open House: {format(new Date(nextOH.date), "MMM d")} · {formatTime(nextOH.start_time)} – {formatTime(nextOH.end_time)}
+            </div>
+          )}
+
+          {/* Row 6: Agent */}
           {listing.agent_name && (
             <div className="mt-1.5">
               <span className="text-sm font-semibold text-zinc-900">{listing.agent_name}</span>
@@ -216,24 +367,9 @@ export const ListingResultCard = ({
           {/* Spacer */}
           <div className="flex-grow" />
 
-          {/* Row 6: Actions (bottom-right) */}
-          <div className="mt-2 flex items-center justify-end gap-3">
-            <button
-              onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 transition hover:text-emerald-600"
-            >
-              <ExternalLink className="h-4 w-4" />
-              View
-            </button>
-            {listing.agent_id && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 transition hover:text-emerald-600"
-              >
-                <Mail className="h-4 w-4" />
-                Contact
-              </button>
-            )}
+          {/* Row 7: Actions (bottom-right) */}
+          <div className="mt-2 flex items-center justify-end">
+            {actionButtons}
           </div>
         </div>
       </div>
@@ -243,21 +379,16 @@ export const ListingResultCard = ({
         {/* Photo + Address row */}
         <div className="flex gap-3">
           <div className="relative flex-shrink-0">
-            <button
-              onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-              className="absolute left-1.5 top-1.5 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow flex items-center justify-center"
-              aria-label="Select listing"
-            >
-              {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
-            </button>
+            {checkboxButton("sm")}
             <div className={`relative h-[75px] w-[100px] overflow-hidden rounded-xl bg-zinc-50 ${isSelected ? "ring-2 ring-emerald-300/30 border border-emerald-400" : "border border-zinc-200/70"}`}>
               {thumbnail ? (
                 <img src={thumbnail} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-[10px] text-zinc-400">No photo</div>
               )}
+              <PhotoBanners listing={listing} />
               {photoCount > 0 && (
-                <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                <div className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white z-[5]">
                   {photoCount}
                 </div>
               )}
@@ -272,26 +403,42 @@ export const ListingResultCard = ({
               {loc.city}{loc.city ? "," : ""} {loc.state} {loc.zip}
               {loc.showNeighborhood && ` · ${loc.neighborhood}`}
             </div>
-            <div className="mt-1.5 flex items-center gap-2">
+            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
               <ListingStatusBadge status={listing.status} size="sm" />
               <span className="text-[11px] font-mono text-zinc-500">#{listing.listing_number}</span>
+              {dom !== null && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium text-zinc-500 border-zinc-200">
+                  {dom} DOM
+                </Badge>
+              )}
             </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="mt-3 flex items-center gap-4 text-sm border-t border-zinc-100 pt-3">
-          <span className="font-semibold text-zinc-900">{formatPrice(listing.price)}</span>
-          {pricePerSqFt && <span className="text-xs text-zinc-500">${pricePerSqFt}/sqft</span>}
-          <span className="text-zinc-600">{listing.bedrooms || "-"} bd</span>
-          <span className="text-zinc-600">{listing.bathrooms || "-"} ba</span>
-          <span className="text-zinc-600">{listing.square_feet?.toLocaleString() || "-"} sqft</span>
+        <div className="mt-3 border-t border-zinc-100 pt-3">
+          <StatsRow listing={listing} pricePerSqFt={pricePerSqFt} />
         </div>
 
         {/* Micro-facts */}
         {microFacts.length > 0 && (
           <div className="mt-1.5 text-[11px] text-zinc-500 truncate">
             {microFacts.join(" · ")}
+          </div>
+        )}
+
+        {/* Open house info */}
+        {nextOH && (
+          <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-green-700 font-medium">
+            <Calendar className="h-3 w-3" />
+            OH: {format(new Date(nextOH.date), "MMM d")} · {formatTime(nextOH.start_time)} – {formatTime(nextOH.end_time)}
+          </div>
+        )}
+
+        {/* List date on mobile */}
+        {listing.list_date && (
+          <div className="mt-1 text-[11px] text-zinc-400">
+            Listed {format(new Date(listing.list_date), "MMM d, yyyy")}
           </div>
         )}
 
@@ -304,23 +451,8 @@ export const ListingResultCard = ({
         )}
 
         {/* Actions */}
-        <div className="mt-3 flex items-center justify-end gap-2 border-t border-zinc-100 pt-3">
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-            className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 transition hover:text-emerald-600"
-          >
-            <ExternalLink className="h-4 w-4" />
-            View
-          </button>
-          {listing.agent_id && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 transition hover:text-emerald-600"
-            >
-              <Mail className="h-4 w-4" />
-              Contact
-            </button>
-          )}
+        <div className="mt-3 flex items-center justify-end border-t border-zinc-100 pt-3">
+          {actionButtons}
         </div>
       </div>
 
