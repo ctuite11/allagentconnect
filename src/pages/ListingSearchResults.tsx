@@ -1,19 +1,15 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
-import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
 import { toast } from "sonner";
-import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, FileSpreadsheet, X } from "lucide-react";
+import { ArrowLeft, CheckSquare, FileSpreadsheet, X, List } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SectionCard } from "@/components/ui/section-card";
-import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
-import SaveSearchDialog from "@/components/SaveSearchDialog";
 
 
 const ListingSearchResults = () => {
@@ -50,56 +46,7 @@ const ListingSearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState("list_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
-  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
-  const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
-  const [saveSearchDialogOpen, setSaveSearchDialogOpen] = useState(false);
-
-  // Build current search criteria for hot sheet
-  const buildHotSheetCriteria = () => ({
-    state: filters?.state,
-    county: filters?.county,
-    cities: filters?.selectedTowns,
-    propertyTypes: filters?.propertyTypes,
-    minPrice: filters?.priceMin ? parseInt(filters.priceMin) : null,
-    maxPrice: filters?.priceMax ? parseInt(filters.priceMax) : null,
-    bedrooms: filters?.bedsMin ? parseInt(filters.bedsMin) : null,
-    bathrooms: filters?.bathsMin ? parseFloat(filters.bathsMin) : null,
-    statuses: filters?.statuses,
-  });
-
-  // Generate search summary for default name
-  const searchSummary = useMemo(() => {
-    const parts: string[] = [];
-    
-    // Towns
-    if (filters.selectedTowns.length > 0) {
-      parts.push(filters.selectedTowns.slice(0, 2).join(", ") + (filters.selectedTowns.length > 2 ? ` +${filters.selectedTowns.length - 2}` : ""));
-    } else if (filters.state) {
-      parts.push(filters.state);
-    }
-    
-    // Beds
-    if (filters.bedsMin) {
-      parts.push(`${filters.bedsMin}+ Beds`);
-    }
-    
-    // Price
-    if (filters.priceMin || filters.priceMax) {
-      const min = filters.priceMin ? `$${Math.round(parseInt(filters.priceMin) / 1000)}k` : "";
-      const max = filters.priceMax ? `$${Math.round(parseInt(filters.priceMax) / 1000)}k` : "";
-      if (min && max) {
-        parts.push(`${min}–${max}`);
-      } else if (min) {
-        parts.push(`${min}+`);
-      } else if (max) {
-        parts.push(`Up to ${max}`);
-      }
-    }
-    
-    return parts.join(" • ") || `Search ${new Date().toLocaleDateString()}`;
-  }, [filters]);
 
   const handleSelectListing = (id: string) => {
     setSelectedListings(prev => {
@@ -112,24 +59,6 @@ const ListingSearchResults = () => {
       return newSet;
     });
   };
-
-  const toggleSelectAll = () => {
-    if (selectedListings.size === displayedListings.length) {
-      setSelectedListings(new Set());
-    } else {
-      setSelectedListings(new Set(displayedListings.map(l => l.id)));
-    }
-  };
-
-  const handleKeepSelected = () => {
-    setShowSelectedOnly(!showSelectedOnly);
-  };
-
-
-
-  const displayedListings = showSelectedOnly 
-    ? listings.filter(l => selectedListings.has(l.id))
-    : listings;
 
   const handleSearch = useCallback(async () => {
     setLoading(true);
@@ -375,28 +304,6 @@ const ListingSearchResults = () => {
                   <span className="font-semibold text-neutral-900">{loading ? "..." : listings.length}</span>
                   {" "}listings found
                 </span>
-                <div className="h-5 w-px bg-neutral-200" />
-                <ToggleGroup
-                  type="single" 
-                  value={viewMode} 
-                  onValueChange={(value) => value && setViewMode(value as "list" | "grid")}
-                  className="bg-neutral-100 rounded-lg p-0.5"
-                >
-                  <ToggleGroupItem 
-                    value="list" 
-                    aria-label="List view"
-                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-neutral-500 data-[state=on]:text-neutral-900"
-                  >
-                    <List className="h-4 w-4" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem 
-                    value="grid" 
-                    aria-label="Grid view"
-                    className="h-7 w-7 p-0 rounded-md data-[state=on]:bg-white data-[state=on]:shadow-sm text-neutral-500 data-[state=on]:text-neutral-900"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </ToggleGroupItem>
-                </ToggleGroup>
               </div>
             </div>
           </div>
@@ -438,7 +345,6 @@ const ListingSearchResults = () => {
                     className="h-8"
                     onClick={() => {
                       setSelectedListings(new Set());
-                      setShowSelectedOnly(false);
                     }}
                   >
                     <X className="h-4 w-4 mr-1.5" />
@@ -449,112 +355,19 @@ const ListingSearchResults = () => {
             </SectionCard>
           )}
 
-          {/* Results */}
-          {viewMode === "list" ? (
-            <section className="bg-transparent">
-              <ListingResultsTable
-                listings={listings}
-                loading={loading}
-                sortColumn={sortColumn}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-                onRowClick={handleRowClick}
-                filters={filters}
-                fromPath={`/listing-results${window.location.search}`}
-              />
-            </section>
-          ) : (
-            <>
-              {/* Grid View Action Buttons */}
-              <SectionCard className="mb-4 p-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleSelectAll}
-                    className="h-8 gap-1.5 text-sm"
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                    {selectedListings.size === displayedListings.length && displayedListings.length > 0 ? 'Deselect All' : 'Select All'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleKeepSelected}
-                    disabled={selectedListings.size === 0}
-                    className="h-8 gap-1.5 text-sm"
-                  >
-                    {showSelectedOnly ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    {showSelectedOnly ? 'Show All' : 'Keep Selected'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSaveSearchDialogOpen(true)}
-                    className="h-8 gap-1.5 text-sm"
-                  >
-                    <Bookmark className="h-4 w-4" />
-                    Save Search
-                  </Button>
-                  <Button
-                    variant="brandOutline"
-                    size="sm"
-                    onClick={() => {
-                      if (selectedListings.size === 0) {
-                        toast.error("You haven't selected any properties", {
-                          description: "Select one or more properties from the results to save a hotsheet.",
-                        });
-                        return;
-                      }
-                      setHotSheetDialogOpen(true);
-                    }}
-                    className="h-8 gap-1.5 text-sm"
-                  >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    Save as Hot Sheet
-                  </Button>
-                </div>
-              </SectionCard>
-
-              {/* Hot Sheet Dialog */}
-              <SaveToHotSheetDialog
-                open={hotSheetDialogOpen}
-                onOpenChange={setHotSheetDialogOpen}
-                currentSearch={buildHotSheetCriteria()}
-                selectedListingIds={Array.from(selectedListings)}
-              />
-
-              {/* Save Search Dialog */}
-              <SaveSearchDialog
-                open={saveSearchDialogOpen}
-                onOpenChange={setSaveSearchDialogOpen}
-                searchSummary={searchSummary}
-              />
-
-              <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {loading ? (
-                  Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="bg-background border border-border rounded-lg h-72 animate-pulse" />
-                  ))
-                ) : displayedListings.length === 0 ? (
-                  <div className="col-span-full text-center py-12 text-muted-foreground">
-                    No listings found matching your criteria
-                  </div>
-                ) : (
-                  displayedListings.map((listing) => (
-                    <SearchListingCard
-                      key={listing.id}
-                      listing={listing}
-                      isSelected={selectedListings.has(listing.id)}
-                      onSelect={handleSelectListing}
-                      onRowClick={() => navigate(`/property/${listing.id}`, { state: { from: `/listing-results${window.location.search}` } })}
-                      fromPath={`/listing-results${window.location.search}`}
-                    />
-                  ))
-                )}
-              </section>
-            </>
-          )}
+          {/* Results — premium horizontal card stack only */}
+          <section className="bg-transparent">
+            <ListingResultsTable
+              listings={listings}
+              loading={loading}
+              sortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+              onRowClick={handleRowClick}
+              filters={filters}
+              fromPath={`/listing-results${window.location.search}`}
+            />
+          </section>
         </div>
       </main>
     </div>
