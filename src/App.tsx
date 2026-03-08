@@ -4,9 +4,10 @@ import React from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation, Outlet } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
+import { AppShell } from "@/components/layout/AppShell";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -120,6 +121,11 @@ function LegacyClientHotSheetRedirect() {
   return <Navigate to={`/client/hotsheet/${token}${location.search}`} replace />;
 }
 
+/** Layout route: wraps children in AppShell (sidebar + header) */
+function AgentLayout() {
+  return <AppShell><Outlet /></AppShell>;
+}
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -169,74 +175,81 @@ const App = () => (
                 {/* Legacy route redirect */}
                 <Route path="/allagentconnect" element={<Navigate to="/agent-dashboard" replace />} />
                 
-                {/* Agent routes - ALL require verification by default via RouteGuard */}
-                <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
-                <Route path="/network" element={<RouteGuard requireRole="agent"><NetworkIntelligence /></RouteGuard>} />
-                <Route path="/success-hub/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests/></RouteGuard>} />
+                {/* Agent routes wrapped in AppShell via layout route */}
+                <Route element={<AgentLayout />}>
+                  <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><AgentSuccessHub /></RouteGuard>} />
+                  <Route path="/network" element={<RouteGuard requireRole="agent"><NetworkIntelligence /></RouteGuard>} />
+                  <Route path="/success-hub/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests/></RouteGuard>} />
 
-                {/* Success Hub v2 */}
-                <Route path="/success-hub" element={<RouteGuard requireRole="agent"><SuccessHubDashboard /></RouteGuard>} />
-                <Route path="/success-hub/buyers" element={<RouteGuard requireRole="agent"><BuyersList /></RouteGuard>} />
-                <Route path="/success-hub/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
-                <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
-                <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
-                <Route path="/communications" element={<RouteGuard requireRole="agent"><CommunicationsHub /></RouteGuard>} />
+                  {/* Success Hub v2 */}
+                  <Route path="/success-hub" element={<RouteGuard requireRole="agent"><SuccessHubDashboard /></RouteGuard>} />
+                  <Route path="/success-hub/buyers" element={<RouteGuard requireRole="agent"><BuyersList /></RouteGuard>} />
+                  <Route path="/success-hub/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
+                  <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
+                  <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
+                  <Route path="/communications" element={<RouteGuard requireRole="agent"><CommunicationsHub /></RouteGuard>} />
 
-
-                <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
-                <Route path="/agent/listings/drafts" element={<RouteGuard requireRole="agent"><DraftListings /></RouteGuard>} />
-                <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
-                <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
-                <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
-                <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
-                <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
+                  <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
+                  <Route path="/agent/listings/drafts" element={<RouteGuard requireRole="agent"><DraftListings /></RouteGuard>} />
+                  <Route path="/agent/listings/new" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
+                  <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
+                  <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
+                  <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
+                  <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
+                  <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
+                  <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
+                  <Route path="/agent/diagnostics" element={<RouteGuard requireRole="agent"><AgentDiagnostics /></RouteGuard>} />
+                  <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
+                  <Route path="/agent/profile" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
+                  <Route path="/agent-profile-editor" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
+                  <Route path="/manage-team" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
+                  <Route path="/manage-coverage-areas" element={<RouteGuard requireRole="agent"><ManageCoverageAreas /></RouteGuard>} />
+                  <Route path="/our-members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
+                  <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
+                  <Route path="/listing-search" element={<ListingSearch />} />
+                  <Route path="/listing-results" element={<ListingSearchResults />} />
+                  <Route path="/agent-search" element={<MLSPINSearch />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/my-favorites" element={<MyFavorites />} />
+                  <Route path="/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets /></RouteGuard>} />
+                  <Route path="/agent/off-market" element={<Navigate to="/agent/listings?status=off_market" replace />} />
+                  <Route path="/hot-sheets/:id/review" element={<RouteGuard requireRole="agent"><HotSheetReview /></RouteGuard>} />
+                  <Route path="/hot-sheets/buyer/:clientId" element={<RouteGuard requireRole="agent"><HotSheetBuyerDetail /></RouteGuard>} />
+                  <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
+                  <Route path="/my-clients/:clientId/favorites" element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>} />
+                  <Route path="/messages" element={<RouteGuard requireRole={["agent", "buyer"]}><Messages /></RouteGuard>} />
+                  <Route path="/messages/:id" element={<RouteGuard requireRole={["agent", "buyer"]}><Conversation /></RouteGuard>} />
+                  <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
+                  <Route path="/analytics" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
+                  <Route path="/analytics/:id" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
+                  <Route path="/market-insights" element={<RouteGuard requireRole="agent"><MarketInsights /></RouteGuard>} />
+                  <Route path="/vendor/dashboard" element={<RouteGuard requireRole="agent"><VendorDashboard /></RouteGuard>} />
+                  <Route path="/vendor/setup" element={<RouteGuard requireRole="agent"><VendorSetup /></RouteGuard>} />
+                  <Route path="/vendor/packages" element={<RouteGuard requireRole="agent"><VendorPackages /></RouteGuard>} />
+                  <Route path="/vendor/directory" element={<RouteGuard requireRole="agent"><VendorDirectory /></RouteGuard>} />
+                  <Route path="/admin/approvals" element={<AdminApprovals />} />
+                  <Route path="/admin/matches" element={<AdminMatches />} />
+                  <Route path="/admin/consumers" element={<AdminConsumers />} />
+                  <Route path="/admin/invites" element={<AdminInviteAudit />} />
+                  <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
+                </Route>
+                {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
-                <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
                 <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
-                <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
-                <Route path="/agent/diagnostics" element={<RouteGuard requireRole="agent"><AgentDiagnostics /></RouteGuard>} />
-                <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
                 <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 <Route path="/agent/:id" element={<AgentProfile />} />
-                <Route path="/agent/profile" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
-                <Route path="/agent-profile-editor" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
-                <Route path="/manage-team" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
                 <Route path="/team/:id" element={<TeamProfile />} />
-                <Route path="/manage-coverage-areas" element={<RouteGuard requireRole="agent"><ManageCoverageAreas /></RouteGuard>} />
                 <Route path="/browse" element={<BrowsePropertiesNew />} />
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/our-agents" element={<OurAgents />} />
                 <Route path="/agents" element={<OurAgents />} />
                 <Route path="/find-agent" element={<OurAgents />} />
-                <Route path="/our-members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
-                <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
-                <Route path="/agent-search" element={<MLSPINSearch />} />
-                <Route path="/listing-search" element={<ListingSearch />} />
-                <Route path="/listing-results" element={<ListingSearchResults />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/my-favorites" element={<MyFavorites />} />
-                <Route path="/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets /></RouteGuard>} />
-                <Route path="/agent/off-market" element={<Navigate to="/agent/listings?status=off_market" replace />} />
-                <Route path="/hot-sheets/:id/review" element={<RouteGuard requireRole="agent"><HotSheetReview /></RouteGuard>} />
-                <Route path="/hot-sheets/buyer/:clientId" element={<RouteGuard requireRole="agent"><HotSheetBuyerDetail /></RouteGuard>} />
-                <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
-                <Route path="/my-clients/:clientId/favorites" element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>} />
-                <Route path="/messages" element={<RouteGuard requireRole={["agent", "buyer"]}><Messages /></RouteGuard>} />
-                <Route path="/messages/:id" element={<RouteGuard requireRole={["agent", "buyer"]}><Conversation /></RouteGuard>} />
-                <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
-                <Route path="/analytics" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
-                <Route path="/analytics/:id" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
-                <Route path="/market-insights" element={<RouteGuard requireRole="agent"><MarketInsights /></RouteGuard>} />
-                <Route path="/vendor/dashboard" element={<RouteGuard requireRole="agent"><VendorDashboard /></RouteGuard>} />
-                <Route path="/vendor/setup" element={<RouteGuard requireRole="agent"><VendorSetup /></RouteGuard>} />
-                <Route path="/vendor/packages" element={<RouteGuard requireRole="agent"><VendorPackages /></RouteGuard>} />
-                <Route path="/vendor/directory" element={<RouteGuard requireRole="agent"><VendorDirectory /></RouteGuard>} />
-                {/* Legacy consumer routes - redirect to auth */}
+                {/* Legacy consumer routes */}
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
@@ -251,11 +264,6 @@ const App = () => (
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
-                <Route path="/admin/approvals" element={<AdminApprovals />} />
-                <Route path="/admin/matches" element={<AdminMatches />} />
-                <Route path="/admin/consumers" element={<AdminConsumers />} />
-                <Route path="/admin/invites" element={<AdminInviteAudit />} />
-                <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                 {/* Legal pages */}
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
@@ -263,9 +271,8 @@ const App = () => (
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/fair-housing" element={<FairHousing />} />
                 <Route path="/disclosures" element={<Disclosures />} />
-                {/* Design mockup - isolated visual exploration, not production */}
                 <Route path="/mockup" element={<DesignMockup />} />
-                {/* IDX Routes - MLS property search via Repliers (separate from Supabase listings) */}
+                {/* IDX Routes */}
                 <Route path="/idx" element={<IDXSearchBeta />} />
                 <Route path="/idx/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="/idx/search" element={<IDXSearch />} />
