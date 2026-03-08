@@ -349,14 +349,6 @@ function MyListingsView({
           <Plus className="h-4 w-4" />
           New Listing
         </Button>
-        <Button
-          variant="ghost"
-          onClick={() => toggleStatus("draft")}
-          className={`gap-2 ${selectedStatuses.has("draft") ? "text-emerald-700" : "text-zinc-600"}`}
-        >
-          <FileText className="h-4 w-4" />
-          Drafts
-        </Button>
       </div>
 
       {/* Premium Filter Bar */}
