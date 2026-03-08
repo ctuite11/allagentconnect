@@ -648,6 +648,7 @@ function MyListingsView({
             return (
               <CardSurface
                 key={l.id}
+                interactive
                 className="relative p-4"
               >
                 {/* Draft checkbox for list view */}
