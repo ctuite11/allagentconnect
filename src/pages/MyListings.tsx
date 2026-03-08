@@ -5,6 +5,8 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
+import { ListingCardShell } from "@/components/ListingCardShell";
+import { Badge } from "@/components/ui/badge";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
@@ -495,329 +497,182 @@ function MyListingsView({
             const matchCount = l.hot_sheet_matches ?? 0;
             const views = l.listing_stats?.view_count ?? 0;
             const favorites = l.listing_stats?.save_count ?? 0;
-            const shares = l.listing_stats?.share_count ?? 0;
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
             const goLiveDate = formatDate(l.go_live_date);
-            // Filter out past events for toolbar button logic
             const nowForToolbar = new Date();
-            const upcomingEvents = Array.isArray(l.open_houses) 
+            const upcomingEvents = Array.isArray(l.open_houses)
               ? (l.open_houses as any[]).filter((e: any) => {
                   if (!e?.date || !e?.end_time) return true;
                   return new Date(`${e.date}T${e.end_time}`) > nowForToolbar;
                 })
               : [];
-            const hasOpenHouses = upcomingEvents.length > 0;
             const hasPublicOpenHouse = upcomingEvents.some((oh: any) => oh.event_type === "in_person");
             const hasBrokerTour = upcomingEvents.some((oh: any) => oh.event_type === "broker_tour");
-            
-            // Calculate Days on Market
             const listDateObj = l.list_date ? new Date(l.list_date) : l.created_at ? new Date(l.created_at) : null;
             const dom = listDateObj ? Math.max(0, Math.floor((Date.now() - listDateObj.getTime()) / (1000 * 60 * 60 * 24))) : 0;
 
             return (
-              <CardSurface
+              <ListingCardShell
                 key={l.id}
-                interactive
-                className="relative p-4"
-              >
-                {/* Draft checkbox for list view */}
-                {l.status === "draft" && (
-                  <div className="absolute top-4 left-4 z-10">
+                listing={{
+                  ...l,
+                  address: toTitleCase(l.address || ""),
+                  city: toTitleCase(l.city || ""),
+                }}
+                photoUrl={thumbnail}
+                displayPrice={`$${l.price.toLocaleString()}`}
+                daysOnMarket={dom}
+                unitNumber={l.unit_number}
+                dateDisplay={listDate ? `Listed ${listDate}` : null}
+                onClick={() => onPreview(l.id)}
+
+                photoOverlay={l.status === "draft" ? (
+                  <div className="absolute left-2 top-2 z-10" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedDraftIds.has(l.id)}
                       onCheckedChange={() => toggleDraftSelection(l.id)}
                       aria-label="Select draft"
                     />
                   </div>
-                )}
-                {/* Action row - tight, no vertical padding */}
-                <div className={`mb-3 flex justify-between items-start ${l.status === "draft" ? "ml-8" : ""}`}>
-                  <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onEdit(l.id)}
-                    >
-                      Edit
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onPhotos(l.id)}
-                    >
-                      Photos
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="flex items-center gap-1 group"
-                      onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
-                    >
-                      <span aria-hidden>🎈</span>
-                      <span className="group-hover:text-emerald-700 transition">Open House</span>
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="flex items-center gap-1 group"
-                      onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
-                    >
-                      <span aria-hidden>🚙</span>
-                      <span className="group-hover:text-[#0E56F5] transition">Broker Tour</span>
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onMatches(l)}
-                    >
-                      Matches ({matchCount})
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onEmail?.(l)}
-                    >
-                      Email
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onSocialShare(l)}
-                    >
-                      Social
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 text-aac">
-                        <path fill="currentColor" d="M8 2.75c3.73 0 6.7 2.2 7.95 5.25-1.25 3.05-4.22 5.25-7.95 5.25-3.73 0-6.7-2.2-7.95-5.25C1.3 4.95 4.27 2.75 8 2.75Z" />
-                        <circle cx="8" cy="8" r="2.15" fill="hsl(var(--background))" />
-                        <circle cx="8" cy="8" r="1.15" fill="currentColor" />
-                      </svg>
-                      <span className="text-[13px] leading-none text-zinc-800 font-medium">{views}</span>
-                    </span>
-                    <span className="text-zinc-300">•</span>
-                    <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 fill-current text-destructive">
-                        <path d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z" />
-                      </svg>
-                      <span className="text-[13px] leading-none text-zinc-800 font-medium">{favorites}</span>
-                    </span>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onStats(l.id)}
-                    >
-                      Stats
-                    </button>
-                  </div>
-                  {/* Right side - quiet metadata + overflow */}
-                   <div className="absolute top-4 right-4 z-10 text-right space-y-0.5">
-                     <ListingStatusBadge status={l.status} size="lg" />
-                       <div className="text-xs leading-tight"><span className="text-zinc-400">AAC List Date:</span> <span className="text-zinc-500">{listDate}</span></div>
-                     {isComingSoon(l.status) ? (
-                       <>
-                         {goLiveDate && <div className="text-xs leading-tight"><span className="text-zinc-400">On MLS Date:</span> <span className="text-zinc-500">{goLiveDate}</span></div>}
-                         {expDate && <div className="text-xs leading-tight"><span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span></div>}
-                       </>
-                     ) : (
-                       expDate && <div className="text-xs leading-tight"><span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span></div>
-                     )}
-                     <div className="text-xs leading-tight"><span className="text-zinc-400">DOM:</span> <span className="text-zinc-700 font-medium">{dom}</span></div>
-                    {l.status === "draft" && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="mt-1 p-1 rounded hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem
-                            className="cursor-pointer text-sm text-destructive focus:text-destructive"
-                            onClick={() => setListingToDelete(l)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
-                            Delete Listing
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </div>
+                ) : undefined}
 
-                {/* Content row - photo + info */}
-                <div className="relative flex items-start gap-4">
-                  {/* Photo - locked size */}
-                  <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer">
-                    <img
-                      src={thumbnail || "/placeholder.svg"}
-                      alt={l.address}
-                      className="w-full h-full object-cover"
-                      onClick={() => onPreview(l.id)}
-                    />
-                  </div>
+                infoRowExtra={l.listing_type ? (
+                  <>
+                    <span className="text-muted-foreground/40">•</span>
+                    <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                      {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
+                    </span>
+                  </>
+                ) : undefined}
 
-                  {/* Center text stack */}
-                   {/* Status badge moved to right column */}
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    {/* Listing # + Status inline */}
-                    <div className="flex items-center gap-2">
-                      {l.listing_number && (
-                        <button 
-                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer leading-none"
-                          onClick={() => onPreview(l.id)}
+                metadataSlot={
+                  <>
+                    {isEditing && (
+                      <div className="flex items-center gap-2 mt-1" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                        <input
+                          type="number"
+                          className="border border-border rounded px-2 py-1 text-sm w-28 bg-background"
+                          value={editPrice}
+                          onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                        />
+                        <select
+                          className="border border-border rounded px-2 py-1 bg-background capitalize text-xs"
+                          value={editStatus}
+                          onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                         >
-                          #{l.listing_number}
+                          {ALL_STATUSES.map((tab) => (
+                            <option key={tab.value} value={tab.value}>{tab.label}</option>
+                          ))}
+                        </select>
+                        <button
+                          className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                          onClick={saveQuickEdit}
+                        >
+                          Save
                         </button>
-                      )}
-                      {l.listing_type && (
-                        <>
-                          <span className="text-zinc-300">•</span>
-                          <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-                            {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    {/* Address */}
-                    <div className="font-semibold text-base text-zinc-900 truncate leading-tight">
-                      {formatAddressWithUnit(l)}
-                    </div>
-                    {/* Location + Neighborhood */}
-                    <div className="text-sm text-zinc-500 leading-tight">
-                      {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
-                    </div>
-                    {/* Price */}
-                    <div className="mt-1">
-                       {isEditing ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              className="border border-zinc-200 rounded px-2 py-1 text-sm w-28 bg-white"
-                              value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                            />
-                            <select
-                              className="border border-zinc-200 rounded px-2 py-1 bg-white capitalize text-xs"
-                              value={editStatus}
-                              onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                            >
-                              {ALL_STATUSES.map((tab) => (
-                                <option key={tab.value} value={tab.value}>
-                                  {tab.label}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
-                              onClick={saveQuickEdit}
-                            >
-                              Save
-                            </button>
-                            <button
-                              className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
-                              onClick={cancelQuickEdit}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-sm font-medium text-zinc-900">${l.price.toLocaleString()}</span>
-                              <button
-                                className="text-xs text-primary hover:text-primary/80 hover:underline"
-                                onClick={() => startQuickEdit(l)}
-                                title="Quick edit price and status"
-                              >
-                                Quick Edit
-                              </button>
+                        <button
+                          className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                          onClick={cancelQuickEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                    {!isEditing && upcomingEvents.length > 0 && (
+                      <div className="space-y-0.5 mt-1">
+                        {(() => {
+                          const ohIdx = upcomingEvents.findIndex((e: any) => e.event_type !== "broker_tour");
+                          if (ohIdx < 0) return null;
+                          const oh = upcomingEvents[ohIdx];
+                          const info = formatOpenHouseEvent(oh);
+                          const count = upcomingEvents.filter((e: any) => e.event_type !== "broker_tour").length;
+                          return (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <span>🎈</span>
+                              <span className="truncate">Open House • {info.dateLabel} • {info.timeLabel}</span>
+                              {count > 1 && <span className="text-muted-foreground/60">+{count - 1} more</span>}
+                              <button className="text-xs text-primary hover:underline ml-1" onClick={(e) => { e.stopPropagation(); onViewOpenHouses(l); }}>Edit</button>
+                              <button className="text-xs text-destructive hover:underline" onClick={(e) => { e.stopPropagation(); onDeleteOpenHouse(l.id, ohIdx); }}>Delete</button>
                             </div>
-                            <div className="w-8 shrink-0" />
-                            {(() => {
-                              const now = new Date();
-                              const allEvents = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
-                              // Filter out past events (safety net while backend cleans up every 15 min)
-                              const events = allEvents.filter((e: any) => {
-                                if (!e?.date || !e?.end_time) return true;
-                                return new Date(`${e.date}T${e.end_time}`) > now;
-                              });
-                              const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
-                              const openHouseEvent = openHouseIndex >= 0 ? events[openHouseIndex] : null;
-                              const openHouseCount = events.filter((e: any) => e?.event_type !== "broker_tour").length;
-                              const brokerTourIndex = events.findIndex((e: any) => e?.event_type === "broker_tour");
-                              const brokerTourEvent = brokerTourIndex >= 0 ? events[brokerTourIndex] : null;
-                              const brokerTourCount = events.filter((e: any) => e?.event_type === "broker_tour").length;
-                              const hasEvents = openHouseEvent || brokerTourEvent;
+                          );
+                        })()}
+                        {(() => {
+                          const btIdx = upcomingEvents.findIndex((e: any) => e.event_type === "broker_tour");
+                          if (btIdx < 0) return null;
+                          const bt = upcomingEvents[btIdx];
+                          const info = formatOpenHouseEvent(bt);
+                          const count = upcomingEvents.filter((e: any) => e.event_type === "broker_tour").length;
+                          return (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <span>🚙</span>
+                              <span className="truncate">Broker Tour • {info.dateLabel} • {info.timeLabel}</span>
+                              {count > 1 && <span className="text-muted-foreground/60">+{count - 1} more</span>}
+                              <button className="text-xs text-primary hover:underline ml-1" onClick={(e) => { e.stopPropagation(); onViewOpenHouses(l); }}>Edit</button>
+                              <button className="text-xs text-destructive hover:underline" onClick={(e) => { e.stopPropagation(); onDeleteOpenHouse(l.id, btIdx); }}>Delete</button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </>
+                }
 
-                              if (!hasEvents) return null;
+                rightMetadataSlot={
+                  <>
+                    {isComingSoon(l.status) && goLiveDate && (
+                      <div className="text-[11px]"><span className="text-muted-foreground">On MLS:</span> <span className="text-foreground">{goLiveDate}</span></div>
+                    )}
+                    {expDate && (
+                      <div className="text-[11px]"><span className="text-muted-foreground">Exp:</span> <span className="text-foreground">{expDate}</span></div>
+                    )}
+                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+                      <span>👁 {views}</span>
+                      <span>❤️ {favorites}</span>
+                    </div>
+                  </>
+                }
 
-                              return (
-                                <div className="min-w-0 space-y-0.5">
-                                  {openHouseEvent && (() => {
-                                    const first = formatOpenHouseEvent(openHouseEvent);
-                                    return (
-                                      <div className="flex items-center gap-1.5 text-sm text-zinc-600 min-w-0">
-                                        <span aria-hidden className="shrink-0">🎈</span>
-                                        <span className="truncate">Open House • {first.dateLabel} • {first.timeLabel}</span>
-                                        {openHouseCount > 1 && (
-                                          <span className="text-zinc-400 text-xs shrink-0">+{openHouseCount - 1} more</span>
-                                        )}
-                                        <button
-                                          type="button"
-                                          className="text-xs text-primary hover:text-primary/80 hover:underline ml-1 shrink-0"
-                                          onClick={() => onViewOpenHouses(l)}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="text-xs text-red-600 hover:text-red-700 hover:underline shrink-0"
-                                          onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
-                                        >
-                                          Delete
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
-                                  {brokerTourEvent && (() => {
-                                    const first = formatOpenHouseEvent(brokerTourEvent);
-                                    return (
-                                      <div className="flex items-center gap-1.5 text-sm text-zinc-600 min-w-0">
-                                        <span aria-hidden className="shrink-0">🚙</span>
-                                        <span className="truncate">Broker Tour • {first.dateLabel} • {first.timeLabel}</span>
-                                        {brokerTourCount > 1 && (
-                                          <span className="text-zinc-400 text-xs shrink-0">+{brokerTourCount - 1} more</span>
-                                        )}
-                                        <button
-                                          type="button"
-                                          className="text-xs text-primary hover:text-primary/80 hover:underline ml-1 shrink-0"
-                                          onClick={() => onViewOpenHouses(l)}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="text-xs text-red-600 hover:text-red-700 hover:underline shrink-0"
-                                          onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
-                                        >
-                                          Delete
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
-                                </div>
-                              );
-                            })()}
-                          </div>
+                actionsSlot={
+                  <>
+                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={(e) => { e.stopPropagation(); onEdit(l.id); }}>
+                      Edit
+                    </Button>
+                    {!isEditing && (
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={(e) => { e.stopPropagation(); startQuickEdit(l); }}>
+                        Quick Edit
+                      </Button>
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full text-xs" onClick={(e) => e.stopPropagation()}>
+                          <MoreHorizontal className="h-3 w-3 mr-1" /> More
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => onPhotos(l.id)}>📸 Photos</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}>🎈 Open House</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}>🚙 Broker Tour</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onMatches(l)}>🎯 Matches ({matchCount})</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEmail?.(l)}>✉️ Email</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onSocialShare(l)}>📱 Social</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onStats(l.id)}>📊 Stats</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onPreview(l.id)}>🔗 View</DropdownMenuItem>
+                        {l.status === "draft" && (
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setListingToDelete(l)}>
+                            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                          </DropdownMenuItem>
                         )}
-                     </div>
-                  </div>
-
-                </div>
-              </CardSurface>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                }
+              />
             );
           })}
 
           {filteredListings.length === 0 && (
-            <div className="text-center text-zinc-500 text-sm py-10">No listings match your filters yet.</div>
+            <div className="text-center text-muted-foreground text-sm py-10">No listings match your filters yet.</div>
           )}
         </div>
     </>
