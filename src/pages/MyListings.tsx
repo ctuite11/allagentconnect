@@ -748,16 +748,16 @@ function MyListingsView({
                   {/* Right side - quiet metadata + overflow */}
                    <div className="absolute top-4 right-4 z-10 text-right space-y-0.5">
                      <ListingStatusBadge status={l.status} size="lg" />
-                      <div className="text-xs text-zinc-500 leading-tight">AAC List Date: {listDate}</div>
-                    {isComingSoon(l.status) ? (
-                      <>
-                        {goLiveDate && <div className="text-xs text-zinc-500 leading-tight">On MLS Date: {goLiveDate}</div>}
-                        {expDate && <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>}
-                      </>
-                    ) : (
-                      expDate && <div className="text-xs text-zinc-500 leading-tight">Exp: {expDate}</div>
-                    )}
-                    <div className="text-xs text-zinc-500 leading-tight">DOM: {dom}</div>
+                       <div className="text-xs leading-tight"><span className="text-zinc-400">AAC List Date:</span> <span className="text-zinc-500">{listDate}</span></div>
+                     {isComingSoon(l.status) ? (
+                       <>
+                         {goLiveDate && <div className="text-xs leading-tight"><span className="text-zinc-400">On MLS Date:</span> <span className="text-zinc-500">{goLiveDate}</span></div>}
+                         {expDate && <div className="text-xs leading-tight"><span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span></div>}
+                       </>
+                     ) : (
+                       expDate && <div className="text-xs leading-tight"><span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span></div>
+                     )}
+                     <div className="text-xs leading-tight"><span className="text-zinc-400">DOM:</span> <span className="text-zinc-700 font-medium">{dom}</span></div>
                     {l.status === "draft" && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
