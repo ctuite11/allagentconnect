@@ -37,7 +37,11 @@ const HIDE_NAV_ROUTES = [
 const SIDEBAR_MANAGED_PREFIXES = [
   "/agent-dashboard",
   "/success-hub",
-  "/agent/",
+  "/agent/listings",        // NOT /agent/:id (public profile)
+  "/agent/profile",
+  "/agent/diagnostics",
+  "/agent/off-market",
+  "/agent-profile-editor",
   "/network",
   "/listing-search",
   "/listing-results",
@@ -53,7 +57,6 @@ const SIDEBAR_MANAGED_PREFIXES = [
   "/manage-team",
   "/manage-coverage-areas",
   "/add-rental-listing",
-  "/agent-profile-editor",
   "/our-members",
   "/members",
   "/agent-search",
