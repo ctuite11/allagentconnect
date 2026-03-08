@@ -1,0 +1,322 @@
+/**
+ * ListingCardShell — Canonical desktop list-view layout.
+ *
+ * This is the SINGLE visual source of truth for horizontal listing cards.
+ * Both ListingCard (agent management) and SearchListingCard (search results)
+ * consume this shell and inject their own actions/metadata via slots.
+ *
+ * Layout: Card → flex → [Photo w-40 h-40] + [grid-cols-12 info]
+ *   Col 1-6: address, location, stats, metadataSlot
+ *   Col 7-8: status + property type
+ *   Col 9-10: price + listing type + dateSlot
+ *   Col 11-12: actionsSlot
+ *
+ * DO NOT add context-specific logic here.
+ * All behavioral differences go through the slot props.
+ */
+
+import { ReactNode } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
+import {
+  MapPin, Bed, Bath, Home, Sparkles,
+  TrendingDown, RefreshCw, Calendar,
+} from "lucide-react";
+import { format } from "date-fns";
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface BannerData {
+  text: string;
+  color: string;
+  iconType: "sparkles" | "refresh" | "trendingDown";
+}
+
+export interface OpenHouseBannerData {
+  text: string;
+  date: string;
+  time: string;
+  color: string;
+  isBroker: boolean;
+}
+
+export interface ShellListingData {
+  id: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  price: number;
+  property_type?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  square_feet?: number | null;
+  status: string;
+  photos?: any;
+  listing_type?: string | null;
+  listing_number?: string | null;
+  neighborhood?: string | null;
+}
+
+export interface ListingCardShellProps {
+  /** Core listing data */
+  listing: ShellListingData;
+
+  /** Computed display values */
+  photoUrl: string | null;
+  displayPrice: string;
+  daysOnMarket: number;
+  unitNumber?: string | null;
+
+  /** Banners */
+  statusBanner?: BannerData | null;
+  priceChangeBanner?: BannerData | null;
+  openHouseBanner?: OpenHouseBannerData | null;
+
+  /** Next open house data (for inline info block) */
+  nextOpenHouse?: any;
+
+  /** Date to display in price column (created_at, list_date, etc.) */
+  dateDisplay?: string | null;
+
+  // ── Slots ──────────────────────────────────────────────────────────────
+
+  /** Extra rows in col 1-6 below bed/bath/sqft (match count, micro-facts, attribution, etc.) */
+  metadataSlot?: ReactNode;
+
+  /** Col 11-12 action buttons */
+  actionsSlot: ReactNode;
+
+  /** Overlay on photo (checkbox, etc.) */
+  photoOverlay?: ReactNode;
+
+  /** Extra metadata items in the listing-number row (relisting badge, cumulative days, etc.) */
+  infoRowExtra?: ReactNode;
+
+  /** Extra stat items after bed/bath/sqft (price per sqft, etc.) */
+  statsExtra?: ReactNode;
+
+  // ── Events ─────────────────────────────────────────────────────────────
+
+  /** Card click handler */
+  onClick?: () => void;
+}
+
+// ── Banner Icon ──────────────────────────────────────────────────────────────
+
+function BannerIcon({ type }: { type: BannerData["iconType"] }) {
+  switch (type) {
+    case "sparkles": return <Sparkles className="w-3 h-3" />;
+    case "refresh": return <RefreshCw className="w-3 h-3" />;
+    case "trendingDown": return <TrendingDown className="w-3 h-3" />;
+  }
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+export function ListingCardShell({
+  listing,
+  photoUrl,
+  displayPrice,
+  daysOnMarket,
+  unitNumber,
+  statusBanner,
+  priceChangeBanner,
+  openHouseBanner,
+  nextOpenHouse,
+  dateDisplay,
+  metadataSlot,
+  actionsSlot,
+  photoOverlay,
+  infoRowExtra,
+  statsExtra,
+  onClick,
+}: ListingCardShellProps) {
+  return (
+    <Card
+      className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="flex gap-4 p-4">
+        {/* ── Photo with Banners ────────────────────────────────────────── */}
+        <div className="relative w-40 h-40 flex-shrink-0">
+          {photoOverlay}
+
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt={listing.address}
+              className="w-full h-full object-cover rounded"
+            />
+          ) : (
+            <div className="w-full h-full bg-muted rounded flex items-center justify-center">
+              <Home className="w-8 h-8 text-muted-foreground" />
+            </div>
+          )}
+
+          {/* Status Change Banner (top priority) */}
+          {statusBanner && (
+            <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+              <BannerIcon type={statusBanner.iconType} />
+              {statusBanner.text}
+            </div>
+          )}
+
+          {/* Price Change Banner (second priority) */}
+          {priceChangeBanner && !statusBanner && (
+            <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+              <TrendingDown className="w-3 h-3" />
+              {priceChangeBanner.text}
+            </div>
+          )}
+
+          {/* Open House Banner */}
+          {openHouseBanner && (
+            <div
+              className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
+            >
+              {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
+            </div>
+          )}
+
+          {/* Photo count badge */}
+          <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+            {listing.photos?.length || 0} Photos
+          </div>
+        </div>
+
+        {/* ── Info Grid ─────────────────────────────────────────────────── */}
+        <div className="flex-1 grid grid-cols-12 gap-3">
+          {/* Col 1-6: Address, location, metadata */}
+          <div className="col-span-6">
+            <h3 className="font-semibold text-sm mb-1">
+              {listing.address}
+              {unitNumber && (
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  Unit {unitNumber}
+                </Badge>
+              )}
+            </h3>
+            <div className="flex items-center text-muted-foreground text-xs mb-2">
+              <MapPin className="w-3 h-3 mr-1" />
+              {listing.city}, {listing.state} {listing.zip_code}
+              {listing.neighborhood && (
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {listing.neighborhood}
+                </Badge>
+              )}
+            </div>
+
+            {/* Info row: listing number + DOM + extras */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+              {listing.listing_number && <span>Listing #{listing.listing_number}</span>}
+              {infoRowExtra}
+              {listing.listing_number && daysOnMarket > 0 && <span>•</span>}
+              {daysOnMarket > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
+                </Badge>
+              )}
+            </div>
+
+            {/* Stats row: bed/bath/sqft + extras */}
+            <div className="flex gap-2 text-xs text-muted-foreground mb-3">
+              {listing.bedrooms != null && (
+                <span><Bed className="w-3 h-3 inline mr-0.5" />{listing.bedrooms}</span>
+              )}
+              {listing.bathrooms != null && (
+                <span><Bath className="w-3 h-3 inline mr-0.5" />{listing.bathrooms}</span>
+              )}
+              {listing.square_feet != null && (
+                <span><Home className="w-3 h-3 inline mr-0.5" />{listing.square_feet.toLocaleString()} sqft</span>
+              )}
+              {statsExtra}
+            </div>
+
+            {/* Open House Info (inline) */}
+            {nextOpenHouse && (
+              <div className={`flex items-center gap-1.5 text-xs p-2 rounded-md mb-2 ${
+                nextOpenHouse.type === 'broker'
+                  ? 'bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800'
+                  : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800'
+              }`}>
+                <Calendar className={`h-4 w-4 ${
+                  nextOpenHouse.type === 'broker'
+                    ? 'text-purple-600 dark:text-purple-400'
+                    : 'text-emerald-600 dark:text-emerald-400'
+                }`} />
+                <div className="flex-1">
+                  <div className={`font-semibold ${
+                    nextOpenHouse.type === 'broker'
+                      ? 'text-purple-700 dark:text-purple-300'
+                      : 'text-emerald-700 dark:text-emerald-300'
+                  }`}>
+                    {nextOpenHouse.type === 'broker' ? 'Broker Tour' : 'Open House'}
+                  </div>
+                  <div className={
+                    nextOpenHouse.type === 'broker'
+                      ? 'text-purple-600 dark:text-purple-400'
+                      : 'text-emerald-600 dark:text-emerald-400'
+                  }>
+                    {format(new Date(nextOpenHouse.date), "EEE, MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Context-specific metadata (match count, agent attribution, etc.) */}
+            {metadataSlot}
+          </div>
+
+          {/* Col 7-8: Status + property type */}
+          <div className="col-span-2">
+            <ListingStatusBadge status={listing.status} size="sm" className="mb-1" />
+            {listing.property_type && (
+              <div className="text-xs text-muted-foreground">{listing.property_type}</div>
+            )}
+          </div>
+
+          {/* Col 9-10: Price */}
+          <div className="col-span-2 text-right">
+            <div className="text-base font-bold text-primary mb-0.5">
+              {displayPrice}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
+            </div>
+            {dateDisplay && (
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {dateDisplay}
+              </div>
+            )}
+          </div>
+
+          {/* Col 11-12: Actions (injected by consumer) */}
+          <div className="col-span-2 flex flex-col gap-1.5 justify-center pt-1">
+            {actionsSlot}
+          </div>
+        </div>
+      </div>
+
+      {/* Open House footer bar */}
+      {openHouseBanner && nextOpenHouse && (
+        <div className={`${
+          openHouseBanner.isBroker
+            ? 'bg-purple-50 border-t border-purple-200'
+            : 'bg-emerald-50 border-t border-emerald-200'
+        } px-3 py-1.5 text-xs`}>
+          <Calendar className={`w-4 h-4 inline mr-2 ${
+            openHouseBanner.isBroker ? 'text-purple-600' : 'text-emerald-600'
+          }`} />
+          <span className={`font-semibold ${
+            openHouseBanner.isBroker ? 'text-purple-700' : 'text-emerald-700'
+          }`}>
+            {openHouseBanner.isBroker ? 'Broker Open House:' : 'Open House:'}
+          </span>{" "}
+          {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {openHouseBanner.time}
+        </div>
+      )}
+    </Card>
+  );
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ListingCardShell } from "@/components/ListingCardShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
@@ -896,195 +897,103 @@ const ListingCard = ({
         </Card>;
   }
   if (viewMode === 'list') {
-    return <Card className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary">
-        <div className="flex gap-4 p-4">
-          {/* Photo with Banners */}
-          <div className="relative w-40 h-40 flex-shrink-0">
-            {photoUrl ? <img src={photoUrl} alt={listing.address} className="w-full h-full object-cover rounded" /> : <div className="w-full h-full bg-muted rounded flex items-center justify-center">
-                <Home className="w-8 h-8 text-muted-foreground" />
-              </div>}
-            
-            {/* Status Change Banner (top priority) */}
-            {statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-                {statusBanner.iconType === 'sparkles' ? <Sparkles className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
-                {statusBanner.text}
-              </div>}
-            
-            {/* Price Change Banner (second priority) */}
-            {priceChangeBanner && !statusBanner && <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-                <TrendingDown className="w-3 h-3" />
-                {priceChangeBanner.text}
-              </div>}
-            
-            {/* Open House Banner (third priority) */}
-            {openHouseBanner && <div className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
-                {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
-              </div>}
-            
-            {/* Photo count badge */}
-            <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
-              {listing.photos?.length || 0} Photos
-            </div>
-          </div>
-
-          {/* Listing Info */}
-          <div className="flex-1 grid grid-cols-12 gap-3">
-            <div className="col-span-6">
-              <h3 className="font-semibold text-sm mb-1">
-                {listing.address}
-                {unitNumber && <Badge variant="secondary" className="ml-2 text-xs">
-                    Unit {unitNumber}
-                  </Badge>}
-              </h3>
-              <div className="flex items-center text-muted-foreground text-xs mb-2">
-                <MapPin className="w-3 h-3 mr-1" />
-                {listing.city}, {listing.state} {listing.zip_code}
-                {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {listing.neighborhood || (listing as any).attom_data?.neighborhood}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                {listing.listing_number && <span>Listing #{listing.listing_number}</span>}
-                {listing.is_relisting && <>
-                    {listing.listing_number && <span>•</span>}
-                    <Badge variant="secondary" className="text-xs">
-                      Relisted
-                    </Badge>
-                  </>}
-                {listing.listing_number && daysOnMarket > 0 && <span>•</span>}
-                {daysOnMarket > 0 && <Badge variant="outline" className="text-xs">
-                    {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
-                  </Badge>}
-                {listing.listing_stats?.cumulative_active_days && listing.listing_stats.cumulative_active_days > daysOnMarket && <>
-                    <span>•</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {listing.listing_stats.cumulative_active_days} total active
-                    </Badge>
-                  </>}
-              </div>
-              <div className="flex gap-2 text-xs text-muted-foreground mb-3">
-                {listing.bedrooms && <span><Bed className="w-3 h-3 inline mr-0.5" />{listing.bedrooms}</span>}
-                {listing.bathrooms && <span><Bath className="w-3 h-3 inline mr-0.5" />{listing.bathrooms}</span>}
-                {listing.square_feet && <span><Home className="w-3 h-3 inline mr-0.5" />{listing.square_feet.toLocaleString()} sqft</span>}
-              </div>
-              
-              {/* Open House Info */}
-              {nextOpenHouse && (
-                <div className={`flex items-center gap-1.5 text-xs p-2 rounded-md mb-2 ${nextOpenHouse.type === 'broker' ? 'bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800' : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800'}`}>
-                  <Calendar className={`h-4 w-4 ${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
-                  <div className="flex-1">
-                    <div className={`font-semibold ${nextOpenHouse.type === 'broker' ? 'text-purple-700 dark:text-purple-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
-                      {nextOpenHouse.type === 'broker' ? 'Broker Tour' : 'Open House'}
-                    </div>
-                    <div className={`${nextOpenHouse.type === 'broker' ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                      {format(new Date(nextOpenHouse.date), "EEE, MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {(listing.status === LISTING_STATUS.ACTIVE || listing.status === LISTING_STATUS.COMING_SOON) && buyerCount > 0 && (
-                <Button 
-                  size="sm" 
-                  variant={matchButtonStyle.variant} 
-                  onClick={() => setProspectDialogOpen(true)} 
-                  disabled={loadingMatches} 
-                  className={`text-xs ${matchButtonStyle.className}`}
-                >
-                  <Users className="w-3 h-3 mr-1" />
-                  {getMatchLabel()}
+    return <>
+      <ListingCardShell
+        listing={listing}
+        photoUrl={photoUrl}
+        displayPrice={displayPrice}
+        daysOnMarket={daysOnMarket}
+        unitNumber={unitNumber}
+        statusBanner={statusBanner}
+        priceChangeBanner={priceChangeBanner}
+        openHouseBanner={openHouseBanner}
+        nextOpenHouse={nextOpenHouse}
+        dateDisplay={listing.created_at ? format(new Date(listing.created_at), "MM/dd/yy") : null}
+        onClick={() => {
+          sessionStorage.setItem('fromAgentDashboard', 'true');
+          navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
+        }}
+        infoRowExtra={<>
+          {listing.is_relisting && <>
+            {listing.listing_number && <span>•</span>}
+            <Badge variant="secondary" className="text-xs">Relisted</Badge>
+          </>}
+          {listing.listing_stats?.cumulative_active_days && listing.listing_stats.cumulative_active_days > daysOnMarket && <>
+            <span>•</span>
+            <Badge variant="secondary" className="text-xs">
+              {listing.listing_stats.cumulative_active_days} total active
+            </Badge>
+          </>}
+        </>}
+        metadataSlot={
+          (listing.status === LISTING_STATUS.ACTIVE || listing.status === LISTING_STATUS.COMING_SOON) && buyerCount > 0 ? (
+            <Button
+              size="sm"
+              variant={matchButtonStyle.variant}
+              onClick={(e) => { e.stopPropagation(); setProspectDialogOpen(true); }}
+              disabled={loadingMatches}
+              className={`text-xs ${matchButtonStyle.className}`}
+            >
+              <Users className="w-3 h-3 mr-1" />
+              {getMatchLabel()}
+            </Button>
+          ) : undefined
+        }
+        actionsSlot={<>
+          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/agent/listings/edit/${listing.id}`); }} className="w-full">
+            <Edit className="w-3 h-3 mr-1" /> Edit
+          </Button>
+          <Button variant="outline" size="sm" onClick={(e) => {
+            e.stopPropagation();
+            sessionStorage.setItem('fromAgentDashboard', 'true');
+            navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
+          }} className="w-full">
+            <Eye className="w-3 h-3 mr-1" /> View
+          </Button>
+          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/analytics/${listing.id}`); }} className="w-full">
+            <BarChart3 className="w-3 h-3 mr-1" /> Stats
+          </Button>
+          {listing.status === 'draft' && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" onClick={(e) => e.stopPropagation()} className="w-full">
+                  <Trash2 className="w-3 h-3 mr-1" /> Delete
                 </Button>
-              )}
-            </div>
-
-            <div className="col-span-2">
-              <ListingStatusBadge status={listing.status} size="sm" className="mb-1" />
-              {listing.property_type && <div className="text-xs text-muted-foreground">{listing.property_type}</div>}
-            </div>
-
-            <div className="col-span-2 text-right">
-              <div className="text-base font-bold text-primary mb-0.5">
-                {displayPrice}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
-              </div>
-              {listing.created_at && <div className="text-xs text-muted-foreground mt-0.5">
-                  {format(new Date(listing.created_at), "MM/dd/yy")}
-                </div>}
-            </div>
-
-            <div className="col-span-2 flex flex-col gap-1.5 justify-center pt-1">
-              <Button variant="outline" size="sm" onClick={() => navigate(`/agent/listings/edit/${listing.id}`)} className="w-full">
-                <Edit className="w-3 h-3 mr-1" />
-                Edit
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-              sessionStorage.setItem('fromAgentDashboard', 'true');
-              navigate(`/property/${listing.id}?from=my-listings`, {
-                state: {
-                  fromAgentDashboard: true
-                }
-              });
-            }} className="w-full">
-                <Eye className="w-3 h-3 mr-1" />
-                View
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/analytics/${listing.id}`)} className="w-full">
-                <BarChart3 className="w-3 h-3 mr-1" />
-                Stats
-              </Button>
-              {listing.status === 'draft' && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" onClick={(e) => e.stopPropagation()} className="w-full">
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Draft Listing</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this draft listing? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        {deleting ? 'Deleting...' : 'Delete'}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-              <div className="flex items-center gap-2 w-full">
-                <span className="text-2xl animate-pulse">🎈</span>
-                <Button size="sm" variant="outline" className="flex-1" onClick={(e) => {
-                  e.stopPropagation();
-                  setQuickOpenHouseDialogOpen(true);
-                }}>
-                  Schedule OH
-                </Button>
-              </div>
-              {listing.status === 'cancelled' && onReactivate && <Button variant="default" size="sm" onClick={() => onReactivate(listing.id)} className="w-full bg-emerald-600 hover:bg-emerald-700">
-                  <RefreshCw className="w-3 h-3 mr-1" />
-                  Reactivate
-                </Button>}
-            </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Draft Listing</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this draft listing? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <div className="flex items-center gap-2 w-full">
+            <span className="text-2xl animate-pulse">🎈</span>
+            <Button size="sm" variant="outline" className="flex-1" onClick={(e) => {
+              e.stopPropagation();
+              setQuickOpenHouseDialogOpen(true);
+            }}>
+              Schedule OH
+            </Button>
           </div>
-        </div>
-        {openHouseBanner && <div className={`${openHouseBanner.isBroker ? 'bg-purple-50 border-t border-purple-200' : 'bg-emerald-50 border-t border-emerald-200'} px-3 py-1.5 text-xs`}>
-            <Calendar className={`w-4 h-4 inline mr-2 ${openHouseBanner.isBroker ? 'text-purple-600' : 'text-emerald-600'}`} />
-            <span className={`font-semibold ${openHouseBanner.isBroker ? 'text-purple-700' : 'text-emerald-700'}`}>
-              {openHouseBanner.isBroker ? 'Broker Open House:' : 'Open House:'}
-            </span>{" "}
-            {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {openHouseBanner.time}
-          </div>}
-        <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} agentCount={agentCount} buyerCount={buyerCount} />
-        <MarketInsightsDialog open={marketInsightsOpen} onOpenChange={setMarketInsightsOpen} listing={{
+          {listing.status === 'cancelled' && onReactivate && (
+            <Button variant="default" size="sm" onClick={(e) => { e.stopPropagation(); onReactivate(listing.id); }} className="w-full bg-emerald-600 hover:bg-emerald-700">
+              <RefreshCw className="w-3 h-3 mr-1" /> Reactivate
+            </Button>
+          )}
+        </>}
+      />
+      <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} agentCount={agentCount} buyerCount={buyerCount} />
+      <MarketInsightsDialog open={marketInsightsOpen} onOpenChange={setMarketInsightsOpen} listing={{
         address: listing.address,
         city: listing.city,
         state: listing.state,
@@ -1092,15 +1001,6 @@ const ListingCard = ({
         price: listing.price,
         property_type: listing.property_type
       }} />
-      <ReverseProspectDialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen} listing={listing} agentCount={agentCount} buyerCount={buyerCount} />
-      <MarketInsightsDialog open={marketInsightsOpen} onOpenChange={setMarketInsightsOpen} listing={{
-      address: listing.address,
-      city: listing.city,
-      state: listing.state,
-      zip_code: listing.zip_code,
-      price: listing.price,
-      property_type: listing.property_type
-    }} />
       <Dialog open={quickOpenHouseDialogOpen} onOpenChange={setQuickOpenHouseDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1109,85 +1009,44 @@ const ListingCard = ({
               Add an open house for {listing.address}
             </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Type</Label>
               <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={quickOHType === 'public' ? 'default' : 'outline'}
-                  onClick={() => setQuickOHType('public')}
-                  className="flex-1"
-                >
+                <Button type="button" variant={quickOHType === 'public' ? 'default' : 'outline'} onClick={() => setQuickOHType('public')} className="flex-1">
                   Public Open House
                 </Button>
-                <Button
-                  type="button"
-                  variant={quickOHType === 'broker' ? 'default' : 'outline'}
-                  onClick={() => setQuickOHType('broker')}
-                  className="flex-1"
-                >
+                <Button type="button" variant={quickOHType === 'broker' ? 'default' : 'outline'} onClick={() => setQuickOHType('broker')} className="flex-1">
                   Broker Open House
                 </Button>
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="quick-oh-date">Date</Label>
-              <Input
-                id="quick-oh-date"
-                type="date"
-                value={quickOHDate}
-                onChange={(e) => setQuickOHDate(e.target.value)}
-              />
+              <Input id="quick-oh-date" type="date" value={quickOHDate} onChange={(e) => setQuickOHDate(e.target.value)} />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="quick-oh-start">Start Time</Label>
-                <Input
-                  id="quick-oh-start"
-                  type="time"
-                  value={quickOHStartTime}
-                  onChange={(e) => setQuickOHStartTime(e.target.value)}
-                />
+                <Input id="quick-oh-start" type="time" value={quickOHStartTime} onChange={(e) => setQuickOHStartTime(e.target.value)} />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="quick-oh-end">End Time</Label>
-                <Input
-                  id="quick-oh-end"
-                  type="time"
-                  value={quickOHEndTime}
-                  onChange={(e) => setQuickOHEndTime(e.target.value)}
-                />
+                <Input id="quick-oh-end" type="time" value={quickOHEndTime} onChange={(e) => setQuickOHEndTime(e.target.value)} />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="quick-oh-notes">Notes (optional)</Label>
-              <Textarea
-                id="quick-oh-notes"
-                value={quickOHNotes}
-                onChange={(e) => setQuickOHNotes(e.target.value)}
-                placeholder="Any special instructions..."
-                rows={3}
-              />
+              <Textarea id="quick-oh-notes" value={quickOHNotes} onChange={(e) => setQuickOHNotes(e.target.value)} placeholder="Any special instructions..." rows={3} />
             </div>
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => setQuickOpenHouseDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleQuickAddOpenHouse}>
-              Add Open House
-            </Button>
+            <Button variant="outline" onClick={() => setQuickOpenHouseDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleQuickAddOpenHouse}>Add Open House</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>;
+    </>;
   }
 
   // Grid view - Clean design for listing search results
