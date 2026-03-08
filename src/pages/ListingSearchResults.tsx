@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
-import ListingResultCard from "@/components/listing-search/ListingResultCard";
+import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
 import { toast } from "sonner";
 import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, FileSpreadsheet, X } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
