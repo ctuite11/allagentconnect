@@ -509,19 +509,19 @@ const ListingResultsTable = ({
         ))}
       </div>
 
-      {/* DESKTOP: Table/Grid (md+) */}
-      <div className="hidden md:block overflow-x-auto px-5 pb-6">
-        {/* Responsive min-widths: md=720px, lg=920px, xl=1100px */}
-        <div className="min-w-[720px] lg:min-w-[920px] xl:min-w-[1100px] space-y-3">
-          {/* Header Row */}
-          <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3 mb-3">
-            {/* Responsive grid: md=compact, lg=+SqFt/DOM, xl=+Agent */}
-            <div className="grid grid-cols-[170px_minmax(240px,1fr)_100px_60px_60px_100px] lg:grid-cols-[170px_minmax(260px,1fr)_100px_60px_60px_80px_60px_100px] xl:grid-cols-[170px_minmax(280px,1fr)_100px_60px_60px_80px_60px_180px_100px] gap-3 items-center">
-              <div className="text-xs font-medium text-neutral-500"></div>
-              <div className="text-xs font-medium text-neutral-500 cursor-pointer hover:text-neutral-900 flex items-center gap-1" onClick={() => onSort("address")}>
-                Address
-                <ArrowUpDown className={`h-3 w-3 ${sortColumn === "address" ? "text-neutral-700" : "text-neutral-400"}`} />
-              </div>
+      {/* DESKTOP: Card Stack (md+) */}
+      <div className="hidden md:block px-5 pb-6 space-y-3">
+        {displayedListings.map((listing) => (
+          <ListingResultCard
+            key={listing.id}
+            listing={listing}
+            isSelected={selectedRows.has(listing.id)}
+            onSelect={toggleRowSelection}
+            onRowClick={onRowClick}
+            fromPath={fromPath}
+          />
+        ))}
+      </div>
               <div className="text-xs font-medium text-neutral-500 cursor-pointer hover:text-neutral-900 flex items-center gap-1" onClick={() => onSort("price")}>
                 Price
                 <ArrowUpDown className={`h-3 w-3 ${sortColumn === "price" ? "text-neutral-700" : "text-neutral-400"}`} />
