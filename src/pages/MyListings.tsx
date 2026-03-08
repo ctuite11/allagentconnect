@@ -489,7 +489,6 @@ function MyListingsView({
 
       {/* LIST VIEW */}
       <div className="mt-6 space-y-4">
-        <div className="mt-6 space-y-4">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
