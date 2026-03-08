@@ -233,7 +233,23 @@ const App = () => (
                   <Route path="/admin/invites" element={<AdminInviteAudit />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                 </Route>
-                {/* Legacy consumer routes - redirect to auth */}
+                {/* Public routes outside AppShell */}
+                <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
+                <Route path="/submit-client-need" element={<SubmitClientNeed />} />
+                <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
+                <Route path="/property/:id" element={<PropertyDetail />} />
+                <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
+                <Route path="/agent/:id" element={<AgentProfile />} />
+                <Route path="/team/:id" element={<TeamProfile />} />
+                <Route path="/browse" element={<BrowsePropertiesNew />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/our-agents" element={<OurAgents />} />
+                <Route path="/agents" element={<OurAgents />} />
+                <Route path="/find-agent" element={<OurAgents />} />
+                <Route path="/client-invite" element={<ClientInvitationSetup />} />
+                <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
+                <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
+                {/* Legacy consumer routes */}
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
@@ -248,11 +264,6 @@ const App = () => (
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
-                <Route path="/admin/approvals" element={<AdminApprovals />} />
-                <Route path="/admin/matches" element={<AdminMatches />} />
-                <Route path="/admin/consumers" element={<AdminConsumers />} />
-                <Route path="/admin/invites" element={<AdminInviteAudit />} />
-                <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                 {/* Legal pages */}
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
@@ -260,9 +271,8 @@ const App = () => (
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/fair-housing" element={<FairHousing />} />
                 <Route path="/disclosures" element={<Disclosures />} />
-                {/* Design mockup - isolated visual exploration, not production */}
                 <Route path="/mockup" element={<DesignMockup />} />
-                {/* IDX Routes - MLS property search via Repliers (separate from Supabase listings) */}
+                {/* IDX Routes */}
                 <Route path="/idx" element={<IDXSearchBeta />} />
                 <Route path="/idx/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="/idx/search" element={<IDXSearch />} />
