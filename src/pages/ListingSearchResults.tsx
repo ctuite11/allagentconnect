@@ -47,8 +47,7 @@ const ListingSearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState("list_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+  const [viewMode] = useState<"list">("list");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
   const [saveSearchDialogOpen, setSaveSearchDialogOpen] = useState(false);
