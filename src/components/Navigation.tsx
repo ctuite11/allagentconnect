@@ -30,6 +30,39 @@ const HIDE_NAV_ROUTES = [
   "/pending-verification", // Pending verification
 ];
 
+/**
+ * Routes managed by AppShell sidebar — hide top nav to avoid double-header.
+ * Uses startsWith matching.
+ */
+const SIDEBAR_MANAGED_PREFIXES = [
+  "/agent-dashboard",
+  "/success-hub",
+  "/agent/",
+  "/network",
+  "/listing-search",
+  "/listing-results",
+  "/listing-intel",
+  "/client-needs",
+  "/hot-sheets",
+  "/my-clients",
+  "/showing-requests",
+  "/messages",
+  "/communications",
+  "/analytics",
+  "/market-insights",
+  "/manage-team",
+  "/manage-coverage-areas",
+  "/add-rental-listing",
+  "/agent-profile-editor",
+  "/our-members",
+  "/members",
+  "/agent-search",
+  "/favorites",
+  "/my-favorites",
+  "/vendor/",
+  "/admin/",
+];
+
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
