@@ -573,7 +573,7 @@ function MyListingsView({
                 </div>
                 {/* Status + Listing # as secondary metadata */}
                 <div className="flex items-center gap-2 mt-2">
-                  <ListingStatusBadge status={l.status} size="sm" />
+                  <ListingStatusBadge status={l.status} size="lg" />
                   {l.listing_type && (
                     <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
                       {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
@@ -723,7 +723,7 @@ function MyListingsView({
                     </button>
                     <span className="text-zinc-300">•</span>
                     <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 text-aac">
+                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 text-aac">
                         <path fill="currentColor" d="M8 2.75c3.73 0 6.7 2.2 7.95 5.25-1.25 3.05-4.22 5.25-7.95 5.25-3.73 0-6.7-2.2-7.95-5.25C1.3 4.95 4.27 2.75 8 2.75Z" />
                         <circle cx="8" cy="8" r="2.15" fill="hsl(var(--background))" />
                         <circle cx="8" cy="8" r="1.15" fill="currentColor" />
@@ -732,7 +732,7 @@ function MyListingsView({
                     </span>
                     <span className="text-zinc-300">•</span>
                     <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 fill-current text-destructive">
+                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 fill-current text-destructive">
                         <path d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z" />
                       </svg>
                       <span className="text-[13px] leading-none text-zinc-800 font-medium">{favorites}</span>
@@ -747,7 +747,7 @@ function MyListingsView({
                   </div>
                   {/* Right side - quiet metadata + overflow */}
                    <div className="absolute top-4 right-4 z-10 text-right space-y-0.5">
-                     <ListingStatusBadge status={l.status} size="sm" />
+                     <ListingStatusBadge status={l.status} size="lg" />
                       <div className="text-xs text-zinc-500 leading-tight">AAC List Date: {listDate}</div>
                     {isComingSoon(l.status) ? (
                       <>
