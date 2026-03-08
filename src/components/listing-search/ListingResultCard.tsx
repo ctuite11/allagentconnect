@@ -1,6 +1,9 @@
-import { Check, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Check, ExternalLink, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
+import ContactAgentDialog from "@/components/ContactAgentDialog";
+
 interface Listing {
   id: string;
   listing_number: string;
@@ -17,6 +20,9 @@ interface Listing {
   list_date?: string;
   photos?: any;
   neighborhood?: string;
+  agent_name?: string | null;
+  agent_id?: string | null;
+  list_office?: string | null;
 }
 
 interface ListingResultCardProps {
@@ -34,8 +40,6 @@ const formatPrice = (price: number) => {
     maximumFractionDigits: 0,
   }).format(price);
 };
-
-// Status badge now uses centralized StatusBadge component
 
 const getThumbnail = (listing: Listing) => {
   if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
@@ -97,6 +101,7 @@ export const ListingResultCard = ({
   const navigate = useNavigate();
   const thumbnail = getThumbnail(listing);
   const loc = getLocation(listing);
+  const [contactOpen, setContactOpen] = useState(false);
 
   const handleCardClick = () => {
     navigate(`/property/${listing.id}`, { state: { from: fromPath } });
@@ -105,7 +110,7 @@ export const ListingResultCard = ({
   return (
     <div
       onClick={handleCardClick}
-      className="rounded-3xl border border-neutral-200 bg-white aac-shadow aac-shadow-hover p-4 cursor-pointer transition-all hover:border-neutral-300 hover:-translate-y-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+      className="flex flex-col h-full rounded-3xl border border-neutral-200 bg-white aac-shadow aac-shadow-hover p-4 cursor-pointer transition-all hover:border-neutral-300 hover:-translate-y-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30"
     >
       {/* Top Row: Photo + Address/Status */}
       <div className="flex gap-3">
@@ -164,8 +169,21 @@ export const ListingResultCard = ({
         </div>
       </div>
 
+      {/* Agent Row */}
+      {listing.agent_name && (
+        <div className="mt-2 px-0.5">
+          <div className="text-sm font-semibold text-foreground truncate">{listing.agent_name}</div>
+          {listing.list_office && (
+            <div className="text-xs text-muted-foreground truncate">{listing.list_office}</div>
+          )}
+        </div>
+      )}
+
+      {/* Spacer to push actions to bottom */}
+      <div className="flex-grow" />
+
       {/* Actions Row */}
-      <div className="mt-3 flex items-center justify-end gap-2">
+      <div className="mt-3 flex items-center justify-end gap-2 border-t border-neutral-100 pt-3">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -176,6 +194,29 @@ export const ListingResultCard = ({
           <ExternalLink className="h-4 w-4" />
           View
         </button>
+
+        {listing.agent_id && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setContactOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 transition hover:text-emerald-600"
+            >
+              <Mail className="h-4 w-4" />
+              Contact
+            </button>
+            <ContactAgentDialog
+              listingId={listing.id}
+              agentId={listing.agent_id}
+              listingAddress={`${loc.street}${listing.unit_number ? ` #${listing.unit_number}` : ""}, ${loc.city}, ${loc.state}`}
+              open={contactOpen}
+              onOpenChange={setContactOpen}
+              hideTrigger
+            />
+          </>
+        )}
       </div>
     </div>
   );

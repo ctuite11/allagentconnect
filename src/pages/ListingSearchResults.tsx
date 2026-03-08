@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
-import ListingCard from "@/components/ListingCard";
+import ListingResultCard from "@/components/listing-search/ListingResultCard";
 import { toast } from "sonner";
 import { ArrowLeft, LayoutGrid, List, CheckSquare, Eye, EyeOff, Bookmark, FileSpreadsheet, X } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
@@ -542,14 +542,13 @@ const ListingSearchResults = () => {
                   </div>
                 ) : (
                   displayedListings.map((listing) => (
-                    <ListingCard
+                    <ListingResultCard
                       key={listing.id}
                       listing={listing}
-                      viewMode="grid"
-                      showActions={false}
-                      agentInfo={listing.agent_name ? { name: listing.agent_name } : null}
-                      onSelect={handleSelectListing}
                       isSelected={selectedListings.has(listing.id)}
+                      onSelect={handleSelectListing}
+                      onRowClick={() => navigate(`/property/${listing.id}`, { state: { from: `/listing-results${window.location.search}` } })}
+                      fromPath={`/listing-results${window.location.search}`}
                     />
                   ))
                 )}
