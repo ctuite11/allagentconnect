@@ -266,7 +266,7 @@ const ListingResultsTable = ({
       {/* MOBILE: Card List (< md) */}
       <div className="md:hidden space-y-3">
         {displayedListings.map((listing) => (
-          <ListingResultCard
+          <SearchListingCard
             key={listing.id}
             listing={listing}
             isSelected={selectedRows.has(listing.id)}
@@ -280,7 +280,7 @@ const ListingResultsTable = ({
       {/* DESKTOP: Card Stack (md+) */}
       <div className="hidden md:block px-5 pb-6 space-y-3">
         {displayedListings.map((listing) => (
-          <ListingResultCard
+          <SearchListingCard
             key={listing.id}
             listing={listing}
             isSelected={selectedRows.has(listing.id)}

@@ -542,7 +542,7 @@ const ListingSearchResults = () => {
                   </div>
                 ) : (
                   displayedListings.map((listing) => (
-                    <ListingResultCard
+                    <SearchListingCard
                       key={listing.id}
                       listing={listing}
                       isSelected={selectedListings.has(listing.id)}
