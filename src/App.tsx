@@ -121,6 +121,11 @@ function LegacyClientHotSheetRedirect() {
   return <Navigate to={`/client/hotsheet/${token}${location.search}`} replace />;
 }
 
+/** Layout route: wraps children in AppShell (sidebar + header) */
+function AgentLayout() {
+  return <AppShell><Outlet /></AppShell>;
+}
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
