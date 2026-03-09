@@ -277,14 +277,15 @@ export const SearchListingCard = ({
             </button>
           ) : undefined}
           priceDateSlot={
-            <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+            <div className="text-xs text-muted-foreground mt-1 space-y-1.5 flex flex-col items-end h-full">
               {pricePerSqFt && <div>${pricePerSqFt}/sqft</div>}
               {listing.list_date && (
                 <div>List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
               )}
               {daysOnMarket > 0 && <div>DOM: {daysOnMarket}</div>}
+              <div className="flex-1" />
               {(listing.agent_name || listing.list_office) && (
-              <div className="mt-2 pt-2 border-t border-border text-right ml-auto">
+              <div className="text-right">
                    {listing.list_office && (
                      <div className="text-muted-foreground text-[11px]">{listing.list_office}</div>
                    )}
