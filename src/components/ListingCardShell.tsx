@@ -101,9 +101,6 @@ export interface ListingCardShellProps {
 
   /** Card click handler */
   onClick?: () => void;
-
-  /** Price position variant — "topRight" renders price larger at top of price column */
-  pricePosition?: "default" | "topRight";
 }
 
 // ── Banner Icon ──────────────────────────────────────────────────────────────
@@ -135,7 +132,6 @@ export function ListingCardShell({
   infoRowExtra,
   statsExtra,
   onClick,
-  pricePosition,
 }: ListingCardShellProps) {
   return (
     <Card
@@ -283,7 +279,7 @@ export function ListingCardShell({
 
           {/* Col 9-10: Price */}
           <div className="col-span-2 text-right">
-            <div className={`${pricePosition === "topRight" ? "text-lg" : "text-base"} font-bold text-primary mb-0.5`}>
+            <div className="text-base font-bold text-primary mb-0.5">
               {displayPrice}
             </div>
             <div className="text-xs text-muted-foreground">

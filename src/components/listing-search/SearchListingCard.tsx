@@ -219,7 +219,6 @@ export const SearchListingCard = ({
           openHouseBanner={openHouseBanner}
           nextOpenHouse={nextOpenHouse}
           dateDisplay={listing.list_date ? format(new Date(listing.list_date), "MM/dd/yy") : null}
-          pricePosition="topRight"
           onClick={handleCardClick}
           photoOverlay={onSelect ? (
             <button
