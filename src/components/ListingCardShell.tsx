@@ -126,6 +126,9 @@ export interface ListingCardShellProps {
   /** Status badge size override */
   statusSize?: "sm" | "md" | "lg";
 
+  /** Optional label rendered above the status badge (e.g. "Status:") */
+  statusLabel?: string;
+
   /** When true, hides the status banner overlays on the photo */
   hidePhotoBanners?: boolean;
 
