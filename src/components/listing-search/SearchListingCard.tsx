@@ -14,8 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
-  MapPin, Bed, Bath, Home, Calendar, Sparkles,
-  TrendingDown, RefreshCw, Check, Mail, ExternalLink,
+  MapPin, Bed, Bath, Home, Calendar,
+  Check, Mail, ExternalLink,
   Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -124,15 +124,6 @@ const calculateDaysOnMarket = (listing: SearchListing) => {
   return Math.ceil(Math.abs(today.getTime() - activeDate.getTime()) / (1000 * 60 * 60 * 24));
 };
 
-type BannerData = { text: string; color: string; iconType: "sparkles" | "refresh" | "trendingDown" };
-
-const getStatusChangeBanner = (status: string): BannerData | null => {
-  if (isComingSoon(status)) return { text: "COMING SOON", color: "bg-purple-600", iconType: "sparkles" };
-  if (status === LISTING_STATUS.NEW) return { text: "NEW LISTING", color: "bg-blue-600", iconType: "sparkles" };
-  if (status === LISTING_STATUS.BACK_ON_MARKET) return { text: "BACK ON MARKET", color: "bg-orange-600", iconType: "refresh" };
-  if (status === LISTING_STATUS.PRICE_CHANGED) return { text: "PRICE REDUCED", color: "bg-red-600", iconType: "trendingDown" };
-  return null;
-};
 
 const getPropertyStyle = (listing: SearchListing) => {
   if (listing.property_styles) {
@@ -156,7 +147,7 @@ export const SearchListingCard = ({
 
   const photoUrl = getFirstPhoto(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
-  const statusBanner = getStatusChangeBanner(listing.status);
+  
   const unitNumber = getUnitNumber(listing);
   const daysOnMarket = calculateDaysOnMarket(listing);
 
@@ -188,11 +179,6 @@ export const SearchListingCard = ({
     }
   };
 
-  const BannerIcon = ({ type }: { type: string }) => {
-    if (type === "sparkles") return <Sparkles className="h-3 w-3" />;
-    if (type === "refresh") return <RefreshCw className="h-3 w-3" />;
-    return <TrendingDown className="h-3 w-3" />;
-  };
 
   // ── Attribution row (shared between desktop & mobile) ─────────────────
   const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
@@ -264,13 +250,6 @@ export const SearchListingCard = ({
             </div>
           )}
 
-          {/* Status banner overlay */}
-          {statusBanner && (
-            <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-[11px] font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-              <BannerIcon type={statusBanner.iconType} />
-              {statusBanner.text}
-            </div>
-          )}
 
           {/* Photo count */}
           {(listing.photos?.length || 0) > 1 && (
@@ -283,7 +262,7 @@ export const SearchListingCard = ({
         {/* Content column */}
         <div className="flex-1 p-4 flex flex-col min-w-0">
           {/* A. Header row: Address / Status / Price */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
             {/* Address block */}
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-sm">
@@ -311,17 +290,23 @@ export const SearchListingCard = ({
               )}
             </div>
 
-            {/* Status block */}
-            <div className="flex-shrink-0 flex items-center gap-2">
+            {/* Status block — centered */}
+            <div className="flex-shrink-0 flex items-center gap-2 self-center">
               <span className="text-sm font-medium text-foreground">Status:</span>
               <ListingStatusBadge status={listing.status} size="lg" />
             </div>
 
-            {/* Price block */}
+            {/* Price block — right-aligned stack */}
             <div className="flex-shrink-0 text-right">
               <div className="text-lg font-bold text-primary">{displayPrice}</div>
               {pricePerSqFt && (
                 <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
+              )}
+              {listing.list_date && (
+                <div className="text-xs text-muted-foreground">List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
+              )}
+              {daysOnMarket > 0 && (
+                <div className="text-xs text-muted-foreground">DOM: {daysOnMarket}</div>
               )}
             </div>
           </div>
@@ -338,14 +323,6 @@ export const SearchListingCard = ({
             )}
             {listing.property_type && (
               <span>{listing.property_type}</span>
-            )}
-            {listing.list_date && (
-              <span>Listed {format(new Date(listing.list_date), "MM/dd/yy")}</span>
-            )}
-            {daysOnMarket > 0 && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                DOM {daysOnMarket}
-              </Badge>
             )}
           </div>
 
@@ -411,12 +388,6 @@ export const SearchListingCard = ({
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <Home className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                )}
-                {statusBanner && (
-                  <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-[10px] font-bold px-1.5 py-0.5 text-center flex items-center justify-center gap-0.5`}>
-                    <BannerIcon type={statusBanner.iconType} />
-                    {statusBanner.text}
                   </div>
                 )}
                 {(listing.photos?.length || 0) > 0 && (
