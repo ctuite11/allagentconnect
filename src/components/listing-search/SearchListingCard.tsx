@@ -306,12 +306,10 @@ export const SearchListingCard = ({
           }
           metadataSlot={
             microFacts.length > 0 ? (
-              <div className="flex-1" />
+              <div className="text-xs text-muted-foreground truncate mt-auto pt-1">
+                {microFacts.join(" · ")}
+              </div>
             ) : undefined
-          }
-          footerSlot={
-            /* micro-facts rendered in footerSlot area — see below for combined footer */
-            undefined
           }
           hideActionsCol
           footerSlot={
