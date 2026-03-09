@@ -220,6 +220,8 @@ export const SearchListingCard = ({
           nextOpenHouse={nextOpenHouse}
           dateDisplay={listing.list_date ? format(new Date(listing.list_date), "MM/dd/yy") : null}
           onClick={handleCardClick}
+          photoAspect="wide"
+          pricePosition="topRight"
           photoOverlay={onSelect ? (
             <button
               onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
