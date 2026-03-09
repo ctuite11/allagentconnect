@@ -214,7 +214,40 @@ export const SearchListingCard = ({
       {/* ══ DESKTOP (md+) — delegates to ListingCardShell ═══════════════ */}
       <div className="hidden md:block">
         <ListingCardShell
-          listing={listing}
+          listing={{
+            ...listing,
+            // Suppress shell's default listing number — we render a clickable one via infoRowExtra
+            listing_number: null,
+          }}
+          addressSlot={
+            <>
+              <h3 className="font-semibold text-sm mb-1">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:text-primary transition-colors"
+                >
+                  {listing.address}
+                </a>
+                {unitNumber && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    Unit {unitNumber}
+                  </Badge>
+                )}
+              </h3>
+              <div className="flex items-center text-muted-foreground text-xs mb-2">
+                <MapPin className="w-3 h-3 mr-1" />
+                {listing.city}, {listing.state} {listing.zip_code}
+                {listing.neighborhood && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {listing.neighborhood}
+                  </Badge>
+                )}
+              </div>
+            </>
+          }
           photoUrl={photoUrl}
           displayPrice={displayPrice}
           daysOnMarket={daysOnMarket}
@@ -225,6 +258,8 @@ export const SearchListingCard = ({
           onClick={handleCardClick}
           photoAspect="wide"
           pricePosition="topRight"
+          statsVariant="prominent"
+          hideDOMBadge
           photoOverlay={onSelect ? (
             <button
               onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
@@ -234,36 +269,45 @@ export const SearchListingCard = ({
               {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
             </button>
           ) : undefined}
-          priceExtra={pricePerSqFt ? (
-            <span className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</span>
-          ) : undefined}
           priceDateSlot={
             <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+              {pricePerSqFt && <div>${pricePerSqFt}/sqft</div>}
               {listing.list_date && (
                 <div>List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
               )}
               {daysOnMarket > 0 && <div>DOM: {daysOnMarket}</div>}
             </div>
           }
+          infoRowExtra={
+            <>
+              {listing.listing_number && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
+                >
+                  Listing #{listing.listing_number}
+                </button>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+                className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" /> View
+              </button>
+            </>
+          }
           metadataSlot={
-            microFacts.length > 0 ? (
-              <div className="text-xs text-muted-foreground mb-2 truncate">
-                {microFacts.join(" · ")}
-              </div>
-            ) : undefined
+            <div className="space-y-1">
+              {microFacts.length > 0 && (
+                <div className="text-xs text-muted-foreground truncate">
+                  {microFacts.join(" · ")}
+                </div>
+              )}
+            </div>
           }
           footerSlot={listing.agent_name ? (
-            <div className="border-t border-border px-4 py-2 flex items-center justify-end gap-3 text-xs text-muted-foreground">
+            <div className="px-4 py-2 flex items-center justify-end gap-3 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">{listing.agent_name}</span>
-              {listing.agent_email && (
-                <a
-                  href={`mailto:${listing.agent_email}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 hover:text-primary transition-colors"
-                >
-                  <Mail className="h-3 w-3" /> {listing.agent_email}
-                </a>
-              )}
               {listing.agent_phone && (
                 <span className="inline-flex items-center gap-1">
                   <Phone className="h-3 w-3" /> {formatPhoneNumber(listing.agent_phone)}
@@ -273,20 +317,14 @@ export const SearchListingCard = ({
                 <button
                   onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
                   className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary/80 transition-colors"
+                  title="Contact listing agent"
                 >
-                  <Mail className="h-3 w-3" /> Contact
+                  <Mail className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
           ) : undefined}
-          actionsSlot={<>
-            <Button variant="outline" size="sm" onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/property/${listing.id}`, { state: { from: fromPath } });
-            }} className="w-full">
-              <ExternalLink className="w-3 h-3 mr-1" /> View
-            </Button>
-          </>}
+          actionsSlot={<></>}
         />
       </div>
 

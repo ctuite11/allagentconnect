@@ -85,6 +85,9 @@ export interface ListingCardShellProps {
   /** Extra rows in col 1-6 below bed/bath/sqft (match count, micro-facts, attribution, etc.) */
   metadataSlot?: ReactNode;
 
+  /** When provided, replaces the default address + location <h3> block */
+  addressSlot?: ReactNode;
+
   /** Col 11-12 action buttons */
   actionsSlot: ReactNode;
 
@@ -113,6 +116,12 @@ export interface ListingCardShellProps {
 
   /** Price column alignment: "default" or "topRight" (anchored to top) */
   pricePosition?: "default" | "topRight";
+
+  /** Stats row style: "default" (small muted) or "prominent" (larger, primary-colored icons) */
+  statsVariant?: "default" | "prominent";
+
+  /** When true, suppresses the "X days on market" badge in the info row */
+  hideDOMBadge?: boolean;
 
   // ── Events ─────────────────────────────────────────────────────────────
 
@@ -144,6 +153,7 @@ export function ListingCardShell({
   nextOpenHouse,
   dateDisplay,
   metadataSlot,
+  addressSlot,
   actionsSlot,
   photoOverlay,
   infoRowExtra,
@@ -153,8 +163,14 @@ export function ListingCardShell({
   footerSlot,
   photoAspect = "square",
   pricePosition = "default",
+  statsVariant = "default",
+  hideDOMBadge = false,
   onClick,
 }: ListingCardShellProps) {
+
+  const isProminent = statsVariant === "prominent";
+  const statsIconClass = isProminent ? "w-4 h-4 inline mr-0.5 text-primary" : "w-3 h-3 inline mr-0.5";
+  const statsTextClass = isProminent ? "flex gap-2 text-sm text-foreground mb-3" : "flex gap-2 text-xs text-muted-foreground mb-3";
 
   const photoClass = photoAspect === "wide" ? "w-48 h-28" : "w-40 h-40";
   return (
@@ -214,30 +230,34 @@ export function ListingCardShell({
         <div className="flex-1 grid grid-cols-12 gap-3">
           {/* Col 1-6: Address, location, metadata */}
           <div className="col-span-6">
-            <h3 className="font-semibold text-sm mb-1">
-              {listing.address}
-              {unitNumber && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  Unit {unitNumber}
-                </Badge>
-              )}
-            </h3>
-            <div className="flex items-center text-muted-foreground text-xs mb-2">
-              <MapPin className="w-3 h-3 mr-1" />
-              {listing.city}, {listing.state} {listing.zip_code}
-              {listing.neighborhood && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {listing.neighborhood}
-                </Badge>
-              )}
-            </div>
+            {addressSlot || (
+              <>
+                <h3 className="font-semibold text-sm mb-1">
+                  {listing.address}
+                  {unitNumber && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      Unit {unitNumber}
+                    </Badge>
+                  )}
+                </h3>
+                <div className="flex items-center text-muted-foreground text-xs mb-2">
+                  <MapPin className="w-3 h-3 mr-1" />
+                  {listing.city}, {listing.state} {listing.zip_code}
+                  {listing.neighborhood && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {listing.neighborhood}
+                    </Badge>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Info row: listing number + DOM + extras */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
               {listing.listing_number && <span>Listing #{listing.listing_number}</span>}
               {infoRowExtra}
-              {listing.listing_number && daysOnMarket > 0 && <span>•</span>}
-              {daysOnMarket > 0 && (
+              {!hideDOMBadge && listing.listing_number && daysOnMarket > 0 && <span>•</span>}
+              {!hideDOMBadge && daysOnMarket > 0 && (
                 <Badge variant="outline" className="text-xs">
                   {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
                 </Badge>
@@ -245,15 +265,15 @@ export function ListingCardShell({
             </div>
 
             {/* Stats row: bed/bath/sqft + extras */}
-            <div className="flex gap-2 text-xs text-muted-foreground mb-3">
+            <div className={statsTextClass}>
               {listing.bedrooms != null && (
-                <span><Bed className="w-3 h-3 inline mr-0.5" />{listing.bedrooms}</span>
+                <span><Bed className={statsIconClass} />{listing.bedrooms}</span>
               )}
               {listing.bathrooms != null && (
-                <span><Bath className="w-3 h-3 inline mr-0.5" />{listing.bathrooms}</span>
+                <span><Bath className={statsIconClass} />{listing.bathrooms}</span>
               )}
               {listing.square_feet != null && (
-                <span><Home className="w-3 h-3 inline mr-0.5" />{listing.square_feet.toLocaleString()} sqft</span>
+                <span><Home className={statsIconClass} />{listing.square_feet.toLocaleString()} sqft</span>
               )}
               {statsExtra}
             </div>
