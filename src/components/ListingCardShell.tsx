@@ -112,6 +112,9 @@ export interface ListingCardShellProps {
   /** Override the default price display (e.g. quick-edit form) */
   priceSlot?: ReactNode;
 
+  /** Where to render the price: "default" (below status) or "topRight" (top of right column, larger) */
+  pricePosition?: "default" | "topRight";
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
