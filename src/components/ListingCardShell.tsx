@@ -184,7 +184,7 @@ export function ListingCardShell({
   const statsIconClass = isProminent ? "w-4 h-4 inline mr-0.5 text-primary" : "w-3 h-3 inline mr-0.5";
   const statsTextClass = isProminent ? "flex gap-2 text-sm text-foreground mb-3" : "flex gap-2 text-xs text-muted-foreground mb-3";
 
-  const photoClass = photoAspect === "wide" ? "w-48 h-28" : "w-40 h-40";
+  const photoClass = photoAspect === "wide" ? "w-52 h-36" : "w-40 h-40";
   return (
     <Card
       className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
