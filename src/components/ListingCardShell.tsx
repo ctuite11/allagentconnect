@@ -323,7 +323,7 @@ export function ListingCardShell({
 
           {/* Col 7-8: Status + property type */}
           <div className="col-span-2">
-            <ListingStatusBadge status={listing.status} size="sm" className="mb-1" />
+            <ListingStatusBadge status={listing.status} size={statusSize} className="mb-1" />
             {listing.property_type && (
               <div className="text-xs text-muted-foreground">{listing.property_type}</div>
             )}
