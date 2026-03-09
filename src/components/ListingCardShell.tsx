@@ -129,6 +129,9 @@ export interface ListingCardShellProps {
   /** When true, hides the status banner overlays on the photo */
   hidePhotoBanners?: boolean;
 
+  /** When true, hides the actions column (col 11-12) and expands price to col-span-4 */
+  hideActionsCol?: boolean;
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
@@ -173,6 +176,7 @@ export function ListingCardShell({
   hideDOMBadge = false,
   statusSize = "sm",
   hidePhotoBanners = false,
+  hideActionsCol = false,
   onClick,
 }: ListingCardShellProps) {
 
@@ -180,7 +184,7 @@ export function ListingCardShell({
   const statsIconClass = isProminent ? "w-4 h-4 inline mr-0.5 text-primary" : "w-3 h-3 inline mr-0.5";
   const statsTextClass = isProminent ? "flex gap-2 text-sm text-foreground mb-3" : "flex gap-2 text-xs text-muted-foreground mb-3";
 
-  const photoClass = photoAspect === "wide" ? "w-48 h-28" : "w-40 h-40";
+  const photoClass = photoAspect === "wide" ? "w-52 h-36" : "w-40 h-40";
   return (
     <Card
       className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
@@ -195,7 +199,7 @@ export function ListingCardShell({
             <img
               src={photoUrl}
               alt={listing.address}
-              className="w-full h-full object-cover rounded"
+              className={`w-full h-full object-cover ${photoAspect === "wide" ? "rounded-lg" : "rounded"}`}
             />
           ) : (
             <div className="w-full h-full bg-muted rounded flex items-center justify-center">
@@ -329,8 +333,8 @@ export function ListingCardShell({
             )}
           </div>
 
-          {/* Col 9-10: Price */}
-          <div className={`col-span-2 text-right ${pricePosition === "topRight" ? "flex flex-col items-end" : ""}`}>
+          {/* Col 9-10 (or 9-12 when hideActionsCol): Price */}
+          <div className={`${hideActionsCol ? "col-span-4" : "col-span-2"} text-right ${pricePosition === "topRight" ? "flex flex-col items-end" : ""}`}>
             {pricePosition === "topRight" ? (
               <>
                 <div className="flex items-baseline gap-1.5">
@@ -358,9 +362,11 @@ export function ListingCardShell({
           </div>
 
           {/* Col 11-12: Actions (injected by consumer) */}
-          <div className="col-span-2 flex flex-col gap-1.5 justify-center pt-1">
-            {actionsSlot}
-          </div>
+          {!hideActionsCol && (
+            <div className="col-span-2 flex flex-col gap-1.5 justify-center pt-1">
+              {actionsSlot}
+            </div>
+          )}
         </div>
       </div>
 
