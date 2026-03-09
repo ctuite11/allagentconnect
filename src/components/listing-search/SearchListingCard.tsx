@@ -285,6 +285,32 @@ export const SearchListingCard = ({
                 <div>List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
               )}
               {daysOnMarket > 0 && <div>DOM: {daysOnMarket}</div>}
+              {(listing.agent_name || listing.list_office) && (
+                <div className="mt-2 pt-2 border-t border-border text-right">
+                  {listing.list_office && (
+                    <div className="text-muted-foreground text-[11px]">{listing.list_office}</div>
+                  )}
+                  <div className="inline-flex items-center gap-1.5 mt-0.5">
+                    <span className="font-medium text-foreground">
+                      {listing.agent_name}
+                    </span>
+                    {listing.agent_id && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
+                        className="inline-flex items-center text-primary hover:text-primary/80 transition-colors"
+                        title="Contact listing agent"
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {listing.agent_phone && (
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.agent_phone)}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           }
           infoRowExtra={
