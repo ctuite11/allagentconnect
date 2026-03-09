@@ -230,23 +230,27 @@ export function ListingCardShell({
         <div className="flex-1 grid grid-cols-12 gap-3">
           {/* Col 1-6: Address, location, metadata */}
           <div className="col-span-6">
-            <h3 className="font-semibold text-sm mb-1">
-              {listing.address}
-              {unitNumber && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  Unit {unitNumber}
-                </Badge>
-              )}
-            </h3>
-            <div className="flex items-center text-muted-foreground text-xs mb-2">
-              <MapPin className="w-3 h-3 mr-1" />
-              {listing.city}, {listing.state} {listing.zip_code}
-              {listing.neighborhood && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {listing.neighborhood}
-                </Badge>
-              )}
-            </div>
+            {addressSlot || (
+              <>
+                <h3 className="font-semibold text-sm mb-1">
+                  {listing.address}
+                  {unitNumber && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      Unit {unitNumber}
+                    </Badge>
+                  )}
+                </h3>
+                <div className="flex items-center text-muted-foreground text-xs mb-2">
+                  <MapPin className="w-3 h-3 mr-1" />
+                  {listing.city}, {listing.state} {listing.zip_code}
+                  {listing.neighborhood && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {listing.neighborhood}
+                    </Badge>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Info row: listing number + DOM + extras */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
