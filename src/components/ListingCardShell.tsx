@@ -112,9 +112,6 @@ export interface ListingCardShellProps {
   /** Override the default price display (e.g. quick-edit form) */
   priceSlot?: ReactNode;
 
-  /** Where to render the price: "default" (below status) or "topRight" (top of right column, larger) */
-  pricePosition?: "default" | "topRight";
-
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
@@ -151,14 +148,11 @@ export function ListingCardShell({
   statsExtra,
   rightMetadataSlot,
   priceSlot,
-  pricePosition = "default",
   onClick,
 }: ListingCardShellProps) {
-  const isTopRight = pricePosition === "topRight";
-
   return (
     <Card
-      className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary cursor-pointer"
       onClick={onClick}
     >
       <div className="flex gap-4 p-4">
