@@ -196,8 +196,6 @@ export const SearchListingCard = ({
   if (listing.year_built) microFacts.push(`Built ${listing.year_built}`);
   const parking = listing.garage_spaces || listing.total_parking_spaces;
   if (parking) microFacts.push(`${parking} pkg`);
-  const style = getPropertyStyle(listing);
-  if (style) microFacts.push(style);
 
   const fullAddress = `${listing.address}${unitNumber ? ` #${unitNumber}` : ""}, ${listing.city}, ${listing.state}`;
 
