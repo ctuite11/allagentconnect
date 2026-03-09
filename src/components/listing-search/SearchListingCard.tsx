@@ -55,6 +55,8 @@ interface SearchListing {
   neighborhood?: string | null;
   agent_id?: string | null;
   agent_name?: string | null;
+  agent_email?: string | null;
+  agent_phone?: string | null;
   list_office?: string | null;
   unit_number?: string | null;
   year_built?: number | null;
