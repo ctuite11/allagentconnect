@@ -333,7 +333,7 @@ export function ListingCardShell({
           <div className="col-span-2">
             <div className="inline-flex items-center gap-2 mb-1 whitespace-nowrap">
               {statusLabel && (
-                <span className="text-[11px] text-muted-foreground leading-none">{statusLabel}</span>
+                <span className="text-sm text-muted-foreground leading-none font-medium">{statusLabel}</span>
               )}
               <ListingStatusBadge status={listing.status} size={statusSize} />
             </div>

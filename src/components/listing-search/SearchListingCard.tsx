@@ -286,14 +286,14 @@ export const SearchListingCard = ({
               )}
               {daysOnMarket > 0 && <div>DOM: {daysOnMarket}</div>}
               {(listing.agent_name || listing.list_office) && (
-                <div className="mt-2 pt-2 border-t border-border text-right">
-                  {listing.list_office && (
-                    <div className="text-muted-foreground text-[11px]">{listing.list_office}</div>
-                  )}
-                  <div className="inline-flex items-center gap-1.5 mt-0.5">
-                    <span className="font-medium text-foreground">
-                      {listing.agent_name}
-                    </span>
+              <div className="mt-2 pt-2 border-t border-border text-right ml-auto">
+                   {listing.list_office && (
+                     <div className="text-muted-foreground text-[11px]">{listing.list_office}</div>
+                   )}
+                   <div className="inline-flex items-center gap-1.5 mt-0.5 justify-end w-full">
+                     <span className="font-medium text-foreground">
+                       {listing.agent_name}
+                     </span>
                     {listing.agent_id && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
