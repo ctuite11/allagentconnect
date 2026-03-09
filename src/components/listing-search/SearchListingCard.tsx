@@ -266,7 +266,7 @@ export const SearchListingCard = ({
           photoAspect="wide"
           pricePosition="topRight"
           statsVariant="prominent"
-          statusSize="md"
+          statusSize="lg"
           statusLabel="Status:"
           hideDOMBadge
           photoOverlay={onSelect ? (
