@@ -100,9 +100,15 @@ export interface ListingCardShellProps {
   /** Extra content rendered inside the price block (e.g. $/sqft) */
   priceExtra?: ReactNode;
 
+  /** Replaces default Sale/Rental + dateDisplay below price when provided */
+  priceDateSlot?: ReactNode;
+
+  /** Full-width footer below the main card content, right-aligned */
+  footerSlot?: ReactNode;
+
   // ── Layout variants ───────────────────────────────────────────────────
 
-  /** Photo aspect: "square" (default 160×160) or "wide" (192×128) */
+  /** Photo aspect: "square" (default 160×160) or "wide" (wider, shorter) */
   photoAspect?: "square" | "wide";
 
   /** Price column alignment: "default" or "topRight" (anchored to top) */
