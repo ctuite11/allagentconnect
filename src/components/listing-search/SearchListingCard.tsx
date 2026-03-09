@@ -324,14 +324,6 @@ export const SearchListingCard = ({
             {listing.property_type && (
               <span>{listing.property_type}</span>
             )}
-            {listing.list_date && (
-              <span>Listed {format(new Date(listing.list_date), "MM/dd/yy")}</span>
-            )}
-            {daysOnMarket > 0 && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                DOM {daysOnMarket}
-              </Badge>
-            )}
           </div>
 
           {/* C. Stats row */}
