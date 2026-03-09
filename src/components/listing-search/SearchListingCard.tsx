@@ -246,10 +246,8 @@ export const SearchListingCard = ({
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
               {listing.neighborhood && (
-                <div className="mb-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {listing.neighborhood}
-                  </Badge>
+                <div className="text-xs text-muted-foreground mb-1">
+                  {listing.neighborhood}
                 </div>
               )}
             </>
