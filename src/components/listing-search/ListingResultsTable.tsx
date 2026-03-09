@@ -40,8 +40,9 @@ interface Listing {
   annual_property_tax?: number;
   hoa_monthly?: number;
   list_office?: string;
-  list_agent_phone?: string;
-  list_agent_email?: string;
+  list_office_phone?: string;
+  agent_phone?: string;
+  agent_email?: string;
 }
 
 interface ListingResultsTableProps {

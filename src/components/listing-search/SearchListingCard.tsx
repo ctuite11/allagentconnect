@@ -50,6 +50,7 @@ interface SearchListing {
   agent_email?: string | null;
   agent_phone?: string | null;
   list_office?: string | null;
+  list_office_phone?: string | null;
   unit_number?: string | null;
   year_built?: number | null;
   garage_spaces?: number | null;
