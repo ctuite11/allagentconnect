@@ -129,6 +129,9 @@ export interface ListingCardShellProps {
   /** When true, hides the status banner overlays on the photo */
   hidePhotoBanners?: boolean;
 
+  /** When true, hides the actions column (col 11-12) and expands price to col-span-4 */
+  hideActionsCol?: boolean;
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
