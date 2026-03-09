@@ -14,8 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
-  MapPin, Bed, Bath, Home, Calendar, Sparkles,
-  TrendingDown, RefreshCw, Check, Mail, ExternalLink,
+  MapPin, Bed, Bath, Home, Calendar,
+  Check, Mail, ExternalLink,
   Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
