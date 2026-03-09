@@ -206,7 +206,7 @@ const ListingSearchResults = () => {
         const agentIds = [...new Set(data.map(l => l.agent_id))];
         const { data: agents } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, email, phone, cell_phone, office_name")
+          .select("id, first_name, last_name, email, phone, cell_phone, office_name, office_phone")
           .in("id", agentIds);
 
         const agentMap = new Map(
@@ -215,6 +215,7 @@ const ListingSearchResults = () => {
             email: a.email,
             phone: a.cell_phone || a.phone,
             office: a.office_name,
+            officePhone: a.office_phone,
           }]) || []
         );
 
@@ -223,9 +224,10 @@ const ListingSearchResults = () => {
           return {
             ...l,
             agent_name: agentInfo?.name || null,
-            list_agent_email: agentInfo?.email || null,
-            list_agent_phone: agentInfo?.phone || null,
+            agent_email: agentInfo?.email || null,
+            agent_phone: agentInfo?.phone || null,
             list_office: agentInfo?.office || null,
+            list_office_phone: agentInfo?.officePhone || null,
           };
         });
 

@@ -50,6 +50,7 @@ interface SearchListing {
   agent_email?: string | null;
   agent_phone?: string | null;
   list_office?: string | null;
+  list_office_phone?: string | null;
   unit_number?: string | null;
   year_built?: number | null;
   garage_spaces?: number | null;
@@ -192,6 +193,11 @@ export const SearchListingCard = ({
           <div className="min-w-0">
             <span className={`${labelClass} text-muted-foreground`}>List Office: </span>
             <span className={valueClass}>{listing.list_office}</span>
+            {listing.list_office_phone && (
+              <span className={`${labelClass} text-muted-foreground ml-2`}>
+                <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.list_office_phone)}
+              </span>
+            )}
           </div>
         )}
 
@@ -296,8 +302,8 @@ export const SearchListingCard = ({
               <ListingStatusBadge status={listing.status} size="lg" />
             </div>
 
-            {/* Price block — right-aligned stack */}
-            <div className="flex-shrink-0 text-right">
+            {/* Price block — right-aligned stack, flex-1 for true status centering */}
+            <div className="flex-1 text-right">
               <div className="text-lg font-bold text-primary">{displayPrice}</div>
               {pricePerSqFt && (
                 <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
@@ -311,8 +317,8 @@ export const SearchListingCard = ({
             </div>
           </div>
 
-          {/* B. Info row */}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+          {/* B. Info row — tighter spacing with dot separator */}
+          <div className="flex items-center text-xs text-muted-foreground mt-1">
             {listing.listing_number && (
               <button
                 onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
@@ -320,6 +326,9 @@ export const SearchListingCard = ({
               >
                 Listing #{listing.listing_number}
               </button>
+            )}
+            {listing.listing_number && listing.property_type && (
+              <span className="mx-1.5">·</span>
             )}
             {listing.property_type && (
               <span>{listing.property_type}</span>
