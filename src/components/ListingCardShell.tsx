@@ -156,7 +156,7 @@ export function ListingCardShell({
     >
       <div className="flex gap-4 p-4">
         {/* ── Photo with Banners ────────────────────────────────────────── */}
-        <div className="relative w-40 h-40 flex-shrink-0">
+        <div className={`relative ${photoClass} flex-shrink-0`}>
           {photoOverlay}
 
           {photoUrl ? (
