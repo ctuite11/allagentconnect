@@ -303,17 +303,29 @@ export function ListingCardShell({
 
           {/* Col 9-10: Price */}
           <div className={`col-span-2 text-right ${pricePosition === "topRight" ? "flex flex-col items-end" : ""}`}>
-            <div className={`font-bold text-primary mb-0.5 ${pricePosition === "topRight" ? "text-lg" : "text-base"}`}>
-              {displayPrice}
-            </div>
-            {priceExtra}
-            <div className="text-xs text-muted-foreground">
-              {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
-            </div>
-            {dateDisplay && (
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {dateDisplay}
-              </div>
+            {pricePosition === "topRight" ? (
+              <>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-lg font-bold text-primary">{displayPrice}</span>
+                  {priceExtra}
+                </div>
+                {priceDateSlot}
+              </>
+            ) : (
+              <>
+                <div className="text-base font-bold text-primary mb-0.5">
+                  {displayPrice}
+                </div>
+                {priceExtra}
+                <div className="text-xs text-muted-foreground">
+                  {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
+                </div>
+                {dateDisplay && (
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {dateDisplay}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -323,6 +335,9 @@ export function ListingCardShell({
           </div>
         </div>
       </div>
+
+      {/* Footer slot (search agent attribution, etc.) */}
+      {footerSlot}
 
       {/* Open House footer bar */}
       {openHouseBanner && nextOpenHouse && (
