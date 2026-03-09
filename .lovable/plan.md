@@ -1,76 +1,72 @@
-## Completed Changes
 
-### 1. Add Expired to My Listings filters
-- Added `"expired"` to `PIPELINE_STATUSES` and `ListingStatus` type in `MyListings.tsx`
-- Expired now appears in filter tabs and is searchable
 
-### 2. "Save Changes" → "Publish" for draft edits
-- `AddListing.tsx`: Both desktop and mobile save buttons now show "Publish" with Upload icon when original status is draft and current status is non-draft; "Save Draft" when status remains draft
-- `EditListing.tsx`: Same logic applied to save button label
+# Fix SearchListingCard: Layout + Missing Data
 
-### 3. Price range display for Coming Soon / Off Market
-- `ListingCard.tsx`: Added `price_range_min` / `price_range_max` to interface; `displayPrice` falls back to range when price is 0/null
-- `PropertyDetail.tsx`: Added range fields to interface; price display falls back to range
+## Problems identified
 
-### 4. Relabel "Private" → "Off Market"
-- `status.ts`: All 6 instances of "Private", "Off-Market", "Off-Market (Private)" normalized to "Off Market"
-- `MyListings.tsx`: Removed hardcoded "Private" override, now uses centralized label
+1. **Agent phone/email never show** — Data field mismatch. `ListingSearchResults` maps to `list_agent_phone` / `list_agent_email`, but `SearchListingCard` reads `agent_phone` / `agent_email`. They never match.
 
-### 5. Auto-revert Back on Market → Active after 48 hours
-- `supabase/functions/update-listing-statuses/index.ts`: Added Part 4 logic
-- Queries listings with `status = 'back_on_market'`
-- Finds latest `listing_status_history` row where `new_status = 'back_on_market'`
-- If `created_at` is older than 48 hours, reverts to `active` with `.eq('status', 'back_on_market')` guard
-- Logs transition in `listing_status_history` with system note
-- Response payload includes `back_on_market_reverted` with count and IDs
-- No migration needed; UI badge in ListingCard is history-driven (14-day window) and unaffected
+2. **Office phone missing** — `agent_profiles.office_phone` exists in the database but is never fetched in the search query.
 
-### 6. Status-aware Hot Sheet alerts for Back on Market → Active
-- **`hot_sheet_sent_listings`**: Added `status_at_send text NOT NULL` column; backfilled from listings; replaced unique index `(hot_sheet_id, listing_id)` → `(hot_sheet_id, listing_id, status_at_send)` — allows same listing to be sent under different statuses
-- **`check_hot_sheet_matches`**: Added `back_on_market` to default pipeline statuses; added status-criteria matching (respects `criteria->'statuses'` when set); dedup now checks `status_at_send = l.status`
-- **`notify_matching_buyers_on_new_listing` trigger**: Changed from `AFTER INSERT` to `AFTER INSERT OR UPDATE`; fires for `active` and `back_on_market`; guards against unchanged status on UPDATE
-- **`process-hot-sheet/index.ts`**: Added `back_on_market` to default status filter; writes `status_at_send` when recording sent listings
-- **`send-new-match-notification/index.ts`**: Fetches listing statuses and writes `status_at_send` on upsert; updated onConflict to include `status_at_send`
+3. **Big gap below neighborhood** — The info row (Listing # + property type) at line 315 has `mt-2` creating unnecessary space. Should be tighter, `mt-1`.
 
-### 7. Duplicate Listing Detection
-- **`src/lib/checkDuplicateListing.ts`** (new): Reusable helper that queries `listings` for matching normalized address+city+state+zip in blocking statuses (`active`, `new`, `coming_soon`, `off_market`, `back_on_market`, `price_changed`, `extended`, `reactivated`, `under_agreement`, `pending`, `contingent`). Normalizes via trim + lowercase + collapse spaces. Excludes self via `excludeListingId` param for edit mode. `isLiveStatus()` helper determines when to run the check.
-- **`AddListing.tsx`**: Duplicate check wired into both `handleSaveChanges` (after validation, before file uploads) and `handleSubmit` (after Zod validation, before file uploads). Only runs when target status is a live/published status. Excludes `listingId || draftId` in edit mode.
-- **`AddRentalListing.tsx`**: Same duplicate check wired into `handleSubmit` after Zod validation, before file uploads. Only runs for live statuses.
+4. **Listing # and property type don't align well** — They're in a separate flex row with `gap-3` but feel disconnected. Should use a separator dot and tighter spacing.
 
-### 8. Database-Level Duplicate Listing Protection
-- Added `address_normalized` column to `listings` table
-- Created `BEFORE INSERT OR UPDATE` trigger to auto-populate via `lower(trim(regexp_replace(...)))`
-- Created partial unique index `listings_unique_live_address` on `(address_normalized, city, state, zip_code)` for live statuses only
-- Backfilled all existing rows
+5. **Status not truly centered** — The address block has `flex-1` but the price block is `flex-shrink-0`, so status drifts. Both address and price need `flex-1` so status centers between them.
 
-### 9. Stronger Address Normalization (MLS-Grade)
-- **`normalize_listing_address_text(input text)`** (new SQL function): Deterministic normalization with street suffix mapping (street→st, avenue→ave, etc.), unit marker normalization (apt/suite/#→unit), punctuation stripping, word-boundary-aware regex (`\y`), NULL/empty safety
-- **`normalize_listing_address()` trigger**: Updated to call `normalize_listing_address_text()` instead of inline logic
-- **Backfill**: All existing `address_normalized` values recalculated with stronger normalization
-- No frontend or index changes
+## Changes
 
-### 10. AppShell + Sidebar Navigation (Phase 1)
-- Created `src/components/layout/AppShell.tsx` with collapsible sidebar + compact header
-- Created `src/components/layout/SidebarNavigation.tsx` with grouped nav links
-- Wrapped all authenticated agent/admin routes in `AgentLayout` → `AppShell`
-- Public, auth, consumer, and legal pages remain outside the shell
-- Fixed Navigation.tsx prefix-based hiding to use specific sub-paths (not broad `/agent/`)
+### File 1: `src/pages/ListingSearchResults.tsx` (lines 207-229)
 
-### 11. ListingCardShell — Canonical Horizontal Card (Phase 2)
-- Created `src/components/ListingCardShell.tsx` as single visual source of truth for desktop list-view listing cards
-- Refactored `ListingCard.tsx` to use shell for `list` viewMode
-- Refactored `SearchListingCard.tsx` to use shell for desktop view
-- Deleted `ListingResultCard.tsx` (537 lines, zero external imports — confirmed dead code)
+**Fix the query** — add `office_phone` to the select:
+```
+.select("id, first_name, last_name, email, phone, cell_phone, office_name, office_phone")
+```
 
-#### Listing Surface Classification
-| Surface | Component | Card Class |
-|---|---|---|
-| My Listings | ListingCard (list mode) | canonical horizontal via shell |
-| Listing Search / Results | SearchListingCard → shell | canonical horizontal via shell |
-| Agent Dashboard | ListingCard (list mode) | canonical horizontal via shell |
-| Hot Sheet Review | ListingCard (list mode) | canonical horizontal via shell |
-| Browse Properties | ListingCard (compact/grid) | intentional grid card |
-| Search Results (consumer) | ListingCard (compact/grid) | intentional grid card |
-| IDX Search | IDXListingCard | IDX-specific separate system |
+**Fix the mapping** — use field names that SearchListingCard expects:
+```tsx
+agent_name: agentInfo?.name || null,
+agent_email: agentInfo?.email || null,       // was list_agent_email
+agent_phone: agentInfo?.phone || null,       // was list_agent_phone
+list_office: agentInfo?.office || null,
+list_office_phone: agentInfo?.officePhone || null,  // NEW
+```
 
-Rule: ListingCardShell is the single source of truth for all desktop horizontal listing cards. Grid mode and IDX remain intentionally separate.
+### File 2: `src/components/listing-search/ListingResultsTable.tsx` (lines 43-44)
+
+Update the `Listing` interface to match:
+```tsx
+agent_phone?: string;      // was list_agent_phone
+agent_email?: string;      // was list_agent_email
+list_office_phone?: string; // NEW
+```
+
+### File 3: `src/components/listing-search/SearchListingCard.tsx`
+
+**Interface** — add `list_office_phone?: string | null` to `SearchListing`.
+
+**Layout fixes (desktop):**
+
+- **Header row (line 265):** Give the price block `flex-1 text-right` (same as address block `flex-1`) so the status block centers evenly between them.
+
+- **Info row (line 315):** Reduce `mt-2` to `mt-1`. Join listing # and property type with a dot separator instead of gap-3 flex.
+
+- **Attribution row:** Add office phone display next to `list_office` name. The phone and email for agent are already coded — they just weren't receiving data due to the field name bug.
+
+**No other files change.** No shell changes. No ListingCard changes.
+
+## Result
+
+```text
+[PHOTO]  10 North Mead St          Status: New          $2,000,000
+         Boston, MA 02129                                $853/sqft
+         Charlestown                                     List Date: 01/15/26
+         Listing #L-1182 · Single Family                 DOM: 4
+
+         4 Beds   3 Baths   2,345 sqft
+         Built 1987 · 3 pkg
+
+         ────────────────────────────────────────────────────────────────
+         List Office: Compass (617) 555-1111    List Agent: Chris Tuite (617) 555-2222 chris@compass.com [Contact]
+```
+
