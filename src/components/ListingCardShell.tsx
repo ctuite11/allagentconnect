@@ -114,6 +114,12 @@ export interface ListingCardShellProps {
   /** Price column alignment: "default" or "topRight" (anchored to top) */
   pricePosition?: "default" | "topRight";
 
+  /** Stats row style: "default" (small muted) or "prominent" (larger, primary-colored icons) */
+  statsVariant?: "default" | "prominent";
+
+  /** When true, suppresses the "X days on market" badge in the info row */
+  hideDOMBadge?: boolean;
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
