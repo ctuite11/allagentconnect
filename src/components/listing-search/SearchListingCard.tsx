@@ -124,15 +124,6 @@ const calculateDaysOnMarket = (listing: SearchListing) => {
   return Math.ceil(Math.abs(today.getTime() - activeDate.getTime()) / (1000 * 60 * 60 * 24));
 };
 
-type BannerData = { text: string; color: string; iconType: "sparkles" | "refresh" | "trendingDown" };
-
-const getStatusChangeBanner = (status: string): BannerData | null => {
-  if (isComingSoon(status)) return { text: "COMING SOON", color: "bg-purple-600", iconType: "sparkles" };
-  if (status === LISTING_STATUS.NEW) return { text: "NEW LISTING", color: "bg-blue-600", iconType: "sparkles" };
-  if (status === LISTING_STATUS.BACK_ON_MARKET) return { text: "BACK ON MARKET", color: "bg-orange-600", iconType: "refresh" };
-  if (status === LISTING_STATUS.PRICE_CHANGED) return { text: "PRICE REDUCED", color: "bg-red-600", iconType: "trendingDown" };
-  return null;
-};
 
 const getPropertyStyle = (listing: SearchListing) => {
   if (listing.property_styles) {
