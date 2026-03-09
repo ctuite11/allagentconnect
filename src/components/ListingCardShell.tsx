@@ -176,6 +176,7 @@ export function ListingCardShell({
   hideDOMBadge = false,
   statusSize = "sm",
   hidePhotoBanners = false,
+  hideActionsCol = false,
   onClick,
 }: ListingCardShellProps) {
 
