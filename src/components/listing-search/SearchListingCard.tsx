@@ -193,6 +193,11 @@ export const SearchListingCard = ({
           <div className="min-w-0">
             <span className={`${labelClass} text-muted-foreground`}>List Office: </span>
             <span className={valueClass}>{listing.list_office}</span>
+            {listing.list_office_phone && (
+              <span className={`${labelClass} text-muted-foreground ml-2`}>
+                <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.list_office_phone)}
+              </span>
+            )}
           </div>
         )}
 
