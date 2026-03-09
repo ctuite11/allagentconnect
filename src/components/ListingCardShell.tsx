@@ -149,12 +149,14 @@ export function ListingCardShell({
   infoRowExtra,
   statsExtra,
   priceExtra,
+  priceDateSlot,
+  footerSlot,
   photoAspect = "square",
   pricePosition = "default",
   onClick,
 }: ListingCardShellProps) {
 
-  const photoClass = photoAspect === "wide" ? "w-48 h-32" : "w-40 h-40";
+  const photoClass = photoAspect === "wide" ? "w-48 h-28" : "w-40 h-40";
   return (
     <Card
       className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
