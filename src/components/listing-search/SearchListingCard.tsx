@@ -308,18 +308,21 @@ export const SearchListingCard = ({
               </div>
             ) : undefined
           }
+          hideActionsCol
           footerSlot={
             (listing.agent_name || listing.list_office) ? (
               <div className="px-4 py-2 flex items-center justify-end gap-3 text-xs text-muted-foreground">
                 {listing.list_office && (
                   <span className="text-muted-foreground">{listing.list_office}</span>
                 )}
-                <span className="font-medium text-foreground">{listing.agent_name}</span>
-                {listing.agent_phone && (
-                  <span className="inline-flex items-center gap-1">
-                    <Phone className="h-3 w-3" /> {formatPhoneNumber(listing.agent_phone)}
-                  </span>
-                )}
+                <span className="font-medium text-foreground">
+                  {listing.agent_name}
+                  {listing.agent_phone && (
+                    <span className="ml-2 font-normal text-muted-foreground">
+                      <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.agent_phone)}
+                    </span>
+                  )}
+                </span>
                 {listing.agent_id && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}

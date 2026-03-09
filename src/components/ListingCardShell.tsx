@@ -333,8 +333,8 @@ export function ListingCardShell({
             )}
           </div>
 
-          {/* Col 9-10: Price */}
-          <div className={`col-span-2 text-right ${pricePosition === "topRight" ? "flex flex-col items-end" : ""}`}>
+          {/* Col 9-10 (or 9-12 when hideActionsCol): Price */}
+          <div className={`${hideActionsCol ? "col-span-4" : "col-span-2"} text-right ${pricePosition === "topRight" ? "flex flex-col items-end" : ""}`}>
             {pricePosition === "topRight" ? (
               <>
                 <div className="flex items-baseline gap-1.5">
@@ -362,9 +362,11 @@ export function ListingCardShell({
           </div>
 
           {/* Col 11-12: Actions (injected by consumer) */}
-          <div className="col-span-2 flex flex-col gap-1.5 justify-center pt-1">
-            {actionsSlot}
-          </div>
+          {!hideActionsCol && (
+            <div className="col-span-2 flex flex-col gap-1.5 justify-center pt-1">
+              {actionsSlot}
+            </div>
+          )}
         </div>
       </div>
 
