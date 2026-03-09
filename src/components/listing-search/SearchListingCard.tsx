@@ -1,17 +1,11 @@
 /**
- * SearchListingCard — Thin wrapper around ListingCardShell.
+ * SearchListingCard — MLS-style search results card.
  *
- * Provides search-specific actions (View + Contact) and metadata
- * (price/sqft, micro-facts, agent attribution, checkbox) via shell slots.
- *
- * The visual layout is 100% owned by ListingCardShell.
- * This file ONLY supplies:
- *   - variant-specific data computation
- *   - actionsSlot (View + Contact buttons)
- *   - metadataSlot (agent attribution)
- *   - statsExtra (price per sqft)
- *   - photoOverlay (checkbox)
- *   - mobile view (search-specific compact layout)
+ * Renders its own desktop + mobile layouts directly (does NOT use ListingCardShell).
+ * Layout follows MLS scan pattern:
+ *   Header: Address left / Status center / Price right
+ *   Body: stats, micro-facts, open house
+ *   Footer: List Office left / List Agent right
  */
 
 import { useState } from "react";
@@ -29,9 +23,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import { LISTING_STATUS, isComingSoon } from "@/constants/status";
-import { buildDisplayAddress } from "@/lib/utils";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { ListingCardShell, type BannerData, type OpenHouseBannerData } from "@/components/ListingCardShell";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -132,24 +124,14 @@ const calculateDaysOnMarket = (listing: SearchListing) => {
   return Math.ceil(Math.abs(today.getTime() - activeDate.getTime()) / (1000 * 60 * 60 * 24));
 };
 
+type BannerData = { text: string; color: string; iconType: "sparkles" | "refresh" | "trendingDown" };
+
 const getStatusChangeBanner = (status: string): BannerData | null => {
   if (isComingSoon(status)) return { text: "COMING SOON", color: "bg-purple-600", iconType: "sparkles" };
   if (status === LISTING_STATUS.NEW) return { text: "NEW LISTING", color: "bg-blue-600", iconType: "sparkles" };
   if (status === LISTING_STATUS.BACK_ON_MARKET) return { text: "BACK ON MARKET", color: "bg-orange-600", iconType: "refresh" };
   if (status === LISTING_STATUS.PRICE_CHANGED) return { text: "PRICE REDUCED", color: "bg-red-600", iconType: "trendingDown" };
   return null;
-};
-
-const getOpenHouseBanner = (nextOH: any): OpenHouseBannerData | null => {
-  if (!nextOH) return null;
-  const isBrokerOnly = nextOH.event_type === 'broker_tour' || nextOH.type === 'broker';
-  return {
-    text: isBrokerOnly ? "BROKER OPEN HOUSE" : "OPEN HOUSE",
-    date: format(new Date(nextOH.date), "MMM d"),
-    time: `${formatTime(nextOH.start_time)} - ${formatTime(nextOH.end_time)}`,
-    color: isBrokerOnly ? "bg-purple-600" : "bg-green-600",
-    isBroker: isBrokerOnly,
-  };
 };
 
 const getPropertyStyle = (listing: SearchListing) => {
@@ -175,7 +157,6 @@ export const SearchListingCard = ({
   const photoUrl = getFirstPhoto(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
   const statusBanner = getStatusChangeBanner(listing.status);
-  const openHouseBanner = getOpenHouseBanner(nextOpenHouse);
   const unitNumber = getUnitNumber(listing);
   const daysOnMarket = calculateDaysOnMarket(listing);
 
@@ -207,19 +188,105 @@ export const SearchListingCard = ({
     }
   };
 
+  const BannerIcon = ({ type }: { type: string }) => {
+    if (type === "sparkles") return <Sparkles className="h-3 w-3" />;
+    if (type === "refresh") return <RefreshCw className="h-3 w-3" />;
+    return <TrendingDown className="h-3 w-3" />;
+  };
+
+  // ── Attribution row (shared between desktop & mobile) ─────────────────
+  const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
+    const labelClass = compact ? "text-[11px]" : "text-xs";
+    const valueClass = compact ? "text-[11px] font-medium text-foreground" : "text-xs font-medium text-foreground";
+
+    return (
+      <div className={`flex items-start justify-between gap-4 ${compact ? "flex-wrap" : ""}`}>
+        {/* Left — List Office */}
+        {listing.list_office && (
+          <div className="min-w-0">
+            <span className={`${labelClass} text-muted-foreground`}>List Office: </span>
+            <span className={valueClass}>{listing.list_office}</span>
+          </div>
+        )}
+
+        {/* Right — List Agent */}
+        {listing.agent_name && (
+          <div className="min-w-0 text-right flex-shrink-0">
+            <span className={`${labelClass} text-muted-foreground`}>List Agent: </span>
+            <span className={valueClass}>{listing.agent_name}</span>
+            {listing.agent_phone && (
+              <span className={`${labelClass} text-muted-foreground ml-2`}>
+                <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.agent_phone)}
+              </span>
+            )}
+            {!compact && listing.agent_email && (
+              <span className={`${labelClass} text-muted-foreground ml-2`}>{listing.agent_email}</span>
+            )}
+            {listing.agent_id && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
+                className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                {!compact && "Contact"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
-      {/* ══ DESKTOP (md+) — delegates to ListingCardShell ═══════════════ */}
-      <div className="hidden md:block">
-        <ListingCardShell
-          listing={{
-            ...listing,
-            listing_number: null,
-            property_type: null,
-          }}
-          addressSlot={
-            <>
-              <h3 className="font-semibold text-sm mb-1">
+      {/* ══ DESKTOP (md+) — custom MLS-style card ═══════════════════════ */}
+      <Card
+        className="hidden md:flex overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        onClick={handleCardClick}
+      >
+        {/* Photo column */}
+        <div className="relative flex-shrink-0 w-52 h-auto min-h-[9rem]">
+          {onSelect && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
+              className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
+              aria-label="Select listing"
+            >
+              {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
+            </button>
+          )}
+
+          {photoUrl ? (
+            <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-muted">
+              <Home className="w-8 h-8 text-muted-foreground" />
+            </div>
+          )}
+
+          {/* Status banner overlay */}
+          {statusBanner && (
+            <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-[11px] font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+              <BannerIcon type={statusBanner.iconType} />
+              {statusBanner.text}
+            </div>
+          )}
+
+          {/* Photo count */}
+          {(listing.photos?.length || 0) > 1 && (
+            <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
+              {listing.photos?.length}
+            </div>
+          )}
+        </div>
+
+        {/* Content column */}
+        <div className="flex-1 p-4 flex flex-col min-w-0">
+          {/* A. Header row: Address / Status / Price */}
+          <div className="flex items-start justify-between gap-4">
+            {/* Address block */}
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-sm">
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                   target="_blank"
@@ -234,112 +301,95 @@ export const SearchListingCard = ({
                     Unit {unitNumber}
                   </Badge>
                 )}
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-                  className="ml-3 text-primary hover:text-primary/80 font-medium text-xs transition-colors"
-                >
-                  View
-                </button>
               </h3>
-              <div className="flex items-center text-muted-foreground text-xs mb-1">
+              <div className="flex items-center text-muted-foreground text-xs mt-0.5">
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
               {listing.neighborhood && (
-                <div className="text-xs text-muted-foreground mb-1">
-                  {listing.neighborhood}
-                </div>
-              )}
-            </>
-          }
-          photoUrl={photoUrl}
-          displayPrice={displayPrice}
-          daysOnMarket={daysOnMarket}
-          unitNumber={unitNumber}
-          statusBanner={statusBanner}
-          openHouseBanner={openHouseBanner}
-          nextOpenHouse={nextOpenHouse}
-          hidePhotoBanners
-          onClick={handleCardClick}
-          photoAspect="wide"
-          pricePosition="topRight"
-          statsVariant="prominent"
-          statusSize="lg"
-          statusLabel="Status:"
-          hideDOMBadge
-          photoOverlay={onSelect ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-              className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
-              aria-label="Select listing"
-            >
-              {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
-            </button>
-          ) : undefined}
-          priceDateSlot={
-            <div className="text-xs text-muted-foreground mt-1 space-y-1.5 flex flex-col items-end h-full">
-              {pricePerSqFt && <div>${pricePerSqFt}/sqft</div>}
-              {listing.list_date && (
-                <div>List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
-              )}
-              {daysOnMarket > 0 && <div>DOM: {daysOnMarket}</div>}
-              <div className="flex-1" />
-              {(listing.agent_name || listing.list_office) && (
-              <div className="text-right">
-                   {listing.list_office && (
-                     <div className="text-muted-foreground text-[11px]">{listing.list_office}</div>
-                   )}
-                   <div className="inline-flex items-center gap-1.5 mt-0.5 justify-end w-full">
-                     <span className="font-medium text-foreground">
-                       {listing.agent_name}
-                     </span>
-                    {listing.agent_id && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                        className="inline-flex items-center text-primary hover:text-primary/80 transition-colors"
-                        title="Contact listing agent"
-                      >
-                        <Mail className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  {listing.agent_phone && (
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                      <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.agent_phone)}
-                    </div>
-                  )}
-                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">{listing.neighborhood}</div>
               )}
             </div>
-          }
-          infoRowExtra={
-            <>
-              {listing.listing_number && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-                  className="text-primary hover:text-primary/80 font-medium transition-colors"
-                >
-                  Listing #{listing.listing_number}
-                </button>
+
+            {/* Status block */}
+            <div className="flex-shrink-0 flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Status:</span>
+              <ListingStatusBadge status={listing.status} size="lg" />
+            </div>
+
+            {/* Price block */}
+            <div className="flex-shrink-0 text-right">
+              <div className="text-lg font-bold text-primary">{displayPrice}</div>
+              {pricePerSqFt && (
+                <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
               )}
-              {listing.property_type && (
-                <span className="text-muted-foreground">
-                  {listing.property_type}
-                </span>
-              )}
-            </>
-          }
-          metadataSlot={
-            microFacts.length > 0 ? (
-              <div className="text-xs text-muted-foreground truncate mt-auto pt-1">
-                {microFacts.join(" · ")}
-              </div>
-            ) : undefined
-          }
-          hideActionsCol
-          actionsSlot={<></>}
-        />
-      </div>
+            </div>
+          </div>
+
+          {/* B. Info row */}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+            {listing.listing_number && (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                Listing #{listing.listing_number}
+              </button>
+            )}
+            {listing.property_type && (
+              <span>{listing.property_type}</span>
+            )}
+            {listing.list_date && (
+              <span>Listed {format(new Date(listing.list_date), "MM/dd/yy")}</span>
+            )}
+            {daysOnMarket > 0 && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                DOM {daysOnMarket}
+              </Badge>
+            )}
+          </div>
+
+          {/* C. Stats row */}
+          <div className="flex items-center gap-4 text-sm text-foreground mt-2">
+            <span className="flex items-center gap-1">
+              <Bed className="h-4 w-4 text-primary" /> {listing.bedrooms ?? "-"} Beds
+            </span>
+            <span className="flex items-center gap-1">
+              <Bath className="h-4 w-4 text-primary" /> {listing.bathrooms ?? "-"} Baths
+            </span>
+            <span className="flex items-center gap-1">
+              <Home className="h-4 w-4 text-primary" /> {listing.square_feet?.toLocaleString() ?? "-"} sqft
+            </span>
+          </div>
+
+          {/* D. Micro-facts */}
+          {microFacts.length > 0 && (
+            <div className="text-xs text-muted-foreground mt-1.5">
+              {microFacts.join(" · ")}
+            </div>
+          )}
+
+          {/* E. Open house banner */}
+          {nextOpenHouse && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs p-2 rounded-md bg-emerald-50 border border-emerald-200">
+              <Calendar className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-emerald-700 font-medium">
+                Open House: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
+              </span>
+            </div>
+          )}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* F. Divider + G. Attribution row */}
+          {(listing.list_office || listing.agent_name) && (
+            <div className="border-t border-border pt-2.5 mt-2.5">
+              <AttributionRow />
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
       <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
@@ -365,9 +415,7 @@ export const SearchListingCard = ({
                 )}
                 {statusBanner && (
                   <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-[10px] font-bold px-1.5 py-0.5 text-center flex items-center justify-center gap-0.5`}>
-                    {statusBanner.iconType === 'sparkles' ? <Sparkles className="h-2.5 w-2.5" /> :
-                     statusBanner.iconType === 'refresh' ? <RefreshCw className="h-2.5 w-2.5" /> :
-                     <TrendingDown className="h-2.5 w-2.5" />}
+                    <BannerIcon type={statusBanner.iconType} />
                     {statusBanner.text}
                   </div>
                 )}
@@ -438,10 +486,10 @@ export const SearchListingCard = ({
             </div>
           )}
 
-          {listing.agent_name && (
-            <div className="mt-2">
-              <div className="text-sm font-medium text-foreground truncate">{listing.agent_name}</div>
-              {listing.list_office && <div className="text-xs text-muted-foreground truncate">{listing.list_office}</div>}
+          {/* Attribution footer */}
+          {(listing.list_office || listing.agent_name) && (
+            <div className="mt-2.5 border-t border-border pt-2.5">
+              <AttributionRow compact />
             </div>
           )}
 
