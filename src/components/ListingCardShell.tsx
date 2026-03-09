@@ -123,6 +123,12 @@ export interface ListingCardShellProps {
   /** When true, suppresses the "X days on market" badge in the info row */
   hideDOMBadge?: boolean;
 
+  /** Status badge size override */
+  statusSize?: "sm" | "md" | "lg";
+
+  /** When true, hides the status banner overlays on the photo */
+  hidePhotoBanners?: boolean;
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
