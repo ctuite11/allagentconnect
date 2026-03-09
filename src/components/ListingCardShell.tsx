@@ -294,10 +294,11 @@ export function ListingCardShell({
           </div>
 
           {/* Col 9-10: Price */}
-          <div className="col-span-2 text-right">
-            <div className="text-base font-bold text-primary mb-0.5">
+          <div className={`col-span-2 text-right ${pricePosition === "topRight" ? "flex flex-col items-end" : ""}`}>
+            <div className={`font-bold text-primary mb-0.5 ${pricePosition === "topRight" ? "text-lg" : "text-base"}`}>
               {displayPrice}
             </div>
+            {priceExtra}
             <div className="text-xs text-muted-foreground">
               {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
             </div>
