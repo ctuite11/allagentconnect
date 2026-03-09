@@ -231,8 +231,8 @@ export const SearchListingCard = ({
               {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
             </button>
           ) : undefined}
-          statsExtra={pricePerSqFt ? (
-            <span className="text-muted-foreground">${pricePerSqFt}/sqft</span>
+          priceExtra={pricePerSqFt ? (
+            <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
           ) : undefined}
           metadataSlot={<>
             {microFacts.length > 0 && (
