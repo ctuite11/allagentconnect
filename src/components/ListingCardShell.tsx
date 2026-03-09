@@ -199,7 +199,7 @@ export function ListingCardShell({
             <img
               src={photoUrl}
               alt={listing.address}
-              className="w-full h-full object-cover rounded"
+              className={`w-full h-full object-cover ${photoAspect === "wide" ? "rounded-lg" : "rounded"}`}
             />
           ) : (
             <div className="w-full h-full bg-muted rounded flex items-center justify-center">
