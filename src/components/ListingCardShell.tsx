@@ -85,6 +85,9 @@ export interface ListingCardShellProps {
   /** Extra rows in col 1-6 below bed/bath/sqft (match count, micro-facts, attribution, etc.) */
   metadataSlot?: ReactNode;
 
+  /** When provided, replaces the default address + location <h3> block */
+  addressSlot?: ReactNode;
+
   /** Col 11-12 action buttons */
   actionsSlot: ReactNode;
 
