@@ -331,9 +331,9 @@ export function ListingCardShell({
 
           {/* Col 7-8: Status + property type */}
           <div className="col-span-2">
-            <div className="flex items-center gap-1.5 mb-1">
+            <div className="inline-flex items-center gap-2 mb-1 whitespace-nowrap">
               {statusLabel && (
-                <span className="text-[10px] text-muted-foreground">{statusLabel}</span>
+                <span className="text-[11px] text-muted-foreground leading-none">{statusLabel}</span>
               )}
               <ListingStatusBadge status={listing.status} size={statusSize} />
             </div>
