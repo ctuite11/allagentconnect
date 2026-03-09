@@ -250,13 +250,6 @@ export const SearchListingCard = ({
             </div>
           )}
 
-          {/* Status banner overlay */}
-          {statusBanner && (
-            <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-[11px] font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-              <BannerIcon type={statusBanner.iconType} />
-              {statusBanner.text}
-            </div>
-          )}
 
           {/* Photo count */}
           {(listing.photos?.length || 0) > 1 && (
