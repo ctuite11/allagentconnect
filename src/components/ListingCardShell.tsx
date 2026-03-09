@@ -245,7 +245,7 @@ export function ListingCardShell({
         {/* ── Info Grid ─────────────────────────────────────────────────── */}
         <div className="flex-1 grid grid-cols-12 gap-3">
           {/* Col 1-6: Address, location, metadata */}
-          <div className="col-span-6">
+          <div className="col-span-6 flex flex-col">
             {addressSlot || (
               <>
                 <h3 className="font-semibold text-sm mb-1">
