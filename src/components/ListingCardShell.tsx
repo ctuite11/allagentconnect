@@ -135,7 +135,7 @@ export function ListingCardShell({
 }: ListingCardShellProps) {
   return (
     <Card
-      className="overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary cursor-pointer"
+      className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
       <div className="flex gap-4 p-4">
