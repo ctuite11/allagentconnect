@@ -179,11 +179,6 @@ export const SearchListingCard = ({
     }
   };
 
-  const BannerIcon = ({ type }: { type: string }) => {
-    if (type === "sparkles") return <Sparkles className="h-3 w-3" />;
-    if (type === "refresh") return <RefreshCw className="h-3 w-3" />;
-    return <TrendingDown className="h-3 w-3" />;
-  };
 
   // ── Attribution row (shared between desktop & mobile) ─────────────────
   const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
