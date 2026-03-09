@@ -267,6 +267,7 @@ export const SearchListingCard = ({
           pricePosition="topRight"
           statsVariant="prominent"
           statusSize="md"
+          statusLabel="Status:"
           hideDOMBadge
           photoOverlay={onSelect ? (
             <button
