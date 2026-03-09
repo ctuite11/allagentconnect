@@ -248,8 +248,8 @@ export function ListingCardShell({
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
               {listing.listing_number && <span>Listing #{listing.listing_number}</span>}
               {infoRowExtra}
-              {listing.listing_number && daysOnMarket > 0 && <span>•</span>}
-              {daysOnMarket > 0 && (
+              {!hideDOMBadge && listing.listing_number && daysOnMarket > 0 && <span>•</span>}
+              {!hideDOMBadge && daysOnMarket > 0 && (
                 <Badge variant="outline" className="text-xs">
                   {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
                 </Badge>
@@ -257,15 +257,15 @@ export function ListingCardShell({
             </div>
 
             {/* Stats row: bed/bath/sqft + extras */}
-            <div className="flex gap-2 text-xs text-muted-foreground mb-3">
+            <div className={statsTextClass}>
               {listing.bedrooms != null && (
-                <span><Bed className="w-3 h-3 inline mr-0.5" />{listing.bedrooms}</span>
+                <span><Bed className={statsIconClass} />{listing.bedrooms}</span>
               )}
               {listing.bathrooms != null && (
-                <span><Bath className="w-3 h-3 inline mr-0.5" />{listing.bathrooms}</span>
+                <span><Bath className={statsIconClass} />{listing.bathrooms}</span>
               )}
               {listing.square_feet != null && (
-                <span><Home className="w-3 h-3 inline mr-0.5" />{listing.square_feet.toLocaleString()} sqft</span>
+                <span><Home className={statsIconClass} />{listing.square_feet.toLocaleString()} sqft</span>
               )}
               {statsExtra}
             </div>
