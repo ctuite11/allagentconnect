@@ -390,12 +390,6 @@ export const SearchListingCard = ({
                     <Home className="w-6 h-6 text-muted-foreground" />
                   </div>
                 )}
-                {statusBanner && (
-                  <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-[10px] font-bold px-1.5 py-0.5 text-center flex items-center justify-center gap-0.5`}>
-                    <BannerIcon type={statusBanner.iconType} />
-                    {statusBanner.text}
-                  </div>
-                )}
                 {(listing.photos?.length || 0) > 0 && (
                   <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
                     {listing.photos?.length}
