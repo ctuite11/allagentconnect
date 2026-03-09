@@ -222,7 +222,6 @@ export const SearchListingCard = ({
           statusBanner={statusBanner}
           openHouseBanner={openHouseBanner}
           nextOpenHouse={nextOpenHouse}
-          dateDisplay={listing.list_date ? format(new Date(listing.list_date), "MM/dd/yy") : null}
           onClick={handleCardClick}
           photoAspect="wide"
           pricePosition="topRight"
@@ -236,21 +235,50 @@ export const SearchListingCard = ({
             </button>
           ) : undefined}
           priceExtra={pricePerSqFt ? (
-            <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
+            <span className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</span>
           ) : undefined}
-          metadataSlot={<>
-            {microFacts.length > 0 && (
+          priceDateSlot={
+            <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+              {listing.list_date && (
+                <div>List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
+              )}
+              {daysOnMarket > 0 && <div>DOM: {daysOnMarket}</div>}
+            </div>
+          }
+          metadataSlot={
+            microFacts.length > 0 ? (
               <div className="text-xs text-muted-foreground mb-2 truncate">
                 {microFacts.join(" · ")}
               </div>
-            )}
-            {listing.agent_name && (
-              <div className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">{listing.agent_name}</span>
-                {listing.list_office && <span className="ml-2">{listing.list_office}</span>}
-              </div>
-            )}
-          </>}
+            ) : undefined
+          }
+          footerSlot={listing.agent_name ? (
+            <div className="border-t border-border px-4 py-2 flex items-center justify-end gap-3 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{listing.agent_name}</span>
+              {listing.agent_email && (
+                <a
+                  href={`mailto:${listing.agent_email}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 hover:text-primary transition-colors"
+                >
+                  <Mail className="h-3 w-3" /> {listing.agent_email}
+                </a>
+              )}
+              {listing.agent_phone && (
+                <span className="inline-flex items-center gap-1">
+                  <Phone className="h-3 w-3" /> {formatPhoneNumber(listing.agent_phone)}
+                </span>
+              )}
+              {listing.agent_id && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
+                  className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  <Mail className="h-3 w-3" /> Contact
+                </button>
+              )}
+            </div>
+          ) : undefined}
           actionsSlot={<>
             <Button variant="outline" size="sm" onClick={(e) => {
               e.stopPropagation();
@@ -258,14 +286,6 @@ export const SearchListingCard = ({
             }} className="w-full">
               <ExternalLink className="w-3 h-3 mr-1" /> View
             </Button>
-            {listing.agent_id && (
-              <Button variant="outline" size="sm" onClick={(e) => {
-                e.stopPropagation();
-                setContactOpen(true);
-              }} className="w-full">
-                <Mail className="w-3 h-3 mr-1" /> Contact
-              </Button>
-            )}
           </>}
         />
       </div>
