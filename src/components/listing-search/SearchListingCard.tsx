@@ -265,7 +265,7 @@ export const SearchListingCard = ({
       </div>
 
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
-      <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-primary cursor-pointer" onClick={handleCardClick}>
+      <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
         <div className="p-4">
           <div className="flex gap-3">
             <div className="relative flex-shrink-0">
