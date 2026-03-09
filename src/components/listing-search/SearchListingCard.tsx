@@ -262,7 +262,7 @@ export const SearchListingCard = ({
         {/* Content column */}
         <div className="flex-1 p-4 flex flex-col min-w-0">
           {/* A. Header row: Address / Status / Price */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
             {/* Address block */}
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-sm">
