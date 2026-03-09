@@ -290,17 +290,23 @@ export const SearchListingCard = ({
               )}
             </div>
 
-            {/* Status block */}
-            <div className="flex-shrink-0 flex items-center gap-2">
+            {/* Status block — centered */}
+            <div className="flex-shrink-0 flex items-center gap-2 self-center">
               <span className="text-sm font-medium text-foreground">Status:</span>
               <ListingStatusBadge status={listing.status} size="lg" />
             </div>
 
-            {/* Price block */}
+            {/* Price block — right-aligned stack */}
             <div className="flex-shrink-0 text-right">
               <div className="text-lg font-bold text-primary">{displayPrice}</div>
               {pricePerSqFt && (
                 <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
+              )}
+              {listing.list_date && (
+                <div className="text-xs text-muted-foreground">List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
+              )}
+              {daysOnMarket > 0 && (
+                <div className="text-xs text-muted-foreground">DOM: {daysOnMarket}</div>
               )}
             </div>
           </div>
