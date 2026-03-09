@@ -153,6 +153,7 @@ export function ListingCardShell({
   nextOpenHouse,
   dateDisplay,
   metadataSlot,
+  addressSlot,
   actionsSlot,
   photoOverlay,
   infoRowExtra,
