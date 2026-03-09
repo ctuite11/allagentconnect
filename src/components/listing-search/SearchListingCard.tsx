@@ -241,15 +241,17 @@ export const SearchListingCard = ({
                   View
                 </button>
               </h3>
-              <div className="flex items-center text-muted-foreground text-xs mb-2">
+              <div className="flex items-center text-muted-foreground text-xs mb-1">
                 <MapPin className="w-3 h-3 mr-1" />
                 {listing.city}, {listing.state} {listing.zip_code}
-                {listing.neighborhood && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
+              </div>
+              {listing.neighborhood && (
+                <div className="mb-2">
+                  <Badge variant="secondary" className="text-xs">
                     {listing.neighborhood}
                   </Badge>
-                )}
-              </div>
+                </div>
+              )}
             </>
           }
           photoUrl={photoUrl}
@@ -265,6 +267,7 @@ export const SearchListingCard = ({
           pricePosition="topRight"
           statsVariant="prominent"
           statusSize="md"
+          statusLabel="Status:"
           hideDOMBadge
           photoOverlay={onSelect ? (
             <button
@@ -303,7 +306,7 @@ export const SearchListingCard = ({
           }
           metadataSlot={
             microFacts.length > 0 ? (
-              <div className="text-xs text-muted-foreground truncate">
+              <div className="text-xs text-muted-foreground truncate mt-auto pt-1">
                 {microFacts.join(" · ")}
               </div>
             ) : undefined

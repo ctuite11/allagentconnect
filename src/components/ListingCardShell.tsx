@@ -126,6 +126,9 @@ export interface ListingCardShellProps {
   /** Status badge size override */
   statusSize?: "sm" | "md" | "lg";
 
+  /** Optional label rendered above the status badge (e.g. "Status:") */
+  statusLabel?: string;
+
   /** When true, hides the status banner overlays on the photo */
   hidePhotoBanners?: boolean;
 
@@ -175,6 +178,7 @@ export function ListingCardShell({
   statsVariant = "default",
   hideDOMBadge = false,
   statusSize = "sm",
+  statusLabel,
   hidePhotoBanners = false,
   hideActionsCol = false,
   onClick,
@@ -241,7 +245,7 @@ export function ListingCardShell({
         {/* ── Info Grid ─────────────────────────────────────────────────── */}
         <div className="flex-1 grid grid-cols-12 gap-3">
           {/* Col 1-6: Address, location, metadata */}
-          <div className="col-span-6">
+          <div className="col-span-6 flex flex-col">
             {addressSlot || (
               <>
                 <h3 className="font-semibold text-sm mb-1">
@@ -327,6 +331,9 @@ export function ListingCardShell({
 
           {/* Col 7-8: Status + property type */}
           <div className="col-span-2">
+            {statusLabel && (
+              <div className="text-[10px] text-muted-foreground mb-0.5">{statusLabel}</div>
+            )}
             <ListingStatusBadge status={listing.status} size={statusSize} className="mb-1" />
             {listing.property_type && (
               <div className="text-xs text-muted-foreground">{listing.property_type}</div>
