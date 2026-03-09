@@ -123,6 +123,12 @@ export interface ListingCardShellProps {
   /** When true, suppresses the "X days on market" badge in the info row */
   hideDOMBadge?: boolean;
 
+  /** Status badge size override */
+  statusSize?: "sm" | "md" | "lg";
+
+  /** When true, hides the status banner overlays on the photo */
+  hidePhotoBanners?: boolean;
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
@@ -165,6 +171,8 @@ export function ListingCardShell({
   pricePosition = "default",
   statsVariant = "default",
   hideDOMBadge = false,
+  statusSize = "sm",
+  hidePhotoBanners = false,
   onClick,
 }: ListingCardShellProps) {
 
@@ -196,7 +204,7 @@ export function ListingCardShell({
           )}
 
           {/* Status Change Banner (top priority) */}
-          {statusBanner && (
+          {!hidePhotoBanners && statusBanner && (
             <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
               <BannerIcon type={statusBanner.iconType} />
               {statusBanner.text}
@@ -204,7 +212,7 @@ export function ListingCardShell({
           )}
 
           {/* Price Change Banner (second priority) */}
-          {priceChangeBanner && !statusBanner && (
+          {!hidePhotoBanners && priceChangeBanner && !statusBanner && (
             <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
               <TrendingDown className="w-3 h-3" />
               {priceChangeBanner.text}
@@ -212,7 +220,7 @@ export function ListingCardShell({
           )}
 
           {/* Open House Banner */}
-          {openHouseBanner && (
+          {!hidePhotoBanners && openHouseBanner && (
             <div
               className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
             >
@@ -315,7 +323,7 @@ export function ListingCardShell({
 
           {/* Col 7-8: Status + property type */}
           <div className="col-span-2">
-            <ListingStatusBadge status={listing.status} size="sm" className="mb-1" />
+            <ListingStatusBadge status={listing.status} size={statusSize} className="mb-1" />
             {listing.property_type && (
               <div className="text-xs text-muted-foreground">{listing.property_type}</div>
             )}
