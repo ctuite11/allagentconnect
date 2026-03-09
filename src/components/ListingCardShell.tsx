@@ -283,7 +283,7 @@ export function ListingCardShell({
 
           {/* Col 9-10: Price */}
           <div className="col-span-2 text-right">
-            <div className="text-base font-bold text-primary mb-0.5">
+            <div className={`${pricePosition === "topRight" ? "text-lg" : "text-base"} font-bold text-primary mb-0.5`}>
               {displayPrice}
             </div>
             <div className="text-xs text-muted-foreground">
