@@ -186,7 +186,7 @@ export function ListingCardShell({
 
   const isProminent = statsVariant === "prominent";
   const statsIconClass = isProminent ? "w-4 h-4 inline mr-0.5 text-primary" : "w-3 h-3 inline mr-0.5";
-  const statsTextClass = isProminent ? "flex gap-2 text-sm text-foreground mb-3" : "flex gap-2 text-xs text-muted-foreground mb-3";
+  const statsTextClass = isProminent ? "flex gap-4 text-sm text-foreground mb-3" : "flex gap-2 text-xs text-muted-foreground mb-3";
 
   const photoClass = photoAspect === "wide" ? "w-52 h-36" : "w-40 h-40";
   return (
@@ -333,7 +333,7 @@ export function ListingCardShell({
           <div className="col-span-2">
             <div className="inline-flex items-center gap-2 mb-1 whitespace-nowrap">
               {statusLabel && (
-                <span className="text-[11px] text-muted-foreground leading-none">{statusLabel}</span>
+                <span className="text-sm text-muted-foreground leading-none font-medium">{statusLabel}</span>
               )}
               <ListingStatusBadge status={listing.status} size={statusSize} />
             </div>
