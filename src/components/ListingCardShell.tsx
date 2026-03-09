@@ -171,6 +171,8 @@ export function ListingCardShell({
   pricePosition = "default",
   statsVariant = "default",
   hideDOMBadge = false,
+  statusSize = "sm",
+  hidePhotoBanners = false,
   onClick,
 }: ListingCardShellProps) {
 
