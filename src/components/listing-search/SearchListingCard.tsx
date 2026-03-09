@@ -214,8 +214,8 @@ export const SearchListingCard = ({
         <ListingCardShell
           listing={{
             ...listing,
-            // Suppress shell's default listing number — we render a clickable one via infoRowExtra
             listing_number: null,
+            property_type: null,
           }}
           addressSlot={
             <>
@@ -234,6 +234,12 @@ export const SearchListingCard = ({
                     Unit {unitNumber}
                   </Badge>
                 )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+                  className="ml-3 text-primary hover:text-primary/80 font-medium text-xs transition-colors"
+                >
+                  View
+                </button>
               </h3>
               <div className="flex items-center text-muted-foreground text-xs mb-2">
                 <MapPin className="w-3 h-3 mr-1" />
@@ -253,10 +259,12 @@ export const SearchListingCard = ({
           statusBanner={statusBanner}
           openHouseBanner={openHouseBanner}
           nextOpenHouse={nextOpenHouse}
+          hidePhotoBanners
           onClick={handleCardClick}
           photoAspect="wide"
           pricePosition="topRight"
           statsVariant="prominent"
+          statusSize="md"
           hideDOMBadge
           photoOverlay={onSelect ? (
             <button
@@ -286,42 +294,44 @@ export const SearchListingCard = ({
                   Listing #{listing.listing_number}
                 </button>
               )}
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-                className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium transition-colors"
-              >
-                <ExternalLink className="w-3 h-3" /> View
-              </button>
+              {listing.property_type && (
+                <span className="text-muted-foreground">
+                  {listing.property_type}
+                </span>
+              )}
             </>
           }
           metadataSlot={
-            <div className="space-y-1">
-              {microFacts.length > 0 && (
-                <div className="text-xs text-muted-foreground truncate">
-                  {microFacts.join(" · ")}
-                </div>
-              )}
-            </div>
+            microFacts.length > 0 ? (
+              <div className="text-xs text-muted-foreground truncate">
+                {microFacts.join(" · ")}
+              </div>
+            ) : undefined
           }
-          footerSlot={listing.agent_name ? (
-            <div className="px-4 py-2 flex items-center justify-end gap-3 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{listing.agent_name}</span>
-              {listing.agent_phone && (
-                <span className="inline-flex items-center gap-1">
-                  <Phone className="h-3 w-3" /> {formatPhoneNumber(listing.agent_phone)}
-                </span>
-              )}
-              {listing.agent_id && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                  className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary/80 transition-colors"
-                  title="Contact listing agent"
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-          ) : undefined}
+          footerSlot={
+            (listing.agent_name || listing.list_office) ? (
+              <div className="px-4 py-2 flex items-center justify-end gap-3 text-xs text-muted-foreground">
+                {listing.list_office && (
+                  <span className="text-muted-foreground">{listing.list_office}</span>
+                )}
+                <span className="font-medium text-foreground">{listing.agent_name}</span>
+                {listing.agent_phone && (
+                  <span className="inline-flex items-center gap-1">
+                    <Phone className="h-3 w-3" /> {formatPhoneNumber(listing.agent_phone)}
+                  </span>
+                )}
+                {listing.agent_id && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
+                    className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary/80 transition-colors"
+                    title="Contact listing agent"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            ) : undefined
+          }
           actionsSlot={<></>}
         />
       </div>
