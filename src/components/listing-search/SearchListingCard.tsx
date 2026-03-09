@@ -216,9 +216,38 @@ export const SearchListingCard = ({
         <ListingCardShell
           listing={{
             ...listing,
-            // Override address to render clickable version via the shell's default address rendering
-            // We use metadataSlot + infoRowExtra for customization instead of new shell props
+            // Suppress shell's default listing number — we render a clickable one via infoRowExtra
+            listing_number: null,
           }}
+          addressSlot={
+            <>
+              <h3 className="font-semibold text-sm mb-1">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:text-primary transition-colors"
+                >
+                  {listing.address}
+                </a>
+                {unitNumber && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    Unit {unitNumber}
+                  </Badge>
+                )}
+              </h3>
+              <div className="flex items-center text-muted-foreground text-xs mb-2">
+                <MapPin className="w-3 h-3 mr-1" />
+                {listing.city}, {listing.state} {listing.zip_code}
+                {listing.neighborhood && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {listing.neighborhood}
+                  </Badge>
+                )}
+              </div>
+            </>
+          }
           photoUrl={photoUrl}
           displayPrice={displayPrice}
           daysOnMarket={daysOnMarket}
