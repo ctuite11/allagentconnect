@@ -204,7 +204,7 @@ export function ListingCardShell({
           )}
 
           {/* Status Change Banner (top priority) */}
-          {statusBanner && (
+          {!hidePhotoBanners && statusBanner && (
             <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
               <BannerIcon type={statusBanner.iconType} />
               {statusBanner.text}
@@ -212,7 +212,7 @@ export function ListingCardShell({
           )}
 
           {/* Price Change Banner (second priority) */}
-          {priceChangeBanner && !statusBanner && (
+          {!hidePhotoBanners && priceChangeBanner && !statusBanner && (
             <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
               <TrendingDown className="w-3 h-3" />
               {priceChangeBanner.text}
@@ -220,7 +220,7 @@ export function ListingCardShell({
           )}
 
           {/* Open House Banner */}
-          {openHouseBanner && (
+          {!hidePhotoBanners && openHouseBanner && (
             <div
               className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
             >
