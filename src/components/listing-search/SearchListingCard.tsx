@@ -220,6 +220,8 @@ export const SearchListingCard = ({
           nextOpenHouse={nextOpenHouse}
           dateDisplay={listing.list_date ? format(new Date(listing.list_date), "MM/dd/yy") : null}
           onClick={handleCardClick}
+          photoAspect="wide"
+          pricePosition="topRight"
           photoOverlay={onSelect ? (
             <button
               onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
@@ -229,8 +231,8 @@ export const SearchListingCard = ({
               {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
             </button>
           ) : undefined}
-          statsExtra={pricePerSqFt ? (
-            <span className="text-muted-foreground">${pricePerSqFt}/sqft</span>
+          priceExtra={pricePerSqFt ? (
+            <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
           ) : undefined}
           metadataSlot={<>
             {microFacts.length > 0 && (

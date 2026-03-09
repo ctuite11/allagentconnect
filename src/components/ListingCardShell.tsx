@@ -97,6 +97,17 @@ export interface ListingCardShellProps {
   /** Extra stat items after bed/bath/sqft (price per sqft, etc.) */
   statsExtra?: ReactNode;
 
+  /** Extra content rendered inside the price block (e.g. $/sqft) */
+  priceExtra?: ReactNode;
+
+  // ── Layout variants ───────────────────────────────────────────────────
+
+  /** Photo aspect: "square" (default 160×160) or "wide" (192×128) */
+  photoAspect?: "square" | "wide";
+
+  /** Price column alignment: "default" or "topRight" (anchored to top) */
+  pricePosition?: "default" | "topRight";
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
@@ -131,8 +142,13 @@ export function ListingCardShell({
   photoOverlay,
   infoRowExtra,
   statsExtra,
+  priceExtra,
+  photoAspect = "square",
+  pricePosition = "default",
   onClick,
 }: ListingCardShellProps) {
+
+  const photoClass = photoAspect === "wide" ? "w-48 h-32" : "w-40 h-40";
   return (
     <Card
       className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
@@ -140,7 +156,7 @@ export function ListingCardShell({
     >
       <div className="flex gap-4 p-4">
         {/* ── Photo with Banners ────────────────────────────────────────── */}
-        <div className="relative w-40 h-40 flex-shrink-0">
+        <div className={`relative ${photoClass} flex-shrink-0`}>
           {photoOverlay}
 
           {photoUrl ? (
@@ -278,10 +294,11 @@ export function ListingCardShell({
           </div>
 
           {/* Col 9-10: Price */}
-          <div className="col-span-2 text-right">
-            <div className="text-base font-bold text-primary mb-0.5">
+          <div className={`col-span-2 text-right ${pricePosition === "topRight" ? "flex flex-col items-end" : ""}`}>
+            <div className={`font-bold text-primary mb-0.5 ${pricePosition === "topRight" ? "text-lg" : "text-base"}`}>
               {displayPrice}
             </div>
+            {priceExtra}
             <div className="text-xs text-muted-foreground">
               {listing.listing_type === 'for_rent' ? 'Rental' : 'Sale'}
             </div>
