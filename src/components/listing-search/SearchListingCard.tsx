@@ -147,7 +147,7 @@ export const SearchListingCard = ({
 
   const photoUrl = getFirstPhoto(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
-  const statusBanner = getStatusChangeBanner(listing.status);
+  
   const unitNumber = getUnitNumber(listing);
   const daysOnMarket = calculateDaysOnMarket(listing);
 
