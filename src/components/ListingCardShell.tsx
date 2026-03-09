@@ -178,6 +178,7 @@ export function ListingCardShell({
   statsVariant = "default",
   hideDOMBadge = false,
   statusSize = "sm",
+  statusLabel,
   hidePhotoBanners = false,
   hideActionsCol = false,
   onClick,
