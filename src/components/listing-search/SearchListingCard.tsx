@@ -312,8 +312,8 @@ export const SearchListingCard = ({
             </div>
           </div>
 
-          {/* B. Info row */}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+          {/* B. Info row — tighter spacing with dot separator */}
+          <div className="flex items-center text-xs text-muted-foreground mt-1">
             {listing.listing_number && (
               <button
                 onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
@@ -321,6 +321,9 @@ export const SearchListingCard = ({
               >
                 Listing #{listing.listing_number}
               </button>
+            )}
+            {listing.listing_number && listing.property_type && (
+              <span className="mx-1.5">·</span>
             )}
             {listing.property_type && (
               <span>{listing.property_type}</span>
