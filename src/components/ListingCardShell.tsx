@@ -330,7 +330,7 @@ export function ListingCardShell({
           </div>
 
           {/* Col 7-8: Status + property type */}
-          <div className="col-span-2">
+          <div className="col-span-2 flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-2 mb-1 whitespace-nowrap">
               {statusLabel && (
                 <span className="text-sm text-muted-foreground leading-none font-medium">{statusLabel}</span>
