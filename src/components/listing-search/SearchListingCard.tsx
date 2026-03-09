@@ -297,8 +297,8 @@ export const SearchListingCard = ({
               <ListingStatusBadge status={listing.status} size="lg" />
             </div>
 
-            {/* Price block — right-aligned stack */}
-            <div className="flex-shrink-0 text-right">
+            {/* Price block — right-aligned stack, flex-1 for true status centering */}
+            <div className="flex-1 text-right">
               <div className="text-lg font-bold text-primary">{displayPrice}</div>
               {pricePerSqFt && (
                 <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
