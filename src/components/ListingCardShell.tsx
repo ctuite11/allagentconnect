@@ -331,6 +331,9 @@ export function ListingCardShell({
 
           {/* Col 7-8: Status + property type */}
           <div className="col-span-2">
+            {statusLabel && (
+              <div className="text-[10px] text-muted-foreground mb-0.5">{statusLabel}</div>
+            )}
             <ListingStatusBadge status={listing.status} size={statusSize} className="mb-1" />
             {listing.property_type && (
               <div className="text-xs text-muted-foreground">{listing.property_type}</div>
