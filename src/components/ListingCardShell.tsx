@@ -135,6 +135,7 @@ export function ListingCardShell({
   infoRowExtra,
   statsExtra,
   onClick,
+  pricePosition,
 }: ListingCardShellProps) {
   return (
     <Card
