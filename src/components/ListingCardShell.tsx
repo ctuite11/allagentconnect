@@ -101,6 +101,9 @@ export interface ListingCardShellProps {
 
   /** Card click handler */
   onClick?: () => void;
+
+  /** Price position variant — "topRight" renders price larger at top of price column */
+  pricePosition?: "default" | "topRight";
 }
 
 // ── Banner Icon ──────────────────────────────────────────────────────────────
