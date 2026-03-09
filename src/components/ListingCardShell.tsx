@@ -97,6 +97,17 @@ export interface ListingCardShellProps {
   /** Extra stat items after bed/bath/sqft (price per sqft, etc.) */
   statsExtra?: ReactNode;
 
+  /** Extra content rendered inside the price block (e.g. $/sqft) */
+  priceExtra?: ReactNode;
+
+  // ── Layout variants ───────────────────────────────────────────────────
+
+  /** Photo aspect: "square" (default 160×160) or "wide" (192×128) */
+  photoAspect?: "square" | "wide";
+
+  /** Price column alignment: "default" or "topRight" (anchored to top) */
+  pricePosition?: "default" | "topRight";
+
   // ── Events ─────────────────────────────────────────────────────────────
 
   /** Card click handler */
