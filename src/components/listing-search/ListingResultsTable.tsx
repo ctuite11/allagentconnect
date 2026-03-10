@@ -80,7 +80,7 @@ const ListingResultsTable = ({
   const [sortBy, setSortBy] = useState("date_new");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
-  const [saveSearchDialogOpen, setSaveSearchDialogOpen] = useState(false);
+  
 
   // Filter listings based on selected-only mode
   const displayedListings = showSelectedOnly
