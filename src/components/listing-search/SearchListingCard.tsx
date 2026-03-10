@@ -205,8 +205,8 @@ export const SearchListingCard = ({
 
   // ── Attribution row (shared between desktop & mobile) ─────────────────
   const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
-    const labelClass = compact ? "text-[11px] text-muted-foreground/70" : "text-[11px] text-muted-foreground/70";
-    const valueClass = compact ? "text-[11px] text-foreground" : "text-xs text-foreground";
+    const labelClass = "text-[11px] text-muted-foreground/60 font-normal";
+    const valueClass = compact ? "text-[11px] text-foreground/80" : "text-xs text-foreground/80 font-medium";
 
     return (
       <div className={`flex items-start justify-between gap-4 ${compact ? "flex-wrap" : ""}`}>
@@ -216,7 +216,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.list_office}</span>
             {listing.list_office_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-60" />{formatPhoneNumber(listing.list_office_phone)}
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-50" />{formatPhoneNumber(listing.list_office_phone)}
               </span>
             )}
           </div>
@@ -227,7 +227,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.agent_name}</span>
             {listing.agent_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-60" />{formatPhoneNumber(listing.agent_phone)}
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-50" />{formatPhoneNumber(listing.agent_phone)}
               </span>
             )}
             {!compact && listing.agent_email && (
@@ -236,7 +236,7 @@ export const SearchListingCard = ({
             {listing.agent_id && (
               <button
                 onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                className="ml-2.5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
+                className="ml-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/70 hover:underline underline-offset-2 transition-colors"
               >
                 <Mail className="h-3 w-3" />
                 {!compact && "Contact"}
@@ -251,11 +251,11 @@ export const SearchListingCard = ({
   return (
     <>
       {/* ══ DESKTOP (md+) — MLS-style two-column card ═══════════════════ */}
-      <Card
-        className="hidden md:block overflow-hidden cursor-pointer rounded-2xl border border-border bg-card aac-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] transition-all duration-200"
+      <div
+        className="hidden md:block overflow-hidden cursor-pointer rounded-2xl border border-border bg-card will-change-transform transition-all duration-200 aac-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px]"
         onClick={handleCardClick}
       >
-        <div className="flex items-start p-5 gap-5">
+        <div className="flex items-start p-5 gap-6">
           {/* ── LEFT COLUMN: Photo + Utility strip ──────────────────────── */}
           <div className="flex-shrink-0 w-64">
             {/* A. Photo */}
@@ -266,28 +266,28 @@ export const SearchListingCard = ({
                   className="absolute left-2.5 top-2.5 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
                   aria-label="Select listing"
                 >
-                  {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
+                  {isSelected && <Check className="h-3 w-3 text-accent" />}
                 </button>
               )}
               {photoUrl ? (
                 <img src={photoUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Home className="w-10 h-10 text-muted-foreground/50" />
+                  <Home className="w-10 h-10 text-muted-foreground/40" />
                 </div>
               )}
             </div>
 
             {/* B. Utility icon strip under photo */}
-            <div className="flex items-center gap-3 mt-2.5 px-0.5">
+            <div className="flex items-center gap-3.5 mt-2.5 px-0.5">
               {photoCount > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Camera className="h-3.5 w-3.5 text-primary/60" /> {photoCount}
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
+                  <Camera className="h-3.5 w-3.5 text-primary/50" /> {photoCount}
                 </span>
               )}
               {docCount > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <FileText className="h-3.5 w-3.5 text-primary/60" /> {docCount}
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
+                  <FileText className="h-3.5 w-3.5 text-primary/50" /> {docCount}
                 </span>
               )}
               {listing.virtual_tour_url && (
@@ -296,7 +296,7 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-[11px] text-primary font-medium hover:text-primary/80 transition-colors"
+                  className="flex items-center gap-1 text-[11px] text-primary/80 font-medium hover:text-primary transition-colors"
                 >
                   <Video className="h-3.5 w-3.5" /> Tour
                 </a>
@@ -307,7 +307,7 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-[11px] text-primary font-medium hover:text-primary/80 transition-colors"
+                  className="flex items-center gap-1 text-[11px] text-primary/80 font-medium hover:text-primary transition-colors"
                 >
                   <Video className="h-3.5 w-3.5" /> Video
                 </a>
@@ -330,7 +330,7 @@ export const SearchListingCard = ({
                       e.stopPropagation();
                       navigate(`/property/${listing.id}`, { state: { from: fromPath } });
                     }}
-                    className="text-sm font-semibold text-primary hover:underline"
+                    className="text-sm font-semibold text-primary hover:text-primary/80 hover:underline underline-offset-2 transition-colors"
                   >
                     L-{listing.listing_number}
                   </a>
@@ -351,13 +351,13 @@ export const SearchListingCard = ({
                     </Badge>
                   )}
                 </h3>
-                <div className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-                  <MapPin className="w-3 h-3 text-primary/70 flex-shrink-0" />
+                <div className="text-sm text-muted-foreground/80 flex items-center gap-1.5 mt-1">
+                  <MapPin className="w-3 h-3 text-primary/60 flex-shrink-0" />
                   <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
                     <>
-                      <span className="text-border">·</span>
-                      <span>{listing.neighborhood}</span>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-muted-foreground/70">{listing.neighborhood}</span>
                     </>
                   )}
                 </div>
@@ -367,10 +367,10 @@ export const SearchListingCard = ({
               <div className="flex-shrink-0 flex flex-col items-center gap-1.5 text-center min-w-[100px]">
                 <ListingStatusBadge status={listing.status} size="lg" />
                 {daysOnMarket > 0 && (
-                  <span className="text-[11px] text-muted-foreground">{daysOnMarket} DOM</span>
+                  <span className="text-[11px] text-muted-foreground/70">{daysOnMarket} DOM</span>
                 )}
                 {pricePerSqFt && (
-                  <span className="text-[11px] text-muted-foreground">${pricePerSqFt}/sqft</span>
+                  <span className="text-[11px] text-muted-foreground/70">${pricePerSqFt}/sqft</span>
                 )}
               </div>
 
@@ -378,7 +378,7 @@ export const SearchListingCard = ({
               <div className="flex-shrink-0 text-right min-w-[120px]">
                 <div className="text-xl font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
                 {listing.list_date && (
-                  <div className="text-[11px] text-muted-foreground mt-1">
+                  <div className="text-[11px] text-muted-foreground/60 mt-1">
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
                 )}
@@ -387,10 +387,10 @@ export const SearchListingCard = ({
 
             {/* SECTION 2 — Structured facts grid */}
             {facts.length > 0 && (
-              <div className="grid grid-cols-4 gap-x-8 gap-y-1.5 mt-4 pt-3.5 border-t border-border/60">
+              <div className="grid grid-cols-4 gap-x-8 gap-y-2 mt-4 pt-3.5 border-t border-border/40">
                 {facts.map((f) => (
                   <div key={f.label} className="text-xs">
-                    <span className="text-muted-foreground">{f.label}:</span>{" "}
+                    <span className="text-muted-foreground/70">{f.label}:</span>{" "}
                     <span className="font-medium text-foreground">{f.value}</span>
                   </div>
                 ))}
@@ -399,14 +399,14 @@ export const SearchListingCard = ({
 
             {/* SECTION 3 — Remarks preview */}
             {listing.description && (
-              <div className="mt-3 text-sm leading-6 text-muted-foreground line-clamp-3">
+              <div className="mt-4 text-sm leading-relaxed text-muted-foreground/80 line-clamp-3">
                 {listing.description}
               </div>
             )}
 
             {/* Open house banner */}
             {nextOpenHouse && (
-              <div className="mt-3 flex items-center gap-1.5 text-xs py-2 px-3 rounded-lg bg-accent-soft border border-accent-muted">
+              <div className="mt-3.5 flex items-center gap-1.5 text-xs py-2 px-3 rounded-lg bg-accent-soft border border-accent-muted/60">
                 <Calendar className="h-3.5 w-3.5 text-accent" />
                 <span className="text-accent font-medium">
                   Open House: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
@@ -416,14 +416,13 @@ export const SearchListingCard = ({
 
             {/* SECTION 4 — Attribution footer */}
             {(listing.list_office || listing.agent_name) && (
-              <div className="border-t border-border/60 mt-4 pt-2.5">
+              <div className="border-t border-border/40 mt-4 pt-2.5">
                 <AttributionRow />
               </div>
             )}
           </div>
         </div>
-      </Card>
-
+      </div>
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
       <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
         <div className="p-4">
