@@ -281,9 +281,9 @@ export const SearchListingCard = ({
             {/* B. Utility icon strip under photo */}
             <div className="flex items-center gap-3.5 mt-2.5 px-0.5">
               {photoCount > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
-                  <Camera className="h-3.5 w-3.5 text-primary/50" /> {photoCount}
-                </span>
+                 <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
+                   <Camera className="h-4 w-4 text-primary/50" /> {photoCount}
+                 </span>
               )}
               {docCount > 0 && (
                 <span className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
