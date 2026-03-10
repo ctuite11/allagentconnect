@@ -322,7 +322,7 @@ export const SearchListingCard = ({
               )}
               {docCount > 0 && (
                  <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
-                   <FileText className="h-4 w-4 text-primary/50" /> {docCount}
+                   <FileText className="h-4 w-4 text-primary" /> {docCount}
                  </span>
               )}
               {listing.virtual_tour_url && (
