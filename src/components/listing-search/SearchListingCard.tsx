@@ -281,12 +281,35 @@ export const SearchListingCard = ({
                   {isSelected && <Check className="h-3 w-3 text-accent" />}
                 </button>
               )}
-              {photoUrl ? (
+              {allPhotos.length > 0 ? (
+                <img src={allPhotos[currentPhotoIndex] || photoUrl!} alt="" className="w-full h-full object-cover" />
+              ) : photoUrl ? (
                 <img src={photoUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <Home className="w-10 h-10 text-muted-foreground/40" />
                 </div>
+              )}
+              {allPhotos.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentPhotoIndex((i) => (i - 1 + allPhotos.length) % allPhotos.length); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentPhotoIndex((i) => (i + 1) % allPhotos.length); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full">
+                    {currentPhotoIndex + 1} / {allPhotos.length}
+                  </div>
+                </>
               )}
             </div>
 
