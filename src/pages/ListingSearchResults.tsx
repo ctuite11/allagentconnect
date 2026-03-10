@@ -207,11 +207,11 @@ const ListingSearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white pt-6">
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto">
           {/* ── Unified Sticky Command Bar ──────────────────────────────── */}
-          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-zinc-200 px-5 py-3">
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-zinc-200 px-5 py-4">
             {/* Row 1: Navigation + Count */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
