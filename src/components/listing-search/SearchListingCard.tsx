@@ -264,7 +264,11 @@ export const SearchListingCard = ({
     <>
       {/* ══ DESKTOP (md+) — MLS-style two-column card ═══════════════════ */}
       <div
-        className="hidden md:block overflow-hidden cursor-pointer rounded-2xl border border-border bg-card will-change-transform transition-all duration-200 aac-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px]"
+        className={`hidden md:block overflow-hidden cursor-pointer rounded-2xl border bg-card will-change-transform transition-all duration-200 aac-shadow ${
+          isSelected
+            ? "border-primary/40 bg-blue-50/30 ring-1 ring-primary/15 shadow-sm"
+            : "border-border hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-zinc-300 hover:-translate-y-[1px]"
+        }`}
         onClick={handleCardClick}
       >
         <div className="flex items-start p-5 gap-6">
@@ -461,7 +465,11 @@ export const SearchListingCard = ({
         )}
       </div>
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
-      <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
+      <Card className={`md:hidden overflow-hidden transition-shadow cursor-pointer ${
+        isSelected
+          ? "border-primary/40 bg-blue-50/30 ring-1 ring-primary/15 shadow-sm"
+          : "hover:shadow-md hover:border-zinc-300"
+      }`} onClick={handleCardClick}>
         <div className="p-4">
           <div className="flex gap-3">
             <div className="relative flex-shrink-0">
