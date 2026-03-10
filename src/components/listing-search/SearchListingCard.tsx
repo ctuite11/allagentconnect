@@ -376,7 +376,7 @@ export const SearchListingCard = ({
                   <div className="text-xs text-muted-foreground mt-0.5">${pricePerSqFt}/sqft</div>
                 )}
                 {listing.list_date && (
-                  <div className="text-sm text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
                 )}
