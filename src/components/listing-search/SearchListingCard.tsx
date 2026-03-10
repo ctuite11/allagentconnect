@@ -324,25 +324,7 @@ export const SearchListingCard = ({
             </div>
           </div>
 
-          {/* B. Info row — tighter spacing with dot separator */}
-          <div className="flex items-center text-xs text-muted-foreground">
-            {listing.listing_number && (
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-                className="text-primary hover:text-primary/80 font-medium transition-colors"
-              >
-                Listing #{listing.listing_number}
-              </button>
-            )}
-            {listing.listing_number && listing.property_type && (
-              <span className="mx-1.5">·</span>
-            )}
-            {listing.property_type && (
-              <span>{listing.property_type}</span>
-            )}
-          </div>
-
-          {/* C. Stats row */}
+          {/* B. Stats row — directly below neighborhood */}
           <div className="flex items-center gap-4 text-sm text-foreground mt-1">
             <span className="flex items-center gap-1">
               <Bed className="h-4 w-4 text-primary" /> {listing.bedrooms ?? "-"} Beds
@@ -353,6 +335,25 @@ export const SearchListingCard = ({
             <span className="flex items-center gap-1">
               <Home className="h-4 w-4 text-primary" /> {listing.square_feet?.toLocaleString() ?? "-"} sqft
             </span>
+          </div>
+
+          {/* C. Info row — listing number + property type */}
+          <div className="flex items-center text-xs text-muted-foreground">
+            {listing.listing_number && (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
+                className="hover:text-primary/80 font-medium transition-colors"
+              >
+                <span className="text-muted-foreground">Listing #</span>
+                <span className="text-primary">{listing.listing_number}</span>
+              </button>
+            )}
+            {listing.listing_number && listing.property_type && (
+              <span className="mx-1.5">·</span>
+            )}
+            {listing.property_type && (
+              <span>{listing.property_type}</span>
+            )}
           </div>
 
           {/* D. Micro-facts */}
