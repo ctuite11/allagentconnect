@@ -365,7 +365,10 @@ export const SearchListingCard = ({
 
               {/* Middle: Status + DOM + $/sqft */}
               <div className="flex-shrink-0 flex flex-col items-center gap-1.5 text-center min-w-[100px]">
-                <ListingStatusBadge status={listing.status} size="lg" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground/70">Status:</span>
+                  <ListingStatusBadge status={listing.status} size="sm" />
+                </div>
                 {daysOnMarket > 0 && (
                   <span className="text-[11px] text-muted-foreground/70">{daysOnMarket} DOM</span>
                 )}
