@@ -300,7 +300,7 @@ export const SearchListingCard = ({
             </div>
 
             {/* Status block — centered */}
-            <div className="flex-shrink-0 flex items-center gap-2 self-center">
+            <div className="flex-shrink-0 flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Status:</span>
               <ListingStatusBadge status={listing.status} size="lg" />
             </div>
