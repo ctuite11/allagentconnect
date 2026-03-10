@@ -382,15 +382,13 @@ export const SearchListingCard = ({
             </div>
           )}
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
           {/* F. Divider + G. Attribution row */}
           {(listing.list_office || listing.agent_name) && (
-            <div className="border-t border-border pt-2.5 mt-2.5">
+            <div className="border-t border-zinc-200 mt-2 pt-2">
               <AttributionRow />
             </div>
           )}
+        </div>
         </div>
       </Card>
 
