@@ -319,9 +319,9 @@ export const SearchListingCard = ({
           <div className="flex-1 min-w-0">
 
             {/* SECTION 1 — Top scan row: 3 zones */}
-            <div className="flex items-start justify-between gap-4">
-              {/* Left: ID + Address */}
-              <div className="min-w-0 flex-1">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-6">
+              {/* LEFT: ID + Address */}
+              <div className="min-w-0">
                 {listing.listing_number && (
                   <a
                     href={`/property/${listing.id}`}
@@ -330,12 +330,12 @@ export const SearchListingCard = ({
                       e.stopPropagation();
                       navigate(`/property/${listing.id}`, { state: { from: fromPath } });
                     }}
-                    className="text-xs font-semibold text-primary hover:text-primary/80 hover:underline underline-offset-2 transition-colors"
+                    className="text-primary text-sm font-semibold hover:underline underline-offset-2 transition-colors"
                   >
                     L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
                 )}
-                <h3 className="text-sm font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
+                <h3 className="text-xl font-semibold tracking-[-0.01em] text-foreground leading-tight mt-1">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
@@ -351,37 +351,37 @@ export const SearchListingCard = ({
                     </Badge>
                   )}
                 </h3>
-                <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                   <MapPin className="w-3 h-3 text-primary/60 flex-shrink-0" />
                   <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
                     <>
                       <span className="text-muted-foreground/40">·</span>
-                      <span className="text-muted-foreground/70">{listing.neighborhood}</span>
+                      <span>{listing.neighborhood}</span>
                     </>
                   )}
                 </div>
               </div>
 
-              {/* Center: Status only */}
-              <div className="flex-shrink-0 flex items-center justify-center gap-1.5 min-w-[100px]">
-                <span className="text-xs text-zinc-700">Status:</span>
+              {/* CENTER: Status */}
+              <div className="flex items-center justify-center gap-1.5 pt-0.5">
+                <span className="text-sm text-muted-foreground">Status:</span>
                 <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
-              {/* Right: Price + $/sqft + Listed + DOM */}
-              <div className="flex-shrink-0 text-right min-w-[130px]">
-                <div className="text-base font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
+              {/* RIGHT: Price + details */}
+              <div className="text-right">
+                <div className="text-primary text-[2rem] font-bold leading-none">{displayPrice}</div>
                 {pricePerSqFt && (
-                  <div className="text-xs text-zinc-700 mt-0.5">${pricePerSqFt}/sqft</div>
+                  <div className="text-sm text-muted-foreground mt-1">${pricePerSqFt}/sqft</div>
                 )}
                 {listing.list_date && (
-                  <div className="text-xs text-zinc-700 mt-0.5">
+                  <div className="text-sm text-muted-foreground mt-1">
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
                 )}
                 {daysOnMarket > 0 && (
-                  <div className="text-xs text-zinc-700 mt-0.5">{daysOnMarket} DOM</div>
+                  <div className="text-sm text-muted-foreground mt-0.5">{daysOnMarket} DOM</div>
                 )}
               </div>
             </div>
