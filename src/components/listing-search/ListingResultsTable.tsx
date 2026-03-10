@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, Check } from "lucide-react";
+import { FileSpreadsheet, Check, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 
 import { FilterState } from "@/components/listing-search/ListingSearchFilters";
@@ -155,6 +155,7 @@ const ListingResultsTable = ({
             onClick={toggleSelectAll}
             className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-zinc-200 text-zinc-700 hover:text-emerald-600 hover:bg-transparent hover:border-zinc-300 transition-colors"
           >
+            <ListChecks className="h-4 w-4 mr-1.5 text-[hsl(221,92%,51%)]" />
             {selectedRows.size === displayedListings.length && displayedListings.length > 0
               ? "Deselect All"
               : "Select All"}
