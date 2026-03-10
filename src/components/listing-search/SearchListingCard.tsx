@@ -288,16 +288,19 @@ export const SearchListingCard = ({
                 )}
               </h3>
               <div className="flex items-center text-muted-foreground text-xs mt-0.5">
-                <MapPin className="w-3 h-3 mr-1" />
+                <MapPin className="w-3 h-3 mr-1 text-primary" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
               {listing.neighborhood && (
-                <div className="text-xs text-muted-foreground mt-0.5">{listing.neighborhood}</div>
+                <div className="flex items-center text-xs text-muted-foreground mt-0.5">
+                  <MapPin className="w-3 h-3 mr-1 text-red-500" />
+                  {listing.neighborhood}
+                </div>
               )}
             </div>
 
             {/* Status block — centered */}
-            <div className="flex-shrink-0 flex items-center gap-2 self-center">
+            <div className="flex-shrink-0 flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Status:</span>
               <ListingStatusBadge status={listing.status} size="lg" />
             </div>
@@ -308,12 +311,14 @@ export const SearchListingCard = ({
               {pricePerSqFt && (
                 <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
               )}
-              {listing.list_date && (
-                <div className="text-xs text-muted-foreground">List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
-              )}
-              {daysOnMarket > 0 && (
-                <div className="text-xs text-muted-foreground">DOM: {daysOnMarket}</div>
-              )}
+              <div className="mt-1">
+                {listing.list_date && (
+                  <div className="text-xs text-muted-foreground">List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
+                )}
+                {daysOnMarket > 0 && (
+                  <div className="text-xs text-muted-foreground">DOM: {daysOnMarket}</div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -336,7 +341,7 @@ export const SearchListingCard = ({
           </div>
 
           {/* C. Stats row */}
-          <div className="flex items-center gap-4 text-sm text-foreground mt-2">
+          <div className="flex items-center gap-4 text-sm text-foreground mt-1">
             <span className="flex items-center gap-1">
               <Bed className="h-4 w-4 text-primary" /> {listing.bedrooms ?? "-"} Beds
             </span>
