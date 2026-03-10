@@ -494,8 +494,7 @@ export const SearchListingCard = ({
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-foreground truncate">
-                {listing.address}
-                {unitNumber && <Badge variant="secondary" className="ml-1.5 text-[10px]">Unit {unitNumber}</Badge>}
+                {listing.address}{unitNumber ? `, #${unitNumber}` : ""}
               </h3>
               <div className="flex items-center text-xs text-muted-foreground mt-0.5">
                 <MapPin className="w-3 h-3 mr-0.5" />
