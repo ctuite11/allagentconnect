@@ -319,7 +319,7 @@ export const SearchListingCard = ({
           <div className="flex-1 min-w-0">
 
             {/* SECTION 1 — Top scan row: 3 zones */}
-            <div className="flex items-start gap-4">
+            <div className="flex items-center gap-4">
               {/* Left: ID + Address */}
               <div className="min-w-0 flex-1">
                 {listing.listing_number && (
@@ -371,7 +371,7 @@ export const SearchListingCard = ({
 
               {/* Right: Price + $/sqft + Listed + DOM */}
               <div className="flex-shrink-0 text-right min-w-[130px]">
-                <div className="text-lg font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
+                <div className="text-base font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
                 {pricePerSqFt && (
                   <div className="text-xs text-zinc-700 mt-0.5">${pricePerSqFt}/sqft</div>
                 )}
