@@ -305,9 +305,8 @@ const ListingSearchResults = () => {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="h-5 w-px bg-neutral-200" />
                 <div>
-                  <h1 className="text-lg font-semibold text-neutral-900">Search Results</h1>
+                  <h1 className="text-lg font-semibold text-neutral-900">Edit Search</h1>
                 </div>
               </div>
               <div className="flex items-center gap-3">
