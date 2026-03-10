@@ -415,14 +415,15 @@ export const SearchListingCard = ({
               </div>
             )}
 
-            {/* SECTION 4 — Attribution footer */}
-            {(listing.list_office || listing.agent_name) && (
-              <div className="border-t border-border/40 mt-4 pt-2.5">
-                <AttributionRow />
-              </div>
-            )}
           </div>
         </div>
+
+        {/* SECTION 4 — Attribution footer (full card width) */}
+        {(listing.list_office || listing.agent_name) && (
+          <div className="border-t border-zinc-200 mx-5 mb-4 pt-2.5">
+            <AttributionRow />
+          </div>
+        )}
       </div>
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
       <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
