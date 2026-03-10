@@ -465,7 +465,11 @@ export const SearchListingCard = ({
         )}
       </div>
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
-      <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
+      <Card className={`md:hidden overflow-hidden transition-shadow cursor-pointer ${
+        isSelected
+          ? "border-primary/40 bg-blue-50/30 ring-1 ring-primary/15 shadow-sm"
+          : "hover:shadow-md hover:border-zinc-300"
+      }`} onClick={handleCardClick}>
         <div className="p-4">
           <div className="flex gap-3">
             <div className="relative flex-shrink-0">
