@@ -205,40 +205,40 @@ export const SearchListingCard = ({
 
   // ── Attribution row (shared between desktop & mobile) ─────────────────
   const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
-    const labelClass = compact ? "text-[11px]" : "text-xs";
-    const valueClass = compact ? "text-[11px] font-medium text-foreground" : "text-xs font-medium text-foreground";
+    const labelClass = compact ? "text-[11px] text-muted-foreground/70" : "text-[11px] text-muted-foreground/70";
+    const valueClass = compact ? "text-[11px] text-foreground" : "text-xs text-foreground";
 
     return (
       <div className={`flex items-start justify-between gap-4 ${compact ? "flex-wrap" : ""}`}>
         {listing.list_office && (
           <div className="min-w-0">
-            <span className={`${labelClass} text-muted-foreground`}>List Office: </span>
+            <span className={labelClass}>List Office: </span>
             <span className={valueClass}>{listing.list_office}</span>
             {listing.list_office_phone && (
-              <span className={`${labelClass} text-muted-foreground ml-2`}>
-                <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.list_office_phone)}
+              <span className={`${labelClass} ml-2`}>
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-60" />{formatPhoneNumber(listing.list_office_phone)}
               </span>
             )}
           </div>
         )}
         {listing.agent_name && (
           <div className="min-w-0 text-right flex-shrink-0">
-            <span className={`${labelClass} text-muted-foreground`}>List Agent: </span>
+            <span className={labelClass}>List Agent: </span>
             <span className={valueClass}>{listing.agent_name}</span>
             {listing.agent_phone && (
-              <span className={`${labelClass} text-muted-foreground ml-2`}>
-                <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.agent_phone)}
+              <span className={`${labelClass} ml-2`}>
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-60" />{formatPhoneNumber(listing.agent_phone)}
               </span>
             )}
             {!compact && listing.agent_email && (
-              <span className={`${labelClass} text-muted-foreground ml-2`}>{listing.agent_email}</span>
+              <span className={`${labelClass} ml-2`}>{listing.agent_email}</span>
             )}
             {listing.agent_id && (
               <button
                 onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                className="ml-2.5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
               >
-                <Mail className="h-3.5 w-3.5" />
+                <Mail className="h-3 w-3" />
                 {!compact && "Contact"}
               </button>
             )}
@@ -252,14 +252,14 @@ export const SearchListingCard = ({
     <>
       {/* ══ DESKTOP (md+) — MLS-style two-column card ═══════════════════ */}
       <Card
-        className="hidden md:block overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        className="hidden md:block overflow-hidden cursor-pointer rounded-2xl border border-border bg-card aac-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] transition-all duration-200"
         onClick={handleCardClick}
       >
-        <div className="flex items-start p-4 gap-5">
+        <div className="flex items-start p-5 gap-5">
           {/* ── LEFT COLUMN: Photo + Utility strip ──────────────────────── */}
           <div className="flex-shrink-0 w-64">
             {/* A. Photo */}
-            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-muted">
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
@@ -273,21 +273,21 @@ export const SearchListingCard = ({
                 <img src={photoUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Home className="w-10 h-10 text-muted-foreground" />
+                  <Home className="w-10 h-10 text-muted-foreground/50" />
                 </div>
               )}
             </div>
 
             {/* B. Utility icon strip under photo */}
-            <div className="flex items-center gap-3 mt-2 px-0.5">
+            <div className="flex items-center gap-3 mt-2.5 px-0.5">
               {photoCount > 0 && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Camera className="h-3.5 w-3.5" /> {photoCount}
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Camera className="h-3.5 w-3.5 text-primary/60" /> {photoCount}
                 </span>
               )}
               {docCount > 0 && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <FileText className="h-3.5 w-3.5" /> {docCount}
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <FileText className="h-3.5 w-3.5 text-primary/60" /> {docCount}
                 </span>
               )}
               {listing.virtual_tour_url && (
@@ -296,7 +296,7 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                  className="flex items-center gap-1 text-[11px] text-primary font-medium hover:text-primary/80 transition-colors"
                 >
                   <Video className="h-3.5 w-3.5" /> Tour
                 </a>
@@ -307,7 +307,7 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                  className="flex items-center gap-1 text-[11px] text-primary font-medium hover:text-primary/80 transition-colors"
                 >
                   <Video className="h-3.5 w-3.5" /> Video
                 </a>
@@ -322,22 +322,20 @@ export const SearchListingCard = ({
             <div className="flex items-start gap-4">
               {/* Left: ID + Address */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-xs mb-0.5">
-                  {listing.listing_number && (
-                    <a
-                      href={`/property/${listing.id}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        navigate(`/property/${listing.id}`, { state: { from: fromPath } });
-                      }}
-                      className="text-primary font-semibold hover:underline"
-                    >
-                      L-{listing.listing_number}
-                    </a>
-                  )}
-                </div>
-                <h3 className="text-base font-semibold text-foreground leading-tight">
+                {listing.listing_number && (
+                  <a
+                    href={`/property/${listing.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(`/property/${listing.id}`, { state: { from: fromPath } });
+                    }}
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    L-{listing.listing_number}
+                  </a>
+                )}
+                <h3 className="text-xl font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
@@ -348,36 +346,39 @@ export const SearchListingCard = ({
                     {listing.address}
                   </a>
                   {unitNumber && (
-                    <Badge variant="secondary" className="ml-2 text-xs align-middle">
+                    <Badge variant="secondary" className="ml-2 text-[11px] align-middle font-normal">
                       Unit {unitNumber}
                     </Badge>
                   )}
                 </h3>
-                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
-                  {listing.city}, {listing.state} {listing.zip_code}
+                <div className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                  <MapPin className="w-3 h-3 text-primary/70 flex-shrink-0" />
+                  <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
-                    <span className="text-muted-foreground ml-1">· {listing.neighborhood}</span>
+                    <>
+                      <span className="text-border">·</span>
+                      <span>{listing.neighborhood}</span>
+                    </>
                   )}
                 </div>
               </div>
 
               {/* Middle: Status + DOM + $/sqft */}
-              <div className="flex-shrink-0 flex flex-col items-center gap-1 text-center min-w-[100px]">
+              <div className="flex-shrink-0 flex flex-col items-center gap-1.5 text-center min-w-[100px]">
                 <ListingStatusBadge status={listing.status} size="lg" />
                 {daysOnMarket > 0 && (
-                  <span className="text-xs text-muted-foreground">{daysOnMarket} DOM</span>
+                  <span className="text-[11px] text-muted-foreground">{daysOnMarket} DOM</span>
                 )}
                 {pricePerSqFt && (
-                  <span className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</span>
+                  <span className="text-[11px] text-muted-foreground">${pricePerSqFt}/sqft</span>
                 )}
               </div>
 
               {/* Right: Price + List Date */}
               <div className="flex-shrink-0 text-right min-w-[120px]">
-                <div className="text-lg font-bold text-primary">{displayPrice}</div>
+                <div className="text-xl font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
                 {listing.list_date && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
+                  <div className="text-[11px] text-muted-foreground mt-1">
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
                 )}
@@ -386,10 +387,10 @@ export const SearchListingCard = ({
 
             {/* SECTION 2 — Structured facts grid */}
             {facts.length > 0 && (
-              <div className="grid grid-cols-4 gap-x-6 gap-y-1 mt-3 pt-3 border-t border-border">
+              <div className="grid grid-cols-4 gap-x-8 gap-y-1.5 mt-4 pt-3.5 border-t border-border/60">
                 {facts.map((f) => (
                   <div key={f.label} className="text-xs">
-                    <span className="text-muted-foreground">{f.label}: </span>
+                    <span className="text-muted-foreground">{f.label}:</span>{" "}
                     <span className="font-medium text-foreground">{f.value}</span>
                   </div>
                 ))}
@@ -398,16 +399,16 @@ export const SearchListingCard = ({
 
             {/* SECTION 3 — Remarks preview */}
             {listing.description && (
-              <div className="mt-2.5 text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+              <div className="mt-3 text-sm leading-6 text-muted-foreground line-clamp-3">
                 {listing.description}
               </div>
             )}
 
             {/* Open house banner */}
             {nextOpenHouse && (
-              <div className="mt-2.5 flex items-center gap-1.5 text-xs p-2 rounded-md bg-emerald-50 border border-emerald-200">
-                <Calendar className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-emerald-700 font-medium">
+              <div className="mt-3 flex items-center gap-1.5 text-xs py-2 px-3 rounded-lg bg-accent-soft border border-accent-muted">
+                <Calendar className="h-3.5 w-3.5 text-accent" />
+                <span className="text-accent font-medium">
                   Open House: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
                 </span>
               </div>
@@ -415,7 +416,7 @@ export const SearchListingCard = ({
 
             {/* SECTION 4 — Attribution footer */}
             {(listing.list_office || listing.agent_name) && (
-              <div className="border-t border-border mt-3 pt-2.5">
+              <div className="border-t border-border/60 mt-4 pt-2.5">
                 <AttributionRow />
               </div>
             )}
