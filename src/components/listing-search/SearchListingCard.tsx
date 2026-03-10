@@ -365,7 +365,7 @@ export const SearchListingCard = ({
 
               {/* CENTER: Status */}
               <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                <span className="text-sm text-muted-foreground">Status:</span>
+                <span className="text-xs text-muted-foreground">Status:</span>
                 <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
