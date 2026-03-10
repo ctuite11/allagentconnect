@@ -340,19 +340,27 @@ export const SearchListingCard = ({
           {/* C. Info row — listing number + property type */}
           <div className="flex items-center text-xs text-muted-foreground">
             {listing.listing_number && (
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-                className="hover:text-primary/80 font-medium transition-colors"
+              <a
+                href={`/property/${listing.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/property/${listing.id}`, { state: { from: fromPath } });
+                }}
+                className="text-primary font-medium hover:underline"
               >
-                <span className="text-muted-foreground">Listing #</span>
-                <span className="text-primary">{listing.listing_number}</span>
-              </button>
+                L-{listing.listing_number}
+              </a>
             )}
             {listing.listing_number && listing.property_type && (
-              <span className="mx-1.5">·</span>
+              <span className="text-zinc-400 mx-1.5">•</span>
             )}
             {listing.property_type && (
-              <span>{listing.property_type}</span>
+              <span>
+                {listing.property_type
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (char) => char.toUpperCase())}
+              </span>
             )}
           </div>
 
