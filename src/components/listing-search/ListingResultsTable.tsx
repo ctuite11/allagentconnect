@@ -1,14 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, Eye, EyeOff, Bookmark } from "lucide-react";
+import { FileSpreadsheet, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import { FilterState } from "@/components/listing-search/ListingSearchFilters";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
-import SaveSearchDialog from "@/components/SaveSearchDialog";
+
 import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
 
 
@@ -80,7 +80,7 @@ const ListingResultsTable = ({
   const [sortBy, setSortBy] = useState("date_new");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
-  const [saveSearchDialogOpen, setSaveSearchDialogOpen] = useState(false);
+  
 
   // Filter listings based on selected-only mode
   const displayedListings = showSelectedOnly
@@ -99,27 +99,6 @@ const ListingResultsTable = ({
     setShowSelectedOnly(!showSelectedOnly);
   };
 
-  // Generate search summary for default name
-  const searchSummary = useMemo(() => {
-    const parts: string[] = [];
-    if (filters?.selectedTowns && filters.selectedTowns.length > 0) {
-      parts.push(
-        filters.selectedTowns.slice(0, 2).join(", ") +
-          (filters.selectedTowns.length > 2 ? ` +${filters.selectedTowns.length - 2}` : "")
-      );
-    } else if (filters?.state) {
-      parts.push(filters.state);
-    }
-    if (filters?.bedsMin) parts.push(`${filters.bedsMin}+ Beds`);
-    if (filters?.priceMin || filters?.priceMax) {
-      const min = filters.priceMin ? `$${Math.round(parseInt(filters.priceMin) / 1000)}k` : "";
-      const max = filters.priceMax ? `$${Math.round(parseInt(filters.priceMax) / 1000)}k` : "";
-      if (min && max) parts.push(`${min}–${max}`);
-      else if (min) parts.push(`${min}+`);
-      else if (max) parts.push(`Up to ${max}`);
-    }
-    return parts.join(" • ") || `Search ${new Date().toLocaleDateString()}`;
-  }, [filters]);
 
   // Build current search criteria for hot sheet
   const buildHotSheetCriteria = () => ({
@@ -189,24 +168,15 @@ const ListingResultsTable = ({
           >
             {showSelectedOnly ? (
               <>
-                <Eye className="h-4 w-4 mr-1.5" />
+                <Check className="h-4 w-4 mr-1.5 text-[hsl(221,92%,51%)]" />
                 Show All
               </>
             ) : (
               <>
-                <EyeOff className="h-4 w-4 mr-1.5" />
+                <Check className="h-4 w-4 mr-1.5 text-[hsl(221,92%,51%)]" />
                 Keep Selected
               </>
             )}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSaveSearchDialogOpen(true)}
-            className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-zinc-200 text-zinc-700 hover:text-emerald-600 hover:bg-transparent hover:border-zinc-300 transition-colors"
-          >
-            <Bookmark className="h-4 w-4 mr-1.5" />
-            Save Search
           </Button>
           {selectedRows.size > 0 && (
             <BulkShareListingsDialog
@@ -228,7 +198,7 @@ const ListingResultsTable = ({
             }}
             className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-zinc-200 text-zinc-700 hover:text-emerald-600 hover:bg-transparent hover:border-zinc-300 transition-colors"
           >
-            <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+            <FileSpreadsheet className="h-4 w-4 mr-1.5 text-[hsl(221,92%,51%)]" />
             Save as Hot Sheet
           </Button>
 
@@ -267,12 +237,6 @@ const ListingResultsTable = ({
         selectedListingIds={Array.from(selectedRows)}
       />
 
-      {/* Save Search Dialog */}
-      <SaveSearchDialog
-        open={saveSearchDialogOpen}
-        onOpenChange={setSaveSearchDialogOpen}
-        searchSummary={searchSummary}
-      />
 
       {/* MOBILE: Card List (< md) */}
       <div className="md:hidden space-y-3">
