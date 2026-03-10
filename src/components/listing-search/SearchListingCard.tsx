@@ -319,7 +319,7 @@ export const SearchListingCard = ({
           <div className="flex-1 min-w-0">
 
             {/* SECTION 1 — Top scan row: 3 zones */}
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-6">
+            <div className="<div className="grid grid-cols-[1fr_auto_1fr] items-start gap-6">">
               {/* LEFT: ID + Address */}
               <div className="min-w-0">
                 {listing.listing_number && (
