@@ -300,7 +300,7 @@ const ListingSearchResults = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleBackToSearch}
-                  className="p-1.5 -ml-1.5 rounded-md hover:bg-neutral-50 transition-colors text-neutral-400 hover:text-neutral-700"
+                  className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
                   aria-label="Go back"
                 >
                   <ArrowLeft className="h-5 w-5" />
