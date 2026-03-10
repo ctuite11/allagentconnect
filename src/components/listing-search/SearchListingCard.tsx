@@ -568,7 +568,7 @@ export const SearchListingCard = ({
                 onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-primary"
               >
-                <Mail className="h-4 w-4" /> Contact
+                <Mail className="h-4 w-4 text-primary" /> Contact
               </button>
             )}
           </div>
