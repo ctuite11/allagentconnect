@@ -266,12 +266,12 @@ export const SearchListingCard = ({
         </div>
 
         {/* Content column */}
-        <div className="flex-1 p-4 flex flex-col min-w-0">
+        <div className="flex-1 min-w-0 self-start">
           {/* A. Header row: Address / Status / Price */}
           <div className="flex items-start gap-4">
             {/* Address block */}
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-sm">
+            <div className="min-w-0 flex-1 flex flex-col leading-tight space-y-0.5">
+              <h3 className="text-base font-semibold text-zinc-900">
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                   target="_blank"
