@@ -216,7 +216,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.list_office}</span>
             {listing.list_office_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-50" />{formatPhoneNumber(listing.list_office_phone)}
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 text-primary" />{formatPhoneNumber(listing.list_office_phone)}
               </span>
             )}
           </div>
