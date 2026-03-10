@@ -382,13 +382,8 @@ export const SearchListingCard = ({
                     onClick={(e) => e.stopPropagation()}
                     className="hover:text-primary transition-colors"
                   >
-                    {listing.address}
+                    {listing.address}{unitNumber ? `, #${unitNumber}` : ""}
                   </a>
-                  {unitNumber && (
-                    <Badge variant="secondary" className="ml-2 text-[11px] align-middle font-normal">
-                      Unit {unitNumber}
-                    </Badge>
-                  )}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                   <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
