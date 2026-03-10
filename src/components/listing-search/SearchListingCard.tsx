@@ -250,9 +250,9 @@ export const SearchListingCard = ({
           )}
 
           {photoUrl ? (
-            <img src={photoUrl} alt="" className="h-full w-full object-cover rounded-lg" />
+            <img src={photoUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted rounded-lg">
+            <div className="flex h-full w-full items-center justify-center bg-muted">
               <Home className="w-8 h-8 text-muted-foreground" />
             </div>
           )}
