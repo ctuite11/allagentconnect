@@ -266,7 +266,7 @@ export const SearchListingCard = ({
       <div
         className={`hidden md:block overflow-hidden cursor-pointer rounded-2xl border bg-card will-change-transform transition-all duration-200 aac-shadow ${
           isSelected
-            ? "border-primary/40 bg-blue-50/30 ring-1 ring-primary/15 shadow-sm"
+            ? "border-primary/40 ring-1 ring-primary/20 shadow-sm"
             : "border-border hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-zinc-300 hover:-translate-y-[1px]"
         }`}
         onClick={handleCardClick}
