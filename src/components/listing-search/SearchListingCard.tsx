@@ -205,8 +205,8 @@ export const SearchListingCard = ({
 
   // ── Attribution row (shared between desktop & mobile) ─────────────────
   const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
-    const labelClass = "text-[11px] text-muted-foreground/60 font-normal";
-    const valueClass = compact ? "text-[11px] text-foreground/80" : "text-xs text-foreground/80 font-medium";
+    const labelClass = compact ? "text-[11px] text-zinc-500 font-normal" : "text-xs text-zinc-500 font-normal";
+    const valueClass = compact ? "text-[11px] text-zinc-700" : "text-xs text-zinc-700 font-medium";
 
     return (
       <div className={`flex items-start justify-between gap-4 ${compact ? "flex-wrap" : ""}`}>
@@ -318,7 +318,7 @@ export const SearchListingCard = ({
           {/* ── RIGHT COLUMN: Listing content ───────────────────────────── */}
           <div className="flex-1 min-w-0">
 
-            {/* SECTION 1 — Top scan row */}
+            {/* SECTION 1 — Top scan row: 3 zones */}
             <div className="flex items-start gap-4">
               {/* Left: ID + Address */}
               <div className="min-w-0 flex-1">
@@ -330,12 +330,12 @@ export const SearchListingCard = ({
                       e.stopPropagation();
                       navigate(`/property/${listing.id}`, { state: { from: fromPath } });
                     }}
-                    className="text-sm font-semibold text-primary hover:text-primary/80 hover:underline underline-offset-2 transition-colors"
+                    className="text-xs font-semibold text-primary hover:text-primary/80 hover:underline underline-offset-2 transition-colors"
                   >
                     L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
                 )}
-                <h3 className="text-xl font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
+                <h3 className="text-base font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
@@ -351,7 +351,7 @@ export const SearchListingCard = ({
                     </Badge>
                   )}
                 </h3>
-                <div className="text-sm text-muted-foreground/80 flex items-center gap-1.5 mt-1">
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
                   <MapPin className="w-3 h-3 text-primary/60 flex-shrink-0" />
                   <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
@@ -363,27 +363,25 @@ export const SearchListingCard = ({
                 </div>
               </div>
 
-              {/* Middle: Status + DOM + $/sqft */}
-              <div className="flex-shrink-0 flex flex-col items-center gap-1.5 text-center min-w-[100px]">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground/70">Status:</span>
-                  <ListingStatusBadge status={listing.status} size="sm" />
-                </div>
-                {daysOnMarket > 0 && (
-                  <span className="text-[11px] text-muted-foreground/70">{daysOnMarket} DOM</span>
-                )}
-                {pricePerSqFt && (
-                  <span className="text-[11px] text-muted-foreground/70">${pricePerSqFt}/sqft</span>
-                )}
+              {/* Center: Status only */}
+              <div className="flex-shrink-0 flex items-center justify-center gap-1.5 min-w-[100px] pt-1">
+                <span className="text-xs text-zinc-700">Status:</span>
+                <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
-              {/* Right: Price + List Date */}
-              <div className="flex-shrink-0 text-right min-w-[120px]">
+              {/* Right: Price + $/sqft + Listed + DOM */}
+              <div className="flex-shrink-0 text-right min-w-[130px]">
                 <div className="text-xl font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
+                {pricePerSqFt && (
+                  <div className="text-xs text-zinc-700 mt-0.5">${pricePerSqFt}/sqft</div>
+                )}
                 {listing.list_date && (
-                  <div className="text-[11px] text-muted-foreground/60 mt-1">
+                  <div className="text-xs text-zinc-700 mt-0.5">
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
+                )}
+                {daysOnMarket > 0 && (
+                  <div className="text-xs text-zinc-700 mt-0.5">{daysOnMarket} DOM</div>
                 )}
               </div>
             </div>
@@ -393,7 +391,7 @@ export const SearchListingCard = ({
               <div className="grid grid-cols-4 gap-x-8 gap-y-2 mt-4 pt-3.5 border-t border-border/40">
                 {facts.map((f) => (
                   <div key={f.label} className="text-xs">
-                    <span className="text-muted-foreground/70">{f.label}:</span>{" "}
+                    <span className="text-zinc-500">{f.label}:</span>{" "}
                     <span className="font-medium text-foreground">{f.value}</span>
                   </div>
                 ))}
@@ -417,14 +415,15 @@ export const SearchListingCard = ({
               </div>
             )}
 
-            {/* SECTION 4 — Attribution footer */}
-            {(listing.list_office || listing.agent_name) && (
-              <div className="border-t border-border/40 mt-4 pt-2.5">
-                <AttributionRow />
-              </div>
-            )}
           </div>
         </div>
+
+        {/* SECTION 4 — Attribution footer (full card width) */}
+        {(listing.list_office || listing.agent_name) && (
+          <div className="border-t border-zinc-200 mx-5 mb-4 pt-2.5">
+            <AttributionRow />
+          </div>
+        )}
       </div>
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
       <Card className="md:hidden overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
