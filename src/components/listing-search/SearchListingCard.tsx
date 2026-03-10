@@ -16,7 +16,7 @@ import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
   MapPin, Bed, Bath, Home, Calendar,
   Check, Mail, ExternalLink,
-  Phone,
+  Phone, Pin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
