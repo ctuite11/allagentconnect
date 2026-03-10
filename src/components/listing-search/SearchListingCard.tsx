@@ -233,11 +233,12 @@ export const SearchListingCard = ({
     <>
       {/* ══ DESKTOP (md+) — custom MLS-style card ═══════════════════════ */}
       <Card
-        className="hidden md:flex overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        className="hidden md:block overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-3"
         onClick={handleCardClick}
       >
+        <div className="flex items-start gap-4">
         {/* Photo column */}
-        <div className="relative flex-shrink-0 w-52 p-3">
+        <div className="relative w-44 aspect-[4/3] flex-shrink-0 overflow-hidden rounded-lg">
           {onSelect && (
             <button
               onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
