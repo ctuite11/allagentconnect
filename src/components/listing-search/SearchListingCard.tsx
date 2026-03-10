@@ -227,7 +227,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.agent_name}</span>
             {listing.agent_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-50" />{formatPhoneNumber(listing.agent_phone)}
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 text-primary" />{formatPhoneNumber(listing.agent_phone)}
               </span>
             )}
             {!compact && listing.agent_email && (
