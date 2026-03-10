@@ -99,27 +99,6 @@ const ListingResultsTable = ({
     setShowSelectedOnly(!showSelectedOnly);
   };
 
-  // Generate search summary for default name
-  const searchSummary = useMemo(() => {
-    const parts: string[] = [];
-    if (filters?.selectedTowns && filters.selectedTowns.length > 0) {
-      parts.push(
-        filters.selectedTowns.slice(0, 2).join(", ") +
-          (filters.selectedTowns.length > 2 ? ` +${filters.selectedTowns.length - 2}` : "")
-      );
-    } else if (filters?.state) {
-      parts.push(filters.state);
-    }
-    if (filters?.bedsMin) parts.push(`${filters.bedsMin}+ Beds`);
-    if (filters?.priceMin || filters?.priceMax) {
-      const min = filters.priceMin ? `$${Math.round(parseInt(filters.priceMin) / 1000)}k` : "";
-      const max = filters.priceMax ? `$${Math.round(parseInt(filters.priceMax) / 1000)}k` : "";
-      if (min && max) parts.push(`${min}–${max}`);
-      else if (min) parts.push(`${min}+`);
-      else if (max) parts.push(`Up to ${max}`);
-    }
-    return parts.join(" • ") || `Search ${new Date().toLocaleDateString()}`;
-  }, [filters]);
 
   // Build current search criteria for hot sheet
   const buildHotSheetCriteria = () => ({
