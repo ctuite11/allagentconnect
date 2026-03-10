@@ -341,7 +341,7 @@ export const SearchListingCard = ({
           </div>
 
           {/* C. Stats row */}
-          <div className="flex items-center gap-4 text-sm text-foreground mt-2">
+          <div className="flex items-center gap-4 text-sm text-foreground mt-1">
             <span className="flex items-center gap-1">
               <Bed className="h-4 w-4 text-primary" /> {listing.bedrooms ?? "-"} Beds
             </span>
