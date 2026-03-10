@@ -332,7 +332,7 @@ export const SearchListingCard = ({
                     }}
                     className="text-sm font-semibold text-primary hover:text-primary/80 hover:underline underline-offset-2 transition-colors"
                   >
-                    L-{listing.listing_number}
+                    L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
                 )}
                 <h3 className="text-xl font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
