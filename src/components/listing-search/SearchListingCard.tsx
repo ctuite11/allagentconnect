@@ -339,7 +339,7 @@ export const SearchListingCard = ({
           </div>
 
           {/* C. Info row — listing number + property type */}
-          <div className="flex items-center text-xs text-muted-foreground">
+          <div className="flex items-center text-xs text-muted-foreground mt-1">
             {listing.listing_number && (
               <a
                 href={`/property/${listing.id}`}
