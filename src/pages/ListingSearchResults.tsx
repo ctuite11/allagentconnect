@@ -207,7 +207,7 @@ const ListingSearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white pt-20">
+    <div className="min-h-screen flex flex-col bg-white">
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto">
           {/* ── Unified Sticky Command Bar ──────────────────────────────── */}
