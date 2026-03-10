@@ -82,17 +82,26 @@ interface SearchListingCardProps {
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(price);
 
-const getFirstPhoto = (listing: SearchListing) => {
-  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-    const photo = listing.photos[0];
-    if (typeof photo === "string") return photo;
-    if (photo?.url) {
-      if (photo.url.startsWith("http")) return photo.url;
-      const { data } = supabase.storage.from("listing-photos").getPublicUrl(photo.url);
-      return data.publicUrl;
-    }
+const resolvePhotoUrl = (photo: any): string | null => {
+  if (typeof photo === "string") return photo;
+  if (photo?.url) {
+    if (photo.url.startsWith("http")) return photo.url;
+    const { data } = supabase.storage.from("listing-photos").getPublicUrl(photo.url);
+    return data.publicUrl;
   }
   return null;
+};
+
+const getFirstPhoto = (listing: SearchListing) => {
+  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+    return resolvePhotoUrl(listing.photos[0]);
+  }
+  return null;
+};
+
+const getAllPhotos = (listing: SearchListing): string[] => {
+  if (!listing.photos || !Array.isArray(listing.photos)) return [];
+  return listing.photos.map(resolvePhotoUrl).filter((u): u is string => u !== null);
 };
 
 const formatTime = (time: string): string => {
