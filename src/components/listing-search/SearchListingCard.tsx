@@ -391,7 +391,7 @@ export const SearchListingCard = ({
               <div className="grid grid-cols-4 gap-x-8 gap-y-2 mt-4 pt-3.5 border-t border-border/40">
                 {facts.map((f) => (
                   <div key={f.label} className="text-xs">
-                    <span className="text-muted-foreground/70">{f.label}:</span>{" "}
+                    <span className="text-zinc-500">{f.label}:</span>{" "}
                     <span className="font-medium text-foreground">{f.value}</span>
                   </div>
                 ))}
