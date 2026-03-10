@@ -216,7 +216,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.list_office}</span>
             {listing.list_office_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-50" />{formatPhoneNumber(listing.list_office_phone)}
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 text-primary" />{formatPhoneNumber(listing.list_office_phone)}
               </span>
             )}
           </div>
@@ -227,7 +227,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.agent_name}</span>
             {listing.agent_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-50" />{formatPhoneNumber(listing.agent_phone)}
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 text-primary" />{formatPhoneNumber(listing.agent_phone)}
               </span>
             )}
             {!compact && listing.agent_email && (
@@ -319,7 +319,7 @@ export const SearchListingCard = ({
           <div className="flex-1 min-w-0">
 
             {/* SECTION 1 — Top scan row: 3 zones */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
               {/* Left: ID + Address */}
               <div className="min-w-0 flex-1">
                 {listing.listing_number && (
