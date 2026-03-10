@@ -335,7 +335,7 @@ export const SearchListingCard = ({
                     L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
                 )}
-                <h3 className="text-xl font-semibold tracking-[-0.01em] text-foreground leading-tight mt-1">
+                <h3 className="text-sm font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
