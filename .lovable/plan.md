@@ -1,53 +1,76 @@
+## Completed Changes
 
+### 1. Add Expired to My Listings filters
+- Added `"expired"` to `PIPELINE_STATUSES` and `ListingStatus` type in `MyListings.tsx`
+- Expired now appears in filter tabs and is searchable
 
-## Rebuild Home (/home) to Match Figma Design
+### 2. "Save Changes" → "Publish" for draft edits
+- `AddListing.tsx`: Both desktop and mobile save buttons now show "Publish" with Upload icon when original status is draft and current status is non-draft; "Save Draft" when status remains draft
+- `EditListing.tsx`: Same logic applied to save button label
 
-This is a full-page rebuild of `src/pages/Home.tsx` to match the uploaded Figma design. The design has ~10 distinct sections with a mix of dark and light backgrounds, hero photography, platform screenshots, and a full footer.
+### 3. Price range display for Coming Soon / Off Market
+- `ListingCard.tsx`: Added `price_range_min` / `price_range_max` to interface; `displayPrice` falls back to range when price is 0/null
+- `PropertyDetail.tsx`: Added range fields to interface; price display falls back to range
 
-### Design Sections Identified from Figma
+### 4. Relabel "Private" → "Off Market"
+- `status.ts`: All 6 instances of "Private", "Off-Market", "Off-Market (Private)" normalized to "Off Market"
+- `MyListings.tsx`: Removed hardcoded "Private" override, now uses centralized label
 
-1. **Header** — Dark transparent nav with logo, nav links (For Agents, Marketplace, Features, Agents, Pricing), green "Get Access" CTA, Login link
-2. **Hero** — Dark background, large agent photo left-aligned, headline "A private agent network for PRE-MLS intelligence.", green CTA
-3. **Network Intelligence** — Light section, pill badge, headline "Operate on network intelligence, not the public feed", platform screenshot mockup
-4. **Agent Photos Row** — 4 agent headshots with names, one highlighted in green
-5. **Results Hub** — "Turning network intelligence into real results" with icon nodes around central AAC globe
-6. **Agent Testimonials** — "How agents are using All Agent Connect" with 3 photo cards
-7. **Dark Feature Cards** — Marketplace tools section with dark background
-8. **Scale & Persistence** — "Deliberately designed for scale and persistence" with dark screenshot and feature bullets
-9. **GCI Section** — Dark bg, "GCI driven by better information and faster connections", 6 value-prop icons, green CTA
-10. **Final CTA** — "See the Market Before it Happens" with green button
-11. **Footer** — Full multi-column footer with links
+### 5. Auto-revert Back on Market → Active after 48 hours
+- `supabase/functions/update-listing-statuses/index.ts`: Added Part 4 logic
+- Queries listings with `status = 'back_on_market'`
+- Finds latest `listing_status_history` row where `new_status = 'back_on_market'`
+- If `created_at` is older than 48 hours, reverts to `active` with `.eq('status', 'back_on_market')` guard
+- Logs transition in `listing_status_history` with system note
+- Response payload includes `back_on_market_reverted` with count and IDs
+- No migration needed; UI badge in ListingCard is history-driven (14-day window) and unaffected
 
-### Implementation Approach
+### 6. Status-aware Hot Sheet alerts for Back on Market → Active
+- **`hot_sheet_sent_listings`**: Added `status_at_send text NOT NULL` column; backfilled from listings; replaced unique index `(hot_sheet_id, listing_id)` → `(hot_sheet_id, listing_id, status_at_send)` — allows same listing to be sent under different statuses
+- **`check_hot_sheet_matches`**: Added `back_on_market` to default pipeline statuses; added status-criteria matching (respects `criteria->'statuses'` when set); dedup now checks `status_at_send = l.status`
+- **`notify_matching_buyers_on_new_listing` trigger**: Changed from `AFTER INSERT` to `AFTER INSERT OR UPDATE`; fires for `active` and `back_on_market`; guards against unchanged status on UPDATE
+- **`process-hot-sheet/index.ts`**: Added `back_on_market` to default status filter; writes `status_at_send` when recording sent listings
+- **`send-new-match-notification/index.ts`**: Fetches listing statuses and writes `status_at_send` on upsert; updated onConflict to include `status_at_send`
 
-**Phase 1 — Structure & text-only sections** (this pass)
-- Rebuild `src/pages/Home.tsx` with all 11 sections
-- Use placeholder divs for hero photo, platform screenshots, and agent photos (these need real assets)
-- Match typography, spacing, dark/light section alternation, and green CTA color from Figma
-- Keep existing navigation logic (Login → `/auth`, Get Access → `/auth?mode=register`)
+### 7. Duplicate Listing Detection
+- **`src/lib/checkDuplicateListing.ts`** (new): Reusable helper that queries `listings` for matching normalized address+city+state+zip in blocking statuses (`active`, `new`, `coming_soon`, `off_market`, `back_on_market`, `price_changed`, `extended`, `reactivated`, `under_agreement`, `pending`, `contingent`). Normalizes via trim + lowercase + collapse spaces. Excludes self via `excludeListingId` param for edit mode. `isLiveStatus()` helper determines when to run the check.
+- **`AddListing.tsx`**: Duplicate check wired into both `handleSaveChanges` (after validation, before file uploads) and `handleSubmit` (after Zod validation, before file uploads). Only runs when target status is a live/published status. Excludes `listingId || draftId` in edit mode.
+- **`AddRentalListing.tsx`**: Same duplicate check wired into `handleSubmit` after Zod validation, before file uploads. Only runs for live statuses.
 
-**Phase 2 — Assets** (separate pass, needs your input)
-- Hero agent photo
-- Platform screenshot mockups
-- Agent headshot photos
-- Any other imagery from Figma
+### 8. Database-Level Duplicate Listing Protection
+- Added `address_normalized` column to `listings` table
+- Created `BEFORE INSERT OR UPDATE` trigger to auto-populate via `lower(trim(regexp_replace(...)))`
+- Created partial unique index `listings_unique_live_address` on `(address_normalized, city, state, zip_code)` for live statuses only
+- Backfilled all existing rows
 
-### Key Design Decisions
+### 9. Stronger Address Normalization (MLS-Grade)
+- **`normalize_listing_address_text(input text)`** (new SQL function): Deterministic normalization with street suffix mapping (street→st, avenue→ave, etc.), unit marker normalization (apt/suite/#→unit), punctuation stripping, word-boundary-aware regex (`\y`), NULL/empty safety
+- **`normalize_listing_address()` trigger**: Updated to call `normalize_listing_address_text()` instead of inline logic
+- **Backfill**: All existing `address_normalized` values recalculated with stronger normalization
+- No frontend or index changes
 
-- **Green CTAs**: The Figma uses emerald/green for primary CTAs (not black or blue) — this is a departure from the current Home page. Will implement as shown in Figma.
-- **Dark sections**: Multiple sections use dark backgrounds (hero, feature cards, GCI section) — matches the Figma's contrast pattern.
-- **No globe animation**: The current NetworkGlobe component stays available but the Figma shows a static globe icon in the results hub section.
-- **Footer**: Full footer with link columns replaces the current minimal footer.
+### 10. AppShell + Sidebar Navigation (Phase 1)
+- Created `src/components/layout/AppShell.tsx` with collapsible sidebar + compact header
+- Created `src/components/layout/SidebarNavigation.tsx` with grouped nav links
+- Wrapped all authenticated agent/admin routes in `AgentLayout` → `AppShell`
+- Public, auth, consumer, and legal pages remain outside the shell
+- Fixed Navigation.tsx prefix-based hiding to use specific sub-paths (not broad `/agent/`)
 
-### Files Modified
+### 11. ListingCardShell — Canonical Horizontal Card (Phase 2)
+- Created `src/components/ListingCardShell.tsx` as single visual source of truth for desktop list-view listing cards
+- Refactored `ListingCard.tsx` to use shell for `list` viewMode
+- Refactored `SearchListingCard.tsx` to use shell for desktop view
+- Deleted `ListingResultCard.tsx` (537 lines, zero external imports — confirmed dead code)
 
-- `src/pages/Home.tsx` — full rewrite to match Figma layout
+#### Listing Surface Classification
+| Surface | Component | Card Class |
+|---|---|---|
+| My Listings | ListingCard (list mode) | canonical horizontal via shell |
+| Listing Search / Results | SearchListingCard → shell | canonical horizontal via shell |
+| Agent Dashboard | ListingCard (list mode) | canonical horizontal via shell |
+| Hot Sheet Review | ListingCard (list mode) | canonical horizontal via shell |
+| Browse Properties | ListingCard (compact/grid) | intentional grid card |
+| Search Results (consumer) | ListingCard (compact/grid) | intentional grid card |
+| IDX Search | IDXListingCard | IDX-specific separate system |
 
-### What I Need From You
-
-Before or after Phase 1, you'll need to provide:
-1. The hero agent photo (or confirm using a placeholder)
-2. Platform screenshot images for the mockup sections
-3. Agent headshot photos (or confirm using placeholders)
-4. Exact nav link destinations (For Agents, Marketplace, Features, Agents, Pricing)
-
+Rule: ListingCardShell is the single source of truth for all desktop horizontal listing cards. Grid mode and IDX remain intentionally separate.
