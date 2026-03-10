@@ -13,10 +13,12 @@ import {
   Plus,
   Building2,
   Heart,
+  LogOut,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { Logo } from "@/components/brand";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +29,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -126,6 +129,15 @@ export function SidebarNavigation() {
   const currentPath = location.pathname;
   const { unreadCount } = useUnreadConversations();
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   // Messages injected into client group
   const clientItemsWithMessages: NavItem[] = [
     ...clientItems,
@@ -135,18 +147,34 @@ export function SidebarNavigation() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border bg-background">
       <SidebarContent className="pt-2">
+        {/* Sidebar trigger + logo row */}
+        <div className={cn("flex items-center gap-2 px-3 pb-2", collapsed && "justify-center")}>
+          <SidebarTrigger className="h-8 w-8 shrink-0" />
+          {!collapsed && (
+            <div onClick={() => navigate("/")} className="cursor-pointer">
+              <Logo size="sm" />
+            </div>
+          )}
+        </div>
+
         <SidebarGroupSection label="Dashboard" items={dashboardItems} currentPath={currentPath} collapsed={collapsed} onNavigate={navigate} />
         <SidebarGroupSection label="Listings" items={listingItems} currentPath={currentPath} collapsed={collapsed} onNavigate={navigate} />
         <SidebarGroupSection label="Clients" items={clientItemsWithMessages} currentPath={currentPath} collapsed={collapsed} onNavigate={navigate} unreadCount={unreadCount} />
         <SidebarGroupSection label="Insights" items={insightItems} currentPath={currentPath} collapsed={collapsed} onNavigate={navigate} />
         <SidebarGroupSection label="Settings" items={settingsItems} currentPath={currentPath} collapsed={collapsed} onNavigate={navigate} />
       </SidebarContent>
-      <SidebarFooter className="p-3">
-        {!collapsed && (
-          <div className="flex items-center justify-center opacity-40">
-            <Logo size="sm" />
-          </div>
-        )}
+
+      <SidebarFooter className="mt-auto border-t border-zinc-200 p-3">
+        <button
+          onClick={handleLogout}
+          className={cn(
+            "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors w-full",
+            collapsed && "justify-center px-0"
+          )}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Sign Out</span>}
+        </button>
       </SidebarFooter>
     </Sidebar>
   );
