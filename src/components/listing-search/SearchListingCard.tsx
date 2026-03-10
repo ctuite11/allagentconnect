@@ -279,10 +279,14 @@ export const SearchListingCard = ({
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-                  className="absolute left-2.5 top-2.5 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
+                  className={`absolute left-2.5 top-2.5 z-10 h-5 w-5 rounded border shadow-sm flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? "bg-primary border-primary"
+                      : "bg-white border-zinc-300"
+                  }`}
                   aria-label="Select listing"
                 >
-                  {isSelected && <Check className="h-3 w-3 text-accent" />}
+                  {isSelected && <Check className="h-3 w-3 text-white" />}
                 </button>
               )}
               {allPhotos.length > 0 ? (
