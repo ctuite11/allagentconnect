@@ -258,12 +258,6 @@ const ListingResultsTable = ({
         selectedListingIds={Array.from(selectedRows)}
       />
 
-      {/* Save Search Dialog */}
-      <SaveSearchDialog
-        open={saveSearchDialogOpen}
-        onOpenChange={setSaveSearchDialogOpen}
-        searchSummary={searchSummary}
-      />
 
       {/* MOBILE: Card List (< md) */}
       <div className="md:hidden space-y-3">
