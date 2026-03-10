@@ -291,9 +291,12 @@ export const SearchListingCard = ({
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
               {listing.neighborhood && (
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <MapPin className="w-3 h-3 mr-1 text-red-400" fill="currentColor" />
-                  {listing.neighborhood}
+              <div className="flex items-center text-xs text-muted-foreground">
+                <svg className="w-3 h-3 mr-1 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="8" r="7" fill="#f87171" />
+                  <line x1="12" y1="15" x2="12" y2="24" stroke="#f87171" strokeWidth="2.5" />
+                </svg>
+                {listing.neighborhood}
                 </div>
               )}
             </div>
