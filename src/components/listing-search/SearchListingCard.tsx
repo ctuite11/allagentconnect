@@ -323,7 +323,7 @@ export const SearchListingCard = ({
           </div>
 
           {/* B. Info row — tighter spacing with dot separator */}
-          <div className="flex items-center text-xs text-muted-foreground mt-0.5">
+          <div className="flex items-center text-xs text-muted-foreground">
             {listing.listing_number && (
               <button
                 onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
