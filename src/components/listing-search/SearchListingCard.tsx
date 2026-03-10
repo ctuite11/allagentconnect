@@ -288,11 +288,14 @@ export const SearchListingCard = ({
                 )}
               </h3>
               <div className="flex items-center text-muted-foreground text-xs mt-0.5">
-                <MapPin className="w-3 h-3 mr-1" />
+                <MapPin className="w-3 h-3 mr-1 text-primary" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
               {listing.neighborhood && (
-                <div className="text-xs text-muted-foreground mt-0.5">{listing.neighborhood}</div>
+                <div className="flex items-center text-xs text-muted-foreground mt-0.5">
+                  <MapPin className="w-3 h-3 mr-1 text-red-500" />
+                  {listing.neighborhood}
+                </div>
               )}
             </div>
 
