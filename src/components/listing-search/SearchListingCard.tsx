@@ -307,9 +307,9 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-[11px] text-primary/80 font-medium hover:text-primary transition-colors"
-                >
-                  <Video className="h-3.5 w-3.5" /> Video
+                   className="flex items-center gap-1 text-sm text-primary/80 font-medium hover:text-primary transition-colors"
+                 >
+                   <Video className="h-4 w-4" /> Video
                 </a>
               )}
             </div>
