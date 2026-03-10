@@ -189,24 +189,15 @@ const ListingResultsTable = ({
           >
             {showSelectedOnly ? (
               <>
-                <Eye className="h-4 w-4 mr-1.5" />
+                <Check className="h-4 w-4 mr-1.5 text-[hsl(221,92%,51%)]" />
                 Show All
               </>
             ) : (
               <>
-                <EyeOff className="h-4 w-4 mr-1.5" />
+                <Check className="h-4 w-4 mr-1.5 text-[hsl(221,92%,51%)]" />
                 Keep Selected
               </>
             )}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSaveSearchDialogOpen(true)}
-            className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-zinc-200 text-zinc-700 hover:text-emerald-600 hover:bg-transparent hover:border-zinc-300 transition-colors"
-          >
-            <Bookmark className="h-4 w-4 mr-1.5" />
-            Save Search
           </Button>
           {selectedRows.size > 0 && (
             <BulkShareListingsDialog
