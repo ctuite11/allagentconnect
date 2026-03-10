@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, Eye, EyeOff, Bookmark } from "lucide-react";
+import { FileSpreadsheet, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import { FilterState } from "@/components/listing-search/ListingSearchFilters";
