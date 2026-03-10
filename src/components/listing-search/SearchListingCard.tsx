@@ -311,12 +311,14 @@ export const SearchListingCard = ({
               {pricePerSqFt && (
                 <div className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</div>
               )}
-              {listing.list_date && (
-                <div className="text-xs text-muted-foreground">List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
-              )}
-              {daysOnMarket > 0 && (
-                <div className="text-xs text-muted-foreground">DOM: {daysOnMarket}</div>
-              )}
+              <div className="mt-1">
+                {listing.list_date && (
+                  <div className="text-xs text-muted-foreground">List Date: {format(new Date(listing.list_date), "MM/dd/yy")}</div>
+                )}
+                {daysOnMarket > 0 && (
+                  <div className="text-xs text-muted-foreground">DOM: {daysOnMarket}</div>
+                )}
+              </div>
             </div>
           </div>
 
