@@ -281,14 +281,14 @@ export const SearchListingCard = ({
             {/* B. Utility icon strip under photo */}
             <div className="flex items-center gap-3.5 mt-2.5 px-0.5">
               {photoCount > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
-                  <Camera className="h-3.5 w-3.5 text-primary/50" /> {photoCount}
-                </span>
+                 <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
+                   <Camera className="h-4 w-4 text-primary/50" /> {photoCount}
+                 </span>
               )}
               {docCount > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
-                  <FileText className="h-3.5 w-3.5 text-primary/50" /> {docCount}
-                </span>
+                 <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
+                   <FileText className="h-4 w-4 text-primary/50" /> {docCount}
+                 </span>
               )}
               {listing.virtual_tour_url && (
                 <a
@@ -296,9 +296,9 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-[11px] text-primary/80 font-medium hover:text-primary transition-colors"
-                >
-                  <Video className="h-3.5 w-3.5" /> Tour
+                   className="flex items-center gap-1 text-sm text-primary/80 font-medium hover:text-primary transition-colors"
+                 >
+                   <Video className="h-4 w-4" /> Tour
                 </a>
               )}
               {!listing.virtual_tour_url && listing.video_url && (
@@ -307,9 +307,9 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1 text-[11px] text-primary/80 font-medium hover:text-primary transition-colors"
-                >
-                  <Video className="h-3.5 w-3.5" /> Video
+                   className="flex items-center gap-1 text-sm text-primary/80 font-medium hover:text-primary transition-colors"
+                 >
+                   <Video className="h-4 w-4" /> Video
                 </a>
               )}
             </div>
@@ -332,7 +332,7 @@ export const SearchListingCard = ({
                     }}
                     className="text-sm font-semibold text-primary hover:text-primary/80 hover:underline underline-offset-2 transition-colors"
                   >
-                    L-{listing.listing_number}
+                    L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
                 )}
                 <h3 className="text-xl font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
@@ -365,7 +365,10 @@ export const SearchListingCard = ({
 
               {/* Middle: Status + DOM + $/sqft */}
               <div className="flex-shrink-0 flex flex-col items-center gap-1.5 text-center min-w-[100px]">
-                <ListingStatusBadge status={listing.status} size="lg" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground/70">Status:</span>
+                  <ListingStatusBadge status={listing.status} size="sm" />
+                </div>
                 {daysOnMarket > 0 && (
                   <span className="text-[11px] text-muted-foreground/70">{daysOnMarket} DOM</span>
                 )}
