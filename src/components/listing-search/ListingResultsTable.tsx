@@ -219,7 +219,7 @@ const ListingResultsTable = ({
             }}
             className="h-9 px-4 text-sm font-medium rounded-xl bg-white border-zinc-200 text-zinc-700 hover:text-emerald-600 hover:bg-transparent hover:border-zinc-300 transition-colors"
           >
-            <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+            <FileSpreadsheet className="h-4 w-4 mr-1.5 text-[hsl(221,92%,51%)]" />
             Save as Hot Sheet
           </Button>
 
