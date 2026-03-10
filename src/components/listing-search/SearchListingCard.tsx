@@ -281,7 +281,7 @@ export const SearchListingCard = ({
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
                   className={`absolute left-2.5 top-2.5 z-10 h-5 w-5 rounded border shadow-sm flex items-center justify-center transition-colors ${
                     isSelected
-                      ? "bg-primary border-primary"
+                      ? "bg-accent border-accent"
                       : "bg-white border-zinc-300"
                   }`}
                   aria-label="Select listing"
