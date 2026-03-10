@@ -15,6 +15,7 @@ import {
   MapPin, Bed, Bath, Home, Calendar,
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -81,17 +82,26 @@ interface SearchListingCardProps {
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(price);
 
-const getFirstPhoto = (listing: SearchListing) => {
-  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-    const photo = listing.photos[0];
-    if (typeof photo === "string") return photo;
-    if (photo?.url) {
-      if (photo.url.startsWith("http")) return photo.url;
-      const { data } = supabase.storage.from("listing-photos").getPublicUrl(photo.url);
-      return data.publicUrl;
-    }
+const resolvePhotoUrl = (photo: any): string | null => {
+  if (typeof photo === "string") return photo;
+  if (photo?.url) {
+    if (photo.url.startsWith("http")) return photo.url;
+    const { data } = supabase.storage.from("listing-photos").getPublicUrl(photo.url);
+    return data.publicUrl;
   }
   return null;
+};
+
+const getFirstPhoto = (listing: SearchListing) => {
+  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+    return resolvePhotoUrl(listing.photos[0]);
+  }
+  return null;
+};
+
+const getAllPhotos = (listing: SearchListing): string[] => {
+  if (!listing.photos || !Array.isArray(listing.photos)) return [];
+  return listing.photos.map(resolvePhotoUrl).filter((u): u is string => u !== null);
 };
 
 const formatTime = (time: string): string => {
@@ -158,8 +168,10 @@ export const SearchListingCard = ({
 }: SearchListingCardProps) => {
   const navigate = useNavigate();
   const [contactOpen, setContactOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const photoUrl = getFirstPhoto(listing);
+  const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
   const unitNumber = getUnitNumber(listing);
   const daysOnMarket = calculateDaysOnMarket(listing);
@@ -269,12 +281,35 @@ export const SearchListingCard = ({
                   {isSelected && <Check className="h-3 w-3 text-accent" />}
                 </button>
               )}
-              {photoUrl ? (
+              {allPhotos.length > 0 ? (
+                <img src={allPhotos[currentPhotoIndex] || photoUrl!} alt="" className="w-full h-full object-cover" />
+              ) : photoUrl ? (
                 <img src={photoUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <Home className="w-10 h-10 text-muted-foreground/40" />
                 </div>
+              )}
+              {allPhotos.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentPhotoIndex((i) => (i - 1 + allPhotos.length) % allPhotos.length); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentPhotoIndex((i) => (i + 1) % allPhotos.length); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full">
+                    {currentPhotoIndex + 1} / {allPhotos.length}
+                  </div>
+                </>
               )}
             </div>
 
@@ -296,7 +331,7 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                   className="flex items-center gap-1 text-sm text-primary/80 font-medium hover:text-primary transition-colors"
+                   className="flex items-center gap-1 text-sm text-muted-foreground/80 font-medium hover:text-muted-foreground transition-colors"
                  >
                    <Video className="h-4 w-4" /> Tour
                 </a>
@@ -307,7 +342,7 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                   className="flex items-center gap-1 text-sm text-primary/80 font-medium hover:text-primary transition-colors"
+                   className="flex items-center gap-1 text-sm text-muted-foreground/80 font-medium hover:text-muted-foreground transition-colors"
                  >
                    <Video className="h-4 w-4" /> Video
                 </a>
