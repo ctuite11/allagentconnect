@@ -387,7 +387,7 @@ export const SearchListingCard = ({
                   )}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                  <MapPin className="w-3 h-3 text-primary/60 flex-shrink-0" />
+                  <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
                   <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
                     <>
