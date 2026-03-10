@@ -317,12 +317,12 @@ export const SearchListingCard = ({
             <div className="flex items-center gap-3.5 mt-2.5 px-0.5">
               {photoCount > 0 && (
                  <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
-                   <Camera className="h-4 w-4 text-primary/50" /> {photoCount}
+                   <Camera className="h-4 w-4 text-primary" /> {photoCount}
                  </span>
               )}
               {docCount > 0 && (
                  <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
-                   <FileText className="h-4 w-4 text-primary/50" /> {docCount}
+                   <FileText className="h-4 w-4 text-primary" /> {docCount}
                  </span>
               )}
               {listing.virtual_tour_url && (
@@ -387,7 +387,7 @@ export const SearchListingCard = ({
                   )}
                 </h3>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                  <MapPin className="w-3 h-3 text-primary/60 flex-shrink-0" />
+                  <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
                   <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
                     <>
@@ -568,7 +568,7 @@ export const SearchListingCard = ({
                 onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-primary"
               >
-                <Mail className="h-4 w-4" /> Contact
+                <Mail className="h-4 w-4 text-primary" /> Contact
               </button>
             )}
           </div>
