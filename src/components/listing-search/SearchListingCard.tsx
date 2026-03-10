@@ -233,11 +233,12 @@ export const SearchListingCard = ({
     <>
       {/* ══ DESKTOP (md+) — custom MLS-style card ═══════════════════════ */}
       <Card
-        className="hidden md:flex overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        className="hidden md:block overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-3"
         onClick={handleCardClick}
       >
+        <div className="flex items-start gap-4">
         {/* Photo column */}
-        <div className="relative flex-shrink-0 w-52 p-3">
+        <div className="relative w-44 aspect-[4/3] flex-shrink-0 overflow-hidden rounded-lg">
           {onSelect && (
             <button
               onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
@@ -249,9 +250,9 @@ export const SearchListingCard = ({
           )}
 
           {photoUrl ? (
-            <img src={photoUrl} alt="" className="h-full w-full object-cover rounded-lg" />
+            <img src={photoUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted rounded-lg">
+            <div className="flex h-full w-full items-center justify-center bg-muted">
               <Home className="w-8 h-8 text-muted-foreground" />
             </div>
           )}
@@ -265,12 +266,12 @@ export const SearchListingCard = ({
         </div>
 
         {/* Content column */}
-        <div className="flex-1 p-4 flex flex-col min-w-0">
+        <div className="flex-1 min-w-0 self-start">
           {/* A. Header row: Address / Status / Price */}
           <div className="flex items-start gap-4">
             {/* Address block */}
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-sm">
+            <div className="min-w-0 flex-1 flex flex-col leading-tight space-y-0.5">
+              <h3 className="text-base font-semibold text-zinc-900">
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                   target="_blank"
@@ -286,12 +287,12 @@ export const SearchListingCard = ({
                   </Badge>
                 )}
               </h3>
-              <div className="flex items-center text-muted-foreground text-xs mt-0.5">
-                <MapPin className="w-3 h-3 mr-1 text-primary" />
+              <div className="text-sm text-zinc-600 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-primary" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
               {listing.neighborhood && (
-              <div className="flex items-center text-xs text-muted-foreground">
+              <div className="text-xs text-zinc-500 flex items-center gap-1">
                 <svg className="w-3 h-3 mr-1 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="12" cy="8" r="7" fill="#f87171" />
                   <line x1="12" y1="15" x2="12" y2="24" stroke="#f87171" strokeWidth="2.5" />
@@ -324,8 +325,8 @@ export const SearchListingCard = ({
             </div>
           </div>
 
-          {/* B. Stats row — directly below neighborhood */}
-          <div className="flex items-center gap-4 text-sm text-foreground mt-1">
+          {/* B. Stats row */}
+          <div className="flex items-center gap-4 text-sm mt-2">
             <span className="flex items-center gap-1">
               <Bed className="h-4 w-4 text-primary" /> {listing.bedrooms ?? "-"} Beds
             </span>
@@ -338,7 +339,7 @@ export const SearchListingCard = ({
           </div>
 
           {/* C. Info row — listing number + property type */}
-          <div className="flex items-center text-xs text-muted-foreground">
+          <div className="flex items-center text-xs text-muted-foreground mt-1">
             {listing.listing_number && (
               <a
                 href={`/property/${listing.id}`}
@@ -366,7 +367,7 @@ export const SearchListingCard = ({
 
           {/* D. Micro-facts */}
           {microFacts.length > 0 && (
-            <div className="text-xs text-muted-foreground mt-1.5">
+            <div className="text-xs text-zinc-500 mt-1">
               {microFacts.join(" · ")}
             </div>
           )}
@@ -381,15 +382,13 @@ export const SearchListingCard = ({
             </div>
           )}
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
           {/* F. Divider + G. Attribution row */}
           {(listing.list_office || listing.agent_name) && (
-            <div className="border-t border-border pt-2.5 mt-2.5">
+            <div className="border-t border-zinc-200 mt-2 pt-2">
               <AttributionRow />
             </div>
           )}
+        </div>
         </div>
       </Card>
 
