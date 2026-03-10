@@ -381,7 +381,7 @@ export const SearchListingCard = ({
                   </div>
                 )}
                 {daysOnMarket > 0 && (
-                  <div className="text-sm text-muted-foreground mt-0.5">{daysOnMarket} DOM</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{daysOnMarket} DOM</div>
                 )}
               </div>
             </div>
