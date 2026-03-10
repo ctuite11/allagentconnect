@@ -168,8 +168,10 @@ export const SearchListingCard = ({
 }: SearchListingCardProps) => {
   const navigate = useNavigate();
   const [contactOpen, setContactOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const photoUrl = getFirstPhoto(listing);
+  const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
   const unitNumber = getUnitNumber(listing);
   const daysOnMarket = calculateDaysOnMarket(listing);
