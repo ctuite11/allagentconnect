@@ -43,6 +43,16 @@ interface Listing {
   list_office_phone?: string;
   agent_phone?: string;
   agent_email?: string;
+  description?: string | null;
+  num_fireplaces?: number | null;
+  virtual_tour_url?: string | null;
+  video_url?: string | null;
+  documents?: any;
+  floors?: number | null;
+  active_date?: string | null;
+  condo_details?: any;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
 }
 
 interface ListingResultsTableProps {
