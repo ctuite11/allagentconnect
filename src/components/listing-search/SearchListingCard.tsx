@@ -344,7 +344,7 @@ export const SearchListingCard = ({
                   onClick={(e) => e.stopPropagation()}
                    className="flex items-center gap-1 text-sm text-muted-foreground/80 font-medium hover:text-muted-foreground transition-colors"
                  >
-                   <Video className="h-4 w-4" /> Video
+                   <Video className="h-4 w-4 text-primary" /> Video
                 </a>
               )}
             </div>
