@@ -237,11 +237,11 @@ export const SearchListingCard = ({
         onClick={handleCardClick}
       >
         {/* Photo column */}
-        <div className="relative flex-shrink-0 w-52 h-auto min-h-[9rem]">
+        <div className="relative flex-shrink-0 w-52 p-3">
           {onSelect && (
             <button
               onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-              className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
+              className="absolute left-5 top-5 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
               aria-label="Select listing"
             >
               {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
@@ -249,17 +249,16 @@ export const SearchListingCard = ({
           )}
 
           {photoUrl ? (
-            <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+            <img src={photoUrl} alt="" className="h-full w-full object-cover rounded-lg" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted">
+            <div className="flex h-full w-full items-center justify-center bg-muted rounded-lg">
               <Home className="w-8 h-8 text-muted-foreground" />
             </div>
           )}
 
-
           {/* Photo count */}
           {(listing.photos?.length || 0) > 1 && (
-            <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
+            <div className="absolute bottom-4 left-4 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
               {listing.photos?.length}
             </div>
           )}
