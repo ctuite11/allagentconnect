@@ -16,7 +16,7 @@ import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
   MapPin, Bed, Bath, Home, Calendar,
   Check, Mail, ExternalLink,
-  Phone,
+  Phone, Pin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -292,8 +292,8 @@ export const SearchListingCard = ({
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
               {listing.neighborhood && (
-                <div className="flex items-center text-xs text-muted-foreground mt-0.5">
-                  <MapPin className="w-3 h-3 mr-1 text-red-400" />
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Pin className="w-3 h-3 mr-1 text-red-400" fill="currentColor" />
                   {listing.neighborhood}
                 </div>
               )}
@@ -323,7 +323,7 @@ export const SearchListingCard = ({
           </div>
 
           {/* B. Info row — tighter spacing with dot separator */}
-          <div className="flex items-center text-xs text-muted-foreground mt-0.5">
+          <div className="flex items-center text-xs text-muted-foreground">
             {listing.listing_number && (
               <button
                 onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
