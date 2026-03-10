@@ -410,7 +410,7 @@ export const SearchListingCard = ({
 
               {/* RIGHT: Price + details */}
               <div className="text-right">
-                <div className="text-base font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
+                <div className="text-[20px] font-semibold text-primary tracking-tight">{displayPrice}</div>
                 {pricePerSqFt && (
                   <div className="text-xs text-muted-foreground mt-0.5">${pricePerSqFt}/sqft</div>
                 )}
