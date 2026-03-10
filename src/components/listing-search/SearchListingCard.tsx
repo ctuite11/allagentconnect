@@ -330,7 +330,7 @@ export const SearchListingCard = ({
                       e.stopPropagation();
                       navigate(`/property/${listing.id}`, { state: { from: fromPath } });
                     }}
-                    className="text-primary text-sm font-semibold hover:underline underline-offset-2 transition-colors"
+                    className="text-primary text-xs font-semibold hover:underline underline-offset-2 transition-colors"
                   >
                     L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
