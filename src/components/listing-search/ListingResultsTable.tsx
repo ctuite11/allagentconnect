@@ -168,7 +168,7 @@ const ListingResultsTable = ({
   return (
     <div className="space-y-4">
       {/* Sticky Action Bar */}
-      <div className="sticky top-0 z-30 bg-[#FAFAF8] px-5 py-4">
+      <div className="sticky top-0 z-30 bg-white px-5 py-4">
         <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
