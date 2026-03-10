@@ -466,7 +466,7 @@ export const SearchListingCard = ({
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
       <Card className={`md:hidden overflow-hidden transition-shadow cursor-pointer ${
         isSelected
-          ? "border-primary/40 bg-blue-50/30 ring-1 ring-primary/15 shadow-sm"
+          ? "border-primary/40 ring-1 ring-primary/20 shadow-sm"
           : "hover:shadow-md hover:border-zinc-300"
       }`} onClick={handleCardClick}>
         <div className="p-4">
