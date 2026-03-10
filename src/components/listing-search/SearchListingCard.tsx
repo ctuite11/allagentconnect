@@ -205,8 +205,8 @@ export const SearchListingCard = ({
 
   // ── Attribution row (shared between desktop & mobile) ─────────────────
   const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
-    const labelClass = "text-[11px] text-muted-foreground/60 font-normal";
-    const valueClass = compact ? "text-[11px] text-foreground/80" : "text-xs text-foreground/80 font-medium";
+    const labelClass = compact ? "text-[11px] text-zinc-500 font-normal" : "text-xs text-zinc-500 font-normal";
+    const valueClass = compact ? "text-[11px] text-zinc-700" : "text-xs text-zinc-700 font-medium";
 
     return (
       <div className={`flex items-start justify-between gap-4 ${compact ? "flex-wrap" : ""}`}>
