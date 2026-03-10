@@ -291,7 +291,7 @@ const ListingSearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAF8] pt-20">
+    <div className="min-h-screen flex flex-col bg-white pt-20">
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto px-6 pt-6">
           {/* Page Header */}
