@@ -330,12 +330,12 @@ export const SearchListingCard = ({
                       e.stopPropagation();
                       navigate(`/property/${listing.id}`, { state: { from: fromPath } });
                     }}
-                    className="text-primary text-sm font-semibold hover:underline underline-offset-2 transition-colors"
+                    className="text-primary text-xs font-semibold hover:underline underline-offset-2 transition-colors"
                   >
                     L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
                 )}
-                <h3 className="text-xl font-semibold tracking-[-0.01em] text-foreground leading-tight mt-1">
+                <h3 className="text-sm font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
@@ -351,7 +351,7 @@ export const SearchListingCard = ({
                     </Badge>
                   )}
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                   <MapPin className="w-3 h-3 text-primary/60 flex-shrink-0" />
                   <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
@@ -365,23 +365,23 @@ export const SearchListingCard = ({
 
               {/* CENTER: Status */}
               <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                <span className="text-sm text-muted-foreground">Status:</span>
+                <span className="text-xs text-muted-foreground">Status:</span>
                 <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
               {/* RIGHT: Price + details */}
               <div className="text-right">
-                <div className="text-primary text-[2rem] font-bold leading-none">{displayPrice}</div>
+                <div className="text-base font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
                 {pricePerSqFt && (
-                  <div className="text-sm text-muted-foreground mt-1">${pricePerSqFt}/sqft</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">${pricePerSqFt}/sqft</div>
                 )}
                 {listing.list_date && (
-                  <div className="text-sm text-muted-foreground mt-1">
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
                 )}
                 {daysOnMarket > 0 && (
-                  <div className="text-sm text-muted-foreground mt-0.5">{daysOnMarket} DOM</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{daysOnMarket} DOM</div>
                 )}
               </div>
             </div>
