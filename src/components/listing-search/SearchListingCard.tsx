@@ -367,7 +367,7 @@ export const SearchListingCard = ({
 
           {/* D. Micro-facts */}
           {microFacts.length > 0 && (
-            <div className="text-xs text-muted-foreground mt-1.5">
+            <div className="text-xs text-zinc-500 mt-1">
               {microFacts.join(" · ")}
             </div>
           )}
