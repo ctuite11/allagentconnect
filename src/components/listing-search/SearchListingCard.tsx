@@ -15,6 +15,7 @@ import {
   MapPin, Bed, Bath, Home, Calendar,
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
