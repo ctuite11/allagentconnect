@@ -266,7 +266,7 @@ export const SearchListingCard = ({
       <div
         className={`hidden md:block overflow-hidden cursor-pointer rounded-2xl border bg-card will-change-transform transition-all duration-200 aac-shadow ${
           isSelected
-            ? "border-primary/40 bg-blue-50/30 ring-1 ring-primary/15 shadow-sm"
+            ? "border-primary/40 ring-1 ring-primary/20 shadow-sm"
             : "border-border hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-zinc-300 hover:-translate-y-[1px]"
         }`}
         onClick={handleCardClick}
@@ -279,10 +279,14 @@ export const SearchListingCard = ({
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-                  className="absolute left-2.5 top-2.5 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
+                  className={`absolute left-2.5 top-2.5 z-10 h-5 w-5 rounded border shadow-sm flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? "bg-primary border-primary"
+                      : "bg-white border-zinc-300"
+                  }`}
                   aria-label="Select listing"
                 >
-                  {isSelected && <Check className="h-3 w-3 text-accent" />}
+                  {isSelected && <Check className="h-3 w-3 text-white" />}
                 </button>
               )}
               {allPhotos.length > 0 ? (
@@ -462,7 +466,7 @@ export const SearchListingCard = ({
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
       <Card className={`md:hidden overflow-hidden transition-shadow cursor-pointer ${
         isSelected
-          ? "border-primary/40 bg-blue-50/30 ring-1 ring-primary/15 shadow-sm"
+          ? "border-primary/40 ring-1 ring-primary/20 shadow-sm"
           : "hover:shadow-md hover:border-zinc-300"
       }`} onClick={handleCardClick}>
         <div className="p-4">
@@ -471,10 +475,14 @@ export const SearchListingCard = ({
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-                  className="absolute left-2 top-2 z-10 h-5 w-5 rounded-md border border-white/80 bg-white/90 shadow-sm flex items-center justify-center"
+                  className={`absolute left-2 top-2 z-10 h-5 w-5 rounded border shadow-sm flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? "bg-primary border-primary"
+                      : "bg-white border-zinc-300"
+                  }`}
                   aria-label="Select listing"
                 >
-                  {isSelected && <Check className="h-3 w-3 text-emerald-600" />}
+                  {isSelected && <Check className="h-3 w-3 text-white" />}
                 </button>
               )}
               <div className="relative h-[75px] w-[100px] overflow-hidden rounded bg-muted">
