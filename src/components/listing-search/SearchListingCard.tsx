@@ -317,7 +317,7 @@ export const SearchListingCard = ({
             <div className="flex items-center gap-3.5 mt-2.5 px-0.5">
               {photoCount > 0 && (
                  <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
-                   <Camera className="h-4 w-4 text-primary/50" /> {photoCount}
+                   <Camera className="h-4 w-4 text-primary" /> {photoCount}
                  </span>
               )}
               {docCount > 0 && (
