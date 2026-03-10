@@ -205,40 +205,40 @@ export const SearchListingCard = ({
 
   // ── Attribution row (shared between desktop & mobile) ─────────────────
   const AttributionRow = ({ compact = false }: { compact?: boolean }) => {
-    const labelClass = compact ? "text-[11px]" : "text-xs";
-    const valueClass = compact ? "text-[11px] font-medium text-foreground" : "text-xs font-medium text-foreground";
+    const labelClass = compact ? "text-[11px] text-muted-foreground/70" : "text-[11px] text-muted-foreground/70";
+    const valueClass = compact ? "text-[11px] text-foreground" : "text-xs text-foreground";
 
     return (
       <div className={`flex items-start justify-between gap-4 ${compact ? "flex-wrap" : ""}`}>
         {listing.list_office && (
           <div className="min-w-0">
-            <span className={`${labelClass} text-muted-foreground`}>List Office: </span>
+            <span className={labelClass}>List Office: </span>
             <span className={valueClass}>{listing.list_office}</span>
             {listing.list_office_phone && (
-              <span className={`${labelClass} text-muted-foreground ml-2`}>
-                <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.list_office_phone)}
+              <span className={`${labelClass} ml-2`}>
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-60" />{formatPhoneNumber(listing.list_office_phone)}
               </span>
             )}
           </div>
         )}
         {listing.agent_name && (
           <div className="min-w-0 text-right flex-shrink-0">
-            <span className={`${labelClass} text-muted-foreground`}>List Agent: </span>
+            <span className={labelClass}>List Agent: </span>
             <span className={valueClass}>{listing.agent_name}</span>
             {listing.agent_phone && (
-              <span className={`${labelClass} text-muted-foreground ml-2`}>
-                <Phone className="h-3 w-3 inline mr-0.5" />{formatPhoneNumber(listing.agent_phone)}
+              <span className={`${labelClass} ml-2`}>
+                <Phone className="h-2.5 w-2.5 inline mr-0.5 opacity-60" />{formatPhoneNumber(listing.agent_phone)}
               </span>
             )}
             {!compact && listing.agent_email && (
-              <span className={`${labelClass} text-muted-foreground ml-2`}>{listing.agent_email}</span>
+              <span className={`${labelClass} ml-2`}>{listing.agent_email}</span>
             )}
             {listing.agent_id && (
               <button
                 onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                className="ml-2.5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
               >
-                <Mail className="h-3.5 w-3.5" />
+                <Mail className="h-3 w-3" />
                 {!compact && "Contact"}
               </button>
             )}
