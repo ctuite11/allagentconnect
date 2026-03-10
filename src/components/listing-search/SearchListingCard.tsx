@@ -335,7 +335,7 @@ export const SearchListingCard = ({
                     L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
                   </a>
                 )}
-                <h3 className="text-base font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
+                <h3 className="text-sm font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
@@ -364,14 +364,14 @@ export const SearchListingCard = ({
               </div>
 
               {/* Center: Status only */}
-              <div className="flex-shrink-0 flex items-center justify-center gap-1.5 min-w-[100px] pt-1">
+              <div className="flex-shrink-0 flex items-center justify-center gap-1.5 min-w-[100px] self-center">
                 <span className="text-xs text-zinc-700">Status:</span>
                 <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
               {/* Right: Price + $/sqft + Listed + DOM */}
               <div className="flex-shrink-0 text-right min-w-[130px]">
-                <div className="text-xl font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
+                <div className="text-lg font-bold tracking-[-0.02em] text-primary">{displayPrice}</div>
                 {pricePerSqFt && (
                   <div className="text-xs text-zinc-700 mt-0.5">${pricePerSqFt}/sqft</div>
                 )}
