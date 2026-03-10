@@ -93,7 +93,16 @@ const ListingSearchResults = () => {
         photos,
         neighborhood,
         open_houses,
-        property_styles
+        property_styles,
+        num_fireplaces,
+        virtual_tour_url,
+        video_url,
+        documents,
+        floors,
+        active_date,
+        condo_details,
+        price_range_min,
+        price_range_max
       `)
       .limit(500);
 
