@@ -22,7 +22,7 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
         }
 
         // Check if script is already loaded
-        if (!window.google?.maps) {
+        if (!(window as any).google?.maps) {
           const script = document.createElement("script");
           script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
           script.async = true;

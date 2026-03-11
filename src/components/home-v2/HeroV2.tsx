@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/brand/Logo";
+import heroEditorial from "@/assets/hero-editorial.png";
 
 const HeroV2 = () => {
   return (
@@ -31,7 +32,7 @@ const HeroV2 = () => {
 
       {/* Hero content */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 pt-12 lg:pt-20 pb-24 lg:pb-32">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
           {/* Left text block */}
           <div className="max-w-xl">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] tracking-tight">
@@ -56,16 +57,16 @@ const HeroV2 = () => {
             </div>
           </div>
 
-          {/* Right agent portrait */}
+          {/* Right agent portrait — full-height editorial photo */}
           <div className="relative hidden lg:flex justify-end">
-            <div className="w-[420px] h-[520px] rounded-2xl bg-zinc-800/50 overflow-hidden">
+            <div className="w-full max-w-[500px] h-[560px] rounded-2xl overflow-hidden">
               <img
-                src="/brand/aac-globe.png"
-                alt="Agent network"
-                className="w-full h-full object-cover opacity-80"
+                src={heroEditorial}
+                alt="Agent using All Agent Connect"
+                className="w-full h-full object-cover"
               />
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/60 via-transparent to-transparent rounded-2xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/40 via-transparent to-transparent rounded-2xl" />
             </div>
           </div>
         </div>
