@@ -1,425 +1,553 @@
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowRight,
-  Globe,
-  BarChart3,
+  ShieldCheck,
   Users,
-  Shield,
-  Zap,
-  TrendingUp,
-  Search,
-  MessageSquare,
-  Bell,
-  Target,
+  Handshake,
+  ArrowRight,
+  Share2,
+  Megaphone,
+  MessageCircle,
+  Check,
+  X,
+  Clock,
   Lock,
-  Eye,
 } from "lucide-react";
+import NetworkGlobe from "@/components/home/NetworkGlobe";
 import VersionStamp from "@/components/VersionStamp";
-import NetworkIntelligenceSection from "@/components/home/NetworkIntelligenceSection";
-import heroAgent from "@/assets/hero-agent.jpg";
 
 export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-white">
-      {/* ─── 1. HEADER ─── */}
-      <header className="absolute left-0 right-0 top-0 z-30">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <span className="text-sm font-semibold tracking-tight">
-            <span className="text-white">All Agent</span>{" "}
-            <span className="text-zinc-500">Connect</span>
-          </span>
+    <div className="relative min-h-screen bg-white text-neutral-900">
+      {/* Floating utility bar (NOT a header, NOT sticky) */}
+      <div className="pointer-events-none absolute left-0 right-0 top-6 z-20">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6">
+          {/* Left: small brand text only */}
+          <div className="pointer-events-auto text-sm font-semibold tracking-tight">
+            <span className="text-[#0E56F5]">All Agent</span>{" "}
+            <span className="text-zinc-400">Connect</span>
+          </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
-            <button onClick={() => navigate("/home")} className="hover:text-white transition-colors">For Agents</button>
-            <button onClick={() => navigate("/home")} className="hover:text-white transition-colors">Marketplace</button>
-            <button onClick={() => navigate("/home")} className="hover:text-white transition-colors">Features</button>
-            <button onClick={() => navigate("/our-agents")} className="hover:text-white transition-colors">Agents</button>
-            <button onClick={() => navigate("/home")} className="hover:text-white transition-colors">Pricing</button>
-          </nav>
-
-          <div className="flex items-center gap-4">
+          {/* Right: actions only */}
+          <div className="pointer-events-auto flex items-center gap-5">
             <button
               onClick={() => navigate("/auth")}
-              className="text-sm text-zinc-400 hover:text-white transition-colors"
+              className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
             >
-              Login
+              Log in
             </button>
+
             <button
               onClick={() => navigate("/auth?mode=register&source=home")}
-              className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors"
+              className="group inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all"
             >
               Get Access
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-400">→</span>
+              </span>
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main>
-        {/* ─── 2. HERO ─── */}
-        <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Left: Text */}
-              <div>
-                <p className="text-sm font-medium uppercase tracking-widest text-emerald-400 mb-4">
-                  Private Agent Network
-                </p>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
-                  A private agent network for{" "}
-                  <span className="text-emerald-400">PRE-MLS</span>{" "}
-                  intelligence.
-                </h1>
-                <p className="text-lg text-zinc-400 mb-8 max-w-lg">
-                  Surface off-market opportunities, match buyers privately, and close deals before they hit the public feed.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <button
-                    onClick={() => navigate("/auth?mode=register&source=home")}
-                    className="rounded-full bg-emerald-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-emerald-500 transition-colors"
-                  >
-                    Get Access
-                  </button>
-                  <button
-                    onClick={() => navigate("/auth")}
-                    className="rounded-full border border-zinc-700 px-8 py-3.5 text-base font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
-                  >
-                    Learn More
-                  </button>
-                </div>
-              </div>
+      <main className="pb-12">
+        {/* Hero - calm, centered, confident */}
+        <section className="relative w-full px-6 sm:px-10 lg:px-20 pt-24 md:pt-28 lg:pt-32 pb-16 md:pb-20">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Brand anchor */}
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
+              <span className="text-[#0E56F5]">All Agent</span>
+              <span className="text-zinc-400"> Connect</span>
+            </h1>
 
-              {/* Right: Hero image placeholder */}
-              <div className="relative hidden lg:block">
-                <img
-                  src={heroAgent}
-                  alt="Real estate agent working on laptop"
-                  className="aspect-[4/5] rounded-3xl object-cover w-full"
-                />
-                {/* Floating stats card */}
-                <div className="absolute -left-8 bottom-16 rounded-2xl bg-zinc-900/90 backdrop-blur border border-zinc-700/50 px-5 py-4">
-                  <p className="text-xs text-zinc-500 mb-1">Network Matches</p>
-                  <p className="text-2xl font-bold text-emerald-400">2,847</p>
-                  <p className="text-xs text-zinc-500 mt-1">Active this month</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 3. NETWORK INTELLIGENCE ─── */}
-        <NetworkIntelligenceSection />
-
-        {/* ─── 4. AGENT PHOTOS ROW ─── */}
-        <section className="py-16 bg-zinc-50 border-y border-zinc-200">
-          <div className="mx-auto max-w-5xl px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                { name: "Sarah Chen", role: "Luxury Specialist" },
-                { name: "Marcus Rivera", role: "Buyer's Agent" },
-                { name: "Emily Foster", role: "Listing Expert" },
-                { name: "David Kim", role: "Investment Pro" },
-              ].map((agent, i) => (
-                <div key={agent.name} className="text-center">
-                  <div
-                    className={`mx-auto w-28 h-28 rounded-full flex items-center justify-center mb-3 ${
-                      i === 2
-                        ? "bg-emerald-100 border-2 border-emerald-400"
-                        : "bg-zinc-200 border border-zinc-300"
-                    }`}
-                  >
-                    <Users className={`h-8 w-8 ${i === 2 ? "text-emerald-600" : "text-zinc-400"}`} />
-                  </div>
-                  <p className="text-sm font-semibold text-zinc-900">{agent.name}</p>
-                  <p className="text-xs text-zinc-500">{agent.role}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 5. RESULTS HUB ─── */}
-        <section className="py-20 md:py-28 bg-white text-zinc-900">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-                Turning network intelligence
-                <br className="hidden md:block" />
-                into real results
-              </h2>
-              <p className="text-lg text-zinc-500 max-w-2xl mx-auto">
-                Every connection, listing, and match flows through the AAC network — turning data into deals.
-              </p>
+            {/* Globe - subtle, centered, not dominant */}
+            <div className="mx-auto mb-8 w-[140px] h-[140px]">
+              <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
             </div>
 
-            {/* Hub icon grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 max-w-4xl mx-auto">
-              {[
-                { icon: Search, label: "Discovery" },
-                { icon: Target, label: "Matching" },
-                { icon: MessageSquare, label: "Collaboration" },
-                { icon: Bell, label: "Alerts" },
-                { icon: Globe, label: "Network" },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex flex-col items-center gap-3">
-                  <div className="h-16 w-16 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center">
-                    <Icon className="h-7 w-7 text-zinc-600" />
-                  </div>
-                  <span className="text-sm font-medium text-zinc-700">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 6. AGENT TESTIMONIALS ─── */}
-        <section className="py-20 md:py-28 bg-zinc-50 border-y border-zinc-200">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-900 mb-4">
-                How agents are using All Agent Connect
-              </h2>
-              <p className="text-lg text-zinc-500">Real results from active network members.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {[
-                {
-                  quote: "I closed 3 off-market deals in my first month on AAC. The network intelligence is unmatched.",
-                  name: "Jennifer Walsh",
-                  market: "Boston Metro",
-                },
-                {
-                  quote: "My buyers get first look at properties before they hit the MLS. It's a game changer for competitive markets.",
-                  name: "Robert Chen",
-                  market: "Greater Hartford",
-                },
-                {
-                  quote: "The agent-to-agent matching saved me weeks of searching. Found the perfect buyer in 48 hours.",
-                  name: "Maria Santos",
-                  market: "Rhode Island",
-                },
-              ].map((t) => (
-                <div
-                  key={t.name}
-                  className="rounded-2xl bg-white border border-zinc-200 p-7 shadow-sm"
-                >
-                  <p className="text-sm leading-relaxed text-zinc-600 mb-6">"{t.quote}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-zinc-200 flex items-center justify-center">
-                      <Users className="h-4 w-4 text-zinc-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-zinc-900">{t.name}</p>
-                      <p className="text-xs text-zinc-500">{t.market}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 7. DARK FEATURE CARDS ─── */}
-        <section className="py-20 md:py-28 bg-zinc-950">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-16">
-              <span className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-4 py-1.5 text-xs font-medium text-zinc-400 mb-6">
-                Marketplace Tools
-              </span>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4">
-                Everything you need to
-                <br className="hidden md:block" />
-                close more deals
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { icon: Eye, title: "Off-Market Listings", body: "Share and discover exclusive listings before they go public." },
-                { icon: Target, title: "Buyer Matching", body: "Automatically match active buyers with new and existing listings." },
-                { icon: MessageSquare, title: "Agent Messaging", body: "Direct, private communication between verified agents." },
-                { icon: Bell, title: "Smart Alerts", body: "Get notified when matching opportunities hit the network." },
-                { icon: Shield, title: "Verified Network", body: "Every agent is license-verified for trust and compliance." },
-                { icon: TrendingUp, title: "Market Intelligence", body: "Track trends and signals across your coverage areas." },
-              ].map((f) => (
-                <div
-                  key={f.title}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-7 hover:border-zinc-700 transition-colors"
-                >
-                  <f.icon className="h-6 w-6 text-emerald-400 mb-4" />
-                  <h3 className="text-base font-semibold text-white mb-2">{f.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{f.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 8. SCALE & PERSISTENCE ─── */}
-        <section className="py-20 md:py-28 bg-zinc-900">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Left: Screenshot placeholder */}
-              <div className="aspect-[4/3] rounded-2xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center">
-                <div className="text-center text-zinc-600">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                  <p className="text-sm">Platform Screenshot</p>
-                </div>
-              </div>
-
-              {/* Right: Copy */}
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-6">
-                  Deliberately designed for scale and persistence
-                </h2>
-                <p className="text-zinc-400 text-lg mb-8">
-                  Built on proprietary, patented technology that protects agent relationships and deal integrity at every level.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    "Patent-protected matching algorithms",
-                    "Agent-verified network integrity",
-                    "Persistent listing visibility across buyer cycles",
-                    "Enterprise-grade security and compliance",
-                  ].map((item) => (
-                    <div key={item} className="flex items-center gap-3">
-                      <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                      <span className="text-sm text-zinc-300">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 9. GCI SECTION ─── */}
-        <section className="py-20 md:py-28 bg-zinc-950">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4">
-                GCI driven by better information
-                <br className="hidden md:block" />
-                and faster connections
-              </h2>
-              <p className="text-lg text-zinc-500 max-w-2xl mx-auto">
-                Members who operate on network intelligence consistently outperform agents relying on public feeds alone.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">
-              {[
-                { icon: Zap, label: "Speed to Market", desc: "See deals before the MLS" },
-                { icon: Target, label: "Precision Matching", desc: "Buyers matched to listings" },
-                { icon: Lock, label: "Deal Privacy", desc: "Off-market confidentiality" },
-                { icon: Users, label: "Agent Network", desc: "Verified collaboration" },
-                { icon: TrendingUp, label: "GCI Growth", desc: "Higher close rates" },
-                { icon: Shield, label: "Compliance", desc: "Licensed & protected" },
-              ].map(({ icon: Icon, label, desc }) => (
-                <div key={label} className="text-center">
-                  <div className="mx-auto h-14 w-14 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-3">
-                    <Icon className="h-6 w-6 text-emerald-400" />
-                  </div>
-                  <p className="text-sm font-semibold text-white">{label}</p>
-                  <p className="text-xs text-zinc-500 mt-1">{desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <button
-                onClick={() => navigate("/auth?mode=register&source=home")}
-                className="rounded-full bg-emerald-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-emerald-500 transition-colors"
-              >
-                Get Access
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 10. FINAL CTA ─── */}
-        <section className="py-24 md:py-32 bg-zinc-900 border-t border-zinc-800">
-          <div className="mx-auto max-w-3xl px-6 text-center">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-6">
-              See the Market Before
-              <br />
-              it Happens
+            {/* Headline */}
+            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight mb-4" style={{ color: '#1D1D1F' }}>
+              Where Real Deals Get Done
             </h2>
-            <p className="text-lg text-zinc-400 mb-10 max-w-xl mx-auto">
-              Join the private agent network where deals are made before they reach the public market.
+
+            {/* Tension line */}
+            <p className="text-lg text-zinc-600 max-w-xl mx-auto mb-6">
+              The deals you don't see are the ones that can change a client's life — and your bottom line.
             </p>
+
+            {/* Capability signals - silvery pills with colored dots */}
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-medium shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Off-market
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-medium shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                Coming soon
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-medium shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-slate-400" />
+                Agent-to-agent
+              </span>
+            </div>
+
+            {/* CTA - black with emerald accent */}
             <button
               onClick={() => navigate("/auth?mode=register&source=home")}
-              className="rounded-full bg-emerald-600 px-10 py-4 text-lg font-semibold text-white hover:bg-emerald-500 transition-colors"
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
             >
-              Get Access
-              <ArrowRight className="inline-block ml-2 h-5 w-5" />
+              Request Access
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-400">→</span>
+              </span>
             </button>
+
+            {/* Identity line */}
+            <p className="mt-8 text-sm font-medium tracking-wide text-zinc-500 uppercase">
+              By Agents. For Agents. All Agents.
+            </p>
+          </div>
+        </section>
+
+        {/* Proof Strip - naked icons */}
+        <section className="py-8 md:py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 text-sm text-slate-950">
+              <span className="inline-flex items-center gap-3 font-medium">
+                <ShieldCheck className="h-6 w-6 text-blue-600" />
+                Operating since 2016
+              </span>
+              <span className="inline-flex items-center gap-3 font-medium">
+                <Users className="h-6 w-6 text-blue-600" />
+                Thousands of agents nationwide
+              </span>
+              <span className="inline-flex items-center gap-3 font-medium">
+                <Handshake className="h-6 w-6 text-emerald-600" />
+                Off-market deals closed
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Built to Increase Production */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
+              Built to Increase Production
+            </h2>
+            <div className="mx-auto mt-4 mb-8 h-[2px] w-16 bg-blue-600" />
+            
+            <p className="text-center text-lg leading-relaxed text-zinc-600 max-w-2xl mx-auto">
+              A private agent collaboration network designed to increase deal flow, surface hidden opportunities, and help agents close more transactions.
+            </p>
+            
+            <p className="mt-6 text-center text-base font-medium text-zinc-700">
+              More deal flow. Better matches. Fewer missed opportunities.
+            </p>
+            
+            <div className="mt-8 max-w-2xl mx-auto space-y-4">
+              <BulletItem>See off-market and pre-market opportunities before others do</BulletItem>
+              <BulletItem>Match active buyers quietly, without public competition</BulletItem>
+              <BulletItem>Close more deals through direct agent-to-agent collaboration</BulletItem>
+              <BulletItem>Increase GCI by operating ahead of the open market</BulletItem>
+            </div>
+          </div>
+        </section>
+
+        {/* Success Hub — How AAC Gets Used */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
+              Success Hub — How AAC Gets Used
+            </h2>
+            <div className="mx-auto mt-4 h-[2px] w-16 bg-blue-600" />
+            <p className="mt-4 text-center text-lg text-slate-600 max-w-2xl mx-auto">
+              Core workflows inside AAC, used daily by working agents across sales and rentals.
+            </p>
+            <p className="text-center text-sm text-slate-500 mb-10">
+              Supports residential sales, rentals, and agent-only opportunities across markets.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ModuleCard
+                icon={Share2}
+                tier="hub"
+                title="Listings Exchange"
+                body="Quietly share off-market sales and rental listings with verified agents — with full control over visibility and timing."
+              />
+              <ModuleCard
+                icon={Megaphone}
+                tier="hub"
+                title="Buyer & Renter Needs"
+                body="Post active buyer and renter demand privately, so opportunities surface without public exposure."
+              />
+              <ModuleCard
+                icon={Users}
+                tier="premium"
+                title="Private Matching"
+                body="Match listings, buyers, and renters before they hit the open market — or without going public at all."
+              />
+              <ModuleCard
+                icon={MessageCircle}
+                tier="premium"
+                title="Agent-to-Agent Workspace"
+                body="Direct, verified agent collaboration — sales and rentals — without feeds, noise, or outside interference."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Seller Match Section */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="rounded-2xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+              <div className="p-6 sm:p-8">
+                <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase mb-4">
+                  For Homeowners
+                </p>
+
+                <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+                  {/* Left: Value */}
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                      Match your home with real buyers — before it ever hits the market
+                    </h2>
+                    <p className="mt-3 text-base leading-relaxed text-zinc-600">
+                      Seller Match connects your home directly with <span className="font-medium text-zinc-800">AAC Verified agents</span> who are actively representing qualified buyers searching for properties like yours.
+                    </p>
+                    <p className="mt-3 text-base leading-relaxed text-zinc-600">
+                      Instead of listing publicly, your home is privately matched against real buyer needs — giving you visibility, leverage, and optionality without committing to a brokerage upfront.
+                    </p>
+
+                    <div className="mt-6 space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">Private, off-market exposure</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">Matches only with agents representing real buyers</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">No public listing, no portals, no noise</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm text-zinc-700">Your listing stays active as new matching buyers enter the network</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: CTA */}
+                  <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        AAC Verified agents only
+                      </span>
+                    </div>
+
+                    <p className="text-sm font-medium text-zinc-900">
+                      See how many agents match your home
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-600">
+                      Enter your property details and instantly see how many verified agents are working with buyers looking for homes like yours.
+                    </p>
+
+                    <div className="mt-5 grid gap-2">
+                      <button
+                        onClick={() => navigate("/agent-match")}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white hover:bg-zinc-800 transition"
+                      >
+                        See how many agents match your home
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => navigate("/agent-match")}
+                        className="inline-flex w-full items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition"
+                      >
+                        Learn how Seller Match works
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-zinc-200 px-6 py-4 sm:px-8">
+                <p className="text-xs text-zinc-500">
+                  If a match results in a sale, sellers agree to provide buyer-agent details for verification and network integrity.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Mid-Page CTA Band */}
+        <section className="border-y border-zinc-200 bg-white py-10 md:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 className="text-lg font-semibold mb-4" style={{ color: '#1D1D1F' }}>
+              Ready to operate ahead of the market?
+            </h3>
+            <button
+              onClick={() => navigate("/auth?mode=register&source=home")}
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
+            >
+              Request Access
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-400">→</span>
+              </span>
+            </button>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
+              How It Works
+            </h2>
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
+              <StepItem number={1} label="Verify" />
+              <StepItem number={2} label="Connect" />
+              <StepItem number={3} label="Close" />
+            </div>
+          </div>
+        </section>
+
+        {/* Why Clients Love It */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
+              Why Clients Love When Their Agent Is in AAC
+            </h2>
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <ClientBenefitCard
+                title="For Sellers"
+                benefits={[
+                  "Discreet exposure to serious buyers before going public",
+                  "Faster, higher-quality feedback from active agents",
+                  "A smarter launch strategy, not an all-or-nothing gamble",
+                ]}
+              />
+              <ClientBenefitCard
+                title="For Buyers"
+                benefits={[
+                  "Early access to opportunities they'll never see online",
+                  "Less competition and fewer bidding wars",
+                  "Better outcomes through agent collaboration",
+                ]}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* The AAC Advantage */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
+              The AAC Advantage
+            </h2>
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
+            
+            <div className="max-w-2xl mx-auto space-y-4">
+              <BulletItem>AAC members collaborate privately instead of competing publicly</BulletItem>
+              <BulletItem>Opportunities circulate inside the network before hitting the market</BulletItem>
+              <BulletItem>Members see deals non-members never do</BulletItem>
+              <BulletItem>Built by working agents who actually close transactions</BulletItem>
+            </div>
+
+            <p className="mt-10 text-center text-lg font-medium text-zinc-700 max-w-2xl mx-auto">
+              AAC members don't wait for the market. They operate ahead of it.
+            </p>
+          </div>
+        </section>
+
+        {/* Coming Soon */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center text-slate-950">
+              Coming Soon
+            </h2>
+            <div className="mx-auto mt-4 mb-10 h-[2px] w-16 bg-blue-600" />
+            
+            <div className="max-w-2xl mx-auto space-y-4">
+              <BulletItem>Expanded markets and regional growth</BulletItem>
+              <BulletItem>Enhanced buyer-needs matching</BulletItem>
+              <BulletItem>New tools for listing presentations</BulletItem>
+              <BulletItem>Additional member-only collaboration features</BulletItem>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-8" style={{ color: '#1D1D1F' }}>
+                Request Access
+              </h2>
+              
+              <div className="space-y-1 text-sm text-zinc-500">
+                <p>Operating since 2016</p>
+                <p>Built on proprietary, patented collaboration technology</p>
+                <p>Designed to protect agent relationships and deal integrity</p>
+              </div>
+
+              <div className="mt-8">
+                <button
+                  onClick={() => navigate("/auth?mode=register&source=home")}
+                  className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
+                >
+                  Request Access
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-emerald-400">→</span>
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </main>
 
-      {/* ─── 11. FOOTER ─── */}
-      <footer className="bg-zinc-950 border-t border-zinc-800 py-16">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-            <div>
-              <span className="text-sm font-semibold tracking-tight">
-                <span className="text-white">All Agent</span>{" "}
-                <span className="text-zinc-500">Connect</span>
-              </span>
-              <p className="mt-3 text-sm text-zinc-500 leading-relaxed">
-                Professional agent collaboration infrastructure for off-market opportunities and private matching.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-semibold text-zinc-300 mb-4">Platform</h4>
-              <ul className="space-y-2.5 text-sm text-zinc-500">
-                <li><a href="/register" className="hover:text-zinc-300 transition-colors">Request Access</a></li>
-                <li><a href="/our-agents" className="hover:text-zinc-300 transition-colors">Our Agents</a></li>
-                <li><a href="/browse" className="hover:text-zinc-300 transition-colors">Browse Properties</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-semibold text-zinc-300 mb-4">Legal</h4>
-              <ul className="space-y-2.5 text-sm text-zinc-500">
-                <li><a href="/privacy" className="hover:text-zinc-300 transition-colors">Privacy Policy</a></li>
-                <li><a href="/terms" className="hover:text-zinc-300 transition-colors">Terms of Service</a></li>
-                <li><a href="/agent-rules" className="hover:text-zinc-300 transition-colors">Agent Network Rules</a></li>
-                <li><a href="/fair-housing" className="hover:text-zinc-300 transition-colors">Fair Housing</a></li>
-                <li><a href="/disclosures" className="hover:text-zinc-300 transition-colors">Disclosures</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-semibold text-zinc-300 mb-4">Contact</h4>
-              <ul className="space-y-2.5 text-sm text-zinc-500">
-                <li>
-                  <a href="mailto:hello@allagentconnect.com" className="hover:text-zinc-300 transition-colors">
-                    hello@allagentconnect.com
-                  </a>
-                </li>
-              </ul>
-            </div>
+      {/* Footer */}
+      <footer className="border-t border-neutral-200/70 bg-white">
+        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="text-sm text-neutral-600">
+            <span className="font-semibold text-neutral-900">All Agent Connect</span> — where real deals get done.
+            <div className="mt-1 text-xs text-neutral-500">© {new Date().getFullYear()} • AAC Member Network</div>
+            <VersionStamp className="mt-1" />
           </div>
 
-          <div className="pt-6 border-t border-zinc-800 mb-6">
-            <p className="text-xs text-zinc-600 text-center max-w-3xl mx-auto">
-              This platform is not a multiple listing service and is not affiliated with any MLS or REALTOR® association.
-              Certain platform features are protected by issued and pending U.S. patents. Unauthorized use is prohibited.
-            </p>
-          </div>
-
-          <div className="pt-4 border-t border-zinc-800 text-center">
-            <p className="text-sm text-zinc-600">© {new Date().getFullYear()} All Agent Connect. All rights reserved.</p>
-            <VersionStamp className="mt-2 opacity-40" />
+          <div className="flex items-center gap-4 text-sm">
+            <a className="text-neutral-600 hover:text-neutral-900 transition" href="/privacy">
+              Privacy
+            </a>
+            <a className="text-neutral-600 hover:text-neutral-900 transition" href="/terms">
+              Terms
+            </a>
+            <button
+              onClick={() => navigate("/auth?mode=register&source=home")}
+              className="group inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-900 hover:-translate-y-0.5 transition-all"
+            >
+              Get Access
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            </button>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+/* -------------------- Components -------------------- */
+
+function BulletItem({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <Check className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <span className="text-base text-slate-600 leading-relaxed">{children}</span>
+    </div>
+  );
+}
+
+function ClientBenefitCard({
+  title,
+  benefits,
+}: {
+  title: string;
+  benefits: string[];
+}) {
+  return (
+    <div className="rounded-2xl bg-white border border-slate-200 p-7 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[1px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
+      <h3 className="text-lg font-semibold mb-4 text-slate-950">{title}</h3>
+      <div className="space-y-3">
+        {benefits.map((benefit, index) => (
+          <div key={index} className="flex items-start gap-3">
+            <Check className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <span className="text-sm text-slate-600 leading-relaxed">{benefit}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FeatureCard({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div 
+      className="rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200"
+    >
+      <Icon className="h-6 w-6 text-[#0E56F5] mb-4" />
+      <div className="text-base font-semibold tracking-tight" style={{ color: '#1D1D1F' }}>{title}</div>
+      <p className="mt-2 text-sm leading-relaxed" style={{ color: '#86868B' }}>{body}</p>
+    </div>
+  );
+}
+
+function ModuleCard({
+  icon: Icon,
+  title,
+  body,
+  tier,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+  tier: "hub" | "premium";
+}) {
+  return (
+    <div className="relative h-full rounded-2xl bg-white border border-slate-200 p-7 shadow-[0_10px_30px_rgba(15,23,42,0.08)] hover:-translate-y-[1px] hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)] transition-all duration-200">
+      {/* Tier pill - top right */}
+      <span
+        className={`absolute top-4 right-4 text-xs font-medium tracking-wide px-2.5 py-1 rounded-full border ${
+          tier === "hub"
+            ? "bg-white text-slate-600 border-slate-200"
+            : "bg-white text-blue-600 border-slate-200"
+        }`}
+      >
+        {tier === "hub" ? "Success Hub" : "AAC Premium"}
+      </span>
+
+      {/* Naked icon */}
+      <Icon className="h-6 w-6 text-blue-600 mb-4" />
+      <div className="text-base font-semibold tracking-tight text-slate-950">{title}</div>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">{body}</p>
+    </div>
+  );
+}
+
+function StepItem({
+  number,
+  label,
+}: {
+  number: number;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-12 w-12 rounded-xl bg-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.12)] flex items-center justify-center">
+        <span className="text-emerald-400 font-semibold">{number}</span>
+      </div>
+      <span className="text-base font-medium text-slate-950">{label}</span>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-/// <reference types="@types/google.maps" />
 import { useEffect, useRef } from "react";
 
 interface PropertyMapProps {
@@ -6,8 +5,6 @@ interface PropertyMapProps {
   latitude?: number | null;
   longitude?: number | null;
 }
-
-const g = () => (window as unknown as { google: typeof google }).google;
 
 const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -17,17 +14,20 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
       if (!mapRef.current) return;
 
       try {
+        // Load Google Maps script dynamically
         const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
           console.error("Google Maps API key not configured");
           return;
         }
 
-        if (!g()?.maps) {
+        // Check if script is already loaded
+        if (!window.google?.maps) {
           const script = document.createElement("script");
           script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
           script.async = true;
           script.defer = true;
+          
           await new Promise<void>((resolve, reject) => {
             script.onload = () => resolve();
             script.onerror = reject;
@@ -35,29 +35,41 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
           });
         }
 
-        const gmaps = g().maps;
-
+        // Use provided coordinates or geocode the address
         if (latitude && longitude) {
           const position = { lat: Number(latitude), lng: Number(longitude) };
-          const map = new gmaps.Map(mapRef.current, {
+          
+          const map = new google.maps.Map(mapRef.current, {
             center: position,
             zoom: 15,
             mapTypeControl: false,
             streetViewControl: true,
           });
-          new gmaps.Marker({ position, map, title: address });
+
+          new google.maps.Marker({
+            position,
+            map,
+            title: address,
+          });
         } else {
-          const geocoder = new gmaps.Geocoder();
+          // Geocode the address
+          const geocoder = new google.maps.Geocoder();
           geocoder.geocode({ address }, (results, status) => {
             if (status === "OK" && results?.[0] && mapRef.current) {
               const position = results[0].geometry.location;
-              const map = new gmaps.Map(mapRef.current, {
+              
+              const map = new google.maps.Map(mapRef.current, {
                 center: position,
                 zoom: 15,
                 mapTypeControl: false,
                 streetViewControl: true,
               });
-              new gmaps.Marker({ position, map, title: address });
+
+              new google.maps.Marker({
+                position,
+                map,
+                title: address,
+              });
             }
           });
         }
