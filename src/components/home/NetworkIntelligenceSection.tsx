@@ -16,13 +16,6 @@ const tableRows = [
   { address: "215 Main St", city: "Cambridge", price: "$875,000", status: "Active", days: 5 },
 ];
 
-const propertyCards = [
-  { price: "$1,250,000", address: "42 Beacon St, Boston", beds: 4, baths: 3, sqft: "2,800", status: "Active" },
-  { price: "$425,000", address: "18 Elm Ave, Hartford", beds: 3, baths: 2, sqft: "1,650", status: "Coming Soon" },
-  { price: "$2,100,000", address: "7 Ocean Dr, Newport", beds: 5, baths: 4, sqft: "4,200", status: "Active" },
-  { price: "$875,000", address: "215 Main St, Cambridge", beds: 3, baths: 2, sqft: "1,900", status: "Matched" },
-  { price: "$650,000", address: "33 Park Rd, Providence", beds: 2, baths: 2, sqft: "1,400", status: "Active" },
-];
 
 const statusColor: Record<string, string> = {
   Active: "bg-emerald-500/20 text-emerald-400",
