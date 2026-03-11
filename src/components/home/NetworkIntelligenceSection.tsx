@@ -105,27 +105,6 @@ export default function NetworkIntelligenceSection() {
           </div>
         </div>
 
-        {/* Property Cards Row */}
-        <div className="mt-10 mx-auto max-w-5xl grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {propertyCards.map((p) => (
-            <div key={p.address} className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
-              {/* Photo placeholder */}
-              <div className="aspect-[4/3] bg-gradient-to-br from-zinc-200 to-zinc-300" />
-              <div className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-zinc-900">{p.price}</span>
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${statusColor[p.status] || "bg-zinc-200 text-zinc-600"}`}>
-                    {p.status}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 truncate mb-1">{p.address}</p>
-                <p className="text-[10px] text-zinc-400">
-                  {p.beds}bd · {p.baths}ba · {p.sqft} sqft
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
