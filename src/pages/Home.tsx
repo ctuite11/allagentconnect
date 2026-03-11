@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import VersionStamp from "@/components/VersionStamp";
 import NetworkIntelligenceSection from "@/components/home/NetworkIntelligenceSection";
+import heroAgent from "@/assets/hero-agent.jpg";
 
 export default function Home() {
   const navigate = useNavigate();
