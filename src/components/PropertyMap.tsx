@@ -53,7 +53,7 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
           });
         } else {
           // Geocode the address
-          const geocoder = new google.maps.Geocoder();
+          const geocoder = new (window as any).google.maps.Geocoder();
           geocoder.geocode({ address }, (results, status) => {
             if (status === "OK" && results?.[0] && mapRef.current) {
               const position = results[0].geometry.location;
