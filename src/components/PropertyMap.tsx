@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 
-declare global {
-  interface Window {
-    google?: typeof google;
-  }
+/* global google */
+
+interface PropertyMapProps {
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface PropertyMapProps {
