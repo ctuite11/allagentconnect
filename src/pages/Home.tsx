@@ -15,6 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import VersionStamp from "@/components/VersionStamp";
+import NetworkIntelligenceSection from "@/components/home/NetworkIntelligenceSection";
 
 export default function Home() {
   const navigate = useNavigate();
