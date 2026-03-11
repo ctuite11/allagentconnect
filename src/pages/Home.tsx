@@ -109,32 +109,7 @@ export default function Home() {
         </section>
 
         {/* ─── 3. NETWORK INTELLIGENCE ─── */}
-        <section className="py-20 md:py-28 bg-white text-zinc-900">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center mb-16">
-              <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-1.5 text-xs font-medium text-zinc-600 mb-6">
-                <Globe className="h-3.5 w-3.5" />
-                Network Intelligence
-              </span>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-                Operate on network intelligence,
-                <br className="hidden md:block" />
-                not the public feed.
-              </h2>
-              <p className="text-lg text-zinc-500 max-w-2xl mx-auto">
-                See what's happening across the agent network before it reaches portals, feeds, or the MLS.
-              </p>
-            </div>
-
-            {/* Platform screenshot placeholder */}
-            <div className="mx-auto max-w-4xl aspect-[16/10] rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center">
-              <div className="text-center text-zinc-400">
-                <BarChart3 className="h-16 w-16 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">Platform Screenshot</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <NetworkIntelligenceSection />
 
         {/* ─── 4. AGENT PHOTOS ROW ─── */}
         <section className="py-16 bg-zinc-50 border-y border-zinc-200">
