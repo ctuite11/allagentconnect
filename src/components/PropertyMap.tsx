@@ -58,7 +58,7 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
             if (status === "OK" && results?.[0] && mapRef.current) {
               const position = results[0].geometry.location;
               
-              const map = new google.maps.Map(mapRef.current, {
+              const map = new (window as any).google.maps.Map(mapRef.current, {
                 center: position,
                 zoom: 15,
                 mapTypeControl: false,
