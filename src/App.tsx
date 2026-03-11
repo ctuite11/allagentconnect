@@ -77,6 +77,7 @@ import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
+import HomepageV2 from "./pages/HomepageV2";
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
 import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
