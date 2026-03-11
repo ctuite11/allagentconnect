@@ -46,7 +46,7 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
             streetViewControl: true,
           });
 
-          new google.maps.Marker({
+          new (window as any).google.maps.Marker({
             position,
             map,
             title: address,
