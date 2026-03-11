@@ -77,6 +77,7 @@ import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
+import HomepageV2 from "./pages/HomepageV2";
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
 import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
@@ -272,6 +273,7 @@ const App = () => (
                 <Route path="/fair-housing" element={<FairHousing />} />
                 <Route path="/disclosures" element={<Disclosures />} />
                 <Route path="/mockup" element={<DesignMockup />} />
+                <Route path="/homepage-v2" element={<HomepageV2 />} />
                 {/* IDX Routes */}
                 <Route path="/idx" element={<IDXSearchBeta />} />
                 <Route path="/idx/:mlsNumber" element={<IDXListingDetailBeta />} />
