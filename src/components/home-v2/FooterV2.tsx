@@ -4,21 +4,30 @@ import { Logo } from "@/components/brand/Logo";
 
 const columns = [
   {
-    title: "All Agent Connect",
+    title: "Core",
     links: [
-      { label: "About", href: "#about" },
       { label: "Network", href: "#network" },
       { label: "How It Works", href: "#how-it-works" },
       { label: "Results", href: "#results" },
+      { label: "About", href: "#about" },
     ],
   },
   {
-    title: "Platform",
+    title: "Listings",
     links: [
-      { label: "Agent Search", href: "/our-agents" },
       { label: "Browse Properties", href: "/browse" },
       { label: "IDX Search", href: "/idx" },
+      { label: "Add Listing", href: "/add-listing" },
+      { label: "Market Insights", href: "/market-insights" },
+    ],
+  },
+  {
+    title: "Agents",
+    links: [
+      { label: "Agent Search", href: "/our-agents" },
+      { label: "Agent Match", href: "/agent-match" },
       { label: "Login", href: "/auth" },
+      { label: "Register", href: "/auth?mode=register" },
     ],
   },
   {
@@ -36,13 +45,19 @@ const FooterV2 = () => {
   return (
     <footer className="bg-zinc-950 text-zinc-400 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="grid md:grid-cols-4 gap-10 lg:gap-16">
+        <div className="grid md:grid-cols-5 gap-10 lg:gap-12">
           {/* Brand block */}
           <div>
             <Logo variant="reversed" size="md" />
             <p className="mt-4 text-sm text-zinc-500 leading-relaxed max-w-[240px]">
               The private network where agents share off-market intelligence and close deals faster.
             </p>
+            <Link
+              to="/auth?mode=register"
+              className="mt-6 inline-block bg-accent hover:bg-accent-hover text-accent-foreground text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
+            >
+              Get Access
+            </Link>
           </div>
 
           {/* Link columns */}

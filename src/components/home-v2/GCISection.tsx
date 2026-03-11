@@ -15,40 +15,45 @@ const GCISection = () => {
   return (
     <section className="py-24 lg:py-32 bg-zinc-950">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white text-center leading-tight tracking-tight">
-          GCI driven by better information
-          <br className="hidden sm:block" />
-          and faster connections
-        </h2>
-        <p className="mt-5 text-lg text-zinc-400 text-center max-w-2xl mx-auto">
-          Members who operate on network intelligence consistently outperform agents relying on public feeds alone.
-        </p>
-
-        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {props.map((p) => {
-            const Icon = p.icon;
-            return (
-              <div
-                key={p.title}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-7 hover:border-accent/30 transition-colors"
+        <div className="grid lg:grid-cols-2 gap-16 items-start">
+          {/* Left: text block */}
+          <div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight">
+              GCI driven by better information
+              <br className="hidden sm:block" />
+              and faster connections
+            </h2>
+            <p className="mt-5 text-lg text-zinc-400 max-w-lg">
+              Members who operate on network intelligence consistently outperform agents relying on public feeds alone.
+            </p>
+            <div className="mt-10">
+              <Link
+                to="/auth?mode=register"
+                className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold px-10 py-3.5 rounded-lg text-base transition-colors inline-block"
               >
-                <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
-                  <Icon className="w-5 h-5 text-accent" strokeWidth={1.8} />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{p.title}</h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">{p.desc}</p>
-              </div>
-            );
-          })}
-        </div>
+                Get Access
+              </Link>
+            </div>
+          </div>
 
-        <div className="mt-14 flex justify-center">
-          <Link
-            to="/auth?mode=register"
-            className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold px-10 py-3.5 rounded-lg text-base transition-colors"
-          >
-            Get Access
-          </Link>
+          {/* Right: 2x3 value props grid */}
+          <div className="grid sm:grid-cols-2 gap-5">
+            {props.map((p) => {
+              const Icon = p.icon;
+              return (
+                <div
+                  key={p.title}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 hover:border-accent/30 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-accent" strokeWidth={1.8} />
+                  </div>
+                  <h3 className="text-base font-semibold text-white mb-1.5">{p.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{p.desc}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

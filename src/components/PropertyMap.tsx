@@ -22,7 +22,7 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
         }
 
         // Check if script is already loaded
-        if (!window.google?.maps) {
+        if (!(window as any).google?.maps) {
           const script = document.createElement("script");
           script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
           script.async = true;
@@ -39,33 +39,33 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
         if (latitude && longitude) {
           const position = { lat: Number(latitude), lng: Number(longitude) };
           
-          const map = new google.maps.Map(mapRef.current, {
+          const map = new (window as any).google.maps.Map(mapRef.current, {
             center: position,
             zoom: 15,
             mapTypeControl: false,
             streetViewControl: true,
           });
 
-          new google.maps.Marker({
+          new (window as any).google.maps.Marker({
             position,
             map,
             title: address,
           });
         } else {
           // Geocode the address
-          const geocoder = new google.maps.Geocoder();
+          const geocoder = new (window as any).google.maps.Geocoder();
           geocoder.geocode({ address }, (results, status) => {
             if (status === "OK" && results?.[0] && mapRef.current) {
               const position = results[0].geometry.location;
               
-              const map = new google.maps.Map(mapRef.current, {
+              const map = new (window as any).google.maps.Map(mapRef.current, {
                 center: position,
                 zoom: 15,
                 mapTypeControl: false,
                 streetViewControl: true,
               });
 
-              new google.maps.Marker({
+              new (window as any).google.maps.Marker({
                 position,
                 map,
                 title: address,

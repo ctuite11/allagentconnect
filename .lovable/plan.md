@@ -1,62 +1,76 @@
+## Completed Changes
 
+### 1. Add Expired to My Listings filters
+- Added `"expired"` to `PIPELINE_STATUSES` and `ListingStatus` type in `MyListings.tsx`
+- Expired now appears in filter tabs and is searchable
 
-## Update HomepageV2 to match the screenshot exactly
+### 2. "Save Changes" → "Publish" for draft edits
+- `AddListing.tsx`: Both desktop and mobile save buttons now show "Publish" with Upload icon when original status is draft and current status is non-draft; "Save Draft" when status remains draft
+- `EditListing.tsx`: Same logic applied to save button label
 
-The current build uses placeholders and generic compositions where the screenshot shows real images and specific layouts. Here's what needs to change across each component.
+### 3. Price range display for Coming Soon / Off Market
+- `ListingCard.tsx`: Added `price_range_min` / `price_range_max` to interface; `displayPrice` falls back to range when price is 0/null
+- `PropertyDetail.tsx`: Added range fields to interface; price display falls back to range
 
-### 1. HeroV2.tsx — Use `hero-editorial.png` as the agent portrait
+### 4. Relabel "Private" → "Off Market"
+- `status.ts`: All 6 instances of "Private", "Off-Market", "Off-Market (Private)" normalized to "Off Market"
+- `MyListings.tsx`: Removed hardcoded "Private" override, now uses centralized label
 
-The screenshot shows a large agent headshot photo filling the right side of the hero, not the globe image. The hero also has a full-bleed dark background with the photo extending edge-to-edge on the right.
+### 5. Auto-revert Back on Market → Active after 48 hours
+- `supabase/functions/update-listing-statuses/index.ts`: Added Part 4 logic
+- Queries listings with `status = 'back_on_market'`
+- Finds latest `listing_status_history` row where `new_status = 'back_on_market'`
+- If `created_at` is older than 48 hours, reverts to `active` with `.eq('status', 'back_on_market')` guard
+- Logs transition in `listing_status_history` with system note
+- Response payload includes `back_on_market_reverted` with count and IDs
+- No migration needed; UI badge in ListingCard is history-driven (14-day window) and unaffected
 
-- Replace `/brand/aac-globe.png` with the `hero-editorial.png` asset
-- Make the image larger and more prominent to match the screenshot's edge-to-edge composition
-- Keep the updated headline ("See the market before it hits the MLS.")
+### 6. Status-aware Hot Sheet alerts for Back on Market → Active
+- **`hot_sheet_sent_listings`**: Added `status_at_send text NOT NULL` column; backfilled from listings; replaced unique index `(hot_sheet_id, listing_id)` → `(hot_sheet_id, listing_id, status_at_send)` — allows same listing to be sent under different statuses
+- **`check_hot_sheet_matches`**: Added `back_on_market` to default pipeline statuses; added status-criteria matching (respects `criteria->'statuses'` when set); dedup now checks `status_at_send = l.status`
+- **`notify_matching_buyers_on_new_listing` trigger**: Changed from `AFTER INSERT` to `AFTER INSERT OR UPDATE`; fires for `active` and `back_on_market`; guards against unchanged status on UPDATE
+- **`process-hot-sheet/index.ts`**: Added `back_on_market` to default status filter; writes `status_at_send` when recording sent listings
+- **`send-new-match-notification/index.ts`**: Fetches listing statuses and writes `status_at_send` on upsert; updated onConflict to include `status_at_send`
 
-### 2. NetworkIntelSection.tsx — Use property photos for agent tiles
+### 7. Duplicate Listing Detection
+- **`src/lib/checkDuplicateListing.ts`** (new): Reusable helper that queries `listings` for matching normalized address+city+state+zip in blocking statuses (`active`, `new`, `coming_soon`, `off_market`, `back_on_market`, `price_changed`, `extended`, `reactivated`, `under_agreement`, `pending`, `contingent`). Normalizes via trim + lowercase + collapse spaces. Excludes self via `excludeListingId` param for edit mode. `isLiveStatus()` helper determines when to run the check.
+- **`AddListing.tsx`**: Duplicate check wired into both `handleSaveChanges` (after validation, before file uploads) and `handleSubmit` (after Zod validation, before file uploads). Only runs when target status is a live/published status. Excludes `listingId || draftId` in edit mode.
+- **`AddRentalListing.tsx`**: Same duplicate check wired into `handleSubmit` after Zod validation, before file uploads. Only runs for live statuses.
 
-The screenshot shows 4 photo tiles at the bottom with actual headshot/property images, not just colored initials.
+### 8. Database-Level Duplicate Listing Protection
+- Added `address_normalized` column to `listings` table
+- Created `BEFORE INSERT OR UPDATE` trigger to auto-populate via `lower(trim(regexp_replace(...)))`
+- Created partial unique index `listings_unique_live_address` on `(address_normalized, city, state, zip_code)` for live statuses only
+- Backfilled all existing rows
 
-- Use `property-1.jpg`, `property-2.jpg`, `property-3.jpg`, and `hero-editorial.png` as the agent card images
-- Make the dashboard mockup more detailed to match the screenshot (it shows sidebar nav, more UI chrome)
+### 9. Stronger Address Normalization (MLS-Grade)
+- **`normalize_listing_address_text(input text)`** (new SQL function): Deterministic normalization with street suffix mapping (street→st, avenue→ave, etc.), unit marker normalization (apt/suite/#→unit), punctuation stripping, word-boundary-aware regex (`\y`), NULL/empty safety
+- **`normalize_listing_address()` trigger**: Updated to call `normalize_listing_address_text()` instead of inline logic
+- **Backfill**: All existing `address_normalized` values recalculated with stronger normalization
+- No frontend or index changes
 
-### 3. AgentUseCasesSection.tsx — Add real images to use-case cards
+### 10. AppShell + Sidebar Navigation (Phase 1)
+- Created `src/components/layout/AppShell.tsx` with collapsible sidebar + compact header
+- Created `src/components/layout/SidebarNavigation.tsx` with grouped nav links
+- Wrapped all authenticated agent/admin routes in `AgentLayout` → `AppShell`
+- Public, auth, consumer, and legal pages remain outside the shell
+- Fixed Navigation.tsx prefix-based hiding to use specific sub-paths (not broad `/agent/`)
 
-The screenshot shows 3 cards each with a large photo at the top (lifestyle/property photos), not just initials in colored boxes.
+### 11. ListingCardShell — Canonical Horizontal Card (Phase 2)
+- Created `src/components/ListingCardShell.tsx` as single visual source of truth for desktop list-view listing cards
+- Refactored `ListingCard.tsx` to use shell for `list` viewMode
+- Refactored `SearchListingCard.tsx` to use shell for desktop view
+- Deleted `ListingResultCard.tsx` (537 lines, zero external imports — confirmed dead code)
 
-- Add `property-1.jpg`, `property-2.jpg`, `property-3.jpg` as card header images
-- Cards should have photo on top, then title, description, and stat below
+#### Listing Surface Classification
+| Surface | Component | Card Class |
+|---|---|---|
+| My Listings | ListingCard (list mode) | canonical horizontal via shell |
+| Listing Search / Results | SearchListingCard → shell | canonical horizontal via shell |
+| Agent Dashboard | ListingCard (list mode) | canonical horizontal via shell |
+| Hot Sheet Review | ListingCard (list mode) | canonical horizontal via shell |
+| Browse Properties | ListingCard (compact/grid) | intentional grid card |
+| Search Results (consumer) | ListingCard (compact/grid) | intentional grid card |
+| IDX Search | IDXListingCard | IDX-specific separate system |
 
-### 4. ScaleSection.tsx — Use the actual globe/earth image
-
-The screenshot shows a real photo of the earth from space (the `aac-globe.png` or similar), not a CSS-drawn wireframe globe. It also shows overlaid card callouts on top of the globe image.
-
-- Replace the SVG wireframe globe with the `/brand/aac-globe.png` image
-- Add overlaid card/badge elements matching the screenshot's composition (cards with green accents floating over the globe)
-
-### 5. GCISection.tsx — Match the screenshot's left-aligned layout
-
-The screenshot shows headline + subtext + CTA on the left, with a 2x3 icon grid on the right. Currently it's all centered.
-
-- Change to a 2-column grid layout: left text block, right 2x3 value props grid
-- Add the dark background pattern matching the screenshot
-
-### 6. FooterV2.tsx — Match the screenshot's 5-column layout
-
-The screenshot shows more columns and a different structure than the current 4-column footer.
-
-- Add additional columns to match (AAC, Core, Listings, Agents, Contact)
-- Add the green "Get Access" button in the footer matching the screenshot
-
-### Files to modify (all within `src/components/home-v2/` only)
-
-| File | Change |
-|------|--------|
-| `HeroV2.tsx` | Swap globe for `hero-editorial.png`, larger right-side image |
-| `NetworkIntelSection.tsx` | Add property photos to agent tiles, richer dashboard |
-| `AgentUseCasesSection.tsx` | Add property photos as card headers |
-| `ScaleSection.tsx` | Replace SVG globe with actual `aac-globe.png` image, add overlay cards |
-| `GCISection.tsx` | Switch to 2-column layout (left text, right grid) |
-| `FooterV2.tsx` | Expand to match screenshot's column structure |
-
-No changes to existing homepage, shared components, routes, or authenticated flows.
-
+Rule: ListingCardShell is the single source of truth for all desktop horizontal listing cards. Grid mode and IDX remain intentionally separate.
