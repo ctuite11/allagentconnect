@@ -273,6 +273,7 @@ const App = () => (
                 <Route path="/fair-housing" element={<FairHousing />} />
                 <Route path="/disclosures" element={<Disclosures />} />
                 <Route path="/mockup" element={<DesignMockup />} />
+                <Route path="/homepage-v2" element={<HomepageV2 />} />
                 {/* IDX Routes */}
                 <Route path="/idx" element={<IDXSearchBeta />} />
                 <Route path="/idx/:mlsNumber" element={<IDXListingDetailBeta />} />
