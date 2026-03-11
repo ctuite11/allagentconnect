@@ -74,6 +74,7 @@ import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
 import ShareLinkHandler from "./pages/ShareLinkHandler";
 import LandingPage from "./pages/LandingPage";
+import Homepage from "./pages/Homepage";
 import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
