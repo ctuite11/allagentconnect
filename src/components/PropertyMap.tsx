@@ -39,7 +39,7 @@ const PropertyMap = ({ address, latitude, longitude }: PropertyMapProps) => {
         if (latitude && longitude) {
           const position = { lat: Number(latitude), lng: Number(longitude) };
           
-          const map = new google.maps.Map(mapRef.current, {
+          const map = new (window as any).google.maps.Map(mapRef.current, {
             center: position,
             zoom: 15,
             mapTypeControl: false,
