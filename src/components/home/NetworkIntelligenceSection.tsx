@@ -16,13 +16,6 @@ const tableRows = [
   { address: "215 Main St", city: "Cambridge", price: "$875,000", status: "Active", days: 5 },
 ];
 
-const propertyCards = [
-  { price: "$1,250,000", address: "42 Beacon St, Boston", beds: 4, baths: 3, sqft: "2,800", status: "Active" },
-  { price: "$425,000", address: "18 Elm Ave, Hartford", beds: 3, baths: 2, sqft: "1,650", status: "Coming Soon" },
-  { price: "$2,100,000", address: "7 Ocean Dr, Newport", beds: 5, baths: 4, sqft: "4,200", status: "Active" },
-  { price: "$875,000", address: "215 Main St, Cambridge", beds: 3, baths: 2, sqft: "1,900", status: "Matched" },
-  { price: "$650,000", address: "33 Park Rd, Providence", beds: 2, baths: 2, sqft: "1,400", status: "Active" },
-];
 
 const statusColor: Record<string, string> = {
   Active: "bg-emerald-500/20 text-emerald-400",
@@ -112,27 +105,6 @@ export default function NetworkIntelligenceSection() {
           </div>
         </div>
 
-        {/* Property Cards Row */}
-        <div className="mt-10 mx-auto max-w-5xl grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {propertyCards.map((p) => (
-            <div key={p.address} className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
-              {/* Photo placeholder */}
-              <div className="aspect-[4/3] bg-gradient-to-br from-zinc-200 to-zinc-300" />
-              <div className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-zinc-900">{p.price}</span>
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${statusColor[p.status] || "bg-zinc-200 text-zinc-600"}`}>
-                    {p.status}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 truncate mb-1">{p.address}</p>
-                <p className="text-[10px] text-zinc-400">
-                  {p.beds}bd · {p.baths}ba · {p.sqft} sqft
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
