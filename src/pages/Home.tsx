@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import VersionStamp from "@/components/VersionStamp";
 import NetworkIntelligenceSection from "@/components/home/NetworkIntelligenceSection";
+import heroAgent from "@/assets/hero-agent.jpg";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -91,12 +92,11 @@ export default function Home() {
 
               {/* Right: Hero image placeholder */}
               <div className="relative hidden lg:block">
-                <div className="aspect-[4/5] rounded-3xl bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center">
-                  <div className="text-center text-zinc-600">
-                    <Users className="h-16 w-16 mx-auto mb-3 opacity-40" />
-                    <p className="text-sm">Agent Photo</p>
-                  </div>
-                </div>
+                <img
+                  src={heroAgent}
+                  alt="Real estate agent working on laptop"
+                  className="aspect-[4/5] rounded-3xl object-cover w-full"
+                />
                 {/* Floating stats card */}
                 <div className="absolute -left-8 bottom-16 rounded-2xl bg-zinc-900/90 backdrop-blur border border-zinc-700/50 px-5 py-4">
                   <p className="text-xs text-zinc-500 mb-1">Network Matches</p>

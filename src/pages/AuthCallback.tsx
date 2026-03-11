@@ -106,7 +106,7 @@ const AuthCallback = () => {
 
     const hasAuthHash = window.location.hash.includes("access_token");
 
-    let timeout: NodeJS.Timeout | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     let subscription: { unsubscribe: () => void } | null = null;
     let cancelled = false;
 

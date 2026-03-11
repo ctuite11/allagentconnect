@@ -21,7 +21,7 @@ const PendingVerification = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [fatalError, setFatalError] = useState<string | null>(null);
   const didNavigate = useRef(false);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Upload state
   const [uploading, setUploading] = useState(false);
