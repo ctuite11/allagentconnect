@@ -20,11 +20,11 @@ const leftYFractions = [-0.68, -0.34, 0, 0.34, 0.68];
 const rightYFractions = [-0.68, -0.34, 0, 0.34, 0.68];
 
 const ResultsHub = () => {
-  const W = 1100, H = 400;
+  const W = 1000, H = 380;
   const cx = W / 2, cy = H / 2;
   const r1 = 36, r2 = 56, r3 = 80;
-  const leftNodeX = 88, rightNodeX = W - 88;
-  const spread = 148;
+  const leftNodeX = 160, rightNodeX = W - 160;
+  const spread = 140;
 
   const leftNodes = LEFT_NODES.map((n, i) => ({ ...n, x: leftNodeX, y: cy + leftYFractions[i] * spread }));
   const rightNodes = RIGHT_NODES.map((n, i) => ({ ...n, x: rightNodeX, y: cy + rightYFractions[i] * spread }));
@@ -35,47 +35,45 @@ const ResultsHub = () => {
     const hx = cx + Math.cos(angle) * (r3 + 2);
     const hy = cy + Math.sin(angle) * (r3 + 2);
     const npx = isLeft ? nx + 6 : nx - 6;
-    const cpx1 = isLeft ? npx + 70 : npx - 70;
-    const cpx2 = isLeft ? hx - 50 : hx + 50;
+    const cpx1 = isLeft ? npx + 50 : npx - 50;
+    const cpx2 = isLeft ? hx - 36 : hx + 36;
     return `M ${npx} ${ny} C ${cpx1} ${ny}, ${cpx2} ${hy}, ${hx} ${hy}`;
   };
 
   return (
-    <section className="w-full bg-white py-28 px-4 overflow-hidden">
-      <div className="max-w-[1200px] mx-auto flex flex-col items-center gap-16">
+    <section className="w-full bg-white py-20 px-4 overflow-hidden">
+      <div className="max-w-[1200px] mx-auto flex flex-col items-center gap-10">
         {/* Header */}
-        <div className="flex flex-col items-center gap-5 text-center max-w-[680px]">
+        <div className="flex flex-col items-center gap-4 text-center max-w-[680px]">
           <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-[#2537ff0f] border border-[#2537ff26] rounded-full">
             <span className="font-['Manrope'] font-semibold text-[#2537ff] text-[14px] tracking-[0.28px]">⚡ Capability</span>
           </div>
-          <h2 className="font-['Manrope'] font-bold text-[#292d32] text-[clamp(28px,4vw,52px)] tracking-[-2px] leading-[1.15]">
+          <h2 className="font-['Manrope'] font-bold text-[#292d32] text-[clamp(28px,4vw,48px)] tracking-[-1.5px] leading-[1.12]">
             Turning network intelligence into real results.
           </h2>
-          <p className="font-['Manrope'] font-medium text-[#40424d] text-[17px] leading-[1.7]">
+          <p className="font-['Manrope'] font-bold text-[#292d32] text-[20px] tracking-[-0.3px] leading-[1.4] mt-1">
             Data in. Dollars out.
           </p>
         </div>
 
         {/* Desktop SVG radial diagram */}
-        <div className="hidden lg:block w-full -mt-4" style={{ maxWidth: W }}>
+        <div className="hidden lg:block w-full" style={{ maxWidth: W }}>
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ overflow: "visible" }} aria-label="All Agent Connect network diagram">
             {/* Connection lines */}
             {leftNodes.map((n) => (
-              <path key={n.label + "-line"} d={buildPath(n.x, n.y, "left")} fill="none" stroke="#c7cfe0" strokeWidth="1.4" strokeDasharray="5 4" strokeLinecap="round" />
+              <path key={n.label + "-line"} d={buildPath(n.x, n.y, "left")} fill="none" stroke="#d0d8e8" strokeWidth="1.2" strokeDasharray="4 4" strokeLinecap="round" />
             ))}
             {rightNodes.map((n) => (
-              <path key={n.label + "-line"} d={buildPath(n.x, n.y, "right")} fill="none" stroke="#c7cfe0" strokeWidth="1.4" strokeDasharray="5 4" strokeLinecap="round" />
+              <path key={n.label + "-line"} d={buildPath(n.x, n.y, "right")} fill="none" stroke="#d0d8e8" strokeWidth="1.2" strokeDasharray="4 4" strokeLinecap="round" />
             ))}
 
             {/* Hub glow rings */}
-            <circle cx={cx} cy={cy} r={r3 + 90} fill="rgba(37,55,255,0.025)" style={{ filter: "blur(12px)" }} />
-            <circle cx={cx} cy={cy} r={r3 + 66} fill="rgba(37,55,255,0.04)" style={{ filter: "blur(8px)" }} />
-            <circle cx={cx} cy={cy} r={r3 + 46} fill="rgba(37,55,255,0.055)" style={{ filter: "blur(6px)" }} />
-            <circle cx={cx} cy={cy} r={r3 + 30} fill="rgba(37,55,255,0.07)" style={{ filter: "blur(4px)" }} />
-            <circle cx={cx} cy={cy} r={r3 + 16} fill="rgba(37,55,255,0.09)" style={{ filter: "blur(2px)" }} />
-            <circle cx={cx} cy={cy} r={r3} fill="rgba(37,55,255,0.12)" stroke="rgba(37,55,255,0.14)" strokeWidth="1" />
-            <circle cx={cx} cy={cy} r={r2} fill="rgba(37,55,255,0.17)" stroke="rgba(37,55,255,0.20)" strokeWidth="1" />
-            <circle cx={cx} cy={cy} r={r1 + 6} fill="rgba(37,55,255,0.26)" />
+            <circle cx={cx} cy={cy} r={r3 + 66} fill="rgba(37,55,255,0.02)" style={{ filter: "blur(10px)" }} />
+            <circle cx={cx} cy={cy} r={r3 + 40} fill="rgba(37,55,255,0.04)" style={{ filter: "blur(6px)" }} />
+            <circle cx={cx} cy={cy} r={r3 + 20} fill="rgba(37,55,255,0.06)" style={{ filter: "blur(3px)" }} />
+            <circle cx={cx} cy={cy} r={r3} fill="rgba(37,55,255,0.10)" stroke="rgba(37,55,255,0.12)" strokeWidth="1" />
+            <circle cx={cx} cy={cy} r={r2} fill="rgba(37,55,255,0.15)" stroke="rgba(37,55,255,0.18)" strokeWidth="1" />
+            <circle cx={cx} cy={cy} r={r1 + 6} fill="rgba(37,55,255,0.24)" />
             <circle cx={cx} cy={cy} r={r1} fill="#2537ff" />
 
             {/* Hub AAC monogram */}
@@ -89,36 +87,36 @@ const ResultsHub = () => {
               <path d="M 17 -3.5 A 5 5 0 1 0 17 3.5" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" />
             </g>
 
-            {/* Hub label */}
-            <text x={cx} y={cy + r3 + 34} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="700" fontSize="13" fill="#292d32">All Agent Connect</text>
-            <text x={cx} y={cy + r3 + 50} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="500" fontSize="12" fill="#92a2bb">Private agent network</text>
+            {/* Hub label — tighter, better balanced */}
+            <text x={cx} y={cy + r3 + 28} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="800" fontSize="14" letterSpacing="-0.3" fill="#292d32">All Agent Connect</text>
+            <text x={cx} y={cy + r3 + 44} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="500" fontSize="11.5" fill="#92a2bb">Private agent network</text>
 
-            {/* Left nodes */}
+            {/* Left nodes — blue-tinted fill */}
             {leftNodes.map((n) => {
               const pillW = 160, pillH = 32, iconBoxSize = 30, gap = 8;
               const totalW = iconBoxSize + gap + pillW;
               const startX = n.x - totalW;
               return (
                 <g key={n.label} transform={`translate(${startX}, ${n.y - pillH / 2})`}>
-                  <rect x="0" y="0" width={iconBoxSize} height={pillH} rx="6" fill="white" stroke="#e8eaf0" strokeWidth="1.2" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.07))" }} />
+                  <rect x="0" y="0" width={iconBoxSize} height={pillH} rx="6" fill="#f0f3ff" stroke="#e0e5f5" strokeWidth="1" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.05))" }} />
                   <g transform={`translate(${iconBoxSize / 2 - 7}, ${pillH / 2 - 7})`}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={n.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={n.icon} /></svg>
                   </g>
-                  <rect x={iconBoxSize + gap} y="0" width={pillW} height={pillH} rx={pillH / 2} fill="white" stroke="#2537ff" strokeWidth="1.2" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.07))" }} />
-                  <text x={iconBoxSize + gap + pillW / 2} y={pillH / 2 + 4.5} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="600" fontSize="11.5" fill="#40424d">{n.label}</text>
+                  <rect x={iconBoxSize + gap} y="0" width={pillW} height={pillH} rx={pillH / 2} fill="#f0f4ff" stroke="#2537ff" strokeWidth="1" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.05))" }} />
+                  <text x={iconBoxSize + gap + pillW / 2} y={pillH / 2 + 4.5} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="600" fontSize="11.5" fill="#363a42">{n.label}</text>
                 </g>
               );
             })}
 
-            {/* Right nodes */}
+            {/* Right nodes — green-tinted fill */}
             {rightNodes.map((n) => {
               const pillW = 192, pillH = 32, iconBoxSize = 30, gap = 8;
               return (
                 <g key={n.label} transform={`translate(${n.x}, ${n.y - pillH / 2})`}>
-                  <rect x="0" y="0" width={pillW} height={pillH} rx={pillH / 2} fill="white" stroke="#1bc572" strokeWidth="1.2" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.07))" }} />
+                  <rect x="0" y="0" width={pillW} height={pillH} rx={pillH / 2} fill="#f0fdf6" stroke="#1bc572" strokeWidth="1" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.05))" }} />
                   <circle cx={16} cy={pillH / 2} r={4} fill="#1bc572" />
-                  <text x={pillW / 2 + 6} y={pillH / 2 + 4.5} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="600" fontSize="11.5" fill="#40424d">{n.label}</text>
-                  <rect x={pillW + gap} y="0" width={iconBoxSize} height={pillH} rx="6" fill="white" stroke="#e8eaf0" strokeWidth="1.2" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.07))" }} />
+                  <text x={pillW / 2 + 6} y={pillH / 2 + 4.5} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="600" fontSize="11.5" fill="#363a42">{n.label}</text>
+                  <rect x={pillW + gap} y="0" width={iconBoxSize} height={pillH} rx="6" fill="#f0fdf6" stroke="#d4eddf" strokeWidth="1" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.05))" }} />
                   <g transform={`translate(${pillW + gap + iconBoxSize / 2 - 7}, ${pillH / 2 - 7})`}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#92a2bb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={n.icon} /></svg>
                   </g>
@@ -139,20 +137,20 @@ const ResultsHub = () => {
                 <rect x="16" y="16" width="9" height="9" rx="2" fill="white" />
               </svg>
             </div>
-            <p className="font-['Manrope'] font-bold text-[#292d32] text-[13px]">All Agent Connect</p>
+            <p className="font-['Manrope'] font-bold text-[#292d32] text-[14px]">All Agent Connect</p>
             <p className="font-['Manrope'] font-medium text-[#92a2bb] text-[12px] -mt-2">Private agent network</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {LEFT_NODES.map((n) => (
-              <div key={n.label} className="flex items-center gap-2.5 px-4 py-2.5 bg-white rounded-full border border-[#2537ff] shadow-sm">
+              <div key={n.label} className="flex items-center gap-2.5 px-4 py-2.5 bg-[#f0f4ff] rounded-full border border-[#2537ff] shadow-sm">
                 <span className="w-2 h-2 rounded-full bg-[#2537ff] shrink-0" />
-                <span className="font-['Manrope'] font-semibold text-[#40424d] text-[12px]">{n.label}</span>
+                <span className="font-['Manrope'] font-semibold text-[#363a42] text-[12px]">{n.label}</span>
               </div>
             ))}
             {RIGHT_NODES.map((n) => (
-              <div key={n.label} className="flex items-center gap-2.5 px-4 py-2.5 bg-white rounded-full border border-[#1bc572] shadow-sm">
+              <div key={n.label} className="flex items-center gap-2.5 px-4 py-2.5 bg-[#f0fdf6] rounded-full border border-[#1bc572] shadow-sm">
                 <span className="w-2 h-2 rounded-full bg-[#1bc572] shrink-0" />
-                <span className="font-['Manrope'] font-semibold text-[#40424d] text-[12px]">{n.label}</span>
+                <span className="font-['Manrope'] font-semibold text-[#363a42] text-[12px]">{n.label}</span>
               </div>
             ))}
           </div>
