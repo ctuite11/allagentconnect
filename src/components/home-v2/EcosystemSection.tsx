@@ -1,4 +1,4 @@
-import { useState, ElementType } from "react";
+import { useState, useMemo, ElementType } from "react";
 import { motion } from "framer-motion";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
@@ -233,6 +233,39 @@ function Hub() {
   );
 }
 
+/* ─── Constellation Lines ────────────────────────────────── */
+
+const CONSTELLATION_LINES = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  x1: Math.random() * 100,
+  y1: Math.random() * 100,
+  x2: Math.random() * 100,
+  y2: Math.random() * 100,
+}));
+
+function ConstellationLines() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="none"
+    >
+      {CONSTELLATION_LINES.map((line) => (
+        <line
+          key={line.id}
+          x1={`${line.x1}%`}
+          y1={`${line.y1}%`}
+          x2={`${line.x2}%`}
+          y2={`${line.y2}%`}
+          stroke="rgba(148,163,184,0.12)"
+          strokeWidth="0.5"
+        />
+      ))}
+    </svg>
+  );
+}
+
 /* ─── Main Section ───────────────────────────────────────── */
 
 export default function EcosystemSection() {
@@ -248,6 +281,9 @@ export default function EcosystemSection() {
         className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
         style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f8fafc 80%, #f8fafc 100%)" }}
       />
+
+      {/* Constellation web lines */}
+      <ConstellationLines />
 
       {/* Subtle grid — lines only, no nodes */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.06]"
