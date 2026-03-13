@@ -267,7 +267,7 @@ export default function EcosystemSection() {
 
           {/* Right — Results column */}
           <div className="flex flex-col justify-center space-y-3">
-            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: GREEN }}>
+            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: GREEN, opacity: 0.85 }}>
               Results
             </p>
             {resultCards.map((card, i) => (
