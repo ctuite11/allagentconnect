@@ -58,6 +58,15 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
           className="pointer-events-none absolute inset-0 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style={{ background: "rgba(255,255,255,0.04)" }}
         />
+        {/* Hover sweep */}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100"
+          style={{ background: "linear-gradient(90deg, transparent 0%, hsl(217,90%,60%,0.08) 50%, transparent 100%)" }}
+          initial={{ x: "-100%" }}
+          whileHover={{ x: "100%" }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+        />
         <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
             <motion.div
