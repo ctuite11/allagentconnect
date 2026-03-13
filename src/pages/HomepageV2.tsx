@@ -139,7 +139,7 @@ const HomepageV2 = () => {
         <main className="flex flex-col w-full">
           <HeroSection />
           <NetworkIntelligence />
-          <ResultsHub />
+          <EcosystemSection />
           <HowAgentsUseAAC />
           <ScalePersistence />
           <GCIBenefits />
