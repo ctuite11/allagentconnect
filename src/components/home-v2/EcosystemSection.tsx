@@ -40,10 +40,10 @@ const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
 
 /* Card tokens — clean, no glass */
-const CARD_BG = "rgba(255,255,255,0.96)";
-const CARD_BORDER = "rgba(15,23,42,0.08)";
-const CARD_SHADOW = "0 2px 12px rgba(15,23,42,0.05)";
-const CARD_SHADOW_HOVER = "0 8px 24px rgba(15,23,42,0.08)";
+const CARD_BG = "rgba(255,255,255,0.94)";
+const CARD_BORDER = "rgba(15,23,42,0.10)";
+const CARD_SHADOW = "0 4px 16px rgba(15,23,42,0.06)";
+const CARD_SHADOW_HOVER = "0 10px 30px rgba(15,23,42,0.10)";
 
 /* ─── Static constellation lines ─────────────────────────── */
 
@@ -77,6 +77,7 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
         border: `1px solid ${CARD_BORDER}`,
         background: CARD_BG,
         boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW,
+        transform: `translateY(${hovered ? -2 : 0}px)`,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -86,7 +87,7 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
           <Icon size={16} style={{ color: BLUE }} aria-hidden="true" className="flex-shrink-0" />
           <div className="min-w-0">
             <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
-            <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
+            <p className="font-sans text-xs font-normal truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
           </div>
         </div>
       </div>
@@ -108,6 +109,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
         border: `1px solid ${CARD_BORDER}`,
         background: CARD_BG,
         boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW,
+        transform: `translateY(${hovered ? -2 : 0}px)`,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -117,7 +119,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
           <Icon size={16} style={{ color: GREEN }} aria-hidden="true" className="flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
-            <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
+            <p className="font-sans text-xs font-normal truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
           </div>
         </div>
       </div>
@@ -129,18 +131,18 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
 
 function Hub() {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 320, height: 320 }}>
+    <div className="relative flex items-center justify-center" style={{ width: 320, height: 320, boxShadow: "0 8px 30px rgba(15,23,42,0.08)" }}>
       {/* Outer ring */}
       <div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 280, height: 280, border: "1px solid rgba(148,163,184,0.12)" }} />
+        style={{ width: 280, height: 280, border: "1px solid rgba(148,163,184,0.18)" }} />
 
       {/* Middle ring */}
       <div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 215, height: 215, border: "1px solid rgba(148,163,184,0.10)" }} />
+        style={{ width: 215, height: 215, border: "1px solid rgba(148,163,184,0.18)" }} />
 
       {/* Inner ring */}
       <div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 155, height: 155, border: "1px solid rgba(148,163,184,0.08)" }} />
+        style={{ width: 155, height: 155, border: "1px solid rgba(148,163,184,0.18)" }} />
 
       {/* Center — monogram */}
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
@@ -149,7 +151,7 @@ function Hub() {
 
       {/* Hub labels */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-12 text-center">
-        <p className="whitespace-nowrap font-sans text-base font-bold" style={{ color: TEXT_PRIMARY }}>
+        <p className="whitespace-nowrap font-sans text-base font-semibold" style={{ color: TEXT_PRIMARY }}>
           All Agent Connect
         </p>
         <p className="whitespace-nowrap font-mono text-xs font-light tracking-wide" style={{ color: TEXT_SECONDARY }}>
@@ -230,10 +232,10 @@ export default function EcosystemSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <h2 className="mb-3 font-sans text-4xl font-medium leading-tight lg:text-5xl" style={{ color: TEXT_PRIMARY }}>
+          <h2 className="mb-3 font-sans text-4xl font-semibold leading-tight lg:text-5xl" style={{ color: TEXT_PRIMARY, letterSpacing: "-0.02em" }}>
             Turning network intelligence into real results.
           </h2>
-          <p className="font-mono text-xl font-light tracking-wide" style={{ color: "#475569" }}>
+          <p className="font-mono text-xl font-medium tracking-wide" style={{ color: "#475569" }}>
             Data in. Dollars out.
           </p>
         </motion.div>
@@ -243,7 +245,7 @@ export default function EcosystemSection() {
 
           {/* Left — Input column */}
           <div className="flex flex-col justify-center" style={{ gap: 22 }}>
-            <p className="text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: BLUE, opacity: 0.85 }}>
+            <p className="text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] lg:text-left" style={{ color: BLUE, opacity: 0.85 }}>
               Data Inputs
             </p>
             {inputCards.map((card, i) => (
@@ -267,7 +269,7 @@ export default function EcosystemSection() {
 
           {/* Right — Results column */}
           <div className="flex flex-col justify-center" style={{ gap: 22 }}>
-            <p className="text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: GREEN, opacity: 0.85 }}>
+            <p className="text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] lg:text-left" style={{ color: GREEN, opacity: 0.85 }}>
               Results
             </p>
             {resultCards.map((card, i) => (
