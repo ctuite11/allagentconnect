@@ -375,7 +375,7 @@ export default function EcosystemSection() {
                 >
                   <div className="h-full w-full" style={{ background: `linear-gradient(to right, ${GREEN_08}, ${GREEN_60})` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: GREEN, boxShadow: `0 0 6px 2px rgba(80,200,120,0.7)` }}
+                    style={{ width: 5, height: 5, background: GREEN, boxShadow: `0 0 6px 2px rgba(5,150,105,0.7)` }}
                     animate={{ x: [0, 56] }}
                     transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 + 0.7 }}
                   />
