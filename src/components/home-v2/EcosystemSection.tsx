@@ -1,5 +1,5 @@
-import { useMemo, useEffect, useState, ElementType } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo, useState, ElementType } from "react";
+import { motion } from "framer-motion";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
   Users,
@@ -35,11 +35,10 @@ const resultCards = [
 
 const BG_LIGHT = "#f8fafc";
 const BLUE = "#0E56F5";
-const BLUE_ACCENT = "#3B82F6";
-const GREEN = "#059669";
+const GREEN = "#22C55E";
 
 /* Light-theme card tokens */
-const CARD_BG_QUIET = "rgba(255,255,255,0.78)";
+const CARD_BG_QUIET = "rgba(255,255,255,0.72)";
 const CARD_BORDER_QUIET = "rgba(15,23,42,0.08)";
 const CARD_BG_HOVER = "rgba(255,255,255,0.95)";
 const CARD_BORDER_HOVER = "rgba(15,23,42,0.14)";
@@ -50,7 +49,6 @@ const CARD_SHADOW_REST = "0 1px 3px rgba(0,0,0,0.04)";
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
 const LINE_MUTED = "rgba(148,163,184,0.12)";
-const DOT_MUTED = "rgba(148,163,184,0.15)";
 const RING_MUTED = "rgba(148,163,184,0.15)";
 
 /* ─── Sub-components ─────────────────────────────────────── */
@@ -75,7 +73,6 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative px-4 py-3">
-        {/* Hover sweep */}
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100"
@@ -88,13 +85,13 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
           <div className="relative flex-shrink-0">
             <motion.div
               className="h-2 w-2 rounded-full"
-              style={{ background: BLUE_ACCENT }}
+              style={{ background: BLUE }}
               animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.2, 0.4] }}
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
             />
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Icon size={16} style={{ color: "rgba(59,130,246,0.7)" }} aria-hidden="true" className="flex-shrink-0" />
+            <Icon size={16} style={{ color: BLUE }} aria-hidden="true" className="flex-shrink-0" />
             <div className="min-w-0">
               <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
               <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
@@ -126,7 +123,6 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative px-4 py-3">
-        {/* Hover sweep */}
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100"
@@ -144,7 +140,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             />
           </div>
-          <Icon size={16} style={{ color: "rgba(5,150,105,0.7)" }} aria-hidden="true" className="flex-shrink-0" />
+          <Icon size={16} style={{ color: GREEN }} aria-hidden="true" className="flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
             <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
@@ -152,85 +148,6 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
         </div>
       </div>
     </motion.div>
-  );
-}
-
-/* ─── Constellation Background ───────────────────────────── */
-
-interface Dot { id: number; x: number; y: number; duration: number; delay: number }
-interface Line { id: number; x1: number; y1: number; x2: number; y2: number }
-interface WakeNode { id: number; x: number; y: number; color: "blue" | "green" }
-
-function ConstellationBackground() {
-  const dots: Dot[] = useMemo(
-    () => Array.from({ length: 80 }, (_, i) => ({
-      id: i, x: Math.random() * 100, y: Math.random() * 100,
-      duration: 3 + Math.random() * 2, delay: Math.random() * 4,
-    })), []
-  );
-
-  const lines: Line[] = useMemo(
-    () => Array.from({ length: 30 }, (_, i) => ({
-      id: i, x1: Math.random() * 100, y1: Math.random() * 100,
-      x2: Math.random() * 100, y2: Math.random() * 100,
-    })), []
-  );
-
-  const [wakeNodes, setWakeNodes] = useState<WakeNode[]>([]);
-
-  useEffect(() => {
-    let counter = 0;
-    const fireWave = () => {
-      const isBlue = counter % 2 === 0;
-      const color: "blue" | "green" = isBlue ? "blue" : "green";
-      const side = isBlue ? [0, 38] : [62, 100];
-      const count = 4 + Math.floor(Math.random() * 4);
-      const nodes: WakeNode[] = Array.from({ length: count }, (_, i) => ({
-        id: Date.now() + i,
-        x: side[0] + Math.random() * (side[1] - side[0]),
-        y: 10 + Math.random() * 80,
-        color,
-      }));
-      setWakeNodes(nodes);
-      counter++;
-      setTimeout(() => setWakeNodes([]), 1800);
-    };
-    const interval = setInterval(fireWave, 3200);
-    const timeout = setTimeout(fireWave, 1200);
-    return () => { clearInterval(interval); clearTimeout(timeout); };
-  }, []);
-
-  return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-      <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-        {lines.map((line) => (
-          <line key={line.id} x1={`${line.x1}%`} y1={`${line.y1}%`} x2={`${line.x2}%`} y2={`${line.y2}%`}
-            stroke={LINE_MUTED} strokeWidth="0.5" strokeOpacity="0.08" />
-        ))}
-      </svg>
-      {dots.map((dot) => (
-        <motion.div key={dot.id} className="absolute rounded-full"
-          style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: 2.5, height: 2.5, backgroundColor: DOT_MUTED }}
-          animate={{ opacity: [0.05, 0.18, 0.05], scale: [1, 1.3, 1] }}
-          transition={{ duration: dot.duration, delay: dot.delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-      <AnimatePresence>
-        {wakeNodes.map((node) => (
-          <motion.div key={node.id} className="absolute rounded-full"
-            style={{
-              left: `${node.x}%`, top: `${node.y}%`, width: 7, height: 7,
-              marginLeft: -3.5, marginTop: -3.5,
-              backgroundColor: node.color === "blue" ? "rgba(148,163,184,0.25)" : "rgba(148,163,184,0.25)",
-            }}
-            initial={{ opacity: 0, scale: 0.4 }}
-            animate={{ opacity: [0, 0.25, 0.25, 0], scale: [0.4, 1.3, 1.1, 0.6] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.6, ease: "easeInOut" }}
-          />
-        ))}
-      </AnimatePresence>
-    </div>
   );
 }
 
@@ -255,7 +172,7 @@ function Hub() {
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Outer orbit ring — 35s */}
+      {/* Outer orbit ring */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
         style={{ width: 280, height: 280, border: `1px solid ${RING_MUTED}` }}
         animate={{ rotate: 360 }}
@@ -269,7 +186,7 @@ function Hub() {
             background: "rgba(5,150,105,0.5)", }} />
       </motion.div>
 
-      {/* Middle orbit ring — counter-clockwise 26s */}
+      {/* Middle orbit ring */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
         style={{ width: 215, height: 215, border: `1px solid ${RING_MUTED}` }}
         animate={{ rotate: -360 }}
@@ -287,7 +204,7 @@ function Hub() {
         transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
       />
 
-      {/* Center — monogram + ambient glow */}
+      {/* Center — monogram */}
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
         <motion.div aria-hidden="true" className="absolute rounded-full"
           style={{ width: 100, height: 100,
@@ -332,8 +249,6 @@ export default function EcosystemSection() {
         className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
         style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f3f4f6 80%, #f8fafc 100%)" }}
       />
-      {/* Background constellation */}
-      <ConstellationBackground />
 
       {/* Subtle grid */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.02]"
@@ -342,11 +257,6 @@ export default function EcosystemSection() {
           backgroundSize: "60px 60px",
         }}
       />
-
-      {/* Ambient glow behind grid */}
-      <div aria-hidden="true" className="absolute inset-0 flex justify-center pointer-events-none">
-        <div className="w-[900px] h-[500px] rounded-full blur-[160px]" style={{ background: "rgba(191,219,254,0.08)" }} />
-      </div>
 
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-7xl">
@@ -382,7 +292,7 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 translate-x-full lg:block overflow-hidden"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(148,163,184,0.18), rgba(148,163,184,0.06))` }} />
+                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(14,86,245,0.18), rgba(14,86,245,0.06))` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
                     style={{ width: 5, height: 5, background: "rgba(59,130,246,0.5)" }}
                     animate={{ x: [0, 56] }}
@@ -410,7 +320,7 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute left-0 top-1/2 hidden -translate-x-full -translate-y-1/2 lg:block overflow-hidden"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(148,163,184,0.06), rgba(148,163,184,0.18))` }} />
+                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(34,197,94,0.06), rgba(34,197,94,0.18))` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
                     style={{ width: 5, height: 5, background: "rgba(5,150,105,0.5)" }}
                     animate={{ x: [0, 56] }}
