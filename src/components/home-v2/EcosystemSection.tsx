@@ -249,6 +249,9 @@ export default function EcosystemSection() {
         style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f8fafc 80%, #f8fafc 100%)" }}
       />
 
+      {/* Constellation web lines */}
+      <ConstellationLines />
+
       {/* Subtle grid — lines only, no nodes */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
