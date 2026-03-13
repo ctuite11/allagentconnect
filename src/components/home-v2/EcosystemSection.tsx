@@ -254,7 +254,7 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 translate-x-full lg:block"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(14,86,245,0.15), rgba(14,86,245,0.05))" }} />
+                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(14,86,245,0.22), rgba(14,86,245,0.08))" }} />
                 </div>
               </div>
             ))}
