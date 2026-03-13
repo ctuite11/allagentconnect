@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@300;400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #0A0E1A;
+  --color-primary-foreground: hsl(210, 100%, 98%);
+  --color-secondary: hsl(217, 92%, 28%);
+  --color-secondary-foreground: hsl(210, 100%, 98%);
+  --color-tertiary: hsl(161, 79%, 26%);
+  --color-tertiary-foreground: hsl(145, 67%, 90%);
+  --color-neutral: hsl(215, 24%, 16%);
+  --color-neutral-foreground: hsl(215, 20%, 95%);
+  --color-success: hsl(152, 78%, 46%);
+  --color-warning: hsl(43, 100%, 60%);
+  --color-blue-energy: hsl(217, 90%, 60%);
+  --color-blue-depth: hsl(217, 88%, 45%);
+  --color-emerald-result: hsl(161, 78%, 45%);
+  --color-border: hsl(215, 24%, 22%);
+  --color-background: #0A0E1A;
+  --color-foreground: hsl(210, 100%, 98%);
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --border-radius: 12px;
+}
+
+html, body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+*:focus-visible {
+  outline: 2px solid hsl(217, 90%, 60%);
+  outline-offset: 2px;
+}
