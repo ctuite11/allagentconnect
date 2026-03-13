@@ -166,7 +166,7 @@ export default function EcosystemSection() {
   return (
     <section
       aria-label="Ecosystem visualization"
-      className="relative w-full overflow-hidden pt-36 pb-24 px-8 mt-[160px]"
+      className="relative w-full overflow-hidden pt-36 pb-[140px] px-8 mt-[160px]"
       style={{ backgroundColor: "#ffffff" }}
     >
       {/* Soft gradient transition from previous section */}
@@ -224,7 +224,7 @@ export default function EcosystemSection() {
       <div className="relative z-10 mx-auto max-w-7xl">
 
         {/* Headline */}
-        <motion.div className="mb-20 text-center"
+        <motion.div className="mb-[80px] text-center"
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -239,11 +239,11 @@ export default function EcosystemSection() {
         </motion.div>
 
         {/* Three-column ecosystem grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_auto_380px] lg:gap-8 items-center justify-center">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_auto_400px] lg:gap-8 items-center justify-center">
 
           {/* Left — Input column */}
-          <div className="flex flex-col justify-center space-y-3">
-            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: BLUE, opacity: 0.85 }}>
+          <div className="flex flex-col justify-center" style={{ gap: 22 }}>
+            <p className="text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: BLUE, opacity: 0.85 }}>
               Data Inputs
             </p>
             {inputCards.map((card, i) => (
@@ -266,8 +266,8 @@ export default function EcosystemSection() {
           </div>
 
           {/* Right — Results column */}
-          <div className="flex flex-col justify-center space-y-3">
-            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: GREEN, opacity: 0.85 }}>
+          <div className="flex flex-col justify-center" style={{ gap: 22 }}>
+            <p className="text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: GREEN, opacity: 0.85 }}>
               Results
             </p>
             {resultCards.map((card, i) => (
