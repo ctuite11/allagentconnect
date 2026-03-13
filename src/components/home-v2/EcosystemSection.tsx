@@ -265,7 +265,7 @@ function Hub() {
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
         <motion.div aria-hidden="true" className="absolute rounded-full"
           style={{ width: 100, height: 100,
-            background: "radial-gradient(circle, rgba(80,200,120,0.18) 0%, rgba(14,86,245,0.12) 55%, transparent 80%)" }}
+            background: "radial-gradient(circle, rgba(5,150,105,0.18) 0%, rgba(14,86,245,0.12) 55%, transparent 80%)" }}
           animate={{ opacity: [0.4, 0.7, 0.4] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
