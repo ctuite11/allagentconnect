@@ -112,7 +112,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
           </div>
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: GREEN_08, border: `1px solid rgba(80,200,120,0.2)` }}
+            style={{ background: GREEN_08, border: `1px solid rgba(5,150,105,0.2)` }}
           >
             <Icon size={16} style={{ color: GREEN }} aria-hidden="true" />
           </div>
