@@ -250,7 +250,7 @@ export default function EcosystemSection() {
       />
 
       {/* Subtle grid — lines only, no nodes */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.04]"
+      <div aria-hidden="true" <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage: `linear-gradient(rgba(148,163,184,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.6) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
