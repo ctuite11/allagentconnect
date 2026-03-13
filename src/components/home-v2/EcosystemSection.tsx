@@ -1,4 +1,4 @@
-import { useMemo, useState, ElementType } from "react";
+import { useState, ElementType } from "react";
 import { motion } from "framer-motion";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
@@ -33,7 +33,7 @@ const resultCards = [
 
 /* ─── Brand colors (inline, scoped to this section) ──────── */
 
-const BG_LIGHT = "#f8fafc";
+const BG_LIGHT = "#f1f5f9";
 const BLUE = "#0E56F5";
 const GREEN = "#22C55E";
 
@@ -48,7 +48,6 @@ const CARD_SHADOW_REST = "0 1px 3px rgba(0,0,0,0.04)";
 /* Light-theme palette */
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
-const LINE_MUTED = "rgba(148,163,184,0.12)";
 const RING_MUTED = "rgba(148,163,184,0.15)";
 
 /* ─── Sub-components ─────────────────────────────────────── */
@@ -73,13 +72,13 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative px-4 py-3">
-        <motion.div
+        {/* Apple light sweep — blue tinted */}
+        <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100"
-          style={{ background: "linear-gradient(90deg, transparent 0%, hsl(217,90%,60%,0.03) 50%, transparent 100%)" }}
-          initial={{ x: "-100%" }}
-          whileHover={{ x: "100%" }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          className="pointer-events-none absolute inset-0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700 ease-out"
+          style={{
+            background: "linear-gradient(110deg, transparent 40%, rgba(14,86,245,0.18) 50%, transparent 60%)",
+          }}
         />
         <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
@@ -123,13 +122,13 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative px-4 py-3">
-        <motion.div
+        {/* Apple light sweep — emerald tinted */}
+        <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100"
-          style={{ background: "linear-gradient(90deg, transparent 0%, hsl(161,78%,45%,0.03) 50%, transparent 100%)" }}
-          initial={{ x: "-100%" }}
-          whileHover={{ x: "100%" }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          className="pointer-events-none absolute inset-0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700 ease-out"
+          style={{
+            background: "linear-gradient(110deg, transparent 40%, rgba(34,197,94,0.18) 50%, transparent 60%)",
+          }}
         />
         <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
@@ -247,13 +246,13 @@ export default function EcosystemSection() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
-        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f3f4f6 80%, #f8fafc 100%)" }}
+        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f1f5f9 80%, #f1f5f9 100%)" }}
       />
 
-      {/* Subtle grid */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.02]"
+      {/* Subtle grid — lines only, no nodes */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
-          backgroundImage: `linear-gradient(rgba(148,163,184,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.5) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(148,163,184,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.6) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
         }}
       />
