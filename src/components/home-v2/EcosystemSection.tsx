@@ -274,7 +274,7 @@ function Hub() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="relative z-10"
         >
-          <AACMonogram className="w-[72px] h-[72px] text-emerald-400" />
+          <AACMonogram className="w-[72px] h-[72px] text-emerald-500" />
         </motion.div>
       </div>
 
