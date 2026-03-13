@@ -77,6 +77,7 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
         border: `1px solid ${CARD_BORDER}`,
         background: CARD_BG,
         boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW,
+        transform: `translateY(${hovered ? -2 : 0}px)`,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -86,7 +87,7 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
           <Icon size={16} style={{ color: BLUE }} aria-hidden="true" className="flex-shrink-0" />
           <div className="min-w-0">
             <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
-            <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
+            <p className="font-sans text-xs font-normal truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
           </div>
         </div>
       </div>
