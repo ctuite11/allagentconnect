@@ -101,7 +101,7 @@ const NetworkIntelligence = () => {
       </div>
 
       {/* Property listing cards row */}
-      <div className="w-full max-w-[1080px] mx-auto mt-10 pb-4">
+      <div className="w-full max-w-[1080px] mx-auto mt-20 pb-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { image: "https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-7.png", label: "Off-Market listing", price: "$4,000,000", dot: "#2537ff" },
