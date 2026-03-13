@@ -232,10 +232,10 @@ export default function EcosystemSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <h2 className="mb-3 font-sans text-4xl font-medium leading-tight lg:text-5xl" style={{ color: TEXT_PRIMARY }}>
+          <h2 className="mb-3 font-sans text-4xl font-semibold leading-tight lg:text-5xl" style={{ color: TEXT_PRIMARY, letterSpacing: "-0.02em" }}>
             Turning network intelligence into real results.
           </h2>
-          <p className="font-mono text-xl font-light tracking-wide" style={{ color: "#475569" }}>
+          <p className="font-mono text-xl font-medium tracking-wide" style={{ color: "#475569" }}>
             Data in. Dollars out.
           </p>
         </motion.div>
