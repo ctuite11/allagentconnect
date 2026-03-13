@@ -36,9 +36,9 @@ const resultCards = [
 const BLUE = "#0E56F5";
 const BLUE_60 = "rgba(14,86,245,0.6)";
 const BLUE_08 = "rgba(14,86,245,0.08)";
-const GREEN = "#50C878";
-const GREEN_60 = "rgba(80,200,120,0.6)";
-const GREEN_08 = "rgba(80,200,120,0.08)";
+const GREEN = "#059669";
+const GREEN_60 = "rgba(5,150,105,0.6)";
+const GREEN_08 = "rgba(5,150,105,0.08)";
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
@@ -93,7 +93,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
       className="group relative overflow-hidden backdrop-blur-sm cursor-default"
-      style={{ borderRadius: 12, border: `1px solid rgba(80,200,120,0.2)`, background: "rgba(31,41,55,0.8)" }}
+      style={{ borderRadius: 12, border: `1px solid rgba(5,150,105,0.2)`, background: "rgba(31,41,55,0.8)" }}
     >
       <div className="relative px-4 py-3">
         <div
@@ -112,7 +112,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
           </div>
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: GREEN_08, border: `1px solid rgba(80,200,120,0.2)` }}
+            style={{ background: GREEN_08, border: `1px solid rgba(5,150,105,0.2)` }}
           >
             <Icon size={16} style={{ color: GREEN }} aria-hidden="true" />
           </div>
@@ -192,10 +192,10 @@ function ConstellationBackground() {
             style={{
               left: `${node.x}%`, top: `${node.y}%`, width: 8, height: 8,
               marginLeft: -4, marginTop: -4,
-              backgroundColor: node.color === "blue" ? "#3B82F6" : "#22C55E",
+              backgroundColor: node.color === "blue" ? "#3B82F6" : "#059669",
               boxShadow: node.color === "blue"
                 ? "0 0 12px 4px rgba(59,130,246,0.6)"
-                : "0 0 12px 4px rgba(34,197,94,0.6)",
+                : "0 0 12px 4px rgba(5,150,105,0.6)",
             }}
             initial={{ opacity: 0, scale: 0.4 }}
             animate={{ opacity: [0, 0.9, 0.9, 0], scale: [0.4, 1.4, 1.2, 0.6] }}
@@ -240,7 +240,7 @@ function Hub() {
             background: "#3B82F6", boxShadow: "0 0 8px 3px rgba(59,130,246,0.7)" }} />
         <div className="absolute rounded-full"
           style={{ width: 8, height: 8, bottom: -4, left: "50%", transform: "translateX(-50%)",
-            background: "#22C55E", boxShadow: "0 0 8px 3px rgba(34,197,94,0.7)" }} />
+            background: "#059669", boxShadow: "0 0 8px 3px rgba(5,150,105,0.7)" }} />
       </motion.div>
 
       {/* Middle orbit ring — counter-clockwise 22s */}
@@ -265,7 +265,7 @@ function Hub() {
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
         <motion.div aria-hidden="true" className="absolute rounded-full"
           style={{ width: 100, height: 100,
-            background: "radial-gradient(circle, rgba(80,200,120,0.18) 0%, rgba(14,86,245,0.12) 55%, transparent 80%)" }}
+            background: "radial-gradient(circle, rgba(5,150,105,0.18) 0%, rgba(14,86,245,0.12) 55%, transparent 80%)" }}
           animate={{ opacity: [0.4, 0.7, 0.4] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -274,7 +274,7 @@ function Hub() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="relative z-10"
         >
-          <AACMonogram className="w-[72px] h-[72px] text-emerald-400" />
+          <AACMonogram className="w-[72px] h-[72px] text-emerald-500" />
         </motion.div>
       </div>
 
@@ -375,7 +375,7 @@ export default function EcosystemSection() {
                 >
                   <div className="h-full w-full" style={{ background: `linear-gradient(to right, ${GREEN_08}, ${GREEN_60})` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: GREEN, boxShadow: `0 0 6px 2px rgba(80,200,120,0.7)` }}
+                    style={{ width: 5, height: 5, background: GREEN, boxShadow: `0 0 6px 2px rgba(5,150,105,0.7)` }}
                     animate={{ x: [0, 56] }}
                     transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 + 0.7 }}
                   />
