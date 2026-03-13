@@ -192,10 +192,10 @@ function ConstellationBackground() {
             style={{
               left: `${node.x}%`, top: `${node.y}%`, width: 8, height: 8,
               marginLeft: -4, marginTop: -4,
-              backgroundColor: node.color === "blue" ? "#3B82F6" : "#22C55E",
+              backgroundColor: node.color === "blue" ? "#3B82F6" : "#059669",
               boxShadow: node.color === "blue"
                 ? "0 0 12px 4px rgba(59,130,246,0.6)"
-                : "0 0 12px 4px rgba(34,197,94,0.6)",
+                : "0 0 12px 4px rgba(5,150,105,0.6)",
             }}
             initial={{ opacity: 0, scale: 0.4 }}
             animate={{ opacity: [0, 0.9, 0.9, 0], scale: [0.4, 1.4, 1.2, 0.6] }}
