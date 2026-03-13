@@ -131,18 +131,18 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
 
 function Hub() {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 320, height: 320 }}>
+    <div className="relative flex items-center justify-center" style={{ width: 320, height: 320, boxShadow: "0 8px 30px rgba(15,23,42,0.08)" }}>
       {/* Outer ring */}
       <div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 280, height: 280, border: "1px solid rgba(148,163,184,0.12)" }} />
+        style={{ width: 280, height: 280, border: "1px solid rgba(148,163,184,0.18)" }} />
 
       {/* Middle ring */}
       <div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 215, height: 215, border: "1px solid rgba(148,163,184,0.10)" }} />
+        style={{ width: 215, height: 215, border: "1px solid rgba(148,163,184,0.18)" }} />
 
       {/* Inner ring */}
       <div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 155, height: 155, border: "1px solid rgba(148,163,184,0.08)" }} />
+        style={{ width: 155, height: 155, border: "1px solid rgba(148,163,184,0.18)" }} />
 
       {/* Center — monogram */}
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
