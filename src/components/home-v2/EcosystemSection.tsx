@@ -246,7 +246,7 @@ export default function EcosystemSection() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
-        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f1f5f9 80%, #f1f5f9 100%)" }}
+        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f8fafc 80%, #f8fafc 100%)" }}
       />
 
       {/* Subtle grid — lines only, no nodes */}
