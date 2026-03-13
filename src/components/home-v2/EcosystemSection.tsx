@@ -1,4 +1,4 @@
-import { useState, useMemo, ElementType } from "react";
+import { useState, ElementType } from "react";
 import { motion } from "framer-motion";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
@@ -31,24 +31,35 @@ const resultCards = [
   { icon: TrendingUp, label: "Higher agent production", description: "Lift output across your entire team" },
 ];
 
-/* ─── Brand colors (inline, scoped to this section) ──────── */
+/* ─── Brand colors ───────────────────────────────────────── */
 
-const BG_LIGHT = "#f8fafc";
 const BLUE = "#0E56F5";
 const GREEN = "#22C55E";
 
-/* Light-theme card tokens */
-const CARD_BG_QUIET = "rgba(255,255,255,0.72)";
-const CARD_BORDER_QUIET = "rgba(15,23,42,0.08)";
-const CARD_BG_HOVER = "rgba(255,255,255,0.95)";
-const CARD_BORDER_HOVER = "rgba(15,23,42,0.14)";
-const CARD_SHADOW_HOVER = "0 12px 40px rgba(0,0,0,0.08)";
-const CARD_SHADOW_REST = "0 1px 3px rgba(0,0,0,0.04)";
-
-/* Light-theme palette */
 const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
-const RING_MUTED = "rgba(148,163,184,0.15)";
+
+/* Card tokens — clean, no glass */
+const CARD_BG = "rgba(255,255,255,0.96)";
+const CARD_BORDER = "rgba(15,23,42,0.08)";
+const CARD_SHADOW = "0 2px 12px rgba(15,23,42,0.05)";
+const CARD_SHADOW_HOVER = "0 8px 24px rgba(15,23,42,0.08)";
+
+/* ─── Static constellation lines ─────────────────────────── */
+
+const CONSTELLATION_LINES = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  x1: Math.random() * 100,
+  y1: Math.random() * 100,
+  x2: Math.random() * 100,
+  y2: Math.random() * 100,
+}));
+
+const CONSTELLATION_NODES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+}));
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
@@ -60,41 +71,22 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
-      className="group relative overflow-hidden backdrop-blur-sm cursor-default transition-all duration-300 ease-out"
+      className="cursor-default transition-shadow duration-300 ease-out"
       style={{
         borderRadius: 12,
-        border: `1px solid ${hovered ? CARD_BORDER_HOVER : CARD_BORDER_QUIET}`,
-        background: hovered ? CARD_BG_HOVER : CARD_BG_QUIET,
-        transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW_REST,
+        border: `1px solid ${CARD_BORDER}`,
+        background: CARD_BG,
+        boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="relative px-4 py-3">
-        {/* Apple light sweep — blue tinted */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700 ease-out"
-          style={{
-            background: "linear-gradient(110deg, transparent 40%, rgba(14,86,245,0.18) 50%, transparent 60%)",
-          }}
-        />
+      <div className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="relative flex-shrink-0">
-            <motion.div
-              className="h-2 w-2 rounded-full"
-              style={{ background: BLUE }}
-              animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.2, 0.4] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </div>
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Icon size={16} style={{ color: BLUE }} aria-hidden="true" className="flex-shrink-0" />
-            <div className="min-w-0">
-              <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
-              <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
-            </div>
+          <Icon size={16} style={{ color: BLUE }} aria-hidden="true" className="flex-shrink-0" />
+          <div className="min-w-0">
+            <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
+            <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
           </div>
         </div>
       </div>
@@ -110,35 +102,18 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
-      className="group relative overflow-hidden backdrop-blur-sm cursor-default transition-all duration-300 ease-out"
+      className="cursor-default transition-shadow duration-300 ease-out"
       style={{
         borderRadius: 12,
-        border: `1px solid ${hovered ? CARD_BORDER_HOVER : CARD_BORDER_QUIET}`,
-        background: hovered ? CARD_BG_HOVER : CARD_BG_QUIET,
-        transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW_REST,
+        border: `1px solid ${CARD_BORDER}`,
+        background: CARD_BG,
+        boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="relative px-4 py-3">
-        {/* Apple light sweep — emerald tinted */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700 ease-out"
-          style={{
-            background: "linear-gradient(110deg, transparent 40%, rgba(34,197,94,0.18) 50%, transparent 60%)",
-          }}
-        />
+      <div className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="relative flex-shrink-0">
-            <motion.div
-              className="h-2 w-2 rounded-full"
-              style={{ background: GREEN }}
-              animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.2, 0.4] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            />
-          </div>
           <Icon size={16} style={{ color: GREEN }} aria-hidden="true" className="flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
@@ -150,74 +125,26 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
   );
 }
 
-/* ─── Hub (center core) ──────────────────────────────────── */
+/* ─── Hub (quiet, confident center) ──────────────────────── */
 
 function Hub() {
   return (
     <div className="relative flex items-center justify-center" style={{ width: 320, height: 320 }}>
-      {/* Deep radial glow */}
-      <div aria-hidden="true" className="absolute rounded-full blur-3xl"
-        style={{ width: 300, height: 300, background: "radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%)" }} />
-      {/* Mid glow — blended blue + emerald */}
-      <div aria-hidden="true" className="absolute rounded-full blur-2xl"
-        style={{ width: 230, height: 230, background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, rgba(5,150,105,0.04) 50%, transparent 75%)" }} />
-      {/* Inner glow */}
-      <div aria-hidden="true" className="absolute rounded-full blur-xl"
-        style={{ width: 160, height: 160, background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)" }} />
-      {/* Pulsing glow */}
-      <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 130, height: 130, background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)" }}
-        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.85, 0.5] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      />
+      {/* Outer ring */}
+      <div aria-hidden="true" className="absolute rounded-full"
+        style={{ width: 280, height: 280, border: "1px solid rgba(148,163,184,0.12)" }} />
 
-      {/* Outer orbit ring */}
-      <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 280, height: 280, border: `1px solid ${RING_MUTED}` }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-      >
-        <div className="absolute rounded-full"
-          style={{ width: 9, height: 9, top: -4.5, left: "50%", transform: "translateX(-50%)",
-            background: "rgba(59,130,246,0.5)", }} />
-        <div className="absolute rounded-full"
-          style={{ width: 7, height: 7, bottom: -3.5, left: "50%", transform: "translateX(-50%)",
-            background: "rgba(5,150,105,0.5)", }} />
-      </motion.div>
+      {/* Middle ring */}
+      <div aria-hidden="true" className="absolute rounded-full"
+        style={{ width: 215, height: 215, border: "1px solid rgba(148,163,184,0.10)" }} />
 
-      {/* Middle orbit ring */}
-      <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 215, height: 215, border: `1px solid ${RING_MUTED}` }}
-        animate={{ rotate: -360 }}
-        transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
-      >
-        <div className="absolute rounded-full"
-          style={{ width: 6, height: 6, top: -3, right: "15%",
-            background: "rgba(14,86,245,0.4)", }} />
-      </motion.div>
-
-      {/* Inner pulsing ring */}
-      <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 155, height: 155, border: "1px solid rgba(148,163,184,0.12)" }}
-        animate={{ scale: [1, 1.05, 1] }}
-        transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-      />
+      {/* Inner ring */}
+      <div aria-hidden="true" className="absolute rounded-full"
+        style={{ width: 155, height: 155, border: "1px solid rgba(148,163,184,0.08)" }} />
 
       {/* Center — monogram */}
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
-        <motion.div aria-hidden="true" className="absolute rounded-full"
-          style={{ width: 100, height: 100,
-            background: "radial-gradient(circle, rgba(5,150,105,0.06) 0%, rgba(59,130,246,0.04) 55%, transparent 80%)" }}
-          animate={{ opacity: [0.35, 0.6, 0.35] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          animate={{ y: [0, -4, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="relative z-10"
-        >
-          <AACMonogram className="w-[72px] h-[72px] text-emerald-500" />
-        </motion.div>
+        <AACMonogram className="w-[72px] h-[72px] text-emerald-500" />
       </div>
 
       {/* Hub labels */}
@@ -233,39 +160,6 @@ function Hub() {
   );
 }
 
-/* ─── Constellation Lines ────────────────────────────────── */
-
-const CONSTELLATION_LINES = Array.from({ length: 30 }, (_, i) => ({
-  id: i,
-  x1: Math.random() * 100,
-  y1: Math.random() * 100,
-  x2: Math.random() * 100,
-  y2: Math.random() * 100,
-}));
-
-function ConstellationLines() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 h-full w-full"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="none"
-    >
-      {CONSTELLATION_LINES.map((line) => (
-        <line
-          key={line.id}
-          x1={`${line.x1}%`}
-          y1={`${line.y1}%`}
-          x2={`${line.x2}%`}
-          y2={`${line.y2}%`}
-          stroke="rgba(148,163,184,0.12)"
-          strokeWidth="0.5"
-        />
-      ))}
-    </svg>
-  );
-}
-
 /* ─── Main Section ───────────────────────────────────────── */
 
 export default function EcosystemSection() {
@@ -273,20 +167,53 @@ export default function EcosystemSection() {
     <section
       aria-label="Ecosystem visualization"
       className="relative w-full overflow-hidden pt-36 pb-24 px-8 mt-[160px]"
-      style={{ backgroundColor: BG_LIGHT }}
+      style={{ backgroundColor: "#ffffff" }}
     >
-      {/* Light gradient transition band */}
+      {/* Soft gradient transition from previous section */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
-        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f8fafc 80%, #f8fafc 100%)" }}
+        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #ffffff 60%, #f8fafc 100%)" }}
       />
 
-      {/* Constellation web lines */}
-      <ConstellationLines />
+      {/* Static constellation lines — faint blueprint feel */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+      >
+        {CONSTELLATION_LINES.map((line) => (
+          <line
+            key={line.id}
+            x1={`${line.x1}%`}
+            y1={`${line.y1}%`}
+            x2={`${line.x2}%`}
+            y2={`${line.y2}%`}
+            stroke="rgba(148,163,184,0.10)"
+            strokeWidth="0.5"
+          />
+        ))}
+      </svg>
 
-      {/* Subtle grid — lines only, no nodes */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.06]"
+      {/* Static constellation nodes */}
+      {CONSTELLATION_NODES.map((node) => (
+        <div
+          key={node.id}
+          aria-hidden="true"
+          className="pointer-events-none absolute rounded-full"
+          style={{
+            left: `${node.x}%`,
+            top: `${node.y}%`,
+            width: 3,
+            height: 3,
+            backgroundColor: "rgba(148,163,184,0.18)",
+          }}
+        />
+      ))}
+
+      {/* Subtle grid — barely visible */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `linear-gradient(rgba(148,163,184,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.6) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
@@ -322,17 +249,12 @@ export default function EcosystemSection() {
             {inputCards.map((card, i) => (
               <div key={card.label} className="relative">
                 <InputCard icon={card.icon} label={card.label} description={card.description} delay={i * 0.1} />
-                {/* Blue connector with particle */}
+                {/* Connector line — static, no particles */}
                 <div aria-hidden="true"
-                  className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 translate-x-full lg:block overflow-hidden"
+                  className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 translate-x-full lg:block"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(14,86,245,0.18), rgba(14,86,245,0.06))` }} />
-                  <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: "rgba(59,130,246,0.5)" }}
-                    animate={{ x: [0, 56] }}
-                    transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 }}
-                  />
+                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(14,86,245,0.15), rgba(14,86,245,0.05))" }} />
                 </div>
               </div>
             ))}
@@ -350,17 +272,12 @@ export default function EcosystemSection() {
             </p>
             {resultCards.map((card, i) => (
               <div key={card.label} className="relative">
-                {/* Green connector with particle */}
+                {/* Connector line — static, no particles */}
                 <div aria-hidden="true"
-                  className="pointer-events-none absolute left-0 top-1/2 hidden -translate-x-full -translate-y-1/2 lg:block overflow-hidden"
+                  className="pointer-events-none absolute left-0 top-1/2 hidden -translate-x-full -translate-y-1/2 lg:block"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(34,197,94,0.06), rgba(34,197,94,0.18))` }} />
-                  <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: "rgba(5,150,105,0.5)" }}
-                    animate={{ x: [0, 56] }}
-                    transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 + 0.7 }}
-                  />
+                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(34,197,94,0.05), rgba(34,197,94,0.15))" }} />
                 </div>
                 <ResultCard icon={card.icon} label={card.label} description={card.description} delay={i * 0.1} />
               </div>
