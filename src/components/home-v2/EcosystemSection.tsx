@@ -239,7 +239,7 @@ export default function EcosystemSection() {
         </motion.div>
 
         {/* Three-column ecosystem grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_auto_380px] lg:gap-8 items-center justify-center">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_auto_400px] lg:gap-8 items-center justify-center">
 
           {/* Left — Input column */}
           <div className="flex flex-col justify-center space-y-3">
