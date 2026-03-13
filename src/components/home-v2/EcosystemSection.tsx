@@ -40,10 +40,10 @@ const TEXT_PRIMARY = "#0f172a";
 const TEXT_SECONDARY = "#64748b";
 
 /* Card tokens — clean, no glass */
-const CARD_BG = "rgba(255,255,255,0.96)";
-const CARD_BORDER = "rgba(15,23,42,0.08)";
-const CARD_SHADOW = "0 2px 12px rgba(15,23,42,0.05)";
-const CARD_SHADOW_HOVER = "0 8px 24px rgba(15,23,42,0.08)";
+const CARD_BG = "rgba(255,255,255,0.94)";
+const CARD_BORDER = "rgba(15,23,42,0.10)";
+const CARD_SHADOW = "0 4px 16px rgba(15,23,42,0.06)";
+const CARD_SHADOW_HOVER = "0 10px 30px rgba(15,23,42,0.10)";
 
 /* ─── Static constellation lines ─────────────────────────── */
 
