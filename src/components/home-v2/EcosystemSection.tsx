@@ -320,9 +320,15 @@ export default function EcosystemSection() {
   return (
     <section
       aria-label="Ecosystem visualization"
-      className="relative w-full overflow-hidden py-24 px-8"
+      className="relative w-full overflow-hidden pt-36 pb-24 px-8 mt-[160px]"
       style={{ backgroundColor: BG_NAVY }}
     >
+      {/* Light-to-dark gradient transition band */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
+        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 25%, #0a1024 65%, #050B1A 100%)" }}
+      />
       {/* Background constellation */}
       <ConstellationBackground />
 
@@ -338,7 +344,7 @@ export default function EcosystemSection() {
       <div className="relative z-10 mx-auto max-w-7xl">
 
         {/* Headline */}
-        <motion.div className="mb-16 text-center"
+        <motion.div className="mb-20 text-center"
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
