@@ -166,7 +166,7 @@ export default function EcosystemSection() {
   return (
     <section
       aria-label="Ecosystem visualization"
-      className="relative w-full overflow-hidden pt-36 pb-24 px-8 mt-[160px]"
+      className="relative w-full overflow-hidden pt-36 pb-[140px] px-8 mt-[160px]"
       style={{ backgroundColor: "#ffffff" }}
     >
       {/* Soft gradient transition from previous section */}
