@@ -93,7 +93,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
       className="group relative overflow-hidden backdrop-blur-sm cursor-default"
-      style={{ borderRadius: 12, border: `1px solid rgba(80,200,120,0.2)`, background: "rgba(31,41,55,0.8)" }}
+      style={{ borderRadius: 12, border: `1px solid rgba(5,150,105,0.2)`, background: "rgba(31,41,55,0.8)" }}
     >
       <div className="relative px-4 py-3">
         <div
