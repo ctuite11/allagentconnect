@@ -33,12 +33,17 @@ const resultCards = [
 
 /* ─── Brand colors (inline, scoped to this section) ──────── */
 
+const BG_NAVY = "#050B1A";
 const BLUE = "#0E56F5";
+const BLUE_ACCENT = "#3B82F6";
 const BLUE_60 = "rgba(14,86,245,0.6)";
 const BLUE_08 = "rgba(14,86,245,0.08)";
 const GREEN = "#059669";
 const GREEN_60 = "rgba(5,150,105,0.6)";
 const GREEN_08 = "rgba(5,150,105,0.08)";
+const CARD_BG = "rgba(17,24,39,0.78)";
+const INPUT_BORDER = "rgba(59,130,246,0.22)";
+const RESULT_BORDER = "rgba(5,150,105,0.24)";
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
@@ -50,13 +55,13 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
       className="group relative overflow-hidden backdrop-blur-sm cursor-default"
-      style={{ borderRadius: 12, border: `1px solid rgba(14,86,245,0.2)`, background: "rgba(31,41,55,0.8)" }}
+      style={{ borderRadius: 12, border: `1px solid ${INPUT_BORDER}`, background: CARD_BG }}
     >
       <div className="relative px-4 py-3">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "rgba(255,255,255,0.04)" }}
+          style={{ background: "rgba(255,255,255,0.03)" }}
         />
         {/* Hover sweep */}
         <motion.div
@@ -71,21 +76,21 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
           <div className="relative flex-shrink-0">
             <motion.div
               className="h-2 w-2 rounded-full"
-              style={{ background: BLUE }}
-              animate={{ scale: [1, 1.6, 1], opacity: [1, 0.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              style={{ background: BLUE_ACCENT }}
+              animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.4, 0.8] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
             />
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: BLUE_08, border: `1px solid rgba(14,86,245,0.2)` }}
+              style={{ background: BLUE_08, border: `1px solid ${INPUT_BORDER}` }}
             >
-              <Icon size={16} style={{ color: BLUE }} aria-hidden="true" />
+              <Icon size={16} style={{ color: BLUE_ACCENT }} aria-hidden="true" />
             </div>
             <div className="min-w-0">
               <span className="font-sans text-sm font-medium block" style={{ color: "#F0F8FF" }}>{label}</span>
-              <p className="font-sans text-xs font-light truncate" style={{ color: "#D1D5DB" }}>{description}</p>
+              <p className="font-sans text-xs font-light truncate" style={{ color: "#94A3B8" }}>{description}</p>
             </div>
           </div>
         </div>
@@ -102,13 +107,13 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
       className="group relative overflow-hidden backdrop-blur-sm cursor-default"
-      style={{ borderRadius: 12, border: `1px solid rgba(5,150,105,0.2)`, background: "rgba(31,41,55,0.8)" }}
+      style={{ borderRadius: 12, border: `1px solid ${RESULT_BORDER}`, background: CARD_BG }}
     >
       <div className="relative px-4 py-3">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "rgba(255,255,255,0.04)" }}
+          style={{ background: "rgba(255,255,255,0.03)" }}
         />
         {/* Hover sweep */}
         <motion.div
@@ -124,19 +129,19 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
             <motion.div
               className="h-2 w-2 rounded-full"
               style={{ background: GREEN }}
-              animate={{ scale: [1, 1.6, 1], opacity: [1, 0.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.4, 0.8] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             />
           </div>
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: GREEN_08, border: `1px solid rgba(5,150,105,0.2)` }}
+            style={{ background: GREEN_08, border: `1px solid ${RESULT_BORDER}` }}
           >
             <Icon size={16} style={{ color: GREEN }} aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
             <span className="font-sans text-sm font-medium block" style={{ color: "#F0F8FF" }}>{label}</span>
-            <p className="font-sans text-xs font-light truncate" style={{ color: "#D1D5DB" }}>{description}</p>
+            <p className="font-sans text-xs font-light truncate" style={{ color: "#94A3B8" }}>{description}</p>
           </div>
         </div>
       </div>
@@ -194,13 +199,13 @@ function ConstellationBackground() {
       <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         {lines.map((line) => (
           <line key={line.id} x1={`${line.x1}%`} y1={`${line.y1}%`} x2={`${line.x2}%`} y2={`${line.y2}%`}
-            stroke="#3B82F6" strokeWidth="0.5" strokeOpacity="0.18" />
+            stroke={BLUE_ACCENT} strokeWidth="0.5" strokeOpacity="0.13" />
         ))}
       </svg>
       {dots.map((dot) => (
         <motion.div key={dot.id} className="absolute rounded-full"
-          style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: 3, height: 3, backgroundColor: "#3B82F6" }}
-          animate={{ opacity: [0.2, 0.6, 0.2], scale: [1, 1.4, 1] }}
+          style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: 2.5, height: 2.5, backgroundColor: BLUE_ACCENT }}
+          animate={{ opacity: [0.12, 0.45, 0.12], scale: [1, 1.3, 1] }}
           transition={{ duration: dot.duration, delay: dot.delay, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
@@ -208,15 +213,15 @@ function ConstellationBackground() {
         {wakeNodes.map((node) => (
           <motion.div key={node.id} className="absolute rounded-full"
             style={{
-              left: `${node.x}%`, top: `${node.y}%`, width: 8, height: 8,
-              marginLeft: -4, marginTop: -4,
-              backgroundColor: node.color === "blue" ? "#3B82F6" : "#059669",
+              left: `${node.x}%`, top: `${node.y}%`, width: 7, height: 7,
+              marginLeft: -3.5, marginTop: -3.5,
+              backgroundColor: node.color === "blue" ? BLUE_ACCENT : GREEN,
               boxShadow: node.color === "blue"
-                ? "0 0 12px 4px rgba(59,130,246,0.6)"
-                : "0 0 12px 4px rgba(5,150,105,0.6)",
+                ? "0 0 10px 3px rgba(59,130,246,0.45)"
+                : "0 0 10px 3px rgba(5,150,105,0.45)",
             }}
             initial={{ opacity: 0, scale: 0.4 }}
-            animate={{ opacity: [0, 0.9, 0.9, 0], scale: [0.4, 1.4, 1.2, 0.6] }}
+            animate={{ opacity: [0, 0.75, 0.75, 0], scale: [0.4, 1.3, 1.1, 0.6] }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.6, ease: "easeInOut" }}
           />
@@ -233,59 +238,59 @@ function Hub() {
     <div className="relative flex items-center justify-center" style={{ width: 320, height: 320 }}>
       {/* Deep radial glow */}
       <div aria-hidden="true" className="absolute rounded-full blur-3xl"
-        style={{ width: 300, height: 300, background: "radial-gradient(circle, rgba(14,86,245,0.22) 0%, transparent 70%)" }} />
-      {/* Mid glow */}
+        style={{ width: 300, height: 300, background: "radial-gradient(circle, rgba(14,86,245,0.15) 0%, transparent 70%)" }} />
+      {/* Mid glow — blended blue + emerald */}
       <div aria-hidden="true" className="absolute rounded-full blur-2xl"
-        style={{ width: 230, height: 230, background: "radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)" }} />
+        style={{ width: 230, height: 230, background: "radial-gradient(circle, rgba(59,130,246,0.18) 0%, rgba(5,150,105,0.08) 50%, transparent 75%)" }} />
       {/* Inner glow */}
       <div aria-hidden="true" className="absolute rounded-full blur-xl"
-        style={{ width: 160, height: 160, background: "radial-gradient(circle, rgba(14,86,245,0.45) 0%, transparent 70%)" }} />
+        style={{ width: 160, height: 160, background: "radial-gradient(circle, rgba(14,86,245,0.3) 0%, transparent 70%)" }} />
       {/* Pulsing glow */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 130, height: 130, background: "radial-gradient(circle, rgba(14,86,245,0.35) 0%, transparent 70%)" }}
-        animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        style={{ width: 130, height: 130, background: "radial-gradient(circle, rgba(14,86,245,0.22) 0%, transparent 70%)" }}
+        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.85, 0.5] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Outer orbit ring — 30s */}
+      {/* Outer orbit ring — 35s */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 280, height: 280, border: "1px solid rgba(59,130,246,0.22)" }}
+        style={{ width: 280, height: 280, border: "1px solid rgba(59,130,246,0.18)" }}
         animate={{ rotate: 360 }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
       >
         <div className="absolute rounded-full"
-          style={{ width: 10, height: 10, top: -5, left: "50%", transform: "translateX(-50%)",
-            background: "#3B82F6", boxShadow: "0 0 8px 3px rgba(59,130,246,0.7)" }} />
+          style={{ width: 9, height: 9, top: -4.5, left: "50%", transform: "translateX(-50%)",
+            background: BLUE_ACCENT, boxShadow: "0 0 6px 2px rgba(59,130,246,0.5)" }} />
         <div className="absolute rounded-full"
-          style={{ width: 8, height: 8, bottom: -4, left: "50%", transform: "translateX(-50%)",
-            background: "#059669", boxShadow: "0 0 8px 3px rgba(5,150,105,0.7)" }} />
+          style={{ width: 7, height: 7, bottom: -3.5, left: "50%", transform: "translateX(-50%)",
+            background: GREEN, boxShadow: "0 0 6px 2px rgba(5,150,105,0.5)" }} />
       </motion.div>
 
-      {/* Middle orbit ring — counter-clockwise 22s */}
+      {/* Middle orbit ring — counter-clockwise 26s */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 215, height: 215, border: "1px solid rgba(14,86,245,0.2)" }}
+        style={{ width: 215, height: 215, border: "1px solid rgba(14,86,245,0.15)" }}
         animate={{ rotate: -360 }}
-        transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
       >
         <div className="absolute rounded-full"
-          style={{ width: 7, height: 7, top: -3.5, right: "15%",
-            background: BLUE, boxShadow: "0 0 6px 2px rgba(14,86,245,0.6)" }} />
+          style={{ width: 6, height: 6, top: -3, right: "15%",
+            background: BLUE, boxShadow: "0 0 5px 2px rgba(14,86,245,0.45)" }} />
       </motion.div>
 
       {/* Inner pulsing ring */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 155, height: 155, border: "1px solid rgba(14,86,245,0.35)" }}
-        animate={{ scale: [1, 1.06, 1] }}
-        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+        style={{ width: 155, height: 155, border: "1px solid rgba(14,86,245,0.25)" }}
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
       />
 
       {/* Center — monogram + ambient glow */}
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
         <motion.div aria-hidden="true" className="absolute rounded-full"
           style={{ width: 100, height: 100,
-            background: "radial-gradient(circle, rgba(5,150,105,0.18) 0%, rgba(14,86,245,0.12) 55%, transparent 80%)" }}
-          animate={{ opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            background: "radial-gradient(circle, rgba(5,150,105,0.14) 0%, rgba(14,86,245,0.1) 55%, transparent 80%)" }}
+          animate={{ opacity: [0.35, 0.6, 0.35] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           animate={{ y: [0, -4, 0] }}
@@ -316,15 +321,15 @@ export default function EcosystemSection() {
     <section
       aria-label="Ecosystem visualization"
       className="relative w-full overflow-hidden py-24 px-8"
-      style={{ backgroundColor: "#0A0E1A" }}
+      style={{ backgroundColor: BG_NAVY }}
     >
       {/* Background constellation */}
       <ConstellationBackground />
 
       {/* Subtle grid */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.04]"
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: "linear-gradient(#3B82F6 1px, transparent 1px), linear-gradient(90deg, #3B82F6 1px, transparent 1px)",
+          backgroundImage: `linear-gradient(${BLUE_ACCENT} 1px, transparent 1px), linear-gradient(90deg, ${BLUE_ACCENT} 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
         }}
       />
@@ -339,7 +344,7 @@ export default function EcosystemSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <h2 className="mb-3 font-sans text-4xl font-medium leading-tight lg:text-5xl" style={{ color: "#F0F8FF" }}>
+          <h2 className="mb-3 font-sans text-4xl font-medium leading-tight lg:text-5xl" style={{ color: "#ffffff" }}>
             Turning network intelligence into real results.
           </h2>
           <p className="font-mono text-xl font-light tracking-wide" style={{ color: BLUE }}>
@@ -365,7 +370,7 @@ export default function EcosystemSection() {
                 >
                   <div className="h-full w-full" style={{ background: `linear-gradient(to right, ${BLUE_60}, rgba(14,86,245,0.08))` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: BLUE, boxShadow: `0 0 6px 2px rgba(14,86,245,0.7)` }}
+                    style={{ width: 5, height: 5, background: BLUE_ACCENT, boxShadow: `0 0 5px 2px rgba(59,130,246,0.5)` }}
                     animate={{ x: [0, 56] }}
                     transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 }}
                   />
@@ -393,7 +398,7 @@ export default function EcosystemSection() {
                 >
                   <div className="h-full w-full" style={{ background: `linear-gradient(to right, ${GREEN_08}, ${GREEN_60})` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: GREEN, boxShadow: `0 0 6px 2px rgba(5,150,105,0.7)` }}
+                    style={{ width: 5, height: 5, background: GREEN, boxShadow: `0 0 5px 2px rgba(5,150,105,0.5)` }}
                     animate={{ x: [0, 56] }}
                     transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 + 0.7 }}
                   />
