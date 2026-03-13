@@ -151,7 +151,7 @@ function Hub() {
 
       {/* Hub labels */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-12 text-center">
-        <p className="whitespace-nowrap font-sans text-base font-bold" style={{ color: TEXT_PRIMARY }}>
+        <p className="whitespace-nowrap font-sans text-base font-semibold" style={{ color: TEXT_PRIMARY }}>
           All Agent Connect
         </p>
         <p className="whitespace-nowrap font-mono text-xs font-light tracking-wide" style={{ color: TEXT_SECONDARY }}>
