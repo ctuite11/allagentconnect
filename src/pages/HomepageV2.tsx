@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/home-v2/HeroSection";
 import NetworkIntelligence from "@/components/home-v2/NetworkIntelligence";
-import ResultsHub from "@/components/home-v2/ResultsHub";
+import EcosystemSection from "@/components/home-v2/EcosystemSection";
 import HowAgentsUseAAC from "@/components/home-v2/HowAgentsUseAAC";
 import ScalePersistence from "@/components/home-v2/ScalePersistence";
 import GCIBenefits from "@/components/home-v2/GCIBenefits";
@@ -139,7 +139,7 @@ const HomepageV2 = () => {
         <main className="flex flex-col w-full">
           <HeroSection />
           <NetworkIntelligence />
-          <ResultsHub />
+          <EcosystemSection />
           <HowAgentsUseAAC />
           <ScalePersistence />
           <GCIBenefits />
