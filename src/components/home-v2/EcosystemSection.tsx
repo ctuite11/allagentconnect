@@ -233,6 +233,39 @@ function Hub() {
   );
 }
 
+/* ─── Constellation Lines ────────────────────────────────── */
+
+const CONSTELLATION_LINES = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  x1: Math.random() * 100,
+  y1: Math.random() * 100,
+  x2: Math.random() * 100,
+  y2: Math.random() * 100,
+}));
+
+function ConstellationLines() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="none"
+    >
+      {CONSTELLATION_LINES.map((line) => (
+        <line
+          key={line.id}
+          x1={`${line.x1}%`}
+          y1={`${line.y1}%`}
+          x2={`${line.x2}%`}
+          y2={`${line.y2}%`}
+          stroke="rgba(148,163,184,0.12)"
+          strokeWidth="0.5"
+        />
+      ))}
+    </svg>
+  );
+}
+
 /* ─── Main Section ───────────────────────────────────────── */
 
 export default function EcosystemSection() {
