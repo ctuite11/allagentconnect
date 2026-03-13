@@ -344,7 +344,7 @@ export default function EcosystemSection() {
       <div className="relative z-10 mx-auto max-w-7xl">
 
         {/* Headline */}
-        <motion.div className="mb-16 text-center"
+        <motion.div className="mb-20 text-center"
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
