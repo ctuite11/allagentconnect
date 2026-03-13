@@ -1,4 +1,4 @@
-import { useState, ElementType } from "react";
+import { useState, useMemo, ElementType } from "react";
 import { motion } from "framer-motion";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
