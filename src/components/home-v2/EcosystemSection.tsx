@@ -33,7 +33,7 @@ const resultCards = [
 
 /* ─── Brand colors (inline, scoped to this section) ──────── */
 
-const BG_LIGHT = "#f1f5f9";
+const BG_LIGHT = "#f8fafc";
 const BLUE = "#0E56F5";
 const GREEN = "#22C55E";
 
