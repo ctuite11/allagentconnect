@@ -245,7 +245,7 @@ export default function EcosystemSection() {
 
           {/* Left — Input column */}
           <div className="flex flex-col justify-center" style={{ gap: 22 }}>
-            <p className="text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] lg:text-left" style={{ color: BLUE, opacity: 0.85 }}>
+            <p className="text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] lg:text-left" style={{ color: BLUE }}>
               Data Inputs
             </p>
             {inputCards.map((card, i) => (
@@ -269,7 +269,7 @@ export default function EcosystemSection() {
 
           {/* Right — Results column */}
           <div className="flex flex-col justify-center" style={{ gap: 22 }}>
-            <p className="text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] lg:text-left" style={{ color: GREEN, opacity: 0.85 }}>
+            <p className="text-center font-mono text-xs font-semibold uppercase tracking-[0.12em] lg:text-left" style={{ color: GREEN }}>
               Results
             </p>
             {resultCards.map((card, i) => (
