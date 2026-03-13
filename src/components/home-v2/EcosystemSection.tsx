@@ -33,20 +33,25 @@ const resultCards = [
 
 /* ─── Brand colors (inline, scoped to this section) ──────── */
 
-const BG_NAVY = "#050B1A";
+const BG_LIGHT = "#f8fafc";
 const BLUE = "#0E56F5";
 const BLUE_ACCENT = "#3B82F6";
-const BLUE_60 = "rgba(14,86,245,0.6)";
 const GREEN = "#059669";
-const GREEN_60 = "rgba(5,150,105,0.6)";
-const GREEN_08 = "rgba(5,150,105,0.08)";
 
-/* Apple-style card tokens */
-const CARD_BG_QUIET = "rgba(255,255,255,0.04)";
-const CARD_BORDER_QUIET = "rgba(255,255,255,0.08)";
-const CARD_BG_HOVER = "rgba(255,255,255,0.07)";
-const CARD_BORDER_HOVER = "rgba(255,255,255,0.16)";
-const CARD_SHADOW_HOVER = "0 20px 50px rgba(0,0,0,0.35)";
+/* Light-theme card tokens */
+const CARD_BG_QUIET = "rgba(255,255,255,0.78)";
+const CARD_BORDER_QUIET = "rgba(15,23,42,0.08)";
+const CARD_BG_HOVER = "rgba(255,255,255,0.95)";
+const CARD_BORDER_HOVER = "rgba(15,23,42,0.14)";
+const CARD_SHADOW_HOVER = "0 12px 40px rgba(0,0,0,0.08)";
+const CARD_SHADOW_REST = "0 1px 3px rgba(0,0,0,0.04)";
+
+/* Light-theme palette */
+const TEXT_PRIMARY = "#0f172a";
+const TEXT_SECONDARY = "#64748b";
+const LINE_MUTED = "rgba(148,163,184,0.12)";
+const DOT_MUTED = "rgba(148,163,184,0.15)";
+const RING_MUTED = "rgba(148,163,184,0.15)";
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
@@ -64,7 +69,7 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
         border: `1px solid ${hovered ? CARD_BORDER_HOVER : CARD_BORDER_QUIET}`,
         background: hovered ? CARD_BG_HOVER : CARD_BG_QUIET,
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        boxShadow: hovered ? CARD_SHADOW_HOVER : "none",
+        boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW_REST,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -74,7 +79,7 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100"
-          style={{ background: "linear-gradient(90deg, transparent 0%, hsl(217,90%,60%,0.08) 50%, transparent 100%)" }}
+          style={{ background: "linear-gradient(90deg, transparent 0%, hsl(217,90%,60%,0.03) 50%, transparent 100%)" }}
           initial={{ x: "-100%" }}
           whileHover={{ x: "100%" }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
@@ -84,15 +89,15 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
             <motion.div
               className="h-2 w-2 rounded-full"
               style={{ background: BLUE_ACCENT }}
-              animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.4, 0.8] }}
+              animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.2, 0.4] }}
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
             />
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Icon size={16} style={{ color: "rgba(59,130,246,0.7)" }} aria-hidden="true" className="flex-shrink-0" />
             <div className="min-w-0">
-              <span className="font-sans text-sm font-semibold block" style={{ color: "#ffffff" }}>{label}</span>
-              <p className="font-sans text-xs font-light truncate" style={{ color: "#9CA3AF" }}>{description}</p>
+              <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
+              <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
             </div>
           </div>
         </div>
@@ -115,7 +120,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
         border: `1px solid ${hovered ? CARD_BORDER_HOVER : CARD_BORDER_QUIET}`,
         background: hovered ? CARD_BG_HOVER : CARD_BG_QUIET,
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        boxShadow: hovered ? CARD_SHADOW_HOVER : "none",
+        boxShadow: hovered ? CARD_SHADOW_HOVER : CARD_SHADOW_REST,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -125,7 +130,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100"
-          style={{ background: "linear-gradient(90deg, transparent 0%, hsl(161,78%,45%,0.08) 50%, transparent 100%)" }}
+          style={{ background: "linear-gradient(90deg, transparent 0%, hsl(161,78%,45%,0.03) 50%, transparent 100%)" }}
           initial={{ x: "-100%" }}
           whileHover={{ x: "100%" }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
@@ -135,14 +140,14 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
             <motion.div
               className="h-2 w-2 rounded-full"
               style={{ background: GREEN }}
-              animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.4, 0.8] }}
+              animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.2, 0.4] }}
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             />
           </div>
           <Icon size={16} style={{ color: "rgba(5,150,105,0.7)" }} aria-hidden="true" className="flex-shrink-0" />
           <div className="min-w-0 flex-1">
-            <span className="font-sans text-sm font-semibold block" style={{ color: "#ffffff" }}>{label}</span>
-            <p className="font-sans text-xs font-light truncate" style={{ color: "#9CA3AF" }}>{description}</p>
+            <span className="font-sans text-sm font-semibold block" style={{ color: TEXT_PRIMARY }}>{label}</span>
+            <p className="font-sans text-xs font-light truncate" style={{ color: TEXT_SECONDARY }}>{description}</p>
           </div>
         </div>
       </div>
@@ -200,13 +205,13 @@ function ConstellationBackground() {
       <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         {lines.map((line) => (
           <line key={line.id} x1={`${line.x1}%`} y1={`${line.y1}%`} x2={`${line.x2}%`} y2={`${line.y2}%`}
-            stroke={BLUE_ACCENT} strokeWidth="0.5" strokeOpacity="0.08" />
+            stroke={LINE_MUTED} strokeWidth="0.5" strokeOpacity="0.08" />
         ))}
       </svg>
       {dots.map((dot) => (
         <motion.div key={dot.id} className="absolute rounded-full"
-          style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: 2.5, height: 2.5, backgroundColor: BLUE_ACCENT }}
-          animate={{ opacity: [0.08, 0.3, 0.08], scale: [1, 1.3, 1] }}
+          style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: 2.5, height: 2.5, backgroundColor: DOT_MUTED }}
+          animate={{ opacity: [0.05, 0.18, 0.05], scale: [1, 1.3, 1] }}
           transition={{ duration: dot.duration, delay: dot.delay, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
@@ -216,13 +221,10 @@ function ConstellationBackground() {
             style={{
               left: `${node.x}%`, top: `${node.y}%`, width: 7, height: 7,
               marginLeft: -3.5, marginTop: -3.5,
-              backgroundColor: node.color === "blue" ? BLUE_ACCENT : GREEN,
-              boxShadow: node.color === "blue"
-                ? "0 0 10px 3px rgba(59,130,246,0.45)"
-                : "0 0 10px 3px rgba(5,150,105,0.45)",
+              backgroundColor: node.color === "blue" ? "rgba(148,163,184,0.25)" : "rgba(148,163,184,0.25)",
             }}
             initial={{ opacity: 0, scale: 0.4 }}
-            animate={{ opacity: [0, 0.5, 0.5, 0], scale: [0.4, 1.3, 1.1, 0.6] }}
+            animate={{ opacity: [0, 0.25, 0.25, 0], scale: [0.4, 1.3, 1.1, 0.6] }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.6, ease: "easeInOut" }}
           />
@@ -239,48 +241,48 @@ function Hub() {
     <div className="relative flex items-center justify-center" style={{ width: 320, height: 320 }}>
       {/* Deep radial glow */}
       <div aria-hidden="true" className="absolute rounded-full blur-3xl"
-        style={{ width: 300, height: 300, background: "radial-gradient(circle, rgba(14,86,245,0.1) 0%, transparent 70%)" }} />
+        style={{ width: 300, height: 300, background: "radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%)" }} />
       {/* Mid glow — blended blue + emerald */}
       <div aria-hidden="true" className="absolute rounded-full blur-2xl"
-        style={{ width: 230, height: 230, background: "radial-gradient(circle, rgba(59,130,246,0.14) 0%, rgba(5,150,105,0.06) 50%, transparent 75%)" }} />
+        style={{ width: 230, height: 230, background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, rgba(5,150,105,0.04) 50%, transparent 75%)" }} />
       {/* Inner glow */}
       <div aria-hidden="true" className="absolute rounded-full blur-xl"
-        style={{ width: 160, height: 160, background: "radial-gradient(circle, rgba(14,86,245,0.2) 0%, transparent 70%)" }} />
+        style={{ width: 160, height: 160, background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)" }} />
       {/* Pulsing glow */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 130, height: 130, background: "radial-gradient(circle, rgba(14,86,245,0.15) 0%, transparent 70%)" }}
+        style={{ width: 130, height: 130, background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)" }}
         animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.85, 0.5] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Outer orbit ring — 35s */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 280, height: 280, border: "1px solid rgba(59,130,246,0.18)" }}
+        style={{ width: 280, height: 280, border: `1px solid ${RING_MUTED}` }}
         animate={{ rotate: 360 }}
         transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
       >
         <div className="absolute rounded-full"
           style={{ width: 9, height: 9, top: -4.5, left: "50%", transform: "translateX(-50%)",
-            background: BLUE_ACCENT, boxShadow: "0 0 6px 2px rgba(59,130,246,0.5)" }} />
+            background: "rgba(59,130,246,0.5)", }} />
         <div className="absolute rounded-full"
           style={{ width: 7, height: 7, bottom: -3.5, left: "50%", transform: "translateX(-50%)",
-            background: GREEN, boxShadow: "0 0 6px 2px rgba(5,150,105,0.5)" }} />
+            background: "rgba(5,150,105,0.5)", }} />
       </motion.div>
 
       {/* Middle orbit ring — counter-clockwise 26s */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 215, height: 215, border: "1px solid rgba(14,86,245,0.15)" }}
+        style={{ width: 215, height: 215, border: `1px solid ${RING_MUTED}` }}
         animate={{ rotate: -360 }}
         transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
       >
         <div className="absolute rounded-full"
           style={{ width: 6, height: 6, top: -3, right: "15%",
-            background: BLUE, boxShadow: "0 0 5px 2px rgba(14,86,245,0.45)" }} />
+            background: "rgba(14,86,245,0.4)", }} />
       </motion.div>
 
       {/* Inner pulsing ring */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 155, height: 155, border: "1px solid rgba(14,86,245,0.25)" }}
+        style={{ width: 155, height: 155, border: "1px solid rgba(148,163,184,0.12)" }}
         animate={{ scale: [1, 1.05, 1] }}
         transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
       />
@@ -289,7 +291,7 @@ function Hub() {
       <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: 118, height: 118 }}>
         <motion.div aria-hidden="true" className="absolute rounded-full"
           style={{ width: 100, height: 100,
-            background: "radial-gradient(circle, rgba(5,150,105,0.14) 0%, rgba(14,86,245,0.1) 55%, transparent 80%)" }}
+            background: "radial-gradient(circle, rgba(5,150,105,0.06) 0%, rgba(59,130,246,0.04) 55%, transparent 80%)" }}
           animate={{ opacity: [0.35, 0.6, 0.35] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -304,10 +306,10 @@ function Hub() {
 
       {/* Hub labels */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-12 text-center">
-        <p className="whitespace-nowrap font-sans text-base font-bold" style={{ color: "#ffffff" }}>
+        <p className="whitespace-nowrap font-sans text-base font-bold" style={{ color: TEXT_PRIMARY }}>
           All Agent Connect
         </p>
-        <p className="whitespace-nowrap font-mono text-xs font-light tracking-wide" style={{ color: "#94A3B8" }}>
+        <p className="whitespace-nowrap font-mono text-xs font-light tracking-wide" style={{ color: TEXT_SECONDARY }}>
           Private agent network
         </p>
       </div>
@@ -322,13 +324,13 @@ export default function EcosystemSection() {
     <section
       aria-label="Ecosystem visualization"
       className="relative w-full overflow-hidden pt-36 pb-24 px-8 mt-[160px]"
-      style={{ backgroundColor: BG_NAVY }}
+      style={{ backgroundColor: BG_LIGHT }}
     >
-      {/* Light-to-dark gradient transition band */}
+      {/* Light gradient transition band */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
-        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 25%, #0a1024 65%, #050B1A 100%)" }}
+        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f3f4f6 80%, #f8fafc 100%)" }}
       />
       {/* Background constellation */}
       <ConstellationBackground />
@@ -336,14 +338,14 @@ export default function EcosystemSection() {
       {/* Subtle grid */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.02]"
         style={{
-          backgroundImage: `linear-gradient(${BLUE_ACCENT} 1px, transparent 1px), linear-gradient(90deg, ${BLUE_ACCENT} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(148,163,184,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.5) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
         }}
       />
 
       {/* Ambient glow behind grid */}
       <div aria-hidden="true" className="absolute inset-0 flex justify-center pointer-events-none">
-        <div className="w-[900px] h-[500px] bg-emerald-500/10 blur-[160px] rounded-full" />
+        <div className="w-[900px] h-[500px] rounded-full blur-[160px]" style={{ background: "rgba(191,219,254,0.08)" }} />
       </div>
 
       {/* Content */}
@@ -356,7 +358,7 @@ export default function EcosystemSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <h2 className="mb-3 font-sans text-4xl font-medium leading-tight lg:text-5xl" style={{ color: "#ffffff" }}>
+          <h2 className="mb-3 font-sans text-4xl font-medium leading-tight lg:text-5xl" style={{ color: TEXT_PRIMARY }}>
             Turning network intelligence into real results.
           </h2>
           <p className="font-mono text-xl font-light tracking-wide" style={{ color: BLUE }}>
@@ -380,9 +382,9 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 translate-x-full lg:block overflow-hidden"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, ${BLUE_60}, rgba(14,86,245,0.08))` }} />
+                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(148,163,184,0.18), rgba(148,163,184,0.06))` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: BLUE_ACCENT, boxShadow: `0 0 5px 2px rgba(59,130,246,0.5)` }}
+                    style={{ width: 5, height: 5, background: "rgba(59,130,246,0.5)" }}
                     animate={{ x: [0, 56] }}
                     transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 }}
                   />
@@ -408,9 +410,9 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute left-0 top-1/2 hidden -translate-x-full -translate-y-1/2 lg:block overflow-hidden"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, ${GREEN_08}, ${GREEN_60})` }} />
+                  <div className="h-full w-full" style={{ background: `linear-gradient(to right, rgba(148,163,184,0.06), rgba(148,163,184,0.18))` }} />
                   <motion.div className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 5, height: 5, background: GREEN, boxShadow: `0 0 5px 2px rgba(5,150,105,0.5)` }}
+                    style={{ width: 5, height: 5, background: "rgba(5,150,105,0.5)" }}
                     animate={{ x: [0, 56] }}
                     transition={{ duration: 1.4 + i * 0.15, repeat: Infinity, ease: "linear", delay: i * 0.3 + 0.7 }}
                   />
