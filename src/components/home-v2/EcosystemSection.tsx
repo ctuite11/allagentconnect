@@ -233,7 +233,7 @@ export default function EcosystemSection() {
           <h2 className="mb-3 font-sans text-4xl font-medium leading-tight lg:text-5xl" style={{ color: TEXT_PRIMARY }}>
             Turning network intelligence into real results.
           </h2>
-          <p className="font-mono text-xl font-light tracking-wide" style={{ color: BLUE }}>
+          <p className="font-mono text-xl font-light tracking-wide" style={{ color: "#475569" }}>
             Data in. Dollars out.
           </p>
         </motion.div>
@@ -243,7 +243,7 @@ export default function EcosystemSection() {
 
           {/* Left — Input column */}
           <div className="flex flex-col justify-center space-y-3">
-            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: BLUE }}>
+            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: BLUE, opacity: 0.85 }}>
               Data Inputs
             </p>
             {inputCards.map((card, i) => (
@@ -254,7 +254,7 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute right-0 top-1/2 hidden -translate-y-1/2 translate-x-full lg:block"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(14,86,245,0.15), rgba(14,86,245,0.05))" }} />
+                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(14,86,245,0.22), rgba(14,86,245,0.08))" }} />
                 </div>
               </div>
             ))}
@@ -267,7 +267,7 @@ export default function EcosystemSection() {
 
           {/* Right — Results column */}
           <div className="flex flex-col justify-center space-y-3">
-            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: GREEN }}>
+            <p className="mb-2 text-center font-mono text-xs font-light uppercase tracking-widest lg:text-left" style={{ color: GREEN, opacity: 0.85 }}>
               Results
             </p>
             {resultCards.map((card, i) => (
@@ -277,7 +277,7 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute left-0 top-1/2 hidden -translate-x-full -translate-y-1/2 lg:block"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(34,197,94,0.05), rgba(34,197,94,0.15))" }} />
+                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(34,197,94,0.08), rgba(34,197,94,0.22))" }} />
                 </div>
                 <ResultCard icon={card.icon} label={card.label} description={card.description} delay={i * 0.1} />
               </div>
