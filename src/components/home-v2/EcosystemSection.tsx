@@ -240,7 +240,7 @@ function Hub() {
             background: "#3B82F6", boxShadow: "0 0 8px 3px rgba(59,130,246,0.7)" }} />
         <div className="absolute rounded-full"
           style={{ width: 8, height: 8, bottom: -4, left: "50%", transform: "translateX(-50%)",
-            background: "#22C55E", boxShadow: "0 0 8px 3px rgba(34,197,94,0.7)" }} />
+            background: "#059669", boxShadow: "0 0 8px 3px rgba(5,150,105,0.7)" }} />
       </motion.div>
 
       {/* Middle orbit ring — counter-clockwise 22s */}
