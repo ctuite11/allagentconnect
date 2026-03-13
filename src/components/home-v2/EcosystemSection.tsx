@@ -33,7 +33,7 @@ const resultCards = [
 
 /* ─── Brand colors (inline, scoped to this section) ──────── */
 
-const BG_LIGHT = "#f1f5f9";
+const BG_LIGHT = "#f8fafc";
 const BLUE = "#0E56F5";
 const GREEN = "#22C55E";
 
@@ -246,11 +246,11 @@ export default function EcosystemSection() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 right-0 h-[160px] -top-[160px]"
-        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f1f5f9 80%, #f1f5f9 100%)" }}
+        style={{ background: "linear-gradient(to bottom, #ffffff 0%, #f8fafc 40%, #f8fafc 80%, #f8fafc 100%)" }}
       />
 
       {/* Subtle grid — lines only, no nodes */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.04]"
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage: `linear-gradient(rgba(148,163,184,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.6) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
