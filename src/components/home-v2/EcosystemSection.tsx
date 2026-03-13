@@ -36,9 +36,9 @@ const resultCards = [
 const BLUE = "#0E56F5";
 const BLUE_60 = "rgba(14,86,245,0.6)";
 const BLUE_08 = "rgba(14,86,245,0.08)";
-const GREEN = "#50C878";
-const GREEN_60 = "rgba(80,200,120,0.6)";
-const GREEN_08 = "rgba(80,200,120,0.08)";
+const GREEN = "#059669";
+const GREEN_60 = "rgba(5,150,105,0.6)";
+const GREEN_08 = "rgba(5,150,105,0.08)";
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
