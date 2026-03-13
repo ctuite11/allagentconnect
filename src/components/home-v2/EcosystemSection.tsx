@@ -37,32 +37,39 @@ const BG_NAVY = "#050B1A";
 const BLUE = "#0E56F5";
 const BLUE_ACCENT = "#3B82F6";
 const BLUE_60 = "rgba(14,86,245,0.6)";
-const BLUE_08 = "rgba(14,86,245,0.08)";
 const GREEN = "#059669";
 const GREEN_60 = "rgba(5,150,105,0.6)";
 const GREEN_08 = "rgba(5,150,105,0.08)";
-const CARD_BG = "rgba(17,24,39,0.78)";
-const INPUT_BORDER = "rgba(59,130,246,0.22)";
-const RESULT_BORDER = "rgba(5,150,105,0.24)";
+
+/* Apple-style card tokens */
+const CARD_BG_QUIET = "rgba(255,255,255,0.04)";
+const CARD_BORDER_QUIET = "rgba(255,255,255,0.08)";
+const CARD_BG_HOVER = "rgba(255,255,255,0.07)";
+const CARD_BORDER_HOVER = "rgba(255,255,255,0.16)";
+const CARD_SHADOW_HOVER = "0 20px 50px rgba(0,0,0,0.35)";
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
 function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: ElementType; label: string; description: string; delay?: number }) {
+  const [hovered, setHovered] = useState(false);
   return (
     <motion.div
       initial={{ opacity: 0, x: -24 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
-      className="group relative overflow-hidden backdrop-blur-sm cursor-default"
-      style={{ borderRadius: 12, border: `1px solid ${INPUT_BORDER}`, background: CARD_BG }}
+      className="group relative overflow-hidden backdrop-blur-sm cursor-default transition-all duration-300 ease-out"
+      style={{
+        borderRadius: 12,
+        border: `1px solid ${hovered ? CARD_BORDER_HOVER : CARD_BORDER_QUIET}`,
+        background: hovered ? CARD_BG_HOVER : CARD_BG_QUIET,
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hovered ? CARD_SHADOW_HOVER : "none",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className="relative px-4 py-3">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "rgba(255,255,255,0.03)" }}
-        />
         {/* Hover sweep */}
         <motion.div
           aria-hidden="true"
@@ -82,15 +89,10 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
             />
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: BLUE_08, border: `1px solid ${INPUT_BORDER}` }}
-            >
-              <Icon size={16} style={{ color: BLUE_ACCENT }} aria-hidden="true" />
-            </div>
+            <Icon size={16} style={{ color: "rgba(59,130,246,0.7)" }} aria-hidden="true" className="flex-shrink-0" />
             <div className="min-w-0">
-              <span className="font-sans text-sm font-medium block" style={{ color: "#F0F8FF" }}>{label}</span>
-              <p className="font-sans text-xs font-light truncate" style={{ color: "#94A3B8" }}>{description}</p>
+              <span className="font-sans text-sm font-semibold block" style={{ color: "#ffffff" }}>{label}</span>
+              <p className="font-sans text-xs font-light truncate" style={{ color: "#9CA3AF" }}>{description}</p>
             </div>
           </div>
         </div>
@@ -100,21 +102,25 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
 }
 
 function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: ElementType; label: string; description: string; delay?: number }) {
+  const [hovered, setHovered] = useState(false);
   return (
     <motion.div
       initial={{ opacity: 0, x: 24 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
-      className="group relative overflow-hidden backdrop-blur-sm cursor-default"
-      style={{ borderRadius: 12, border: `1px solid ${RESULT_BORDER}`, background: CARD_BG }}
+      className="group relative overflow-hidden backdrop-blur-sm cursor-default transition-all duration-300 ease-out"
+      style={{
+        borderRadius: 12,
+        border: `1px solid ${hovered ? CARD_BORDER_HOVER : CARD_BORDER_QUIET}`,
+        background: hovered ? CARD_BG_HOVER : CARD_BG_QUIET,
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hovered ? CARD_SHADOW_HOVER : "none",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className="relative px-4 py-3">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "rgba(255,255,255,0.03)" }}
-        />
         {/* Hover sweep */}
         <motion.div
           aria-hidden="true"
@@ -133,15 +139,10 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             />
           </div>
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: GREEN_08, border: `1px solid ${RESULT_BORDER}` }}
-          >
-            <Icon size={16} style={{ color: GREEN }} aria-hidden="true" />
-          </div>
+          <Icon size={16} style={{ color: "rgba(5,150,105,0.7)" }} aria-hidden="true" className="flex-shrink-0" />
           <div className="min-w-0 flex-1">
-            <span className="font-sans text-sm font-medium block" style={{ color: "#F0F8FF" }}>{label}</span>
-            <p className="font-sans text-xs font-light truncate" style={{ color: "#94A3B8" }}>{description}</p>
+            <span className="font-sans text-sm font-semibold block" style={{ color: "#ffffff" }}>{label}</span>
+            <p className="font-sans text-xs font-light truncate" style={{ color: "#9CA3AF" }}>{description}</p>
           </div>
         </div>
       </div>
@@ -199,13 +200,13 @@ function ConstellationBackground() {
       <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         {lines.map((line) => (
           <line key={line.id} x1={`${line.x1}%`} y1={`${line.y1}%`} x2={`${line.x2}%`} y2={`${line.y2}%`}
-            stroke={BLUE_ACCENT} strokeWidth="0.5" strokeOpacity="0.13" />
+            stroke={BLUE_ACCENT} strokeWidth="0.5" strokeOpacity="0.08" />
         ))}
       </svg>
       {dots.map((dot) => (
         <motion.div key={dot.id} className="absolute rounded-full"
           style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: 2.5, height: 2.5, backgroundColor: BLUE_ACCENT }}
-          animate={{ opacity: [0.12, 0.45, 0.12], scale: [1, 1.3, 1] }}
+          animate={{ opacity: [0.08, 0.3, 0.08], scale: [1, 1.3, 1] }}
           transition={{ duration: dot.duration, delay: dot.delay, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
@@ -221,7 +222,7 @@ function ConstellationBackground() {
                 : "0 0 10px 3px rgba(5,150,105,0.45)",
             }}
             initial={{ opacity: 0, scale: 0.4 }}
-            animate={{ opacity: [0, 0.75, 0.75, 0], scale: [0.4, 1.3, 1.1, 0.6] }}
+            animate={{ opacity: [0, 0.5, 0.5, 0], scale: [0.4, 1.3, 1.1, 0.6] }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.6, ease: "easeInOut" }}
           />
@@ -238,16 +239,16 @@ function Hub() {
     <div className="relative flex items-center justify-center" style={{ width: 320, height: 320 }}>
       {/* Deep radial glow */}
       <div aria-hidden="true" className="absolute rounded-full blur-3xl"
-        style={{ width: 300, height: 300, background: "radial-gradient(circle, rgba(14,86,245,0.15) 0%, transparent 70%)" }} />
+        style={{ width: 300, height: 300, background: "radial-gradient(circle, rgba(14,86,245,0.1) 0%, transparent 70%)" }} />
       {/* Mid glow — blended blue + emerald */}
       <div aria-hidden="true" className="absolute rounded-full blur-2xl"
-        style={{ width: 230, height: 230, background: "radial-gradient(circle, rgba(59,130,246,0.18) 0%, rgba(5,150,105,0.08) 50%, transparent 75%)" }} />
+        style={{ width: 230, height: 230, background: "radial-gradient(circle, rgba(59,130,246,0.14) 0%, rgba(5,150,105,0.06) 50%, transparent 75%)" }} />
       {/* Inner glow */}
       <div aria-hidden="true" className="absolute rounded-full blur-xl"
-        style={{ width: 160, height: 160, background: "radial-gradient(circle, rgba(14,86,245,0.3) 0%, transparent 70%)" }} />
+        style={{ width: 160, height: 160, background: "radial-gradient(circle, rgba(14,86,245,0.2) 0%, transparent 70%)" }} />
       {/* Pulsing glow */}
       <motion.div aria-hidden="true" className="absolute rounded-full"
-        style={{ width: 130, height: 130, background: "radial-gradient(circle, rgba(14,86,245,0.22) 0%, transparent 70%)" }}
+        style={{ width: 130, height: 130, background: "radial-gradient(circle, rgba(14,86,245,0.15) 0%, transparent 70%)" }}
         animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.85, 0.5] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -333,12 +334,17 @@ export default function EcosystemSection() {
       <ConstellationBackground />
 
       {/* Subtle grid */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.03]"
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `linear-gradient(${BLUE_ACCENT} 1px, transparent 1px), linear-gradient(90deg, ${BLUE_ACCENT} 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
         }}
       />
+
+      {/* Ambient glow behind grid */}
+      <div aria-hidden="true" className="absolute inset-0 flex justify-center pointer-events-none">
+        <div className="w-[900px] h-[500px] bg-emerald-500/10 blur-[160px] rounded-full" />
+      </div>
 
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-7xl">
