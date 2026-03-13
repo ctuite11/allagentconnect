@@ -277,7 +277,7 @@ export default function EcosystemSection() {
                   className="pointer-events-none absolute left-0 top-1/2 hidden -translate-x-full -translate-y-1/2 lg:block"
                   style={{ width: 56, height: 2 }}
                 >
-                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(34,197,94,0.05), rgba(34,197,94,0.15))" }} />
+                  <div className="h-full w-full" style={{ background: "linear-gradient(to right, rgba(34,197,94,0.08), rgba(34,197,94,0.22))" }} />
                 </div>
                 <ResultCard icon={card.icon} label={card.label} description={card.description} delay={i * 0.1} />
               </div>
