@@ -51,19 +51,19 @@ const HeroSection = () => {
 
           {/* Headline */}
           <h1
-            className="font-['Manrope'] font-extrabold text-white text-[clamp(38px,4.8vw,64px)] tracking-[-2.5px] leading-[1.07]"
+            className="mt-6 font-['Manrope'] font-extrabold text-white text-[clamp(38px,4.8vw,64px)] tracking-[-2.5px] leading-[1.07]"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
           >
             The private network where agents share pre-market intelligence.
           </h1>
 
           {/* Sub-headline */}
-          <p className="font-['Manrope'] font-medium text-white/50 text-[17px] leading-[1.75] tracking-[0.2px]">
+          <p className="mt-5 font-['Manrope'] font-medium text-white/50 text-[17px] leading-[1.75] tracking-[0.2px]">
             Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.
           </p>
 
           {/* CTA */}
-          <div className="flex items-center gap-4 mt-1 flex-wrap">
+          <div className="flex items-center gap-4 mt-8 flex-wrap">
             <button className="h-auto inline-flex items-center gap-2.5 px-[20px] py-[11px] bg-[#50c878] rounded-[90px] border-[5px] border-[#50c87866] hover:bg-[#3dba68] transition-colors font-['Manrope'] font-bold text-white text-base">
               Request access
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
