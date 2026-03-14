@@ -114,8 +114,8 @@ const HowAgentsUseAAC = () => {
               </div>
             </div>
             <div className="flex flex-col gap-2 p-5">
-              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Share inventory</h3>
-              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Verified agents share off-market and coming-soon opportunities inside the network.</p>
+              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Share listings before they hit the market</h3>
+              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Quietly market properties to the AAC network and gauge demand before launching publicly.</p>
             </div>
           </div>
 
