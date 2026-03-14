@@ -28,7 +28,7 @@ const HeroSection = () => {
         <div className="flex items-center gap-5">
           <a
             href="/auth?mode=register"
-            className="font-['Manrope'] font-semibold text-white text-sm bg-[#50c878] hover:bg-[#3dba68] transition-colors px-4 py-2 rounded-full"
+            className="font-['Manrope'] font-semibold text-white text-[13px] bg-[#50c878] hover:bg-[#3dba68] transition-colors px-[14px] py-[6px] rounded-full"
           >
             Request Access
           </a>
