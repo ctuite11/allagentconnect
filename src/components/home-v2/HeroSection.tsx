@@ -28,7 +28,7 @@ const HeroSection = () => {
         <div className="flex items-center gap-5">
           <a
             href="/auth?mode=register"
-            className="font-['Manrope'] font-semibold text-white text-sm bg-[#50c878] hover:bg-[#3dba68] transition-colors px-4 py-2 rounded-full"
+            className="font-['Manrope'] font-semibold text-white text-[13px] bg-[#50c878] hover:bg-[#3dba68] transition-colors px-[14px] py-[6px] rounded-full"
           >
             Request Access
           </a>
@@ -42,7 +42,7 @@ const HeroSection = () => {
       <div className="relative z-10 flex flex-col justify-center flex-1 px-6 lg:px-[100px] pt-20 pb-32 max-w-[1440px] mx-auto w-full">
         <div className="max-w-[580px] flex flex-col gap-6">
           {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/5 border border-white/10 rounded-full w-fit">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/5 border border-white/10 rounded-full w-fit mt-4">
             <span className="w-[7px] h-[7px] rounded-full bg-[#50c878] shrink-0" />
             <span className="font-['Manrope'] font-semibold text-white/80 text-sm tracking-[0.28px]">
               Verified Agent Network
