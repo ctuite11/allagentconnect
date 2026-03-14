@@ -1,16 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import { AAC_BLUE } from "@/lib/brandColors";
 
 const HowAgentsUseAAC = () => {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+  const cardStyle = (index: number): React.CSSProperties => ({
+    backgroundColor: "rgba(255,255,255,0.96)",
+    border: "1px solid rgba(15,23,42,0.08)",
+    boxShadow: hoveredCard === index
+      ? "0 12px 32px rgba(15,23,42,0.10)"
+      : "0 6px 20px rgba(15,23,42,0.06)",
+    transform: hoveredCard === index ? "translateY(-3px)" : "translateY(0)",
+    transition: "all 200ms ease-out",
+  });
+
   return (
     <section className="w-full py-28 px-6 relative bg-white">
-      <div className="max-w-[1200px] mx-auto flex flex-col gap-14">
+      <div className="max-w-[1200px] mx-auto flex flex-col gap-16">
         {/* Header */}
         <div className="flex flex-col items-center gap-5 text-center max-w-[600px] mx-auto">
           <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-[#0E56F50f] border border-[#0E56F526] rounded-full">
             <span className="font-['Manrope'] font-semibold text-[14px] tracking-[0.28px]" style={{ color: AAC_BLUE }}>How agents use the platform</span>
           </div>
-          <h2 className="font-['Manrope'] font-bold text-[#0f172a] text-[clamp(30px,4vw,46px)] tracking-[-1.5px] leading-[1.18]">
+          <h2 className="font-['Manrope'] font-semibold text-[#0f172a] text-[clamp(30px,4vw,46px)] leading-[1.18]" style={{ letterSpacing: "-0.02em" }}>
             How agents are using<br />All Agent Connect
           </h2>
         </div>
@@ -18,7 +30,12 @@ const HowAgentsUseAAC = () => {
         {/* Three cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Card 1 — Discover */}
-          <div className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-[0_2px_20px_rgba(15,23,42,0.07)] border border-[#e2e8f0]">
+          <div
+            className="flex flex-col rounded-2xl overflow-hidden"
+            style={cardStyle(0)}
+            onMouseEnter={() => setHoveredCard(0)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
             <div className="flex flex-col justify-center bg-[#f8fafc] px-5 py-4 overflow-hidden" style={{ minHeight: 260 }}>
               <div className="flex flex-col gap-2.5">
                 {[
@@ -39,23 +56,28 @@ const HowAgentsUseAAC = () => {
                 ))}
               </div>
             </div>
-            <div className="flex flex-col gap-2.5 p-5">
+            <div className="flex flex-col gap-2 p-5">
               <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Discover opportunities</h3>
-              <p className="font-['Manrope'] font-medium text-[#64748b] text-[13px] leading-[1.65]">Structured, searchable listings matching private listings with buyer and renter needs.</p>
+              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Structured, searchable listings matching private listings with buyer and renter needs.</p>
             </div>
           </div>
 
           {/* Card 2 — Share inventory */}
-          <div className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-[0_2px_20px_rgba(15,23,42,0.07)] border border-[#e2e8f0]">
+          <div
+            className="flex flex-col rounded-2xl overflow-hidden"
+            style={cardStyle(1)}
+            onMouseEnter={() => setHoveredCard(1)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
             <div className="relative flex flex-col items-center justify-center bg-[#f8fafc] px-5 pt-7 pb-6 overflow-hidden" style={{ minHeight: 260 }}>
-              <div className="relative w-full flex justify-center items-end gap-2 mb-5" style={{ height: 120 }}>
-                <div className="relative rounded-xl overflow-hidden shadow-md shrink-0" style={{ width: 80, height: 100 }}>
+              <div className="relative w-full flex justify-center items-end gap-1.5 mb-5" style={{ height: 120 }}>
+                <div className="relative rounded-xl overflow-hidden shrink-0" style={{ width: 80, height: 100, boxShadow: "0 6px 16px rgba(15,23,42,0.08)" }}>
                   <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=200&q=80" alt="Property" className="w-full h-full object-cover" />
                 </div>
-                <div className="relative rounded-xl overflow-hidden shadow-lg shrink-0 z-10" style={{ width: 95, height: 120 }}>
+                <div className="relative rounded-xl overflow-hidden shrink-0 z-10" style={{ width: 95, height: 120, boxShadow: "0 6px 16px rgba(15,23,42,0.08)" }}>
                   <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=200&q=80" alt="Property" className="w-full h-full object-cover" />
                 </div>
-                <div className="relative rounded-xl overflow-hidden shadow-md shrink-0" style={{ width: 80, height: 100 }}>
+                <div className="relative rounded-xl overflow-hidden shrink-0" style={{ width: 80, height: 100, boxShadow: "0 6px 16px rgba(15,23,42,0.08)" }}>
                   <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=80" alt="Property" className="w-full h-full object-cover" />
                 </div>
               </div>
@@ -70,14 +92,15 @@ const HowAgentsUseAAC = () => {
                   </div>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </div>
-                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-full shadow-sm" style={{ backgroundColor: AAC_BLUE }}>
+                {/* Blue outline instead of solid fill */}
+                <div className="flex items-center justify-between px-3.5 py-2.5 bg-white rounded-full shadow-sm" style={{ border: `1px solid ${AAC_BLUE}` }}>
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" strokeWidth="2" strokeLinecap="round" /><circle cx="9" cy="7" r="4" stroke="white" strokeWidth="2" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="white" strokeWidth="2" strokeLinecap="round" /><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="white" strokeWidth="2" strokeLinecap="round" /></svg>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(14,86,245,0.08)" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" /><circle cx="9" cy="7" r="4" stroke={AAC_BLUE} strokeWidth="2" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" /><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" /></svg>
                     </div>
-                    <span className="font-['Manrope'] font-semibold text-white text-[12px]">Share with agents</span>
+                    <span className="font-['Manrope'] font-semibold text-[12px]" style={{ color: AAC_BLUE }}>Share with agents</span>
                   </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={0.5} /></svg>
                 </div>
                 <div className="flex items-center justify-between px-3.5 py-2.5 bg-white rounded-full shadow-sm border border-[#e2e8f0]">
                   <div className="flex items-center gap-2.5">
@@ -90,14 +113,19 @@ const HowAgentsUseAAC = () => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2.5 p-5">
+            <div className="flex flex-col gap-2 p-5">
               <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Share inventory</h3>
-              <p className="font-['Manrope'] font-medium text-[#64748b] text-[13px] leading-[1.65]">Verified agents share off-market and coming-soon opportunities inside the network.</p>
+              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Verified agents share off-market and coming-soon opportunities inside the network.</p>
             </div>
           </div>
 
           {/* Card 3 — Collaborate */}
-          <div className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-[0_2px_20px_rgba(15,23,42,0.07)] border border-[#e2e8f0]">
+          <div
+            className="flex flex-col rounded-2xl overflow-hidden"
+            style={cardStyle(2)}
+            onMouseEnter={() => setHoveredCard(2)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
             <div className="relative flex items-center justify-center bg-[#f8fafc] overflow-hidden" style={{ minHeight: 260, paddingTop: 28, paddingBottom: 24 }}>
               <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 340 260" preserveAspectRatio="xMidYMid meet">
                 <path d="M170 148 Q130 118 90 88" stroke="#cbd5e1" strokeWidth="1.5" fill="none" strokeDasharray="5 4" />
@@ -106,7 +134,7 @@ const HowAgentsUseAAC = () => {
                 <path d="M170 148 Q220 170 292 198" stroke="#cbd5e1" strokeWidth="1.5" fill="none" strokeDasharray="5 4" />
                 <path d="M170 148 Q215 148 262 148" stroke="#cbd5e1" strokeWidth="1.5" fill="none" strokeDasharray="5 4" />
               </svg>
-              <div className="relative z-10 w-[72px] h-[72px] rounded-full overflow-hidden border-[3px] border-white shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+              <div className="relative z-10 w-[72px] h-[72px] rounded-full overflow-hidden border-[3px] border-white" style={{ boxShadow: "0 6px 16px rgba(15,23,42,0.10)" }}>
                 <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Agent" className="w-full h-full object-cover" />
               </div>
               {[
@@ -117,30 +145,17 @@ const HowAgentsUseAAC = () => {
                 { src: "https://randomuser.me/api/portraits/women/29.jpg", size: 44, top: "46%", right: "7%" },
               ].map((a, i) => (
                 <div
-                  key={i}
-                  className="absolute rounded-full overflow-hidden border-[2.5px] border-white shadow-md"
-                  style={{ width: a.size, height: a.size, top: a.top, left: a.left, bottom: a.bottom, right: a.right }}
-                />
-              ))}
-              {[
-                { src: "https://randomuser.me/api/portraits/men/32.jpg", size: 52, top: "18%", left: "14%" },
-                { src: "https://randomuser.me/api/portraits/men/75.jpg", size: 56, top: "16%", right: "16%" },
-                { src: "https://randomuser.me/api/portraits/women/68.jpg", size: 48, bottom: "12%", left: "16%" },
-                { src: "https://randomuser.me/api/portraits/men/52.jpg", size: 52, bottom: "10%", right: "10%" },
-                { src: "https://randomuser.me/api/portraits/women/29.jpg", size: 44, top: "46%", right: "7%" },
-              ].map((a, i) => (
-                <div
                   key={`avatar-${i}`}
-                  className="absolute rounded-full overflow-hidden border-[2.5px] border-white shadow-md"
-                  style={{ width: a.size, height: a.size, top: a.top, left: a.left, bottom: a.bottom, right: a.right }}
+                  className="absolute rounded-full overflow-hidden border-[2.5px] border-white"
+                  style={{ width: a.size, height: a.size, top: a.top, left: a.left, bottom: a.bottom, right: a.right, boxShadow: "0 6px 16px rgba(15,23,42,0.10)" }}
                 >
                   <img src={a.src} alt="Agent" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
-            <div className="flex flex-col gap-2.5 p-5">
+            <div className="flex flex-col gap-2 p-5">
               <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Collaborate</h3>
-              <p className="font-['Manrope'] font-medium text-[#64748b] text-[13px] leading-[1.65]">Direct agent-to-agent coordination without public posts, email chains, or group noise.</p>
+              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Direct agent-to-agent coordination without public posts, email chains, or group noise.</p>
             </div>
           </div>
         </div>
