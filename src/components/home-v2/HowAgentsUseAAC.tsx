@@ -23,7 +23,7 @@ const HowAgentsUseAAC = () => {
             <span className="font-['Manrope'] font-semibold text-[14px] tracking-[0.28px]" style={{ color: AAC_BLUE }}>Agent workflow</span>
           </div>
           <h2 className="font-['Manrope'] font-semibold text-[#0f172a] text-[clamp(30px,4vw,46px)] leading-[1.18]" style={{ letterSpacing: "-0.02em" }}>
-            Why Agents Choose<br />All Agent Connect
+            How Agents Work Inside<br />The AAC Network
           </h2>
         </div>
 
