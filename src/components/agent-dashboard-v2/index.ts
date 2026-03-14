@@ -1,4 +1,5 @@
-/**
- * Agent Dashboard V2 components barrel file.
- * Add new redesigned dashboard components here as they are created.
- */
+export { WelcomeHeader } from "./WelcomeHeader";
+export { NeedsAttentionBar } from "./NeedsAttentionBar";
+export { MyListingsRow } from "./MyListingsRow";
+export { CommunicationsPanel } from "./CommunicationsPanel";
+export { BuyersTable } from "./BuyersTable";
