@@ -151,7 +151,7 @@ const App = () => (
               <Navigation />
               <NewMessageToastListener />
               <Routes>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<HomepageV2 />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/agent-match" element={<AgentMatch />} />
                 <Route path="/seller-listing/:id" element={<SellerListingDetail />} />
