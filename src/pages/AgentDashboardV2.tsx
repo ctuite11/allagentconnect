@@ -1,5 +1,4 @@
 import { Helmet } from "react-helmet-async";
-import PageShell from "@/components/layout/PageShell";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
 import {
   WelcomeHeader,
@@ -7,6 +6,7 @@ import {
   MyListingsRow,
   CommunicationsPanel,
   BuyersTable,
+  DashboardSidebar,
 } from "@/components/agent-dashboard-v2";
 
 /**
@@ -18,27 +18,27 @@ const AgentDashboardV2 = () => {
 
   if (loading) {
     return (
-      <PageShell>
-        <div className="space-y-4 animate-pulse">
-          <div className="h-16 rounded-xl bg-muted" />
-          <div className="h-8 rounded-lg bg-muted w-2/3" />
-          <div className="h-64 rounded-xl bg-muted" />
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-72 rounded-xl bg-muted" />
-            <div className="h-72 rounded-xl bg-muted" />
+      <div className="flex min-h-screen">
+        <DashboardSidebar />
+        <div className="flex-1 bg-zinc-50 p-8">
+          <div className="space-y-4 animate-pulse max-w-[1200px]">
+            <div className="h-16 rounded-xl bg-zinc-200" />
+            <div className="h-8 rounded-lg bg-zinc-200 w-2/3" />
+            <div className="h-64 rounded-xl bg-zinc-200" />
           </div>
         </div>
-      </PageShell>
+      </div>
     );
   }
 
   if (error || !summary) {
     return (
-      <PageShell>
-        <div className="py-20 text-center text-muted-foreground">
-          <p>{error ?? "Unable to load dashboard data."}</p>
+      <div className="flex min-h-screen">
+        <DashboardSidebar />
+        <div className="flex-1 bg-zinc-50 flex items-center justify-center">
+          <p className="text-zinc-500">{error ?? "Unable to load dashboard data."}</p>
         </div>
-      </PageShell>
+      </div>
     );
   }
 
@@ -48,29 +48,26 @@ const AgentDashboardV2 = () => {
         <title>Dashboard — All Agent Connect</title>
       </Helmet>
 
-      <PageShell className="pb-12">
-        <div className="space-y-6 max-w-[1200px]">
-          {/* Welcome */}
-          <WelcomeHeader
-            firstName={summary.profile?.first_name ?? "Agent"}
-            lastName={summary.profile?.last_name ?? ""}
-            headshotUrl={summary.profile?.headshot_url ?? null}
-            aacId={summary.agentId ? `AAC-${summary.agentId.slice(0, 5).toUpperCase()}` : undefined}
-          />
+      <div className="flex min-h-screen">
+        <DashboardSidebar />
 
-          {/* Needs Attention */}
-          <NeedsAttentionBar items={summary.attentionItems} />
-
-          {/* Listings carousel */}
-          <MyListingsRow listings={summary.listings} />
-
-          {/* Communications + Buyers side-by-side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <CommunicationsPanel conversations={summary.conversations} />
-            <BuyersTable buyers={summary.buyers} />
+        <main className="flex-1 bg-zinc-50 overflow-y-auto p-8">
+          <div className="space-y-6 max-w-[1200px]">
+            <WelcomeHeader
+              firstName={summary.profile?.first_name ?? "Agent"}
+              lastName={summary.profile?.last_name ?? ""}
+              headshotUrl={summary.profile?.headshot_url ?? null}
+              aacId={summary.agentId ? `AAC-${summary.agentId.slice(0, 5).toUpperCase()}` : undefined}
+            />
+            <NeedsAttentionBar items={summary.attentionItems} />
+            <MyListingsRow listings={summary.listings} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <CommunicationsPanel conversations={summary.conversations} />
+              <BuyersTable buyers={summary.buyers} />
+            </div>
           </div>
-        </div>
-      </PageShell>
+        </main>
+      </div>
     </>
   );
 };
