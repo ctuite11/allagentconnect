@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/home-v2/HeroSection";
+import ProofStrip from "@/components/home-v2/ProofStrip";
 import NetworkIntelligence from "@/components/home-v2/NetworkIntelligence";
 import EcosystemSection from "@/components/home-v2/EcosystemSection";
 import HowAgentsUseAAC from "@/components/home-v2/HowAgentsUseAAC";
