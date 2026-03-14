@@ -154,8 +154,8 @@ const HowAgentsUseAAC = () => {
               ))}
             </div>
             <div className="flex flex-col gap-2 p-5">
-              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Collaborate</h3>
-              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Direct agent-to-agent coordination without public posts, email chains, or group noise.</p>
+              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Collaborate with trusted agents</h3>
+              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Connect directly with experienced agents to match buyers, solve deals, and move transactions forward faster.</p>
             </div>
           </div>
         </div>
