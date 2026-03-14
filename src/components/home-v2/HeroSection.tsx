@@ -64,7 +64,7 @@ const HeroSection = () => {
 
           {/* CTA */}
           <div className="flex items-center gap-4 mt-1 flex-wrap">
-            <button className="h-auto inline-flex items-center gap-3 pl-7 pr-6 py-[14px] bg-[#50c878] rounded-[90px] border-[5px] border-[#50c87866] hover:bg-[#3dba68] transition-colors font-['Manrope'] font-bold text-white text-[17px]">
+            <button className="h-auto inline-flex items-center gap-3 px-[26px] py-[14px] bg-[#50c878] rounded-[90px] border-[5px] border-[#50c87866] hover:bg-[#3dba68] transition-colors font-['Manrope'] font-bold text-white text-base">
               Request access
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M7.5 5l5 5-5 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
