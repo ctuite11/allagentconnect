@@ -18,7 +18,7 @@ const HeroSection = () => {
       <div className="absolute top-1/3 left-0 w-[560px] h-[560px] rounded-full bg-[#2537ff] opacity-[0.07] blur-[140px] pointer-events-none" />
 
       {/* Top access row */}
-      <div className="relative z-10 flex items-center justify-between w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] pt-12">
+      <div className="relative z-10 flex items-center justify-between w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] pt-12 mb-12">
         <div className="flex items-center gap-2.5">
           <AACMonogram className="w-8 h-8 text-[#50c878]" />
           <span className="font-['Manrope'] font-semibold text-white text-lg tracking-[-0.4px] whitespace-nowrap">
@@ -26,14 +26,14 @@ const HeroSection = () => {
           </span>
         </div>
         <div className="flex items-center gap-5">
-          <a href="/auth" className="font-['Manrope'] font-medium text-white/80 text-sm hover:text-white transition-colors">
-            Sign in
-          </a>
           <a
             href="/auth?mode=register"
-            className="font-['Manrope'] font-semibold text-white text-sm bg-[#50c878] hover:bg-[#3dba68] transition-colors px-6 py-2.5 rounded-full"
+            className="font-['Manrope'] font-semibold text-white text-sm bg-[#50c878] hover:bg-[#3dba68] transition-colors px-4 py-2 rounded-full"
           >
             Request Access
+          </a>
+          <a href="/auth" className="font-['Manrope'] font-medium text-white/80 text-sm hover:text-white transition-colors">
+            Sign in
           </a>
         </div>
       </div>
