@@ -139,6 +139,7 @@ const HomepageV2 = () => {
         {/* Page Sections */}
         <main className="flex flex-col w-full">
           <HeroSection />
+          <ProofStrip />
           <NetworkIntelligence />
           <EcosystemSection />
           <HowAgentsUseAAC />
