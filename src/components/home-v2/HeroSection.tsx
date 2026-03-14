@@ -1,4 +1,5 @@
 import React from "react";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 const HeroSection = () => {
   return (
@@ -16,8 +17,26 @@ const HeroSection = () => {
       {/* Blue glow accent */}
       <div className="absolute top-1/3 left-0 w-[560px] h-[560px] rounded-full bg-[#2537ff] opacity-[0.07] blur-[140px] pointer-events-none" />
 
-      {/* Nav spacer */}
-      <div className="h-[83px] shrink-0" />
+      {/* Top access row */}
+      <div className="relative z-10 flex items-center justify-between w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] pt-12">
+        <div className="flex items-center gap-2.5">
+          <AACMonogram className="w-8 h-8 text-[#50c878]" />
+          <span className="font-['Manrope'] font-semibold text-white text-lg tracking-[-0.4px] whitespace-nowrap">
+            All Agent Connect
+          </span>
+        </div>
+        <div className="flex items-center gap-5">
+          <a href="/auth" className="font-['Manrope'] font-medium text-white/80 text-sm hover:text-white transition-colors">
+            Sign in
+          </a>
+          <a
+            href="/auth?mode=register"
+            className="font-['Manrope'] font-semibold text-white text-sm bg-[#50c878] hover:bg-[#3dba68] transition-colors px-6 py-2.5 rounded-full"
+          >
+            Request Access
+          </a>
+        </div>
+      </div>
 
       {/* Hero content */}
       <div className="relative z-10 flex flex-col justify-center flex-1 px-6 lg:px-[100px] pt-20 pb-32 max-w-[1440px] mx-auto w-full">
