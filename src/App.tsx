@@ -190,6 +190,7 @@ const App = () => (
                   <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
                   <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
                   <Route path="/communications" element={<RouteGuard requireRole="agent"><CommunicationsHub /></RouteGuard>} />
+                  <Route path="/agent-dashboard-v2" element={<RouteGuard requireRole="agent"><AgentDashboardV2 /></RouteGuard>} />
 
                   <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
                   <Route path="/agent/listings/drafts" element={<RouteGuard requireRole="agent"><DraftListings /></RouteGuard>} />
