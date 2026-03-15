@@ -75,11 +75,11 @@ function SidebarRow({
   const button = (
     <button
       className={cn(
-        "relative flex w-full items-center gap-2.5 rounded-md px-4 h-9 text-[13px] transition-colors cursor-default",
+        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors cursor-default",
         collapsed && "justify-center px-0",
         active
-          ? "bg-zinc-800 text-white font-medium"
-          : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+          ? "bg-zinc-800/40 text-zinc-100 font-medium"
+          : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30"
       )}
     >
       <item.icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-[hsl(221,92%,51%)]")} />
@@ -129,7 +129,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
+            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors mx-2 rounded-md hover:bg-zinc-800/30",
             collapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -165,15 +165,17 @@ export function DashboardSidebar({
             />
           )}
 
-          <SectionLabel collapsed={collapsed}>Other Tools</SectionLabel>
-          {otherTools.map((item) => (
-            <SidebarRow
-              key={item.label}
-              item={item}
-              active={item.label === activeItem}
-              collapsed={collapsed}
-            />
-          ))}
+          <div className="mt-4">
+            <SectionLabel collapsed={collapsed}>Other Tools</SectionLabel>
+            {otherTools.map((item) => (
+              <SidebarRow
+                key={item.label}
+                item={item}
+                active={item.label === activeItem}
+                collapsed={collapsed}
+              />
+            ))}
+          </div>
         </nav>
       </aside>
     </TooltipProvider>
