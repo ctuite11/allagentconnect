@@ -212,10 +212,3 @@ export function DashboardSidebar({
     </TooltipProvider>
   );
 }
-            ))}
-          </div>
-        </nav>
-      </aside>
-    </TooltipProvider>
-  );
-}
