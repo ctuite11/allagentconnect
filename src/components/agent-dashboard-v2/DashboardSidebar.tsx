@@ -65,10 +65,7 @@ function SidebarRow({
           : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
       )}
     >
-      {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r bg-emerald-500" />
-      )}
-      <item.icon className="h-[18px] w-[18px] shrink-0" />
+      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-[hsl(221,92%,51%)]")} />
       <span className="truncate">{item.label}</span>
     </button>
   );
