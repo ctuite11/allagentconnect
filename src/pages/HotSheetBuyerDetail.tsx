@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Clock, AlertCircle, Home, MapPin } from "lucide-react";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface BuyerInfo {
   firstName: string;
@@ -17,6 +18,7 @@ interface LinkedHotSheet {
   name: string;
   criteria: any;
   photos: string[];
+  matchCount: number;
 }
 
 type InviteStatus = "accepted" | "pending" | "not_invited";
@@ -125,42 +127,26 @@ const HotSheetBuyerDetail = () => {
           .select("id, name, criteria")
           .in("id", hsIds);
 
-        // Fetch photos from sent listings
-        const { data: sentData } = await supabase
-          .from("hot_sheet_sent_listings")
-          .select("hot_sheet_id, listing_id")
-          .in("hot_sheet_id", hsIds)
-          .limit(200);
-
-        const listingIdsByHs = new Map<string, string[]>();
-        const uniqueIds = new Set<string>();
-        for (const row of sentData || []) {
-          uniqueIds.add(row.listing_id);
-          const arr = listingIdsByHs.get(row.hot_sheet_id) || [];
-          arr.push(row.listing_id);
-          listingIdsByHs.set(row.hot_sheet_id, arr);
-        }
-
-        let photosMap = new Map<string, string[]>();
-        if (uniqueIds.size > 0) {
-          const ids = Array.from(uniqueIds).slice(0, 100);
-          const { data: listingsData } = await supabase.from("listings").select("id, photos").in("id", ids);
-          for (const l of listingsData || []) {
-            const photos = l.photos as string[] | null;
-            if (photos?.length) photosMap.set(l.id, photos);
+        // For each hot sheet, run criteria query to get matching listing photos
+        const result: LinkedHotSheet[] = [];
+        for (const hs of hsData || []) {
+          let photos: string[] = [];
+          const matchCount = { value: 0 };
+          try {
+            const criteria = hs.criteria as any;
+            if (criteria) {
+              const { data: matchedListings, count: totalCount } = await buildListingsQuery(supabase, criteria).limit(200);
+              for (const l of matchedListings || []) {
+                const lPhotos = l.photos as string[] | null;
+                if (lPhotos?.length && photos.length < 4) photos.push(lPhotos[0]);
+              }
+              matchCount.value = matchedListings?.length || 0;
+            }
+          } catch (e) {
+            console.error("Error fetching matches for", hs.id, e);
           }
+          result.push({ id: hs.id, name: hs.name, criteria: hs.criteria, photos, matchCount: matchCount.value });
         }
-
-        const result: LinkedHotSheet[] = (hsData || []).map((hs: any) => {
-          const sheetListingIds = listingIdsByHs.get(hs.id) || [];
-          const photos: string[] = [];
-          for (const lid of sheetListingIds) {
-            const p = photosMap.get(lid);
-            if (p?.length) photos.push(p[0]);
-            if (photos.length >= 4) break;
-          }
-          return { id: hs.id, name: hs.name, criteria: hs.criteria, photos };
-        });
 
         setHotSheets(result);
       }
@@ -249,6 +235,9 @@ const HotSheetBuyerDetail = () => {
               {/* Card Body */}
               <div className="px-4 pt-3 pb-4">
                 <h3 className="text-lg font-semibold text-zinc-900 truncate">{hs.name}</h3>
+                <p className="text-sm text-zinc-500 mt-0.5">
+                  {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
+                </p>
 
                 {/* Search Criteria Pills */}
                 <div className="mt-2">
