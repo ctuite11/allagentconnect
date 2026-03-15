@@ -143,6 +143,7 @@ const HotSheetBuyerDetail = () => {
                   const url = typeof raw === "string" ? raw : raw?.url || null;
                   if (url) photos.push(url);
                 }
+              }
               matchCount.value = matchedListings?.length || 0;
             }
           } catch (e) {
