@@ -84,9 +84,7 @@ export function DashboardSidebar({
     >
       {/* Logo area */}
       <div className="flex items-center gap-2 px-4 py-4">
-        <div className="h-7 w-7 rounded-md bg-emerald-600 flex items-center justify-center">
-          <span className="text-white text-xs font-bold">A</span>
-        </div>
+        <AACMonogram className="w-7 h-7 text-emerald-400" />
         <span className="text-[14px] font-semibold text-white tracking-tight">
           All Agent Connect
         </span>
