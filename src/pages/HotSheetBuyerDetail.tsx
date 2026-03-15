@@ -235,6 +235,9 @@ const HotSheetBuyerDetail = () => {
               {/* Card Body */}
               <div className="px-4 pt-3 pb-4">
                 <h3 className="text-lg font-semibold text-zinc-900 truncate">{hs.name}</h3>
+                <p className="text-sm text-zinc-500 mt-0.5">
+                  {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
+                </p>
 
                 {/* Search Criteria Pills */}
                 <div className="mt-2">
