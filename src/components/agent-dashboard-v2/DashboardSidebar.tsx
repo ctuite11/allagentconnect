@@ -12,6 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 interface SidebarItem {
   label: string;
@@ -42,7 +43,7 @@ interface DashboardSidebarProps {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 select-none">
+    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-300 select-none">
       {children}
     </span>
   );
@@ -64,10 +65,7 @@ function SidebarRow({
           : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
       )}
     >
-      {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] rounded-r bg-emerald-500" />
-      )}
-      <item.icon className="h-[18px] w-[18px] shrink-0" />
+      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-[hsl(221,92%,51%)]")} />
       <span className="truncate">{item.label}</span>
     </button>
   );
@@ -86,9 +84,7 @@ export function DashboardSidebar({
     >
       {/* Logo area */}
       <div className="flex items-center gap-2 px-4 py-4">
-        <div className="h-7 w-7 rounded-md bg-emerald-600 flex items-center justify-center">
-          <span className="text-white text-xs font-bold">A</span>
-        </div>
+        <AACMonogram className="w-7 h-7 text-emerald-400" />
         <span className="text-[14px] font-semibold text-white tracking-tight">
           All Agent Connect
         </span>
