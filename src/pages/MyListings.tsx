@@ -336,7 +336,7 @@ function MyListingsView({
       <PageHeader
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
-        backTo="/agent-dashboard"
+        backTo="/agent-dashboard-v2"
       />
 
       {/* New Listing Button Row */}
