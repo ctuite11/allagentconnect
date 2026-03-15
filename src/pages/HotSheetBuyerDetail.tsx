@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Clock, AlertCircle, Home, MapPin } from "lucide-react";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface BuyerInfo {
   firstName: string;
