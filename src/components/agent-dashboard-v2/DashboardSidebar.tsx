@@ -12,6 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 interface SidebarItem {
   label: string;
