@@ -135,14 +135,12 @@ const HotSheetBuyerDetail = () => {
           try {
             const criteria = hs.criteria as any;
             if (criteria) {
-              const { data: matchedListings } = await buildListingsQuery(supabase, criteria).limit(4);
+              const { data: matchedListings, count: totalCount } = await buildListingsQuery(supabase, criteria).limit(200);
               for (const l of matchedListings || []) {
                 const lPhotos = l.photos as string[] | null;
-                if (lPhotos?.length) photos.push(lPhotos[0]);
+                if (lPhotos?.length && photos.length < 4) photos.push(lPhotos[0]);
               }
-              const { count } = await buildListingsQuery(supabase, criteria)
-                .select("id", { count: "exact", head: true });
-              matchCount.value = count || 0;
+              matchCount.value = matchedListings?.length || 0;
             }
           } catch (e) {
             console.error("Error fetching matches for", hs.id, e);
