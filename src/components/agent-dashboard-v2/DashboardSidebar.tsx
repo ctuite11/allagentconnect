@@ -43,7 +43,7 @@ interface DashboardSidebarProps {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 select-none">
+    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-300 select-none">
       {children}
     </span>
   );
