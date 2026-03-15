@@ -109,11 +109,30 @@ function SidebarRow({
 }
 
 export function DashboardSidebar({
-  activeItem = "Success Hub",
+  activeItem,
   isAdmin,
   className,
 }: DashboardSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine active item from current route if not explicitly set
+  const resolvedActive = activeItem ?? (() => {
+    const path = location.pathname;
+    const allItems = [...mainMenu, ...(isAdmin ? [adminItem] : []), ...otherTools];
+    // Exact match first, then prefix match (but skip "/" to avoid false positives)
+    const exact = allItems.find((item) => item.route && item.route === path);
+    if (exact) return exact.label;
+    const prefix = allItems.find((item) => item.route && item.route !== "/" && path.startsWith(item.route));
+    return prefix?.label ?? "Success Hub";
+  })();
+
+  const handleNav = (item: SidebarItem) => {
+    if (item.route) {
+      navigate(item.route);
+    }
+  };
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -160,8 +179,9 @@ export function DashboardSidebar({
             <SidebarRow
               key={item.label}
               item={item}
-              active={item.label === activeItem}
+              active={item.label === resolvedActive}
               collapsed={collapsed}
+              onClick={() => handleNav(item)}
             />
           ))}
 
@@ -169,8 +189,9 @@ export function DashboardSidebar({
           {isAdmin && (
             <SidebarRow
               item={adminItem}
-              active={activeItem === "Admin"}
+              active={resolvedActive === "Admin"}
               collapsed={collapsed}
+              onClick={() => handleNav(adminItem)}
             />
           )}
 
@@ -180,9 +201,17 @@ export function DashboardSidebar({
               <SidebarRow
                 key={item.label}
                 item={item}
-                active={item.label === activeItem}
+                active={item.label === resolvedActive}
                 collapsed={collapsed}
+                onClick={() => handleNav(item)}
               />
+            ))}
+          </div>
+        </nav>
+      </aside>
+    </TooltipProvider>
+  );
+}
             ))}
           </div>
         </nav>
