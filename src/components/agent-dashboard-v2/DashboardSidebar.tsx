@@ -91,7 +91,7 @@ function SidebarRow({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="right">{item.label}</TooltipContent>
+        <TooltipContent side="right" className="bg-white text-zinc-900 text-[13px] font-medium border border-zinc-200 rounded-md px-2.5 py-1.5 shadow-md">{item.label}</TooltipContent>
       </Tooltip>
     );
   }
