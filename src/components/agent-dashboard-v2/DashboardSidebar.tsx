@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -27,25 +28,26 @@ import {
 interface SidebarItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  route: string | null; // null = not yet wired
 }
 
 const mainMenu: SidebarItem[] = [
-  { label: "Success Hub", icon: LayoutDashboard },
-  { label: "Buyers", icon: Users },
-  { label: "Contacts", icon: Contact },
-  { label: "Listings", icon: List },
-  { label: "HotSheets", icon: Flame },
-  { label: "Messages", icon: MessageSquare },
-  { label: "Communication center", icon: Radio },
-  { label: "Profile", icon: UserCircle },
+  { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard-v2" },
+  { label: "Buyers", icon: Users, route: "/my-clients" },
+  { label: "Contacts", icon: Contact, route: "/my-clients" },
+  { label: "Listings", icon: List, route: "/agent/listings" },
+  { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
+  { label: "Messages", icon: MessageSquare, route: "/communications" },
+  { label: "Communication center", icon: Radio, route: "/communications" },
+  { label: "Profile", icon: UserCircle, route: "/profile" },
 ];
 
-const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck };
+const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin" };
 
 const otherTools: SidebarItem[] = [
-  { label: "Calendar", icon: Calendar },
-  { label: "Analytics", icon: BarChart3 },
-  { label: "Settings", icon: Settings },
+  { label: "Calendar", icon: Calendar, route: null }, // TODO: no V2 calendar yet
+  { label: "Analytics", icon: BarChart3, route: "/market-insights" },
+  { label: "Settings", icon: Settings, route: null }, // TODO: no V2 settings yet
 ];
 
 interface DashboardSidebarProps {
