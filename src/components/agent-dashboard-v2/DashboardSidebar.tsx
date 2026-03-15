@@ -75,7 +75,7 @@ function SidebarRow({
   const button = (
     <button
       className={cn(
-        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors cursor-default",
+        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors cursor-default outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
         collapsed && "justify-center px-0",
         active
           ? "bg-zinc-800/40 text-zinc-100 font-medium"
