@@ -165,15 +165,17 @@ export function DashboardSidebar({
             />
           )}
 
-          <SectionLabel collapsed={collapsed}>Other Tools</SectionLabel>
-          {otherTools.map((item) => (
-            <SidebarRow
-              key={item.label}
-              item={item}
-              active={item.label === activeItem}
-              collapsed={collapsed}
-            />
-          ))}
+          <div className="mt-4">
+            <SectionLabel collapsed={collapsed}>Other Tools</SectionLabel>
+            {otherTools.map((item) => (
+              <SidebarRow
+                key={item.label}
+                item={item}
+                active={item.label === activeItem}
+                collapsed={collapsed}
+              />
+            ))}
+          </div>
         </nav>
       </aside>
     </TooltipProvider>
