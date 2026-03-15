@@ -560,7 +560,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
           <PageHeader
             title="Edit Profile"
             subtitle="Customize how you appear to clients"
-            backTo="/agent-dashboard"
+            backTo="/agent-dashboard-v2"
           />
           {/* Mobile Preview Button */}
           <Button 

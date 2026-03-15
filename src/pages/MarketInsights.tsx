@@ -201,6 +201,7 @@ const MarketInsights = () => {
             title="Market Insights"
             subtitle="Real-time analytics and trends from recently sold properties"
             className="mb-8"
+            backTo="/agent-dashboard-v2"
           />
 
             {/* Filters */}
