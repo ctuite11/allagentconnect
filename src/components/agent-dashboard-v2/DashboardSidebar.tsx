@@ -69,16 +69,23 @@ function SidebarRow({
   item,
   active,
   collapsed,
+  onClick,
 }: {
   item: SidebarItem;
   active: boolean;
   collapsed: boolean;
+  onClick?: () => void;
 }) {
+  const disabled = !item.route;
   const button = (
     <button
+      onClick={onClick}
+      disabled={disabled}
       className={cn(
-        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors cursor-default outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
+        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
         collapsed && "justify-center px-0",
+        disabled && "opacity-40 cursor-not-allowed",
+        !disabled && "cursor-default",
         active
           ? "bg-zinc-800/40 text-zinc-100 font-medium"
           : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30"
