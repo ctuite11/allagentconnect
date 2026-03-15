@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -10,9 +11,18 @@ import {
   Calendar,
   BarChart3,
   Settings,
+  ShieldCheck,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AACMonogram from "@/components/ui/AACMonogram";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SidebarItem {
   label: string;
@@ -30,6 +40,8 @@ const mainMenu: SidebarItem[] = [
   { label: "Profile", icon: UserCircle },
 ];
 
+const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck };
+
 const otherTools: SidebarItem[] = [
   { label: "Calendar", icon: Calendar },
   { label: "Analytics", icon: BarChart3 },
@@ -38,10 +50,12 @@ const otherTools: SidebarItem[] = [
 
 interface DashboardSidebarProps {
   activeItem?: string;
+  isAdmin?: boolean;
   className?: string;
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
+  if (collapsed) return null;
   return (
     <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-300 select-none">
       {children}
@@ -52,64 +66,116 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function SidebarRow({
   item,
   active,
+  collapsed,
 }: {
   item: SidebarItem;
   active: boolean;
+  collapsed: boolean;
 }) {
-  return (
+  const button = (
     <button
       className={cn(
         "relative flex w-full items-center gap-2.5 rounded-md px-4 h-9 text-[13px] transition-colors cursor-default",
+        collapsed && "justify-center px-0",
         active
           ? "bg-zinc-800 text-white font-medium"
           : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
       )}
     >
       <item.icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-[hsl(221,92%,51%)]")} />
-      <span className="truncate">{item.label}</span>
+      {!collapsed && <span className="truncate">{item.label}</span>}
     </button>
   );
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent side="right">{item.label}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return button;
 }
 
 export function DashboardSidebar({
   activeItem = "Success Hub",
+  isAdmin,
   className,
 }: DashboardSidebarProps) {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
-    <aside
-      className={cn(
-        "flex w-[212px] shrink-0 flex-col bg-zinc-900 min-h-screen",
-        className
-      )}
-    >
-      {/* Logo area */}
-      <div className="flex items-center gap-2 px-4 py-4">
-        <AACMonogram className="w-7 h-7 text-emerald-400" />
-        <span className="text-[14px] font-semibold text-white tracking-tight">
-          All Agent Connect
-        </span>
-      </div>
+    <TooltipProvider delayDuration={200}>
+      <aside
+        className={cn(
+          "flex shrink-0 flex-col bg-zinc-900 min-h-screen transition-all duration-200",
+          collapsed ? "w-[72px]" : "w-[212px]",
+          className
+        )}
+      >
+        {/* Logo area */}
+        <div className={cn("flex items-center px-4 py-4", collapsed ? "justify-center" : "gap-2")}>
+          <AACMonogram className="w-7 h-7 text-emerald-400 shrink-0" />
+          {!collapsed && (
+            <span className="text-[14px] font-semibold text-white tracking-tight">
+              All Agent Connect
+            </span>
+          )}
+        </div>
 
-      {/* Main menu */}
-      <nav className="flex-1 space-y-0.5 px-2">
-        <SectionLabel>Main Menu</SectionLabel>
-        {mainMenu.map((item) => (
-          <SidebarRow
-            key={item.label}
-            item={item}
-            active={item.label === activeItem}
-          />
-        ))}
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setCollapsed((c) => !c)}
+          className={cn(
+            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
+            collapsed ? "justify-center px-0" : "px-3 gap-2"
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <PanelLeft className="h-[16px] w-[16px]" />
+          ) : (
+            <>
+              <PanelLeftClose className="h-[16px] w-[16px]" />
+              <span className="text-[12px]">Collapse</span>
+            </>
+          )}
+        </button>
 
-        <SectionLabel>Other Tools</SectionLabel>
-        {otherTools.map((item) => (
-          <SidebarRow
-            key={item.label}
-            item={item}
-            active={item.label === activeItem}
-          />
-        ))}
-      </nav>
-    </aside>
+        {/* Main menu */}
+        <nav className="flex-1 space-y-0.5 px-2">
+          <SectionLabel collapsed={collapsed}>Main Menu</SectionLabel>
+          {mainMenu.map((item) => (
+            <SidebarRow
+              key={item.label}
+              item={item}
+              active={item.label === activeItem}
+              collapsed={collapsed}
+            />
+          ))}
+
+          {/* Admin — only when isAdmin is truthy */}
+          {isAdmin && (
+            <SidebarRow
+              item={adminItem}
+              active={activeItem === "Admin"}
+              collapsed={collapsed}
+            />
+          )}
+
+          <SectionLabel collapsed={collapsed}>Other Tools</SectionLabel>
+          {otherTools.map((item) => (
+            <SidebarRow
+              key={item.label}
+              item={item}
+              active={item.label === activeItem}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
+      </aside>
+    </TooltipProvider>
   );
 }

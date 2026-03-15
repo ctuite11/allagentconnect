@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import {
   WelcomeHeader,
   NeedsAttentionBar,
@@ -15,11 +16,12 @@ import {
  */
 const AgentDashboardV2 = () => {
   const { summary, loading, error } = useSuccessHubData();
+  const { isAdmin } = useAuthRole();
 
   if (loading) {
     return (
       <div className="flex min-h-screen">
-        <DashboardSidebar />
+        <DashboardSidebar isAdmin={isAdmin} />
         <div className="flex-1 bg-zinc-50 p-8">
           <div className="space-y-4 animate-pulse max-w-[1200px]">
             <div className="h-16 rounded-xl bg-zinc-200" />
@@ -34,7 +36,7 @@ const AgentDashboardV2 = () => {
   if (error || !summary) {
     return (
       <div className="flex min-h-screen">
-        <DashboardSidebar />
+        <DashboardSidebar isAdmin={isAdmin} />
         <div className="flex-1 bg-zinc-50 flex items-center justify-center">
           <p className="text-zinc-500">{error ?? "Unable to load dashboard data."}</p>
         </div>
@@ -49,7 +51,7 @@ const AgentDashboardV2 = () => {
       </Helmet>
 
       <div className="flex min-h-screen">
-        <DashboardSidebar />
+        <DashboardSidebar isAdmin={isAdmin} />
 
         <main className="flex-1 bg-zinc-50 overflow-y-auto p-8">
           <div className="space-y-6 max-w-[1200px]">
