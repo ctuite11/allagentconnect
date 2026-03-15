@@ -33,9 +33,9 @@ interface SidebarItem {
 
 const mainMenu: SidebarItem[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard-v2" },
-  { label: "Buyers", icon: Users, route: "/my-clients" },
+  { label: "Buyers", icon: Users, route: "/success-hub/buyers" },
   { label: "Contacts", icon: Contact, route: "/my-clients" },
-  { label: "Listings", icon: List, route: "/agent/listings" },
+  { label: "Listings", icon: List, route: "/success-hub/listings" },
   { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
   { label: "Messages", icon: MessageSquare, route: "/communications" },
   { label: "Communication center", icon: Radio, route: "/communications" },
