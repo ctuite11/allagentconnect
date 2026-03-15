@@ -133,14 +133,8 @@ const HotSheets = () => {
           return parts.map((p: string) => p[0]?.toUpperCase() || "").join("").slice(0, 2);
         });
 
-        // Get photos for this sheet
-        const sheetListingIds = listingIdsByHs.get(sheet.id) || [];
-        const sheetPhotos: string[] = [];
-        for (const lid of sheetListingIds) {
-          const p = photosMap.get(lid);
-          if (p?.length) sheetPhotos.push(p[0]);
-          if (sheetPhotos.length >= 4) break;
-        }
+        // Get photos for this sheet from criteria matches
+        const sheetPhotos: string[] = photosPerSheet.get(sheet.id) || [];
 
         if (clients.length === 0) {
           // Hot sheet with no client — use criteria name or sheet name
