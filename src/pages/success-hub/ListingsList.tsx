@@ -20,7 +20,7 @@ export default function ListingsList() {
       <PageHeader
         title="Your Listings"
         subtitle="Click a listing to view its performance dashboard."
-        backTo="/success-hub"
+        backTo="/agent-dashboard-v2"
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
