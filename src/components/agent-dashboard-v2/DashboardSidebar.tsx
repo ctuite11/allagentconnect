@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -27,25 +28,26 @@ import {
 interface SidebarItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  route: string | null; // null = not yet wired
 }
 
 const mainMenu: SidebarItem[] = [
-  { label: "Success Hub", icon: LayoutDashboard },
-  { label: "Buyers", icon: Users },
-  { label: "Contacts", icon: Contact },
-  { label: "Listings", icon: List },
-  { label: "HotSheets", icon: Flame },
-  { label: "Messages", icon: MessageSquare },
-  { label: "Communication center", icon: Radio },
-  { label: "Profile", icon: UserCircle },
+  { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard-v2" },
+  { label: "Buyers", icon: Users, route: "/my-clients" },
+  { label: "Contacts", icon: Contact, route: "/my-clients" },
+  { label: "Listings", icon: List, route: "/agent/listings" },
+  { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
+  { label: "Messages", icon: MessageSquare, route: "/communications" },
+  { label: "Communication center", icon: Radio, route: "/communications" },
+  { label: "Profile", icon: UserCircle, route: "/profile" },
 ];
 
-const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck };
+const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin" };
 
 const otherTools: SidebarItem[] = [
-  { label: "Calendar", icon: Calendar },
-  { label: "Analytics", icon: BarChart3 },
-  { label: "Settings", icon: Settings },
+  { label: "Calendar", icon: Calendar, route: null }, // TODO: no V2 calendar yet
+  { label: "Analytics", icon: BarChart3, route: "/market-insights" },
+  { label: "Settings", icon: Settings, route: null }, // TODO: no V2 settings yet
 ];
 
 interface DashboardSidebarProps {
@@ -67,16 +69,23 @@ function SidebarRow({
   item,
   active,
   collapsed,
+  onClick,
 }: {
   item: SidebarItem;
   active: boolean;
   collapsed: boolean;
+  onClick?: () => void;
 }) {
+  const disabled = !item.route;
   const button = (
     <button
+      onClick={onClick}
+      disabled={disabled}
       className={cn(
-        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors cursor-default outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
+        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
         collapsed && "justify-center px-0",
+        disabled && "opacity-40 cursor-not-allowed",
+        !disabled && "cursor-default",
         active
           ? "bg-zinc-800/40 text-zinc-100 font-medium"
           : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30"
@@ -100,11 +109,30 @@ function SidebarRow({
 }
 
 export function DashboardSidebar({
-  activeItem = "Success Hub",
+  activeItem,
   isAdmin,
   className,
 }: DashboardSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine active item from current route if not explicitly set
+  const resolvedActive = activeItem ?? (() => {
+    const path = location.pathname;
+    const allItems = [...mainMenu, ...(isAdmin ? [adminItem] : []), ...otherTools];
+    // Exact match first, then prefix match (but skip "/" to avoid false positives)
+    const exact = allItems.find((item) => item.route && item.route === path);
+    if (exact) return exact.label;
+    const prefix = allItems.find((item) => item.route && item.route !== "/" && path.startsWith(item.route));
+    return prefix?.label ?? "Success Hub";
+  })();
+
+  const handleNav = (item: SidebarItem) => {
+    if (item.route) {
+      navigate(item.route);
+    }
+  };
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -151,8 +179,9 @@ export function DashboardSidebar({
             <SidebarRow
               key={item.label}
               item={item}
-              active={item.label === activeItem}
+              active={item.label === resolvedActive}
               collapsed={collapsed}
+              onClick={() => handleNav(item)}
             />
           ))}
 
@@ -160,8 +189,9 @@ export function DashboardSidebar({
           {isAdmin && (
             <SidebarRow
               item={adminItem}
-              active={activeItem === "Admin"}
+              active={resolvedActive === "Admin"}
               collapsed={collapsed}
+              onClick={() => handleNav(adminItem)}
             />
           )}
 
@@ -171,8 +201,9 @@ export function DashboardSidebar({
               <SidebarRow
                 key={item.label}
                 item={item}
-                active={item.label === activeItem}
+                active={item.label === resolvedActive}
                 collapsed={collapsed}
+                onClick={() => handleNav(item)}
               />
             ))}
           </div>
