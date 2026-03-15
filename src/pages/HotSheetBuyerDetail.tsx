@@ -18,6 +18,7 @@ interface LinkedHotSheet {
   name: string;
   criteria: any;
   photos: string[];
+  matchCount: number;
 }
 
 type InviteStatus = "accepted" | "pending" | "not_invited";
