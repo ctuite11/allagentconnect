@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import {
   WelcomeHeader,
   NeedsAttentionBar,
