@@ -118,9 +118,14 @@ const HotSheets = () => {
           .from("listings")
           .select("id, photos")
           .in("id", ids);
-        for (const l of listingsData || []) {
-          const photos = l.photos as string[] | null;
-          if (photos?.length) photosMap.set(l.id, photos);
+      for (const l of listingsData || []) {
+          const rawPhotos = l.photos as any[] | null;
+          if (rawPhotos?.length) {
+            const urls = rawPhotos
+              .map((p: any) => (typeof p === "string" ? p : p?.url || null))
+              .filter(Boolean) as string[];
+            if (urls.length) photosMap.set(l.id, urls);
+          }
         }
       }
 

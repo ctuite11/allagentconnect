@@ -137,9 +137,12 @@ const HotSheetBuyerDetail = () => {
             if (criteria) {
               const { data: matchedListings, count: totalCount } = await buildListingsQuery(supabase, criteria).limit(200);
               for (const l of matchedListings || []) {
-                const lPhotos = l.photos as string[] | null;
-                if (lPhotos?.length && photos.length < 4) photos.push(lPhotos[0]);
-              }
+                const lPhotos = l.photos as any[] | null;
+                if (lPhotos?.length && photos.length < 4) {
+                  const raw = lPhotos[0];
+                  const url = typeof raw === "string" ? raw : raw?.url || null;
+                  if (url) photos.push(url);
+                }
               matchCount.value = matchedListings?.length || 0;
             }
           } catch (e) {
