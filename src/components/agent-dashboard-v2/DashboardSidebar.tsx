@@ -57,7 +57,7 @@ interface DashboardSidebarProps {
 function SectionLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
   if (collapsed) return null;
   return (
-    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-300 select-none">
+    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 select-none">
       {children}
     </span>
   );
@@ -91,7 +91,7 @@ function SidebarRow({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="right">{item.label}</TooltipContent>
+        <TooltipContent side="right" className="bg-white text-zinc-900 text-[13px] font-medium border border-zinc-200 rounded-md px-2.5 py-1.5 shadow-md">{item.label}</TooltipContent>
       </Tooltip>
     );
   }
@@ -116,8 +116,8 @@ export function DashboardSidebar({
         )}
       >
         {/* Logo area */}
-        <div className={cn("flex items-center px-4 py-4", collapsed ? "justify-center" : "gap-2")}>
-          <AACMonogram className="w-7 h-7 text-emerald-400 shrink-0" />
+        <div className={cn("flex items-center px-4 py-3", collapsed ? "justify-center" : "gap-2")}>
+          <AACMonogram className={cn("shrink-0 text-zinc-100", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
           {!collapsed && (
             <span className="text-[14px] font-semibold text-white tracking-tight">
               All Agent Connect
