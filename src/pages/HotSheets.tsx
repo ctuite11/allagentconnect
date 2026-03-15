@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface BuyerCollection {
   clientId: string;
@@ -94,38 +95,25 @@ const HotSheets = () => {
         return;
       }
 
-      // 2. Fetch listing photos from sent listings
-      const hotSheetIds = sheets.map((s: any) => s.id);
-      const { data: sentData } = await supabase
-        .from("hot_sheet_sent_listings")
-        .select("hot_sheet_id, listing_id")
-        .in("hot_sheet_id", hotSheetIds)
-        .limit(200);
-
-      const listingIdsByHs = new Map<string, string[]>();
-      const uniqueListingIds = new Set<string>();
-      for (const row of sentData || []) {
-        uniqueListingIds.add(row.listing_id);
-        const arr = listingIdsByHs.get(row.hot_sheet_id) || [];
-        arr.push(row.listing_id);
-        listingIdsByHs.set(row.hot_sheet_id, arr);
-      }
-
-      let photosMap = new Map<string, string[]>();
-      if (uniqueListingIds.size > 0) {
-        const ids = Array.from(uniqueListingIds).slice(0, 100);
-        const { data: listingsData } = await supabase
-          .from("listings")
-          .select("id, photos")
-          .in("id", ids);
-      for (const l of listingsData || []) {
-          const rawPhotos = l.photos as any[] | null;
-          if (rawPhotos?.length) {
-            const urls = rawPhotos
-              .map((p: any) => (typeof p === "string" ? p : p?.url || null))
-              .filter(Boolean) as string[];
-            if (urls.length) photosMap.set(l.id, urls);
+      // 2. Fetch listing photos from criteria-matched listings for each sheet
+      const photosPerSheet = new Map<string, string[]>();
+      for (const sheet of sheets) {
+        const criteria = sheet.criteria as any;
+        if (!criteria) continue;
+        try {
+          const { data: matchedListings } = await buildListingsQuery(supabase, criteria).limit(20);
+          const photos: string[] = [];
+          for (const l of matchedListings || []) {
+            const lPhotos = l.photos as any[] | null;
+            if (lPhotos?.length && photos.length < 4) {
+              const raw = lPhotos[0];
+              const url = typeof raw === "string" ? raw : raw?.url || null;
+              if (url) photos.push(url);
+            }
           }
+          if (photos.length) photosPerSheet.set(sheet.id, photos);
+        } catch (e) {
+          console.error("Error fetching matches for", sheet.id, e);
         }
       }
 
@@ -145,14 +133,8 @@ const HotSheets = () => {
           return parts.map((p: string) => p[0]?.toUpperCase() || "").join("").slice(0, 2);
         });
 
-        // Get photos for this sheet
-        const sheetListingIds = listingIdsByHs.get(sheet.id) || [];
-        const sheetPhotos: string[] = [];
-        for (const lid of sheetListingIds) {
-          const p = photosMap.get(lid);
-          if (p?.length) sheetPhotos.push(p[0]);
-          if (sheetPhotos.length >= 4) break;
-        }
+        // Get photos for this sheet from criteria matches
+        const sheetPhotos: string[] = photosPerSheet.get(sheet.id) || [];
 
         if (clients.length === 0) {
           // Hot sheet with no client — use criteria name or sheet name
