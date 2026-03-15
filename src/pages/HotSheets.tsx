@@ -119,7 +119,8 @@ const HotSheets = () => {
           .select("id, photos")
           .in("id", ids);
         for (const l of listingsData || []) {
-          if (l.photos?.length) photosMap.set(l.id, l.photos as string[]);
+          const photos = l.photos as string[] | null;
+          if (photos?.length) photosMap.set(l.id, photos);
         }
       }
 
