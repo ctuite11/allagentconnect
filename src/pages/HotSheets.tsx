@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
 interface BuyerCollection {
   clientId: string;
