@@ -74,3 +74,9 @@
 | IDX Search | IDXListingCard | IDX-specific separate system |
 
 Rule: ListingCardShell is the single source of truth for all desktop horizontal listing cards. Grid mode and IDX remain intentionally separate.
+
+### 12. Buyer HotSheets Collections Page (Compass-inspired)
+- **`src/pages/HotSheets.tsx`**: Full rewrite — groups hot sheets by client into `BuyerCollection[]`, responsive 3-col grid, fetches listing photos from `hot_sheet_sent_listings → listings` for mosaic
+- **`src/components/BuyerCollectionCard.tsx`** (new): Compass Collections-style card with 2x2 image mosaic, client name, hot sheet count, participant row (agent + client + up to 2 collaborators + overflow)
+- Card click: single hot sheet → `/hot-sheets/:id/review`; multiple → `/hot-sheets/buyer/:clientId`
+- Existing dialogs (create, edit, share, comments) preserved
