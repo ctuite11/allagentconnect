@@ -135,14 +135,11 @@ const HotSheetBuyerDetail = () => {
           try {
             const criteria = hs.criteria as any;
             if (criteria) {
-              const { data: matchedListings } = await buildListingsQuery(supabase, criteria)
-                .select("id, photos")
-                .limit(4);
+              const { data: matchedListings } = await buildListingsQuery(supabase, criteria).limit(4);
               for (const l of matchedListings || []) {
                 const lPhotos = l.photos as string[] | null;
                 if (lPhotos?.length) photos.push(lPhotos[0]);
               }
-              // Get total count
               const { count } = await buildListingsQuery(supabase, criteria)
                 .select("id", { count: "exact", head: true });
               matchCount.value = count || 0;
