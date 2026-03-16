@@ -119,6 +119,15 @@ export function DashboardSidebar({
   const navigate = useNavigate();
   const location = useLocation();
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   // Determine active item from current route if not explicitly set
   const resolvedActive = activeItem ?? (() => {
     const path = location.pathname;
