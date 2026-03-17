@@ -37,12 +37,12 @@ interface SidebarItem {
 const mainMenu: SidebarItem[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard-v2" },
   { label: "Search", icon: Search, route: "/listing-search" },
+  { label: "Communication center", icon: Radio, route: "/communications" },
   { label: "Buyers", icon: Users, route: "/success-hub/buyers" },
   { label: "Contacts", icon: Contact, route: "/my-clients" },
   { label: "Listings", icon: List, route: "/agent/listings" },
   { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
   { label: "Agent Network", icon: Users, route: "/agent-search" },
-  { label: "Communication center", icon: Radio, route: "/communications" },
   { label: "Profile", icon: UserCircle, route: "/agent-profile-editor" },
 ];
 
