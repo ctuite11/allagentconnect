@@ -36,6 +36,7 @@ interface SidebarItem {
 
 const mainMenu: SidebarItem[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard-v2" },
+  { label: "Search", icon: Search, route: "/listing-search" },
   { label: "Buyers", icon: Users, route: "/success-hub/buyers" },
   { label: "Contacts", icon: Contact, route: "/my-clients" },
   { label: "Listings", icon: List, route: "/agent/listings" },
@@ -48,7 +49,6 @@ const mainMenu: SidebarItem[] = [
 const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin" };
 
 const otherTools: SidebarItem[] = [
-  { label: "Search", icon: Search, route: "/listing-search" },
   { label: "Calendar", icon: Calendar, route: null }, // TODO: no V2 calendar yet
   { label: "Analytics", icon: BarChart3, route: "/market-insights" },
   { label: "Settings", icon: Settings, route: null }, // TODO: no V2 settings yet
