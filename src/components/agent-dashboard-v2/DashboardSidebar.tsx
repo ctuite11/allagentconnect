@@ -41,12 +41,12 @@ const mainMenu: SidebarItem[] = [
   { label: "Contacts", icon: Contact, route: "/my-clients" },
   { label: "Listings", icon: List, route: "/agent/listings" },
   { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
-  { label: "Messages", icon: MessageSquare, route: "/communications" },
+  { label: "Messages", icon: MessageSquare, route: "/messages" },
   { label: "Communication center", icon: Radio, route: "/communications" },
-  { label: "Profile", icon: UserCircle, route: "/profile" },
+  { label: "Profile", icon: UserCircle, route: "/agent-profile-editor" },
 ];
 
-const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin" };
+const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin/approvals" };
 
 const otherTools: SidebarItem[] = [
   { label: "Calendar", icon: Calendar, route: null }, // TODO: no V2 calendar yet
