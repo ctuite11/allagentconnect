@@ -43,7 +43,7 @@ const mainMenu: SidebarItem[] = [
   { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
   { label: "Messages", icon: MessageSquare, route: "/messages" },
   { label: "Communication center", icon: Radio, route: "/communications" },
-  { label: "Profile", icon: UserCircle, route: "/profile" },
+  { label: "Profile", icon: UserCircle, route: "/agent-profile-editor" },
 ];
 
 const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin" };
