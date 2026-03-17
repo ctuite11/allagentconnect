@@ -41,7 +41,7 @@ const mainMenu: SidebarItem[] = [
   { label: "Contacts", icon: Contact, route: "/my-clients" },
   { label: "Listings", icon: List, route: "/agent/listings" },
   { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
-  { label: "Messages", icon: MessageSquare, route: "/messages" },
+  { label: "Agent Network", icon: Users, route: "/agent-search" },
   { label: "Communication center", icon: Radio, route: "/communications" },
   { label: "Profile", icon: UserCircle, route: "/agent-profile-editor" },
 ];
