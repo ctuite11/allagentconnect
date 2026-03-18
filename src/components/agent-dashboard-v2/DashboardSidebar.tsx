@@ -63,7 +63,7 @@ interface DashboardSidebarProps {
 function SectionLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
   if (collapsed) return null;
   return (
-    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 select-none">
+    <span className="block px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 select-none">
       {children}
     </span>
   );
@@ -86,16 +86,16 @@ function SidebarRow({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
+        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight leading-6 transition-colors duration-150 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
         collapsed && "justify-center px-0",
         disabled && "opacity-40 cursor-not-allowed",
         !disabled && "cursor-default",
         active
-          ? "bg-zinc-800/40 text-zinc-100 font-medium"
-          : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30"
+          ? "bg-zinc-100 text-zinc-900 font-medium"
+          : "text-zinc-600 font-normal hover:text-zinc-900 hover:bg-zinc-100"
       )}
     >
-      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-[hsl(221,92%,51%)]")} />
+      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-zinc-900" : "text-zinc-500")} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </button>
   );
@@ -104,7 +104,7 @@ function SidebarRow({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="right" className="bg-white text-zinc-900 text-[12px] font-medium border border-zinc-200 rounded px-2 py-1 shadow-sm">{item.label}</TooltipContent>
+        <TooltipContent side="right" className="bg-white text-zinc-900 text-[12px] font-medium border border-zinc-200 rounded px-2 py-1 shadow-sm z-50">{item.label}</TooltipContent>
       </Tooltip>
     );
   }
@@ -151,16 +151,16 @@ export function DashboardSidebar({
     <TooltipProvider delayDuration={200}>
       <aside
         className={cn(
-          "flex shrink-0 flex-col bg-zinc-900 min-h-screen transition-all duration-200",
+          "flex shrink-0 flex-col bg-white border-r border-zinc-200 min-h-screen transition-all duration-200",
           collapsed ? "w-[72px]" : "w-[212px]",
           className
         )}
       >
         {/* Logo area */}
         <div className={cn("flex items-center px-4 py-3", collapsed ? "justify-center" : "gap-2")}>
-          <AACMonogram className={cn("shrink-0 text-zinc-100", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
+          <AACMonogram className={cn("shrink-0 text-zinc-900", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
           {!collapsed && (
-            <span className="text-[14px] font-semibold text-white tracking-tight">
+            <span className="text-[14px] font-semibold text-zinc-900 tracking-tight">
               All Agent Connect
             </span>
           )}
@@ -170,7 +170,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors mx-2 rounded-md hover:bg-zinc-800/30",
+            "flex items-center h-8 text-zinc-500 hover:text-zinc-900 transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-100",
             collapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -223,17 +223,17 @@ export function DashboardSidebar({
         </nav>
 
         {/* Sign Out */}
-        <div className="mt-auto border-t border-zinc-800 px-2 py-3">
+        <div className="mt-auto border-t border-zinc-200 px-2 py-3">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={handleLogout}
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30 transition-colors",
+                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors duration-150",
                   collapsed && "justify-center px-0"
                 )}
               >
-                <LogOut className="h-[18px] w-[18px] shrink-0" />
+                <LogOut className="h-[18px] w-[18px] shrink-0 text-zinc-500" />
                 {!collapsed && <span>Sign Out</span>}
               </button>
             </TooltipTrigger>
