@@ -233,7 +233,7 @@ export function DashboardSidebar({
                   collapsed && "justify-center px-0"
                 )}
               >
-                <LogOut className="h-[18px] w-[18px] shrink-0" />
+                <LogOut className="h-[18px] w-[18px] shrink-0 text-zinc-500" />
                 {!collapsed && <span>Sign Out</span>}
               </button>
             </TooltipTrigger>
