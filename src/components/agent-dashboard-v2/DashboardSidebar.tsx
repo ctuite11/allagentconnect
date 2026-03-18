@@ -223,13 +223,13 @@ export function DashboardSidebar({
         </nav>
 
         {/* Sign Out */}
-        <div className="mt-auto border-t border-zinc-800 px-2 py-3">
+        <div className="mt-auto border-t border-zinc-200 px-2 py-3">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={handleLogout}
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30 transition-colors",
+                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors duration-150",
                   collapsed && "justify-center px-0"
                 )}
               >
