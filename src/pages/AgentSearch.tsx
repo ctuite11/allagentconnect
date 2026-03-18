@@ -126,8 +126,8 @@ const AgentSearch = () => {
         {/* Header */}
         <div className="max-w-6xl mx-auto px-4 py-8">
           <PageHeader
-            title="Find an Agent"
-            subtitle="Browse verified agents and the incentives they offer to buyers and sellers."
+            title="Find a Trusted Agent"
+            subtitle="Search your network by city, specialty, or name"
             className="mb-8"
           />
         </div>
