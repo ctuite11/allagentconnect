@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MapPin, Building2, CheckCircle2, Shield, Send, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -32,27 +32,10 @@ interface Agent {
 
 interface AgentMarketplaceCardProps {
   agent: Agent;
-  agentIndex?: number;
 }
 
-// Mock specialty tags — will be replaced with real data later
-const SPECIALTY_POOL = [
-  "Luxury", "Waterfront", "Investment", "First-Time Buyers",
-  "Relocation", "New Construction", "Condos", "Commercial"
-];
 
-const getSpecialtyTags = (agentId: string): string[] => {
-  // Deterministic pseudo-random based on agent ID for consistent display
-  const hash = agentId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const count = 2 + (hash % 2); // 2 or 3 tags
-  const tags: string[] = [];
-  for (let i = 0; i < count; i++) {
-    tags.push(SPECIALTY_POOL[(hash + i * 3) % SPECIALTY_POOL.length]);
-  }
-  return [...new Set(tags)].slice(0, 3);
-};
-
-const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardProps) => {
+const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
   
   const fullName = `${agent.first_name} ${agent.last_name}`;
@@ -64,8 +47,6 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
       ? `${agent.agent_county_preferences[0].counties.name}, ${agent.agent_county_preferences[0].counties.state}`
       : null;
 
-  // Mock specialty tags (deterministic per agent)
-  const specialtyTags = getSpecialtyTags(agent.id);
 
   return (
     <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1 hover:border-neutral-300">
@@ -99,18 +80,6 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
           </div>
         )}
 
-        {/* Specialty Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {specialtyTags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-xs font-medium px-2.5 py-0.5"
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
 
         {/* Trust Signal */}
         <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium mb-4">
