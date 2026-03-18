@@ -35,22 +35,6 @@ interface AgentMarketplaceCardProps {
   agentIndex?: number;
 }
 
-// Mock specialty tags — will be replaced with real data later
-const SPECIALTY_POOL = [
-  "Luxury", "Waterfront", "Investment", "First-Time Buyers",
-  "Relocation", "New Construction", "Condos", "Commercial"
-];
-
-const getSpecialtyTags = (agentId: string): string[] => {
-  // Deterministic pseudo-random based on agent ID for consistent display
-  const hash = agentId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const count = 2 + (hash % 2); // 2 or 3 tags
-  const tags: string[] = [];
-  for (let i = 0; i < count; i++) {
-    tags.push(SPECIALTY_POOL[(hash + i * 3) % SPECIALTY_POOL.length]);
-  }
-  return [...new Set(tags)].slice(0, 3);
-};
 
 const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
