@@ -32,7 +32,6 @@ interface Agent {
 
 interface AgentMarketplaceCardProps {
   agent: Agent;
-  agentIndex?: number;
 }
 
 
