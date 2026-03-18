@@ -170,7 +170,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-500 hover:text-zinc-900 transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-100",
+            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-800/30",
             collapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
