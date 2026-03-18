@@ -83,6 +83,7 @@ import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
 import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
 import HotSheetPreview from "./pages/HotSheetPreview";
 import DraftListings from "./pages/DraftListings";
+import AgentSettings from "./pages/AgentSettings";
 import SellerListingDetail from "./pages/SellerListingDetail";
 import IDXSearch from "./pages/IDXSearch";
 import IDXSearchBeta from "./pages/IDXSearchBeta";
