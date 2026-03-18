@@ -47,8 +47,6 @@ const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
       ? `${agent.agent_county_preferences[0].counties.name}, ${agent.agent_county_preferences[0].counties.state}`
       : null;
 
-  // Mock specialty tags (deterministic per agent)
-  const specialtyTags = getSpecialtyTags(agent.id);
 
   return (
     <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1 hover:border-neutral-300">
