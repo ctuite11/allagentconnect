@@ -86,16 +86,16 @@ function SidebarRow({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] transition-colors outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
+        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight leading-6 transition-colors duration-150 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
         collapsed && "justify-center px-0",
         disabled && "opacity-40 cursor-not-allowed",
         !disabled && "cursor-default",
         active
-          ? "bg-zinc-800/40 text-zinc-100 font-medium"
-          : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30"
+          ? "bg-zinc-100 text-zinc-900 font-medium"
+          : "text-zinc-600 font-normal hover:text-zinc-900 hover:bg-zinc-100"
       )}
     >
-      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-[hsl(221,92%,51%)]")} />
+      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-zinc-900" : "text-zinc-500")} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </button>
   );
