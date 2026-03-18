@@ -92,10 +92,10 @@ function SidebarRow({
         !disabled && "cursor-default",
         active
           ? "bg-zinc-800/40 text-white font-medium"
-          : "text-zinc-400 font-normal hover:text-white hover:bg-zinc-800/30"
+          : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30"
       )}
     >
-      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-white" : "text-zinc-400")} />
+      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-white" : "text-zinc-300")} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </button>
   );
