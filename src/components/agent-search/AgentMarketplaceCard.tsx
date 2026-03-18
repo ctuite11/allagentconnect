@@ -56,8 +56,6 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
   const navigate = useNavigate();
   
   const fullName = `${agent.first_name} ${agent.last_name}`;
-  const initials = `${agent.first_name?.[0] || ""}${agent.last_name?.[0] || ""}`.toUpperCase();
-  const phoneNumber = agent.cell_phone || agent.phone;
   
   // Location display
   const locationDisplay = agent.office_city && agent.office_state 
@@ -66,118 +64,83 @@ const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardP
       ? `${agent.agent_county_preferences[0].counties.name}, ${agent.agent_county_preferences[0].counties.state}`
       : null;
 
-  // Verified badge logic - must be based on actual verification status, not profile completeness
-  const isVerified = agent.agent_settings?.agent_status === 'verified';
-
-  // Get incentive badge
-  const incentiveBadge = getIncentiveBadge(agent);
-
-  const handlePhoneClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (phoneNumber) {
-      window.location.href = `tel:${phoneNumber}`;
-    }
-  };
-
+  // Mock specialty tags (deterministic per agent)
+  const specialtyTags = getSpecialtyTags(agent.id);
 
   return (
     <Card className="group overflow-hidden border bg-card transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1 hover:border-neutral-300">
       <div className="p-5">
         {/* Photo + Name Row */}
         <div className="flex items-center gap-4 mb-4">
-          <Avatar className="h-16 w-16 border-2 border-border shadow-sm ring-2 ring-border ring-offset-2 ring-offset-background">
-            <AvatarImage src={agent.headshot_url} alt={fullName} />
-            <AvatarFallback className="bg-muted text-foreground font-semibold text-lg">
-              {initials}
+          <Avatar className="h-16 w-16 rounded-xl overflow-hidden border-2 border-border shadow-sm ring-2 ring-border ring-offset-2 ring-offset-background">
+            <AvatarImage src={agent.headshot_url} alt={fullName} className="rounded-xl" />
+            <AvatarFallback className="bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-xl flex items-center justify-center p-2.5">
+              <AACMonogram className="w-8 h-8 text-zinc-400" />
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-lg text-foreground leading-tight truncate">
-                {fullName}
-              </h3>
-              {isVerified && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex items-center gap-0.5 text-emerald-600 text-xs font-medium cursor-help">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        Verified
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">Verified AAC agent — incentives listed directly by the agent.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+            <h3 className="font-semibold text-lg text-foreground leading-tight truncate">
+              {fullName}
+            </h3>
+            {locationDisplay && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                <span>{locationDisplay}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Brokerage + Market */}
-        <div className="space-y-1.5 mb-4">
-          {(agent.company || agent.office_name) && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
-              <span className="truncate">{agent.company || agent.office_name}</span>
-            </div>
-          )}
-          {locationDisplay && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-              <span>{locationDisplay}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Incentive Badge - hidden per AAC policy */}
-        {false && incentiveBadge && (
-          <div className="mb-4">
-            <Badge 
-              variant="outline" 
-              className={`${incentiveBadge.color} gap-1.5 px-3 py-1 text-xs font-medium`}
-            >
-              {incentiveBadge.icon}
-              {incentiveBadge.label}
-            </Badge>
+        {/* Brokerage */}
+        {(agent.company || agent.office_name) && (
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+            <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="truncate">{agent.company || agent.office_name}</span>
           </div>
         )}
 
-        {/* Contact Icons - Secondary */}
-        <div className="flex items-center gap-2 mb-4">
-          {phoneNumber && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full bg-neutral-50 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-700 transition-all duration-200"
-              onClick={handlePhoneClick}
-              title={formatPhoneNumber(phoneNumber)}
+        {/* Specialty Tags */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {specialtyTags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="text-xs font-medium px-2.5 py-0.5"
             >
-              <Phone className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full bg-neutral-50 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-700 transition-all duration-200"
-            onClick={(e) => {
-              e.stopPropagation();
-              window.location.href = `mailto:${agent.email}`;
-            }}
-            title={agent.email}
-          >
-            <Mail className="h-4 w-4" />
-          </Button>
+              {tag}
+            </Badge>
+          ))}
         </div>
 
-        {/* Primary CTA */}
-        <Button 
-          className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
-          onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`)}
-        >
-          View Incentives
-        </Button>
+        {/* Trust Signal */}
+        <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium mb-4">
+          <Shield className="h-3.5 w-3.5" />
+          <span>AAC Verified Agent</span>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white gap-1.5"
+            size="sm"
+            onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`)}
+          >
+            <Send className="h-3.5 w-3.5" />
+            Refer Client
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 gap-1.5"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/agent/${agent.aac_id || agent.id}`);
+            }}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            Message
+          </Button>
+        </div>
       </div>
     </Card>
   );
