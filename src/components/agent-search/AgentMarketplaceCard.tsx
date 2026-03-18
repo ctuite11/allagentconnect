@@ -35,64 +35,21 @@ interface AgentMarketplaceCardProps {
   agentIndex?: number;
 }
 
-// Determine the primary incentive badge for an agent
-// AAC rule: all badges use emerald (primary) or neutral (secondary) only
-const getIncentiveBadge = (agent: Agent): { label: string; icon: React.ReactNode; color: string } | null => {
-  const buyerIncentives = agent.buyer_incentives?.toLowerCase() || "";
-  const sellerIncentives = agent.seller_incentives?.toLowerCase() || "";
-  
-  // Primary style for monetary incentives
-  const primaryStyle = "bg-emerald-50 text-emerald-800 border-emerald-200";
-  // Secondary style for non-monetary incentives
-  const secondaryStyle = "bg-neutral-50 text-neutral-800 border-neutral-200";
-  
-  // Check for rebate keywords (primary - monetary)
-  if (buyerIncentives.includes("rebate") || buyerIncentives.includes("cash back")) {
-    return { 
-      label: "Buyer Rebate Available", 
-      icon: <DollarSign className="h-3 w-3" />,
-      color: primaryStyle
-    };
+// Mock specialty tags — will be replaced with real data later
+const SPECIALTY_POOL = [
+  "Luxury", "Waterfront", "Investment", "First-Time Buyers",
+  "Relocation", "New Construction", "Condos", "Commercial"
+];
+
+const getSpecialtyTags = (agentId: string): string[] => {
+  // Deterministic pseudo-random based on agent ID for consistent display
+  const hash = agentId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const count = 2 + (hash % 2); // 2 or 3 tags
+  const tags: string[] = [];
+  for (let i = 0; i < count; i++) {
+    tags.push(SPECIALTY_POOL[(hash + i * 3) % SPECIALTY_POOL.length]);
   }
-  
-  // Check for seller credit (primary - monetary)
-  if (sellerIncentives.includes("credit") || sellerIncentives.includes("closing")) {
-    return { 
-      label: "Seller Credit Offered", 
-      icon: <Gift className="h-3 w-3" />,
-      color: primaryStyle
-    };
-  }
-  
-  // Check for flexible commission (primary - monetary)
-  if (buyerIncentives.includes("commission") || sellerIncentives.includes("commission") || 
-      buyerIncentives.includes("flexible") || sellerIncentives.includes("flexible")) {
-    return { 
-      label: "Flexible Commission", 
-      icon: <Percent className="h-3 w-3" />,
-      color: primaryStyle
-    };
-  }
-  
-  // Check for referral friendly (secondary - non-monetary)
-  if (buyerIncentives.includes("referral") || sellerIncentives.includes("referral")) {
-    return { 
-      label: "Referral Friendly", 
-      icon: <Handshake className="h-3 w-3" />,
-      color: secondaryStyle
-    };
-  }
-  
-  // If has any incentives text, show generic (primary)
-  if (agent.buyer_incentives || agent.seller_incentives) {
-    return { 
-      label: "Incentives Available", 
-      icon: <Gift className="h-3 w-3" />,
-      color: primaryStyle
-    };
-  }
-  
-  return null;
+  return [...new Set(tags)].slice(0, 3);
 };
 
 const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardProps) => {
