@@ -95,7 +95,7 @@ function SidebarRow({
           : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30"
       )}
     >
-      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-white" : "text-zinc-300")} />
+      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-[hsl(221,92%,51%)]" : "text-zinc-300")} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </button>
   );
