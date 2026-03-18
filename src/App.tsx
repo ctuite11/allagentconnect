@@ -236,7 +236,7 @@ const App = () => (
                   <Route path="/admin/consumers" element={<AdminConsumers />} />
                   <Route path="/admin/invites" element={<AdminInviteAudit />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
-                </Route>
+                  <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
