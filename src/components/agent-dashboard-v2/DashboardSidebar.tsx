@@ -160,7 +160,7 @@ export function DashboardSidebar({
         <div className={cn("flex items-center px-4 py-3", collapsed ? "justify-center" : "gap-2")}>
           <AACMonogram className={cn("shrink-0 text-zinc-900", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
           {!collapsed && (
-            <span className="text-[14px] font-semibold text-white tracking-tight">
+            <span className="text-[14px] font-semibold text-zinc-900 tracking-tight">
               All Agent Connect
             </span>
           )}
