@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Phone, Mail, MapPin, Building2, CheckCircle2, Gift, Percent, Handshake, DollarSign } from "lucide-react";
-import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { MapPin, Building2, CheckCircle2, Shield, Send, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 
 interface Agent {
