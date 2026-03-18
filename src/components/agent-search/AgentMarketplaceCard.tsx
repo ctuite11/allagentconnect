@@ -36,7 +36,7 @@ interface AgentMarketplaceCardProps {
 }
 
 
-const AgentMarketplaceCard = ({ agent, agentIndex = 999 }: AgentMarketplaceCardProps) => {
+const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
   
   const fullName = `${agent.first_name} ${agent.last_name}`;
