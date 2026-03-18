@@ -51,7 +51,7 @@ const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/adm
 const otherTools: SidebarItem[] = [
   { label: "Calendar", icon: Calendar, route: null }, // TODO: no V2 calendar yet
   { label: "Analytics", icon: BarChart3, route: "/market-insights" },
-  { label: "Settings", icon: Settings, route: null }, // TODO: no V2 settings yet
+  { label: "Settings", icon: Settings, route: "/settings" },
 ];
 
 interface DashboardSidebarProps {
