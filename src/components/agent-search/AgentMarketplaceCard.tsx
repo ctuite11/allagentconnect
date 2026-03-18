@@ -80,18 +80,6 @@ const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
           </div>
         )}
 
-        {/* Specialty Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {specialtyTags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-xs font-medium px-2.5 py-0.5"
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
 
         {/* Trust Signal */}
         <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium mb-4">
