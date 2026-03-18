@@ -85,8 +85,8 @@ export default function AgentSettings() {
                 <CreditCard className="h-4.5 w-4.5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-zinc-900">Free Plan</p>
-                <p className="text-xs text-zinc-500">You're on the free plan.</p>
+                <p className="text-sm font-medium text-zinc-900">Agent Plan</p>
+                <p className="text-xs text-zinc-500">You're on the Agent plan.</p>
               </div>
             </div>
 
