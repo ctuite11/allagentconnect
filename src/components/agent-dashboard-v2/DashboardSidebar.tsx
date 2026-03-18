@@ -151,7 +151,7 @@ export function DashboardSidebar({
     <TooltipProvider delayDuration={200}>
       <aside
         className={cn(
-          "flex shrink-0 flex-col bg-zinc-900 min-h-screen transition-all duration-200",
+          "flex shrink-0 flex-col bg-white border-r border-zinc-200 min-h-screen transition-all duration-200",
           collapsed ? "w-[72px]" : "w-[212px]",
           className
         )}
