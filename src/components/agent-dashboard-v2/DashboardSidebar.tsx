@@ -92,10 +92,10 @@ function SidebarRow({
         !disabled && "cursor-default",
         active
           ? "bg-zinc-800/40 text-white font-medium"
-          : "text-zinc-400 font-normal hover:text-white hover:bg-zinc-800/30"
+          : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30"
       )}
     >
-      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-white" : "text-zinc-400")} />
+      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-white" : "text-zinc-300")} />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </button>
   );
@@ -170,7 +170,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-800/30",
+            "flex items-center h-8 text-zinc-300 hover:text-white transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-800/30",
             collapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -229,11 +229,11 @@ export function DashboardSidebar({
               <button
                 onClick={handleLogout}
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-400 font-normal hover:text-white hover:bg-zinc-800/30 transition-colors duration-150",
+                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30 transition-colors duration-150",
                   collapsed && "justify-center px-0"
                 )}
               >
-                <LogOut className="h-[18px] w-[18px] shrink-0 text-zinc-400" />
+                <LogOut className="h-[18px] w-[18px] shrink-0 text-zinc-300" />
                 {!collapsed && <span>Sign Out</span>}
               </button>
             </TooltipTrigger>
