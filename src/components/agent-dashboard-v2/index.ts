@@ -3,4 +3,5 @@ export { NeedsAttentionBar } from "./NeedsAttentionBar";
 export { MyListingsRow } from "./MyListingsRow";
 export { CommunicationsPanel } from "./CommunicationsPanel";
 export { BuyersTable } from "./BuyersTable";
+export { MatchesOpportunities } from "./MatchesOpportunities";
 export { DashboardSidebar } from "./DashboardSidebar";

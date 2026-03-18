@@ -6,6 +6,7 @@ import {
   MyListingsRow,
   CommunicationsPanel,
   BuyersTable,
+  MatchesOpportunities,
 } from "@/components/agent-dashboard-v2";
 
 /**
@@ -44,18 +45,30 @@ const AgentDashboardV2 = () => {
 
       <main className="flex-1 bg-zinc-50 overflow-y-auto p-8">
         <div className="space-y-6 max-w-[1200px]">
+          {/* 1. Welcome */}
           <WelcomeHeader
             firstName={summary.profile?.first_name ?? "Agent"}
             lastName={summary.profile?.last_name ?? ""}
             headshotUrl={summary.profile?.headshot_url ?? null}
             aacId={summary.agentId ? `AAC-${summary.agentId.slice(0, 5).toUpperCase()}` : undefined}
           />
+
+          {/* 2. Needs Attention — prominent alert section */}
           <NeedsAttentionBar items={summary.attentionItems} />
-          <MyListingsRow listings={summary.listings} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <CommunicationsPanel conversations={summary.conversations} />
-            <BuyersTable buyers={summary.buyers} />
+
+          {/* 3. Communications — right after attention items */}
+          <CommunicationsPanel conversations={summary.conversations} />
+
+          {/* 4. Matches & Opportunities — new action-focused section */}
+          <MatchesOpportunities buyers={summary.buyers} listings={summary.listings} />
+
+          {/* 5. Listings — slightly reduced spacing */}
+          <div className="pt-1">
+            <MyListingsRow listings={summary.listings} />
           </div>
+
+          {/* 6. Buyers — card list format */}
+          <BuyersTable buyers={summary.buyers} />
         </div>
       </main>
     </>
