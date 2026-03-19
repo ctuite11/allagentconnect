@@ -26,7 +26,7 @@ export function NeedsAttentionBar({ items }: NeedsAttentionBarProps) {
           <h3 className="text-base font-semibold text-foreground">Needs Your Attention</h3>
         </div>
         <button
-          onClick={() => navigate("/agent-dashboard-v2")}
+          onClick={() => navigate("/agent-dashboard")}
           className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
         >
           View All Activity <ChevronRight className="h-4 w-4" />
