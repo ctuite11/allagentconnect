@@ -135,8 +135,8 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
               }}
               className={cn(
                 "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-zinc-100",
-                "hover:bg-muted/50",
-                thread.id === selectedId && "bg-muted/50 border-l-2 border-l-primary"
+                "hover:bg-zinc-50",
+                thread.id === selectedId && "bg-zinc-50 border-l-2 border-l-primary"
               )}
             >
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
