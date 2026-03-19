@@ -103,7 +103,7 @@ import BuyerAccount from "./pages/success-hub/BuyerAccount";
 import ListingsList from "./pages/success-hub/ListingsList";
 import ListingPerformance from "./pages/success-hub/ListingPerformance";
 import CommunicationsHub from "./pages/success-hub/CommunicationsHub";
-import AgentDashboardV2 from "./pages/AgentDashboardV2";
+
 
 // Legal pages
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
