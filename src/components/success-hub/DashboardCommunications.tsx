@@ -53,7 +53,7 @@ export function DashboardCommunications({ conversations }: DashboardCommunicatio
               <div
                 key={c.conversation_id}
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors"
-                onClick={() => navigate(`/messages/${c.conversation_id}`)}
+                onClick={() => navigate(`/messages/${c.conversation_id}`, { state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" } })}
               >
                 <Avatar className="h-8 w-8 shrink-0">
                   <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">

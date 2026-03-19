@@ -67,7 +67,7 @@ export default function Messages() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/agent-dashboard")}
               className="p-2 hover:bg-zinc-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-zinc-600" />
@@ -127,7 +127,7 @@ export default function Messages() {
                   "cursor-pointer hover:bg-zinc-50 transition-colors p-4",
                   thread.isUnread && "border-l-4 border-l-emerald-500"
                 )}
-                onClick={() => navigate(`/messages/${thread.id}`)}
+                onClick={() => navigate(`/messages/${thread.id}`, { state: { from: "/messages", fromLabel: "Back to Messages" } })}
                 onMouseEnter={() => prefetch(thread.id)}
                 onFocus={() => prefetch(thread.id)}
                 role="button"
