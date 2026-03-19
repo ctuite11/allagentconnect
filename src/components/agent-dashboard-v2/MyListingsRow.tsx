@@ -142,11 +142,6 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
           );
         })}
 
-        {listings.length === 0 && (
-          <div className="w-full py-12 text-center text-muted-foreground text-sm">
-            No active listings yet.
-          </div>
-        )}
       </div>
     </div>
   );

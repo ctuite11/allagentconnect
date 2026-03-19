@@ -6,6 +6,7 @@ import { useSuccessHubData } from "@/hooks/useSuccessHubData";
 import { WelcomeHeader } from "@/components/agent-dashboard-v2/WelcomeHeader";
 import { NeedsAttentionPills } from "@/components/success-hub/NeedsAttentionPills";
 import { MyListingsRow } from "@/components/agent-dashboard-v2/MyListingsRow";
+import { ListingsOpportunityCenter } from "@/components/success-hub/ListingsOpportunityCenter";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
 
@@ -76,7 +77,20 @@ export default function SuccessHubDashboard() {
 
       {/* ── 3. My Listings (horizontal image cards) ───── */}
       <div className="mb-10">
-        <MyListingsRow listings={summary.listings} />
+        {summary.listings.length > 0 ? (
+          <MyListingsRow listings={summary.listings} />
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-foreground">My Listings</h3>
+            </div>
+            <ListingsOpportunityCenter
+              activeBuyerCount={summary.buyers.length}
+              opportunityCount={summary.attentionItems.length}
+              networkActivityCount={summary.conversations.length}
+            />
+          </>
+        )}
       </div>
 
       {/* ── 4. Communications + Buyers (side-by-side) ── */}
