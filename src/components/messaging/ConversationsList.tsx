@@ -63,7 +63,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex-shrink-0">
+      <div className="px-4 py-3 border-b border-zinc-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-foreground">Conversations</h2>
