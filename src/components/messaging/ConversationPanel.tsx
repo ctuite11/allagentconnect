@@ -130,7 +130,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex-shrink-0" style={{ minHeight: 72 }}>
+      <div className="px-5 py-4 border-b border-zinc-200 flex-shrink-0" style={{ minHeight: 72 }}>
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(from ?? "/agent-dashboard")}
