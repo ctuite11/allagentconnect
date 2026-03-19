@@ -12,9 +12,9 @@ export function DateSeparator({ date }: DateSeparatorProps) {
 
   return (
     <div className="flex items-center gap-3 my-6">
-      <div className="flex-1 h-px bg-border" />
-      <span className="text-xs text-muted-foreground whitespace-nowrap">{label}</span>
-      <div className="flex-1 h-px bg-border" />
+      <div className="flex-1 h-px bg-zinc-200" />
+      <span className="text-xs text-zinc-400 whitespace-nowrap">{label}</span>
+      <div className="flex-1 h-px bg-zinc-200" />
     </div>
   );
 }

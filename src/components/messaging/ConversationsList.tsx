@@ -180,7 +180,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                 )}
               </div>
               {thread.isUnread && (
-                <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-2" />
+                <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-2" />
               )}
             </div>
           ))
