@@ -114,8 +114,10 @@ import FairHousing from "./pages/legal/FairHousing";
 import Disclosures from "./pages/legal/Disclosures";
 
 // Messaging
+// Legacy messaging pages (kept for rollback)
 import Messages from "./pages/Messages";
 import Conversation from "./pages/Conversation";
+import MessagingWorkspace from "./pages/MessagingWorkspace";
 
 // Legacy redirect for /client-hot-sheet/:token → /client/hotsheet/:token
 function LegacyClientHotSheetRedirect() {
