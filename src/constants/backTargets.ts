@@ -26,6 +26,10 @@ const BACK_TARGETS: Array<{ pattern: RegExp; parent: string }> = [
   // Agent Profiles
   { pattern: /^\/agents\/[^/]+$/, parent: ROUTES.AGENT_SEARCH },
   
+  // Messages
+  { pattern: /^\/messages\/[^/]+$/, parent: '/messages' },
+  { pattern: /^\/messages$/, parent: ROUTES.SUCCESS_HUB },
+
   // Client Hot Sheet pages → Client Dashboard
   { pattern: /^\/client\/hotsheet\/[^/]+$/, parent: '/client/dashboard' },
   { pattern: /^\/hot-sheet\/[^/]+$/, parent: '/client/dashboard' },

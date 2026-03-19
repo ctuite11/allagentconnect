@@ -127,7 +127,7 @@ export default function Messages() {
                   "cursor-pointer hover:bg-zinc-50 transition-colors p-4",
                   thread.isUnread && "border-l-4 border-l-emerald-500"
                 )}
-                onClick={() => navigate(`/messages/${thread.id}`)}
+                onClick={() => navigate(`/messages/${thread.id}`, { state: { from: "/messages", fromLabel: "Back to Messages" } })}
                 onMouseEnter={() => prefetch(thread.id)}
                 onFocus={() => prefetch(thread.id)}
                 role="button"
