@@ -152,7 +152,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
               <User className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <span className="text-lg font-semibold text-foreground block truncate">
+              <span className="text-base font-semibold text-zinc-900 block truncate">
                 {details?.otherUserName}
               </span>
               <div className="flex items-center gap-1.5">
