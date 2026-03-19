@@ -114,8 +114,10 @@ import FairHousing from "./pages/legal/FairHousing";
 import Disclosures from "./pages/legal/Disclosures";
 
 // Messaging
+// Legacy messaging pages (kept for rollback)
 import Messages from "./pages/Messages";
 import Conversation from "./pages/Conversation";
+import MessagingWorkspace from "./pages/MessagingWorkspace";
 
 // Legacy redirect for /client-hot-sheet/:token → /client/hotsheet/:token
 function LegacyClientHotSheetRedirect() {
@@ -217,8 +219,8 @@ const App = () => (
                   <Route path="/hot-sheets/buyer/:clientId" element={<RouteGuard requireRole="agent"><HotSheetBuyerDetail /></RouteGuard>} />
                   <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
                   <Route path="/my-clients/:clientId/favorites" element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>} />
-                  <Route path="/messages" element={<RouteGuard requireRole={["agent", "buyer"]}><Messages /></RouteGuard>} />
-                  <Route path="/messages/:id" element={<RouteGuard requireRole={["agent", "buyer"]}><Conversation /></RouteGuard>} />
+                  <Route path="/messages" element={<RouteGuard requireRole={["agent", "buyer"]}><MessagingWorkspace /></RouteGuard>} />
+                  <Route path="/messages/:id" element={<RouteGuard requireRole={["agent", "buyer"]}><MessagingWorkspace /></RouteGuard>} />
                   <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
                   <Route path="/analytics" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
                   <Route path="/analytics/:id" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
