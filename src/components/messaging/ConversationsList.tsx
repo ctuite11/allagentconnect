@@ -63,12 +63,12 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex-shrink-0">
+      <div className="px-4 py-3 border-b border-zinc-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-foreground">Conversations</h2>
             {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-accent text-accent-foreground text-xs font-medium">
+              <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-medium">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
@@ -135,8 +135,8 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
               }}
               className={cn(
                 "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-zinc-100",
-                "hover:bg-muted/50",
-                thread.id === selectedId && "bg-muted/50 border-l-2 border-l-primary"
+                "hover:bg-zinc-50",
+                thread.id === selectedId && "bg-zinc-50 border-l-2 border-l-primary"
               )}
             >
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -180,7 +180,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                 )}
               </div>
               {thread.isUnread && (
-                <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-2" />
+                <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-2" />
               )}
             </div>
           ))

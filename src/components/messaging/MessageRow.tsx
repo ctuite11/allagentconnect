@@ -27,8 +27,8 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
       <div className="min-w-0 max-w-[70%]">
         {showHeader && (
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-medium text-foreground">{message.senderName}</span>
-            <span className="text-sm text-muted-foreground">{time}</span>
+            <span className="text-sm font-medium text-zinc-900">{message.senderName}</span>
+            <span className="text-sm text-zinc-500">{time}</span>
           </div>
         )}
         <p className="text-[15px] leading-7 text-zinc-700 whitespace-pre-wrap break-words">

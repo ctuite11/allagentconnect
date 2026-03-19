@@ -130,7 +130,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex-shrink-0" style={{ minHeight: 72 }}>
+      <div className="px-5 py-4 border-b border-zinc-200 flex-shrink-0" style={{ minHeight: 72 }}>
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(from ?? "/agent-dashboard")}
@@ -152,14 +152,14 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
               <User className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <span className="text-lg font-semibold text-foreground block truncate">
+              <span className="text-base font-semibold text-zinc-900 block truncate">
                 {details?.otherUserName}
               </span>
               <div className="flex items-center gap-1.5">
                 {details?.listingId && (
                   <Building2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 )}
-                <span className="text-sm text-muted-foreground truncate">
+                <span className="text-sm text-zinc-500 truncate">
                   {contextLabel}
                 </span>
               </div>
@@ -169,7 +169,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
       </div>
 
       {/* Thread */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-5 py-4">
         {messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-8 text-sm">
             No messages yet. Start the conversation!
