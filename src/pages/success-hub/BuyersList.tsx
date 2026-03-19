@@ -20,7 +20,7 @@ export default function BuyersList() {
       <PageHeader
         title="Your Buyers"
         subtitle="Select a buyer to manage their hot sheets, favorites, and activity."
-        backTo="/agent-dashboard-v2"
+        backTo="/agent-dashboard"
       />
 
       {mockBuyers.length === 0 ? (

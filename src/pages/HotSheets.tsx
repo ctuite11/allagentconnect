@@ -297,7 +297,7 @@ const HotSheets = () => {
         <PageHeader
           title="Buyer HotSheets"
           subtitle="Collections of listings curated for each buyer or renter client."
-          backTo="/agent-dashboard-v2"
+          backTo="/agent-dashboard"
           actions={
             <Button
               variant="ghost"
