@@ -159,7 +159,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
                 {details?.listingId && (
                   <Building2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 )}
-                <span className="text-sm text-muted-foreground truncate">
+                <span className="text-sm text-zinc-500 truncate">
                   {contextLabel}
                 </span>
               </div>
