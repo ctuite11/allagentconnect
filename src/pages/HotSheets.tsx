@@ -270,7 +270,7 @@ const HotSheets = () => {
         <PageHeader
           title="Buyer HotSheets"
           subtitle="Collections of listings curated for each buyer or renter client."
-          backTo="/agent-dashboard-v2"
+          backTo="/agent-dashboard"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
           {[1, 2, 3].map((i) => (
