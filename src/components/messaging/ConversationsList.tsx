@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { SquarePen, Search } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
+import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "./UserAvatar";
