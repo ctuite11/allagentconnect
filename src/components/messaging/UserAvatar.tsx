@@ -27,7 +27,7 @@ export function UserAvatar({ name, headshotUrl, size = "md", className }: UserAv
       {headshotUrl && (
         <AvatarImage src={headshotUrl} alt={name} className="object-cover" />
       )}
-      <AvatarFallback className="bg-zinc-100 text-zinc-600 font-medium">
+      <AvatarFallback className="bg-primary text-white font-semibold">
         {getInitials(name)}
       </AvatarFallback>
     </Avatar>

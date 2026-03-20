@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowUpRight } from "lucide-react";
+import { SquarePen } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,7 +74,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
             className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
             title="New message"
           >
-            <ArrowUpRight className="w-4 h-4" />
+            <SquarePen className="w-4 h-4" />
           </button>
         </div>
 
