@@ -34,7 +34,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
               headshotUrl={message.senderHeadshotUrl ?? null}
               size="lg"
             />
-            <span className="text-[13px] font-medium text-zinc-900">
+            <span className="text-[13px] font-semibold text-zinc-900">
               {displayName}
             </span>
             <span className="text-[11px] text-zinc-400 tabular-nums">{time}</span>
