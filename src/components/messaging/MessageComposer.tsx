@@ -29,7 +29,7 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="p-1.5 text-zinc-500 hover:text-zinc-700 transition-colors"
+          className="p-1.5 text-zinc-600 hover:text-zinc-700 transition-colors"
           title="Attach file"
         >
           <Paperclip className="w-4 h-4" />
