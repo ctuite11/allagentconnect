@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { X, Building2, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
@@ -7,9 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MessageRow } from "./MessageRow";
 import { DateSeparator } from "./DateSeparator";
 import { MessageComposer } from "./MessageComposer";
+import { UserAvatar } from "./UserAvatar";
 import { isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -24,7 +24,6 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
 
-  // Hydrate listing address
   useEffect(() => {
     if (!details?.listingId) {
       setListingAddress(null);
@@ -50,7 +49,6 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Empty state — no conversation selected
   if (!conversationId) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
@@ -69,6 +67,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
     return (
       <div className="flex-1 p-6 space-y-4">
         <div className="flex items-center gap-3 mb-6">
+          <Skeleton className="h-10 w-10 rounded-full" />
           <Skeleton className="h-6 w-40" />
         </div>
         {[1, 2, 3].map((i) => (
@@ -95,7 +94,6 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
     );
   }
 
-  // Build thread with date separators and same-sender grouping
   const threadElements: React.ReactNode[] = [];
   let lastDate: Date | null = null;
   let lastSenderId: string | null = null;
@@ -103,10 +101,9 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
   messages.forEach((msg, idx) => {
     const msgDate = new Date(msg.createdAt);
 
-    // Insert date separator at day boundary
     if (!lastDate || !isSameDay(lastDate, msgDate)) {
       threadElements.push(<DateSeparator key={`date-${idx}`} date={msgDate} />);
-      lastSenderId = null; // reset grouping at day boundary
+      lastSenderId = null;
     }
 
     const showHeader = msg.senderId !== lastSenderId;
@@ -125,21 +122,28 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header — minimal, confident */}
+      {/* Header */}
       <div className="px-6 py-5 border-b border-zinc-100 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="min-w-0">
-            <h2 className="text-[17px] font-semibold text-zinc-900 tracking-[-0.01em] truncate">
-              {details?.otherUserName}
-            </h2>
-            {contextLabel && (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <Building2 className="w-3 h-3 text-zinc-400 flex-shrink-0" />
-                <span className="text-[13px] text-zinc-400 truncate">
-                  {contextLabel}
-                </span>
-              </div>
-            )}
+          <div className="flex items-center gap-3 min-w-0">
+            <UserAvatar
+              name={details?.otherUserName ?? ""}
+              headshotUrl={details?.otherUserHeadshotUrl ?? null}
+              size="lg"
+            />
+            <div className="min-w-0">
+              <h2 className="text-[17px] font-semibold text-zinc-900 tracking-[-0.01em] truncate">
+                {details?.otherUserName}
+              </h2>
+              {contextLabel && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Building2 className="w-3 h-3 text-zinc-400 flex-shrink-0" />
+                  <span className="text-[13px] text-zinc-400 truncate">
+                    {contextLabel}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
           <button
             onClick={() => navigate(from ?? "/agent-dashboard")}
