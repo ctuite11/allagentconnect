@@ -44,6 +44,12 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
       });
   }, [threads, loading]);
 
+  const otherUserIds = useMemo(
+    () => threads.map((t) => t.otherUserId).filter(Boolean),
+    [threads]
+  );
+  const presenceMap = useAgentPresenceBatch(otherUserIds);
+
   const totalUnread = threads.filter((t) => t.isUnread).length;
 
   const filtered = threads.filter((t) => {
