@@ -142,6 +142,20 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
                   {contextLabel}
                 </span>
               )}
+              {details?.otherUserId && (
+                <span className="flex items-center gap-1.5 mt-0.5">
+                  {isOnline ? (
+                    <>
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <span className="text-[11px] text-emerald-600 font-medium">Online</span>
+                    </>
+                  ) : lastSeenAt ? (
+                    <span className="text-[11px] text-zinc-400">
+                      Active {formatDistanceToNow(new Date(lastSeenAt), { addSuffix: true })}
+                    </span>
+                  ) : null}
+                </span>
+              )}
             </div>
           </div>
           <button
