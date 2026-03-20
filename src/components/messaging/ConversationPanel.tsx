@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, User, Building2, MessageSquare } from "lucide-react";
+import { X, User, Building2, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,10 +55,10 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
         <MessageSquare className="w-12 h-12 text-zinc-200 mb-4" />
-        <h3 className="text-lg font-medium text-foreground mb-1">
+        <h3 className="text-lg font-semibold text-zinc-900 mb-1">
           Select a conversation
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-zinc-400">
           Choose a thread from the right to start messaging
         </p>
       </div>
@@ -74,7 +74,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
         </div>
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex gap-3">
-            <Skeleton className="w-8 h-8 rounded-full" />
+            <Skeleton className="w-9 h-9 rounded-full" />
             <div>
               <Skeleton className="h-4 w-32 mb-2" />
               <Skeleton className="h-4 w-56" />
@@ -88,7 +88,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
   if (notFound) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-        <p className="text-muted-foreground mb-3">Conversation not found</p>
+        <p className="text-zinc-500 mb-3">Conversation not found</p>
         <button
           onClick={() => navigate(from ?? "/agent-dashboard")}
           className="text-sm text-primary hover:underline"
@@ -130,48 +130,51 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-zinc-200 flex-shrink-0" style={{ minHeight: 72 }}>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(from ?? "/agent-dashboard")}
-            className="p-2 hover:bg-muted rounded-lg transition-colors -ml-2"
-          >
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <div
-            className={cn(
-              "flex items-center gap-3",
-              details?.otherUserIsAgent && "cursor-pointer hover:opacity-80"
-            )}
-            onClick={() =>
-              details?.otherUserIsAgent &&
-              navigate(`/agent/${details.otherUserId}`)
-            }
-          >
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-              <User className="w-5 h-5 text-muted-foreground" />
+      <div className="px-5 py-4 border-b border-zinc-200 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                "w-10 h-10 rounded-full bg-zinc-200 flex items-center justify-center flex-shrink-0",
+                details?.otherUserIsAgent && "cursor-pointer hover:opacity-80"
+              )}
+              onClick={() =>
+                details?.otherUserIsAgent &&
+                navigate(`/agent/${details.otherUserId}`)
+              }
+            >
+              <User className="w-5 h-5 text-zinc-500" />
             </div>
             <div className="min-w-0">
-              <span className="text-base font-semibold text-zinc-900 block truncate">
-                {details?.otherUserName}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-base font-semibold text-zinc-900 truncate">
+                  {details?.otherUserName}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+              </div>
               <div className="flex items-center gap-1.5">
                 {details?.listingId && (
-                  <Building2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  <Building2 className="w-3 h-3 text-zinc-400 flex-shrink-0" />
                 )}
-                <span className="text-sm text-zinc-500 truncate">
+                <span className="text-sm text-zinc-400 truncate">
                   {contextLabel}
                 </span>
               </div>
             </div>
           </div>
+          <button
+            onClick={() => navigate(from ?? "/agent-dashboard")}
+            className="p-2 hover:bg-zinc-100 rounded-lg transition-colors text-zinc-400 hover:text-zinc-600"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
       {/* Thread */}
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 text-sm">
+          <div className="text-center text-zinc-400 py-8 text-sm">
             No messages yet. Start the conversation!
           </div>
         ) : (
