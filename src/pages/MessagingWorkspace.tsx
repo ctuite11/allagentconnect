@@ -8,6 +8,7 @@ import { NewConversationDialog } from "@/components/NewConversationDialog";
 export default function MessagingWorkspace() {
   const { id } = useParams<{ id: string }>();
   const [newMessageOpen, setNewMessageOpen] = useState(false);
+  useAgentPresence();
 
   return (
     <div className="h-[calc(100vh-2rem)] p-6 flex gap-5 bg-zinc-50">
