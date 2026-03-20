@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { X, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageRow } from "./MessageRow";
 import { DateSeparator } from "./DateSeparator";
 import { MessageComposer } from "./MessageComposer";
 import { UserAvatar } from "./UserAvatar";
-import { isSameDay } from "date-fns";
+import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface ConversationPanelProps {
