@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { SquarePen, Search } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
+import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "./UserAvatar";
@@ -42,6 +43,12 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
         setAddressCache((prev) => ({ ...prev, ...entries }));
       });
   }, [threads, loading]);
+
+  const otherUserIds = useMemo(
+    () => threads.map((t) => t.otherUserId).filter(Boolean),
+    [threads]
+  );
+  const presenceMap = useAgentPresenceBatch(otherUserIds);
 
   const totalUnread = threads.filter((t) => t.isUnread).length;
 
@@ -138,11 +145,16 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                     : "border-l-4 border-l-transparent hover:bg-zinc-100"
                 )}
               >
-                <UserAvatar
-                  name={thread.otherUserName}
-                  headshotUrl={thread.otherUserHeadshotUrl}
-                  size="lg"
-                />
+                <div className="relative flex-shrink-0">
+                  <UserAvatar
+                    name={thread.otherUserName}
+                    headshotUrl={thread.otherUserHeadshotUrl}
+                    size="lg"
+                  />
+                  {presenceMap.get(thread.otherUserId)?.isOnline && (
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-px">
                     <span

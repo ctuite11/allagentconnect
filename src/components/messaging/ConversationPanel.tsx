@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { X, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageRow } from "./MessageRow";
 import { DateSeparator } from "./DateSeparator";
 import { MessageComposer } from "./MessageComposer";
 import { UserAvatar } from "./UserAvatar";
-import { isSameDay } from "date-fns";
+import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface ConversationPanelProps {
@@ -23,6 +24,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
     useConversation(conversationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
+  const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
   useEffect(() => {
     if (!details?.listingId) {
@@ -138,6 +140,20 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
               {contextLabel && (
                 <span className="text-[12px] text-zinc-400 truncate block">
                   {contextLabel}
+                </span>
+              )}
+              {details?.otherUserId && (
+                <span className="flex items-center gap-1.5 mt-0.5">
+                  {isOnline ? (
+                    <>
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <span className="text-[11px] text-emerald-600 font-medium">Online</span>
+                    </>
+                  ) : lastSeenAt ? (
+                    <span className="text-[11px] text-zinc-400">
+                      Active {formatDistanceToNow(new Date(lastSeenAt), { addSuffix: true })}
+                    </span>
+                  ) : null}
                 </span>
               )}
             </div>
