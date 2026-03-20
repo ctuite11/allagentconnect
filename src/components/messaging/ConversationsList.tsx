@@ -71,10 +71,11 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
           </div>
           <button
             onClick={onNewMessage}
-            className="p-1.5 text-primary hover:text-primary/80 hover:bg-zinc-100 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:bg-zinc-100 rounded-lg transition-colors px-2 py-1.5 text-[13px] font-semibold"
             title="New message"
           >
             <SquarePen className="w-4 h-4" />
+            <span>Create New</span>
           </button>
         </div>
 
