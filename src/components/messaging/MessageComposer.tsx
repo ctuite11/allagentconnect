@@ -25,7 +25,7 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
   };
 
   return (
-    <div className="border-t border-zinc-200 px-6 py-4 flex-shrink-0">
+    <div className="border-t border-zinc-300 px-6 py-4 flex-shrink-0">
       <div className="flex items-center gap-3">
         <button
           type="button"
