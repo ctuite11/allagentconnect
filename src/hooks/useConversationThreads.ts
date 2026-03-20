@@ -61,7 +61,7 @@ export function useConversationThreads() {
           lastMessageAt: row.last_message_at,
           lastMessageSenderId: row.last_message_sender_id,
           isUnread: row.is_unread,
-          unreadCount: row.unread_count ?? (row.is_unread ? 1 : 0),
+          unreadCount: typeof row.unread_count === 'number' ? row.unread_count : (row.is_unread ? 1 : 0),
           listingId: row.listing_id,
           buyerNeedId: row.buyer_need_id,
         };

@@ -3792,6 +3792,7 @@ export type Database = {
           last_read_at: string | null
           listing_id: string | null
           other_user_id: string | null
+          unread_count: number | null
         }
         Relationships: [
           {
