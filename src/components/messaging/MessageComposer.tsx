@@ -25,18 +25,18 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
   };
 
   return (
-    <div className="border-t border-zinc-100 px-6 py-4 flex-shrink-0">
+    <div className="border-t border-zinc-200 px-6 py-4 flex-shrink-0">
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors"
+          className="p-1.5 text-zinc-500 hover:text-zinc-700 transition-colors"
           title="Attach file"
         >
           <Paperclip className="w-4 h-4" />
         </button>
         <button
           type="button"
-          className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors"
+          className="p-1.5 text-zinc-500 hover:text-zinc-700 transition-colors"
           title="Emoji"
         >
           <Smile className="w-4 h-4" />
@@ -46,7 +46,7 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Write a message..."
-          className="flex-1 h-10 rounded-full bg-zinc-50 border border-zinc-200 px-4 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-colors"
+          className="flex-1 h-10 rounded-full bg-white border border-zinc-300 px-4 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-colors"
         />
         <Button
           onClick={handleSend}
