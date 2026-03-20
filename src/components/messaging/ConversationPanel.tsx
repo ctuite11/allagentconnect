@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, Building2, MessageSquare } from "lucide-react";
+import { X, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
