@@ -20,29 +20,49 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
   const displayName = message.isOwn ? "Me" : message.senderName;
 
   return (
-    <div className={cn(showHeader ? "mt-7 first:mt-0" : "mt-1.5")}>
-      {showHeader && (
-        <div className="flex items-center gap-2.5 mb-1">
-          <UserAvatar
-            name={displayName}
-            headshotUrl={message.senderHeadshotUrl ?? null}
-            size="lg"
-          />
-          <span className={cn(
-            "text-[13px] font-semibold tracking-[-0.01em]",
-            message.isOwn ? "text-primary" : "text-zinc-900"
-          )}>
-            {displayName}
-          </span>
-          <span className="text-[11px] text-zinc-400 tabular-nums">{time}</span>
+    <div className={cn(
+      "flex",
+      message.isOwn ? "justify-end" : "justify-start",
+      showHeader ? "mt-8 first:mt-0" : "mt-1.5"
+    )}>
+      <div className={cn("max-w-[70%]", message.isOwn ? "items-end" : "items-start")}>
+        {/* Header: avatar + name + time (incoming only) */}
+        {showHeader && !message.isOwn && (
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <UserAvatar
+              name={displayName}
+              headshotUrl={message.senderHeadshotUrl ?? null}
+              size="lg"
+            />
+            <span className="text-[13px] font-medium text-zinc-900">
+              {displayName}
+            </span>
+            <span className="text-[11px] text-zinc-400 tabular-nums">{time}</span>
+          </div>
+        )}
+
+        {/* Timestamp for own messages */}
+        {showHeader && message.isOwn && (
+          <div className="flex items-center justify-end gap-2 mb-1.5">
+            <span className="text-[11px] text-zinc-400 tabular-nums">{time}</span>
+            <span className="text-[13px] font-medium text-primary">
+              {displayName}
+            </span>
+          </div>
+        )}
+
+        {/* Bubble */}
+        <div className={cn(
+          "rounded-2xl px-4 py-3 whitespace-pre-wrap break-words text-[14px] leading-[1.65]",
+          message.isOwn
+            ? "bg-primary text-white"
+            : "bg-white border border-zinc-200 text-zinc-800",
+          !message.isOwn && showHeader && "ml-[46px]",
+          !message.isOwn && !showHeader && "ml-[46px]"
+        )}>
+          {message.body}
         </div>
-      )}
-      <p className={cn(
-        "text-[14px] leading-[1.65] text-zinc-600 whitespace-pre-wrap break-words max-w-[65%]",
-        showHeader && "ml-[46px]"
-      )}>
-        {message.body}
-      </p>
+      </div>
     </div>
   );
 }

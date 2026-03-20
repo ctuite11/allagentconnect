@@ -152,7 +152,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
       </div>
 
       {/* Thread */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
+      <div className="flex-1 overflow-y-auto px-6 py-5 bg-zinc-50">
         {messages.length === 0 ? (
           <div className="text-center text-zinc-400 py-12 text-sm">
             No messages yet. Start the conversation!
