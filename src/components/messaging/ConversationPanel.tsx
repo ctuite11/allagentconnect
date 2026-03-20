@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, User, Building2, MessageSquare } from "lucide-react";
+import { X, Building2, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,16 +69,12 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
     return (
       <div className="flex-1 p-6 space-y-4">
         <div className="flex items-center gap-3 mb-6">
-          <Skeleton className="w-10 h-10 rounded-full" />
-          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-6 w-40" />
         </div>
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex gap-3">
-            <Skeleton className="w-9 h-9 rounded-full" />
-            <div>
-              <Skeleton className="h-4 w-32 mb-2" />
-              <Skeleton className="h-4 w-56" />
-            </div>
+          <div key={i} className="space-y-2 mt-5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-56" />
           </div>
         ))}
       </div>
@@ -125,56 +121,39 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
 
   const contextLabel = details?.listingId
     ? listingAddress || "Listing conversation"
-    : "General";
+    : null;
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-zinc-200 flex-shrink-0">
+      {/* Header — minimal, confident */}
+      <div className="px-6 py-5 border-b border-zinc-100 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-full bg-zinc-200 flex items-center justify-center flex-shrink-0",
-                details?.otherUserIsAgent && "cursor-pointer hover:opacity-80"
-              )}
-              onClick={() =>
-                details?.otherUserIsAgent &&
-                navigate(`/agent/${details.otherUserId}`)
-              }
-            >
-              <User className="w-5 h-5 text-zinc-500" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-base font-semibold text-zinc-900 truncate">
-                  {details?.otherUserName}
-                </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                {details?.listingId && (
-                  <Building2 className="w-3 h-3 text-zinc-400 flex-shrink-0" />
-                )}
-                <span className="text-sm text-zinc-400 truncate">
+          <div className="min-w-0">
+            <h2 className="text-[17px] font-semibold text-zinc-900 tracking-[-0.01em] truncate">
+              {details?.otherUserName}
+            </h2>
+            {contextLabel && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Building2 className="w-3 h-3 text-zinc-400 flex-shrink-0" />
+                <span className="text-[13px] text-zinc-400 truncate">
                   {contextLabel}
                 </span>
               </div>
-            </div>
+            )}
           </div>
           <button
             onClick={() => navigate(from ?? "/agent-dashboard")}
-            className="p-2 hover:bg-zinc-100 rounded-lg transition-colors text-zinc-400 hover:text-zinc-600"
+            className="p-2 -mr-2 hover:bg-zinc-100 rounded-lg transition-colors text-zinc-400 hover:text-zinc-600"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Thread */}
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-5">
         {messages.length === 0 ? (
-          <div className="text-center text-zinc-400 py-8 text-sm">
+          <div className="text-center text-zinc-400 py-12 text-sm">
             No messages yet. Start the conversation!
           </div>
         ) : (
