@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, Building2, MessageSquare } from "lucide-react";
+import { X, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -123,7 +123,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-zinc-100 flex-shrink-0">
+      <div className="px-6 py-4 border-b border-zinc-200 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <UserAvatar
@@ -132,16 +132,13 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
               size="lg"
             />
             <div className="min-w-0">
-              <h2 className="text-[17px] font-semibold text-zinc-900 tracking-[-0.01em] truncate">
+              <h2 className="text-[15px] font-semibold text-zinc-900 tracking-[-0.01em] truncate">
                 {details?.otherUserName}
               </h2>
               {contextLabel && (
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Building2 className="w-3 h-3 text-zinc-400 flex-shrink-0" />
-                  <span className="text-[13px] text-zinc-400 truncate">
-                    {contextLabel}
-                  </span>
-                </div>
+                <span className="text-[12px] text-zinc-400 truncate block">
+                  {contextLabel}
+                </span>
               )}
             </div>
           </div>

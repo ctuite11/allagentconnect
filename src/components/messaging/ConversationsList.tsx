@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { SquarePen } from "lucide-react";
+import { SquarePen, Search } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,7 +71,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
           </div>
           <button
             onClick={onNewMessage}
-            className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+            className="p-1.5 text-primary hover:text-primary/80 hover:bg-zinc-100 rounded-lg transition-colors"
             title="New message"
           >
             <SquarePen className="w-4 h-4" />
@@ -79,13 +79,16 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
         </div>
 
         {/* Search */}
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search name, message etc."
-          className="w-full h-9 rounded-lg bg-zinc-100/80 border-0 px-3 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
-        />
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search name, message etc."
+            className="w-full h-9 rounded-full bg-zinc-100 border-0 pl-9 pr-3 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+          />
+        </div>
       </div>
 
       {/* Thread list */}
@@ -94,7 +97,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
           <div className="p-4 space-y-1">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-3 px-5 py-3.5">
-                <Skeleton className="w-9 h-9 rounded-full" />
+                <Skeleton className="w-10 h-10 rounded-full" />
                 <div className="flex-1">
                   <Skeleton className="h-3.5 w-24 mb-2" />
                   <Skeleton className="h-3 w-36" />
@@ -128,41 +131,41 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                     });
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-5 py-3 cursor-pointer transition-all",
+                  "flex items-center gap-3 px-3 py-3 cursor-pointer transition-all",
                   isSelected
-                    ? "bg-zinc-50 border-l-2 border-l-primary"
-                    : "border-l-2 border-l-transparent hover:bg-zinc-50/60"
+                    ? "bg-zinc-100 border-l-4 border-l-primary"
+                    : "border-l-4 border-l-transparent hover:bg-zinc-100"
                 )}
               >
                 <UserAvatar
                   name={thread.otherUserName}
                   headshotUrl={thread.otherUserHeadshotUrl}
-                  size="md"
+                  size="lg"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-px">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span
-                        className={cn(
-                          "text-[13px] truncate",
-                          thread.isUnread
-                            ? "font-bold text-zinc-900"
-                            : "font-medium text-zinc-800"
-                        )}
-                      >
-                        {thread.otherUserName}
-                      </span>
+                    <span
+                      className={cn(
+                        "text-[13px] truncate",
+                        thread.isUnread
+                          ? "font-bold text-zinc-900"
+                          : "font-medium text-zinc-800"
+                      )}
+                    >
+                      {thread.otherUserName}
+                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {thread.unreadCount > 0 && (
-                        <span className="inline-flex items-center justify-center h-[16px] min-w-[16px] px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold leading-none flex-shrink-0">
+                        <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-2 py-0.5 rounded-full bg-emerald-500 text-white text-xs font-bold leading-none">
                           {thread.unreadCount > 99 ? "99+" : thread.unreadCount}
                         </span>
                       )}
+                      <span className="text-[11px] text-zinc-400 tabular-nums">
+                        {formatDistanceToNow(new Date(thread.lastMessageAt), {
+                          addSuffix: false,
+                        })}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-zinc-400 flex-shrink-0 tabular-nums">
-                      {formatDistanceToNow(new Date(thread.lastMessageAt), {
-                        addSuffix: false,
-                      })}
-                    </span>
                   </div>
                   {thread.lastMessagePreview && (
                     <p

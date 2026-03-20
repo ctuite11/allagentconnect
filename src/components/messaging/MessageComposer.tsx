@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Send, Paperclip, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MessageComposerProps {
@@ -27,6 +27,20 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
   return (
     <div className="border-t border-zinc-100 px-6 py-4 flex-shrink-0">
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors"
+          title="Attach file"
+        >
+          <Paperclip className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors"
+          title="Emoji"
+        >
+          <Smile className="w-4 h-4" />
+        </button>
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -37,8 +51,7 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
         <Button
           onClick={handleSend}
           disabled={!value.trim() || sending}
-          size="sm"
-          className="h-9 px-5 rounded-full font-semibold text-[13px] gap-1.5"
+          className="h-9 px-5 rounded-full font-semibold text-[13px] gap-1.5 bg-primary hover:bg-primary/90 text-white"
         >
           Send
           <Send className="w-3.5 h-3.5" />

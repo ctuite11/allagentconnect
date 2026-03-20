@@ -26,7 +26,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
           <UserAvatar
             name={displayName}
             headshotUrl={message.senderHeadshotUrl ?? null}
-            size="sm"
+            size="lg"
           />
           <span className={cn(
             "text-[13px] font-semibold tracking-[-0.01em]",
@@ -38,8 +38,8 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
         </div>
       )}
       <p className={cn(
-        "text-[14px] leading-[1.65] text-zinc-600 whitespace-pre-wrap break-words",
-        showHeader && "ml-[42px]"
+        "text-[14px] leading-[1.65] text-zinc-600 whitespace-pre-wrap break-words max-w-[65%]",
+        showHeader && "ml-[46px]"
       )}>
         {message.body}
       </p>
