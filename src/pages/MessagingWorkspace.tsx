@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
