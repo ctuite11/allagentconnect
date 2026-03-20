@@ -17,7 +17,7 @@ export function CommunicationsPanel({ conversations }: CommunicationsPanelProps)
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-base font-semibold text-foreground">Recent Messages</h3>
         <button
-          onClick={() => navigate("/communications")}
+          onClick={() => navigate("/client-needs")}
           className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
         >
           Open Inbox <ChevronRight className="h-4 w-4" />
