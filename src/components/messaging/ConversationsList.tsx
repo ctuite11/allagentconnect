@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { User, Search, Building2, Plus } from "lucide-react";
+import { User, Search, Building2, Plus, ArrowUpRight } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -63,35 +63,33 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-zinc-200 flex-shrink-0">
+      <div className="px-5 py-4 border-b border-zinc-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-foreground">Conversations</h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-lg font-semibold text-zinc-900">Recent chats</h2>
             {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-medium">
+              <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-emerald-500 text-white text-xs font-bold">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
           </div>
-          <Button
+          <button
             onClick={onNewMessage}
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+            className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
           >
-            <Plus className="w-4 h-4" />
-          </Button>
+            <ArrowUpRight className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search clients, agents, messages"
-            className="w-full h-9 pl-9 pr-3 rounded-xl bg-zinc-100 border-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+            placeholder="Search name, message etc."
+            className="w-full h-10 pl-9 pr-3 rounded-xl bg-zinc-100 border-0 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
           />
         </div>
       </div>
@@ -101,7 +99,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
         {loading ? (
           <div className="p-4 space-y-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-3">
+              <div key={i} className="flex items-center gap-3 py-3">
                 <Skeleton className="w-10 h-10 rounded-full" />
                 <div className="flex-1">
                   <Skeleton className="h-4 w-28 mb-2" />
@@ -112,7 +110,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-zinc-400">
               {search ? "No matching conversations" : "No conversations yet"}
             </p>
           </div>
@@ -134,43 +132,44 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                   });
               }}
               className={cn(
-                "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-zinc-100",
+                "flex items-center gap-3 px-5 py-3.5 cursor-pointer transition-colors border-b border-zinc-100",
                 "hover:bg-zinc-50",
-                thread.id === selectedId && "bg-zinc-50 border-l-2 border-l-primary"
+                thread.id === selectedId
+                  ? "bg-zinc-50 border-l-2 border-l-primary"
+                  : "border-l-2 border-l-transparent"
               )}
             >
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                <User className="w-5 h-5 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-zinc-200 flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-zinc-500" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <span
-                    className={cn(
-                      "text-sm truncate text-foreground",
-                      thread.isUnread ? "font-semibold" : "font-medium"
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={cn(
+                        "text-sm truncate text-zinc-900",
+                        thread.isUnread ? "font-bold" : "font-medium"
+                      )}
+                    >
+                      {thread.otherUserName}
+                    </span>
+                    {thread.isUnread && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex-shrink-0">
+                        1
+                      </span>
                     )}
-                  >
-                    {thread.otherUserName}
-                  </span>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                  </div>
+                  <span className="text-xs text-zinc-400 flex-shrink-0 tabular-nums">
                     {formatDistanceToNow(new Date(thread.lastMessageAt), {
-                      addSuffix: true,
+                      addSuffix: false,
                     })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  {thread.listingId && (
-                    <Building2 className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                  )}
-                  <span className="text-xs text-muted-foreground truncate">
-                    {getContext(thread)}
                   </span>
                 </div>
                 {thread.lastMessagePreview && (
                   <p
                     className={cn(
                       "text-sm truncate",
-                      thread.isUnread ? "text-foreground" : "text-muted-foreground"
+                      thread.isUnread ? "text-zinc-600" : "text-zinc-400"
                     )}
                   >
                     {thread.lastMessageSenderId === thread.otherUserId
@@ -179,9 +178,6 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                   </p>
                 )}
               </div>
-              {thread.isUnread && (
-                <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-2" />
-              )}
             </div>
           ))
         )}
