@@ -24,6 +24,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
     useConversation(conversationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
+  const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
   useEffect(() => {
     if (!details?.listingId) {
