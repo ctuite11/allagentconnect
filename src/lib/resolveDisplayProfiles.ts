@@ -5,6 +5,7 @@ export type DisplayProfile = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+  headshot_url: string | null;
   isAgent: boolean;
 };
 
@@ -22,7 +23,7 @@ export async function resolveDisplayProfiles(
   // 1) agent_profiles first
   const { data: agentRows } = await supabase
     .from("agent_profiles")
-    .select("id, first_name, last_name, email")
+    .select("id, first_name, last_name, email, headshot_url")
     .in("id", ids);
 
   (agentRows || []).forEach((p) => {
@@ -31,6 +32,7 @@ export async function resolveDisplayProfiles(
       first_name: p.first_name ?? null,
       last_name: p.last_name ?? null,
       email: p.email ?? null,
+      headshot_url: p.headshot_url ?? null,
       isAgent: true,
     });
   });
@@ -49,6 +51,7 @@ export async function resolveDisplayProfiles(
         first_name: p.first_name ?? null,
         last_name: p.last_name ?? null,
         email: p.email ?? null,
+        headshot_url: null,
         isAgent: false,
       });
     });

@@ -3,19 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
 
-interface Message {
+export interface Message {
   id: string;
   senderId: string;
   senderName: string;
+  senderHeadshotUrl: string | null;
   body: string;
   createdAt: string;
   isOwn: boolean;
 }
 
-interface ConversationDetails {
+export interface ConversationDetails {
   id: string;
   otherUserId: string;
   otherUserName: string;
+  otherUserHeadshotUrl: string | null;
   otherUserIsAgent: boolean;
   listingId: string | null;
 }
@@ -28,7 +30,6 @@ export function useConversation(conversationId: string | undefined) {
   const [notFound, setNotFound] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // Reset notFound when conversationId changes
   useEffect(() => {
     setNotFound(false);
     setLoading(true);
@@ -37,10 +38,7 @@ export function useConversation(conversationId: string | undefined) {
   }, [conversationId]);
 
   const fetchConversation = useCallback(async () => {
-    if (!conversationId || !user) {
-      // Don't set loading=false here — keep skeleton until auth resolves
-      return;
-    }
+    if (!conversationId || !user) return;
 
     try {
       const { data: convo, error: convoError } = await supabase
@@ -81,6 +79,7 @@ export function useConversation(conversationId: string | undefined) {
         otherUserName: otherProfile
           ? `${otherProfile.first_name ?? ""} ${otherProfile.last_name ?? ""}`.trim() || "Unknown User"
           : "Unknown User",
+        otherUserHeadshotUrl: otherProfile?.headshot_url ?? null,
         otherUserIsAgent: otherProfile?.isAgent ?? false,
         listingId: convo.listing_id,
       });
@@ -94,6 +93,7 @@ export function useConversation(conversationId: string | undefined) {
           id: m.id,
           senderId: m.sender_agent_id,
           senderName: name,
+          senderHeadshotUrl: profile?.headshot_url ?? null,
           body: m.body,
           createdAt: m.created_at,
           isOwn: m.sender_agent_id === user.id,
@@ -103,7 +103,6 @@ export function useConversation(conversationId: string | undefined) {
       setMessages(formattedMessages);
       setNotFound(false);
 
-      // Mark as read
       await supabase
         .from("conversation_participants")
         .update({ last_read_at: new Date().toISOString() })
@@ -120,7 +119,6 @@ export function useConversation(conversationId: string | undefined) {
     fetchConversation();
   }, [fetchConversation]);
 
-  // Subscribe to new messages in this conversation
   useEffect(() => {
     if (!conversationId || !user) return;
 
@@ -147,6 +145,7 @@ export function useConversation(conversationId: string | undefined) {
             id: newMsg.id,
             senderId: newMsg.sender_agent_id,
             senderName: name,
+            senderHeadshotUrl: profile?.headshot_url ?? null,
             body: newMsg.body,
             createdAt: newMsg.created_at,
             isOwn: newMsg.sender_agent_id === user.id,

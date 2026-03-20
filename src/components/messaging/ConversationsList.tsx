@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { User, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserAvatar } from "./UserAvatar";
 import { cn } from "@/lib/utils";
 
 interface ConversationsListProps {
@@ -18,7 +19,6 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
   const [search, setSearch] = useState("");
   const [addressCache, setAddressCache] = useState<Record<string, string>>({});
 
-  // Hydrate listing addresses
   useEffect(() => {
     if (loading || threads.length === 0) return;
 
@@ -43,7 +43,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
       });
   }, [threads, loading]);
 
-  const unreadCount = threads.filter((t) => t.isUnread).length;
+  const totalUnread = threads.filter((t) => t.isUnread).length;
 
   const filtered = threads.filter((t) => {
     if (!search.trim()) return true;
@@ -61,17 +61,18 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-[15px] font-semibold text-zinc-900 tracking-[-0.01em]">
-              Messages
+              Recent chats
             </h2>
-            {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">
-                {unreadCount > 99 ? "99+" : unreadCount}
+            {totalUnread > 0 && (
+              <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold leading-none">
+                {totalUnread > 99 ? "99+" : totalUnread}
               </span>
             )}
           </div>
           <button
             onClick={onNewMessage}
             className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+            title="New message"
           >
             <ArrowUpRight className="w-4 h-4" />
           </button>
@@ -82,7 +83,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search conversations..."
+          placeholder="Search name, message etc."
           className="w-full h-9 rounded-lg bg-zinc-100/80 border-0 px-3 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
         />
       </div>
@@ -133,27 +134,30 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                     : "border-l-2 border-l-transparent hover:bg-zinc-50/60"
                 )}
               >
-                <div className={cn(
-                  "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0",
-                  isSelected ? "bg-primary/10" : "bg-zinc-100"
-                )}>
-                  <User className={cn(
-                    "w-4 h-4",
-                    isSelected ? "text-primary" : "text-zinc-400"
-                  )} />
-                </div>
+                <UserAvatar
+                  name={thread.otherUserName}
+                  headshotUrl={thread.otherUserHeadshotUrl}
+                  size="md"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-px">
-                    <span
-                      className={cn(
-                        "text-[13px] truncate",
-                        thread.isUnread
-                          ? "font-bold text-zinc-900"
-                          : "font-medium text-zinc-800"
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span
+                        className={cn(
+                          "text-[13px] truncate",
+                          thread.isUnread
+                            ? "font-bold text-zinc-900"
+                            : "font-medium text-zinc-800"
+                        )}
+                      >
+                        {thread.otherUserName}
+                      </span>
+                      {thread.unreadCount > 0 && (
+                        <span className="inline-flex items-center justify-center h-[16px] min-w-[16px] px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold leading-none flex-shrink-0">
+                          {thread.unreadCount > 99 ? "99+" : thread.unreadCount}
+                        </span>
                       )}
-                    >
-                      {thread.otherUserName}
-                    </span>
+                    </div>
                     <span className="text-[11px] text-zinc-400 flex-shrink-0 tabular-nums">
                       {formatDistanceToNow(new Date(thread.lastMessageAt), {
                         addSuffix: false,

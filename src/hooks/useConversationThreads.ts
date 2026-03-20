@@ -3,15 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
 
-interface ConversationThread {
+export interface ConversationThread {
   id: string;
   otherUserId: string;
   otherUserName: string;
   otherUserEmail: string;
+  otherUserHeadshotUrl: string | null;
   lastMessagePreview: string | null;
   lastMessageAt: string;
   lastMessageSenderId: string | null;
   isUnread: boolean;
+  unreadCount: number;
   listingId: string | null;
   buyerNeedId: string | null;
 }
@@ -22,10 +24,7 @@ export function useConversationThreads() {
   const [loading, setLoading] = useState(true);
 
   const fetchThreads = useCallback(async () => {
-    if (!user) {
-      // Don't set loading=false here — keep skeleton until auth resolves
-      return;
-    }
+    if (!user) return;
 
     try {
       const { data: inboxData, error } = await supabase
@@ -57,10 +56,12 @@ export function useConversationThreads() {
             ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown User"
             : "Unknown User",
           otherUserEmail: profile?.email || "",
+          otherUserHeadshotUrl: profile?.headshot_url ?? null,
           lastMessagePreview: row.last_message_preview?.substring(0, 100) || null,
           lastMessageAt: row.last_message_at,
           lastMessageSenderId: row.last_message_sender_id,
           isUnread: row.is_unread,
+          unreadCount: row.unread_count ?? (row.is_unread ? 1 : 0),
           listingId: row.listing_id,
           buyerNeedId: row.buyer_need_id,
         };
@@ -78,7 +79,6 @@ export function useConversationThreads() {
     fetchThreads();
   }, [fetchThreads]);
 
-  // Subscribe to realtime changes
   useEffect(() => {
     if (!user) return;
 
