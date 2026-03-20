@@ -23,7 +23,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
     <div className={cn(
       "flex",
       message.isOwn ? "justify-end" : "justify-start",
-      showHeader ? "mt-8 first:mt-0" : "mt-1.5"
+      showHeader ? "mt-6 first:mt-0" : "mt-1.5"
     )}>
       <div className={cn("max-w-[70%]", message.isOwn ? "items-end" : "items-start")}>
         {/* Header: avatar + name + time (incoming only) */}
