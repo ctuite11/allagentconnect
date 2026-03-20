@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
   Tooltip,
@@ -31,13 +32,15 @@ import {
 interface SidebarItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  route: string | null; // null = not yet wired
+  route: string | null;
+  badge?: number;
 }
 
-const mainMenu: SidebarItem[] = [
+const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard" },
   { label: "Search", icon: Search, route: "/listing-search" },
   { label: "Comms", icon: Radio, route: "/client-needs" },
+  { label: "Messages", icon: MessageSquare, route: "/messages" },
   { label: "Buyers", icon: Users, route: "/success-hub/buyers" },
   { label: "Contacts", icon: Contact, route: "/my-clients" },
   { label: "Listings", icon: List, route: "/agent/listings" },
@@ -49,7 +52,7 @@ const mainMenu: SidebarItem[] = [
 const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin/approvals" };
 
 const otherTools: SidebarItem[] = [
-  { label: "Calendar", icon: Calendar, route: null }, // TODO: no V2 calendar yet
+  { label: "Calendar", icon: Calendar, route: null },
   { label: "Analytics", icon: BarChart3, route: "/market-insights" },
   { label: "Settings", icon: Settings, route: "/settings" },
 ];
@@ -81,6 +84,9 @@ function SidebarRow({
   onClick?: () => void;
 }) {
   const disabled = !item.route;
+  const hasBadge = item.badge != null && item.badge > 0;
+  const badgeText = hasBadge ? (item.badge! > 99 ? "99+" : String(item.badge)) : null;
+
   const button = (
     <button
       onClick={onClick}
@@ -95,8 +101,24 @@ function SidebarRow({
           : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30"
       )}
     >
-      <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-[hsl(221,92%,51%)]" : "text-zinc-300")} />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      <span className="relative shrink-0">
+        <item.icon className={cn("h-[18px] w-[18px]", active ? "text-[hsl(221,92%,51%)]" : "text-zinc-300")} />
+        {collapsed && hasBadge && (
+          <span className="absolute -top-1.5 -right-1.5 inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-white leading-none">
+            {badgeText}
+          </span>
+        )}
+      </span>
+      {!collapsed && (
+        <>
+          <span className="truncate">{item.label}</span>
+          {hasBadge && (
+            <span className="ml-auto inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-medium text-white leading-none">
+              {badgeText}
+            </span>
+          )}
+        </>
+      )}
     </button>
   );
 
@@ -120,6 +142,11 @@ export function DashboardSidebar({
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { unreadCount } = useUnreadConversations();
+
+  const mainMenu: SidebarItem[] = baseMainMenu.map((item) =>
+    item.label === "Messages" ? { ...item, badge: unreadCount } : item
+  );
 
   const handleLogout = async () => {
     try {
@@ -130,11 +157,9 @@ export function DashboardSidebar({
     }
   };
 
-  // Determine active item from current route if not explicitly set
   const resolvedActive = activeItem ?? (() => {
     const path = location.pathname;
     const allItems = [...mainMenu, ...(isAdmin ? [adminItem] : []), ...otherTools];
-    // Exact match first, then prefix match (but skip "/" to avoid false positives)
     const exact = allItems.find((item) => item.route && item.route === path);
     if (exact) return exact.label;
     const prefix = allItems.find((item) => item.route && item.route !== "/" && path.startsWith(item.route));
@@ -198,7 +223,6 @@ export function DashboardSidebar({
             />
           ))}
 
-          {/* Admin — only when isAdmin is truthy */}
           {isAdmin && (
             <SidebarRow
               item={adminItem}
