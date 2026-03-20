@@ -35,7 +35,7 @@ export function DashboardCommunications({ conversations }: DashboardCommunicatio
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-base font-semibold text-foreground">Communications</h3>
         <button
-          onClick={() => navigate("/communications")}
+          onClick={() => navigate("/client-needs")}
           className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5"
         >
           Open Comm Center <ChevronRight className="h-3 w-3" />
