@@ -28,7 +28,7 @@ export function CommunicationsPanel({ conversations }: CommunicationsPanelProps)
         {topConversations.map((conv, i) => (
           <button
             key={conv.conversation_id}
-            onClick={() => navigate("/communications")}
+            onClick={() => navigate("/client-needs")}
             className={`w-full text-left px-5 py-4 hover:bg-muted/50 transition-colors flex items-start gap-3 ${
               i < topConversations.length - 1 ? "border-b border-border" : ""
             }`}
