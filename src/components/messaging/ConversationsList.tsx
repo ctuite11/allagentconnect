@@ -74,7 +74,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
             className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
             title="New message"
           >
-            <ArrowUpRight className="w-4 h-4" />
+            <SquarePen className="w-4 h-4" />
           </button>
         </div>
 
