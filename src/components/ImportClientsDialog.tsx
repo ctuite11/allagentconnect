@@ -139,6 +139,11 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (!agentId) {
+      toast.error("Please wait a moment and try importing again.");
+      return;
+    }
+
     const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
     
     if (!validTypes.includes(file.type) && !file.name.endsWith('.csv')) {
