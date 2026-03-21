@@ -1353,6 +1353,7 @@ export type Database = {
       clients: {
         Row: {
           agent_id: string
+          agent_user_id: string | null
           client_type: string | null
           created_at: string
           email: string
@@ -1362,10 +1363,12 @@ export type Database = {
           last_name: string
           notes: string | null
           phone: string | null
+          source: string
           updated_at: string
         }
         Insert: {
           agent_id: string
+          agent_user_id?: string | null
           client_type?: string | null
           created_at?: string
           email: string
@@ -1375,10 +1378,12 @@ export type Database = {
           last_name: string
           notes?: string | null
           phone?: string | null
+          source?: string
           updated_at?: string
         }
         Update: {
           agent_id?: string
+          agent_user_id?: string | null
           client_type?: string | null
           created_at?: string
           email?: string
@@ -1388,6 +1393,7 @@ export type Database = {
           last_name?: string
           notes?: string | null
           phone?: string | null
+          source?: string
           updated_at?: string
         }
         Relationships: []
