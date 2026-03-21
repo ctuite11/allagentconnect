@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -49,7 +50,6 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Get agent profile if email/firstName not provided (only for real agents)
     let recipientEmail = email;
     let recipientName = firstName || "Agent";
 
@@ -74,7 +74,6 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Sending ${approved ? 'approval' : 'rejection'} email to ${recipientEmail} (${recipientName})`);
 
-    // Generate password reset link for approved agents
     let passwordSetupUrl = "https://allagentconnect.com/auth";
 
     if (approved && recipientEmail) {
@@ -98,11 +97,34 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    // Build "You've Been Accepted" email HTML
-    const approvedHtml = buildApprovedHtml(recipientName, passwordSetupUrl);
-    const rejectedHtml = buildRejectedHtml(recipientName);
+    const html = approved
+      ? buildAacEmail({
+          headline: "You've Been Accepted",
+          preheader: `Welcome to All Agent Connect, ${recipientName}!`,
+          body: `
+            <p style="margin:0 0 16px;">Hi ${recipientName},</p>
+            <p style="margin:0 0 8px;font-size:15px;">
+              <span style="color:#059669;font-weight:600;">✓</span> Your license has been verified
+            </p>
+            <p style="margin:0 0 0;">You've been accepted into All Agent Connect. Sign in below to access your agent dashboard.</p>`,
+          ctaLabel: "Sign In to Your Account",
+          ctaUrl: passwordSetupUrl,
+        })
+      : buildAacEmail({
+          headline: "Verification Update",
+          body: `
+            <p style="margin:0 0 16px;">Hi ${recipientName},</p>
+            <p style="margin:0 0 16px;">Thank you for your interest in All Agent Connect. Unfortunately, we were unable to verify your real estate license with the information provided. This could be due to:</p>
+            <ul style="margin:0 0 16px 20px;padding:0;color:#64748b;font-size:14px;line-height:2;">
+              <li>License number not found in state database</li>
+              <li>Name mismatch with license records</li>
+              <li>License may be expired or inactive</li>
+            </ul>
+            <p style="margin:0;">You can upload a photo or PDF of your license and we'll review it manually.</p>`,
+          ctaLabel: "Upload Your License",
+          ctaUrl: "https://allagentconnect.com/pending-verification",
+        });
 
-    // Send email via Resend API
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -110,13 +132,13 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
+        from: "All Agent Connect <hello@mail.allagentconnect.com>",
         reply_to: "hello@allagentconnect.com",
         to: [recipientEmail],
         subject: approved 
           ? "You've Been Accepted — Sign In to Your Account"
-          : "AllAgentConnect - Verification Update",
-        html: approved ? approvedHtml : rejectedHtml,
+          : "All Agent Connect - Verification Update",
+        html,
       }),
     });
 
@@ -129,7 +151,6 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailData);
 
-    // Mark approval email as sent if approved (only for real agents with userId)
     if (approved && userId && !isEarlyAccess) {
       const { error: updateError } = await supabaseAdmin
         .from("agent_settings")
@@ -154,186 +175,3 @@ serve(async (req: Request): Promise<Response> => {
     );
   }
 });
-
-function buildApprovedHtml(name: string, passwordUrl: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You've Been Accepted</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc;">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
-          
-          <!-- Header with Logo -->
-          <tr>
-            <td align="center" style="padding: 32px 40px 24px;">
-              <img src="https://allagentconnect.com/brand/aac-globe.png" 
-                   width="80" height="80" alt="AAC" 
-                   style="display: block; margin: 0 auto 16px;" />
-              <p style="margin: 0; font-size: 22px; font-weight: 600;">
-                <span style="color: #0E56F5;">All Agent </span><span style="color: #94A3B8;">Connect</span>
-              </p>
-              <div style="width: 64px; height: 2px; background: #0E56F5; margin: 12px auto 0;"></div>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding: 8px 40px 40px;">
-              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                Hi ${name},
-              </p>
-              
-              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 8px 0;">
-                <span style="color: #059669; font-weight: 600;">✓</span> Your license has been verified
-              </p>
-              
-               <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 28px 0;">
-                You've been accepted into AllAgentConnect. Sign in below to access your agent dashboard.
-              </p>
-              
-              <!-- CTA Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
-                <tr>
-                  <td align="center" style="background-color: #0F172A; border-radius: 10px;">
-                    <a href="${passwordUrl}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
-                      <span style="color: #10B981;">●</span>&nbsp;&nbsp;Sign In to Your Account&nbsp;&nbsp;→
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="font-size: 13px; color: #94a3b8; margin: 0 0 20px 0;">
-                This link works once. If you've already opened it, sign in from the <a href="https://allagentconnect.com/auth" style="color: #334155; text-decoration: underline;">login page</a>.
-              </p>
-              
-              <!-- Fallback URL -->
-              <p style="font-size: 13px; color: #64748b; margin: 0 0 8px 0;">
-                Or copy and paste this link:
-              </p>
-              <div style="background-color: #F8FAFC; padding: 12px; border-radius: 6px; margin: 0 0 28px 0;">
-                <p style="margin: 0; font-size: 12px; color: #475569; word-break: break-all; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">
-                  ${passwordUrl}
-                </p>
-              </div>
-              
-              <p style="font-size: 15px; color: #64748b; line-height: 1.7; margin: 0;">
-                Questions? <a href="mailto:hello@allagentconnect.com" style="color: #334155; text-decoration: none;">hello@allagentconnect.com</a>
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 20px 40px; border-top: 1px solid #f1f5f9;">
-              <p style="font-size: 13px; color: #94a3b8; margin: 0 0 8px 0; text-align: center;">
-                AllAgentConnect &nbsp;•&nbsp; hello@allagentconnect.com
-              </p>
-              <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">
-                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #94a3b8; text-decoration: underline;">Click here</a> to request account removal.
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}
-
-function buildRejectedHtml(name: string): string {
-  const uploadUrl = "https://allagentconnect.com/pending-verification";
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verification Update</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc;">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
-          
-          <!-- Header with Globe -->
-          <tr>
-            <td align="center" style="padding: 32px 40px 24px;">
-              <img src="https://allagentconnect.com/brand/aac-globe.png" 
-                   width="80" height="80" alt="AAC" 
-                   style="display: block; margin: 0 auto 16px;" />
-              <p style="margin: 0; font-size: 22px; font-weight: 600;">
-                <span style="color: #0E56F5;">All Agent </span><span style="color: #94A3B8;">Connect</span>
-              </p>
-              <div style="width: 64px; height: 2px; background: #0E56F5; margin: 12px auto 0;"></div>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding: 8px 40px 40px;">
-              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                Hi ${name},
-              </p>
-              
-              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 20px 0;">
-                Thank you for your interest in AllAgentConnect. Unfortunately, we were unable to verify your real estate license with the information provided. This could be due to:
-              </p>
-              
-              <ul style="margin: 0 0 24px 20px; padding: 0; color: #64748b; font-size: 15px; line-height: 2;">
-                <li>License number not found in state database</li>
-                <li>Name mismatch with license records</li>
-                <li>License may be expired or inactive</li>
-              </ul>
-              
-              <p style="font-size: 16px; color: #334155; line-height: 1.7; margin: 0 0 28px 0;">
-                You can upload a photo or PDF of your license and we'll review it manually.
-              </p>
-              
-              <!-- CTA Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
-                <tr>
-                  <td align="center" style="background-color: #0F172A; border-radius: 10px;">
-                    <a href="${uploadUrl}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
-                      <span style="color: #10B981;">●</span>&nbsp;&nbsp;Upload Your License&nbsp;&nbsp;→
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="font-size: 14px; color: #64748b; line-height: 1.7; margin: 0 0 8px 0;">
-                Or reply to this email with your correct license information and we'll be happy to take another look.
-              </p>
-              
-              <p style="font-size: 15px; color: #64748b; line-height: 1.7; margin: 24px 0 0 0;">
-                Questions? <a href="mailto:hello@allagentconnect.com" style="color: #334155; text-decoration: none;">hello@allagentconnect.com</a>
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 20px 40px; border-top: 1px solid #f1f5f9;">
-              <p style="font-size: 13px; color: #94a3b8; margin: 0 0 8px 0; text-align: center;">
-                AllAgentConnect &nbsp;•&nbsp; hello@allagentconnect.com
-              </p>
-              <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">
-                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #94a3b8; text-decoration: underline;">Click here</a> to request account removal.
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}

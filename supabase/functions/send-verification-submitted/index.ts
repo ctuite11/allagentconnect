@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const ADMIN_EMAIL = "chris@allagentconnect.com";
@@ -18,7 +19,6 @@ interface VerificationEmailRequest {
   licenseNumber: string;
 }
 
-// State license lookup URLs
 const stateLicenseLookupUrls: Record<string, string> = {
   MA: "https://www.mass.gov/orgs/board-of-registration-of-real-estate-brokers-and-salespersons",
   CT: "https://www.elicense.ct.gov/",
@@ -31,7 +31,6 @@ const stateLicenseLookupUrls: Record<string, string> = {
   PA: "https://www.pals.pa.gov/",
 };
 
-// State full names
 const stateNames: Record<string, string> = {
   MA: "Massachusetts",
   CT: "Connecticut",
@@ -45,91 +44,35 @@ const stateNames: Record<string, string> = {
 };
 
 serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { email, firstName, lastName, licenseState, licenseNumber }: VerificationEmailRequest = await req.json();
-
     console.log(`Processing verification request for: ${email}`);
 
     const stateName = stateNames[licenseState] || licenseState;
     const licenseVerifyUrl = stateLicenseLookupUrls[licenseState] || "";
 
-    // Email to admin for verification (NO email to user - page says thank you)
-    const adminEmailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">🔔 New Verification Request</h1>
-        </div>
-        
-        <div style="background: #ffffff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;">
-          <h2 style="color: #0f172a; margin-top: 0;">New Agent License Verification</h2>
-          
-          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Agent Name:</td>
-                <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${firstName} ${lastName}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Email:</td>
-                <td style="padding: 8px 0; color: #0f172a;"><a href="mailto:${email}" style="color: #2563eb;">${email}</a></td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">License #:</td>
-                <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${licenseNumber}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">State:</td>
-                <td style="padding: 8px 0; color: #0f172a;">${stateName}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Submitted:</td>
-                <td style="padding: 8px 0; color: #0f172a;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' })} EST</td>
-              </tr>
-            </table>
-          </div>
-          
-          ${licenseVerifyUrl ? `
-          <div style="text-align: center; margin: 25px 0;">
-            <a href="${licenseVerifyUrl}" target="_blank" style="display: inline-block; background: #0f172a; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
-              🔗 Verify ${stateName} License
-            </a>
-          </div>
-          ` : ''}
-          
-          <div style="text-align: center; margin: 25px 0;">
-            <a href="${ADMIN_PANEL_URL}" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
-              ✅ Review in Admin Panel
-            </a>
-          </div>
-          
-          <div style="background: #ecfdf5; border-left: 4px solid #059669; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-            <p style="margin: 0; color: #065f46; font-size: 14px;">
-              <strong>Next Step:</strong> Click the button above to review and approve/reject this agent in your Admin Panel.
-            </p>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-          
-          <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
-            AllAgentConnect Admin Notification
-          </p>
-        </div>
-      </body>
-      </html>
-    `;
+    const detailsTable = `
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;border-radius:8px;margin:16px 0;">
+        <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">Agent Name:</td><td style="padding:12px 16px;color:#0f172a;font-weight:600;font-size:14px;">${firstName} ${lastName}</td></tr>
+        <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">Email:</td><td style="padding:12px 16px;font-size:14px;"><a href="mailto:${email}" style="color:#0E56F5;text-decoration:none;">${email}</a></td></tr>
+        <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">License #:</td><td style="padding:12px 16px;color:#0f172a;font-weight:600;font-size:14px;">${licenseNumber}</td></tr>
+        <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">State:</td><td style="padding:12px 16px;color:#0f172a;font-size:14px;">${stateName}</td></tr>
+        <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">Submitted:</td><td style="padding:12px 16px;color:#0f172a;font-size:14px;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' })} EST</td></tr>
+      </table>
+      ${licenseVerifyUrl ? `<p style="margin:8px 0 0;font-size:13px;"><a href="${licenseVerifyUrl}" target="_blank" style="color:#0E56F5;text-decoration:none;">Verify ${stateName} license →</a></p>` : ""}`;
 
-    // Send email to admin only
+    const adminEmailHtml = buildAacEmail({
+      headline: "New Agent License Verification",
+      preheader: `New verification: ${firstName} ${lastName} — ${stateName} #${licenseNumber}`,
+      body: detailsTable,
+      ctaLabel: "Review in Admin Panel",
+      ctaUrl: ADMIN_PANEL_URL,
+    });
+
     const adminEmailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -137,10 +80,10 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
+        from: "All Agent Connect <hello@mail.allagentconnect.com>",
         reply_to: "hello@allagentconnect.com",
         to: [ADMIN_EMAIL],
-        subject: `🔔 New License Verification — ${firstName} ${lastName}`,
+        subject: `New License Verification — ${firstName} ${lastName}`,
         html: adminEmailHtml,
       }),
     });
@@ -162,10 +105,7 @@ serve(async (req: Request): Promise<Response> => {
     console.error("Error in send-verification-submitted function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 });
