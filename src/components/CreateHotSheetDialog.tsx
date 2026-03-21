@@ -1093,7 +1093,7 @@ export function CreateHotSheetDialog({
                   <p>Add a client to receive Hot Sheet matches by email.</p>
                   <Button
                     type="button"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm mt-2"
+                    className="shadow-sm mt-2"
                     size="sm"
                     onClick={() => setShowClientPicker(true)}
                   >
