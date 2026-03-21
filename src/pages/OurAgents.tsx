@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
