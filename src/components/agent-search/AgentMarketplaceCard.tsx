@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MapPin, Building2, CheckCircle2, Shield, Send, MessageSquare } from "lucide-react";
+import { MapPin, Building2, CheckCircle2, Shield, Send, MessageSquare, UserPlus, Check } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 
 interface Agent {
@@ -39,6 +42,8 @@ interface AgentMarketplaceCardProps {
 const AgentMarketplaceCard = ({ agent, isOnline }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   
   const fullName = `${agent.first_name} ${agent.last_name}`;
   
@@ -48,6 +53,54 @@ const AgentMarketplaceCard = ({ agent, isOnline }: AgentMarketplaceCardProps) =>
     : agent.agent_county_preferences?.[0]?.counties 
       ? `${agent.agent_county_preferences[0].counties.name}, ${agent.agent_county_preferences[0].counties.state}`
       : null;
+
+  const handleSaveToContacts = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in to save contacts");
+        return;
+      }
+
+      // Check for duplicate
+      const { data: existing } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("agent_id", user.id)
+        .eq("email", agent.email)
+        .maybeSingle();
+
+      if (existing) {
+        toast.info("This agent is already in your contacts");
+        setSaved(true);
+        return;
+      }
+
+      const { error } = await supabase
+        .from("clients")
+        .insert({
+          agent_id: user.id,
+          first_name: agent.first_name,
+          last_name: agent.last_name,
+          email: agent.email,
+          phone: agent.cell_phone || agent.phone || null,
+          client_type: "agent",
+          source: "network",
+          agent_user_id: agent.id,
+        });
+
+      if (error) throw error;
+      toast.success(`${fullName} saved to your contacts`);
+      setSaved(true);
+    } catch (error: any) {
+      console.error("Error saving to contacts:", error);
+      toast.error("Failed to save contact");
+    } finally {
+      setSaving(false);
+    }
+  };
 
 
   return (
@@ -105,7 +158,7 @@ const AgentMarketplaceCard = ({ agent, isOnline }: AgentMarketplaceCardProps) =>
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 gap-1.5"
+            className="gap-1.5"
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/agent/${agent.aac_id || agent.id}`, { state: { from: location.pathname } });
@@ -114,6 +167,26 @@ const AgentMarketplaceCard = ({ agent, isOnline }: AgentMarketplaceCardProps) =>
             <MessageSquare className="h-3.5 w-3.5" />
             Message
           </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={handleSaveToContacts}
+                disabled={saving || saved}
+              >
+                {saved ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                ) : (
+                  <UserPlus className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {saved ? "Saved to Contacts" : "Save to Contacts"}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </Card>

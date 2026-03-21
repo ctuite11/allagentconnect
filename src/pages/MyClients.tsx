@@ -55,6 +55,8 @@ interface Client {
   email: string;
   phone: string | null;
   client_type: string | null;
+  source?: string | null;
+  agent_user_id?: string | null;
   is_favorite?: boolean;
   created_at: string;
   updated_at: string;
@@ -423,9 +425,17 @@ const MyClients = () => {
 
   const handleExportCSV = () => {
     try {
+      // Filter out network-sourced contacts from export
+      const exportableClients = sortedClients.filter(c => (c as any).source !== 'network');
+      
+      if (exportableClients.length === 0) {
+        toast.info("No exportable contacts found (network contacts are excluded)");
+        return;
+      }
+
       // Prepare CSV data
       const headers = ["First Name", "Last Name", "Email", "Phone", "Client Type", "Date Added", "Last Updated"];
-      const csvData = sortedClients.map(client => [
+      const csvData = exportableClients.map(client => [
         client.first_name,
         client.last_name,
         client.email,
@@ -458,7 +468,7 @@ const MyClients = () => {
       link.click();
       document.body.removeChild(link);
 
-      toast.success(`Exported ${sortedClients.length} contacts to CSV`);
+      toast.success(`Exported ${exportableClients.length} contacts to CSV`);
     } catch (error) {
       console.error("Error exporting CSV:", error);
       toast.error("Failed to export contacts");
@@ -914,6 +924,9 @@ const MyClients = () => {
                       </TableCell>
                       <TableCell className="font-medium">
                         {toTitleCase(client.first_name)} {toTitleCase(client.last_name)}
+                        {(client as any).source === 'network' && (
+                          <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200 text-[10px]">AAC Member</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">

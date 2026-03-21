@@ -1,0 +1,3 @@
+ALTER TABLE public.clients
+  ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS agent_user_id UUID NULL;
