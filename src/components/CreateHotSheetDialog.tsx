@@ -1825,7 +1825,7 @@ export function CreateHotSheetDialog({
             <Button 
               onClick={handleValidateAndShowConfirmation} 
               disabled={saving}
-              className="min-w-[180px] bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 shadow-sm hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all"
+              className="min-w-[180px]"
             >
               {saving ? (
                 <>
