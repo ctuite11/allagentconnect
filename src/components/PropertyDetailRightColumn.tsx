@@ -517,15 +517,13 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-3">
-              <Avatar className="w-14 h-14">
-                {agent.headshot_url ? (
-                  <AvatarImage src={agent.headshot_url} />
-                ) : (
-                  <AvatarFallback className="text-lg">
-                    {agent.first_name[0]}{agent.last_name[0]}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+               <AgentAvatar
+                  name={`${agent.first_name} ${agent.last_name}`}
+                  headshotUrl={agent.headshot_url ?? null}
+                  userId={agent.id}
+                  size="xl"
+                  avatarClassName="w-14 h-14"
+                />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-lg">
                   {agent.first_name} {agent.last_name}
