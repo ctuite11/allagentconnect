@@ -575,7 +575,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             Preview Profile
           </Button>
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate("/manage-team")}>
+            <Button variant="outline" onClick={() => navigate("/manage-team", { state: { from: '/agent-profile-editor' } })}>
               <Users className="h-4 w-4 mr-2" />
               Manage Team
             </Button>
