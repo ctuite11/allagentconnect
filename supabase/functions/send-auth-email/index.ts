@@ -9,6 +9,7 @@
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,84 +68,6 @@ function mustGetEnv(name: string): string {
   return v;
 }
 
-function escapeHtml(s: string) {
-  return s
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-// Locked AAC transactional email template
-function buildLockedEmailHtml(opts: { title: string; bodyText: string; ctaLabel?: string; ctaUrl?: string }): string {
-  const { title, bodyText, ctaLabel, ctaUrl } = opts;
-
-  const buttonHtml = ctaLabel && ctaUrl
-    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-        <tr>
-          <td align="center" style="padding:8px 0 24px;">
-            <a href="${escapeHtml(ctaUrl)}" target="_blank" style="display:inline-block;padding:14px 28px;background-color:#0F172A;color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(ctaLabel)}</a>
-          </td>
-        </tr>
-      </table>`
-    : "";
-
-  const fallbackHtml = ctaUrl
-    ? `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-        If the button doesn't work, copy and paste this URL into your browser:
-      </p>
-      <div style="background-color:#F8FAFC;padding:12px;border-radius:6px;">
-        <p style="margin:0;font-size:12px;line-height:1.5;color:#475569;word-break:break-all;font-family:monospace;">${escapeHtml(ctaUrl)}</p>
-      </div>`
-    : "";
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(title)}</title>
-</head>
-<body style="margin:0;padding:0;background-color:#f8fafc;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;">
-    <tr>
-      <td align="center" style="padding:48px 24px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;">
-          <!-- Header: Plain text only -->
-          <tr>
-            <td style="padding:32px 40px 24px;text-align:center;">
-              <p style="margin:0;font-size:20px;font-weight:600;color:#0F172A;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
-            </td>
-          </tr>
-          <!-- Content -->
-          <tr>
-            <td style="padding:0 40px 32px;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0F172A;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(title)}</h2>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                ${escapeHtml(bodyText)}
-              </p>
-              ${buttonHtml}
-              ${fallbackHtml}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
-              <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
-              <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">hello@allagentconnect.com</p>
-              <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color:#94a3b8;text-decoration:underline;">Click here</a> to request account removal.
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}
-
 function buildEmailForType(params: {
   type: string;
   email: string;
@@ -155,66 +78,72 @@ function buildEmailForType(params: {
   const t = (type || "").toLowerCase();
 
   if (t.includes("recovery") || t.includes("reset")) {
-    const subject = "Reset your password";
-    const html = buildLockedEmailHtml({
-      title: "Reset your password",
-      bodyText: "We received a request to reset your password. Click below to choose a new one. This link expires in 1 hour. If you didn't request this, you can safely ignore this email.",
-      ctaLabel: "Reset Password",
-      ctaUrl: actionUrl,
-    });
-    const text = `Reset your password: ${actionUrl ?? ""}\n\nThis link expires in 1 hour. If you didn't request this, ignore this email.`;
-    return { subject, html, text };
+    return {
+      subject: "Reset your password",
+      html: buildAacEmail({
+        headline: "Reset your password",
+        body: `<p style="margin:0 0 12px;">We received a request to reset your password. Click below to choose a new one.</p>
+               <p style="margin:0;font-size:13px;color:#64748b;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`,
+        ctaLabel: "Reset Password",
+        ctaUrl: actionUrl,
+      }),
+      text: `Reset your password: ${actionUrl ?? ""}\n\nThis link expires in 1 hour. If you didn't request this, ignore this email.`,
+    };
   }
 
   if (t.includes("signup") || t.includes("confirm")) {
-    const subject = "Confirm your email for AllAgentConnect";
-    const html = buildLockedEmailHtml({
-      title: "Confirm your email",
-      bodyText: "To finish signing up for AllAgentConnect, please confirm your email address. This helps us keep the platform trusted and agent-only.",
-      ctaLabel: "Confirm Email",
-      ctaUrl: actionUrl,
-    });
-    const text = `Confirm your email: ${actionUrl ?? ""}`;
-    return { subject, html, text };
+    return {
+      subject: "Confirm your email for All Agent Connect",
+      html: buildAacEmail({
+        headline: "Confirm your email",
+        body: `<p style="margin:0;">To finish signing up for All Agent Connect, please confirm your email address. This helps us keep the platform trusted and agent-only.</p>`,
+        ctaLabel: "Confirm Email",
+        ctaUrl: actionUrl,
+      }),
+      text: `Confirm your email: ${actionUrl ?? ""}`,
+    };
   }
 
   if (t.includes("magic")) {
-    const subject = "Your AllAgentConnect sign-in link";
-    const html = buildLockedEmailHtml({
-      title: "Sign in to AllAgentConnect",
-      bodyText: "Use the button below to sign in. This link may expire for security.",
-      ctaLabel: "Sign In",
-      ctaUrl: actionUrl,
-    });
-    const text = `Sign in: ${actionUrl ?? ""}`;
-    return { subject, html, text };
+    return {
+      subject: "Your All Agent Connect sign-in link",
+      html: buildAacEmail({
+        headline: "Sign in to All Agent Connect",
+        body: `<p style="margin:0;">Use the button below to sign in. This link may expire for security.</p>`,
+        ctaLabel: "Sign In",
+        ctaUrl: actionUrl,
+      }),
+      text: `Sign in: ${actionUrl ?? ""}`,
+    };
   }
 
   if (t.includes("email_change")) {
-    const subject = "Confirm your new email for AllAgentConnect";
-    const html = buildLockedEmailHtml({
-      title: "Confirm your new email",
-      bodyText: "Use the button below to confirm your new email address.",
-      ctaLabel: "Confirm New Email",
-      ctaUrl: actionUrl,
-    });
-    const text = `Confirm new email: ${actionUrl ?? ""}`;
-    return { subject, html, text };
+    return {
+      subject: "Confirm your new email for All Agent Connect",
+      html: buildAacEmail({
+        headline: "Confirm your new email",
+        body: `<p style="margin:0;">Use the button below to confirm your new email address.</p>`,
+        ctaLabel: "Confirm New Email",
+        ctaUrl: actionUrl,
+      }),
+      text: `Confirm new email: ${actionUrl ?? ""}`,
+    };
   }
 
   // Fallback
-  const subject = "AllAgentConnect";
   const bodyText = otp
     ? `Please use the link below to continue. Your one-time code is: ${otp}`
     : "Please use the link below to continue.";
-  const html = buildLockedEmailHtml({
-    title: "Action required",
-    bodyText,
-    ctaLabel: actionUrl ? "Continue" : undefined,
-    ctaUrl: actionUrl,
-  });
-  const text = `Continue: ${actionUrl ?? ""}${otp ? `\nOne-time code: ${otp}` : ""}`;
-  return { subject, html, text };
+  return {
+    subject: "All Agent Connect",
+    html: buildAacEmail({
+      headline: "Action required",
+      body: `<p style="margin:0;">${bodyText}</p>`,
+      ctaLabel: actionUrl ? "Continue" : undefined,
+      ctaUrl: actionUrl,
+    }),
+    text: `Continue: ${actionUrl ?? ""}${otp ? `\nOne-time code: ${otp}` : ""}`,
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -233,12 +162,9 @@ Deno.serve(async (req: Request) => {
     const rawBody = await req.text();
     const headersObj = Object.fromEntries(req.headers.entries());
 
-    // Verify signature from Supabase Auth Hook using Standard Webhooks
     const wh = new Webhook(hookSecret);
     const verified = wh.verify(rawBody, headersObj) as any;
 
-    // Payload format can differ slightly depending on Supabase version/config.
-    // We defensively extract what we need.
     const email = verified?.user?.email || verified?.email || verified?.recipient;
     const type =
       verified?.email_data?.template?.type ||
@@ -269,7 +195,6 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Database-backed rate limiting: 5 auth emails per minute per email
     if (supabaseUrl && supabaseAnonKey) {
       const rateLimitKey = `route:send-auth-email|email:${email.toLowerCase()}`;
       const rateLimitResult = await checkRateLimit(supabaseUrl, supabaseAnonKey, rateLimitKey, 60, 5);
@@ -280,22 +205,13 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    console.log("send-auth-email hook invoked:", {
-      type,
-      email,
-      hasActionUrl: !!actionUrl,
-    });
+    console.log("send-auth-email hook invoked:", { type, email, hasActionUrl: !!actionUrl });
 
     const resend = new Resend(resendApiKey);
 
-    const { subject, html, text } = buildEmailForType({
-      type,
-      email,
-      actionUrl,
-      otp,
-    });
+    const { subject, html, text } = buildEmailForType({ type, email, actionUrl, otp });
 
-    const from = `AllAgentConnect <${resendFromEmail}>`;
+    const from = `All Agent Connect <${resendFromEmail}>`;
 
     const sendRes = await resend.emails.send({
       from,
