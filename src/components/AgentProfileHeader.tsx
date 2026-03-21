@@ -74,10 +74,13 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
           {/* Back Button */}
           <button
             onClick={() => {
-              if (window.history.length > 2) {
+              const from = (location.state as any)?.from;
+              if (from) {
+                navigate(from);
+              } else if (window.history.length > 2) {
                 navigate(-1);
               } else {
-                navigate("/find-agent");
+                navigate("/our-members");
               }
             }}
             className="mb-5 p-1.5 -ml-1.5 rounded-md hover:bg-white/20 transition-colors text-white/80 hover:text-white"

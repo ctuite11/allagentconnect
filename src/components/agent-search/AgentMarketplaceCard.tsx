@@ -104,7 +104,7 @@ const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
             className="flex-1 gap-1.5"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/agent/${agent.aac_id || agent.id}`);
+              navigate(`/agent/${agent.aac_id || agent.id}`, { state: { from: location.pathname } });
             }}
           >
             <MessageSquare className="h-3.5 w-3.5" />
