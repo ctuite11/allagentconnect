@@ -132,6 +132,8 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
               name={details?.otherUserName ?? ""}
               headshotUrl={details?.otherUserHeadshotUrl ?? null}
               size="lg"
+              userId={details?.otherUserId}
+              isOnline={isOnline}
             />
             <div className="min-w-0">
               <h2 className="text-[15px] font-semibold text-zinc-900 tracking-[-0.01em] truncate">
