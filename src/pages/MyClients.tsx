@@ -641,7 +641,7 @@ const MyClients = () => {
                     <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <Button type="submit" disabled={saving}>
                       {saving ? "Saving..." : editingClient ? "Update" : "Add Contact"}
                     </Button>
                   </div>
