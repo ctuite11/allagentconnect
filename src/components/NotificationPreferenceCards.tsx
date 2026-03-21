@@ -209,6 +209,7 @@ export const NotificationPreferenceCards = () => {
                       id={`receive-${card.key}`}
                       checked={card.active}
                       onCheckedChange={() => togglePreference(card.key)}
+                      className="data-[state=checked]:bg-primary"
                     />
                   </div>
                 </div>
