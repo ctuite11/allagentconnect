@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { PageHeader } from "@/components/ui/page-header";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
