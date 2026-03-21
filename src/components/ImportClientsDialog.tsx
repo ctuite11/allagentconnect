@@ -186,6 +186,11 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   };
 
   const handleImport = async () => {
+    if (!agentId) {
+      toast.error("Please wait a moment and try importing again.");
+      return;
+    }
+
     if (!validationResult?.valid.length) return;
 
     setImporting(true);
