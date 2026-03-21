@@ -18,6 +18,7 @@ type Agent = {
 type Props = {
   agent: Agent;
   onClick: (id: string) => void;
+  isOnline?: boolean;
 };
 
 function titleCase(s: string) {
