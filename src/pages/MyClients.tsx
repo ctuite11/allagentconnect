@@ -55,6 +55,8 @@ interface Client {
   email: string;
   phone: string | null;
   client_type: string | null;
+  source?: string | null;
+  agent_user_id?: string | null;
   is_favorite?: boolean;
   created_at: string;
   updated_at: string;
