@@ -301,7 +301,6 @@ const ClientNeedsDashboard = () => {
         <PageHeader
           title="Communications Center"
           subtitle="Agent-to-agent collaboration and deal flow"
-          backTo="/agent-dashboard"
         />
 
         {/* Channels Section */}

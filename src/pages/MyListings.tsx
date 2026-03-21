@@ -353,7 +353,6 @@ function MyListingsView({
       <PageHeader
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
-        backTo="/agent-dashboard"
       />
 
       {/* New Listing Button Row */}
@@ -1097,7 +1096,6 @@ const MyListings = () => {
         <PageHeader
           title="My Listings"
           subtitle="Create your first listing to get started."
-          backTo="/agent-dashboard"
         />
         
         {/* Empty State - matches Hot Sheets pattern */}
