@@ -8,7 +8,13 @@ import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "luc
 import { toast } from "sonner";
 import { z } from "zod";
 
-function parseCsvLine(line: string): string[] {
+function detectDelimiter(headerLine: string): string {
+  if (headerLine.includes("\t")) return "\t";
+  if (headerLine.includes(";") && !headerLine.includes(",")) return ";";
+  return ",";
+}
+
+function parseCsvLine(line: string, delimiter: string): string[] {
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -24,7 +30,7 @@ function parseCsvLine(line: string): string[] {
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === "," && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(current.trim());
       current = "";
     } else {
@@ -34,6 +40,10 @@ function parseCsvLine(line: string): string[] {
 
   result.push(current.trim());
   return result;
+}
+
+function findHeaderIndex(headers: string[], candidates: string[]): number {
+  return headers.findIndex((header) => candidates.includes(header));
 }
 
 const clientRowSchema = z.object({
@@ -70,27 +80,48 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   const [importing, setImporting] = useState(false);
 
   const parseCSV = (text: string): ParsedClient[] => {
+    // Strip UTF-8 BOM
+    text = text.replace(/^\uFEFF/, "");
+
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length === 0) return [];
 
-    const header = parseCsvLine(lines[0]).map(h => h.toLowerCase());
+    const delimiter = detectDelimiter(lines[0]);
+    const header = parseCsvLine(lines[0], delimiter).map(h => h.trim().toLowerCase());
 
-    const firstNameIdx = header.findIndex(h => h.includes('first') && h.includes('name'));
-    const lastNameIdx = header.findIndex(h => h.includes('last') && h.includes('name'));
-    const emailIdx = header.findIndex(h => h.includes('email'));
-    const phoneIdx = header.findIndex(h => h.includes('phone'));
+    const firstNameIdx = findHeaderIndex(header, ['first name', 'firstname', 'given name']);
+    const lastNameIdx = findHeaderIndex(header, ['last name', 'lastname', 'surname', 'family name']);
+    const emailIdx = findHeaderIndex(header, ['email', 'e-mail']);
+    const phoneIdx = findHeaderIndex(header, ['phone', 'telephone', 'mobile']);
     const clientTypeIdx = header.findIndex(h => h.includes('client') && h.includes('type'));
+    const fullNameIdx = findHeaderIndex(header, ['name']);
 
-    if (firstNameIdx === -1 || lastNameIdx === -1 || emailIdx === -1) {
-      throw new Error("CSV must contain 'First Name', 'Last Name', and 'Email' columns");
+    // Allow full-name fallback if first/last not found
+    const useFullName = firstNameIdx === -1 && lastNameIdx === -1 && fullNameIdx !== -1;
+
+    if (!useFullName && (firstNameIdx === -1 || lastNameIdx === -1) || emailIdx === -1) {
+      throw new Error("CSV must contain 'First Name', 'Last Name', and 'Email' columns (or 'Name' and 'Email')");
     }
 
     const clients: ParsedClient[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = parseCsvLine(lines[i]);
+      const values = parseCsvLine(lines[i], delimiter);
       
-      if (values.length < 3) continue;
+      if (values.length < 2) continue;
+
+      let firstName = '';
+      let lastName = '';
+
+      if (useFullName) {
+        const fullName = (values[fullNameIdx] || '').trim();
+        const parts = fullName.split(/\s+/);
+        firstName = parts[0] || '';
+        lastName = parts.slice(1).join(' ');
+      } else {
+        firstName = values[firstNameIdx] || '';
+        lastName = values[lastNameIdx] || '';
+      }
 
       const rawClientType = clientTypeIdx !== -1 ? values[clientTypeIdx] : '';
       const normalizedClientType = rawClientType?.trim()
@@ -98,8 +129,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         : null;
 
       clients.push({
-        first_name: values[firstNameIdx] || '',
-        last_name: values[lastNameIdx] || '',
+        first_name: firstName,
+        last_name: lastName,
         email: values[emailIdx] || '',
         phone: phoneIdx !== -1 ? values[phoneIdx] : '',
         client_type: normalizedClientType,
