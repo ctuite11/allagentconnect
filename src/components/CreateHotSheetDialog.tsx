@@ -1040,7 +1040,7 @@ export function CreateHotSheetDialog({
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                   className="shadow-sm"
                     size="sm"
                     onClick={() => setShowClientPicker(true)}
                   >
