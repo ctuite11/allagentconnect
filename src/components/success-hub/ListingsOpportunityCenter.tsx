@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Plus, Upload, Users, Zap, MessageCircle, ArrowRight } from "lucide-react";
+import { Plus, Users, Zap, MessageCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ListingsOpportunityCenterProps {
@@ -9,9 +9,9 @@ interface ListingsOpportunityCenterProps {
 }
 
 const stats = [
-  { key: "buyers", label: "Active Buyers", icon: Users },
-  { key: "opportunities", label: "New Opportunities", icon: Zap },
-  { key: "network", label: "Network Activity", icon: MessageCircle },
+  { key: "buyers", label: "Active Buyers", icon: Users, route: "/success-hub/buyers" },
+  { key: "opportunities", label: "New Opportunities", icon: Zap, route: "/client-needs" },
+  { key: "network", label: "Network Activity", icon: MessageCircle, route: "/messages" },
 ] as const;
 
 export function ListingsOpportunityCenter({
@@ -35,33 +35,26 @@ export function ListingsOpportunityCenter({
           You don't have any active listings yet
         </h4>
         <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-          Add your first listing or import one to start tracking activity,
+          Add your first listing to start tracking activity,
           uncover matches, and connect with buyer demand across your network.
         </p>
       </div>
 
-      {/* Primary CTAs */}
+      {/* Primary CTA */}
       <div className="flex items-center justify-center gap-3 mb-6">
         <Button size="sm" onClick={() => navigate("/agent/listings/new")}>
           <Plus className="h-4 w-4" />
           Add Listing
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => navigate("/agent/listings/new")}
-        >
-          <Upload className="h-4 w-4" />
-          Import Listing
-        </Button>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-3 mb-5">
-        {stats.map(({ key, label, icon: Icon }) => (
+        {stats.map(({ key, label, icon: Icon, route }) => (
           <div
             key={key}
-            className="rounded-lg border border-border bg-secondary/40 px-4 py-3 text-center"
+            onClick={() => navigate(route)}
+            className="rounded-lg border border-border bg-secondary/40 px-4 py-3 text-center cursor-pointer hover:bg-secondary/60 transition-colors"
           >
             <Icon className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
             <p className="text-xl font-bold text-foreground">{values[key]}</p>
@@ -73,7 +66,7 @@ export function ListingsOpportunityCenter({
       {/* Bottom CTA */}
       <div className="text-center">
         <button
-          onClick={() => navigate("/hot-sheets")}
+          onClick={() => navigate("/client-needs")}
           className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           View Opportunities

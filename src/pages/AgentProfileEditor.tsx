@@ -94,6 +94,7 @@ const AgentProfileEditor = () => {
   const [officeState, setOfficeState] = useState("");
   const [officeZip, setOfficeZip] = useState("");
   const [teamName, setTeamName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [headshotUrl, setHeadshotUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
@@ -190,7 +191,8 @@ const [headerBackgroundType, setHeaderBackgroundType] = useState("color");
         setOfficeCity(profile.office_city || "");
         setOfficeState(profile.office_state || "");
         setOfficeZip(profile.office_zip || "");
-        setTeamName(profile.company || "");
+        setTeamName(profile.team_name || "");
+        setCompanyName(profile.company || "");
         setHeadshotUrl(profile.headshot_url || "");
         setLogoUrl(profile.logo_url || "");
 setHeaderBackgroundType(profile.header_background_type || "color");
@@ -267,7 +269,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
           office_city: officeCity,
           office_state: officeState,
           office_zip: officeZip,
-          company: teamName,
+           team_name: teamName,
+           company: companyName,
           headshot_url: headshotUrl,
           logo_url: logoUrl,
           header_background_type: headerBackgroundType,
@@ -698,22 +701,21 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                   />
                 </div>
                 <div>
-                  <Label htmlFor="team_name">Team / Company Name</Label>
+                  <Label htmlFor="team_name">Team Name</Label>
                   <Input
                     id="team_name"
-                    placeholder="Your Team or Company"
+                    placeholder="Your Team Name"
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="company_name">Brokerage / Company Name</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="company_name"
+                    placeholder="Your Brokerage or Company"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
                   />
                 </div>
               </CardContent>
@@ -729,6 +731,16 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 <CardDescription className="text-zinc-500">Phone numbers and office details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="cell_phone">Cell Phone</Label>
