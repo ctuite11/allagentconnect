@@ -424,10 +424,9 @@ const ClientNeedsDashboard = () => {
             <p className="text-zinc-500 text-sm">
               You have unsaved changes
             </p>
-            <button 
+            <Button 
               onClick={handleSavePreferences}
               disabled={saving}
-              className={aacStyles.primaryButton}
             >
               {saving ? (
                 <span className="flex items-center gap-2">
