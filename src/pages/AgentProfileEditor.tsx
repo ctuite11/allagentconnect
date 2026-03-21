@@ -731,6 +731,16 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 <CardDescription className="text-zinc-500">Phone numbers and office details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="cell_phone">Cell Phone</Label>
