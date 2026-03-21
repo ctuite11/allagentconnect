@@ -6,7 +6,7 @@ import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MapPin, Building2, CheckCircle2, Shield, Send, MessageSquare, UserPlus, Check } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import AACMonogram from "@/components/ui/AACMonogram";
+import { supabase } from "@/integrations/supabase/client";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
