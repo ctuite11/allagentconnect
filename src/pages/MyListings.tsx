@@ -282,6 +282,8 @@ function MyListingsView({
     }
   };
 
+  const [sortKey, setSortKey] = useState<"date" | "dom" | "price" | "status">("date");
+
   const filteredListings = useMemo(() => {
     let result = selectedStatuses.size === 0 
       ? listings 
@@ -298,10 +300,25 @@ function MyListingsView({
       );
     }
     
-    // Sort newest first
-    result.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+    // Sort
+    result = [...result].sort((a, b) => {
+      switch (sortKey) {
+        case "dom": {
+          const domA = a.list_date ? Math.floor((Date.now() - new Date(a.list_date).getTime()) / 86400000) : 0;
+          const domB = b.list_date ? Math.floor((Date.now() - new Date(b.list_date).getTime()) / 86400000) : 0;
+          return domB - domA;
+        }
+        case "price":
+          return (b.price ?? 0) - (a.price ?? 0);
+        case "status":
+          return (a.status ?? "").localeCompare(b.status ?? "");
+        case "date":
+        default:
+          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+      }
+    });
     return result;
-  }, [listings, selectedStatuses, searchQuery]);
+  }, [listings, selectedStatuses, searchQuery, sortKey]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -393,10 +410,10 @@ function MyListingsView({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem className="cursor-pointer text-sm">Date (Newest)</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm">DOM</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm">Price</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm">Status</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("date")}>Date (Newest){sortKey === "date" && " ✓"}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("dom")}>DOM{sortKey === "dom" && " ✓"}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("price")}>Price{sortKey === "price" && " ✓"}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("status")}>Status{sortKey === "status" && " ✓"}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
