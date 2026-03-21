@@ -50,6 +50,7 @@ interface AgentProfileHeaderProps {
 
 const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const backgroundType = agent.header_background_type || "color";
   const backgroundValue = agent.header_background_value || "directconnect-blue";
