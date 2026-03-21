@@ -360,7 +360,7 @@ function MyListingsView({
       <div className="mb-4 flex items-center gap-3">
         <Button 
           onClick={() => onNewListing("new")} 
-          className="gap-2 bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
+          className="gap-2"
         >
           <Plus className="h-4 w-4" />
           New Listing
@@ -1109,7 +1109,6 @@ const MyListings = () => {
           </p>
           <Button 
             onClick={() => handleNewListing("new")} 
-            className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300 font-display font-medium tracking-wide"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create New Listing

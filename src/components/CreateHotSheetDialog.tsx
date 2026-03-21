@@ -1040,7 +1040,7 @@ export function CreateHotSheetDialog({
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                   className="shadow-sm"
                     size="sm"
                     onClick={() => setShowClientPicker(true)}
                   >
@@ -1050,7 +1050,7 @@ export function CreateHotSheetDialog({
                   {selectedClients.length > 0 && (
                     <Button
                       type="button"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                      className="shadow-sm"
                       size="sm"
                       onClick={() => setShowClientPicker(true)}
                     >
@@ -1093,7 +1093,7 @@ export function CreateHotSheetDialog({
                   <p>Add a client to receive Hot Sheet matches by email.</p>
                   <Button
                     type="button"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm mt-2"
+                    className="shadow-sm mt-2"
                     size="sm"
                     onClick={() => setShowClientPicker(true)}
                   >
@@ -1446,7 +1446,7 @@ export function CreateHotSheetDialog({
                             <Button 
                               type="button" 
                               onClick={handleAddMultipleTowns}
-                              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 text-sm"
+                              className="px-4 text-sm"
                             >
                               Add
                             </Button>
@@ -1825,7 +1825,7 @@ export function CreateHotSheetDialog({
             <Button 
               onClick={handleValidateAndShowConfirmation} 
               disabled={saving}
-              className="min-w-[180px] bg-black hover:bg-zinc-900 text-emerald-400 font-display font-medium tracking-tight rounded-full px-5 shadow-sm hover:shadow-[0_8px_24px_rgba(16,185,129,0.25)] transition-all"
+              className="min-w-[180px]"
             >
               {saving ? (
                 <>
@@ -1902,7 +1902,7 @@ export function CreateHotSheetDialog({
 
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white">
+            <AlertDialogAction onClick={handleCreate}>
               Confirm & Create
             </AlertDialogAction>
           </AlertDialogFooter>

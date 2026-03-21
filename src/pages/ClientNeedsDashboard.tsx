@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { PageHeader } from "@/components/ui/page-header";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
@@ -424,10 +425,9 @@ const ClientNeedsDashboard = () => {
             <p className="text-zinc-500 text-sm">
               You have unsaved changes
             </p>
-            <button 
+            <Button 
               onClick={handleSavePreferences}
               disabled={saving}
-              className={aacStyles.primaryButton}
             >
               {saving ? (
                 <span className="flex items-center gap-2">
@@ -437,7 +437,7 @@ const ClientNeedsDashboard = () => {
               ) : (
                 "Save Preferences"
               )}
-            </button>
+            </Button>
           </div>
         </div>
       )}

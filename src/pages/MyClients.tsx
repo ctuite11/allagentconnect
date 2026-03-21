@@ -546,8 +546,8 @@ const MyClients = () => {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleAddClient}>
-                  <Plus className="h-4 w-4 mr-2 text-emerald-400" />
+                <Button onClick={handleAddClient}>
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Contact
                 </Button>
               </DialogTrigger>
@@ -641,7 +641,7 @@ const MyClients = () => {
                     <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <Button type="submit" disabled={saving}>
                       {saving ? "Saving..." : editingClient ? "Update" : "Add Contact"}
                     </Button>
                   </div>
@@ -654,23 +654,23 @@ const MyClients = () => {
                 {clients.length > 0 && (
                   <>
                     {selectedClients.size > 0 && (
-                      <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleBulkEmail}>
-                        <Send className="h-4 w-4 mr-2 text-emerald-400" />
+                      <Button onClick={handleBulkEmail}>
+                        <Send className="h-4 w-4 mr-2" />
                         Send Email ({selectedClients.size})
                       </Button>
                     )}
-                    <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setAnalyticsDialogOpen(true)}>
-                      <Mail className="h-4 w-4 mr-2 text-blue-500" />
+                    <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
+                      <Mail className="h-4 w-4 mr-2 text-primary" />
                       Email Analytics
                     </Button>
-                    <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={handleExportCSV}>
-                      <Download className="h-4 w-4 mr-2 text-blue-500" />
+                    <Button variant="outline" onClick={handleExportCSV}>
+                      <Download className="h-4 w-4 mr-2 text-primary" />
                       Export CSV
                     </Button>
                   </>
                 )}
-                <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2 text-blue-500" />
+                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2 text-primary" />
                   Import CSV
                 </Button>
               </div>
@@ -680,13 +680,13 @@ const MyClients = () => {
           {clients.length === 0 ? (
             <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-8">
               <div className="text-center py-4">
-                  <User className="h-12 w-12 mx-auto mb-3 text-blue-500" />
+                  <User className="h-12 w-12 mx-auto mb-3 text-primary" />
                   <h3 className="text-lg font-semibold text-zinc-900 mb-1">No contacts yet</h3>
                   <p className="text-sm text-zinc-600 mb-5">
                     Add your first contact to start managing their property search
                   </p>
-                  <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleAddClient}>
-                    <Plus className="h-4 w-4 mr-2 text-emerald-400" />
+                  <Button onClick={handleAddClient}>
+                    <Plus className="h-4 w-4 mr-2" />
                     Add First Contact
                   </Button>
               </div>
