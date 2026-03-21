@@ -37,6 +37,7 @@ interface AgentMarketplaceCardProps {
 
 const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const fullName = `${agent.first_name} ${agent.last_name}`;
   
