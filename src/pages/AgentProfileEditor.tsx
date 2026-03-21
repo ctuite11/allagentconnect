@@ -701,22 +701,21 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                   />
                 </div>
                 <div>
-                  <Label htmlFor="team_name">Team / Company Name</Label>
+                  <Label htmlFor="team_name">Team Name</Label>
                   <Input
                     id="team_name"
-                    placeholder="Your Team or Company"
+                    placeholder="Your Team Name"
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="company_name">Brokerage / Company Name</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="company_name"
+                    placeholder="Your Brokerage or Company"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
                   />
                 </div>
               </CardContent>

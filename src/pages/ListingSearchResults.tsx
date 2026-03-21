@@ -286,7 +286,22 @@ const ListingSearchResults = () => {
                 )}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-zinc-500">Sort:</span>
-                  <Select value={sortBy} onValueChange={setSortBy}>
+                  <Select
+                    value={`${sortColumn}_${sortDirection}`}
+                    onValueChange={(value) => {
+                      const map: Record<string, [string, "asc" | "desc"]> = {
+                        date_new: ["list_date", "desc"],
+                        date_old: ["list_date", "asc"],
+                        price_high: ["price", "desc"],
+                        price_low: ["price", "asc"],
+                        sqft: ["square_feet", "desc"],
+                        beds: ["bedrooms", "desc"],
+                      };
+                      const [col, dir] = map[value] ?? ["list_date", "desc"];
+                      setSortColumn(col);
+                      setSortDirection(dir);
+                    }}
+                  >
                     <SelectTrigger className="w-[150px] h-9 text-sm rounded-lg border-zinc-300 bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400">
                       <SelectValue />
                     </SelectTrigger>
