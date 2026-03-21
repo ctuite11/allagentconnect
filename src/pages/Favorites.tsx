@@ -358,7 +358,8 @@ const Favorites = () => {
         </div>
       </main>
 
-      <Footer />
+      {/* Footer only on public client route, not inside agent app shell */}
+      {location.pathname.startsWith("/client") && <Footer />}
     </div>
   );
 };

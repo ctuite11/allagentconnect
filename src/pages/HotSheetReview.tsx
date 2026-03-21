@@ -1117,7 +1117,6 @@ if (comments && comments.length > 0) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Footer />
     </div>
   );
 };

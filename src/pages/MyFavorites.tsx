@@ -375,8 +375,6 @@ const MyFavorites = () => {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
