@@ -378,7 +378,7 @@ const AgentMatch = () => {
                 <div
                   key={n}
                   className={`h-1.5 flex-1 rounded-full transition-colors ${
-                    n <= stepNumber ? "bg-[#0E56F5]" : "bg-zinc-200"
+                    n <= stepNumber ? "bg-primary" : "bg-zinc-200"
                   }`}
                 />
               ))}
@@ -659,7 +659,7 @@ const AgentMatch = () => {
 
             <Button
               onClick={handleNextStep}
-              className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9] text-white"
+              className="w-full"
             >
               Continue to Photos
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -739,7 +739,7 @@ const AgentMatch = () => {
 
             <Button
               onClick={handleNextStep}
-              className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9] text-white"
+              className="w-full"
             >
               Continue to Confirmation
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -880,7 +880,7 @@ const AgentMatch = () => {
 
             <Button
               onClick={handleNextStep}
-              className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9] text-white"
+              className="w-full"
               disabled={!confirmations.notUnderContract || !confirmations.ownerOrAuthorized || !confirmations.sellerVerificationConsent || isLoading}
             >
               {isLoading ? "Finding Matches..." : "Find My Matches"}
