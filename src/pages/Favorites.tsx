@@ -38,6 +38,7 @@ interface Favorite {
 
 const Favorites = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
