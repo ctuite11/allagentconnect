@@ -3761,6 +3761,21 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_presence: {
+        Row: {
+          last_seen_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          last_seen_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          last_seen_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       clients_with_relationship_status: {
         Row: {
           agent_id: string | null
