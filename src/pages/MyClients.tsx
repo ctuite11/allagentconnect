@@ -1123,7 +1123,7 @@ const MyClients = () => {
       <ImportClientsDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        agentId={user?.id}
+        agentId={user?.id || ""}
         onImportComplete={() => {
           if (user) fetchClients(user.id);
         }}

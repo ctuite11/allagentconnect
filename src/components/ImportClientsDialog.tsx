@@ -8,12 +8,40 @@ import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "luc
 import { toast } from "sonner";
 import { z } from "zod";
 
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current.trim());
+  return result;
+}
+
 const clientRowSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
-  client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other', '']).optional(),
+  client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other']).nullable().optional(),
 });
 
 interface ImportClientsDialogProps {
@@ -45,10 +73,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length === 0) return [];
 
-    // Parse header
-    const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
-    
-    // Find column indices
+    const header = parseCsvLine(lines[0]).map(h => h.toLowerCase());
+
     const firstNameIdx = header.findIndex(h => h.includes('first') && h.includes('name'));
     const lastNameIdx = header.findIndex(h => h.includes('last') && h.includes('name'));
     const emailIdx = header.findIndex(h => h.includes('email'));
@@ -62,16 +88,21 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const clients: ParsedClient[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      const values = parseCsvLine(lines[i]);
       
-      if (values.length < 3) continue; // Skip invalid rows
-      
+      if (values.length < 3) continue;
+
+      const rawClientType = clientTypeIdx !== -1 ? values[clientTypeIdx] : '';
+      const normalizedClientType = rawClientType?.trim()
+        ? rawClientType.trim().toLowerCase()
+        : null;
+
       clients.push({
         first_name: values[firstNameIdx] || '',
         last_name: values[lastNameIdx] || '',
         email: values[emailIdx] || '',
         phone: phoneIdx !== -1 ? values[phoneIdx] : '',
-        client_type: clientTypeIdx !== -1 ? values[clientTypeIdx] : '',
+        client_type: normalizedClientType,
       });
     }
 
@@ -107,6 +138,11 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (!agentId) {
+      toast.error("Please wait a moment and try importing again.");
+      return;
+    }
 
     const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
     
@@ -150,6 +186,11 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   };
 
   const handleImport = async () => {
+    if (!agentId) {
+      toast.error("Please wait a moment and try importing again.");
+      return;
+    }
+
     if (!validationResult?.valid.length) return;
 
     setImporting(true);
@@ -256,7 +297,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                   accept=".csv,text/csv"
                   onChange={handleFileUpload}
                   className="hidden"
-                  disabled={uploading}
+                  disabled={uploading || !agentId}
                 />
               </div>
 
@@ -343,7 +384,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                 </Button>
                 <Button
                   onClick={handleImport}
-                  disabled={importing || validationResult.valid.length === 0}
+                  disabled={importing || !agentId || validationResult.valid.length === 0}
                 >
                   {importing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Import {validationResult.valid.length} Client(s)
