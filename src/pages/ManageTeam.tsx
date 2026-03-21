@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { Users, Plus, Trash2, Upload, X, ExternalLink, GripVertical } from "lucide-react";
