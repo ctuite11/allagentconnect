@@ -5,6 +5,7 @@ interface WelcomeHeaderProps {
   lastName: string;
   headshotUrl: string | null;
   aacId?: string;
+  userId?: string;
 }
 
 export function WelcomeHeader({ firstName, lastName, headshotUrl, aacId }: WelcomeHeaderProps) {
