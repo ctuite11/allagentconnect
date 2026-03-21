@@ -42,7 +42,7 @@ const ListingSearchResults = () => {
 
   // Command bar state (lifted from ListingResultsTable)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState("date_new");
+  
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
 
