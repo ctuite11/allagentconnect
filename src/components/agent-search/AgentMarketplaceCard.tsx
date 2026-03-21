@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MapPin, Building2, CheckCircle2, Shield, Send, MessageSquare } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AACMonogram from "@/components/ui/AACMonogram";
 
 
@@ -37,6 +37,7 @@ interface AgentMarketplaceCardProps {
 
 const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const fullName = `${agent.first_name} ${agent.last_name}`;
   
@@ -92,7 +93,7 @@ const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
           <Button
             className="flex-1 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white gap-1.5"
             size="sm"
-            onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`)}
+            onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`, { state: { from: location.pathname } })}
           >
             <Send className="h-3.5 w-3.5" />
             Refer Client
@@ -103,7 +104,7 @@ const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
             className="flex-1 gap-1.5"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/agent/${agent.aac_id || agent.id}`);
+              navigate(`/agent/${agent.aac_id || agent.id}`, { state: { from: location.pathname } });
             }}
           >
             <MessageSquare className="h-3.5 w-3.5" />
