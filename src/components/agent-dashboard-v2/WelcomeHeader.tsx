@@ -8,17 +8,19 @@ interface WelcomeHeaderProps {
   userId?: string;
 }
 
-export function WelcomeHeader({ firstName, lastName, headshotUrl, aacId }: WelcomeHeaderProps) {
-  const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "AG";
+export function WelcomeHeader({ firstName, lastName, headshotUrl, aacId, userId }: WelcomeHeaderProps) {
+  const fullName = `${firstName} ${lastName}`.trim();
 
   return (
     <div className="flex items-center gap-4">
-      <Avatar className="h-14 w-14 border-2 border-border">
-        <AvatarImage src={headshotUrl ?? undefined} alt={`${firstName} ${lastName}`} />
-        <AvatarFallback className="bg-muted text-muted-foreground text-lg font-semibold">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
+      <AgentAvatar
+        name={fullName}
+        headshotUrl={headshotUrl}
+        userId={userId}
+        size="xl"
+        avatarClassName="h-14 w-14 border-2 border-border"
+        fallbackClassName="bg-muted text-muted-foreground"
+      />
       <div>
         <h2 className="text-xl font-semibold text-foreground">
           Welcome back, <span className="text-primary">{firstName}</span>.

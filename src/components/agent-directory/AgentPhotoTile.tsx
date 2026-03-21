@@ -31,7 +31,7 @@ function titleCase(s: string) {
     .join(" ");
 }
 
-export default function AgentPhotoTile({ agent, onClick }: Props) {
+export default function AgentPhotoTile({ agent, onClick, isOnline }: Props) {
   const rawName =
     [agent.first_name, agent.last_name].filter(Boolean).join(" ") || "Agent";
   const fullName = titleCase(rawName);
@@ -47,7 +47,7 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
       {/* Card container */}
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
         {/* PHOTO - 3:4 portrait ratio */}
-        <div className="aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
@@ -63,6 +63,9 @@ export default function AgentPhotoTile({ agent, onClick }: Props) {
                 <span className="text-zinc-400">Connect</span>
               </span>
             </div>
+          )}
+          {isOnline && (
+            <span className="absolute bottom-2 right-2 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
           )}
         </div>
 

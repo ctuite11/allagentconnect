@@ -36,7 +36,7 @@ interface AgentMarketplaceCardProps {
 }
 
 
-const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
+const AgentMarketplaceCard = ({ agent, isOnline }: AgentMarketplaceCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -55,12 +55,15 @@ const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
       <div className="p-5">
         {/* Photo + Name Row */}
         <div className="flex items-center gap-4 mb-4">
-          <Avatar className="h-16 w-16 rounded-xl overflow-hidden border-2 border-border shadow-sm ring-2 ring-border ring-offset-2 ring-offset-background">
-            <AvatarImage src={agent.headshot_url} alt={fullName} className="rounded-xl" />
-            <AvatarFallback className="bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-xl flex items-center justify-center p-2.5">
-              <AACMonogram className="w-8 h-8 text-zinc-400" />
-            </AvatarFallback>
-          </Avatar>
+          <AgentAvatar
+            name={fullName}
+            headshotUrl={agent.headshot_url ?? null}
+            size="xl"
+            isOnline={isOnline}
+            avatarClassName="rounded-xl border-2 border-border shadow-sm ring-2 ring-border ring-offset-2 ring-offset-background"
+            fallbackContent={<AACMonogram className="w-8 h-8 text-zinc-400" />}
+            fallbackClassName="bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-xl"
+          />
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-lg text-foreground leading-tight truncate">
               {fullName}

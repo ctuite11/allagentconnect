@@ -43,14 +43,15 @@ export function IDXAgentInfo({ listing }: IDXAgentInfoProps) {
       <CardContent className="space-y-4">
         {/* Agent info row */}
         <div className="flex items-start gap-3">
-          <Avatar className="h-12 w-12 border border-neutral-200">
-            {agentInfo.agentPhoto ? (
-              <AvatarImage src={agentInfo.agentPhoto} alt={agentInfo.agentName || "Agent"} />
-            ) : null}
-            <AvatarFallback className="bg-neutral-100 text-neutral-600">
-              <User className="h-5 w-5" />
-            </AvatarFallback>
-          </Avatar>
+          <AgentAvatar
+            name={agentInfo.agentName || "Agent"}
+            headshotUrl={agentInfo.agentPhoto ?? null}
+            size="lg"
+            showPresence={false}
+            avatarClassName="h-12 w-12 border border-neutral-200"
+            fallbackClassName="bg-neutral-100 text-neutral-600"
+            fallbackContent={<User className="h-5 w-5" />}
+          />
           <div className="flex-1 min-w-0">
             {agentInfo.agentName && (
               <p className="font-medium text-neutral-900 truncate">
