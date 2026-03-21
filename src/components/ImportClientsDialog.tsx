@@ -384,7 +384,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                 </Button>
                 <Button
                   onClick={handleImport}
-                  disabled={importing || validationResult.valid.length === 0}
+                  disabled={importing || !agentId || validationResult.valid.length === 0}
                 >
                   {importing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Import {validationResult.valid.length} Client(s)
