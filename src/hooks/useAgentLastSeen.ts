@@ -26,7 +26,7 @@ export function useAgentLastSeen(userId: string | undefined): LastSeenResult {
 
     const fetch = async () => {
       const { data } = await supabase
-        .from("agent_settings")
+        .from("agent_presence")
         .select("last_seen_at")
         .eq("user_id", userId)
         .maybeSingle();
