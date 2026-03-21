@@ -94,6 +94,7 @@ const AgentProfileEditor = () => {
   const [officeState, setOfficeState] = useState("");
   const [officeZip, setOfficeZip] = useState("");
   const [teamName, setTeamName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [headshotUrl, setHeadshotUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
