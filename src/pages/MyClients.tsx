@@ -680,7 +680,7 @@ const MyClients = () => {
           {clients.length === 0 ? (
             <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-8">
               <div className="text-center py-4">
-                  <User className="h-12 w-12 mx-auto mb-3 text-blue-500" />
+                  <User className="h-12 w-12 mx-auto mb-3 text-primary" />
                   <h3 className="text-lg font-semibold text-zinc-900 mb-1">No contacts yet</h3>
                   <p className="text-sm text-zinc-600 mb-5">
                     Add your first contact to start managing their property search
