@@ -49,8 +49,6 @@ export function IDXAgentInfo({ listing }: IDXAgentInfoProps) {
             size="lg"
             showPresence={false}
             avatarClassName="h-12 w-12 border border-neutral-200"
-            fallbackClassName="bg-neutral-100 text-neutral-600"
-            fallbackContent={<User className="h-5 w-5" />}
           />
           <div className="flex-1 min-w-0">
             {agentInfo.agentName && (

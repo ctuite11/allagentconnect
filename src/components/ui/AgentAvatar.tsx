@@ -1,6 +1,7 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { cn } from "@/lib/utils";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 interface AgentAvatarProps {
   name: string;
@@ -10,26 +11,24 @@ interface AgentAvatarProps {
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   showPresence?: boolean;
-  /** Optional custom fallback content (e.g. icon) instead of initials */
-  fallbackContent?: React.ReactNode;
   /** Extra classes for the Avatar primitive itself */
   avatarClassName?: string;
   /** Extra classes for the AvatarFallback */
   fallbackClassName?: string;
 }
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "?";
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 const sizeClasses = {
-  sm: "h-8 w-8 text-[11px]",
-  md: "h-9 w-9 text-[12px]",
-  lg: "h-10 w-10 text-[13px]",
-  xl: "h-16 w-16 text-lg",
+  sm: "h-8 w-8",
+  md: "h-9 w-9",
+  lg: "h-10 w-10",
+  xl: "h-16 w-16",
+};
+
+const logoSizeClasses = {
+  sm: "w-4 h-4",
+  md: "w-4 h-4",
+  lg: "w-5 h-5",
+  xl: "w-8 h-8",
 };
 
 const dotSizeClasses = {
@@ -47,7 +46,6 @@ export function AgentAvatar({
   size = "md",
   className,
   showPresence = true,
-  fallbackContent,
   avatarClassName,
   fallbackClassName,
 }: AgentAvatarProps) {
@@ -64,8 +62,8 @@ export function AgentAvatar({
         {headshotUrl && (
           <AvatarImage src={headshotUrl} alt={name} className="object-cover" />
         )}
-        <AvatarFallback className={cn("bg-primary text-white font-semibold", fallbackClassName)}>
-          {fallbackContent ?? getInitials(name)}
+        <AvatarFallback className={cn("bg-primary", fallbackClassName)}>
+          <AACMonogram className={cn(logoSizeClasses[size], "text-white")} />
         </AvatarFallback>
       </Avatar>
       {showDot && (
