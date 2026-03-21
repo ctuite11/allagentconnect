@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const PAGE_SIZE = 24;
+
 const AgentSearch = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -21,16 +23,21 @@ const AgentSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedState, setSelectedState] = useState<string>("");
   const [selectedCompany, setSelectedCompany] = useState<string>("All");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchAgents();
   }, []);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedState, selectedCompany]);
+
   const fetchAgents = async () => {
     try {
       setLoading(true);
       
-      // Get verified agent IDs (already excludes hidden agents via the RPC)
       const { data: verifiedIds, error: verifiedError } = await supabase
         .rpc("get_verified_agent_ids");
       
@@ -38,7 +45,6 @@ const AgentSearch = () => {
       
       const verifiedIdSet = new Set((verifiedIds || []).map((r: { user_id: string }) => r.user_id));
       
-      // Fetch agents with county preferences
       const { data: agentData, error: agentError } = await supabase
         .from("agent_profiles")
         .select(`
@@ -53,7 +59,6 @@ const AgentSearch = () => {
 
       if (agentError) throw agentError;
 
-      // Filter to only verified (and not hidden) agents
       const visibleAgents = (agentData || []).filter(
         (agent) => verifiedIdSet.has(agent.id)
       );
@@ -72,7 +77,6 @@ const AgentSearch = () => {
     setSelectedCompany("All");
   };
 
-  // Get unique companies from agents
   const companies = useMemo(() => {
     return Array.from(
       new Set(
@@ -83,16 +87,13 @@ const AgentSearch = () => {
     ).sort((a, b) => a.localeCompare(b));
   }, [agents]);
 
-  // Get unique states from agents
   const uniqueStates = [...new Set(
     agents.flatMap(agent => 
       agent.agent_county_preferences?.map((pref: any) => pref.counties?.state).filter(Boolean) || []
     )
   )].sort();
 
-  // Filter agents
   const filteredAgents = agents.filter((agent) => {
-    // Text search (name, city, brokerage)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const matchesText =
@@ -101,27 +102,44 @@ const AgentSearch = () => {
         agent.company?.toLowerCase().includes(query) ||
         agent.office_name?.toLowerCase().includes(query) ||
         agent.office_city?.toLowerCase().includes(query);
-
       if (!matchesText) return false;
     }
-
-    // State filter
     if (selectedState) {
       const agentStates = agent.agent_county_preferences?.map((pref: any) => pref.counties?.state) || [];
       if (!agentStates.includes(selectedState)) return false;
     }
-
-    // Company filter
     if (selectedCompany !== "All") {
       const co = (agent.company || agent.office_name || "").trim();
       if (co !== selectedCompany) return false;
     }
-
     return true;
   });
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredAgents.length / PAGE_SIZE));
+  const paginatedAgents = filteredAgents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Copy protection handlers
+  const blockEvent = useCallback((e: React.ClipboardEvent | React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const blockKeyboard = useCallback((e: React.KeyboardEvent) => {
+    // Block Cmd/Ctrl+A (select all) and Cmd/Ctrl+C (copy)
+    if ((e.metaKey || e.ctrlKey) && (e.key === "a" || e.key === "A" || e.key === "c" || e.key === "C")) {
+      e.preventDefault();
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div
+      className="min-h-screen flex flex-col bg-background select-none"
+      onCopy={blockEvent}
+      onCut={blockEvent}
+      onPaste={blockEvent}
+      onContextMenu={blockEvent}
+      onKeyDown={blockKeyboard}
+    >
       <main className="flex-1">
         {/* Header */}
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -145,7 +163,6 @@ const AgentSearch = () => {
               hasActiveFilters={!!(searchQuery || selectedState || selectedCompany !== "All")}
             />
             
-            {/* Company Filter */}
             <Select value={selectedCompany} onValueChange={setSelectedCompany}>
               <SelectTrigger className="w-[200px] bg-white border-zinc-200">
                 <SelectValue placeholder="Company" />
@@ -171,17 +188,42 @@ const AgentSearch = () => {
           </div>
         </section>
 
-        {/* Agent Grid */}
+        {/* Agent Grid — paginated */}
         <section className="py-6">
           <div className="max-w-6xl mx-auto px-4">
             <AgentMarketplaceGrid
-              agents={filteredAgents}
+              agents={paginatedAgents}
               loading={loading}
             />
+
+            {/* Pagination controls */}
+            {!loading && totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground px-3">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Secondary CTA - Register as Agent (below grid, smaller, not competing) */}
+        {/* Secondary CTA */}
         <section className="py-8 border-t border-border">
           <div className="max-w-6xl mx-auto px-4 text-center">
             <p className="text-sm text-muted-foreground mb-3">
