@@ -546,8 +546,8 @@ const MyClients = () => {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleAddClient}>
-                  <Plus className="h-4 w-4 mr-2 text-emerald-400" />
+                <Button onClick={handleAddClient}>
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Contact
                 </Button>
               </DialogTrigger>
