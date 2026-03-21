@@ -378,7 +378,7 @@ const AgentMatch = () => {
                 <div
                   key={n}
                   className={`h-1.5 flex-1 rounded-full transition-colors ${
-                    n <= stepNumber ? "bg-[#0E56F5]" : "bg-zinc-200"
+                    n <= stepNumber ? "bg-primary" : "bg-zinc-200"
                   }`}
                 />
               ))}
