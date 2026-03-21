@@ -420,15 +420,13 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <Avatar className="w-14 h-14">
-                {stickyAgent.headshot_url ? (
-                  <AvatarImage src={stickyAgent.headshot_url} alt={`${stickyAgent.first_name} ${stickyAgent.last_name}`} />
-                ) : (
-                  <AvatarFallback className="text-lg">
-                    {stickyAgent.first_name[0]}{stickyAgent.last_name[0]}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+               <AgentAvatar
+                  name={`${stickyAgent.first_name} ${stickyAgent.last_name}`}
+                  headshotUrl={stickyAgent.headshot_url}
+                  userId={stickyAgent.id}
+                  size="xl"
+                  avatarClassName="w-14 h-14"
+                />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-lg">
                   {stickyAgent.first_name} {stickyAgent.last_name}
