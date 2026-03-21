@@ -390,15 +390,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
-                  {filteredAgents.map((agent) => (
-                    <AgentPhotoTile
-                      key={agent.id}
-                      agent={agent}
-                      onClick={handleViewProfile}
-                    />
-                  ))}
-                </div>
+                <AgentPhotoTileGrid agents={filteredAgents} onViewProfile={handleViewProfile} />
 
                 {/* Pagination Controls */}
                 {totalCount > PAGE_SIZE && (
