@@ -1446,7 +1446,7 @@ export function CreateHotSheetDialog({
                             <Button 
                               type="button" 
                               onClick={handleAddMultipleTowns}
-                              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 text-sm"
+                              className="px-4 text-sm"
                             >
                               Add
                             </Button>
