@@ -446,7 +446,7 @@ const ManageTeam = () => {
             <PageHeader 
               title={team ? "Manage Team" : "Create Your Team"}
               subtitle={team ? "Update your team profile and manage members" : "Create a team profile to collaborate with other agents"}
-              backTo="/agent-dashboard"
+              backTo="/agent-profile-editor"
             />
             <div className="flex gap-2">
               {team && (
