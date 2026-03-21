@@ -1356,7 +1356,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Button 
               onClick={handleSaveProfile} 
               disabled={saving} 
-              className="gap-2 bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
+              className="gap-2"
             >
               {saving ? "Saving..." : "Save Changes"}
             </Button>

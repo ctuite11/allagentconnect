@@ -436,7 +436,7 @@ const ClientNeedsDashboard = () => {
               ) : (
                 "Save Preferences"
               )}
-            </button>
+            </Button>
           </div>
         </div>
       )}

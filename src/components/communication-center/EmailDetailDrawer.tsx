@@ -175,7 +175,7 @@ export function EmailDetailDrawer({
             {onResend && (
               <Button 
                 onClick={onResend}
-                className="w-full justify-start bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white"
+                className="w-full justify-start"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Send Similar Email

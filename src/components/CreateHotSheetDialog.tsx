@@ -1902,7 +1902,7 @@ export function CreateHotSheetDialog({
 
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white">
+            <AlertDialogAction onClick={handleCreate}>
               Confirm & Create
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -685,8 +685,8 @@ const MyClients = () => {
                   <p className="text-sm text-zinc-600 mb-5">
                     Add your first contact to start managing their property search
                   </p>
-                  <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleAddClient}>
-                    <Plus className="h-4 w-4 mr-2 text-emerald-400" />
+                  <Button onClick={handleAddClient}>
+                    <Plus className="h-4 w-4 mr-2" />
                     Add First Contact
                   </Button>
               </div>

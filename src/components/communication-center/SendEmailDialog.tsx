@@ -561,7 +561,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             <Button 
               onClick={handleSend} 
               disabled={sending || !subject.trim() || !message.trim() || !state}
-              className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 text-white rounded-lg"
+              className="rounded-lg"
             >
               {sending ? (
                 <>

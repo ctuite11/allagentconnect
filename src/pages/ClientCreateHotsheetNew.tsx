@@ -147,9 +147,9 @@ export default function ClientCreateHotsheetNew() {
             </div>
 
             <div className="flex gap-4">
-              <button type="submit" disabled={loading || !hasActiveAgent} className={aacStyles.primaryButton}>
+              <Button type="submit" disabled={loading || !hasActiveAgent}>
                 {loading ? "Creating..." : "Create Saved Search"}
-              </button>
+              </Button>
               <button
                 type="button"
                 onClick={() => navigate("/client/dashboard")}
