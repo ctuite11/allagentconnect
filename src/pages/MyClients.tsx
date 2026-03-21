@@ -654,8 +654,8 @@ const MyClients = () => {
                 {clients.length > 0 && (
                   <>
                     {selectedClients.size > 0 && (
-                      <Button className="bg-black hover:bg-zinc-900 text-emerald-400 hover:text-emerald-300" onClick={handleBulkEmail}>
-                        <Send className="h-4 w-4 mr-2 text-emerald-400" />
+                      <Button onClick={handleBulkEmail}>
+                        <Send className="h-4 w-4 mr-2" />
                         Send Email ({selectedClients.size})
                       </Button>
                     )}
