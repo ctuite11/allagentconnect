@@ -1229,7 +1229,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                  <MessageSquare className="h-5 w-5 text-primary" />
                   Testimonials
                 </CardTitle>
                 <CardDescription>Add client testimonials to build trust</CardDescription>
