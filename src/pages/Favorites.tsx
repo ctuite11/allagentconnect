@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { PageTitle } from "@/components/ui/page-title";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +38,7 @@ interface Favorite {
 
 const Favorites = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -358,7 +359,8 @@ const Favorites = () => {
         </div>
       </main>
 
-      <Footer />
+      {/* Footer only on public client route, not inside agent app shell */}
+      {location.pathname.startsWith("/client") && <Footer />}
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -1117,7 +1116,6 @@ if (comments && comments.length > 0) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Footer />
     </div>
   );
 };
