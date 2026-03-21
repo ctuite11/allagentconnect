@@ -1,36 +1,41 @@
 
-Fix the Success Hub communication entry points back to Buyer Needs and leave everything else untouched.
 
-## What I found
-There are two dashboard communication components in the codebase, and both are currently pointing to the wrong route:
-- `src/components/success-hub/DashboardCommunications.tsx`
-  - header CTA goes to `/communications`
-- `src/components/agent-dashboard-v2/CommunicationsPanel.tsx`
-  - header CTA goes to `/communications`
-  - each conversation row also goes to `/communications`
+# Standardize Primary CTA Buttons to AAC Blue + White Text
 
-Your backend/app routing already confirms the intended Buyer Needs route is `/client-needs`:
-- `src/App.tsx` has `/client-needs`
-- `src/App.tsx` also has `/communication-center` redirecting to `/client-needs`
-- sidebar Comms item already points to `/client-needs`
+## Summary
+Align `--primary` token to AAC blue, then remove hardcoded blue hex values from CTA surfaces. 7 files total.
 
-## Plan
-1. Update `src/components/success-hub/DashboardCommunications.tsx`
-   - change the “Open Comm Center” button target from `/communications` to `/client-needs`
+## Steps
 
-2. Update `src/components/agent-dashboard-v2/CommunicationsPanel.tsx`
-   - change the “Open Inbox” button target from `/communications` to `/client-needs`
-   - change each conversation row click target from `/communications` to `/client-needs`
+### 1. Align `--primary` to AAC blue
+**File:** `src/index.css`
+- Line 77: `--primary: 215 95% 55%` → `--primary: 221 92% 51%`
+- Line 160: `--primary: 215 100% 55%` → `--primary: 221 92% 51%`
 
-## Scope
-Only these route targets will be changed.
-I will not touch:
-- Messages page
-- Sidebar
-- layout
-- unread logic
-- visual styling
-- any other communication or messaging behavior
+### 2. Remove hardcoded `#0E56F5` from CTA buttons
+- **`src/pages/AgentMatch.tsx`** — Remove `bg-[#0E56F5] hover:bg-[#0D4AD9]` from 3 CTA buttons (use default Button variant). Normalize progress dots → `bg-primary`.
+- **`src/pages/SellerListingDetail.tsx`** — Remove `bg-[#0E56F5] hover:bg-[#0D4AD9]` from Sign In button.
+- **`src/components/agent-match/AgentMatchAuthDialog.tsx`** — Remove `bg-[#0E56F5] hover:bg-[#0D4AD9]` from submit button.
 
-## Result
-From Success Hub, opening the communication center will go to Buyer Needs (`/client-needs`) again, consistently across both dashboard communication components.
+### 3. Replace `#2537ff` drift on homepage
+- **`src/components/home-v2/FinalCTA.tsx`** — Replace `#2537ff` button/border → `bg-aac` with `border-[hsl(var(--aac)/.25)]`.
+- **`src/components/home-v2/FooterV2.tsx`** — Replace `#2537ff` Subscribe button → `bg-aac hover:bg-aac-hover`.
+- **`src/components/home-v2/HeroSection.tsx`** — Replace `#2537ff` glow accent → AAC blue. Preserve blur/opacity effect.
+
+### 4. Not touched
+- Secondary, outline, ghost, destructive variants
+- `bg-blue-*` badges, radio-group indicators, LandingPage badge dot, AgentMatchResultsPanel decorative elements
+- Filters, tabs, chips, pills, button sizing/spacing/radius
+- Files in `design/` directory
+
+## Files Modified
+| File | Change |
+|------|--------|
+| `src/index.css` | `--primary` → `221 92% 51%` (light + dark) |
+| `src/pages/AgentMatch.tsx` | Remove hardcoded CTA blue + normalize dots |
+| `src/pages/SellerListingDetail.tsx` | Remove hardcoded CTA blue |
+| `src/components/agent-match/AgentMatchAuthDialog.tsx` | Remove hardcoded CTA blue |
+| `src/components/home-v2/FinalCTA.tsx` | `#2537ff` → AAC blue |
+| `src/components/home-v2/FooterV2.tsx` | `#2537ff` → AAC blue |
+| `src/components/home-v2/HeroSection.tsx` | `#2537ff` glow → AAC blue |
+
