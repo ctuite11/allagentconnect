@@ -93,7 +93,7 @@ const AgentMarketplaceCard = ({ agent }: AgentMarketplaceCardProps) => {
           <Button
             className="flex-1 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white gap-1.5"
             size="sm"
-            onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`)}
+            onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`, { state: { from: location.pathname } })}
           >
             <Send className="h-3.5 w-3.5" />
             Refer Client
