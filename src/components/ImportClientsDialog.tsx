@@ -297,7 +297,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                   accept=".csv,text/csv"
                   onChange={handleFileUpload}
                   className="hidden"
-                  disabled={uploading}
+                  disabled={uploading || !agentId}
                 />
               </div>
 
