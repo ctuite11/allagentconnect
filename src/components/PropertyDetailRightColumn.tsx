@@ -472,9 +472,14 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         /* Generic fallback — buyer has no sticky agent, still hide listing agent */
         <Card>
           <CardContent className="py-6 text-center space-y-3">
-            <Avatar className="w-14 h-14 mx-auto">
-              <AvatarFallback className="text-lg">?</AvatarFallback>
-            </Avatar>
+            <AgentAvatar
+              name="?"
+              headshotUrl={null}
+              showPresence={false}
+              size="xl"
+              avatarClassName="w-14 h-14"
+              className="mx-auto"
+            />
             <p className="font-semibold text-lg">Need help with this property?</p>
             <p className="text-sm text-muted-foreground">
               Message your agent through the platform for details or to schedule a showing.
