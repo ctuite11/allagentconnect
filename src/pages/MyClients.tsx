@@ -663,8 +663,8 @@ const MyClients = () => {
                       <Mail className="h-4 w-4 mr-2 text-primary" />
                       Email Analytics
                     </Button>
-                    <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={handleExportCSV}>
-                      <Download className="h-4 w-4 mr-2 text-blue-500" />
+                    <Button variant="outline" onClick={handleExportCSV}>
+                      <Download className="h-4 w-4 mr-2 text-primary" />
                       Export CSV
                     </Button>
                   </>
