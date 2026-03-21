@@ -16,7 +16,7 @@ import {
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { getHeaderBackgroundStyle } from "@/components/profile-editor/HeaderBackgroundSelector";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface SocialLinks {
   linkedin?: string;
