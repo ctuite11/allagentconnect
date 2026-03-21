@@ -310,7 +310,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
 
   const handleViewProfile = () => {
     if (userId) {
-      window.open(`/agent/${userId}`, "_blank");
+      navigate(`/agent/${userId}`, { state: { from: '/agent-profile-editor' } });
     }
   };
 
