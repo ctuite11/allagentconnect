@@ -223,22 +223,6 @@ const AgentSearch = () => {
           </div>
         </section>
 
-        {/* Secondary CTA */}
-        <section className="py-8 border-t border-border">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <p className="text-sm text-muted-foreground mb-3">
-              Are you a real estate agent? Showcase your incentives to buyers and sellers.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-neutral-700 border-neutral-300 hover:bg-neutral-50"
-              onClick={() => navigate("/auth?mode=register")}
-            >
-              Register as an Agent
-            </Button>
-          </div>
-        </section>
       </main>
     </div>
   );
