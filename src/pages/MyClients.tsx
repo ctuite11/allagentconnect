@@ -924,6 +924,9 @@ const MyClients = () => {
                       </TableCell>
                       <TableCell className="font-medium">
                         {toTitleCase(client.first_name)} {toTitleCase(client.last_name)}
+                        {(client as any).source === 'network' && (
+                          <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200 text-[10px]">AAC Member</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
