@@ -32,6 +32,7 @@ interface Agent {
 
 interface AgentMarketplaceCardProps {
   agent: Agent;
+  isOnline?: boolean;
 }
 
 
