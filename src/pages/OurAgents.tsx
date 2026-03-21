@@ -346,7 +346,6 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
             <PageHeader
               title="AAC Referral Network"
               subtitle="A private network of vetted agents for referrals, introductions, and trusted collaboration."
-              backTo="/agent-dashboard"
             />
             
             {/* Search Bar - Left Aligned */}
