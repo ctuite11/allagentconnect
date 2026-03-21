@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { PageTitle } from "@/components/ui/page-title";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
