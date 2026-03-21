@@ -153,8 +153,8 @@ const ContactDetailDrawer = ({
         <SheetHeader className="pb-4">
           <div className="flex items-start gap-4">
             <Avatar className="h-14 w-14">
-              <AvatarFallback className="text-base font-semibold bg-zinc-100 text-zinc-700">
-                {initials}
+              <AvatarFallback className="bg-primary">
+                <AACMonogram className="w-7 h-7 text-white" />
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

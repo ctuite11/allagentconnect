@@ -193,8 +193,8 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
                   >
                     <Avatar className="w-16 h-16">
                       <AvatarImage src={agentPhoto} alt={agentName} />
-                      <AvatarFallback className="bg-secondary text-primary text-base">
-                        {agentName?.split(' ').map(n => n[0]).join('') || 'A'}
+                      <AvatarFallback className="bg-primary">
+                        <svg viewBox="0 0 34 34" className="w-8 h-8 text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z"/><path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z"/><path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z"/><path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z"/><path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z"/></svg>
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col min-w-0">

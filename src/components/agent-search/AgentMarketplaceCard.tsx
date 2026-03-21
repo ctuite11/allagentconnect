@@ -114,8 +114,6 @@ const AgentMarketplaceCard = ({ agent, isOnline }: AgentMarketplaceCardProps) =>
             size="xl"
             isOnline={isOnline}
             avatarClassName="rounded-xl border-2 border-border shadow-sm ring-2 ring-border ring-offset-2 ring-offset-background"
-            fallbackContent={<AACMonogram className="w-8 h-8 text-zinc-400" />}
-            fallbackClassName="bg-gradient-to-br from-zinc-100 to-zinc-200 rounded-xl"
           />
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-lg text-foreground leading-tight truncate">
