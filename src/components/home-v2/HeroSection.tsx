@@ -15,7 +15,7 @@ const HeroSection = () => {
       </div>
 
       {/* Blue glow accent */}
-      <div className="absolute top-1/3 left-0 w-[560px] h-[560px] rounded-full bg-[#2537ff] opacity-[0.07] blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/3 left-0 w-[560px] h-[560px] rounded-full bg-aac opacity-[0.07] blur-[140px] pointer-events-none" />
 
       {/* Top access row */}
       <div className="relative z-10 flex items-baseline justify-between w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] pt-12 mb-12">

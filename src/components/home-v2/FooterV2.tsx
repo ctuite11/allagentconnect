@@ -126,7 +126,7 @@ const FooterV2 = () => {
                 className="absolute inset-0 w-full h-full bg-transparent rounded-full pl-5 pr-36 text-white text-base font-['Manrope'] placeholder-[#ffffff50] outline-none"
               />
               <div className="absolute top-[5px] right-[5px] h-[44px]">
-                <Button className="h-full px-5 bg-[#2537ff] rounded-full text-white text-sm font-semibold font-['Manrope'] hover:bg-[#1e2fd4] whitespace-nowrap">
+                <Button className="h-full px-5 bg-aac rounded-full text-white text-sm font-semibold font-['Manrope'] hover:bg-aac-hover whitespace-nowrap">
                   Subscribe
                 </Button>
               </div>

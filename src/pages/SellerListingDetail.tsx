@@ -390,7 +390,7 @@ const SellerListingDetail = () => {
               {!user && (
                 <Button
                   onClick={() => navigate("/auth")}
-                  className="mt-4 bg-[#0E56F5] hover:bg-[#0D4AD9]"
+                  className="mt-4"
                 >
                   Sign In
                 </Button>

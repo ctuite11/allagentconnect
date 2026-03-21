@@ -23,7 +23,7 @@ const FinalCTA = () => {
           <p className="font-['Manrope'] font-medium text-[#40424d] text-[17px] leading-[1.7] max-w-[540px]">
             Build your professional profile to access exclusive network data and see the deals others are missing.
           </p>
-          <button className="h-auto inline-flex items-center gap-3 pl-7 pr-6 py-[14px] bg-[#2537ff] rounded-[90px] border-[5px] border-[#2537ff40] hover:bg-[#1e2fd4] transition-colors font-['Manrope'] font-bold text-white text-[17px]">
+          <button className="h-auto inline-flex items-center gap-3 pl-7 pr-6 py-[14px] bg-aac rounded-[90px] border-[5px] border-[hsl(var(--aac)/.25)] hover:bg-aac-hover transition-colors font-['Manrope'] font-bold text-white text-[17px]">
             Request access
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M7.5 5l5 5-5 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

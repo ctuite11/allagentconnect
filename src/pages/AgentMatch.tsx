@@ -880,7 +880,7 @@ const AgentMatch = () => {
 
             <Button
               onClick={handleNextStep}
-              className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9] text-white"
+              className="w-full"
               disabled={!confirmations.notUnderContract || !confirmations.ownerOrAuthorized || !confirmations.sellerVerificationConsent || isLoading}
             >
               {isLoading ? "Finding Matches..." : "Find My Matches"}

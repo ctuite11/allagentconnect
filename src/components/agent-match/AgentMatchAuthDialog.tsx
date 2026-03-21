@@ -129,7 +129,7 @@ const AgentMatchAuthDialog = ({ open, onOpenChange, onComplete, isLoading }: Age
             />
           </div>
 
-          <Button type="submit" className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9]" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
