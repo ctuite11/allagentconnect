@@ -73,10 +73,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length === 0) return [];
 
-    // Parse header
-    const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
-    
-    // Find column indices
+    const header = parseCsvLine(lines[0]).map(h => h.toLowerCase());
+
     const firstNameIdx = header.findIndex(h => h.includes('first') && h.includes('name'));
     const lastNameIdx = header.findIndex(h => h.includes('last') && h.includes('name'));
     const emailIdx = header.findIndex(h => h.includes('email'));
@@ -90,16 +88,21 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const clients: ParsedClient[] = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      const values = parseCsvLine(lines[i]);
       
-      if (values.length < 3) continue; // Skip invalid rows
-      
+      if (values.length < 3) continue;
+
+      const rawClientType = clientTypeIdx !== -1 ? values[clientTypeIdx] : '';
+      const normalizedClientType = rawClientType?.trim()
+        ? rawClientType.trim().toLowerCase()
+        : null;
+
       clients.push({
         first_name: values[firstNameIdx] || '',
         last_name: values[lastNameIdx] || '',
         email: values[emailIdx] || '',
         phone: phoneIdx !== -1 ? values[phoneIdx] : '',
-        client_type: clientTypeIdx !== -1 ? values[clientTypeIdx] : '',
+        client_type: normalizedClientType,
       });
     }
 
