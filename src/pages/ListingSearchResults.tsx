@@ -287,7 +287,19 @@ const ListingSearchResults = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-zinc-500">Sort:</span>
                   <Select
-                    value={`${sortColumn}_${sortDirection}`}
+                    value={
+                      (() => {
+                        const rev: Record<string, string> = {
+                          "list_date_desc": "date_new",
+                          "list_date_asc": "date_old",
+                          "price_desc": "price_high",
+                          "price_asc": "price_low",
+                          "square_feet_desc": "sqft",
+                          "bedrooms_desc": "beds",
+                        };
+                        return rev[`${sortColumn}_${sortDirection}`] ?? "date_new";
+                      })()
+                    }
                     onValueChange={(value) => {
                       const map: Record<string, [string, "asc" | "desc"]> = {
                         date_new: ["list_date", "desc"],
