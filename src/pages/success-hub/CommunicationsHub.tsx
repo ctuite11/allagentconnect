@@ -27,7 +27,7 @@ export default function CommunicationsHub() {
 
   return (
     <PageShell className="bg-secondary/40">
-      <PageHeader title="Communications" backTo="/agent-dashboard" />
+      <PageHeader title="Communications" />
 
       <div className="grid gap-8 lg:grid-cols-5">
         {/* ── Left: Feed ───────────────────────────────── */}

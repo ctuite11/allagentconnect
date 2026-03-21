@@ -1096,7 +1096,6 @@ const MyListings = () => {
         <PageHeader
           title="My Listings"
           subtitle="Create your first listing to get started."
-          backTo="/agent-dashboard"
         />
         
         {/* Empty State - matches Hot Sheets pattern */}

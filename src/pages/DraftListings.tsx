@@ -170,7 +170,6 @@ export default function DraftListings() {
       <PageHeader
         title="Drafts"
         subtitle="Manage your saved drafts."
-        backTo="/agent/listings"
       />
 
       {/* Action Row */}

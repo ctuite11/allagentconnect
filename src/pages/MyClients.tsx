@@ -532,7 +532,6 @@ const MyClients = () => {
             title="My Contacts"
             subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
             className="mb-8"
-            backTo="/agent-dashboard"
           />
 
           {/* Action Buttons - Primary left, utilities right */}
