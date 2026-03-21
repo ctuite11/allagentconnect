@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { getStatusConfig, LISTING_STATUS } from "@/constants/status";
 import { 
