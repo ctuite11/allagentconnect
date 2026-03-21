@@ -67,7 +67,7 @@ export function useAgentPresenceBatch(userIds: string[]): Map<string, LastSeenRe
 
     const fetch = async () => {
       const { data } = await supabase
-        .from("agent_settings")
+        .from("agent_presence")
         .select("user_id, last_seen_at")
         .in("user_id", userIds);
 
