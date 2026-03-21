@@ -669,8 +669,8 @@ const MyClients = () => {
                     </Button>
                   </>
                 )}
-                <Button variant="outline" className="bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50" onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2 text-blue-500" />
+                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2 text-primary" />
                   Import CSV
                 </Button>
               </div>
