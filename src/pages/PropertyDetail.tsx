@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { getStatusConfig } from "@/constants/status";
 import {
@@ -704,15 +704,14 @@ const PropertyDetail = () => {
                 <Card className="rounded-3xl shadow-md border-2">
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-4">
-                      <Avatar className="w-16 h-16 border-2 border-border">
-                        {agentProfile.headshot_url ? (
-                          <AvatarImage src={agentProfile.headshot_url} />
-                        ) : (
-                          <AvatarFallback className="text-lg font-semibold bg-muted">
-                            {agentProfile.first_name[0]}{agentProfile.last_name[0]}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
+                      <AgentAvatar
+                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                        headshotUrl={agentProfile.headshot_url ?? null}
+                        userId={agentProfile.id}
+                        size="xl"
+                        avatarClassName="w-16 h-16 border-2 border-border"
+                        fallbackClassName="bg-muted"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing Agent</p>
                         <p className="font-bold text-lg leading-tight">

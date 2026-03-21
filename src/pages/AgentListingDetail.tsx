@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { getStatusConfig, LISTING_STATUS } from "@/constants/status";
 import { 
@@ -971,15 +971,14 @@ const AgentListingDetail = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-12 h-12">
-                      {agentProfile.headshot_url ? (
-                        <AvatarImage src={agentProfile.headshot_url} />
-                      ) : (
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {agentProfile.first_name[0]}{agentProfile.last_name[0]}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
+                    <AgentAvatar
+                      name={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                      headshotUrl={agentProfile.headshot_url ?? null}
+                      userId={agentProfile.id}
+                      size="lg"
+                      avatarClassName="w-12 h-12"
+                      fallbackClassName="bg-primary/10 text-primary"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground">
                         {agentProfile.first_name} {agentProfile.last_name}

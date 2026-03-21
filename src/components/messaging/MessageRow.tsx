@@ -33,6 +33,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
               name={displayName}
               headshotUrl={message.senderHeadshotUrl ?? null}
               size="lg"
+              showPresence={false}
             />
             <span className="text-[13px] font-semibold text-zinc-900">
               {displayName}

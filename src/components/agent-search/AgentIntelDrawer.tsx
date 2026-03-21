@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Mail, 
@@ -91,12 +91,13 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
       <SheetContent className="w-[400px] sm:w-[450px] overflow-y-auto">
         <SheetHeader className="pb-4">
           <div className="flex items-start gap-4">
-            <Avatar className="h-16 w-16">
-              {agent.headshot_url && <AvatarImage src={agent.headshot_url} alt={agentName} />}
-              <AvatarFallback className="text-lg font-semibold bg-muted text-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <AgentAvatar
+              name={agentName}
+              headshotUrl={agent.headshot_url ?? null}
+              userId={agent.id}
+              size="xl"
+              fallbackClassName="bg-muted text-foreground"
+            />
             <div className="flex-1 min-w-0">
               <SheetTitle className="text-lg truncate">{agentName}</SheetTitle>
               {agent.company && (

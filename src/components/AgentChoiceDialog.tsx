@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { setPrimaryAgentId } from "@/utils/agentTracking";
@@ -88,12 +88,12 @@ export function AgentChoiceDialog({
           <div className="p-4 rounded-lg border bg-muted/30">
             <p className="text-sm font-medium mb-3 text-muted-foreground">Current Agent</p>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={existingAgent.headshot_url || ""} />
-                <AvatarFallback className="text-lg">
-                  {existingAgent.first_name?.[0]}{existingAgent.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              <AgentAvatar
+                name={`${existingAgent.first_name ?? ""} ${existingAgent.last_name ?? ""}`}
+                headshotUrl={existingAgent.headshot_url || null}
+                userId={existingAgent.id}
+                size="xl"
+              />
               <div>
                 <p className="font-semibold text-lg">
                   {existingAgent.first_name} {existingAgent.last_name}
@@ -112,12 +112,12 @@ export function AgentChoiceDialog({
           <div className="p-4 rounded-lg border bg-muted/30">
             <p className="text-sm font-medium mb-3 text-muted-foreground">New Invitation From</p>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={newAgent.headshot_url || ""} />
-                <AvatarFallback className="text-lg">
-                  {newAgent.first_name?.[0]}{newAgent.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              <AgentAvatar
+                name={`${newAgent.first_name ?? ""} ${newAgent.last_name ?? ""}`}
+                headshotUrl={newAgent.headshot_url || null}
+                userId={newAgent.id}
+                size="xl"
+              />
               <div>
                 <p className="font-semibold text-lg">
                   {newAgent.first_name} {newAgent.last_name}

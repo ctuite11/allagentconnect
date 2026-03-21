@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { 
@@ -149,15 +149,13 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           <Card>
             <CardContent className="py-4 space-y-3">
               <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12">
-                  {agent.headshot_url ? (
-                    <AvatarImage src={agent.headshot_url} alt={`${agent.first_name} ${agent.last_name}`} />
-                  ) : (
-                    <AvatarFallback className="text-base">
-                      {agent.first_name?.[0]}{agent.last_name?.[0]}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
+                <AgentAvatar
+                  name={`${agent.first_name} ${agent.last_name}`}
+                  headshotUrl={agent.headshot_url ?? null}
+                  userId={agent.id}
+                  size="lg"
+                  avatarClassName="w-12 h-12"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-base">
                     {agent.first_name} {agent.last_name}
@@ -422,15 +420,13 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <Avatar className="w-14 h-14">
-                {stickyAgent.headshot_url ? (
-                  <AvatarImage src={stickyAgent.headshot_url} alt={`${stickyAgent.first_name} ${stickyAgent.last_name}`} />
-                ) : (
-                  <AvatarFallback className="text-lg">
-                    {stickyAgent.first_name[0]}{stickyAgent.last_name[0]}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+               <AgentAvatar
+                  name={`${stickyAgent.first_name} ${stickyAgent.last_name}`}
+                  headshotUrl={stickyAgent.headshot_url}
+                  userId={stickyAgent.id}
+                  size="xl"
+                  avatarClassName="w-14 h-14"
+                />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-lg">
                   {stickyAgent.first_name} {stickyAgent.last_name}
@@ -476,9 +472,14 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         /* Generic fallback — buyer has no sticky agent, still hide listing agent */
         <Card>
           <CardContent className="py-6 text-center space-y-3">
-            <Avatar className="w-14 h-14 mx-auto">
-              <AvatarFallback className="text-lg">?</AvatarFallback>
-            </Avatar>
+            <AgentAvatar
+              name="?"
+              headshotUrl={null}
+              showPresence={false}
+              size="xl"
+              avatarClassName="w-14 h-14"
+              className="mx-auto"
+            />
             <p className="font-semibold text-lg">Need help with this property?</p>
             <p className="text-sm text-muted-foreground">
               Message your agent through the platform for details or to schedule a showing.
@@ -516,15 +517,13 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-3">
-              <Avatar className="w-14 h-14">
-                {agent.headshot_url ? (
-                  <AvatarImage src={agent.headshot_url} />
-                ) : (
-                  <AvatarFallback className="text-lg">
-                    {agent.first_name[0]}{agent.last_name[0]}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+               <AgentAvatar
+                  name={`${agent.first_name} ${agent.last_name}`}
+                  headshotUrl={agent.headshot_url ?? null}
+                  userId={agent.id}
+                  size="xl"
+                  avatarClassName="w-14 h-14"
+                />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-lg">
                   {agent.first_name} {agent.last_name}

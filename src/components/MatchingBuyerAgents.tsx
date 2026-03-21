@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -157,10 +157,12 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listin
               onClick={() => navigate(`/agent/${agent.id}`)}
               className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer"
             >
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={agent.headshot_url || undefined} alt={`${agent.first_name} ${agent.last_name}`} />
-                <AvatarFallback>{agent.first_name[0]}{agent.last_name[0]}</AvatarFallback>
-              </Avatar>
+              <AgentAvatar
+                name={`${agent.first_name} ${agent.last_name}`}
+                headshotUrl={agent.headshot_url}
+                userId={agent.id}
+                size="xl"
+              />
               <p className="text-sm font-medium text-center">
                 {agent.first_name} {agent.last_name}
               </p>

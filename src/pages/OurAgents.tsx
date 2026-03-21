@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -248,6 +249,24 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
     return Array.from(stateSet).sort();
   }, [counties]);
 
+/** Sub-component that wraps the grid with batch presence */
+function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]; onViewProfile: (id: string) => void }) {
+  const userIds = useMemo(() => agents.map((a) => a.id), [agents]);
+  const presenceMap = useAgentPresenceBatch(userIds);
+
+  return (
+    <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+      {agents.map((agent) => (
+        <AgentPhotoTile
+          key={agent.id}
+          agent={agent}
+          onClick={onViewProfile}
+          isOnline={presenceMap.get(agent.id)?.isOnline}
+        />
+      ))}
+    </div>
+  );
+}
 
   // Filter and sort agents
   const filteredAgents = useMemo(() => {
@@ -389,15 +408,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
-                  {filteredAgents.map((agent) => (
-                    <AgentPhotoTile
-                      key={agent.id}
-                      agent={agent}
-                      onClick={handleViewProfile}
-                    />
-                  ))}
-                </div>
+                <AgentPhotoTileGrid agents={filteredAgents} onViewProfile={handleViewProfile} />
 
                 {/* Pagination Controls */}
                 {totalCount > PAGE_SIZE && (
