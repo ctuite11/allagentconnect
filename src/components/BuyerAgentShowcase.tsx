@@ -119,15 +119,14 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
               key={agent.id}
               className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
             >
-              <Avatar className="w-12 h-12">
-                {agent.headshot_url ? (
-                  <AvatarImage src={agent.headshot_url} />
-                ) : (
-                  <AvatarFallback className="bg-muted text-foreground">
-                    {agent.first_name[0]}{agent.last_name[0]}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+              <AgentAvatar
+                name={`${agent.first_name} ${agent.last_name}`}
+                headshotUrl={agent.headshot_url}
+                userId={agent.id}
+                size="lg"
+                avatarClassName="w-12 h-12"
+                fallbackClassName="bg-muted text-foreground"
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm">
                   {agent.first_name} {agent.last_name}

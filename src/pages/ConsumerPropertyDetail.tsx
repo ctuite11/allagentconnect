@@ -493,15 +493,14 @@ const ConsumerPropertyDetail = () => {
                 <Card className="rounded-3xl shadow-md border-2">
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-4">
-                      <Avatar className="w-16 h-16 border-2 border-border">
-                        {stickyAgentProfile.headshot_url ? (
-                          <AvatarImage src={stickyAgentProfile.headshot_url} />
-                        ) : (
-                          <AvatarFallback className="text-lg font-semibold bg-muted">
-                            {stickyAgentProfile.first_name[0]}{stickyAgentProfile.last_name[0]}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
+                      <AgentAvatar
+                        name={`${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`}
+                        headshotUrl={stickyAgentProfile.headshot_url ?? null}
+                        userId={stickyAgentProfile.id}
+                        size="xl"
+                        avatarClassName="w-16 h-16 border-2 border-border"
+                        fallbackClassName="bg-muted"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">Your Agent</p>
                         <p className="font-bold text-lg leading-tight">

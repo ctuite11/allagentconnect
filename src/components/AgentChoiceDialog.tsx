@@ -112,12 +112,12 @@ export function AgentChoiceDialog({
           <div className="p-4 rounded-lg border bg-muted/30">
             <p className="text-sm font-medium mb-3 text-muted-foreground">New Invitation From</p>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={newAgent.headshot_url || ""} />
-                <AvatarFallback className="text-lg">
-                  {newAgent.first_name?.[0]}{newAgent.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              <AgentAvatar
+                name={`${newAgent.first_name ?? ""} ${newAgent.last_name ?? ""}`}
+                headshotUrl={newAgent.headshot_url || null}
+                userId={newAgent.id}
+                size="xl"
+              />
               <div>
                 <p className="font-semibold text-lg">
                   {newAgent.first_name} {newAgent.last_name}

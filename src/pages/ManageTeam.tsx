@@ -877,12 +877,13 @@ const SortableMemberItem = ({ member, isOwner, onRemove, onNavigate }: SortableM
         onClick={onNavigate}
         className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
       >
-        <Avatar className="h-12 w-12 cursor-pointer">
-          <AvatarImage src={member.agent_profiles?.headshot_url} />
-          <AvatarFallback>
-            {member.agent_profiles?.first_name?.[0]}{member.agent_profiles?.last_name?.[0]}
-          </AvatarFallback>
-        </Avatar>
+        <AgentAvatar
+          name={`${member.agent_profiles?.first_name ?? ""} ${member.agent_profiles?.last_name ?? ""}`}
+          headshotUrl={member.agent_profiles?.headshot_url ?? null}
+          userId={member.agent_id}
+          size="lg"
+          avatarClassName="h-12 w-12"
+        />
         <div className="flex-1 min-w-0">
           <p className="font-medium text-sm truncate">
             {member.agent_profiles?.first_name} {member.agent_profiles?.last_name}
