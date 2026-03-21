@@ -739,7 +739,7 @@ const AgentMatch = () => {
 
             <Button
               onClick={handleNextStep}
-              className="w-full bg-[#0E56F5] hover:bg-[#0D4AD9] text-white"
+              className="w-full"
             >
               Continue to Confirmation
               <ArrowRight className="ml-2 h-4 w-4" />
