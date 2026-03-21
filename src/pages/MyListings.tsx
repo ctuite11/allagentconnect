@@ -410,10 +410,10 @@ function MyListingsView({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem className="cursor-pointer text-sm">Date (Newest)</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm">DOM</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm">Price</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm">Status</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("date")}>Date (Newest){sortKey === "date" && " ✓"}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("dom")}>DOM{sortKey === "dom" && " ✓"}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("price")}>Price{sortKey === "price" && " ✓"}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("status")}>Status{sortKey === "status" && " ✓"}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
