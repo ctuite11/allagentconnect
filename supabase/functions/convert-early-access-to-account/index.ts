@@ -134,7 +134,7 @@ function buildPasswordSetupEmailHtml(firstName: string, resetLink: string): stri
               <p style="font-size: 13px; color: #64748b; margin: 0 0 8px 0;">
                 Or copy this link:
               </p>
-              <div style="background-color: #F8FAFC; padding: 12px; border-radius: 6px; margin: 0 0 28px 0;">
+              <div style="background-color: #ffffff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 6px; margin: 0 0 28px 0;">
                 <p style="margin: 0; font-size: 12px; color: #475569; word-break: break-all; font-family: 'SF Mono', Monaco, 'Courier New', monospace;">
                   ${resetLink}
                 </p>
