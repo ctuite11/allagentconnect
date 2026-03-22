@@ -76,7 +76,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
         </td></tr>
 
         <!-- White content body -->
-        <tr><td style="background-color:#ffffff;border:1px solid #e2e8f0;border-top:none;">
+        <tr><td style="background-color:#ffffff;border:1px solid #e5e5e5;border-top:none;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <!-- Content -->
             <tr><td style="padding:28px 40px 32px;">
