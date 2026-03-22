@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -63,6 +64,15 @@ function build429Response(resetAt: string): Response {
   });
 }
 
+function esc(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -100,6 +110,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending profile contact email to agent:", agentEmail);
 
+    const bodyHtml = `
+      <p>Hi ${esc(agentName)},</p>
+      <p>You have received a new message through your agent profile.</p>
+      <table role="presentation" cellspacing="0" cellpadding="0" style="margin:16px 0;font-size:14px;line-height:1.6;">
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#0f172a;">Name</td><td style="padding:4px 0;color:#334155;">${esc(senderName)}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#0f172a;">Email</td><td style="padding:4px 0;color:#334155;">${esc(senderEmail)}</td></tr>
+        ${senderPhone ? `<tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#0f172a;">Phone</td><td style="padding:4px 0;color:#334155;">${esc(senderPhone)}</td></tr>` : ""}
+      </table>
+      <p style="margin:16px 0 0;padding:12px;background-color:#f8fafc;border-radius:6px;color:#334155;">${esc(message || "")}</p>
+      <p style="margin:16px 0 0;color:#64748b;font-size:13px;">Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.</p>
+    `;
+
+    const html = buildAacEmail({
+      headline: "New Message from Your Profile",
+      body: bodyHtml,
+      preheader: `New message from ${senderName}`,
+    });
+
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -107,29 +135,11 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+        from: "All Agent Connect <hello@mail.allagentconnect.com>",
         to: [agentEmail],
         reply_to: senderEmail,
         subject: subject || `New message from ${senderName}`,
-        html: `
-          <h2>New Message from Your Profile</h2>
-          <p>Hi ${agentName},</p>
-          <p>You have received a new message through your agent profile.</p>
-          
-          <h3>Contact Details:</h3>
-          <ul>
-            <li><strong>Name:</strong> ${senderName}</li>
-            <li><strong>Email:</strong> ${senderEmail}</li>
-            ${senderPhone ? `<li><strong>Phone:</strong> ${senderPhone}</li>` : ""}
-          </ul>
-          
-          <h3>Message:</h3>
-          <p>${message}</p>
-          
-          <p>Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.</p>
-          
-          <p>Best regards,<br>Your Real Estate Platform</p>
-        `,
+        html,
       }),
     });
 
