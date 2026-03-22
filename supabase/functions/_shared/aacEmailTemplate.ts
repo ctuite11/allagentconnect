@@ -72,7 +72,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
 
         <!-- Logo + Wordmark -->
         <tr><td align="center" style="padding:32px 40px 20px;">
-          ${LOGO_SVG}
+          ${LOGO_LETTERMARK}
           <p style="margin:12px 0 0;font-size:20px;font-weight:600;letter-spacing:-0.02em;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
             <span style="color:#0E56F5;">All Agent </span><span style="color:#94A3B8;">Connect</span>
           </p>
