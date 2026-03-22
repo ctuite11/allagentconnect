@@ -258,10 +258,10 @@ Deno.serve(async (req) => {
           <h1 style="color: white; margin: 0; font-size: 24px;">🚀 New Early Access Request</h1>
         </div>
         
-        <div style="background: #ffffff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;">
+        <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e5e5; border-top: none; border-radius: 0 0 12px 12px;">
           <h2 style="color: #0f172a; margin-top: 0;">Pre-Launch Registration</h2>
           
-          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Name:</td>
@@ -300,13 +300,13 @@ Deno.serve(async (req) => {
             </a>
           </div>
           
-          <div style="background: #eff6ff; border-left: 4px solid #0E56F5; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-left: 4px solid #0E56F5; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
             <p style="margin: 0; color: #1e40af; font-size: 14px;">
               <strong>Early Access:</strong> This agent registered for pre-launch access. They will appear as "pending" in your Admin Panel.
             </p>
           </div>
           
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
             AllAgentConnect Admin Notification

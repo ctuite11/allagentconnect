@@ -163,11 +163,11 @@ const handler = async (req: Request): Promise<Response> => {
             contentHtml: `
               <p>Hi ${profile.first_name || "Agent"},</p>
               <p>A homeowner has submitted a private Seller Match listing that aligns with your active buyer criteria.</p>
-              <div style="background: #F8FAFC; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin:20px 0;">
                 <p style="font-weight: 600;">Property snapshot</p>
                 <ul style="list-style: none; padding: 0;">${propertySnapshotLines.join("")}</ul>
               </div>
-              <div style="background: #EFF6FF; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin:20px 0;">
                 <p><strong>Preferred contact method:</strong> ${contactMethodLabel}</p>
               </div>
               <p><a href="${detailsUrl}" style="display: inline-block; background: #0F172A; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">View Seller Match Listing →</a></p>
