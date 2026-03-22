@@ -122,7 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
         ${senderPhone ? `<tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#0f172a;">Phone</td><td style="padding:4px 0;color:#334155;">${esc(senderPhone)}</td></tr>` : ""}
       </table>
       <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Message</p>
-      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">
+      <div style="background-color:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin:0 0 20px;">
         <p style="margin:0;color:#334155;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(message || "")}</p>
       </div>
       

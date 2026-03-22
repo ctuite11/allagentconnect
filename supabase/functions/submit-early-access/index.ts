@@ -300,7 +300,7 @@ Deno.serve(async (req) => {
             </a>
           </div>
           
-          <div style="background: #eff6ff; border-left: 4px solid #0E56F5; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-left: 4px solid #0E56F5; padding: 15px 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
             <p style="margin: 0; color: #1e40af; font-size: 14px;">
               <strong>Early Access:</strong> This agent registered for pre-launch access. They will appear as "pending" in your Admin Panel.
             </p>

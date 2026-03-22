@@ -56,7 +56,7 @@ serve(async (req: Request): Promise<Response> => {
     const licenseVerifyUrl = stateLicenseLookupUrls[licenseState] || "";
 
     const detailsTable = `
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;border-radius:8px;margin:16px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;margin:16px 0;">
         <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">Agent Name:</td><td style="padding:12px 16px;color:#0f172a;font-weight:600;font-size:14px;">${firstName} ${lastName}</td></tr>
         <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">Email:</td><td style="padding:12px 16px;font-size:14px;"><a href="mailto:${email}" style="color:#0E56F5;text-decoration:none;">${email}</a></td></tr>
         <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">License #:</td><td style="padding:12px 16px;color:#0f172a;font-weight:600;font-size:14px;">${licenseNumber}</td></tr>

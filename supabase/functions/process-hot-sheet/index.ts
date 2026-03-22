@@ -434,7 +434,7 @@ const handler = async (req: Request): Promise<Response> => {
         
         // Add "View Hot Sheet" CTA
         fullListingsHtml += `
-          <div style="margin-top: 32px; padding: 16px; background-color: #f3f4f6; border-radius: 8px;">
+          <div style="margin-top: 32px; padding: 16px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
             <p style="margin: 0 0 12px 0; color: #1f2937;">View all properties and add comments:</p>
             <a href="${accessUrl}" 
               style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">

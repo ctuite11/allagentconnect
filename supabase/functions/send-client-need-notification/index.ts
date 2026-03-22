@@ -212,8 +212,8 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <h2>${subject}</h2>
               <p><strong>Category:</strong> ${getCategoryLabel(category)}</p>
-              ${criteriaText ? `<div style="background: #f5f5f5; padding: 15px; margin: 20px 0;">${criteriaText}</div>` : ""}
-              <div style="padding: 20px; border: 1px solid #ddd;"><p style="white-space: pre-wrap;">${message}</p></div>
+              ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:20px 0;">${criteriaText}</div>` : ""}
+              <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;"><p style="white-space: pre-wrap;">${message}</p></div>
             `,
           },
         },
