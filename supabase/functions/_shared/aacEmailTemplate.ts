@@ -76,7 +76,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
         </td></tr>
 
         <!-- White content body -->
-        <tr><td style="background-color:#ffffff;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;border-top:none;">
+        <tr><td style="background-color:#ffffff;border:1px solid #e2e8f0;border-top:none;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <!-- Content -->
             <tr><td style="padding:28px 40px 32px;">
@@ -87,18 +87,18 @@ export function buildAacEmail(opts: AacEmailOptions): string {
               ${ctaHtml}
               ${fallbackHtml}
             </td></tr>
-
-            <!-- Footer -->
-            <tr><td style="padding:20px 40px;border-top:1px solid #e2e8f0;text-align:center;">
-              <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
-              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                <a href="mailto:hello@allagentconnect.com" style="color:#94a3b8;text-decoration:none;">hello@allagentconnect.com</a>
-              </p>
-              <p style="margin:0;font-size:11px;color:#94a3b8;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:#94a3b8;text-decoration:underline;">Remove my account</a>
-              </p>
-            </td></tr>
           </table>
+        </td></tr>
+
+        <!-- Dark footer -->
+        <tr><td align="center" style="background-color:#111317;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;">
+          <p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+          <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            <a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>
+          </p>
+          <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:rgba(255,255,255,0.35);text-decoration:underline;">Remove my account</a>
+          </p>
         </td></tr>
 
       </table>
