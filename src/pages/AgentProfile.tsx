@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-// Navigation removed - rendered globally in App.tsx
-import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,16 +9,24 @@ import {
   Loader2, 
   Home, 
   Star, 
-  Gift,
-  TrendingUp,
   Quote,
-  HomeIcon
+  Phone,
+  Mail,
+  Globe,
+  Linkedin,
+  Facebook,
+  Twitter,
+  Instagram,
+  Download,
+  Users,
+  ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
-import AgentProfileHeader from "@/components/AgentProfileHeader";
 
-const generateVCard = (agent: AgentProfile) => {
+const generateVCard = (agent: AgentProfileData) => {
   const vcard = [
     'BEGIN:VCARD',
     'VERSION:3.0',
@@ -46,7 +52,7 @@ const generateVCard = (agent: AgentProfile) => {
   window.URL.revokeObjectURL(url);
 };
 
-interface AgentProfile {
+interface AgentProfileData {
   id: string;
   first_name: string;
   last_name: string;
@@ -98,10 +104,17 @@ interface Testimonial {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const socialIconMap = [
+  { key: "facebook", icon: Facebook },
+  { key: "instagram", icon: Instagram },
+  { key: "linkedin", icon: Linkedin },
+  { key: "twitter", icon: Twitter },
+] as const;
+
 const AgentProfile = () => {
   const { id: idOrCode } = useParams();
   const navigate = useNavigate();
-  const [agent, setAgent] = useState<AgentProfile | null>(null);
+  const [agent, setAgent] = useState<AgentProfileData | null>(null);
   const [listings, setListings] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,13 +145,12 @@ const AgentProfile = () => {
       if (agentError) throw agentError;
       if (!agentData) {
         toast.error("Agent not found");
-        navigate("/our-agents");
+        navigate("/our-members");
         return;
       }
 
-      setAgent(agentData as AgentProfile);
+      setAgent(agentData as AgentProfileData);
 
-      // Use the resolved agent UUID for related queries
       const agentUuid = agentData.id;
 
       const { data: listingsData, error: listingsError } = await supabase
@@ -170,223 +182,273 @@ const AgentProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pt-24">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!agent) {
     return (
-      <div className="min-h-screen bg-background pt-24">
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="py-8">
-              <p className="text-center text-muted-foreground">Agent not found</p>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="p-6">
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">Agent not found</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  const activeSocials = socialIconMap.filter(
+    (s) => agent.social_links?.[s.key as keyof typeof agent.social_links]
+  );
+
   return (
-    <div className="min-h-screen bg-background">
-      
-      {/* Premium Header - Extends to very top (behind nav) */}
-      <div className="pt-20">
-        <AgentProfileHeader 
-          agent={agent} 
-          onSaveContact={() => generateVCard(agent)} 
-        />
+    <div className="flex-1 bg-background">
+      <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
+        {/* Back action */}
+        <button
+          onClick={() => navigate("/our-members")}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Network
+        </button>
 
-        {/* Main Content */}
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-10">
-          <div className="max-w-3xl space-y-12">
-            {/* About Me Section */}
-            {agent.bio && (
-              <section>
-                <h2 className="text-2xl font-semibold text-foreground mb-4">
-                  About Me
-                </h2>
-                <div className="max-w-prose">
-                  <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                    {agent.bio}
-                  </p>
-                </div>
-              </section>
-            )}
+        {/* Profile Header Card */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-5">
+              {/* Avatar */}
+              <AgentAvatar
+                name={`${agent.first_name} ${agent.last_name}`}
+                headshotUrl={agent.headshot_url}
+                userId={agent.id}
+                size="xl"
+                showPresence={false}
+              />
 
-            {/* Client Incentives Section - hidden per AAC policy */}
-            {false && (agent.buyer_incentives || agent.seller_incentives) && (
-              <section>
-                <h2 className="text-2xl font-semibold text-foreground mb-4">
-                  Client Incentives
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {agent.buyer_incentives && (
-                    <Card className="border border-neutral-200 shadow-sm rounded-xl bg-white">
-                      <CardContent className="p-5">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg border border-neutral-200 flex-shrink-0">
-                            <Gift className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-neutral-800 mb-1.5">Buyer Incentives</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                              {agent.buyer_incentives}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                  {agent.seller_incentives && (
-                    <Card className="border border-neutral-200 shadow-sm rounded-xl bg-white">
-                      <CardContent className="p-5">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg border border-neutral-200 flex-shrink-0">
-                            <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-neutral-800 mb-1.5">Seller Incentives</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                              {agent.seller_incentives}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+              {/* Info */}
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-xl font-semibold text-foreground">
+                      {agent.first_name} {agent.last_name}
+                    </h1>
+                    {agent.title && (
+                      <p className="text-sm text-muted-foreground">{agent.title}</p>
+                    )}
+                    {agent.company && (
+                      <p className="text-sm text-muted-foreground">{agent.company}</p>
+                    )}
+                  </div>
+                  {agent.logo_url && (
+                    <img
+                      src={agent.logo_url}
+                      alt="Company logo"
+                      className="h-10 max-w-[100px] object-contain flex-shrink-0"
+                    />
                   )}
                 </div>
-              </section>
-            )}
 
-            {/* Client Testimonials Section */}
-            {testimonials.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-semibold text-foreground mb-4">
-                  Client Testimonials
-                </h2>
-                <div className="space-y-4">
-                  {testimonials.slice(0, 3).map((testimonial) => (
-                    <Card key={testimonial.id} className="border border-neutral-200 shadow-sm rounded-xl overflow-hidden bg-white">
-                      <CardContent className="p-6 relative">
-                        <Quote className="absolute top-4 right-4 h-8 w-8 text-muted-foreground/20" />
-                        {testimonial.rating && (
-                          <div className="flex gap-0.5 mb-3">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < testimonial.rating!
-                                    ? "text-amber-500 fill-amber-500"
-                                    : "text-muted-foreground/30"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        <p className="text-foreground/80 italic leading-relaxed pr-8">
-                          "{testimonial.testimonial_text}"
-                        </p>
-                        <p className="mt-4 text-sm font-semibold text-foreground">
-                          — {testimonial.client_name}
-                        </p>
-                        {testimonial.client_title && (
-                          <p className="text-xs text-muted-foreground">
-                            {testimonial.client_title}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                {/* Meta */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  {agent.aac_id && <span>ID: {agent.aac_id}</span>}
+                  {agent.email && (
+                    <a href={`mailto:${agent.email}`} className="flex items-center gap-1 hover:text-foreground">
+                      <Mail className="h-3.5 w-3.5" />
+                      {agent.email}
+                    </a>
+                  )}
+                  {agent.office_phone && (
+                    <a href={`tel:${agent.office_phone}`} className="flex items-center gap-1 hover:text-foreground">
+                      <Phone className="h-3.5 w-3.5" />
+                      Office: {formatPhoneNumber(agent.office_phone)}
+                    </a>
+                  )}
+                  {agent.cell_phone && (
+                    <a href={`tel:${agent.cell_phone}`} className="flex items-center gap-1 hover:text-foreground">
+                      <Phone className="h-3.5 w-3.5" />
+                      Cell: {formatPhoneNumber(agent.cell_phone)}
+                    </a>
+                  )}
+                  {agent.social_links?.website && (
+                    <a
+                      href={agent.social_links.website.startsWith('http') ? agent.social_links.website : `https://${agent.social_links.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-foreground"
+                    >
+                      <Globe className="h-3.5 w-3.5" />
+                      {agent.social_links.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                    </a>
+                  )}
                 </div>
-              </section>
-            )}
-          </div>
-        </div>
 
-        {/* Active Listings Section - Full Width */}
-        <div className="bg-white border-t border-neutral-200">
-          <div className="max-w-5xl mx-auto px-4 md:px-6 py-12">
-            <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">
-              {agent.first_name}'s Listings
-            </h2>
-            
-            {listings.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-20 h-20 rounded-full border border-neutral-200 bg-white flex items-center justify-center mb-4">
-                  <HomeIcon className="h-10 w-10 text-muted-foreground/50" />
-                </div>
-                <p className="text-lg text-muted-foreground mb-2">
-                  This agent currently has no active listings.
-                </p>
-                <p className="text-muted-foreground mb-6">
-                  Browse available homes or contact the agent directly.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button onClick={() => navigate('/browse')}>
-                    <Home className="h-4 w-4 mr-2" />
-                    Browse Properties
-                  </Button>
-                  <ContactAgentProfileDialog 
+                {/* Actions + Social */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <ContactAgentProfileDialog
                     agentId={agent.id}
                     agentName={`${agent.first_name} ${agent.last_name}`}
                     agentEmail={agent.email}
                   />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => generateVCard(agent)}
+                  >
+                    <Download className="h-4 w-4 mr-1.5" />
+                    Save Contact
+                  </Button>
+
+                  {activeSocials.length > 0 && (
+                    <div className="flex items-center gap-1 ml-1">
+                      {activeSocials.map(({ key, icon: Icon }) => (
+                        <a
+                          key={key}
+                          href={agent.social_links![key as keyof typeof agent.social_links]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-7 h-7 rounded-full border border-border hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Badges */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Users className="h-3 w-3" />
+                    DirectConnect Friendly
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs gap-1 bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <ShieldCheck className="h-3 w-3" />
+                    Verified Agent
+                  </Badge>
                 </div>
               </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.map((listing) => (
-                  <Card 
-                    key={listing.id} 
-                    className="cursor-pointer hover:shadow-lg transition-all duration-300 border border-neutral-200 overflow-hidden group bg-white"
-                    onClick={() => navigate(`/property/${listing.id}`)}
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
-                        alt={listing.address}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground">
-                        {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
-                      </Badge>
-                    </div>
-                    <CardContent className="p-4">
-                      <p className="text-2xl font-bold text-primary mb-2">
-                        ${listing.price.toLocaleString()}
-                      </p>
-                      <p className="font-semibold text-foreground text-sm mb-1 truncate">
-                        {listing.address}
-                      </p>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {listing.city}, {listing.state} {listing.zip_code}
-                      </p>
-                      <div className="flex gap-4 text-sm text-muted-foreground">
-                        {listing.bedrooms && (
-                          <span>{listing.bedrooms} bed</span>
-                        )}
-                        {listing.bathrooms && (
-                          <span>{listing.bathrooms} bath</span>
-                        )}
-                        {listing.square_feet && (
-                          <span>{listing.square_feet.toLocaleString()} sqft</span>
-                        )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* About */}
+        {agent.bio && (
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-3">About</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {agent.bio}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Testimonials */}
+        {testimonials.length > 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Client Testimonials</h2>
+              <div className="space-y-4">
+                {testimonials.slice(0, 3).map((testimonial) => (
+                  <div key={testimonial.id} className="border border-border rounded-lg p-4 relative">
+                    <Quote className="absolute top-3 right-3 h-6 w-6 text-muted-foreground/15" />
+                    {testimonial.rating && (
+                      <div className="flex gap-0.5 mb-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${
+                              i < testimonial.rating!
+                                ? "text-amber-500 fill-amber-500"
+                                : "text-muted-foreground/30"
+                            }`}
+                          />
+                        ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                    <p className="text-sm text-muted-foreground italic leading-relaxed pr-6">
+                      "{testimonial.testimonial_text}"
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-foreground">
+                      — {testimonial.client_name}
+                    </p>
+                    {testimonial.client_title && (
+                      <p className="text-xs text-muted-foreground">{testimonial.client_title}</p>
+                    )}
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Listings */}
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            {agent.first_name}'s Listings
+          </h2>
+
+          {listings.length === 0 ? (
+            <div className="flex items-center justify-between border border-border rounded-lg px-5 py-4">
+              <p className="text-sm text-muted-foreground">
+                No active listings right now.
+              </p>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => navigate('/listing-search')}>
+                  <Home className="h-3.5 w-3.5 mr-1.5" />
+                  Browse
+                </Button>
+                <ContactAgentProfileDialog
+                  agentId={agent.id}
+                  agentName={`${agent.first_name} ${agent.last_name}`}
+                  agentEmail={agent.email}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {listings.map((listing) => (
+                <Card
+                  key={listing.id}
+                  className="cursor-pointer hover:shadow-md transition-all overflow-hidden group"
+                  onClick={() => navigate(`/property/${listing.id}`)}
+                >
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
+                      alt={listing.address}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <Badge className="absolute top-2.5 right-2.5 bg-accent text-accent-foreground text-xs">
+                      {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
+                    </Badge>
+                  </div>
+                  <CardContent className="p-4">
+                    <p className="text-lg font-bold text-primary mb-1">
+                      ${listing.price.toLocaleString()}
+                    </p>
+                    <p className="font-medium text-foreground text-sm mb-0.5 truncate">
+                      {listing.address}
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {listing.city}, {listing.state} {listing.zip_code}
+                    </p>
+                    <div className="flex gap-3 text-xs text-muted-foreground">
+                      {listing.bedrooms && <span>{listing.bedrooms} bed</span>}
+                      {listing.bathrooms && <span>{listing.bathrooms} bath</span>}
+                      {listing.square_feet && <span>{listing.square_feet.toLocaleString()} sqft</span>}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

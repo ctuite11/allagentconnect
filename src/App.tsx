@@ -235,6 +235,7 @@ const App = () => (
                   <Route path="/admin/invites" element={<AdminInviteAudit />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
+                  <Route path="/agent/:id" element={<RouteGuard requireRole="agent"><AgentProfile /></RouteGuard>} />
                 </Route>
                 {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
@@ -242,7 +243,6 @@ const App = () => (
                 <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
                 <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
-                <Route path="/agent/:id" element={<AgentProfile />} />
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowsePropertiesNew />} />
                 <Route path="/search" element={<SearchResults />} />
