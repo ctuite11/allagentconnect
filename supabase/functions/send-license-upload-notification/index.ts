@@ -95,7 +95,7 @@ serve(async (req: Request): Promise<Response> => {
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 40px;border-top:1px solid #f1f5f9;">
+            <td style="padding:20px 40px;border-top:1px solid #e5e5e5;">
               <p style="font-size:13px;color:#94a3b8;margin:0;text-align:center;">
                 AllAgentConnect Admin Notification
               </p>
