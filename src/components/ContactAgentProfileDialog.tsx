@@ -162,7 +162,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
               id="message"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              placeholder="I'm interested in working with you..."
+              placeholder="Your message here"
               rows={5}
               maxLength={1000}
             />
