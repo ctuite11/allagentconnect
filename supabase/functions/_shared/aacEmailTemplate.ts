@@ -42,7 +42,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
     ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">
         <tr><td style="padding:16px 0 0;">
           <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">If the button doesn&rsquo;t work, copy this link:</p>
-          <div style="background-color:#f8fafc;padding:10px 12px;border-radius:6px;">
+          <div style="background-color:#ffffff;border:1px solid #e5e7eb;padding:10px 12px;border-radius:6px;">
             <p style="margin:0;font-size:11px;color:#475569;word-break:break-all;font-family:'SF Mono',Monaco,'Courier New',monospace;">${escapeHtml(ctaUrl)}</p>
           </div>
         </td></tr>
