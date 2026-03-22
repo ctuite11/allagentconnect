@@ -193,7 +193,7 @@ export function renderEmailTemplate(
         preheader: (messageBodyRaw || "You have a new message.").replace(/\s+/g, " ").trim().slice(0, 90),
         body: `
           ${contextLine ? `<p style="margin:0 0 12px;font-size:13px;color:#64748b;">${contextLine}</p>` : ""}
-          <div style="background:#f8fafc;padding:16px;border-radius:8px;border-left:4px solid #0E56F5;margin:0 0 4px;">
+          <div style="background:#ffffff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0 0 4px;">
             <p style="margin:0;color:#334155;line-height:1.6;">${safeBody || esc("You have a new message.")}</p>
           </div>`,
         ctaLabel: "View Conversation",
