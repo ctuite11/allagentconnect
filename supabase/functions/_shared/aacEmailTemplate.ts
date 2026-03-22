@@ -67,7 +67,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
           <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center">
             <!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" style="width:40px;height:40px;" fill="false" stroke="false"><v:textbox inset="0,0,0,0" style="mso-fit-shape-to-text:false;"><center style="font-size:16px;font-weight:700;color:#50c878;font-family:Arial,sans-serif;">✦</center></v:textbox></v:rect><![endif]-->
             <!--[if !mso]><!-->
-            <img src="https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-white.svg" width="40" height="40" alt="All Agent Connect" style="display:block;border:0;outline:none;text-decoration:none;" />
+            <img src="https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="40" height="40" alt="All Agent Connect" style="display:block;border:0;outline:none;text-decoration:none;" />
             <!--<![endif]-->
           </td></tr></table>
           <p style="margin:12px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
