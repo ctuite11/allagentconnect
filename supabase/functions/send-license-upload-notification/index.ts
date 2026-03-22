@@ -67,7 +67,7 @@ serve(async (req: Request): Promise<Response> => {
               <p style="font-size:16px;color:#334155;line-height:1.7;margin:0 0 20px;">
                 A rejected agent has uploaded their license for manual review.
               </p>
-              <div style="background:#f8fafc;padding:16px;border-radius:8px;margin:0 0 24px;">
+              <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:0 0 24px;">
                 <table style="width:100%;border-collapse:collapse;">
                   <tr>
                     <td style="padding:6px 0;color:#64748b;font-weight:500;">Agent:</td>
