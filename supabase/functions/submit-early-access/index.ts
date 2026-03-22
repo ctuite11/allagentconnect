@@ -306,7 +306,7 @@ Deno.serve(async (req) => {
             </p>
           </div>
           
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;">
           
           <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
             AllAgentConnect Admin Notification
