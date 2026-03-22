@@ -207,7 +207,7 @@ const handler = async (req: Request): Promise<Response> => {
             isCopy: true,
             recipientCount: agentProfiles.length,
             contentHtml: `
-              <div style="background: #e0f2fe; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+              <div style="background: #ffffff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
                 <p><strong>Copy of email sent to ${agentProfiles.length} recipients</strong></p>
               </div>
               <h2>${subject}</h2>

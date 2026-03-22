@@ -48,11 +48,11 @@ serve(async (req: Request): Promise<Response> => {
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f8fafc;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;">
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f5f5f5;">
     <tr>
       <td align="center" style="padding:40px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(15,23,42,0.06);border:1px solid #e2e8f0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(15,23,42,0.06);border:1px solid #e5e5e5;">
           <tr>
             <td align="center" style="padding:32px 40px 24px;">
               <img src="https://allagentconnect.com/brand/aac-globe.png" width="80" height="80" alt="AAC" style="display:block;margin:0 auto 16px;" />
@@ -67,7 +67,7 @@ serve(async (req: Request): Promise<Response> => {
               <p style="font-size:16px;color:#334155;line-height:1.7;margin:0 0 20px;">
                 A rejected agent has uploaded their license for manual review.
               </p>
-              <div style="background:#f8fafc;padding:16px;border-radius:8px;margin:0 0 24px;">
+              <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:0 0 24px;">
                 <table style="width:100%;border-collapse:collapse;">
                   <tr>
                     <td style="padding:6px 0;color:#64748b;font-weight:500;">Agent:</td>
@@ -95,7 +95,7 @@ serve(async (req: Request): Promise<Response> => {
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 40px;border-top:1px solid #f1f5f9;">
+            <td style="padding:20px 40px;border-top:1px solid #e5e5e5;">
               <p style="font-size:13px;color:#94a3b8;margin:0;text-align:center;">
                 AllAgentConnect Admin Notification
               </p>
