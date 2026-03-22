@@ -91,7 +91,8 @@ export function buildAacEmail(opts: AacEmailOptions): string {
         </td></tr>
 
         <!-- Dark footer -->
-        <tr><td align="center" style="background-color:#111317;border-top:2px solid #50c878;border-radius:0 0 12px 12px;padding:20px 40px;text-align:center;">
+        <tr><td align="center" style="background-color:#111317;border-top:2px solid #50c878;border-radius:0 0 12px 12px;padding:24px 40px 20px;text-align:center;">
+          <img src="https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="24" height="24" alt="" style="display:block;margin:0 auto 12px;border:0;outline:none;text-decoration:none;" />
           <p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
             <a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>
