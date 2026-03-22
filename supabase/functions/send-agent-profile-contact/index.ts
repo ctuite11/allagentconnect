@@ -110,20 +110,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending profile contact email to agent:", agentEmail);
 
+    const firstName = (agentName || "").split(" ")[0] || "there";
+
     const bodyHtml = `
-      <p>Hi ${esc(agentName)},</p>
-      <p>You have received a new message through your agent profile.</p>
-      <table role="presentation" cellspacing="0" cellpadding="0" style="margin:16px 0;font-size:14px;line-height:1.6;">
+      <p style="margin:0 0 12px;color:#334155;">Hi ${esc(firstName)},</p>
+      <p style="margin:0 0 20px;color:#334155;">You received a new message through your All Agent Connect network.</p>
+      <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Contact Details</p>
+      <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 20px;font-size:14px;line-height:1.6;">
         <tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#0f172a;">Name</td><td style="padding:4px 0;color:#334155;">${esc(senderName)}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#0f172a;">Email</td><td style="padding:4px 0;color:#334155;">${esc(senderEmail)}</td></tr>
         ${senderPhone ? `<tr><td style="padding:4px 12px 4px 0;font-weight:600;color:#0f172a;">Phone</td><td style="padding:4px 0;color:#334155;">${esc(senderPhone)}</td></tr>` : ""}
       </table>
-      <p style="margin:16px 0 0;padding:12px;background-color:#f8fafc;border-radius:6px;color:#334155;">${esc(message || "")}</p>
-      <p style="margin:16px 0 0;color:#64748b;font-size:13px;">Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.</p>
+      <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Message</p>
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">
+        <p style="margin:0;color:#334155;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(message || "")}</p>
+      </div>
+      <p style="margin:0;color:#94a3b8;font-size:13px;">Sent from All Agent Connect</p>
     `;
 
     const html = buildAacEmail({
-      headline: "New Message from Your Profile",
+      headline: "New message from your network",
       body: bodyHtml,
       preheader: `New message from ${senderName}`,
     });
