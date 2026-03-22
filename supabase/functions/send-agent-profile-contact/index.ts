@@ -125,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
       <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">
         <p style="margin:0;color:#334155;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(message || "")}</p>
       </div>
-      <p style="margin:0;color:#94a3b8;font-size:13px;">Sent from All Agent Connect</p>
+      
     `;
 
     const html = buildAacEmail({
