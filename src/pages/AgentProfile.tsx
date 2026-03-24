@@ -115,10 +115,13 @@ const socialIconMap = [
 const AgentProfile = () => {
   const { id: idOrCode } = useParams();
   const navigate = useNavigate();
+  const { userId } = useAuthRole();
   const [agent, setAgent] = useState<AgentProfileData | null>(null);
   const [listings, setListings] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isStartingChat, setIsStartingChat] = useState(false);
+  const { isOnline } = useAgentLastSeen(agent?.id);
 
   useEffect(() => {
     fetchAgentProfile();
