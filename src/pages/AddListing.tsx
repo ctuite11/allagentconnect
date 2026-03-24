@@ -2119,8 +2119,8 @@ const AddListing = () => {
     video_url: formData.video_url || null,
     listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
     attom_id: attomId,
-    price_range_min: formData.price_range_min ? parseFloat(formData.price_range_min) : null,
-    price_range_max: formData.price_range_max ? parseFloat(formData.price_range_max) : null,
+    price_range_min: formData.price ? null : (formData.price_range_min ? parseFloat(formData.price_range_min) : null),
+    price_range_max: formData.price ? null : (formData.price_range_max ? parseFloat(formData.price_range_max) : null),
     
     // Parking & Garage
     parking_spaces: (() => { const n = Number(formData.parking_spaces); return Number.isFinite(n) ? n : null; })(),
