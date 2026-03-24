@@ -153,8 +153,9 @@ const AddListing = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   // Refs to track original values for change detection in edit mode
-  const originalPriceRef = useRef<number | null>(null);
-  const originalStatusRef = useRef<string | null>(null);
+   const originalPriceRef = useRef<number | null>(null);
+   const originalStatusRef = useRef<string | null>(null);
+   const backendStatusRef = useRef<string | null>(null);
 
   // Clone listing state (set when navigating from AgentListingDetail "Clone as New Listing")
   const [isRelisting, setIsRelisting] = useState(false);
