@@ -3423,6 +3423,7 @@ const AddListing = () => {
                             value={formData.price_range_min}
                             onChange={(value) => setFormData(prev => ({ ...prev, price_range_min: value }))}
                             decimals={0}
+                            disabled={!!formData.price}
                           />
                           <FormattedInput
                             id="price_range_max"
@@ -3431,9 +3432,14 @@ const AddListing = () => {
                             value={formData.price_range_max}
                             onChange={(value) => setFormData(prev => ({ ...prev, price_range_max: value }))}
                             decimals={0}
+                            disabled={!!formData.price}
                           />
                         </div>
-                        <p className="text-xs text-muted-foreground">For listings without an exact price yet</p>
+                        {!!formData.price ? (
+                          <p className="text-xs text-muted-foreground">Price range is disabled when a list price is entered.</p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">For listings without an exact price yet</p>
+                        )}
                       </div>
                     </div>
                   ) : (
