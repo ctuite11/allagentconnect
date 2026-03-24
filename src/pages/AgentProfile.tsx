@@ -230,25 +230,60 @@ const AgentProfile = () => {
 
       {/* ─── Hero Section ─── */}
       <div className="max-w-4xl mx-auto px-8 pt-12 pb-10">
-        <div className="flex items-start gap-8">
-          {/* Headshot */}
-          {agent.headshot_url ? (
-            <img
-              src={agent.headshot_url}
-              alt={`${agent.first_name} ${agent.last_name}`}
-              className="w-36 h-36 rounded-full object-cover border-4 border-background shadow-lg flex-shrink-0"
-            />
-          ) : (
-            <div className="w-36 h-36 rounded-full bg-primary flex flex-col items-center justify-center gap-1 shadow-lg flex-shrink-0">
-              <AACMonogram className="w-10 h-10 text-primary-foreground" />
-              <span className="text-lg font-bold text-primary-foreground tracking-tight">
-                {agent.first_name[0]}{agent.last_name[0]}
-              </span>
+        <div className="flex items-start gap-10">
+          {/* Left column: Photo + Buttons */}
+          <div className="flex flex-col items-center gap-3 flex-shrink-0 w-40">
+            <div className="relative">
+              {agent.headshot_url ? (
+                <img
+                  src={agent.headshot_url}
+                  alt={`${agent.first_name} ${agent.last_name}`}
+                  className="w-36 h-36 rounded-full object-cover border-4 border-background shadow-lg"
+                />
+              ) : (
+                <div className="w-36 h-36 rounded-full bg-primary flex flex-col items-center justify-center gap-1 shadow-lg">
+                  <AACMonogram className="w-10 h-10 text-primary-foreground" />
+                  <span className="text-lg font-bold text-primary-foreground tracking-tight">
+                    {agent.first_name[0]}{agent.last_name[0]}
+                  </span>
+                </div>
+              )}
+              {isOnline && (
+                <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-emerald-500 border-2 border-background" />
+              )}
             </div>
-          )}
 
-          {/* Details */}
-          <div className="flex flex-col">
+            <ContactAgentProfileDialog
+              agentId={agent.id}
+              agentName={`${agent.first_name} ${agent.last_name}`}
+              agentEmail={agent.email}
+              triggerLabel={`Email ${agent.first_name}`}
+            />
+
+            <Button
+              size="sm"
+              className="w-full"
+              disabled={isStartingChat}
+              onClick={async () => {
+                if (!user?.id || !agent.id) return;
+                setIsStartingChat(true);
+                try {
+                  const convoId = await findOrCreateConversation(user.id, agent.id);
+                  if (convoId) navigate(`/messages/${convoId}`);
+                } catch (e) {
+                  toast.error("Could not start conversation");
+                } finally {
+                  setIsStartingChat(false);
+                }
+              }}
+            >
+              <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+              Message {agent.first_name}
+            </Button>
+          </div>
+
+          {/* Right column: Details */}
+          <div className="flex flex-col pt-2">
             <h1 className="text-4xl font-bold text-foreground tracking-tight leading-tight">
               {agent.first_name}{" "}
               <span className="text-primary">{agent.last_name}</span>
@@ -264,24 +299,8 @@ const AgentProfile = () => {
               <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
             )}
 
-            <div className="flex items-center gap-3 mt-5">
-              <ContactAgentProfileDialog
-                agentId={agent.id}
-                agentName={`${agent.first_name} ${agent.last_name}`}
-                agentEmail={agent.email}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => generateVCard(agent)}
-              >
-                <Download className="h-3.5 w-3.5 mr-1.5" />
-                Save Contact
-              </Button>
-            </div>
-
             {contactItems.length > 0 && (
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 pt-5 border-t border-border/50">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-5">
                 {contactItems.map((item, i) => (
                   <a
                     key={i}
@@ -296,17 +315,6 @@ const AgentProfile = () => {
                 ))}
               </div>
             )}
-
-            <div className="flex items-center gap-2 mt-4">
-              <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5">
-                <Users className="h-3 w-3" />
-                DirectConnect
-              </Badge>
-              <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-200">
-                <ShieldCheck className="h-3 w-3" />
-                Verified
-              </Badge>
-            </div>
           </div>
         </div>
       </div>
