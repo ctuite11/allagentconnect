@@ -329,7 +329,7 @@ const AgentProfile = () => {
                     rel={item.icon === Globe ? "noopener noreferrer" : undefined}
                     className="flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
                   >
-                    <item.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
+                    <item.icon className="h-3.5 w-3.5 text-primary/70" />
                     {item.label}
                   </a>
                 </span>
