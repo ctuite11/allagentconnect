@@ -1,48 +1,24 @@
 
 
-## Put Company + AAC ID on Same Line, Keep Green Dot
+## Move Logo Further Inward
 
 **File:** `src/pages/AgentProfile.tsx`
 
-### Current (lines 262-273)
-```
-Title · Company
-● AAC-0004
-```
+### Problem
+The logo wrapper uses `ml-auto` which pushes it to the far right, and `pr-10 lg:pr-14` isn't enough inset.
 
-### Target
-```
-Title
-Company · ● AAC-0004
-```
+### Fix
+Replace `ml-auto self-center pr-10 lg:pr-14` with just `self-center` and remove the auto-push-right behavior. Instead, let the flex row's `gap-6` naturally space things, and give the identity column (Column 2) `flex-1` so it takes up the middle space, pushing the logo to a natural resting point within the content grid rather than the page edge.
 
-### Changes
-
-**Lines 262-273** become:
-
+**Line 257:** Add `flex-1` to Column 2's wrapper:
 ```tsx
-{agent.title && (
-  <p className="text-base text-muted-foreground mt-1.5">
-    {agent.title}
-  </p>
-)}
-
-{(agent.company || agent.aac_id) && (
-  <p className="flex items-center gap-1.5 text-sm text-muted-foreground/70 mt-1">
-    {agent.company && <span>{agent.company}</span>}
-    {agent.company && agent.aac_id && <span className="text-muted-foreground/30">·</span>}
-    {agent.aac_id && (
-      <>
-        <span className="w-1 h-1 rounded-full bg-aacSuccess" />
-        <span className="font-mono text-xs text-muted-foreground/50">{agent.aac_id}</span>
-      </>
-    )}
-  </p>
-)}
+<div className="flex flex-col justify-center min-w-0 pt-1 flex-1">
 ```
 
-- Title on its own line
-- Company and AAC ID merge into one line with `·` separator
-- Green dot stays before the AAC ID
-- No monogram, no compass icon
+**Line 284:** Remove `ml-auto` and excessive padding from the logo wrapper:
+```tsx
+<div className="flex-shrink-0 self-center">
+```
+
+This makes the identity block fill available space and the logo sits naturally at the end of the content area, not pinned to the page edge.
 
