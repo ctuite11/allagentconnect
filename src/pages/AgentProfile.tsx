@@ -254,7 +254,7 @@ const AgentProfile = () => {
           </div>
 
           {/* Column 2: Identity block — sits next to photo */}
-          <div className="flex flex-col justify-center min-w-0 pt-1">
+          <div className="flex flex-col justify-center min-w-0 pt-1 flex-1">
             <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
               {agent.first_name} {agent.last_name}
             </h1>
