@@ -2925,7 +2925,7 @@ const AddListing = () => {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Saving...
                       </>
-                    ) : originalStatusRef.current === "draft" && formData.status !== "draft" ? (
+                    ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                       <>
                         <Upload className="w-5 h-5" />
                         Publish
@@ -2933,7 +2933,7 @@ const AddListing = () => {
                     ) : (
                       <>
                         <Save className="w-5 h-5" />
-                        {originalStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
+                        {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                       </>
                     )}
                   </Button>
