@@ -1,39 +1,49 @@
 
 
-# Fix Hero Layout: Left-Aligned, Not Centered
+# Fix Agent Profile Hero: Left-Aligned Photo with Buttons Below + Cleanup
 
-## Problem
-The hero section is currently centered (`items-center text-center`). The reference screenshot clearly shows a **left-aligned** layout: headshot on the left with name + details to its right, all starting from the left edge — not centered on the page.
+## What changes
 
-## Changes to `src/pages/AgentProfile.tsx`
+### Hero section restructure (`src/pages/AgentProfile.tsx`, lines 226-306)
 
-### Hero section (lines 227-310)
-Replace the centered `flex-col items-center text-center` layout with a left-aligned horizontal composition matching the reference:
+Change the layout from "photo left, details right" to a stacked structure matching the reference screenshot:
 
 ```text
-[Headshot]  [Name (large, last name in primary)]
-            [Title]
-            [Company · AAC ID]
-            [Contact Agent btn] [Save Contact btn]
-            [phone icon + number]  [mail icon + email]  [globe + website]
-            [badges row]
+[Photo (w-36 h-36 rounded-full, with online presence dot)]
+[Email {FirstName}] [Message {FirstName}]    ← buttons sit directly below photo
+[Name — text-4xl, last name in primary]      ← to the right of photo+buttons column
+[Title · Company]
+[AAC ID]
+[phone · email · website — single horizontal line]
 ```
 
-**Specific changes:**
-- Outer wrapper: `flex items-start gap-8` instead of `flex-col items-center text-center`
-- Headshot stays `w-36 h-36 rounded-full` but sits as a flex child on the left, not centered above
-- Right side is a `flex-col` with all text left-aligned (`text-left`)
-- Name remains `text-4xl font-bold`, last name in `text-primary`
-- Title, company, AAC ID flow naturally below the name
-- Buttons row left-aligned below metadata
-- Contact info row left-aligned below buttons (remove `justify-center`, use `justify-start`)
-- Badges left-aligned below contact row
-- Remove all `text-center` and `items-center` from the hero
+Actually, looking at the reference more carefully: the photo is on the left with buttons stacked below it, and the name/details are to the right. So the layout is:
 
-### No other changes
-- About, Testimonials, Listings sections stay as-is
-- No data/routing/action logic changes
+```text
+LEFT COLUMN              RIGHT COLUMN
+┌──────────────┐         Name (large)
+│   Headshot   │         Title · Company
+│  (circular)  │         AAC ID
+│   ● online   │         
+└──────────────┘         phone | email | website
+[Email Sarah]            (all one horizontal line)
+[Message Sarah]
+```
 
-## Files modified
-- `src/pages/AgentProfile.tsx` — hero section layout only
+### Specific changes:
+
+1. **Photo column**: Wrap headshot + two buttons in a `flex-col items-center` container. Add online presence dot using `useAgentLastSeen(agent.id)`.
+
+2. **Two buttons below photo**:
+   - "Email {FirstName}" — opens `ContactAgentProfileDialog` (email flow, already exists)
+   - "Message {FirstName}" — uses `findOrCreateConversation` to open/create a messaging thread and navigate to `/messages/{conversationId}`
+
+3. **Contact info**: Merge all contact items (office phone, cell phone, email, website) into a single horizontal line separated by subtle dividers, no border-t above.
+
+4. **Remove**: DirectConnect and Verified badges (per user request).
+
+5. **Online dot**: Import `useAgentLastSeen` and render an emerald dot on the headshot circle, consistent with `AgentAvatar` pattern.
+
+### Files modified
+- `src/pages/AgentProfile.tsx` — hero section layout, add messaging import + handler, add presence hook
 
