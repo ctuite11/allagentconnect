@@ -115,7 +115,7 @@ const socialIconMap = [
 const AgentProfile = () => {
   const { id: idOrCode } = useParams();
   const navigate = useNavigate();
-  const { userId } = useAuthRole();
+  const { user } = useAuthRole();
   const [agent, setAgent] = useState<AgentProfileData | null>(null);
   const [listings, setListings] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
