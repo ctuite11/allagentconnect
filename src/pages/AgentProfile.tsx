@@ -266,7 +266,10 @@ const AgentProfile = () => {
             )}
 
             {agent.aac_id && (
-              <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
+              <p className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground/50 mt-1">
+                <span className="w-1 h-1 rounded-full bg-aacSuccess" />
+                {agent.aac_id}
+              </p>
             )}
           </div>
 
