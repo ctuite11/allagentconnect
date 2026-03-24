@@ -153,8 +153,9 @@ const AddListing = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   // Refs to track original values for change detection in edit mode
-  const originalPriceRef = useRef<number | null>(null);
-  const originalStatusRef = useRef<string | null>(null);
+   const originalPriceRef = useRef<number | null>(null);
+   const originalStatusRef = useRef<string | null>(null);
+   const backendStatusRef = useRef<string | null>(null);
 
   // Clone listing state (set when navigating from AgentListingDetail "Clone as New Listing")
   const [isRelisting, setIsRelisting] = useState(false);
@@ -574,9 +575,13 @@ const AddListing = () => {
         // Store original values for change tracking in edit mode
         originalPriceRef.current = data.price || null;
         
+        // Store the true backend status before normalization (for draft detection)
+        const rawStatus = (data.status || "new").toLowerCase();
+        backendStatusRef.current = rawStatus;
+        
         // Normalize status to lowercase to match Select options
         // If status is "draft", convert to "new" (draft isn't a valid UI option for edit)
-        let normalizedStatus = (data.status || "new").toLowerCase();
+        let normalizedStatus = rawStatus;
         if (normalizedStatus === "draft") {
           normalizedStatus = "new";
         }
@@ -2114,8 +2119,8 @@ const AddListing = () => {
     video_url: formData.video_url || null,
     listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
     attom_id: attomId,
-    price_range_min: formData.price_range_min ? parseFloat(formData.price_range_min) : null,
-    price_range_max: formData.price_range_max ? parseFloat(formData.price_range_max) : null,
+    price_range_min: formData.price ? null : (formData.price_range_min ? parseFloat(formData.price_range_min) : null),
+    price_range_max: formData.price ? null : (formData.price_range_max ? parseFloat(formData.price_range_max) : null),
     
     // Parking & Garage
     parking_spaces: (() => { const n = Number(formData.parking_spaces); return Number.isFinite(n) ? n : null; })(),
@@ -2920,7 +2925,7 @@ const AddListing = () => {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Saving...
                       </>
-                    ) : originalStatusRef.current === "draft" && formData.status !== "draft" ? (
+                    ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                       <>
                         <Upload className="w-5 h-5" />
                         Publish
@@ -2928,7 +2933,7 @@ const AddListing = () => {
                     ) : (
                       <>
                         <Save className="w-5 h-5" />
-                        {originalStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
+                        {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                       </>
                     )}
                   </Button>
@@ -3418,6 +3423,7 @@ const AddListing = () => {
                             value={formData.price_range_min}
                             onChange={(value) => setFormData(prev => ({ ...prev, price_range_min: value }))}
                             decimals={0}
+                            disabled={!!formData.price}
                           />
                           <FormattedInput
                             id="price_range_max"
@@ -3426,9 +3432,14 @@ const AddListing = () => {
                             value={formData.price_range_max}
                             onChange={(value) => setFormData(prev => ({ ...prev, price_range_max: value }))}
                             decimals={0}
+                            disabled={!!formData.price}
                           />
                         </div>
-                        <p className="text-xs text-muted-foreground">For listings without an exact price yet</p>
+                        {!!formData.price ? (
+                          <p className="text-xs text-muted-foreground">Price range is disabled when a list price is entered.</p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">For listings without an exact price yet</p>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -4347,9 +4358,10 @@ const AddListing = () => {
                       Type of Listing Agreement <span className="text-destructive">*</span>
                     </Label>
                     {[
-                      { value: "A - Exclusive Right to Rent", label: "A – Exclusive Right to Rent" },
-                      { value: "B - ER w/ Named Exclusion", label: "B – ER w/ Named Exclusion" },
-                      { value: "D - Exclusive Agency", label: "D – Exclusive Agency" },
+                      { value: "Exclusive Right to Sell", label: "Exclusive Right to Sell" },
+                      { value: "Exclusive Agency", label: "Exclusive Agency" },
+                      { value: "Open Listing", label: "Open Listing" },
+                      { value: "Net Listing", label: "Net Listing" },
                     ].map((option) => (
                       <label
                         key={option.value}
@@ -4791,7 +4803,7 @@ const AddListing = () => {
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Saving...
                           </>
-                        ) : originalStatusRef.current === "draft" && formData.status !== "draft" ? (
+                        ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                           <>
                             <Upload className="w-4 h-4 mr-2" />
                             Publish
@@ -4799,7 +4811,7 @@ const AddListing = () => {
                         ) : (
                           <>
                             <Save className="w-4 h-4 mr-2" />
-                            {originalStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
+                            {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                           </>
                         )}
                       </Button>
