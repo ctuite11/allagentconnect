@@ -1,51 +1,39 @@
 
 
-# Fix Agent Profile: Remove Top Toolbar + Redesign Layout
+# Fix Hero Layout: Left-Aligned, Not Centered
 
 ## Problem
-1. The top navigation bar renders on `/agent/:id` because it's explicitly excluded from `SIDEBAR_MANAGED_PREFIXES` (line 41 comment says "NOT /agent/:id (public profile)" — but this is wrong, it's a private authenticated page)
-2. The page layout still doesn't match the reference design quality — it needs a proper editorial redesign, not incremental patches
-3. No green "accepting new buyers" pill needed — this is an internal workspace page
+The hero section is currently centered (`items-center text-center`). The reference screenshot clearly shows a **left-aligned** layout: headshot on the left with name + details to its right, all starting from the left edge — not centered on the page.
 
-## Changes
+## Changes to `src/pages/AgentProfile.tsx`
 
-### 1. Navigation.tsx — Hide top bar on agent profile routes
-Add `"/agent/"` as a prefix to `SIDEBAR_MANAGED_PREFIXES`. Since all the specific `/agent/listings`, `/agent/profile`, etc. entries already exist and match first, adding the broader prefix just catches the dynamic `/agent/:id` routes. Remove the misleading "public profile" comment.
+### Hero section (lines 227-310)
+Replace the centered `flex-col items-center text-center` layout with a left-aligned horizontal composition matching the reference:
 
-### 2. AgentProfile.tsx — Full render redesign
-Replace the entire render output (lines 203-458) with a centered, section-based editorial layout inspired by the reference screenshots:
+```text
+[Headshot]  [Name (large, last name in primary)]
+            [Title]
+            [Company · AAC ID]
+            [Contact Agent btn] [Save Contact btn]
+            [phone icon + number]  [mail icon + email]  [globe + website]
+            [badges row]
+```
 
-**Hero section** (centered, generous spacing):
-- Large circular headshot (w-36 h-36 rounded-full) with ring border, or AAC monogram fallback
-- Name as `text-4xl font-bold`, with last name in `text-primary`
-- Title and company below in muted text
-- AAC ID as small mono text
-- Horizontal contact info row: phone, email, website — separated by subtle dividers, centered
-- Compact action buttons centered: "Contact Agent" (primary) + "Save Contact" (outline)
-- Small badges row beneath (DirectConnect, Verified)
+**Specific changes:**
+- Outer wrapper: `flex items-start gap-8` instead of `flex-col items-center text-center`
+- Headshot stays `w-36 h-36 rounded-full` but sits as a flex child on the left, not centered above
+- Right side is a `flex-col` with all text left-aligned (`text-left`)
+- Name remains `text-4xl font-bold`, last name in `text-primary`
+- Title, company, AAC ID flow naturally below the name
+- Buttons row left-aligned below metadata
+- Contact info row left-aligned below buttons (remove `justify-center`, use `justify-start`)
+- Badges left-aligned below contact row
+- Remove all `text-center` and `items-center` from the hero
 
-**About section**:
-- Two-column layout: left has uppercase "ABOUT" label + a headline like "Get to Know {firstName}", right has the bio text at readable width
-- Social icons centered below in small bordered circles
+### No other changes
+- About, Testimonials, Listings sections stay as-is
+- No data/routing/action logic changes
 
-**Testimonials section**:
-- Centered uppercase label + heading
-- 3-column grid of white cards with neutral borders, quote icon, star rating, testimonial text, client name
-- No left-border accents, no tinted fills
-
-**Listings section**:
-- Centered uppercase label + heading
-- 3-column grid with generous image height (h-40+), price badge overlay, property details below
-
-**Back navigation**: Simple "Back to Network" link at top-left, no toolbar treatment.
-
-### Not changed
-- Data fetching logic (lines 126-181)
-- `generateVCard` utility
-- `ContactAgentProfileDialog` usage
-- Routing, sidebar, auth
-
-### Files modified
-1. `src/components/Navigation.tsx` — add `/agent/` prefix
-2. `src/pages/AgentProfile.tsx` — full render redesign
+## Files modified
+- `src/pages/AgentProfile.tsx` — hero section layout only
 
