@@ -303,6 +303,23 @@ const AgentProfile = () => {
               </div>
             )}
           </div>
+
+          {/* Right column: Identity */}
+          <div className="flex flex-col flex-1 min-w-0 pt-1">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
+              {agent.first_name} {agent.last_name}
+            </h1>
+
+            {(agent.title || agent.company) && (
+              <p className="text-base text-muted-foreground mt-1.5">
+                {[agent.title, agent.company].filter(Boolean).join(" · ")}
+              </p>
+            )}
+
+            {agent.aac_id && (
+              <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
+            )}
+          </div>
         </div>
       </div>
 
