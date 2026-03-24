@@ -257,7 +257,7 @@ const AgentProfile = () => {
               agentId={agent.id}
               agentName={`${agent.first_name} ${agent.last_name}`}
               agentEmail={agent.email}
-              triggerLabel={`Email ${agent.first_name}`}
+              buttonText={`Email ${agent.first_name}`}
             />
 
             <Button
