@@ -4358,9 +4358,10 @@ const AddListing = () => {
                       Type of Listing Agreement <span className="text-destructive">*</span>
                     </Label>
                     {[
-                      { value: "A - Exclusive Right to Rent", label: "A – Exclusive Right to Rent" },
-                      { value: "B - ER w/ Named Exclusion", label: "B – ER w/ Named Exclusion" },
-                      { value: "D - Exclusive Agency", label: "D – Exclusive Agency" },
+                      { value: "Exclusive Right to Sell", label: "Exclusive Right to Sell" },
+                      { value: "Exclusive Agency", label: "Exclusive Agency" },
+                      { value: "Open Listing", label: "Open Listing" },
+                      { value: "Net Listing", label: "Net Listing" },
                     ].map((option) => (
                       <label
                         key={option.value}
