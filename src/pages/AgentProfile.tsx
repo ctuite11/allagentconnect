@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft, 
   Loader2, 
-  Home, 
   Star, 
   Quote,
   Phone,
@@ -200,10 +199,21 @@ const AgentProfile = () => {
     (s) => agent.social_links?.[s.key as keyof typeof agent.social_links]
   );
 
+  const contactItems = [
+    agent.office_phone && { icon: Phone, label: `Office ${formatPhoneNumber(agent.office_phone)}`, href: `tel:${agent.office_phone}` },
+    agent.cell_phone && { icon: Phone, label: `Cell ${formatPhoneNumber(agent.cell_phone)}`, href: `tel:${agent.cell_phone}` },
+    agent.email && { icon: Mail, label: agent.email, href: `mailto:${agent.email}` },
+    agent.social_links?.website && {
+      icon: Globe,
+      label: agent.social_links.website.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+      href: agent.social_links.website.startsWith("http") ? agent.social_links.website : `https://${agent.social_links.website}`,
+    },
+  ].filter(Boolean) as { icon: typeof Phone; label: string; href: string }[];
+
   return (
     <div className="flex-1 bg-background min-h-screen">
       {/* Back nav */}
-      <div className="max-w-3xl mx-auto px-8 pt-6">
+      <div className="max-w-4xl mx-auto px-8 pt-6">
         <button
           onClick={() => navigate("/our-members")}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -213,169 +223,160 @@ const AgentProfile = () => {
         </button>
       </div>
 
-      {/* ─── Identity Section ─── */}
-      <div className="max-w-3xl mx-auto px-8 pt-10 pb-8">
-        <div className="grid grid-cols-[192px_1fr] gap-8 items-start">
-
-          {/* ── Left: Photo + Secondary Rail ── */}
-          <div className="flex flex-col items-start gap-3">
-            {agent.headshot_url ? (
-              <img
-                src={agent.headshot_url}
-                alt={`${agent.first_name} ${agent.last_name}`}
-                className="w-[192px] h-[192px] rounded-2xl object-cover shadow-sm"
-              />
-            ) : (
-              <div className="w-[192px] h-[192px] rounded-2xl bg-muted flex flex-col items-center justify-center gap-2">
-                <AACMonogram className="w-10 h-10 text-primary" />
-                <span className="text-lg font-bold text-foreground tracking-tight">
-                  {agent.first_name[0]}{agent.last_name[0]}
-                </span>
-              </div>
-            )}
-
-            {/* Social + Website + Logo — left-aligned rail */}
-            <div className="flex flex-col items-start gap-2.5 pt-1">
-              {activeSocials.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {activeSocials.map(({ key, icon: Icon }) => (
-                    <a
-                      key={key}
-                      href={agent.social_links![key as keyof typeof agent.social_links]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-7 h-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              {agent.social_links?.website && (
-                <a
-                  href={agent.social_links.website.startsWith("http") ? agent.social_links.website : `https://${agent.social_links.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Globe className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate max-w-[160px]">
-                    {agent.social_links.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                  </span>
-                </a>
-              )}
-
-              {agent.logo_url && (
-                <img
-                  src={agent.logo_url}
-                  alt="Company logo"
-                  className="h-7 max-w-[140px] object-contain opacity-30"
-                />
-              )}
+      {/* ─── Hero Section ─── */}
+      <div className="max-w-4xl mx-auto px-8 pt-12 pb-10">
+        <div className="flex flex-col items-center text-center">
+          {/* Headshot */}
+          {agent.headshot_url ? (
+            <img
+              src={agent.headshot_url}
+              alt={`${agent.first_name} ${agent.last_name}`}
+              className="w-36 h-36 rounded-full object-cover border-4 border-background shadow-lg mb-6"
+            />
+          ) : (
+            <div className="w-36 h-36 rounded-full bg-primary flex flex-col items-center justify-center gap-1 mb-6 shadow-lg">
+              <AACMonogram className="w-10 h-10 text-primary-foreground" />
+              <span className="text-lg font-bold text-primary-foreground tracking-tight">
+                {agent.first_name[0]}{agent.last_name[0]}
+              </span>
             </div>
+          )}
+
+          {/* Name */}
+          <h1 className="text-4xl font-bold text-foreground tracking-tight leading-tight">
+            {agent.first_name}{" "}
+            <span className="text-primary">{agent.last_name}</span>
+          </h1>
+
+          {/* Title · Company */}
+          {(agent.title || agent.company) && (
+            <p className="text-base text-muted-foreground mt-2">
+              {[agent.title, agent.company].filter(Boolean).join(" · ")}
+            </p>
+          )}
+
+          {/* AAC ID */}
+          {agent.aac_id && (
+            <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 mt-6">
+            <ContactAgentProfileDialog
+              agentId={agent.id}
+              agentName={`${agent.first_name} ${agent.last_name}`}
+              agentEmail={agent.email}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => generateVCard(agent)}
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Save Contact
+            </Button>
           </div>
 
-          {/* ── Right: Identity + Actions ── */}
-          <div className="pt-1">
-            {/* Name — hero element */}
-            <h1 className="text-3xl font-bold text-foreground tracking-tight leading-none">
-              {agent.first_name} {agent.last_name}
-            </h1>
-
-            {/* Subtle accent */}
-            <div className="w-8 h-px bg-primary/30 mt-3" />
-
-            {/* Title · Company */}
-            {(agent.title || agent.company) && (
-              <p className="text-[15px] text-muted-foreground mt-3">
-                {[agent.title, agent.company].filter(Boolean).join(" · ")}
-              </p>
-            )}
-
-            {/* Metadata */}
-            <div className="mt-4 space-y-1 text-[13px] text-muted-foreground">
-              {agent.aac_id && (
-                <div className="font-mono text-xs text-foreground/40">{agent.aac_id}</div>
-              )}
-              {agent.email && (
-                <a href={`mailto:${agent.email}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                  <Mail className="h-3 w-3 text-muted-foreground/50" />
-                  {agent.email}
+          {/* Contact info row */}
+          {contactItems.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 pt-6 border-t border-border/50 w-full max-w-xl">
+              {contactItems.map((item, i) => (
+                <a
+                  key={i}
+                  href={item.href}
+                  target={item.icon === Globe ? "_blank" : undefined}
+                  rel={item.icon === Globe ? "noopener noreferrer" : undefined}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <item.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
+                  {item.label}
                 </a>
-              )}
-              {agent.office_phone && (
-                <a href={`tel:${agent.office_phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                  <Phone className="h-3 w-3 text-muted-foreground/50" />
-                  Office {formatPhoneNumber(agent.office_phone)}
-                </a>
-              )}
-              {agent.cell_phone && (
-                <a href={`tel:${agent.cell_phone}`} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                  <Phone className="h-3 w-3 text-muted-foreground/50" />
-                  Cell {formatPhoneNumber(agent.cell_phone)}
-                </a>
-              )}
+              ))}
             </div>
+          )}
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 mt-5">
-              <ContactAgentProfileDialog
-                agentId={agent.id}
-                agentName={`${agent.first_name} ${agent.last_name}`}
-                agentEmail={agent.email}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => generateVCard(agent)}
-              >
-                <Download className="h-3.5 w-3.5 mr-1.5" />
-                Save Contact
-              </Button>
-            </div>
-
-            {/* Badges */}
-            <div className="flex items-center gap-1.5 mt-3">
-              <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5">
-                <Users className="h-3 w-3" />
-                DirectConnect
-              </Badge>
-              <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-200">
-                <ShieldCheck className="h-3 w-3" />
-                Verified
-              </Badge>
-            </div>
+          {/* Badges */}
+          <div className="flex items-center gap-2 mt-4">
+            <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5">
+              <Users className="h-3 w-3" />
+              DirectConnect
+            </Badge>
+            <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-200">
+              <ShieldCheck className="h-3 w-3" />
+              Verified
+            </Badge>
           </div>
         </div>
       </div>
 
       {/* ─── Content Sections ─── */}
-      <div className="max-w-3xl mx-auto px-8 pb-12 space-y-0">
+      <div className="max-w-4xl mx-auto px-8 pb-16">
+
         {/* About */}
         {agent.bio && (
-          <section className="border-t border-border pt-6 pb-6">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-3">About</h2>
-            <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-wrap max-w-xl">
-              {agent.bio}
-            </p>
+          <section className="border-t border-border/50 py-10">
+            <div className="grid md:grid-cols-[200px_1fr] gap-6">
+              <div>
+                <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.15em]">About</p>
+                <h2 className="text-lg font-semibold text-foreground mt-1 leading-snug">
+                  Get to Know<br />{agent.first_name}
+                </h2>
+              </div>
+              <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-wrap max-w-xl">
+                {agent.bio}
+              </p>
+            </div>
+
+            {/* Social icons */}
+            {activeSocials.length > 0 && (
+              <div className="flex items-center justify-center gap-3 mt-8">
+                {activeSocials.map(({ key, icon: Icon }) => (
+                  <a
+                    key={key}
+                    href={agent.social_links![key as keyof typeof agent.social_links]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {/* Company logo */}
+            {agent.logo_url && (
+              <div className="flex justify-center mt-6">
+                <img
+                  src={agent.logo_url}
+                  alt="Company logo"
+                  className="h-8 max-w-[160px] object-contain opacity-25"
+                />
+              </div>
+            )}
           </section>
         )}
 
         {/* Testimonials */}
         {testimonials.length > 0 && (
-          <section className="border-t border-border pt-6 pb-6">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-4">Testimonials</h2>
-            <div className="space-y-3">
-              {testimonials.slice(0, 3).map((testimonial) => (
-                <div key={testimonial.id} className="border border-border rounded-xl bg-white p-4 relative">
-                  <Quote className="absolute top-3 right-3 h-5 w-5 text-muted-foreground/10" />
+          <section className="border-t border-border/50 py-10">
+            <div className="text-center mb-8">
+              <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.15em]">Testimonials</p>
+              <h2 className="text-xl font-semibold text-foreground mt-1">What Clients Are Saying</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {testimonials.slice(0, 6).map((testimonial) => (
+                <div
+                  key={testimonial.id}
+                  className="rounded-xl border border-border bg-white p-5 relative"
+                >
+                  <Quote className="h-5 w-5 text-primary/15 mb-3" />
                   {testimonial.rating && (
-                    <div className="flex gap-0.5 mb-2">
+                    <div className="flex gap-0.5 mb-3">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-3 w-3 ${
+                          className={`h-3.5 w-3.5 ${
                             i < testimonial.rating!
                               ? "text-amber-500 fill-amber-500"
                               : "text-muted-foreground/20"
@@ -384,10 +385,10 @@ const AgentProfile = () => {
                       ))}
                     </div>
                   )}
-                  <p className="text-[14px] text-muted-foreground italic leading-relaxed pr-6">
+                  <p className="text-[14px] text-muted-foreground leading-relaxed">
                     "{testimonial.testimonial_text}"
                   </p>
-                  <p className="mt-2.5 text-[13px] font-semibold text-foreground">
+                  <p className="mt-3 text-[13px] font-semibold text-foreground">
                     — {testimonial.client_name}
                   </p>
                   {testimonial.client_title && (
@@ -400,13 +401,14 @@ const AgentProfile = () => {
         )}
 
         {/* Listings */}
-        <section className="border-t border-border pt-6">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-4">
-            Listings
-          </h2>
+        <section className="border-t border-border/50 py-10">
+          <div className="text-center mb-8">
+            <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.15em]">Featured Properties</p>
+            <h2 className="text-xl font-semibold text-foreground mt-1">Current Listings</h2>
+          </div>
 
           {listings.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground text-center">
               No active listings.{" "}
               <button
                 onClick={() => navigate("/listing-search")}
@@ -416,34 +418,36 @@ const AgentProfile = () => {
               </button>
             </p>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {listings.map((listing) => (
                 <Card
                   key={listing.id}
-                  className="cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-200 overflow-hidden group"
+                  className="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group"
                   onClick={() => navigate(`/property/${listing.id}`)}
                 >
-                  <div className="relative h-36 overflow-hidden">
+                  <div className="relative h-44 overflow-hidden">
                     <img
                       src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : "/placeholder.svg"}
                       alt={listing.address}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground text-xs">
+                    <div className="absolute top-3 left-3">
+                      <Badge className="bg-primary text-primary-foreground text-xs font-semibold shadow-sm">
+                        ${listing.price.toLocaleString()}
+                      </Badge>
+                    </div>
+                    <Badge className="absolute top-3 right-3 bg-white/90 text-foreground text-[10px] border-0 shadow-sm">
                       {listing.listing_type === "for_sale" ? "For Sale" : "For Rent"}
                     </Badge>
                   </div>
-                  <CardContent className="p-3">
-                    <p className="text-base font-bold text-primary mb-0.5">
-                      ${listing.price.toLocaleString()}
-                    </p>
-                    <p className="font-medium text-foreground text-sm truncate">
+                  <CardContent className="p-4">
+                    <p className="font-semibold text-foreground text-sm truncate">
                       {listing.address}
                     </p>
-                    <p className="text-xs text-muted-foreground mb-1">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {listing.city}, {listing.state} {listing.zip_code}
                     </p>
-                    <div className="flex gap-3 text-xs text-muted-foreground">
+                    <div className="flex gap-3 text-xs text-muted-foreground mt-2 pt-2 border-t border-border/40">
                       {listing.bedrooms && <span>{listing.bedrooms} bed</span>}
                       {listing.bathrooms && <span>{listing.bathrooms} bath</span>}
                       {listing.square_feet && <span>{listing.square_feet.toLocaleString()} sqft</span>}
