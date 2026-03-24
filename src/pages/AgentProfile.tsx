@@ -249,7 +249,7 @@ const AgentProfile = () => {
               </div>
             )}
             {isOnline && (
-              <span className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+              <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background ring-2 ring-aacSuccess/20" />
             )}
           </div>
 
@@ -266,7 +266,10 @@ const AgentProfile = () => {
             )}
 
             {agent.aac_id && (
-              <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
+              <p className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground/50 mt-1">
+                <span className="w-1 h-1 rounded-full bg-aacSuccess" />
+                {agent.aac_id}
+              </p>
             )}
           </div>
 
@@ -276,14 +279,14 @@ const AgentProfile = () => {
               <img
                 src={agent.logo_url}
                 alt="Company logo"
-                className="h-10 max-w-[140px] object-contain opacity-30"
+                className="h-14 max-w-[200px] object-contain opacity-50"
               />
             </div>
           )}
         </div>
 
         {/* Row 2: Buttons + Metadata aligned under photo */}
-        <div className="mt-4 flex flex-col items-start gap-3" style={{ paddingLeft: 0 }}>
+        <div className="mt-4 flex flex-col items-start gap-5" style={{ paddingLeft: 0 }}>
           <div className="flex items-center gap-2">
             <ContactAgentProfileDialog
               agentId={agent.id}
@@ -326,7 +329,7 @@ const AgentProfile = () => {
                     rel={item.icon === Globe ? "noopener noreferrer" : undefined}
                     className="flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
                   >
-                    <item.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
+                    <item.icon className="h-3.5 w-3.5 text-primary/70" />
                     {item.label}
                   </a>
                 </span>
