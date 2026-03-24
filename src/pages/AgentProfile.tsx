@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft, 
   Loader2, 
@@ -17,13 +16,15 @@ import {
   Twitter,
   Instagram,
   Download,
-  Users,
-  ShieldCheck
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import AACMonogram from "@/components/ui/AACMonogram";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
+import { findOrCreateConversation } from "@/lib/startConversation";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 const generateVCard = (agent: AgentProfileData) => {
   const vcard = [
