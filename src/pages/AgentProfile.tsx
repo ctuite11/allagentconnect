@@ -279,7 +279,7 @@ const AgentProfile = () => {
               <img
                 src={agent.logo_url}
                 alt="Company logo"
-                className="h-10 max-w-[140px] object-contain opacity-30"
+                className="h-14 max-w-[200px] object-contain opacity-50"
               />
             </div>
           )}
