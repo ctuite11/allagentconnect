@@ -232,7 +232,7 @@ const AgentProfile = () => {
       <div className="max-w-4xl mx-auto px-8 pt-12 pb-10">
         <div className="flex items-start gap-10">
           {/* Left column: Photo + Buttons */}
-          <div className="flex flex-col items-center gap-3 flex-shrink-0 w-40">
+          <div className="flex flex-col items-start gap-3 flex-shrink-0">
             <div className="relative">
               {agent.headshot_url ? (
                 <img
@@ -253,33 +253,35 @@ const AgentProfile = () => {
               )}
             </div>
 
-            <ContactAgentProfileDialog
-              agentId={agent.id}
-              agentName={`${agent.first_name} ${agent.last_name}`}
-              agentEmail={agent.email}
-              buttonText={`Email ${agent.first_name}`}
-            />
+            <div className="flex items-center gap-2">
+              <ContactAgentProfileDialog
+                agentId={agent.id}
+                agentName={`${agent.first_name} ${agent.last_name}`}
+                agentEmail={agent.email}
+                buttonText={`Email ${agent.first_name}`}
+              />
 
-            <Button
-              size="sm"
-              className="w-full"
-              disabled={isStartingChat}
-              onClick={async () => {
-                if (!user?.id || !agent.id) return;
-                setIsStartingChat(true);
-                try {
-                  const convoId = await findOrCreateConversation(user.id, agent.id);
-                  if (convoId) navigate(`/messages/${convoId}`);
-                } catch (e) {
-                  toast.error("Could not start conversation");
-                } finally {
-                  setIsStartingChat(false);
-                }
-              }}
-            >
-              <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-              Message {agent.first_name}
-            </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isStartingChat}
+                onClick={async () => {
+                  if (!user?.id || !agent.id) return;
+                  setIsStartingChat(true);
+                  try {
+                    const convoId = await findOrCreateConversation(user.id, agent.id);
+                    if (convoId) navigate(`/messages/${convoId}`);
+                  } catch (e) {
+                    toast.error("Could not start conversation");
+                  } finally {
+                    setIsStartingChat(false);
+                  }
+                }}
+              >
+                <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                Message {agent.first_name}
+              </Button>
+            </div>
           </div>
 
           {/* Right column: Details */}
