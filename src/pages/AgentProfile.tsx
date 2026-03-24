@@ -231,8 +231,8 @@ const AgentProfile = () => {
       {/* ─── Hero Section ─── */}
       <div className="max-w-6xl mx-auto px-8 pt-12 pb-10">
         {/* Row 1: Photo + Identity + Logo */}
-        <div className="grid grid-cols-[120px_minmax(0,1fr)_auto] items-center gap-6">
-          {/* Column 1: Photo */}
+        <div className="flex items-center gap-6">
+          {/* Photo */}
           <div className="relative flex-shrink-0">
             {agent.headshot_url ? (
               <img
@@ -253,7 +253,7 @@ const AgentProfile = () => {
             )}
           </div>
 
-          {/* Column 2: Identity block — sits next to photo */}
+          {/* Identity */}
           <div className="flex flex-col justify-center min-w-0 pt-1">
             <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
               {agent.first_name} {agent.last_name}
@@ -278,18 +278,6 @@ const AgentProfile = () => {
               </p>
             )}
           </div>
-
-          {/* Column 3: Company logo — far right */}
-          {agent.logo_url && (
-            <div className="flex-shrink-0 self-center pr-8 lg:pr-12">
-              <img
-                src={agent.logo_url}
-                alt="Company logo"
-                className="h-16 max-w-[240px] object-contain"
-                style={{ opacity: 0.7 }}
-              />
-            </div>
-          )}
         </div>
 
         {/* Row 2: Buttons + Metadata aligned under photo */}
