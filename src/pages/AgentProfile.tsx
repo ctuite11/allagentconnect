@@ -225,16 +225,16 @@ const AgentProfile = () => {
 
       {/* ─── Hero Section ─── */}
       <div className="max-w-4xl mx-auto px-8 pt-12 pb-10">
-        <div className="flex flex-col items-center text-center">
+        <div className="flex items-start gap-8">
           {/* Headshot */}
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
               alt={`${agent.first_name} ${agent.last_name}`}
-              className="w-36 h-36 rounded-full object-cover border-4 border-background shadow-lg mb-6"
+              className="w-36 h-36 rounded-full object-cover border-4 border-background shadow-lg flex-shrink-0"
             />
           ) : (
-            <div className="w-36 h-36 rounded-full bg-primary flex flex-col items-center justify-center gap-1 mb-6 shadow-lg">
+            <div className="w-36 h-36 rounded-full bg-primary flex flex-col items-center justify-center gap-1 shadow-lg flex-shrink-0">
               <AACMonogram className="w-10 h-10 text-primary-foreground" />
               <span className="text-lg font-bold text-primary-foreground tracking-tight">
                 {agent.first_name[0]}{agent.last_name[0]}
@@ -242,69 +242,66 @@ const AgentProfile = () => {
             </div>
           )}
 
-          {/* Name */}
-          <h1 className="text-4xl font-bold text-foreground tracking-tight leading-tight">
-            {agent.first_name}{" "}
-            <span className="text-primary">{agent.last_name}</span>
-          </h1>
+          {/* Details */}
+          <div className="flex flex-col">
+            <h1 className="text-4xl font-bold text-foreground tracking-tight leading-tight">
+              {agent.first_name}{" "}
+              <span className="text-primary">{agent.last_name}</span>
+            </h1>
 
-          {/* Title · Company */}
-          {(agent.title || agent.company) && (
-            <p className="text-base text-muted-foreground mt-2">
-              {[agent.title, agent.company].filter(Boolean).join(" · ")}
-            </p>
-          )}
+            {(agent.title || agent.company) && (
+              <p className="text-base text-muted-foreground mt-2">
+                {[agent.title, agent.company].filter(Boolean).join(" · ")}
+              </p>
+            )}
 
-          {/* AAC ID */}
-          {agent.aac_id && (
-            <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
-          )}
+            {agent.aac_id && (
+              <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
+            )}
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 mt-6">
-            <ContactAgentProfileDialog
-              agentId={agent.id}
-              agentName={`${agent.first_name} ${agent.last_name}`}
-              agentEmail={agent.email}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => generateVCard(agent)}
-            >
-              <Download className="h-3.5 w-3.5 mr-1.5" />
-              Save Contact
-            </Button>
-          </div>
-
-          {/* Contact info row */}
-          {contactItems.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 pt-6 border-t border-border/50 w-full max-w-xl">
-              {contactItems.map((item, i) => (
-                <a
-                  key={i}
-                  href={item.href}
-                  target={item.icon === Globe ? "_blank" : undefined}
-                  rel={item.icon === Globe ? "noopener noreferrer" : undefined}
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <item.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
-                  {item.label}
-                </a>
-              ))}
+            <div className="flex items-center gap-3 mt-5">
+              <ContactAgentProfileDialog
+                agentId={agent.id}
+                agentName={`${agent.first_name} ${agent.last_name}`}
+                agentEmail={agent.email}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => generateVCard(agent)}
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Save Contact
+              </Button>
             </div>
-          )}
 
-          {/* Badges */}
-          <div className="flex items-center gap-2 mt-4">
-            <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5">
-              <Users className="h-3 w-3" />
-              DirectConnect
-            </Badge>
-            <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-200">
-              <ShieldCheck className="h-3 w-3" />
-              Verified
-            </Badge>
+            {contactItems.length > 0 && (
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 pt-5 border-t border-border/50">
+                {contactItems.map((item, i) => (
+                  <a
+                    key={i}
+                    href={item.href}
+                    target={item.icon === Globe ? "_blank" : undefined}
+                    rel={item.icon === Globe ? "noopener noreferrer" : undefined}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <item.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-4">
+              <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5">
+                <Users className="h-3 w-3" />
+                DirectConnect
+              </Badge>
+              <Badge variant="secondary" className="text-[11px] gap-1 font-normal px-2 py-0.5 bg-emerald-50 text-emerald-700 border-emerald-200">
+                <ShieldCheck className="h-3 w-3" />
+                Verified
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
