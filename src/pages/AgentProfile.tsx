@@ -231,8 +231,8 @@ const AgentProfile = () => {
       {/* ─── Hero Section ─── */}
       <div className="max-w-6xl mx-auto px-8 pt-12 pb-10">
         <div className="flex items-start gap-12">
-          {/* Left rail: Photo + Action buttons */}
-          <div className="flex flex-col items-center gap-4 flex-shrink-0 w-[200px]">
+          {/* Left rail: Photo + Action buttons + Metadata */}
+          <div className="flex flex-col items-start gap-4 flex-shrink-0">
             <div className="relative">
               {agent.headshot_url ? (
                 <img
@@ -253,7 +253,7 @@ const AgentProfile = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-2 w-full">
+            <div className="flex items-center gap-2">
               <ContactAgentProfileDialog
                 agentId={agent.id}
                 agentName={`${agent.first_name} ${agent.last_name}`}
@@ -283,26 +283,9 @@ const AgentProfile = () => {
                 Message {agent.first_name}
               </Button>
             </div>
-          </div>
-
-          {/* Right column: Identity + Contact */}
-          <div className="flex flex-col flex-1 min-w-0 pt-1">
-            <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
-              {agent.first_name} {agent.last_name}
-            </h1>
-
-            {(agent.title || agent.company) && (
-              <p className="text-base text-muted-foreground mt-1.5">
-                {[agent.title, agent.company].filter(Boolean).join(" · ")}
-              </p>
-            )}
-
-            {agent.aac_id && (
-              <p className="font-mono text-xs text-muted-foreground/50 mt-1">{agent.aac_id}</p>
-            )}
 
             {contactItems.length > 0 && (
-              <div className="flex items-center gap-x-1 mt-6 text-sm text-muted-foreground">
+              <div className="flex items-center flex-wrap gap-x-1 gap-y-1 text-sm text-muted-foreground">
                 {contactItems.map((item, i) => (
                   <span key={i} className="flex items-center">
                     {i > 0 && <span className="mx-2 text-border">·</span>}
