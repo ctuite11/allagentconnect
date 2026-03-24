@@ -231,7 +231,7 @@ const AgentProfile = () => {
       {/* ─── Hero Section ─── */}
       <div className="max-w-6xl mx-auto px-8 pt-12 pb-10">
         {/* Row 1: Photo + Identity + Logo */}
-        <div className="flex items-start gap-6">
+        <div className="grid grid-cols-[120px_minmax(0,1fr)_auto] items-center gap-6">
           {/* Column 1: Photo */}
           <div className="relative flex-shrink-0">
             {agent.headshot_url ? (
