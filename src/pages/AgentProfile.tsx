@@ -249,7 +249,7 @@ const AgentProfile = () => {
               </div>
             )}
             {isOnline && (
-              <span className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+              <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background ring-2 ring-aacSuccess/20" />
             )}
           </div>
 
