@@ -275,11 +275,12 @@ const AgentProfile = () => {
 
           {/* Column 3: Company logo — far right */}
           {agent.logo_url && (
-            <div className="flex-shrink-0 ml-auto self-center">
+            <div className="flex-shrink-0 ml-auto self-start mt-2">
               <img
                 src={agent.logo_url}
                 alt="Company logo"
-                className="h-14 max-w-[200px] object-contain opacity-50"
+                className="h-16 max-w-[260px] object-contain opacity-[0.38]"
+                style={{ filter: 'grayscale(20%)' }}
               />
             </div>
           )}
