@@ -218,7 +218,7 @@ const AgentProfile = () => {
   return (
     <div className="flex-1 bg-background min-h-screen">
       {/* Back nav */}
-      <div className="max-w-4xl mx-auto px-8 pt-6">
+      <div className="max-w-6xl mx-auto px-8 pt-6">
         <button
           onClick={() => navigate("/our-members")}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -229,31 +229,31 @@ const AgentProfile = () => {
       </div>
 
       {/* ─── Hero Section ─── */}
-      <div className="max-w-4xl mx-auto px-8 pt-12 pb-10">
-        <div className="flex items-start gap-10">
-          {/* Left column: Photo + Buttons */}
-          <div className="flex flex-col items-start gap-3 flex-shrink-0">
+      <div className="max-w-6xl mx-auto px-8 pt-12 pb-10">
+        <div className="flex items-start gap-12">
+          {/* Left rail: Photo + Action buttons */}
+          <div className="flex flex-col items-center gap-4 flex-shrink-0 w-[200px]">
             <div className="relative">
               {agent.headshot_url ? (
                 <img
                   src={agent.headshot_url}
                   alt={`${agent.first_name} ${agent.last_name}`}
-                  className="w-24 h-24 rounded-xl object-cover border border-border/60 shadow-sm"
+                  className="w-[120px] h-[120px] rounded-lg object-cover border border-border/50 shadow-sm"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-xl bg-primary flex flex-col items-center justify-center gap-1 shadow-sm border border-border/60">
-                  <AACMonogram className="w-8 h-8 text-primary-foreground" />
-                  <span className="text-sm font-bold text-primary-foreground tracking-tight">
+                <div className="w-[120px] h-[120px] rounded-lg bg-primary flex flex-col items-center justify-center gap-1.5 shadow-sm border border-border/50">
+                  <AACMonogram className="w-10 h-10 text-primary-foreground" />
+                  <span className="text-base font-bold text-primary-foreground tracking-tight">
                     {agent.first_name[0]}{agent.last_name[0]}
                   </span>
                 </div>
               )}
               {isOnline && (
-                <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+                <span className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background" />
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full">
               <ContactAgentProfileDialog
                 agentId={agent.id}
                 agentName={`${agent.first_name} ${agent.last_name}`}
@@ -264,6 +264,7 @@ const AgentProfile = () => {
               <Button
                 size="sm"
                 variant="outline"
+                className="rounded-md"
                 disabled={isStartingChat}
                 onClick={async () => {
                   if (!user?.id || !agent.id) return;
@@ -284,15 +285,14 @@ const AgentProfile = () => {
             </div>
           </div>
 
-          {/* Right column: Details */}
-          <div className="flex flex-col pt-2">
-            <h1 className="text-4xl font-bold text-foreground tracking-tight leading-tight">
-              {agent.first_name}{" "}
-              <span className="text-primary">{agent.last_name}</span>
+          {/* Right column: Identity + Contact */}
+          <div className="flex flex-col flex-1 min-w-0 pt-1">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
+              {agent.first_name} {agent.last_name}
             </h1>
 
             {(agent.title || agent.company) && (
-              <p className="text-base text-muted-foreground mt-2">
+              <p className="text-base text-muted-foreground mt-1.5">
                 {[agent.title, agent.company].filter(Boolean).join(" · ")}
               </p>
             )}
@@ -302,18 +302,20 @@ const AgentProfile = () => {
             )}
 
             {contactItems.length > 0 && (
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-5">
+              <div className="flex items-center gap-x-1 mt-6 text-sm text-muted-foreground">
                 {contactItems.map((item, i) => (
-                  <a
-                    key={i}
-                    href={item.href}
-                    target={item.icon === Globe ? "_blank" : undefined}
-                    rel={item.icon === Globe ? "noopener noreferrer" : undefined}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <item.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
-                    {item.label}
-                  </a>
+                  <span key={i} className="flex items-center">
+                    {i > 0 && <span className="mx-2 text-border">·</span>}
+                    <a
+                      href={item.href}
+                      target={item.icon === Globe ? "_blank" : undefined}
+                      rel={item.icon === Globe ? "noopener noreferrer" : undefined}
+                      className="flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
+                    >
+                      <item.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
+                      {item.label}
+                    </a>
+                  </span>
                 ))}
               </div>
             )}
