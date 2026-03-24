@@ -238,18 +238,18 @@ const AgentProfile = () => {
                 <img
                   src={agent.headshot_url}
                   alt={`${agent.first_name} ${agent.last_name}`}
-                  className="w-36 h-36 rounded-full object-cover border-4 border-background shadow-lg"
+                  className="w-24 h-24 rounded-xl object-cover border border-border/60 shadow-sm"
                 />
               ) : (
-                <div className="w-36 h-36 rounded-full bg-primary flex flex-col items-center justify-center gap-1 shadow-lg">
-                  <AACMonogram className="w-10 h-10 text-primary-foreground" />
-                  <span className="text-lg font-bold text-primary-foreground tracking-tight">
+                <div className="w-24 h-24 rounded-xl bg-primary flex flex-col items-center justify-center gap-1 shadow-sm border border-border/60">
+                  <AACMonogram className="w-8 h-8 text-primary-foreground" />
+                  <span className="text-sm font-bold text-primary-foreground tracking-tight">
                     {agent.first_name[0]}{agent.last_name[0]}
                   </span>
                 </div>
               )}
               {isOnline && (
-                <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-emerald-500 border-2 border-background" />
+                <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background" />
               )}
             </div>
 
