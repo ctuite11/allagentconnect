@@ -230,116 +230,117 @@ const AgentProfile = () => {
 
       {/* ─── Hero Section ─── */}
       <div className="max-w-6xl mx-auto px-8 pt-12 pb-10">
-        <div className="flex items-start justify-between gap-10">
-          <div className="min-w-0 flex-1 max-w-3xl">
-            <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-6">
-              <div className="relative flex-shrink-0">
-                {agent.headshot_url ? (
-                  <img
-                    src={agent.headshot_url}
-                    alt={`${agent.first_name} ${agent.last_name}`}
-                    className="w-[120px] h-[120px] rounded-lg object-cover border border-border/50 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-[120px] h-[120px] rounded-lg bg-primary flex flex-col items-center justify-center gap-1.5 shadow-sm border border-border/50">
-                    <AACMonogram className="w-10 h-10 text-primary-foreground" />
-                    <span className="text-base font-bold text-primary-foreground tracking-tight">
-                      {agent.first_name[0]}{agent.last_name[0]}
-                    </span>
-                  </div>
-                )}
-                {isOnline && (
-                  <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background ring-2 ring-aacSuccess/20" />
-                )}
+        {/* Row 1: Photo + Identity + Logo */}
+        <div className="grid grid-cols-[120px_minmax(0,1fr)_auto] items-center gap-6">
+          {/* Column 1: Photo */}
+          <div className="relative flex-shrink-0">
+            {agent.headshot_url ? (
+              <img
+                src={agent.headshot_url}
+                alt={`${agent.first_name} ${agent.last_name}`}
+                className="w-[120px] h-[120px] rounded-lg object-cover border border-border/50 shadow-sm"
+              />
+            ) : (
+              <div className="w-[120px] h-[120px] rounded-lg bg-primary flex flex-col items-center justify-center gap-1.5 shadow-sm border border-border/50">
+                <AACMonogram className="w-10 h-10 text-primary-foreground" />
+                <span className="text-base font-bold text-primary-foreground tracking-tight">
+                  {agent.first_name[0]}{agent.last_name[0]}
+                </span>
               </div>
-
-              <div className="min-w-0 pt-1">
-                <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
-                  {agent.first_name} {agent.last_name}
-                </h1>
-
-                {agent.title && (
-                  <p className="text-base text-muted-foreground mt-1.5">
-                    {agent.title}
-                  </p>
-                )}
-
-                {(agent.company || agent.aac_id) && (
-                  <p className="flex items-center gap-1.5 text-sm text-muted-foreground/70 mt-1">
-                    {agent.company && <span>{agent.company}</span>}
-                    {agent.company && agent.aac_id && <span className="text-muted-foreground/30">·</span>}
-                    {agent.aac_id && (
-                      <>
-                        <span className="w-1 h-1 rounded-full bg-aacSuccess" />
-                        <span className="font-mono text-xs text-muted-foreground/50">{agent.aac_id}</span>
-                      </>
-                    )}
-                  </p>
-                )}
-
-                <div className="mt-4 flex flex-col items-start gap-5">
-                  <div className="flex items-center gap-2">
-                    <ContactAgentProfileDialog
-                      agentId={agent.id}
-                      agentName={`${agent.first_name} ${agent.last_name}`}
-                      agentEmail={agent.email}
-                      buttonText={`Email ${agent.first_name}`}
-                    />
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-md"
-                      disabled={isStartingChat}
-                      onClick={async () => {
-                        if (!user?.id || !agent.id) return;
-                        setIsStartingChat(true);
-                        try {
-                          const convoId = await findOrCreateConversation(user.id, agent.id);
-                          if (convoId) navigate(`/messages/${convoId}`);
-                        } catch (e) {
-                          toast.error("Could not start conversation");
-                        } finally {
-                          setIsStartingChat(false);
-                        }
-                      }}
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                      Message {agent.first_name}
-                    </Button>
-                  </div>
-
-                  {contactItems.length > 0 && (
-                    <div className="flex items-center flex-wrap gap-x-1 gap-y-1 text-sm text-muted-foreground">
-                      {contactItems.map((item, i) => (
-                        <span key={i} className="flex items-center">
-                          {i > 0 && <span className="mx-2 text-border">·</span>}
-                          <a
-                            href={item.href}
-                            target={item.icon === Globe ? "_blank" : undefined}
-                            rel={item.icon === Globe ? "noopener noreferrer" : undefined}
-                            className="flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
-                          >
-                            <item.icon className="h-3.5 w-3.5 text-primary/70" />
-                            {item.label}
-                          </a>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
+            {isOnline && (
+              <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background ring-2 ring-aacSuccess/20" />
+            )}
           </div>
 
+          {/* Column 2: Identity block — sits next to photo */}
+          <div className="flex flex-col justify-center min-w-0 pt-1">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
+              {agent.first_name} {agent.last_name}
+            </h1>
+
+            {agent.title && (
+              <p className="text-base text-muted-foreground mt-1.5">
+                {agent.title}
+              </p>
+            )}
+
+            {(agent.company || agent.aac_id) && (
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground/70 mt-1">
+                {agent.company && <span>{agent.company}</span>}
+                {agent.company && agent.aac_id && <span className="text-muted-foreground/30">·</span>}
+                {agent.aac_id && (
+                  <>
+                    <span className="w-1 h-1 rounded-full bg-aacSuccess" />
+                    <span className="font-mono text-xs text-muted-foreground/50">{agent.aac_id}</span>
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+
+          {/* Column 3: Company logo — far right */}
           {agent.logo_url && (
-            <div className="hidden md:flex flex-shrink-0 items-center justify-center pl-8 pr-4">
+            <div className="flex-shrink-0 self-center pr-8 lg:pr-12">
               <img
                 src={agent.logo_url}
                 alt="Company logo"
                 className="h-16 max-w-[240px] object-contain"
                 style={{ opacity: 0.7 }}
               />
+            </div>
+          )}
+        </div>
+
+        {/* Row 2: Buttons + Metadata aligned under photo */}
+        <div className="mt-4 flex flex-col items-start gap-5" style={{ paddingLeft: 0 }}>
+          <div className="flex items-center gap-2">
+            <ContactAgentProfileDialog
+              agentId={agent.id}
+              agentName={`${agent.first_name} ${agent.last_name}`}
+              agentEmail={agent.email}
+              buttonText={`Email ${agent.first_name}`}
+            />
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-md"
+              disabled={isStartingChat}
+              onClick={async () => {
+                if (!user?.id || !agent.id) return;
+                setIsStartingChat(true);
+                try {
+                  const convoId = await findOrCreateConversation(user.id, agent.id);
+                  if (convoId) navigate(`/messages/${convoId}`);
+                } catch (e) {
+                  toast.error("Could not start conversation");
+                } finally {
+                  setIsStartingChat(false);
+                }
+              }}
+            >
+              <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+              Message {agent.first_name}
+            </Button>
+          </div>
+
+          {contactItems.length > 0 && (
+            <div className="flex items-center flex-wrap gap-x-1 gap-y-1 text-sm text-muted-foreground">
+              {contactItems.map((item, i) => (
+                <span key={i} className="flex items-center">
+                  {i > 0 && <span className="mx-2 text-border">·</span>}
+                  <a
+                    href={item.href}
+                    target={item.icon === Globe ? "_blank" : undefined}
+                    rel={item.icon === Globe ? "noopener noreferrer" : undefined}
+                    className="flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
+                  >
+                    <item.icon className="h-3.5 w-3.5 text-primary/70" />
+                    {item.label}
+                  </a>
+                </span>
+              ))}
             </div>
           )}
         </div>
