@@ -259,16 +259,22 @@ const AgentProfile = () => {
               {agent.first_name} {agent.last_name}
             </h1>
 
-            {(agent.title || agent.company) && (
+            {agent.title && (
               <p className="text-base text-muted-foreground mt-1.5">
-                {[agent.title, agent.company].filter(Boolean).join(" · ")}
+                {agent.title}
               </p>
             )}
 
-            {agent.aac_id && (
-              <p className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground/50 mt-1">
-                <span className="w-1 h-1 rounded-full bg-aacSuccess" />
-                {agent.aac_id}
+            {(agent.company || agent.aac_id) && (
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground/70 mt-1">
+                {agent.company && <span>{agent.company}</span>}
+                {agent.company && agent.aac_id && <span className="text-muted-foreground/30">·</span>}
+                {agent.aac_id && (
+                  <>
+                    <span className="w-1 h-1 rounded-full bg-aacSuccess" />
+                    <span className="font-mono text-xs text-muted-foreground/50">{agent.aac_id}</span>
+                  </>
+                )}
               </p>
             )}
           </div>
