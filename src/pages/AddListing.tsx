@@ -575,9 +575,13 @@ const AddListing = () => {
         // Store original values for change tracking in edit mode
         originalPriceRef.current = data.price || null;
         
+        // Store the true backend status before normalization (for draft detection)
+        const rawStatus = (data.status || "new").toLowerCase();
+        backendStatusRef.current = rawStatus;
+        
         // Normalize status to lowercase to match Select options
         // If status is "draft", convert to "new" (draft isn't a valid UI option for edit)
-        let normalizedStatus = (data.status || "new").toLowerCase();
+        let normalizedStatus = rawStatus;
         if (normalizedStatus === "draft") {
           normalizedStatus = "new";
         }
