@@ -1,49 +1,48 @@
 
 
-# Fix Agent Profile Hero: Left-Aligned Photo with Buttons Below + Cleanup
+## Put Company + AAC ID on Same Line, Keep Green Dot
 
-## What changes
+**File:** `src/pages/AgentProfile.tsx`
 
-### Hero section restructure (`src/pages/AgentProfile.tsx`, lines 226-306)
-
-Change the layout from "photo left, details right" to a stacked structure matching the reference screenshot:
-
-```text
-[Photo (w-36 h-36 rounded-full, with online presence dot)]
-[Email {FirstName}] [Message {FirstName}]    ← buttons sit directly below photo
-[Name — text-4xl, last name in primary]      ← to the right of photo+buttons column
-[Title · Company]
-[AAC ID]
-[phone · email · website — single horizontal line]
+### Current (lines 262-273)
+```
+Title · Company
+● AAC-0004
 ```
 
-Actually, looking at the reference more carefully: the photo is on the left with buttons stacked below it, and the name/details are to the right. So the layout is:
-
-```text
-LEFT COLUMN              RIGHT COLUMN
-┌──────────────┐         Name (large)
-│   Headshot   │         Title · Company
-│  (circular)  │         AAC ID
-│   ● online   │         
-└──────────────┘         phone | email | website
-[Email Sarah]            (all one horizontal line)
-[Message Sarah]
+### Target
+```
+Title
+Company · ● AAC-0004
 ```
 
-### Specific changes:
+### Changes
 
-1. **Photo column**: Wrap headshot + two buttons in a `flex-col items-center` container. Add online presence dot using `useAgentLastSeen(agent.id)`.
+**Lines 262-273** become:
 
-2. **Two buttons below photo**:
-   - "Email {FirstName}" — opens `ContactAgentProfileDialog` (email flow, already exists)
-   - "Message {FirstName}" — uses `findOrCreateConversation` to open/create a messaging thread and navigate to `/messages/{conversationId}`
+```tsx
+{agent.title && (
+  <p className="text-base text-muted-foreground mt-1.5">
+    {agent.title}
+  </p>
+)}
 
-3. **Contact info**: Merge all contact items (office phone, cell phone, email, website) into a single horizontal line separated by subtle dividers, no border-t above.
+{(agent.company || agent.aac_id) && (
+  <p className="flex items-center gap-1.5 text-sm text-muted-foreground/70 mt-1">
+    {agent.company && <span>{agent.company}</span>}
+    {agent.company && agent.aac_id && <span className="text-muted-foreground/30">·</span>}
+    {agent.aac_id && (
+      <>
+        <span className="w-1 h-1 rounded-full bg-aacSuccess" />
+        <span className="font-mono text-xs text-muted-foreground/50">{agent.aac_id}</span>
+      </>
+    )}
+  </p>
+)}
+```
 
-4. **Remove**: DirectConnect and Verified badges (per user request).
-
-5. **Online dot**: Import `useAgentLastSeen` and render an emerald dot on the headshot circle, consistent with `AgentAvatar` pattern.
-
-### Files modified
-- `src/pages/AgentProfile.tsx` — hero section layout, add messaging import + handler, add presence hook
+- Title on its own line
+- Company and AAC ID merge into one line with `·` separator
+- Green dot stays before the AAC ID
+- No monogram, no compass icon
 
