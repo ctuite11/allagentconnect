@@ -286,7 +286,7 @@ const AgentProfile = () => {
         </div>
 
         {/* Row 2: Buttons + Metadata aligned under photo */}
-        <div className="mt-4 flex flex-col items-start gap-3" style={{ paddingLeft: 0 }}>
+        <div className="mt-4 flex flex-col items-start gap-5" style={{ paddingLeft: 0 }}>
           <div className="flex items-center gap-2">
             <ContactAgentProfileDialog
               agentId={agent.id}
