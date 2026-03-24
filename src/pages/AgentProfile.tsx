@@ -281,7 +281,7 @@ const AgentProfile = () => {
 
           {/* Column 3: Company logo — far right */}
           {agent.logo_url && (
-            <div className="flex-shrink-0 self-center">
+            <div className="flex-shrink-0 self-center pr-8 lg:pr-12">
               <img
                 src={agent.logo_url}
                 alt="Company logo"
