@@ -3166,92 +3166,14 @@ const AddListing = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3")}>
                       <Label htmlFor="address">Street Address *</Label>
-                      {(formData.property_type === 'condo' || formData.property_type === 'apartment') ? (
-                        <Input
-                          id="address"
-                          type="text"
-                          value={formData.address}
-                          onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                          placeholder="Enter street address"
-                          required
-                        />
-                      ) : (
-                        <AddressAutocomplete
-                          value={formData.address}
-                          onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
-                          onPlaceSelect={(place) => {
-                            const normalized = normalizeGooglePlace(place);
-                            const placeComponents = (place as { address_components?: Array<{ long_name?: string; types?: string[] }> }).address_components || [];
-                            const getGoogleLongName = (type: string) =>
-                              placeComponents.find((component) => component.types?.includes(type))?.long_name || "";
-
-                            const preferredCity =
-                              getGoogleLongName("locality") ||
-                              getGoogleLongName("postal_town") ||
-                              getGoogleLongName("sublocality_level_1") ||
-                              normalized.city;
-
-                            const normalizedState = normalized.state || formData.state;
-                            const normalizedCity = preferredCity || formData.city;
-                            const normalizedZip = normalized.zip || formData.zip_code;
-
-                            // Infer county from state+city when mapping data exists.
-                            let inferredCounty = "";
-                            if (normalizedState && normalizedCity && hasCountyCityMapping(normalizedState)) {
-                              const matchingCounties = getCountiesForState(normalizedState).filter((county) => {
-                                const countyCities = getCitiesForCounty(normalizedState, county);
-                                return countyCities.some(city => city.toLowerCase() === normalizedCity.toLowerCase());
-                              });
-
-                              if (matchingCounties.length === 1) {
-                                inferredCounty = matchingCounties[0];
-                              }
-                            }
-
-                            // Keep dropdown UI and formData in sync with a single place-selection update.
-                            isHydratingLocationRef.current = true;
-
-                            const didStateChange = Boolean(normalizedState && normalizedState !== selectedState);
-                            const nextCounty = inferredCounty || (didStateChange
-                              ? (normalizedState === "MA" ? "" : "all")
-                              : selectedCounty);
-
-                            if (normalizedState) {
-                              setSelectedState(normalizedState);
-                              setAvailableCounties(getCountiesForState(normalizedState));
-                            }
-
-                            // If state changed, clear stale county/city values before applying new location.
-                            if (didStateChange) {
-                              setSelectedCounty(normalizedState === "MA" ? "" : "all");
-                              setAvailableCities([]);
-                            }
-
-                            setSelectedCounty(nextCounty);
-
-                            if (normalizedState) {
-                              setAvailableCities(getCitiesForStateAndCounty(normalizedState, nextCounty));
-                            }
-
-                            setFormData(prev => ({
-                              ...prev,
-                              address: normalized.address_line1 || prev.address,
-                              city: normalizedCity,
-                              state: normalizedState,
-                              county: nextCounty !== "all" ? nextCounty : "",
-                              zip_code: normalizedZip,
-                              latitude: normalized.lat ?? prev.latitude,
-                              longitude: normalized.lng ?? prev.longitude,
-                            }));
-
-                            setTimeout(() => {
-                              isHydratingLocationRef.current = false;
-                            }, 100);
-                          }}
-                          placeholder="Start typing an address..."
-                          types={["address"]}
-                        />
-                      )}
+                      <Input
+                        id="address"
+                        type="text"
+                        value={formData.address}
+                        onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                        placeholder="Enter street address"
+                        required
+                      />
                     </div>
 
                     {(formData.property_type === 'condo' || formData.property_type === 'apartment') && (
