@@ -3118,13 +3118,7 @@ const AddListing = () => {
                     </div>
                   )}
                   
-                  {/* Condo missing unit number warning - prompt user to enter unit */}
-                  {isCondoMissingUnit && (
-                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
-                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                      <span>Unit number required to retrieve condo records. Please enter the unit number below.</span>
-                    </div>
-                  )}
+                  
                   
                   {/* Stale verification warning - Condo switch specific */}
                   {isAttomVerificationStale && isSwitchedToCondo && !isCondoMissingUnit && (
@@ -3262,6 +3256,14 @@ const AddListing = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Condo missing unit number — informational note for ATTOM lookup */}
+                  {isCondoMissingUnit && (
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>Enter unit number to enable public record lookup for this condo. Address entry is not affected.</span>
+                    </div>
+                  )}
 
                   {/* Row 2: City + State */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
