@@ -1591,17 +1591,25 @@ const AddListing = () => {
     const zipChanged = prevAddressRef.current.zip !== currentZip && prevAddressRef.current.zip !== "";
     
     // Only reset if the change was NOT from applying ATTOM data
-    if ((addressChanged || cityChanged || zipChanged) && hasAutoFetched && !isApplyingAttomDataRef.current) {
-      console.log("[AddListing] Address changed by user, resetting auto-fetch flag");
+    if ((addressChanged || cityChanged || zipChanged) && !isApplyingAttomDataRef.current) {
+      console.log("[AddListing] Address changed by user, resetting all address-bound state");
       setHasAutoFetched(false);
       setAttomFetchStatus("");
       setAttomNeighborhoods([]);
-      setAttomRejectedForAddress(""); // Reset rejection flag for new address
+      setAttomRejectedForAddress("");
+      setAttomVerifiedContext(null);
+      setPublicRecordStatus('idle');
+      setHasConfirmedAttomAddress(false);
+      setAddressVerified(false);
+      setVerificationMessage('');
+      setAttomPendingRecord(null);
+      setAttomId(null);
+      setAttomResults([]);
     }
     
     // Update refs
     prevAddressRef.current = { address: currentAddress, city: currentCity, zip: currentZip };
-  }, [formData.address, formData.city, formData.zip_code, hasAutoFetched]);
+  }, [formData.address, formData.city, formData.zip_code]);
 
   const handleStatusChange = (value: string) => {
     // Ensure status is never empty - default to original or LISTING_STATUS.NEW
@@ -3181,6 +3189,7 @@ const AddListing = () => {
                       <Label htmlFor="address">Street Address *</Label>
                       <Input
                         id="address"
+                        autoComplete="off"
                         type="text"
                         value={formData.address}
                         onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
