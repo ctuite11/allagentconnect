@@ -2899,9 +2899,22 @@ const AddListing = () => {
                 )}
               </div>
               
-              {/* Edit mode: Preview + Save Changes only */}
+              {/* Edit mode: Save Draft + Preview + Publish/Save Changes */}
               {listingId ? (
                 <>
+                  {backendStatusRef.current === "draft" && (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => handleSaveDraft(false)}
+                      type="button"
+                      disabled={submitting || autoSaving}
+                      className="gap-2"
+                    >
+                      <Save className="w-5 h-5" />
+                      Save Draft
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="lg" 
@@ -2925,7 +2938,7 @@ const AddListing = () => {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Saving...
                       </>
-                    ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
+                    ) : backendStatusRef.current === "draft" ? (
                       <>
                         <Upload className="w-5 h-5" />
                         Publish
@@ -2933,7 +2946,7 @@ const AddListing = () => {
                     ) : (
                       <>
                         <Save className="w-5 h-5" />
-                        {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
+                        Save Changes
                       </>
                     )}
                   </Button>
