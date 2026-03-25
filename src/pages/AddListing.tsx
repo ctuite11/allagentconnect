@@ -1611,6 +1611,20 @@ const AddListing = () => {
     prevAddressRef.current = { address: currentAddress, city: currentCity, zip: currentZip };
   }, [formData.address, formData.city, formData.zip_code]);
 
+  const handleGooglePlaceSelect = (place: any) => {
+    if (!place?.address_components) return;
+    const normalized = normalizeGooglePlace(place);
+    setFormData(prev => ({
+      ...prev,
+      address: normalized.address_line1 || place.formatted_address?.split(',')[0] || '',
+      city: normalized.city || prev.city,
+      state: normalized.state || prev.state,
+      zip_code: normalized.zip || prev.zip_code,
+      latitude: normalized.lat ?? prev.latitude,
+      longitude: normalized.lng ?? prev.longitude,
+    }));
+  };
+
   const handleStatusChange = (value: string) => {
     // Ensure status is never empty - default to original or LISTING_STATUS.NEW
     const newStatus = value || originalStatusRef.current || LISTING_STATUS.NEW;
@@ -3187,14 +3201,12 @@ const AddListing = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3")}>
                       <Label htmlFor="address">Street Address *</Label>
-                      <Input
-                        id="address"
-                        autoComplete="off"
-                        type="text"
+                      <AddressAutocomplete
                         value={formData.address}
-                        onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                        onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
+                        onPlaceSelect={handleGooglePlaceSelect}
                         placeholder="Enter street address"
-                        required
+                        types={["address"]}
                       />
                     </div>
 
