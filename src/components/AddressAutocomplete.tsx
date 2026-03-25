@@ -737,14 +737,9 @@ const AddressAutocomplete = ({
       ) : (
         <Input
           ref={inputRef}
-          placeholder={
-            placesReady
-              ? placeholder || "City, State, Zip or Neighborhood"
-              : "Loading address search..."
-          }
+          placeholder={placeholder || "City, State, Zip or Neighborhood"}
           className={className}
           value={value}
-          disabled={!placesReady}
           name="address_line1"
           autoComplete="street-address"
           autoCorrect="off"
