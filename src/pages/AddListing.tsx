@@ -4728,9 +4728,20 @@ const AddListing = () => {
 
                 {/* Footer Buttons - Sticky at bottom */}
                 <div className="sticky bottom-0 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-4 mt-6 -mx-6 px-6 flex flex-col sm:flex-row items-center justify-end gap-3">
-                  {/* Edit mode: Preview + Save Changes only */}
+                  {/* Edit mode: Save Draft + Preview + Publish/Save Changes */}
                   {listingId ? (
                     <>
+                      {backendStatusRef.current === "draft" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleSaveDraft(false)}
+                          disabled={submitting || autoSaving}
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          Save Draft
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="outline"
@@ -4751,7 +4762,7 @@ const AddListing = () => {
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Saving...
                           </>
-                        ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
+                        ) : backendStatusRef.current === "draft" ? (
                           <>
                             <Upload className="w-4 h-4 mr-2" />
                             Publish
@@ -4759,7 +4770,7 @@ const AddListing = () => {
                         ) : (
                           <>
                             <Save className="w-4 h-4 mr-2" />
-                            {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
+                            Save Changes
                           </>
                         )}
                       </Button>
