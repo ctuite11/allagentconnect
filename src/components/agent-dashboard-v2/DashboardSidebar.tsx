@@ -97,12 +97,12 @@ function SidebarRow({
         disabled && "opacity-40 cursor-not-allowed",
         !disabled && "cursor-default",
         active
-          ? "bg-[hsl(221,92%,51%)]/15 text-white font-medium"
+          ? "bg-[hsl(221,72%,45%)]/15 text-white font-medium"
           : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30"
       )}
     >
       <span className="relative shrink-0">
-        <item.icon className={cn("h-[18px] w-[18px]", active ? "text-primary" : "text-zinc-300")} />
+        <item.icon className={cn("h-[18px] w-[18px]", active ? "text-[hsl(221,72%,55%)]" : "text-zinc-300")} />
         {collapsed && hasBadge && (
           <span className="absolute -top-1.5 -right-1.5 inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-white leading-none">
             {badgeText}
@@ -187,7 +187,7 @@ export function DashboardSidebar({
           {!collapsed && (
             <span className="text-[14px] font-semibold tracking-tight">
               <span className="text-white">All Agent </span>
-              <span className="text-aacSuccess/70 font-medium">Connect</span>
+              <span className="text-aacSuccess/85 font-medium">Connect</span>
             </span>
           )}
         </div>
