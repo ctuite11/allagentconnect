@@ -187,6 +187,7 @@ const AddressAutocomplete = ({
   const [useNewElement, setUseNewElement] = useState(false);
   const [placesReady, setPlacesReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const userTypingRef = useRef(false);
 
   // --- Stable callback refs (synced every time props change, no re-init) ---
   const onPlaceSelectRef = useRef(onPlaceSelect);
@@ -453,9 +454,34 @@ const AddressAutocomplete = ({
           );
           el.addEventListener("gmp-placeselect", handleSelect);
           el.addEventListener("gmp-select", handleSelect);
+
+          // Wire up input listener on internal input for manual typing
+          let innerInput: HTMLInputElement | null = null;
+          const handleInput = (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            userTypingRef.current = true;
+            onChangeRef.current?.(target.value);
+          };
+
+          const attachInputListener = () => {
+            innerInput = el.querySelector('input') || el.shadowRoot?.querySelector('input') || null;
+            if (innerInput) {
+              innerInput.addEventListener('input', handleInput);
+            }
+          };
+
+          // Try immediately, then retry after short delay for shadow DOM
+          attachInputListener();
+          if (!innerInput) {
+            setTimeout(attachInputListener, 200);
+          }
+
           (el as any).__cleanup = () => {
             el.removeEventListener("gmp-placeselect", handleSelect);
             el.removeEventListener("gmp-select", handleSelect);
+            if (innerInput) {
+              innerInput.removeEventListener('input', handleInput);
+            }
           };
 
           if (value) {
@@ -723,7 +749,7 @@ const AddressAutocomplete = ({
 
   // Sync controlled value to new element when it changes
   useEffect(() => {
-    if (useNewElement && autocompleteRef.current && value !== undefined) {
+    if (useNewElement && autocompleteRef.current && value !== undefined && !userTypingRef.current) {
       try {
         (autocompleteRef.current as any).value = value;
       } catch {}
