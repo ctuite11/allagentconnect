@@ -1,64 +1,25 @@
 
 
-# Fix: Restore Google Maps Address Autocomplete in Sale Listing
+# Fix: Save Draft navigates to all listings instead of draft filter
 
-## Changes
+## File
+`src/pages/AddListing.tsx`
 
-### 1. `src/components/AddressAutocomplete.tsx` (lines 738-748)
-
-Remove `disabled={!placesReady}` and fix the placeholder to always show the real text:
-
-```tsx
-<Input
-  ref={inputRef}
-  placeholder={placeholder || "City, State, Zip or Neighborhood"}
-  className={className}
-  value={value}
-  name="address_line1"
-  autoComplete="street-address"
-  ...
-```
-
-- Line 741-743: Replace conditional placeholder with just `placeholder || "City, State, Zip or Neighborhood"`
-- Line 747: Remove `disabled={!placesReady}`
-
-### 2. `src/pages/AddListing.tsx` (lines 3190-3198)
-
-Replace the plain `<Input>` with `<AddressAutocomplete>`:
+## Change
+**Line 2271** — change the navigation target after manual draft save:
 
 ```tsx
-<AddressAutocomplete
-  value={formData.address}
-  onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
-  onPlaceSelect={handleGooglePlaceSelect}
-  placeholder="Enter street address"
-  types={["address"]}
-/>
+// Before
+navigate(`${ROUTES.MY_LISTINGS}?status=draft`);
+
+// After
+navigate(ROUTES.MY_LISTINGS);
 ```
 
-### 3. `src/pages/AddListing.tsx` — Add handler (near other handlers)
-
-Add a `handleGooglePlaceSelect` callback that uses `normalizeGooglePlace` to populate address fields:
-
-```tsx
-const handleGooglePlaceSelect = useCallback((place: any) => {
-  if (!place?.address_components) return;
-  const normalized = normalizeGooglePlace(place);
-  setFormData(prev => ({
-    ...prev,
-    address: normalized.address_line1 || place.formatted_address?.split(',')[0] || '',
-    city: normalized.city || prev.city,
-    state: normalized.state || prev.state,
-    zip_code: normalized.zip || prev.zip_code,
-    latitude: normalized.lat ?? prev.latitude,
-    longitude: normalized.lng ?? prev.longitude,
-  }));
-}, []);
-```
+This removes the `?status=draft` query parameter so the user lands on My Listings showing all statuses instead of only drafts.
 
 ## What stays the same
-- Address reset logic (useEffect watching address/city/zip)
-- Condo unit behavior
-- Save/publish toolbar
-- All other files
+- Auto-save behavior (no navigation)
+- Publish flow navigation
+- Everything else
 
