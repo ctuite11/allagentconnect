@@ -301,6 +301,7 @@ const AddressAutocomplete = ({
               return;
             }
 
+            userTypingRef.current = false;
             const currentRequestId = ++requestIdRef.current;
             debugLog(
               "=== [AddressAutocomplete] gmp-placeselect EVENT FIRED ===",
