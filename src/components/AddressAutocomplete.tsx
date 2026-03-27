@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 interface AddressAutocompleteProps {
@@ -11,146 +11,162 @@ interface AddressAutocompleteProps {
   onError?: () => void;
 }
 
-// --- Constants ---
-const GOOGLE_SCRIPT_ID = "google-maps-places-script";
+// --- Google Maps / Places loader (robust + no silent failure) ---
+
+const GMAPS_SCRIPT_ID = "google-maps-js";
 const GMAPS_KEY_STORAGE = "aac_gmaps_key";
 const DEBUG_PLACES =
   String(import.meta.env.VITE_DEBUG_PLACES ?? "").toLowerCase() === "true";
 
 const debugLog = (...args: any[]) => {
-  if (DEBUG_PLACES) console.log(...args);
+  if (DEBUG_PLACES) {
+    console.log(...args);
+  }
 };
 
-// --- Module-level loader state (allows reset on bad loads) ---
-let loaderPromise: Promise<void> | null = null;
-let loaderKeyUsed: string | null = null;
+function getGmapsKey(): {
+  apiKey?: string;
+  source: "env" | "url" | "storage" | "missing";
+} {
+  const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
-// --- 1. Single key resolver ---
-function resolveGmapsKey(): string | null {
-  let urlKey: string | undefined;
-  let storedKey: string | undefined;
+  const urlKey =
+    typeof window !== "undefined"
+      ? (new URLSearchParams(window.location.search).get("gmaps_key") ??
+        undefined)
+      : undefined;
 
-  if (typeof window !== "undefined") {
-    urlKey = new URLSearchParams(window.location.search).get("gmaps_key")?.trim() || undefined;
-    storedKey = window.localStorage.getItem(GMAPS_KEY_STORAGE)?.trim() || undefined;
+  const storedKey =
+    typeof window !== "undefined"
+      ? (window.localStorage.getItem(GMAPS_KEY_STORAGE) ?? undefined)
+      : undefined;
 
-    // Persist URL key to localStorage for future visits
-    if (urlKey) {
-      try { window.localStorage.setItem(GMAPS_KEY_STORAGE, urlKey); } catch {}
+  const apiKey = envKey || urlKey || storedKey;
+
+  // Persist the url key for convenience (preview only)
+  if (typeof window !== "undefined" && urlKey) {
+    try {
+      window.localStorage.setItem(GMAPS_KEY_STORAGE, urlKey);
+    } catch {
+      // ignore
     }
   }
 
-  const envKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim() || undefined;
+  const source: "env" | "url" | "storage" | "missing" = envKey
+    ? "env"
+    : urlKey
+      ? "url"
+      : storedKey
+        ? "storage"
+        : "missing";
 
-  // Priority: URL > localStorage > env
-  const key = urlKey || storedKey || envKey;
-  const source = urlKey ? "url" : storedKey ? "storage" : envKey ? "env" : "missing";
-  debugLog("[AddressAutocomplete] gmaps key source:", source, "key present:", key ? "[yes]" : "[no]");
-
-  return key || null;
+  return { apiKey: apiKey || undefined, source };
 }
 
-// --- 2. Places-usable helper ---
-function isGooglePlacesUsable(): boolean {
-  return !!(
+function isPlacesReady(): boolean {
+  return Boolean(
     (window as any).google?.maps?.places &&
-    typeof (window as any).google.maps.places.Autocomplete === "function"
+    ((window as any).google?.maps?.places?.Autocomplete ||
+      (window as any).google?.maps?.places?.PlaceAutocompleteElement),
   );
 }
 
-// --- 4. Reset helper for stale/bad script state ---
-function resetGooglePlacesScriptState() {
-  const existing = document.getElementById(GOOGLE_SCRIPT_ID);
-  if (existing) {
-    existing.remove();
-    debugLog("[AddressAutocomplete] Removed stale Google script");
-  }
-  loaderPromise = null;
-  loaderKeyUsed = null;
-}
-
-// --- 3. Key-aware, retry-safe loader ---
 function loadGoogleMapsPlaces(apiKey: string): Promise<void> {
-  // If we already loaded with this exact key and Places is usable, reuse
-  if (loaderPromise && loaderKeyUsed === apiKey && isGooglePlacesUsable()) {
-    return loaderPromise;
-  }
+  return new Promise((resolve, reject) => {
+    // Already loaded and ready
+    if (isPlacesReady()) return resolve();
 
-  // If loader exists but key changed or Places is broken, reset
-  if (loaderPromise && (loaderKeyUsed !== apiKey || !isGooglePlacesUsable())) {
-    debugLog("[AddressAutocomplete] Stale/mismatched loader detected, resetting");
-    resetGooglePlacesScriptState();
-  }
+    const existing = document.getElementById(
+      GMAPS_SCRIPT_ID,
+    ) as HTMLScriptElement | null;
 
-  // Check for existing script tag from a prior load
-  const existingScript = document.getElementById(GOOGLE_SCRIPT_ID) as HTMLScriptElement | null;
-  if (existingScript) {
-    const scriptKey = existingScript.dataset.gmapsKey;
-    if (scriptKey !== apiKey) {
-      debugLog("[AddressAutocomplete] Script key mismatch, removing old script");
-      resetGooglePlacesScriptState();
-    } else if (existingScript.dataset.loaded === "true" && !isGooglePlacesUsable()) {
-      debugLog("[AddressAutocomplete] Script loaded but Places unusable, resetting");
-      resetGooglePlacesScriptState();
-    } else if (existingScript.dataset.loaded === "true" && isGooglePlacesUsable()) {
-      loaderPromise = Promise.resolve();
-      loaderKeyUsed = apiKey;
-      return loaderPromise;
+    // If script exists but Places isn't ready yet, wait for it
+    if (existing) {
+      const checkReady = () => {
+        if (isPlacesReady()) {
+          resolve();
+        } else {
+          setTimeout(() => {
+            if (isPlacesReady()) resolve();
+            else
+              reject(
+                new Error(
+                  "Google Maps script loaded but Places is unavailable. Check: Places API enabled + billing + key restrictions.",
+                ),
+              );
+          }, 2000);
+        }
+      };
+
+      if (existing.dataset.loaded === "true") {
+        checkReady();
+      } else {
+        existing.addEventListener("load", checkReady);
+        existing.addEventListener("error", () => {
+          reject(
+            new Error(
+              "Google Maps script failed to load. Likely: invalid key, referrer restriction, API not enabled, or billing not enabled.",
+            ),
+          );
+        });
+      }
+      return;
     }
-  }
 
-  loaderKeyUsed = apiKey;
-
-  loaderPromise = new Promise<void>((resolve, reject) => {
-    // Double-check after reset: maybe already usable (rare)
-    if (isGooglePlacesUsable()) return resolve();
-
+    // Inject script
     const script = document.createElement("script");
-    script.id = GOOGLE_SCRIPT_ID;
+    script.id = GMAPS_SCRIPT_ID;
     script.async = true;
     script.defer = true;
-    script.dataset.gmapsKey = apiKey;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&v=weekly`;
+
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+      apiKey,
+    )}&libraries=places&v=weekly`;
 
     script.onload = () => {
       script.dataset.loaded = "true";
-      if (isGooglePlacesUsable()) return resolve();
-
-      const google = (window as any).google;
-      if (google?.maps?.importLibrary) {
-        google.maps.importLibrary("places")
-          .then(() => {
-            if (isGooglePlacesUsable()) resolve();
-            else {
-              loaderPromise = null;
-              reject(new Error("Google Maps script loaded but Places unavailable after importLibrary."));
-            }
-          })
-          .catch(() => {
-            loaderPromise = null;
-            reject(new Error("importLibrary('places') failed."));
-          });
-      } else {
-        loaderPromise = null;
-        reject(new Error("Google Maps script loaded but Places unavailable."));
+      if (isPlacesReady()) resolve();
+      else {
+        const google = (window as any).google;
+        if (google?.maps?.importLibrary) {
+          google.maps
+            .importLibrary("places")
+            .then(() => {
+              if (isPlacesReady()) resolve();
+              else
+                reject(
+                  new Error(
+                    "Google Maps script loaded but Places is unavailable after importLibrary. Check: Places API enabled + billing + key restrictions.",
+                  ),
+                );
+            })
+            .catch(() => {
+              reject(
+                new Error(
+                  "Google Maps importLibrary('places') failed. Check: Places API enabled + billing + key restrictions.",
+                ),
+              );
+            });
+        } else {
+          reject(
+            new Error(
+              "Google Maps script loaded but Places is unavailable. Check: Places API enabled + billing + key restrictions.",
+            ),
+          );
+        }
       }
     };
 
     script.onerror = () => {
-      loaderPromise = null;
-      reject(new Error("Google Maps script failed to load (referrer/key/billing issue)."));
+      reject(
+        new Error(
+          "Google Maps script failed to load. Likely: referrer not allowed, invalid/disabled key, Places API not enabled, or billing not enabled.",
+        ),
+      );
     };
 
     document.head.appendChild(script);
   });
-
-  // If the promise rejects, clear loader state so retry is possible
-  loaderPromise.catch(() => {
-    loaderPromise = null;
-    loaderKeyUsed = null;
-  });
-
-  return loaderPromise;
 }
 
 const AddressAutocomplete = ({
@@ -165,18 +181,14 @@ const AddressAutocomplete = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<any>(null);
-  const legacyAutocompleteRef = useRef<any>(null);
   const requestIdRef = useRef(0);
   const placesReadyRef = useRef(false);
   const initializedRef = useRef(false);
   const [useNewElement, setUseNewElement] = useState(false);
   const [placesReady, setPlacesReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const userTypingRef = useRef(false);
-  const hasFallenBackRef = useRef(false);
-  const legacyAttachedRef = useRef(false);
 
-  // Stable callback refs
+  // --- Stable callback refs (synced every time props change, no re-init) ---
   const onPlaceSelectRef = useRef(onPlaceSelect);
   const onChangeRef = useRef(onChange);
   const onErrorRef = useRef(onError);
@@ -187,159 +199,10 @@ const AddressAutocomplete = ({
     onErrorRef.current = onError;
   }, [onPlaceSelect, onChange, onError]);
 
+  // Stabilize types dependency
   const typesKey = JSON.stringify(types ?? []);
 
-  // --- 8. Legacy autocomplete initializer (re-initializable) ---
-  const initLegacyAutocomplete = useCallback(() => {
-    if (!inputRef.current) return false;
-    if (!isGooglePlacesUsable()) return false;
-
-    // Clean up any prior legacy instance
-    if (legacyAutocompleteRef.current) {
-      try {
-        (window as any).google?.maps?.event?.clearInstanceListeners(legacyAutocompleteRef.current);
-      } catch {}
-      legacyAutocompleteRef.current = null;
-    }
-    legacyAttachedRef.current = false;
-
-    const google = (window as any).google;
-    const parsedTypes = JSON.parse(typesKey) as string[];
-
-    try {
-      const ac = new google.maps.places.Autocomplete(inputRef.current, {
-        types: parsedTypes,
-        componentRestrictions: { country: "us" },
-        fields: ["formatted_address", "address_components", "geometry", "name", "place_id"],
-      });
-
-      const listener = ac.addListener("place_changed", () => {
-        if (!placesReadyRef.current) return;
-        userTypingRef.current = false;
-        const currentRequestId = ++requestIdRef.current;
-        const place = ac.getPlace();
-        debugLog("[AddressAutocomplete] Legacy place_changed:", place);
-        if (!place) return;
-
-        const hasComponents = Array.isArray(place.address_components) && place.address_components.length > 0;
-
-        const emitPlace = (finalPlace: any) => {
-          if (currentRequestId !== requestIdRef.current) return;
-          if (!Array.isArray(finalPlace?.address_components) || !finalPlace.address_components.length) return;
-          debugLog("[AddressAutocomplete] onPlaceSelect (legacy):", finalPlace.formatted_address);
-          if (onPlaceSelectRef.current) {
-            onPlaceSelectRef.current(finalPlace);
-          } else {
-            onChangeRef.current?.(finalPlace.formatted_address || finalPlace.name || "");
-          }
-        };
-
-        if (hasComponents) {
-          emitPlace(place);
-          return;
-        }
-
-        // Fallback: fetch details by place_id
-        const placeId = place.place_id;
-        if (!placeId) return;
-        const svc = new google.maps.places.PlacesService(document.createElement("div"));
-        svc.getDetails(
-          { placeId, fields: ["formatted_address", "address_components", "geometry", "name", "place_id"] },
-          (details: any, status: any) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && details) {
-              emitPlace(details);
-            } else {
-              if (currentRequestId === requestIdRef.current) {
-                onChangeRef.current?.(place.formatted_address || place.name || inputRef.current?.value || "");
-              }
-            }
-          }
-        );
-      });
-
-      if (!listener) return false;
-
-      legacyAutocompleteRef.current = ac;
-      legacyAttachedRef.current = true;
-      placesReadyRef.current = true;
-      setPlacesReady(true);
-      debugLog("[AddressAutocomplete] Legacy Autocomplete attached successfully");
-      return true;
-    } catch (e) {
-      console.warn("[AddressAutocomplete] Failed to init legacy autocomplete:", e);
-      return false;
-    }
-  }, [typesKey]);
-
-  // --- 5. Unified guarded recovery path ---
-  const attemptRecovery = useCallback((reason: string) => {
-    if (hasFallenBackRef.current) return;
-    hasFallenBackRef.current = true;
-
-    console.warn(`[AddressAutocomplete] Recovery triggered: ${reason}`);
-
-    // Disable new element
-    setUseNewElement(false);
-
-    // Clean up the new element
-    if (autocompleteRef.current?.__cleanup) {
-      try { autocompleteRef.current.__cleanup(); } catch {}
-    }
-    if (containerRef.current) containerRef.current.innerHTML = "";
-    autocompleteRef.current = null;
-
-    // Try legacy autocomplete first (step 7)
-    // Need a small delay so the plain <Input> is rendered first
-    setTimeout(() => {
-      if (isGooglePlacesUsable()) {
-        const ok = initLegacyAutocomplete();
-        if (ok) {
-          setLoadError(null);
-          debugLog("[AddressAutocomplete] Recovered to legacy autocomplete with suggestions");
-          return;
-        }
-      }
-      // Legacy also failed — plain input only
-      setLoadError("Address suggestions unavailable");
-      onErrorRef.current?.();
-    }, 50);
-  }, [initLegacyAutocomplete]);
-
-  // --- Retry handler ---
-  const handleRetry = useCallback(async () => {
-    setLoadError(null);
-    hasFallenBackRef.current = false;
-    initializedRef.current = false;
-    setUseNewElement(false);
-    setPlacesReady(false);
-
-    resetGooglePlacesScriptState();
-
-    const apiKey = resolveGmapsKey();
-    if (!apiKey) {
-      setLoadError("Autocomplete disabled (missing key)");
-      return;
-    }
-
-    try {
-      await loadGoogleMapsPlaces(apiKey);
-      if (isGooglePlacesUsable()) {
-        const ok = initLegacyAutocomplete();
-        if (ok) {
-          setLoadError(null);
-          debugLog("[AddressAutocomplete] Retry succeeded with legacy autocomplete");
-        } else {
-          setLoadError("Address suggestions unavailable");
-        }
-      } else {
-        setLoadError("Address suggestions unavailable");
-      }
-    } catch (err: any) {
-      setLoadError(err?.message || "Autocomplete disabled");
-    }
-  }, [initLegacyAutocomplete]);
-
-  // --- Init effect ---
+  // --- Init effect: runs ONCE on mount ---
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
@@ -349,10 +212,15 @@ const AddressAutocomplete = ({
     const hasTarget = Boolean(inputRef.current || containerRef.current);
     if (!hasTarget) return;
 
-    const apiKey = resolveGmapsKey();
+    const { apiKey, source } = getGmapsKey();
+
+    debugLog("[AddressAutocomplete] gmaps key source:", source);
+    debugLog("[AddressAutocomplete] key present:", apiKey ? "[yes]" : "[no]");
 
     if (!apiKey) {
-      console.warn("[AddressAutocomplete] Google Maps key missing.");
+      console.warn(
+        "[AddressAutocomplete] Google Maps key missing. Set VITE_GOOGLE_MAPS_API_KEY (production) or open the preview URL with ?gmaps_key=YOUR_KEY.",
+      );
       setLoadError("Autocomplete disabled (missing key)");
       onErrorRef.current?.();
       return;
@@ -374,25 +242,41 @@ const AddressAutocomplete = ({
 
       try {
         if (google.maps.importLibrary) {
+          debugLog("[AddressAutocomplete] Awaiting importLibrary('places')...");
           await google.maps.importLibrary("places");
         }
       } catch (e) {
-        console.warn("[AddressAutocomplete] importLibrary failed, continuing", e);
+        console.warn(
+          "[AddressAutocomplete] importLibrary failed, continuing with loaded script",
+          e,
+        );
       }
 
       const places = google.maps.places as any;
+      debugLog(
+        "[AddressAutocomplete] Places API loaded, checking for PlaceAutocompleteElement...",
+      );
+
       const parsedTypes = JSON.parse(typesKey) as string[];
 
-      // --- Try new PlaceAutocompleteElement first ---
+      // Prefer the new Place Autocomplete Element when available
       if (places?.PlaceAutocompleteElement && containerRef.current) {
-        debugLog("[AddressAutocomplete] Trying PlaceAutocompleteElement");
+        debugLog(
+          "[AddressAutocomplete] PlaceAutocompleteElement available, using new API",
+        );
         try {
           containerRef.current.innerHTML = "";
           const el = new places.PlaceAutocompleteElement({});
-          try { (el as any).componentRestrictions = { country: ["us"] }; } catch {}
-          try { (el as any).types = parsedTypes; } catch {}
+          try {
+            (el as any).componentRestrictions = { country: ["us"] };
+          } catch {}
+          try {
+            (el as any).types = parsedTypes;
+          } catch {}
           if (placeholder) {
-            try { (el as any).placeholder = placeholder; } catch {
+            try {
+              (el as any).placeholder = placeholder;
+            } catch {
               el.setAttribute("placeholder", placeholder);
             }
           }
@@ -408,151 +292,363 @@ const AddressAutocomplete = ({
           containerRef.current.appendChild(el);
           autocompleteRef.current = el;
 
-          // --- Place selection handler ---
           const handleSelect = async (event: any) => {
-            if (!placesReadyRef.current) return;
-            userTypingRef.current = false;
+            if (!placesReadyRef.current) {
+              console.warn(
+                "[AddressAutocomplete] Ignoring place selection before ready",
+              );
+              return;
+            }
+
             const currentRequestId = ++requestIdRef.current;
-            debugLog("[AddressAutocomplete] gmp-placeselect fired");
+            debugLog(
+              "=== [AddressAutocomplete] gmp-placeselect EVENT FIRED ===",
+            );
             try {
               const prediction = event?.placePrediction;
-              if (!prediction) return;
-
-              const place = await prediction.toPlace();
-              if (!place) return;
-
-              await place.fetchFields({
-                fields: ["formattedAddress", "addressComponents", "location", "viewport", "id", "displayName"],
-              });
-
-              if (currentRequestId !== requestIdRef.current) return;
-
-              const hasAddressComponents = Array.isArray(place.addressComponents) && place.addressComponents.length > 0;
-
-              // Legacy fallback for empty components
-              if (!hasAddressComponents) {
-                const placeId = place.id;
-                if (placeId && google.maps.places.PlacesService) {
-                  const svc = new google.maps.places.PlacesService(document.createElement("div"));
-                  svc.getDetails(
-                    { placeId, fields: ["formatted_address", "address_components", "geometry", "name", "place_id"] },
-                    (details: any, status: any) => {
-                      if (currentRequestId !== requestIdRef.current) return;
-                      if (status === google.maps.places.PlacesServiceStatus.OK && details) {
-                        onPlaceSelectRef.current?.(details);
-                      }
-                    }
-                  );
-                }
+              debugLog("[AddressAutocomplete] Prediction:", prediction);
+              if (!prediction) {
+                console.warn("[AddressAutocomplete] No prediction in event");
                 return;
               }
 
-              const mapComp = (c: any) => ({
-                long_name: c?.longText || c?.long_name || c?.shortText || c?.short_name || "",
-                short_name: c?.shortText || c?.short_name || c?.longText || "",
-                types: Array.isArray(c?.types) ? c.types : [],
+              const place = await prediction.toPlace();
+              if (!place) {
+                debugLog(
+                  "[AddressAutocomplete] Partial place received from gmp-placeselect (no place after prediction.toPlace)",
+                );
+                return;
+              }
+
+              await place.fetchFields({
+                fields: [
+                  "formattedAddress",
+                  "addressComponents",
+                  "location",
+                  "viewport",
+                  "id",
+                  "displayName",
+                ],
+              });
+
+              if (currentRequestId !== requestIdRef.current) {
+                debugLog(
+                  "[AddressAutocomplete] Ignoring stale place result",
+                  currentRequestId,
+                  requestIdRef.current,
+                );
+                return;
+              }
+
+              const hasAddressComponents =
+                Array.isArray(place.addressComponents) &&
+                place.addressComponents.length > 0;
+
+              // --- Deterministic legacy fallback when new API returns empty components ---
+              if (!hasAddressComponents) {
+                const placeId = place.id;
+                debugLog(
+                  "[AddressAutocomplete] New API returned empty components, attempting legacy fallback for placeId:",
+                  placeId,
+                );
+                if (placeId && google.maps.places.PlacesService) {
+                  const svc = new google.maps.places.PlacesService(
+                    document.createElement("div"),
+                  );
+                  svc.getDetails(
+                    {
+                      placeId,
+                      fields: [
+                        "formatted_address",
+                        "address_components",
+                        "geometry",
+                        "name",
+                        "place_id",
+                      ],
+                    },
+                    (details: any, status: any) => {
+                      if (currentRequestId !== requestIdRef.current) return;
+                      debugLog(
+                        "[AddressAutocomplete] Legacy fallback status:",
+                        status,
+                        "formatted_address:",
+                        details?.formatted_address,
+                        "source: legacy-fallback",
+                      );
+                      if (
+                        status ===
+                          google.maps.places.PlacesServiceStatus.OK &&
+                        details
+                      ) {
+                        onPlaceSelectRef.current?.(details);
+                      }
+                    },
+                  );
+                  return;
+                }
+                // No placeId available, nothing we can do
+                return;
+              }
+
+              const mapAddressComponent = (component: any) => ({
+                long_name:
+                  component?.longText ||
+                  component?.long_name ||
+                  component?.shortText ||
+                  component?.short_name ||
+                  "",
+                short_name:
+                  component?.shortText ||
+                  component?.short_name ||
+                  component?.longText ||
+                  "",
+                types: Array.isArray(component?.types) ? component.types : [],
               });
 
               const mapped = {
                 formatted_address: place.formattedAddress || "",
-                address_components: (place.addressComponents || []).map(mapComp),
-                geometry: place.location ? {
-                  location: { lat: () => place.location.lat(), lng: () => place.location.lng() },
-                  viewport: place.viewport,
-                } : undefined,
+                address_components: (place.addressComponents || []).map(
+                  mapAddressComponent,
+                ),
+                geometry: place.location
+                  ? {
+                      location: {
+                        lat: () => place.location.lat(),
+                        lng: () => place.location.lng(),
+                      },
+                      viewport: place.viewport,
+                    }
+                  : undefined,
                 name: place.displayName?.text || "",
                 place_id: place.id || "",
               };
 
-              debugLog("[AddressAutocomplete] Mapped place (new API):", mapped);
+              debugLog(
+                "[AddressAutocomplete] Mapped place:",
+                mapped,
+                "source: new-api",
+              );
+
               if (onPlaceSelectRef.current) {
                 onPlaceSelectRef.current(mapped);
+                debugLog(
+                  "[AddressAutocomplete] onPlaceSelect called successfully",
+                );
               } else {
+                console.error(
+                  "[AddressAutocomplete] onPlaceSelect callback is missing!",
+                );
                 onChangeRef.current?.(mapped.formatted_address || mapped.name || "");
               }
             } catch (err) {
-              console.error("[AddressAutocomplete] handleSelect error:", err);
+              console.error(
+                "[AddressAutocomplete] Error in handleSelect:",
+                err,
+              );
             }
           };
 
+          debugLog(
+            "[AddressAutocomplete] Adding gmp-placeselect event listener",
+          );
           el.addEventListener("gmp-placeselect", handleSelect);
           el.addEventListener("gmp-select", handleSelect);
-
-          // --- 6. Error listeners funneling into unified recovery ---
-          hasFallenBackRef.current = false;
-
-          const handleGmpError = () => {
-            if (!isMounted) return;
-            // Also reset script state so a future valid key can recover
-            resetGooglePlacesScriptState();
-            attemptRecovery("gmp-error event");
-          };
-          el.addEventListener("gmp-error", handleGmpError);
-
-          // Delayed silent-failure detector
-          const errorCheckTimeout = window.setTimeout(() => {
-            if (!isMounted || hasFallenBackRef.current) return;
-            const checkDom = (root: ParentNode | null | undefined): boolean => {
-              if (!root) return false;
-              if (root.querySelector(".gm-err-message")) return true;
-              return Array.from(root.querySelectorAll("*")).some((node) =>
-                node.textContent?.includes("Oops! Something went wrong") ||
-                node.textContent?.includes("This page can't load Google Maps correctly")
-              );
-            };
-            const shadowRoot = (el as HTMLElement & { shadowRoot?: ShadowRoot }).shadowRoot;
-            if (checkDom(el) || checkDom(shadowRoot)) {
-              resetGooglePlacesScriptState();
-              attemptRecovery("silent broken element detected");
-            }
-          }, 3000);
-
-          // --- Wire up input listener for manual typing ---
-          let innerInput: HTMLInputElement | null = null;
-          const handleInput = (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            userTypingRef.current = true;
-            onChangeRef.current?.(target.value);
-          };
-
-          const attachInputListener = () => {
-            innerInput = el.querySelector("input") || el.shadowRoot?.querySelector("input") || null;
-            if (innerInput) {
-              innerInput.addEventListener("input", handleInput);
-            }
-          };
-          attachInputListener();
-          if (!innerInput) setTimeout(attachInputListener, 200);
-
-          // Cleanup
           (el as any).__cleanup = () => {
             el.removeEventListener("gmp-placeselect", handleSelect);
             el.removeEventListener("gmp-select", handleSelect);
-            el.removeEventListener("gmp-error", handleGmpError);
-            clearTimeout(errorCheckTimeout);
-            if (innerInput) innerInput.removeEventListener("input", handleInput);
           };
 
           if (value) {
-            try { (el as any).value = value; } catch {}
+            try {
+              (el as any).value = value;
+            } catch {}
           }
 
           setUseNewElement(true);
           markPlacesReady();
-          debugLog("[AddressAutocomplete] PlaceAutocompleteElement setup complete");
+          debugLog(
+            "[AddressAutocomplete] PlaceAutocompleteElement setup complete",
+          );
           return;
         } catch (e) {
-          console.error("[AddressAutocomplete] PlaceAutocompleteElement setup failed, trying legacy:", e);
+          console.error(
+            "[AddressAutocomplete] Error setting up PlaceAutocompleteElement, falling back:",
+            e,
+          );
           setUseNewElement(false);
         }
       }
 
-      // --- Legacy Autocomplete path ---
+      // Legacy Autocomplete
       debugLog("[AddressAutocomplete] Using legacy Autocomplete");
-      const ok = initLegacyAutocomplete();
-      if (!ok) {
-        console.error("[AddressAutocomplete] Legacy autocomplete also failed");
+      if (!inputRef.current) {
+        console.error("[AddressAutocomplete] inputRef.current is null");
+        return;
       }
+
+      autocompleteRef.current = new google.maps.places.Autocomplete(
+        inputRef.current,
+        {
+          types: parsedTypes,
+          componentRestrictions: { country: "us" },
+          fields: [
+            "formatted_address",
+            "address_components",
+            "geometry",
+            "name",
+            "place_id",
+          ],
+        },
+      );
+
+      debugLog(
+        "[AddressAutocomplete] Legacy Autocomplete created, adding place_changed listener",
+      );
+      const placeChangedListener = autocompleteRef.current.addListener(
+        "place_changed",
+        () => {
+          if (!placesReadyRef.current) {
+            console.warn(
+              "[AddressAutocomplete] Ignoring place_changed before ready",
+            );
+            return;
+          }
+
+          const currentRequestId = ++requestIdRef.current;
+          debugLog("=== [AddressAutocomplete] place_changed EVENT FIRED ===");
+          const place = autocompleteRef.current?.getPlace();
+          debugLog("[AddressAutocomplete] Place data:", place);
+          if (!place) {
+            console.warn(
+              "[AddressAutocomplete] No place data received from autocomplete",
+            );
+            return;
+          }
+
+          const hasAddressComponents =
+            Array.isArray(place.address_components) &&
+            place.address_components.length > 0;
+
+          const callOnPlaceSelect = (finalPlace: any) => {
+            if (currentRequestId !== requestIdRef.current) {
+              debugLog(
+                "[AddressAutocomplete] Ignoring stale legacy place result",
+                currentRequestId,
+                requestIdRef.current,
+              );
+              return;
+            }
+
+            const finalHasAddressComponents =
+              Array.isArray(finalPlace?.address_components) &&
+              finalPlace.address_components.length > 0;
+
+            if (!finalHasAddressComponents) {
+              debugLog(
+                "[AddressAutocomplete] Partial legacy place received",
+                finalPlace,
+              );
+              return;
+            }
+
+            debugLog(
+              "[AddressAutocomplete] Calling onPlaceSelect with place data",
+              "formatted_address:", finalPlace.formatted_address,
+              "place_id:", finalPlace.place_id,
+              "source: legacy",
+            );
+
+            if (onPlaceSelectRef.current) {
+              onPlaceSelectRef.current(finalPlace);
+              debugLog(
+                "[AddressAutocomplete] onPlaceSelect called successfully",
+              );
+            } else {
+              console.error(
+                "[AddressAutocomplete] onPlaceSelect callback is missing!",
+              );
+              const formatted =
+                finalPlace.formatted_address || finalPlace.name || "";
+              onChangeRef.current?.(formatted);
+            }
+          };
+
+          const emitSafeFallback = () => {
+            if (currentRequestId !== requestIdRef.current) {
+              return;
+            }
+
+            const fallbackAddress =
+              place.formatted_address || place.name || inputRef.current?.value;
+
+            if (fallbackAddress) {
+              onChangeRef.current?.(fallbackAddress);
+            }
+          };
+
+          if (hasAddressComponents) {
+            callOnPlaceSelect(place);
+            return;
+          }
+
+          const placeId = place.place_id;
+          if (!placeId) {
+            debugLog(
+              "[AddressAutocomplete] Partial legacy place with no place_id",
+              place,
+            );
+            return;
+          }
+
+          const placesService = new google.maps.places.PlacesService(
+            document.createElement("div"),
+          );
+
+          placesService.getDetails(
+            {
+              placeId,
+              fields: [
+                "formatted_address",
+                "address_components",
+                "geometry",
+                "name",
+                "place_id",
+              ],
+            },
+            (details: any, status: any) => {
+              debugLog(
+                "[AddressAutocomplete] PlacesService.getDetails status:",
+                status,
+                "formatted_address:",
+                details?.formatted_address,
+                "source: legacy-fallback",
+              );
+
+              if (
+                status !== google.maps.places.PlacesServiceStatus.OK ||
+                !details
+              ) {
+                debugLog(
+                  "[AddressAutocomplete] Failed to fetch legacy place details",
+                  status,
+                  place,
+                );
+                emitSafeFallback();
+                return;
+              }
+
+              callOnPlaceSelect(details);
+            },
+          );
+        },
+      );
+
+      if (!placeChangedListener) {
+        throw new Error("Failed to attach place_changed listener");
+      }
+
+      markPlacesReady();
+      debugLog("[AddressAutocomplete] Legacy Autocomplete setup complete");
     };
 
     loadGoogleMapsPlaces(apiKey)
@@ -564,7 +660,10 @@ const AddressAutocomplete = ({
       })
       .catch((err) => {
         if (!isMounted) return;
-        console.error("[AddressAutocomplete] Autocomplete disabled:", err?.message || err);
+        console.error(
+          "[AddressAutocomplete] Autocomplete disabled:",
+          err?.message || err,
+        );
         setLoadError(err?.message || "Autocomplete disabled");
         onErrorRef.current?.();
       });
@@ -573,21 +672,21 @@ const AddressAutocomplete = ({
       isMounted = false;
       placesReadyRef.current = false;
 
+      // Cleanup listeners but do NOT reset initializedRef (avoids double-init in StrictMode)
       if (autocompleteRef.current) {
         if ((autocompleteRef.current as any).__cleanup) {
-          try { (autocompleteRef.current as any).__cleanup(); } catch {}
+          try {
+            (autocompleteRef.current as any).__cleanup();
+          } catch {}
         }
         if ((window as any).google?.maps?.event) {
-          try { (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current); } catch {}
+          (window as any).google.maps.event.clearInstanceListeners(
+            autocompleteRef.current,
+          );
         }
       }
-      autocompleteRef.current = null;
 
-      if (legacyAutocompleteRef.current) {
-        try { (window as any).google?.maps?.event?.clearInstanceListeners(legacyAutocompleteRef.current); } catch {}
-        legacyAutocompleteRef.current = null;
-      }
-      legacyAttachedRef.current = false;
+      autocompleteRef.current = null;
 
       if (containerRef.current) {
         containerRef.current.innerHTML = "";
@@ -596,37 +695,46 @@ const AddressAutocomplete = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- Prop updater (types/placeholder) ---
+  // --- Lightweight prop updater: push placeholder/types changes without re-init ---
   useEffect(() => {
     if (!autocompleteRef.current) return;
     const parsedTypes = JSON.parse(typesKey) as string[];
 
+    // Legacy Autocomplete
     if (autocompleteRef.current.setOptions) {
-      try { autocompleteRef.current.setOptions({ types: parsedTypes }); } catch {}
+      try {
+        autocompleteRef.current.setOptions({ types: parsedTypes });
+      } catch {}
     }
-    try { (autocompleteRef.current as any).types = parsedTypes; } catch {}
+    // New PlaceAutocompleteElement
+    try {
+      (autocompleteRef.current as any).types = parsedTypes;
+    } catch {}
 
     if (placeholder) {
-      try { (autocompleteRef.current as any).placeholder = placeholder; } catch {}
-      try { autocompleteRef.current.setAttribute?.("placeholder", placeholder); } catch {}
+      try {
+        (autocompleteRef.current as any).placeholder = placeholder;
+      } catch {}
+      try {
+        autocompleteRef.current.setAttribute?.("placeholder", placeholder);
+      } catch {}
     }
   }, [typesKey, placeholder]);
 
-  // --- Sync controlled value to new element (guarded by userTypingRef) ---
+  // Sync controlled value to new element when it changes
   useEffect(() => {
-    if (useNewElement && autocompleteRef.current && value !== undefined && !userTypingRef.current) {
-      try { (autocompleteRef.current as any).value = value; } catch {}
+    if (useNewElement && autocompleteRef.current && value !== undefined) {
+      try {
+        (autocompleteRef.current as any).value = value;
+      } catch {}
     }
   }, [useNewElement, value]);
 
   return (
     <div className="w-full">
-      <div
-        ref={containerRef}
-        className={className}
-        style={{ display: useNewElement ? undefined : "none" }}
-      />
-      {!useNewElement && (
+      {useNewElement ? (
+        <div ref={containerRef} className={className} />
+      ) : (
         <Input
           ref={inputRef}
           placeholder={placeholder || "City, State, Zip or Neighborhood"}
@@ -645,16 +753,7 @@ const AddressAutocomplete = ({
         />
       )}
       {loadError && (
-        <div className="mt-1 flex items-center gap-2">
-          <p className="text-xs text-destructive">{loadError}</p>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="text-xs text-primary underline hover:text-primary/80"
-          >
-            Retry
-          </button>
-        </div>
+        <p className="text-xs text-destructive mt-1">{loadError}</p>
       )}
     </div>
   );
