@@ -331,3 +331,8 @@ All colors MUST be HSL.
   }
 }
 
+/* Google Places autocomplete dropdown — render above modals/dialogs */
+.pac-container {
+  z-index: 10000 !important;
+}
+
