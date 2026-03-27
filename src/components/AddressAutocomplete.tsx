@@ -41,7 +41,7 @@ function getGmapsKey(): {
       ? (window.localStorage.getItem(GMAPS_KEY_STORAGE) ?? undefined)
       : undefined;
 
-  const apiKey = envKey || urlKey || storedKey;
+  const apiKey = urlKey || storedKey || envKey;
 
   // Persist the url key for convenience (preview only)
   if (typeof window !== "undefined" && urlKey) {
@@ -52,12 +52,12 @@ function getGmapsKey(): {
     }
   }
 
-  const source: "env" | "url" | "storage" | "missing" = envKey
-    ? "env"
-    : urlKey
-      ? "url"
-      : storedKey
-        ? "storage"
+  const source: "env" | "url" | "storage" | "missing" = urlKey
+    ? "url"
+    : storedKey
+      ? "storage"
+      : envKey
+        ? "env"
         : "missing";
 
   return { apiKey: apiKey || undefined, source };
