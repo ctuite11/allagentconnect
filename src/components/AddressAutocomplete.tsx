@@ -681,8 +681,7 @@ const AddressAutocomplete = ({
     return () => {
       isMounted = false;
       placesReadyRef.current = false;
-
-      // Cleanup listeners but do NOT reset initializedRef (avoids double-init in StrictMode)
+      initializedRef.current = false; // Allow re-init on remount
       if (autocompleteRef.current) {
         if ((autocompleteRef.current as any).__cleanup) {
           try {
@@ -755,27 +754,29 @@ const AddressAutocomplete = ({
 
   return (
     <div className="w-full">
-      {useNewElement ? (
-        <div ref={containerRef} className={className} />
-      ) : (
-        <Input
-          ref={inputRef}
-          placeholder={placeholder || "Start typing an address..."}
-          className={className}
-          value={value}
-          name="address_line1"
-          autoComplete="street-address"
-          autoCorrect="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          inputMode="text"
-          data-lpignore="true"
-          data-1p-ignore="true"
-          data-form-type="other"
-          onChange={(e) => onChangeRef.current?.(e.target.value)}
-          onBlur={handleBlur}
-        />
-      )}
+      <div
+        ref={containerRef}
+        className={className}
+        style={{ display: useNewElement ? "block" : "none" }}
+      />
+      <Input
+        ref={inputRef}
+        placeholder={placeholder || "Start typing an address..."}
+        className={className}
+        value={value}
+        name="address_line1"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        inputMode="text"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-form-type="other"
+        onChange={(e) => onChangeRef.current?.(e.target.value)}
+        onBlur={handleBlur}
+        style={{ display: useNewElement ? "none" : "block" }}
+      />
       {loadError && (
         <p className="text-xs text-destructive mt-1">{loadError}</p>
       )}
