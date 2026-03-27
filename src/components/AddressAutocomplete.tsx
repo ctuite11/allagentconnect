@@ -718,6 +718,10 @@ const AddressAutocomplete = ({
       placesReadyRef.current = false;
       initializedRef.current = false; // Allow re-init on remount
       if (autocompleteRef.current) {
+        // Clean up runtime check timeout
+        if ((autocompleteRef.current as any).__runtimeCheckTimeout) {
+          clearTimeout((autocompleteRef.current as any).__runtimeCheckTimeout);
+        }
         if ((autocompleteRef.current as any).__cleanup) {
           try {
             (autocompleteRef.current as any).__cleanup();
