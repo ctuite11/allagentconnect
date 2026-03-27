@@ -65,7 +65,7 @@ const AddressAutocomplete = ({
   onError,
 }: AddressAutocompleteProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const autocompleteRef = useRef<any>(null);
   const isMountedRef = useRef(true);
   const suppressNextChangeRef = useRef(false);
 
@@ -75,11 +75,11 @@ const AddressAutocomplete = ({
     if (!place || !place.place_id) return;
 
     if (!place.address_components && place.place_id) {
-      const service = new google.maps.places.PlacesService(document.createElement("div"));
+      const service = new window.google.maps.places.PlacesService(document.createElement("div"));
       service.getDetails(
         { placeId: place.place_id, fields: ["address_components", "geometry", "formatted_address"] },
         (result, status) => {
-          if (isMountedRef.current && status === google.maps.places.PlacesServiceStatus.OK && result) {
+          if (isMountedRef.current && status === window.google.maps.places.PlacesServiceStatus.OK && result) {
             suppressNextChangeRef.current = true;
             if (result.formatted_address) {
               onChange?.(result.formatted_address.split(",")[0] || "");
@@ -108,10 +108,10 @@ const AddressAutocomplete = ({
       .then(() => {
         if (cancelled || !inputRef.current || !isMountedRef.current) return;
         if (autocompleteRef.current) {
-          google.maps.event.clearInstanceListeners(autocompleteRef.current);
+          window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         }
 
-        const ac = new google.maps.places.Autocomplete(inputRef.current, {
+        const ac = new window.google.maps.places.Autocomplete(inputRef.current, {
           fields: ["address_components", "geometry", "formatted_address", "place_id"],
           types: types || ["address"],
           componentRestrictions: { country: "us" },
@@ -134,7 +134,7 @@ const AddressAutocomplete = ({
     return () => {
       isMountedRef.current = false;
       if (autocompleteRef.current) {
-        google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
   }, []);
