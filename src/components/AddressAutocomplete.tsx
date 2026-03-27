@@ -305,6 +305,40 @@ const AddressAutocomplete = ({
     }, 50);
   }, [initLegacyAutocomplete]);
 
+  // --- Retry handler ---
+  const handleRetry = useCallback(async () => {
+    setLoadError(null);
+    hasFallenBackRef.current = false;
+    initializedRef.current = false;
+    setUseNewElement(false);
+    setPlacesReady(false);
+
+    resetGooglePlacesScriptState();
+
+    const apiKey = resolveGmapsKey();
+    if (!apiKey) {
+      setLoadError("Autocomplete disabled (missing key)");
+      return;
+    }
+
+    try {
+      await loadGoogleMapsPlaces(apiKey);
+      if (isGooglePlacesUsable()) {
+        const ok = initLegacyAutocomplete();
+        if (ok) {
+          setLoadError(null);
+          debugLog("[AddressAutocomplete] Retry succeeded with legacy autocomplete");
+        } else {
+          setLoadError("Address suggestions unavailable");
+        }
+      } else {
+        setLoadError("Address suggestions unavailable");
+      }
+    } catch (err: any) {
+      setLoadError(err?.message || "Autocomplete disabled");
+    }
+  }, [initLegacyAutocomplete]);
+
   // --- Init effect ---
   useEffect(() => {
     if (initializedRef.current) return;
@@ -611,7 +645,16 @@ const AddressAutocomplete = ({
         />
       )}
       {loadError && (
-        <p className="mt-1 text-xs text-destructive">{loadError}</p>
+        <div className="mt-1 flex items-center gap-2">
+          <p className="text-xs text-destructive">{loadError}</p>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="text-xs text-primary underline hover:text-primary/80"
+          >
+            Retry
+          </button>
+        </div>
       )}
     </div>
   );
