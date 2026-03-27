@@ -187,7 +187,7 @@ export function DashboardSidebar({
           {!collapsed && (
             <span className="text-[14px] font-semibold tracking-tight">
               <span className="text-white">All Agent </span>
-              <span className="text-aacSuccess/85 font-medium">Connect</span>
+              <span className="text-emerald-500">Connect</span>
             </span>
           )}
         </div>
