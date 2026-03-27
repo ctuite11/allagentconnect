@@ -220,6 +220,7 @@ const AddressAutocomplete = ({
   const placesReadyRef = useRef(false);
   const initializedRef = useRef(false);
   const userTypingRef = useRef(false);
+  const fallbackRef = useRef(false);
   const [placesReady, setPlacesReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
