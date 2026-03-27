@@ -1,93 +1,37 @@
 
 
-# Regression Fix: Sale Listing Flow
+# Fix AddressAutocomplete — Always Typeable
 
-**File:** `src/pages/AddListing.tsx` (only file modified)
+**File:** `src/components/AddressAutocomplete.tsx` (only file modified)
 
----
+## Problem
 
-## Fix 1 — Disable Price Range when List Price is entered
+The input is locked (`disabled={!placesReady}`) when Places API fails to load. With an invalid or missing key, the field stays permanently disabled. The placeholder also misleads with "Loading address search..." that never resolves.
 
-**Lines ~3411-3430:** Add `disabled` prop to both `price_range_min` and `price_range_max` `FormattedInput` components when `formData.price` has a value.
+## Changes
 
+### 1. Remove disabled gate (line 747)
+Remove `disabled={!placesReady}` from the `<Input>`. The field must always accept typing.
+
+### 2. Fix placeholder (lines 740-744)
+Replace conditional placeholder with a constant:
 ```tsx
-<Label>Price Range (optional)</Label>
-<div className="grid grid-cols-2 gap-2">
-  <FormattedInput
-    id="price_range_min"
-    format="currency"
-    placeholder="Min"
-    value={formData.price_range_min}
-    onChange={(value) => setFormData(prev => ({ ...prev, price_range_min: value }))}
-    decimals={0}
-    disabled={!!formData.price}
-  />
-  <FormattedInput
-    id="price_range_max"
-    format="currency"
-    placeholder="Max"
-    value={formData.price_range_max}
-    onChange={(value) => setFormData(prev => ({ ...prev, price_range_max: value }))}
-    decimals={0}
-    disabled={!!formData.price}
-  />
-</div>
-{!!formData.price && (
-  <p className="text-xs text-muted-foreground">Price range is disabled when a list price is entered.</p>
-)}
+placeholder={placeholder || "Start typing an address..."}
 ```
 
-**Save layer (~lines 2117-2118 and 2619-2620):** When `formData.price` exists, force `price_range_min` and `price_range_max` to `null` in the payload so conflicting data is never persisted.
+### 3. Add userTypingRef for Shadow DOM sync
+Add a `userTypingRef = useRef(false)` that tracks manual input. Wire a native `input` event listener on the DOM element so manual entries aren't overridden by autocomplete state sync. Reset the ref on blur and on place selection.
 
----
+### 4. Key-mismatch recovery in loadGoogleMapsPlaces
+When an existing script is found but Places isn't ready and `dataset.loaded` is already `"true"`, check for `InvalidKeyMapError`-style failures (inspect DOM for `gmp-error` elements). If detected, remove the old script element, then re-inject with the current key. This handles cases where the key changed between page loads.
 
-## Fix 2 — Replace rental agreement options with sale-specific ones
+### 5. Keep loadError notice as-is
+The existing `{loadError && <p>...</p>}` block stays — it shows a helpful message when autocomplete suggestions won't appear, but the input remains usable for manual typing.
 
-**Lines 4349-4353:** Replace:
-```tsx
-{ value: "A - Exclusive Right to Rent", label: "A – Exclusive Right to Rent" },
-{ value: "B - ER w/ Named Exclusion", label: "B – ER w/ Named Exclusion" },
-{ value: "D - Exclusive Agency", label: "D – Exclusive Agency" },
-```
-
-With sale-specific options:
-```tsx
-{ value: "Exclusive Right to Sell", label: "Exclusive Right to Sell" },
-{ value: "Exclusive Agency", label: "Exclusive Agency" },
-{ value: "Open Listing", label: "Open Listing" },
-{ value: "Net Listing", label: "Net Listing" },
-```
-
-No other changes needed — the form field name (`listing_agreement_type`) and save logic remain the same.
-
----
-
-## Fix 3 — Preserve draft status for Publish button visibility
-
-**Root cause (lines 578-583):** When loading a draft for editing, the code converts `"draft"` → `"new"` and stores `"new"` in `originalStatusRef.current`. This means the Publish button condition on line 2923 (`originalStatusRef.current === "draft"`) is **never true** for reopened drafts.
-
-**Fix:** Add a separate ref to track the true backend status:
-
-```tsx
-const backendStatusRef = useRef<string | null>(null);
-```
-
-During load (~line 575), store the raw status before normalization:
-```tsx
-backendStatusRef.current = (data.status || "new").toLowerCase();
-```
-
-Then update the button logic (~line 2923) to use `backendStatusRef.current === "draft"` instead of `originalStatusRef.current === "draft"` for both the Publish label and the Save Draft label on line 2931.
-
-Also update `handleSaveChanges` to use the correct publish target status when a draft is being published (status changed from draft to a live status).
-
----
-
-## Summary of changes
-
-| Issue | Root cause | Fix location (lines) |
-|---|---|---|
-| Price range active with list price | No `disabled` prop on inputs | ~3414-3429 + save payloads |
-| Rental agreements in sale flow | Wrong hardcoded options array | ~4349-4353 |
-| No Publish button on draft edit | `draft` normalized to `new` before storing in ref | ~578-583 + ~2923-2931 |
+## What stays unchanged
+- PlaceAutocompleteElement (new element) path
+- Legacy Autocomplete path logic
+- `getGmapsKey()` key resolution order
+- `onPlaceSelect` callback handling
+- All other files
 
