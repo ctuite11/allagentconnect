@@ -1,77 +1,62 @@
 
+# Fix: Revert AddressAutocomplete to Last Known Working State
 
-# Fix: Simplify AddressAutocomplete to Legacy Autocomplete Only
+## What I found
+- The current `src/components/AddressAutocomplete.tsx` is already a recently simplified rewrite, not the older multi-mode version described in the earlier plan file.
+- The regression is isolated to the shared autocomplete component, which is used by:
+  - `src/pages/AddListing.tsx`
+  - `src/pages/AgentMatch.tsx`
+  - `src/pages/AgentProfileEditor.tsx`
+- The recent change likely removed one failure mode but introduced another: Google partially initializes, then the field freezes after input starts.
+
+## Best fix direction
+Do **not** guess at another patch first.
+
+Instead, restore `src/components/AddressAutocomplete.tsx` to the **last known working implementation from the past few days**, then apply only the minimum compatibility cleanup needed so it still works with today’s callers.
 
 ## Scope
-Only modify: `src/components/AddressAutocomplete.tsx`
+Modify only:
+- `src/components/AddressAutocomplete.tsx`
 
-## Why this is certain
+Do not modify:
+- `src/pages/AddListing.tsx`
+- any other file unless the restored historical file absolutely requires a tiny import/type adjustment in the same component file
 
-The current 596-line component has **four independent permanent-failure paths**, each of which can leave the address field dead with no recovery:
+## Implementation plan
+1. Use project History to identify the last version from the past few days where Google suggestions were confirmed working.
+2. Restore only `src/components/AddressAutocomplete.tsx` from that working point.
+3. Compare the restored file against the current callers and preserve these required behaviors:
+   - field is always typeable
+   - `onChange` still updates on manual typing
+   - `onPlaceSelect` still returns the same place object shape expected by `AddListing`
+   - preview key override still works
+4. Keep or re-apply only the smallest safe protections if they were missing:
+   - URL `?gmaps_key=` must win over stored/env key
+   - the input must never be disabled
+   - if Google fails, the field must remain a plain usable text input
+5. Do not expand into the edit-flow issue yet.
 
-1. `initializedRef` (line 289) — set `true` once, never reset. If init fails, the component never retries
-2. Module-level `loaderPromise` (line 78) — a rejected promise is cached forever, blocking all future instances
-3. `PlaceAutocompleteElement` shadow DOM sync (lines 463-478) — fragile, can silently fail to attach listeners
-4. When `mode === "new-element"`, the plain `<Input>` is `display: none` (line 568) — if the Google element is broken, there is literally nothing visible to type in
+## Why this is the safest path
+- The user said this worked until the last few days.
+- A historical restore is lower risk than inventing another new autocomplete architecture.
+- The component is shared, so a targeted rollback of the single shared file is the cleanest way to recover known-good behavior.
 
-None of these can be fixed by patching. The entire tiered system (`new-element` / `legacy` / `plain`) is the problem.
+## Verification required before calling it fixed
+Test specifically in **Add Sale Listing**:
+1. Type into Street Address → Google suggestions appear
+2. Select a suggestion → address details continue populating correctly
+3. Edit the field again after selection → fresh suggestions still appear
+4. Bad/missing key → field remains typeable
+5. Valid preview key via `?gmaps_key=` → suggestions recover correctly
+6. Confirm no freeze after first character/number
 
-## What replaces it (~120 lines)
+## Technical notes
+- There is also a docs/code mismatch on preview localStorage key naming (`aac_gmaps_key` in docs vs `gmaps_preview_key` in code). That is worth aligning only if the restored working version depends on it.
+- Because `AddressAutocomplete` is shared, the restore should also be smoke-checked anywhere else it appears, but the primary acceptance target is Add Sale Listing.
 
-A single-path component using the proven legacy API:
-
-1. **Key resolution** — same priority: URL `?gmaps_key=` > localStorage > env (this part is correct, keep it)
-2. **Script loader** — inject script tag, resolve on load, reject on error. No module-level caching. No key-swap logic
-3. **Component render** — always render a plain `<Input>`. It is always typeable from frame one
-4. **useEffect** — load Google Maps script → `new google.maps.places.Autocomplete(inputRef.current, options)` → attach `place_changed` listener with `getDetails` fallback
-5. **If Google fails** — input stays as normal text field. No dead state possible
-
-### What gets removed
-- `PlaceAutocompleteElement` path and all shadow DOM syncing
-- `mode` state (`new-element` / `legacy` / `plain`)
-- `containerRef` and hidden div
-- `isGoogleElementBroken()` helper
-- `brokenCheckTimerRef` and timeout
-- `userTypingRef` and shadow input listeners
-- Module-level `loaderPromise` / `loadedWithKey`
-- `initializedRef` guard
-
-### What stays identical
-- Component props interface (no caller changes needed)
-- `onPlaceSelect` callback shape (legacy Google place object with `formatted_address`, `address_components`, `geometry`)
-- `place_changed` handler with `getDetails` fallback for incomplete results
-- Key resolution order (URL > localStorage > env)
-- Controlled `value` prop sync
-- `onChange` on every keystroke
-
-### Cleanup
-- `google.maps.event.clearInstanceListeners` on unmount
-- `isMounted` guard on async callbacks
-
-## Technical detail
-
-```text
-Current (596 lines):
-  Input ──► loader ──► PlaceAutocompleteElement (shadow DOM)
-                           │ fails?
-                           ▼
-                       legacy Autocomplete
-                           │ fails?
-                           ▼
-                       plain Input (but may be hidden)
-
-Simplified (120 lines):
-  Input (always visible, always typeable)
-    │
-    └─► useEffect: load script → attach Autocomplete
-         │ fails? Input stays as-is. Done.
-```
-
-## Expected result
-- Typing always works immediately
-- Google suggestions appear when the API key is valid
-- Selecting a suggestion populates address details via `onPlaceSelect`
-- Bad key / broken load = input still works, just no suggestions
-- Preview `?gmaps_key=` override still works
-- No possible dead/stuck state
-
+## Acceptance criteria
+- Add Sale Listing address field behaves exactly like the last known working version
+- no freeze after one character/number
+- Google suggestions return
+- manual typing always works
+- only `src/components/AddressAutocomplete.tsx` is changed
