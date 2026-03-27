@@ -188,6 +188,7 @@ const AddressAutocomplete = ({
   const [placesReady, setPlacesReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const userTypingRef = useRef(false);
+  const hasFallenBackRef = useRef(false);
 
   // --- Stable callback refs (synced every time props change, no re-init) ---
   const onPlaceSelectRef = useRef(onPlaceSelect);
@@ -456,6 +457,39 @@ const AddressAutocomplete = ({
           el.addEventListener("gmp-placeselect", handleSelect);
           el.addEventListener("gmp-select", handleSelect);
 
+          // --- Guarded fallback helper (fires only once) ---
+          hasFallenBackRef.current = false;
+          const fallbackToPlainInput = () => {
+            if (hasFallenBackRef.current) return;
+            hasFallenBackRef.current = true;
+            console.warn(
+              "[AddressAutocomplete] Google PlaceAutocompleteElement failed, falling back to plain input"
+            );
+            setUseNewElement(false);
+            setLoadError("Address suggestions unavailable");
+            onErrorRef.current?.();
+          };
+
+          // Listen for explicit Google element errors
+          const handleGmpError = () => fallbackToPlainInput();
+          el.addEventListener("gmp-error", handleGmpError);
+
+          // Delayed silent-failure detector (invalid key renders broken UI without event)
+          const detectBrokenElement = () => {
+            const checkDom = (root: ParentNode | null | undefined): boolean => {
+              if (!root) return false;
+              if (root.querySelector('.gm-err-message')) return true;
+              return Array.from(root.querySelectorAll('*')).some((node) =>
+                node.textContent?.includes('Oops! Something went wrong') ||
+                node.textContent?.includes("This page can't load Google Maps correctly")
+              );
+            };
+            if (checkDom(el) || checkDom((el as HTMLElement & { shadowRoot?: ShadowRoot }).shadowRoot)) {
+              fallbackToPlainInput();
+            }
+          };
+          const errorCheckTimeout = window.setTimeout(detectBrokenElement, 3000);
+
           // Wire up input listener on internal input for manual typing
           let innerInput: HTMLInputElement | null = null;
           const handleInput = (e: Event) => {
@@ -480,6 +514,8 @@ const AddressAutocomplete = ({
           (el as any).__cleanup = () => {
             el.removeEventListener("gmp-placeselect", handleSelect);
             el.removeEventListener("gmp-select", handleSelect);
+            el.removeEventListener("gmp-error", handleGmpError);
+            clearTimeout(errorCheckTimeout);
             if (innerInput) {
               innerInput.removeEventListener('input', handleInput);
             }
@@ -759,9 +795,12 @@ const AddressAutocomplete = ({
 
   return (
     <div className="w-full">
-      {useNewElement ? (
-        <div ref={containerRef} className={className} />
-      ) : (
+      <div
+        ref={containerRef}
+        className={className}
+        style={{ display: useNewElement ? undefined : 'none' }}
+      />
+      {!useNewElement && (
         <Input
           ref={inputRef}
           placeholder={placeholder || "City, State, Zip or Neighborhood"}
@@ -780,7 +819,7 @@ const AddressAutocomplete = ({
         />
       )}
       {loadError && (
-        <p className="text-xs text-destructive mt-1">{loadError}</p>
+        <p className="mt-1 text-xs text-destructive">{loadError}</p>
       )}
     </div>
   );
