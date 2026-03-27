@@ -1591,39 +1591,17 @@ const AddListing = () => {
     const zipChanged = prevAddressRef.current.zip !== currentZip && prevAddressRef.current.zip !== "";
     
     // Only reset if the change was NOT from applying ATTOM data
-    if ((addressChanged || cityChanged || zipChanged) && !isApplyingAttomDataRef.current) {
-      console.log("[AddListing] Address changed by user, resetting all address-bound state");
+    if ((addressChanged || cityChanged || zipChanged) && hasAutoFetched && !isApplyingAttomDataRef.current) {
+      console.log("[AddListing] Address changed by user, resetting auto-fetch flag");
       setHasAutoFetched(false);
       setAttomFetchStatus("");
       setAttomNeighborhoods([]);
-      setAttomRejectedForAddress("");
-      setAttomVerifiedContext(null);
-      setPublicRecordStatus('idle');
-      setHasConfirmedAttomAddress(false);
-      setAddressVerified(false);
-      setVerificationMessage('');
-      setAttomPendingRecord(null);
-      setAttomId(null);
-      setAttomResults([]);
+      setAttomRejectedForAddress(""); // Reset rejection flag for new address
     }
     
     // Update refs
     prevAddressRef.current = { address: currentAddress, city: currentCity, zip: currentZip };
-  }, [formData.address, formData.city, formData.zip_code]);
-
-  const handleGooglePlaceSelect = (place: any) => {
-    if (!place?.address_components) return;
-    const normalized = normalizeGooglePlace(place);
-    setFormData(prev => ({
-      ...prev,
-      address: normalized.address_line1 || place.formatted_address?.split(',')[0] || '',
-      city: normalized.city || prev.city,
-      state: normalized.state || prev.state,
-      zip_code: normalized.zip || prev.zip_code,
-      latitude: normalized.lat ?? prev.latitude,
-      longitude: normalized.lng ?? prev.longitude,
-    }));
-  };
+  }, [formData.address, formData.city, formData.zip_code, hasAutoFetched]);
 
   const handleStatusChange = (value: string) => {
     // Ensure status is never empty - default to original or LISTING_STATUS.NEW
@@ -2268,7 +2246,7 @@ const AddListing = () => {
       
       if (!isAutoSave) {
         toast.success("Draft saved successfully!");
-        navigate(ROUTES.MY_LISTINGS);
+        navigate(`${ROUTES.MY_LISTINGS}?status=draft`);
       }
     } catch (error: any) {
       console.error("Error saving draft listing:", {
@@ -2921,22 +2899,9 @@ const AddListing = () => {
                 )}
               </div>
               
-              {/* Edit mode: Save Draft + Preview + Publish/Save Changes */}
+              {/* Edit mode: Preview + Save Changes only */}
               {listingId ? (
                 <>
-                  {backendStatusRef.current === "draft" && (
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => handleSaveDraft(false)}
-                      type="button"
-                      disabled={submitting || autoSaving}
-                      className="gap-2"
-                    >
-                      <Save className="w-5 h-5" />
-                      Save Draft
-                    </Button>
-                  )}
                   <Button 
                     variant="outline" 
                     size="lg" 
@@ -2960,7 +2925,7 @@ const AddListing = () => {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Saving...
                       </>
-                    ) : backendStatusRef.current === "draft" ? (
+                    ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                       <>
                         <Upload className="w-5 h-5" />
                         Publish
@@ -2968,7 +2933,7 @@ const AddListing = () => {
                     ) : (
                       <>
                         <Save className="w-5 h-5" />
-                        Save Changes
+                        {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                       </>
                     )}
                   </Button>
@@ -3153,7 +3118,13 @@ const AddListing = () => {
                     </div>
                   )}
                   
-                  
+                  {/* Condo missing unit number warning - prompt user to enter unit */}
+                  {isCondoMissingUnit && (
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>Unit number required to retrieve condo records. Please enter the unit number below.</span>
+                    </div>
+                  )}
                   
                   {/* Stale verification warning - Condo switch specific */}
                   {isAttomVerificationStale && isSwitchedToCondo && !isCondoMissingUnit && (
@@ -3204,8 +3175,76 @@ const AddListing = () => {
                       <AddressAutocomplete
                         value={formData.address}
                         onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
-                        onPlaceSelect={handleGooglePlaceSelect}
-                        placeholder="Enter street address"
+                        onPlaceSelect={(place) => {
+                          const normalized = normalizeGooglePlace(place);
+                          const placeComponents = (place as { address_components?: Array<{ long_name?: string; types?: string[] }> }).address_components || [];
+                          const getGoogleLongName = (type: string) =>
+                            placeComponents.find((component) => component.types?.includes(type))?.long_name || "";
+
+                          const preferredCity =
+                            getGoogleLongName("locality") ||
+                            getGoogleLongName("postal_town") ||
+                            getGoogleLongName("sublocality_level_1") ||
+                            normalized.city;
+
+                          const normalizedState = normalized.state || formData.state;
+                          const normalizedCity = preferredCity || formData.city;
+                          const normalizedZip = normalized.zip || formData.zip_code;
+
+                          // Infer county from state+city when mapping data exists.
+                          let inferredCounty = "";
+                          if (normalizedState && normalizedCity && hasCountyCityMapping(normalizedState)) {
+                            const matchingCounties = getCountiesForState(normalizedState).filter((county) => {
+                              const countyCities = getCitiesForCounty(normalizedState, county);
+                              return countyCities.some(city => city.toLowerCase() === normalizedCity.toLowerCase());
+                            });
+
+                            if (matchingCounties.length === 1) {
+                              inferredCounty = matchingCounties[0];
+                            }
+                          }
+
+                          // Keep dropdown UI and formData in sync with a single place-selection update.
+                          isHydratingLocationRef.current = true;
+
+                          const didStateChange = Boolean(normalizedState && normalizedState !== selectedState);
+                          const nextCounty = inferredCounty || (didStateChange
+                            ? (normalizedState === "MA" ? "" : "all")
+                            : selectedCounty);
+
+                          if (normalizedState) {
+                            setSelectedState(normalizedState);
+                            setAvailableCounties(getCountiesForState(normalizedState));
+                          }
+
+                          // If state changed, clear stale county/city values before applying new location.
+                          if (didStateChange) {
+                            setSelectedCounty(normalizedState === "MA" ? "" : "all");
+                            setAvailableCities([]);
+                          }
+
+                          setSelectedCounty(nextCounty);
+
+                          if (normalizedState) {
+                            setAvailableCities(getCitiesForStateAndCounty(normalizedState, nextCounty));
+                          }
+
+                          setFormData(prev => ({
+                            ...prev,
+                            address: normalized.address_line1 || prev.address,
+                            city: normalizedCity,
+                            state: normalizedState,
+                            county: nextCounty !== "all" ? nextCounty : "",
+                            zip_code: normalizedZip,
+                            latitude: normalized.lat ?? prev.latitude,
+                            longitude: normalized.lng ?? prev.longitude,
+                          }));
+
+                          setTimeout(() => {
+                            isHydratingLocationRef.current = false;
+                          }, 100);
+                        }}
+                        placeholder="Start typing an address..."
                         types={["address"]}
                       />
                     </div>
@@ -3223,14 +3262,6 @@ const AddListing = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Condo missing unit number — informational note for ATTOM lookup */}
-                  {isCondoMissingUnit && (
-                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
-                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                      <span>Enter unit number to enable public record lookup for this condo. Address entry is not affected.</span>
-                    </div>
-                  )}
 
                   {/* Row 2: City + State */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4749,20 +4780,9 @@ const AddListing = () => {
 
                 {/* Footer Buttons - Sticky at bottom */}
                 <div className="sticky bottom-0 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-4 mt-6 -mx-6 px-6 flex flex-col sm:flex-row items-center justify-end gap-3">
-                  {/* Edit mode: Save Draft + Preview + Publish/Save Changes */}
+                  {/* Edit mode: Preview + Save Changes only */}
                   {listingId ? (
                     <>
-                      {backendStatusRef.current === "draft" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleSaveDraft(false)}
-                          disabled={submitting || autoSaving}
-                        >
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Draft
-                        </Button>
-                      )}
                       <Button
                         type="button"
                         variant="outline"
@@ -4783,7 +4803,7 @@ const AddListing = () => {
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Saving...
                           </>
-                        ) : backendStatusRef.current === "draft" ? (
+                        ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                           <>
                             <Upload className="w-4 h-4 mr-2" />
                             Publish
@@ -4791,7 +4811,7 @@ const AddListing = () => {
                         ) : (
                           <>
                             <Save className="w-4 h-4 mr-2" />
-                            Save Changes
+                            {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                           </>
                         )}
                       </Button>

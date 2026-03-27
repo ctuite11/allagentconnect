@@ -41,7 +41,7 @@ function getGmapsKey(): {
       ? (window.localStorage.getItem(GMAPS_KEY_STORAGE) ?? undefined)
       : undefined;
 
-  const apiKey = urlKey || storedKey || envKey;
+  const apiKey = envKey || urlKey || storedKey;
 
   // Persist the url key for convenience (preview only)
   if (typeof window !== "undefined" && urlKey) {
@@ -52,12 +52,12 @@ function getGmapsKey(): {
     }
   }
 
-  const source: "env" | "url" | "storage" | "missing" = urlKey
-    ? "url"
-    : storedKey
-      ? "storage"
-      : envKey
-        ? "env"
+  const source: "env" | "url" | "storage" | "missing" = envKey
+    ? "env"
+    : urlKey
+      ? "url"
+      : storedKey
+        ? "storage"
         : "missing";
 
   return { apiKey: apiKey || undefined, source };
@@ -737,9 +737,14 @@ const AddressAutocomplete = ({
       ) : (
         <Input
           ref={inputRef}
-          placeholder={placeholder || "City, State, Zip or Neighborhood"}
+          placeholder={
+            placesReady
+              ? placeholder || "City, State, Zip or Neighborhood"
+              : "Loading address search..."
+          }
           className={className}
           value={value}
+          disabled={!placesReady}
           name="address_line1"
           autoComplete="street-address"
           autoCorrect="off"

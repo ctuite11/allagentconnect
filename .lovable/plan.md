@@ -1,62 +1,93 @@
 
-# Fix: Revert AddressAutocomplete to Last Known Working State
 
-## What I found
-- The current `src/components/AddressAutocomplete.tsx` is already a recently simplified rewrite, not the older multi-mode version described in the earlier plan file.
-- The regression is isolated to the shared autocomplete component, which is used by:
-  - `src/pages/AddListing.tsx`
-  - `src/pages/AgentMatch.tsx`
-  - `src/pages/AgentProfileEditor.tsx`
-- The recent change likely removed one failure mode but introduced another: Google partially initializes, then the field freezes after input starts.
+# Regression Fix: Sale Listing Flow
 
-## Best fix direction
-Do **not** guess at another patch first.
+**File:** `src/pages/AddListing.tsx` (only file modified)
 
-Instead, restore `src/components/AddressAutocomplete.tsx` to the **last known working implementation from the past few days**, then apply only the minimum compatibility cleanup needed so it still works with today’s callers.
+---
 
-## Scope
-Modify only:
-- `src/components/AddressAutocomplete.tsx`
+## Fix 1 — Disable Price Range when List Price is entered
 
-Do not modify:
-- `src/pages/AddListing.tsx`
-- any other file unless the restored historical file absolutely requires a tiny import/type adjustment in the same component file
+**Lines ~3411-3430:** Add `disabled` prop to both `price_range_min` and `price_range_max` `FormattedInput` components when `formData.price` has a value.
 
-## Implementation plan
-1. Use project History to identify the last version from the past few days where Google suggestions were confirmed working.
-2. Restore only `src/components/AddressAutocomplete.tsx` from that working point.
-3. Compare the restored file against the current callers and preserve these required behaviors:
-   - field is always typeable
-   - `onChange` still updates on manual typing
-   - `onPlaceSelect` still returns the same place object shape expected by `AddListing`
-   - preview key override still works
-4. Keep or re-apply only the smallest safe protections if they were missing:
-   - URL `?gmaps_key=` must win over stored/env key
-   - the input must never be disabled
-   - if Google fails, the field must remain a plain usable text input
-5. Do not expand into the edit-flow issue yet.
+```tsx
+<Label>Price Range (optional)</Label>
+<div className="grid grid-cols-2 gap-2">
+  <FormattedInput
+    id="price_range_min"
+    format="currency"
+    placeholder="Min"
+    value={formData.price_range_min}
+    onChange={(value) => setFormData(prev => ({ ...prev, price_range_min: value }))}
+    decimals={0}
+    disabled={!!formData.price}
+  />
+  <FormattedInput
+    id="price_range_max"
+    format="currency"
+    placeholder="Max"
+    value={formData.price_range_max}
+    onChange={(value) => setFormData(prev => ({ ...prev, price_range_max: value }))}
+    decimals={0}
+    disabled={!!formData.price}
+  />
+</div>
+{!!formData.price && (
+  <p className="text-xs text-muted-foreground">Price range is disabled when a list price is entered.</p>
+)}
+```
 
-## Why this is the safest path
-- The user said this worked until the last few days.
-- A historical restore is lower risk than inventing another new autocomplete architecture.
-- The component is shared, so a targeted rollback of the single shared file is the cleanest way to recover known-good behavior.
+**Save layer (~lines 2117-2118 and 2619-2620):** When `formData.price` exists, force `price_range_min` and `price_range_max` to `null` in the payload so conflicting data is never persisted.
 
-## Verification required before calling it fixed
-Test specifically in **Add Sale Listing**:
-1. Type into Street Address → Google suggestions appear
-2. Select a suggestion → address details continue populating correctly
-3. Edit the field again after selection → fresh suggestions still appear
-4. Bad/missing key → field remains typeable
-5. Valid preview key via `?gmaps_key=` → suggestions recover correctly
-6. Confirm no freeze after first character/number
+---
 
-## Technical notes
-- There is also a docs/code mismatch on preview localStorage key naming (`aac_gmaps_key` in docs vs `gmaps_preview_key` in code). That is worth aligning only if the restored working version depends on it.
-- Because `AddressAutocomplete` is shared, the restore should also be smoke-checked anywhere else it appears, but the primary acceptance target is Add Sale Listing.
+## Fix 2 — Replace rental agreement options with sale-specific ones
 
-## Acceptance criteria
-- Add Sale Listing address field behaves exactly like the last known working version
-- no freeze after one character/number
-- Google suggestions return
-- manual typing always works
-- only `src/components/AddressAutocomplete.tsx` is changed
+**Lines 4349-4353:** Replace:
+```tsx
+{ value: "A - Exclusive Right to Rent", label: "A – Exclusive Right to Rent" },
+{ value: "B - ER w/ Named Exclusion", label: "B – ER w/ Named Exclusion" },
+{ value: "D - Exclusive Agency", label: "D – Exclusive Agency" },
+```
+
+With sale-specific options:
+```tsx
+{ value: "Exclusive Right to Sell", label: "Exclusive Right to Sell" },
+{ value: "Exclusive Agency", label: "Exclusive Agency" },
+{ value: "Open Listing", label: "Open Listing" },
+{ value: "Net Listing", label: "Net Listing" },
+```
+
+No other changes needed — the form field name (`listing_agreement_type`) and save logic remain the same.
+
+---
+
+## Fix 3 — Preserve draft status for Publish button visibility
+
+**Root cause (lines 578-583):** When loading a draft for editing, the code converts `"draft"` → `"new"` and stores `"new"` in `originalStatusRef.current`. This means the Publish button condition on line 2923 (`originalStatusRef.current === "draft"`) is **never true** for reopened drafts.
+
+**Fix:** Add a separate ref to track the true backend status:
+
+```tsx
+const backendStatusRef = useRef<string | null>(null);
+```
+
+During load (~line 575), store the raw status before normalization:
+```tsx
+backendStatusRef.current = (data.status || "new").toLowerCase();
+```
+
+Then update the button logic (~line 2923) to use `backendStatusRef.current === "draft"` instead of `originalStatusRef.current === "draft"` for both the Publish label and the Save Draft label on line 2931.
+
+Also update `handleSaveChanges` to use the correct publish target status when a draft is being published (status changed from draft to a live status).
+
+---
+
+## Summary of changes
+
+| Issue | Root cause | Fix location (lines) |
+|---|---|---|
+| Price range active with list price | No `disabled` prop on inputs | ~3414-3429 + save payloads |
+| Rental agreements in sale flow | Wrong hardcoded options array | ~4349-4353 |
+| No Publish button on draft edit | `draft` normalized to `new` before storing in ref | ~578-583 + ~2923-2931 |
+
