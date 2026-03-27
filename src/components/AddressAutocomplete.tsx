@@ -220,6 +220,7 @@ const AddressAutocomplete = ({
   const placesReadyRef = useRef(false);
   const initializedRef = useRef(false);
   const userTypingRef = useRef(false);
+  const fallbackRef = useRef(false);
   const [placesReady, setPlacesReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -236,6 +237,36 @@ const AddressAutocomplete = ({
 
   // Stabilize types dependency
   const typesKey = JSON.stringify(types ?? []);
+
+  // --- Dispose autocomplete and enter fallback mode ---
+  const disposeAutocomplete = useCallback((errorMsg: string) => {
+    if (fallbackRef.current) return;
+    fallbackRef.current = true;
+    placesReadyRef.current = false;
+    setPlacesReady(false);
+    setLoadError(errorMsg);
+
+    if (autocompleteRef.current) {
+      try {
+        if ((window as any).google?.maps?.event) {
+          (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        }
+      } catch {}
+      autocompleteRef.current = null;
+    }
+
+    // Remove Google's injected error UI so it stops hijacking the input
+    document.querySelectorAll('.gm-err-container, .gm-err-autocomplete, gmp-internal-error').forEach(el => {
+      try { el.remove(); } catch {}
+    });
+    // Also remove the pac-container that may be stuck
+    document.querySelectorAll('.pac-container').forEach(el => {
+      try { el.remove(); } catch {}
+    });
+
+    onErrorRef.current?.();
+    debugLog("[AddressAutocomplete] Disposed autocomplete, entered fallback mode:", errorMsg);
+  }, []);
 
   // --- Init effect: runs ONCE on mount ---
   useEffect(() => {
@@ -261,12 +292,60 @@ const AddressAutocomplete = ({
     }
 
     const markPlacesReady = () => {
-      if (!isMounted) return;
+      if (!isMounted || fallbackRef.current) return;
       placesReadyRef.current = true;
       setPlacesReady(true);
     };
 
+    // --- Runtime error watcher: detect Google auth failures after init ---
+    let errorObserver: MutationObserver | null = null;
+    let errorCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+    const checkForRuntimeErrors = () => {
+      if (!isMounted || fallbackRef.current) return;
+
+      const hasErrorUI = document.querySelector(
+        '.gm-err-container, .gm-err-autocomplete, gmp-internal-error'
+      );
+
+      if (hasErrorUI) {
+        disposeAutocomplete("Autocomplete unavailable (domain not authorized)");
+      }
+    };
+
+    const startErrorWatcher = () => {
+      // Listen for Google error elements being injected into the DOM
+      errorObserver = new MutationObserver(() => {
+        checkForRuntimeErrors();
+      });
+      errorObserver.observe(document.body, { childList: true, subtree: true });
+
+      // Also poll briefly in case the error was already injected
+      let checks = 0;
+      errorCheckInterval = setInterval(() => {
+        checks++;
+        checkForRuntimeErrors();
+        if (checks >= 15 || fallbackRef.current) {
+          if (errorCheckInterval) clearInterval(errorCheckInterval);
+          errorCheckInterval = null;
+        }
+      }, 1000);
+
+      // Listen for the specific console error via global error handler
+      const origOnError = window.onerror;
+      window.onerror = function (msg, ...rest) {
+        if (typeof msg === 'string' && msg.includes('RefererNotAllowedMapError')) {
+          if (isMounted && !fallbackRef.current) {
+            disposeAutocomplete("Autocomplete unavailable (referrer not allowed)");
+          }
+        }
+        if (origOnError) return (origOnError as any).call(this, msg, ...rest);
+        return false;
+      };
+    };
+
     const initAutocomplete = async () => {
+      if (fallbackRef.current) return;
       debugLog("=== [AddressAutocomplete] initAutocomplete called ===");
       const google = (window as any).google;
       if (!google?.maps?.places) {
@@ -285,6 +364,8 @@ const AddressAutocomplete = ({
           e,
         );
       }
+
+      if (fallbackRef.current || !isMounted) return;
 
       const parsedTypes = JSON.parse(typesKey) as string[];
 
@@ -321,6 +402,7 @@ const AddressAutocomplete = ({
       const placeChangedListener = autocompleteRef.current.addListener(
         "place_changed",
         () => {
+          if (fallbackRef.current) return;
           if (!placesReadyRef.current) {
             console.warn(
               "[AddressAutocomplete] Ignoring place_changed before ready",
@@ -430,6 +512,7 @@ const AddressAutocomplete = ({
               ],
             },
             (details: any, status: any) => {
+              if (fallbackRef.current) return;
               debugLog(
                 "[AddressAutocomplete] PlacesService.getDetails status:",
                 status,
@@ -462,12 +545,13 @@ const AddressAutocomplete = ({
       }
 
       markPlacesReady();
+      startErrorWatcher();
       debugLog("[AddressAutocomplete] Legacy Autocomplete setup complete");
     };
 
     loadGoogleMapsPlaces(apiKey)
       .then(() => {
-        if (!isMounted) return;
+        if (!isMounted || fallbackRef.current) return;
         debugLog("[AddressAutocomplete] Google Places ready.");
         setLoadError(null);
         initAutocomplete();
@@ -486,6 +570,8 @@ const AddressAutocomplete = ({
       isMounted = false;
       placesReadyRef.current = false;
       initializedRef.current = false;
+      if (errorObserver) { errorObserver.disconnect(); errorObserver = null; }
+      if (errorCheckInterval) { clearInterval(errorCheckInterval); errorCheckInterval = null; }
       if (autocompleteRef.current) {
         if ((window as any).google?.maps?.event) {
           (window as any).google.maps.event.clearInstanceListeners(
