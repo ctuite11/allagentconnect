@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 
 interface AddressAutocompleteProps {
@@ -99,7 +99,16 @@ function loadGoogleMapsPlaces(apiKey: string): Promise<void> {
       };
 
       if (existing.dataset.loaded === "true") {
-        checkReady();
+        // Check for key-mismatch / InvalidKeyMapError — detect gmp-error elements in DOM
+        const hasGmpError = document.querySelector("gmp-internal-error, .gm-err-container");
+        if (hasGmpError && !isPlacesReady()) {
+          debugLog("[AddressAutocomplete] Detected broken script (gmp-error), removing and re-injecting");
+          existing.remove();
+          // Fall through to inject fresh script below
+        } else {
+          checkReady();
+          return;
+        }
       } else {
         existing.addEventListener("load", checkReady);
         existing.addEventListener("error", () => {
@@ -184,6 +193,7 @@ const AddressAutocomplete = ({
   const requestIdRef = useRef(0);
   const placesReadyRef = useRef(false);
   const initializedRef = useRef(false);
+  const userTypingRef = useRef(false);
   const [useNewElement, setUseNewElement] = useState(false);
   const [placesReady, setPlacesReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -730,6 +740,19 @@ const AddressAutocomplete = ({
     }
   }, [useNewElement, value]);
 
+  // --- Native input listener for Shadow DOM sync ---
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el || useNewElement) return;
+    const handler = () => { userTypingRef.current = true; };
+    el.addEventListener("input", handler);
+    return () => el.removeEventListener("input", handler);
+  }, [useNewElement]);
+
+  const handleBlur = useCallback(() => {
+    userTypingRef.current = false;
+  }, []);
+
   return (
     <div className="w-full">
       {useNewElement ? (
@@ -737,14 +760,9 @@ const AddressAutocomplete = ({
       ) : (
         <Input
           ref={inputRef}
-          placeholder={
-            placesReady
-              ? placeholder || "City, State, Zip or Neighborhood"
-              : "Loading address search..."
-          }
+          placeholder={placeholder || "Start typing an address..."}
           className={className}
           value={value}
-          disabled={!placesReady}
           name="address_line1"
           autoComplete="street-address"
           autoCorrect="off"
@@ -755,6 +773,7 @@ const AddressAutocomplete = ({
           data-1p-ignore="true"
           data-form-type="other"
           onChange={(e) => onChangeRef.current?.(e.target.value)}
+          onBlur={handleBlur}
         />
       )}
       {loadError && (
