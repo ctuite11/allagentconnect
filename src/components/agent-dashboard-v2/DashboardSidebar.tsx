@@ -183,11 +183,10 @@ export function DashboardSidebar({
       >
         {/* Logo area */}
         <div className={cn("flex items-center px-4 py-3", collapsed ? "justify-center" : "gap-2")}>
-          <AACMonogram className={cn("shrink-0 text-white", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
+          <AACMonogram className={cn("shrink-0 text-emerald-500", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
           {!collapsed && (
-            <span className="text-[14px] font-semibold tracking-tight">
-              <span className="text-white">All Agent </span>
-              <span className="text-emerald-500">Connect</span>
+            <span className="text-[14px] font-semibold text-white tracking-tight">
+              All Agent Connect
             </span>
           )}
         </div>
