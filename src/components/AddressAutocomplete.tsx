@@ -1,5 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 interface AddressAutocompleteProps {
   onPlaceSelect?: (place: any) => void;
