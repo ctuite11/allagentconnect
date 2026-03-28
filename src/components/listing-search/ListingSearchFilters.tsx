@@ -671,7 +671,7 @@ const ListingSearchFilters = ({
                 </div>
                 <div>
                   <Label className="text-xs text-neutral-500 mb-1 block">Unit</Label>
-                  <Select value={filters.radiusUnit} onValueChange={v => updateFilter("radiusUnit", v)}>
+                  <Select value={filters.radiusUnit} onValueChange={v => updateFilter("radiusUnit", v as "miles" | "km")}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
