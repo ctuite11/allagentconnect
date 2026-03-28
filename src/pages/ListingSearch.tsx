@@ -104,6 +104,11 @@ const ListingSearch = () => {
         query = applyLocationFilter(query, filters.selectedTowns);
       }
 
+      // Apply address filters
+      if (filters.streetNumber) query = query.ilike("address", `${filters.streetNumber}%`);
+      if (filters.streetName) query = query.ilike("address", `%${filters.streetName}%`);
+      if (filters.zipCode) query = query.ilike("zip_code", `${filters.zipCode}%`);
+
       const { data, error } = await query;
       if (!error && data) {
         const visible = filterVisibleListings(data, user?.id ?? null);
@@ -134,6 +139,9 @@ const ListingSearch = () => {
     if (f.bathsMin) params.set("bathsMin", f.bathsMin);
     if (f.state && f.state !== "MA") params.set("state", f.state);
     if (f.county) params.set("county", f.county);
+    if (f.streetNumber) params.set("streetNumber", f.streetNumber);
+    if (f.streetName) params.set("streetName", f.streetName);
+    if (f.zipCode) params.set("zipCode", f.zipCode);
     
     setSearchParams(params, { replace: true });
   }, [setSearchParams]);
