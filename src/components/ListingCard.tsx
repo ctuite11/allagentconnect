@@ -619,8 +619,8 @@ const ListingCard = ({
               <div onClick={e => {
             e.stopPropagation();
             onSelect(listing.id);
-          }} className={`w-7 h-7 rounded-md border-2 cursor-pointer transition-all flex items-center justify-center shadow-md ${isSelected ? 'bg-primary border-primary' : 'bg-background/90 border-border hover:border-primary backdrop-blur-sm'}`}>
-                {isSelected && <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+          }} className={`w-5 h-5 rounded-full border cursor-pointer transition-all flex items-center justify-center ${isSelected ? 'bg-emerald-500 border-emerald-500 ring-1 ring-emerald-500/20' : 'bg-white border-zinc-300'}`}>
+                {isSelected && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>}
               </div>
@@ -1070,17 +1070,22 @@ const ListingCard = ({
           </div>
         )}
         
-        {/* Selection Checkbox - Top Right */}
+        {/* Selection Indicator - Top Right */}
         {onSelect && (
           <div 
             className="absolute top-2 right-2 z-10"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(listing.id);
+            }}
           >
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={() => onSelect(listing.id)}
-              className="h-5 w-5 bg-white border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-            />
+            <div className={`w-5 h-5 rounded-full border cursor-pointer transition-all flex items-center justify-center ${isSelected ? 'bg-emerald-500 border-emerald-500 ring-1 ring-emerald-500/20' : 'bg-white border-zinc-300'}`}>
+              {isSelected && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
           </div>
         )}
         
