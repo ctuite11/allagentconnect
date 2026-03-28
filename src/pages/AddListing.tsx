@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
 import { format, differenceInDays } from "date-fns";
@@ -286,7 +287,8 @@ const AddListing = () => {
   const [availableCounties, setAvailableCounties] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<CityOption[]>([]);
   const [locationValidation, setLocationValidation] = useState<{ isValid: boolean; message?: string }>({ isValid: true });
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<{ field: string; label: string }[]>([]);
+  const validationSummaryRef = useRef<HTMLDivElement>(null);
   
   // Flag to prevent cascading useEffects from clearing values during initial data load
   const isHydratingLocationRef = useRef(false);
@@ -2279,6 +2281,48 @@ const AddListing = () => {
     }
   };
 
+  // Centralized validation — single source of truth for required fields
+  const getValidationErrors = (): { field: string; label: string }[] => {
+    const errors: { field: string; label: string }[] = [];
+
+    if (!formData.address.trim()) errors.push({ field: "address", label: "Street Address" });
+    if (!formData.city.trim()) errors.push({ field: "city", label: "City/Town" });
+    if (!formData.state.trim()) errors.push({ field: "state", label: "State" });
+    if (!formData.zip_code.trim()) errors.push({ field: "zip_code", label: "ZIP Code" });
+
+    if (formData.listing_type === "for_sale") {
+      if (!formData.price || String(formData.price).trim() === "" || Number(formData.price) === 0) {
+        errors.push({ field: "price", label: "List Price" });
+      }
+    } else {
+      if (!formData.monthly_rent || String(formData.monthly_rent).trim() === "" || Number(formData.monthly_rent) === 0) {
+        errors.push({ field: "monthly_rent", label: "Monthly Rent" });
+      }
+    }
+
+    if (!formData.listing_agreement_type.trim()) {
+      errors.push({ field: "listing_agreement_type", label: "Type of Listing Agreement" });
+    }
+
+    if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
+      errors.push({ field: "county", label: "County (required for MA)" });
+    }
+
+    if (formData.status === "coming_soon" && !formData.go_live_date.trim()) {
+      errors.push({ field: "go_live_date", label: "Go-Live Date (required for Coming Soon)" });
+    }
+
+    return errors;
+  };
+
+  // Helper: check if a field has a validation error
+  const hasFieldError = (field: string) => validationErrors.some(err => err.field === field);
+
+  // Helper: clear a specific field error when value becomes valid
+  const clearFieldError = (field: string) => {
+    setValidationErrors(prev => prev.filter(err => err.field !== field));
+  };
+
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async () => {
     // Get fresh user from server - single source of truth
@@ -2295,49 +2339,15 @@ const AddListing = () => {
 
     setSubmitting(true);
 
-    // --- Validation (match handleSubmit gates) ---
-    const requiredFields =
-      formData.listing_type === "for_sale"
-        ? {
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zip_code,
-            price: formData.price,
-          }
-        : {
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zip_code,
-            monthlyRent: formData.price,
-          };
-
-    const missingFields = Object.entries(requiredFields).filter(([_, value]) => !value);
-    if (missingFields.length > 0) {
-      toast.error("Please fill in all required fields.");
+    // --- Centralized validation ---
+    const errors = getValidationErrors();
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
       setSubmitting(false);
       return;
     }
-
-    if (!formData.listing_agreement_type) {
-      setValidationErrors((prev) => [...prev, "listing_agreement_type"]);
-      toast.error("Please select a Type of Listing Agreement.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
-      toast.error("Please select a county for Massachusetts listings.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (formData.status === "coming_soon" && !formData.go_live_date) {
-      toast.error("Please select a Go-Live date for Coming Soon listings.");
-      setSubmitting(false);
-      return;
-    }
+    setValidationErrors([]);
     // --- End validation ---
 
     // --- Duplicate listing check (only for live statuses) ---
@@ -2566,39 +2576,15 @@ const AddListing = () => {
         return; // getFreshUserOrRedirect already shows toast and redirects
       }
 
-      // Validate required fields based on listing type
-      const requiredFields = formData.listing_type === "for_sale" 
-        ? { address: formData.address, city: formData.city, state: formData.state, zipCode: formData.zip_code, price: formData.price }
-        : { address: formData.address, city: formData.city, state: formData.state, zipCode: formData.zip_code, monthlyRent: formData.monthly_rent };
-      
-      const missingFields = Object.entries(requiredFields).filter(([_, value]) => !value);
-      if (missingFields.length > 0) {
-        toast.error("Please fill in all required fields.");
+      // Centralized validation
+      const errors = getValidationErrors();
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
         setSubmitting(false);
         return;
       }
-
-      // Validate listing agreement type (required)
-      if (!formData.listing_agreement_type) {
-        setValidationErrors(prev => [...prev, "listing_agreement_type"]);
-        toast.error("Please select a Type of Listing Agreement.");
-        setSubmitting(false);
-        return;
-      }
-
-      // Validate county for MA
-      if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
-        toast.error("Please select a county for Massachusetts listings.");
-        setSubmitting(false);
-        return;
-      }
-
-      // Validate Coming Soon go-live date
-      if (formData.status === "coming_soon" && !formData.go_live_date) {
-        toast.error("Please select a Go-Live date for Coming Soon listings.");
-        setSubmitting(false);
-        return;
-      }
+      setValidationErrors([]);
 
       // Compute auto_activate_on and auto_activate_days
       let computedAutoActivateOn: string | null = null;
@@ -2968,6 +2954,21 @@ const AddListing = () => {
             </div>
           </div>
 
+          {/* Validation Summary */}
+          {validationErrors.length > 0 && (
+            <Alert variant="destructive" ref={validationSummaryRef} className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Please complete the following required fields:</AlertTitle>
+              <AlertDescription>
+                <ul className="list-disc pl-4 mt-2 space-y-1">
+                  {validationErrors.map(err => (
+                    <li key={err.field}>{err.label} is required</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Form Card */}
           <Card>
             <CardContent className="pt-6">
@@ -3064,13 +3065,16 @@ const AddListing = () => {
                     </p>
                   </div>
                   {formData.status === "coming_soon" && (
-                    <div className="space-y-2">
+                    <div className={cn("space-y-2", hasFieldError("go_live_date") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                       <Label htmlFor="go_live_date">On MLS Date *</Label>
                       <Input
                         id="go_live_date"
                         type="date"
                         value={formData.go_live_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, go_live_date: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, go_live_date: e.target.value }));
+                          if (e.target.value.trim()) clearFieldError("go_live_date");
+                        }}
                         required
                       />
                       <p className="text-xs text-muted-foreground">
@@ -3180,11 +3184,11 @@ const AddListing = () => {
                   
                   {/* Street Address + Unit # */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3")}>
+                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3", hasFieldError("address") && "ring-1 ring-destructive/20 border-destructive rounded-md p-2")}>
                       <Label htmlFor="address">Street Address *</Label>
                       <AddressAutocomplete
                         value={formData.address}
-                        onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
+                        onChange={(val: string) => { setFormData(prev => ({ ...prev, address: val })); if (val.trim()) clearFieldError("address"); }}
                         onPlaceSelect={(place) => {
                           const normalized = normalizeGooglePlace(place);
                           const placeComponents = (place as { address_components?: Array<{ long_name?: string; types?: string[] }> }).address_components || [];
@@ -3275,24 +3279,28 @@ const AddListing = () => {
 
                   {/* Row 2: City + State */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className={cn("space-y-2", hasFieldError("city") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                       <Label htmlFor="city">City/Town *</Label>
                       <Input
                         id="city"
                         type="text"
                         placeholder="Enter city"
                         value={formData.city}
-                        onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, city: e.target.value }));
+                          if (e.target.value.trim()) clearFieldError("city");
+                        }}
                         required
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className={cn("space-y-2", hasFieldError("state") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                       <Label htmlFor="state">State *</Label>
                       <Select
                         value={selectedState}
                         onValueChange={(value) => {
                           setSelectedState(value);
                           setFormData(prev => ({ ...prev, state: value }));
+                          if (value.trim()) clearFieldError("state");
                         }}
                       >
                         <SelectTrigger className="bg-white border-neutral-200">
@@ -3320,18 +3328,21 @@ const AddListing = () => {
                     
                     return (
                       <div className={cn("grid grid-cols-1 gap-4", showNeighborhoods ? "md:grid-cols-3" : "md:grid-cols-2")}>
-                        <div className="space-y-2">
+                        <div className={cn("space-y-2", hasFieldError("zip_code") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                           <Label htmlFor="zip_code">ZIP Code *</Label>
                           <Input
                             id="zip_code"
                             type="text"
                             placeholder="Enter ZIP code"
                             value={formData.zip_code}
-                            onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
+                            onChange={(e) => {
+                              setFormData(prev => ({ ...prev, zip_code: e.target.value }));
+                              if (e.target.value.trim()) clearFieldError("zip_code");
+                            }}
                             required
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className={cn("space-y-2", hasFieldError("county") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                           <Label>County {selectedState === "MA" && "*"}</Label>
                           {!selectedState || availableCounties.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
@@ -3343,6 +3354,7 @@ const AddListing = () => {
                               onValueChange={(value) => {
                                 setSelectedCounty(value);
                                 setFormData(prev => ({ ...prev, county: value }));
+                                if (value && value !== "all") clearFieldError("county");
                               }}
                             >
                               <SelectTrigger className="bg-white border-neutral-200">
@@ -3405,14 +3417,17 @@ const AddListing = () => {
                   <Label className="text-lg font-semibold">{formData.listing_type === "for_rent" ? "Pricing & Deposits" : "Pricing"}</Label>
                   {formData.listing_type === "for_sale" ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      <div className={cn("space-y-2", hasFieldError("price") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                         <Label htmlFor="price">Listing Price *</Label>
                         <FormattedInput
                           id="price"
                           format="currency"
                           placeholder="500000"
                           value={formData.price}
-                          onChange={(value) => setFormData(prev => ({ ...prev, price: value }))}
+                          onChange={(value) => {
+                            setFormData(prev => ({ ...prev, price: value }));
+                            if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("price");
+                          }}
                           decimals={0}
                           required
                           disabled={formData.status === 'cancelled' || formData.status === 'sold'}
@@ -3456,14 +3471,17 @@ const AddListing = () => {
                     <div className="space-y-4">
                       {/* Monthly Rent + Rental Fee */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className={cn("space-y-2", hasFieldError("monthly_rent") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                           <Label htmlFor="monthly_rent">Monthly Rent *</Label>
                           <FormattedInput
                             id="monthly_rent"
                             format="currency"
                             placeholder="2000"
                             value={formData.monthly_rent}
-                            onChange={(value) => setFormData(prev => ({ ...prev, monthly_rent: value }))}
+                            onChange={(value) => {
+                              setFormData(prev => ({ ...prev, monthly_rent: value }));
+                              if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("monthly_rent");
+                            }}
                             decimals={0}
                             required
                           />
@@ -4363,7 +4381,7 @@ const AddListing = () => {
                 {/* Listing Agreement Type */}
                 <div className="space-y-2 border-t pt-6">
                   <Label className="text-xl font-semibold">Listing Agreement</Label>
-                  <div className="space-y-3 max-w-md">
+                  <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "ring-1 ring-destructive/20 rounded-md p-3")}>
                     <Label>
                       Type of Listing Agreement <span className="text-destructive">*</span>
                     </Label>
@@ -4386,7 +4404,7 @@ const AddListing = () => {
                               listing_agreement_type: newValue,
                             }));
                             if (newValue) {
-                              setValidationErrors(prev => prev.filter(e => e !== "listing_agreement_type"));
+                              clearFieldError("listing_agreement_type");
                             }
                           }}
                         />
@@ -4395,7 +4413,7 @@ const AddListing = () => {
                         </span>
                       </label>
                     ))}
-                    {!formData.listing_agreement_type && validationErrors.includes("listing_agreement_type") && (
+                    {!formData.listing_agreement_type && hasFieldError("listing_agreement_type") && (
                       <p className="text-sm text-destructive">Please select a listing agreement type.</p>
                     )}
                   </div>
