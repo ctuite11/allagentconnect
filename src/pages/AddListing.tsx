@@ -365,7 +365,12 @@ const AddListing = () => {
     
     // Debounce autosave to 3 seconds after last change
     const debounceTimeout = setTimeout(() => {
-      handleSaveDraft(true);
+      // In edit mode for non-draft listings, use handleSaveChanges to preserve status
+      if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
+        handleSaveChanges(true); // silent auto-save preserving current status
+      } else {
+        handleSaveDraft(true);
+      }
     }, 3000);
     
     return () => clearTimeout(debounceTimeout);
@@ -2324,7 +2329,7 @@ const AddListing = () => {
   };
 
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (isAutoSave = false) => {
     // Get fresh user from server - single source of truth
     const freshUser = await getFreshUserOrRedirect();
     if (!freshUser) {
@@ -2333,25 +2338,31 @@ const AddListing = () => {
 
     const targetId = listingId || draftId;
     if (!targetId) {
-      toast.error("No listing to update. Please use Save Draft for new listings.");
+      if (!isAutoSave) toast.error("No listing to update. Please use Save Draft for new listings.");
       return;
     }
 
-    setSubmitting(true);
-
-    // --- Centralized validation ---
-    const errors = getValidationErrors();
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
-      setSubmitting(false);
-      return;
+    if (isAutoSave) {
+      setAutoSaving(true);
+    } else {
+      setSubmitting(true);
     }
-    setValidationErrors([]);
+
+    // --- Centralized validation (skip for auto-save) ---
+    if (!isAutoSave) {
+      const errors = getValidationErrors();
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
+        setSubmitting(false);
+        return;
+      }
+      setValidationErrors([]);
+    }
     // --- End validation ---
 
-    // --- Duplicate listing check (only for live statuses) ---
-    if (isLiveStatus(formData.status)) {
+    // --- Duplicate listing check (only for live statuses, skip for auto-save) ---
+    if (!isAutoSave && isLiveStatus(formData.status)) {
       const dupResult = await checkDuplicateListing({
         address: formData.address,
         city: formData.city,
@@ -2454,18 +2465,26 @@ const AddListing = () => {
       }
 
       setHasUnsavedChanges(false);
-      toast.success("Listing changes saved!");
-      const returnTo = location.state?.from;
-      if (returnTo) {
-        navigate(returnTo);
-      } else {
-        navigate("/agent/listings");
+      if (!isAutoSave) {
+        toast.success("Listing changes saved!");
+        const returnTo = location.state?.from;
+        if (returnTo) {
+          navigate(returnTo);
+        } else {
+          navigate("/agent/listings");
+        }
       }
     } catch (error: any) {
       console.error("[handleSaveChanges] Error:", error);
-      toast.error(`Failed to save changes: ${error.message || 'Unknown error'}`);
+      if (!isAutoSave) {
+        toast.error(`Failed to save changes: ${error.message || 'Unknown error'}`);
+      }
     } finally {
-      setSubmitting(false);
+      if (isAutoSave) {
+        setAutoSaving(false);
+      } else {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -2911,7 +2930,7 @@ const AddListing = () => {
                   <Button 
                     variant="default" 
                     size="lg" 
-                    onClick={handleSaveChanges} 
+                    onClick={() => handleSaveChanges()} 
                     type="button" 
                     disabled={submitting || autoSaving} 
                     className="gap-2"
@@ -4875,7 +4894,7 @@ const AddListing = () => {
                       </Button>
                       <Button
                         type="button"
-                        onClick={handleSaveChanges}
+                        onClick={() => handleSaveChanges()}
                         disabled={submitting || autoSaving}
                       >
                         {autoSaving ? (
