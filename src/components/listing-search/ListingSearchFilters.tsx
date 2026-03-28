@@ -264,7 +264,37 @@ const ListingSearchFilters = ({
   const filteredCounties = counties.filter(c => c.state === filters.state);
 
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white shadow-none p-5">
+    <div className="rounded-3xl border border-neutral-200 bg-white shadow-none overflow-hidden">
+        {/* Sticky Top Action Row with Active Filter Chips */}
+        <div className="sticky top-0 z-20 bg-white border-b border-neutral-100 px-5 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {filters.selectedTowns.length > 0 && (
+              <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full">
+                {filters.selectedTowns.length} {filters.selectedTowns.length === 1 ? 'town' : 'towns'}
+              </Badge>
+            )}
+            {filters.propertyTypes.length > 0 && (
+              <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full">
+                {filters.propertyTypes.length} {filters.propertyTypes.length === 1 ? 'type' : 'types'}
+              </Badge>
+            )}
+            {filters.statuses.length > 0 && (
+              <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full">
+                {filters.statuses.length} {filters.statuses.length === 1 ? 'status' : 'statuses'}
+              </Badge>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onFiltersChange(initialFilters)}
+            className="h-7 text-xs px-3 text-muted-foreground hover:text-foreground shrink-0"
+          >
+            Reset
+          </Button>
+        </div>
+
+        <div className="p-5">
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           
@@ -1000,34 +1030,7 @@ const ListingSearchFilters = ({
           </div>
         </div>
 
-        {/* Action Bar */}
-        <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
-          <div className="flex items-center gap-2">
-            {filters.selectedTowns.length > 0 && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                {filters.selectedTowns.length} towns
-              </Badge>
-            )}
-            {filters.propertyTypes.length > 0 && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                {filters.propertyTypes.length} types
-              </Badge>
-            )}
-            {filters.statuses.length > 0 && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                {filters.statuses.length} statuses
-              </Badge>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onFiltersChange(initialFilters)}
-            className="h-8 text-xs px-3"
-          >
-            Clear All
-          </Button>
-        </div>
+      </div>
       </div>
   );
 };
