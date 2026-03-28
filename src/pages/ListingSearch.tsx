@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,7 @@ const ListingSearch = () => {
   const [counties, setCounties] = useState<{ id: string; name: string; state: string }[]>([]);
   const [resultCount, setResultCount] = useState<number | null>(null);
   const [countLoading, setCountLoading] = useState(false);
+  const requestIdRef = useRef(0);
 
   // Fetch counties on mount
   useEffect(() => {
@@ -62,6 +63,7 @@ const ListingSearch = () => {
 
   // Fetch result count using same visibility rules as the results page
   const fetchResultCount = useCallback(async () => {
+    const currentRequestId = ++requestIdRef.current;
     setCountLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -116,20 +118,27 @@ const ListingSearch = () => {
       if (filters.listDateTo) query = query.lte("list_date", filters.listDateTo);
 
       const { data, error } = await query;
+      if (currentRequestId !== requestIdRef.current) return; // stale response
       if (!error && data) {
         const visible = filterVisibleListings(data, user?.id ?? null);
         const filtered = filterByPricePerSqft(visible, filters.pricePerSqFtMin || "", filters.pricePerSqFt || "");
         setResultCount(filtered.length);
       }
     } catch (error) {
+      if (currentRequestId !== requestIdRef.current) return;
       console.error("Count error:", error);
     } finally {
-      setCountLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setCountLoading(false);
+      }
     }
   }, [filters]);
 
   useEffect(() => {
-    fetchResultCount();
+    const timer = setTimeout(() => {
+      fetchResultCount();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [fetchResultCount]);
 
   const updateUrlParams = useCallback((f: FilterState) => {
@@ -186,8 +195,8 @@ const ListingSearch = () => {
                     className="flex items-center gap-2 text-sm text-neutral-500 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-default cursor-pointer transition-colors group"
                     title={resultCount !== null && resultCount > 0 ? "View results" : ""}
                   >
-                    <span className="font-medium text-neutral-900 bg-neutral-100 px-2.5 py-1 rounded-lg group-hover:bg-neutral-50 transition-colors">
-                      {countLoading ? "..." : resultCount ?? 0}
+                    <span className={`font-medium text-neutral-900 bg-neutral-100 px-2.5 py-1 rounded-lg group-hover:bg-neutral-50 transition-all duration-200 ${countLoading ? "opacity-50" : ""}`}>
+                      {resultCount ?? 0}
                     </span>
                     <span>results</span>
                   </button>
