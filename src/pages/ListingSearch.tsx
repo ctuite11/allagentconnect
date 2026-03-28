@@ -205,7 +205,7 @@ const ListingSearch = () => {
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
                     size="sm"
-                    className="h-9 gap-1.5 text-sm bg-neutral-900 hover:bg-neutral-800 text-white rounded-2xl px-4"
+                    className="h-9 gap-1.5 text-sm bg-primary hover:bg-primary/90 text-white rounded-2xl px-4"
                   >
                     <Search className="h-3.5 w-3.5" />
                     View Results
