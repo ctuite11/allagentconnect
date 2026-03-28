@@ -20,7 +20,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen flex w-full">
       <DashboardSidebar isAdmin={isAdmin} />
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
