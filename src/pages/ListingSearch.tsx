@@ -8,7 +8,7 @@ import { applyLocationFilter } from "@/lib/buildLocationFilter";
 import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { buildSearchParams, parseAdvancedParams } from "@/lib/buildSearchParams";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
-import { RotateCcw, Search, ExternalLink } from "lucide-react";
+import { RotateCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -229,17 +229,6 @@ const ListingSearch = () => {
                   >
                     <Search className="h-3.5 w-3.5" />
                     View Results
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleViewResultsNewTab}
-                    disabled={countLoading || resultCount === 0}
-                    className="h-9 gap-1.5 text-sm rounded-xl border-neutral-200 text-neutral-700 hover:text-emerald-600 hover:bg-transparent hover:border-neutral-300 transition-colors"
-                    title="Open results in new tab"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
