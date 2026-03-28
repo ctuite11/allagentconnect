@@ -3181,7 +3181,7 @@ const AddListing = () => {
                   
                   {/* Street Address + Unit # */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3")}>
+                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3", hasFieldError("address") && "ring-1 ring-destructive/20 border-destructive rounded-md p-2")}>
                       <Label htmlFor="address">Street Address *</Label>
                       <AddressAutocomplete
                         value={formData.address}
