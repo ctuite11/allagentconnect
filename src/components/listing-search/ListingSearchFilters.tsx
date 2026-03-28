@@ -69,6 +69,7 @@ export interface FilterState {
   rooms: string;
   acres: string;
   pricePerSqFt: string;
+  pricePerSqFtMin: string;
 }
 
 // Format number with commas for display
