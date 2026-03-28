@@ -1,37 +1,51 @@
 
 
-# Fix: Standardize Required-Field Error Styling and Scroll Behavior
+# Fix Standard Criteria Layout — Each Range Field Gets Its Own Full-Width Row
 
 ## Problem
 
-1. **Inconsistent error styling**: The price field uses `ring-2 ring-destructive/50 bg-destructive/5` (strong) while all other required fields use `ring-1 ring-destructive/20` (faint). They should all match the stronger style shown on price.
+Living Area, Price/SqFt, and Year Built have Min/Max pairs crammed into half-width grid cells alongside other fields. The dual inputs inside a half-width cell look squished and inconsistent with the single-input fields above them.
 
-2. **Scroll may not reach top**: The validation summary scroll uses `validationSummaryRef.current?.scrollIntoView()` which scrolls to the summary element — but if the summary isn't at the very top of the page, the user may not see it. Should also call `window.scrollTo(0, 0)` to guarantee top-of-page scroll.
+## Solution
 
-## Changes — One file: `src/pages/AddListing.tsx`
+Give each range field (Living Area, Price/SqFt, Year Built) its own full-width row. The Min/Max inputs share that full row, so they have plenty of breathing room.
 
-### 1. Standardize all `hasFieldError` styling to match the strong treatment
+## File: `src/components/listing-search/ListingSearchFilters.tsx`
 
-Replace every instance of `ring-1 ring-destructive/20` with `ring-2 ring-destructive/50 bg-destructive/5` across all field wrappers:
+### Current structure (lines 455-569):
+```
+grid-cols-2: Bedrooms | Total Baths
+grid-cols-2: Rooms    | Acres
+grid-cols-2: Living Area [Min][Max] | Price/SqFt [Min][Max]
+grid-cols-2: Year Built [From][To]  | Parking
+```
 
-- `go_live_date` (line ~3090)
-- `address` (line ~3209) — also remove the extra `border-destructive` class
-- `city` (line ~3304)
-- `state` (line ~3318)
-- `zip_code` (line ~3353)
-- `county` (line ~3367)
-- `monthly_rent` (line ~3502)
-- `listing_agreement_type` (line ~4412)
+### New structure:
+```
+grid-cols-2: Bedrooms | Total Baths
+grid-cols-2: Rooms    | Acres
+full-width:  Living Area  [  Min  ][  Max  ]
+full-width:  Price/SqFt   [  Min  ][  Max  ]
+full-width:  Year Built   [ From  ][  To   ]
+grid-cols-2: Parking  | (empty or future field)
+```
 
-The `price` field (line ~3442) already has the correct styling.
+### Changes
 
-### 2. Add `window.scrollTo(0, 0)` on validation failure
+1. **Lines 499-538** — Break the `grid-cols-2` wrapper around Living Area + Price/SqFt into two separate full-width `<div>` blocks, each containing one label + `flex gap-2` with two `flex-1` inputs.
 
-At both validation-failure points (lines ~2358 and ~2603), add `window.scrollTo({ top: 0, behavior: 'smooth' })` before or alongside the `scrollIntoView` call to ensure the page always scrolls to the very top when required fields are missing.
+2. **Lines 539-569** — Break the `grid-cols-2` wrapper around Year Built + Parking. Year Built becomes its own full-width row. Parking moves into a new `grid-cols-2` row (with one cell, or paired with Garage if it exists).
+
+3. Each full-width range row uses `flex gap-2` with `flex-1` on both inputs — same as now, but with double the horizontal space.
+
+## Not changing
+- Input styling, heights, or border radius
+- Grid layout for single-input fields (Bedrooms, Baths, Rooms, Acres)
+- Any other filter sections
+- Filter state, URL params, or query logic
 
 ## Expected result
-
-- All required fields show the same visible red ring + tint when invalid
-- Page always scrolls to the top when publish/save finds missing required fields
-- No layout, filter, or unrelated changes
+- Range fields have generous space for Min/Max side by side
+- Single-input fields stay paired in `grid-cols-2`
+- Clean, consistent vertical rhythm throughout Standard Criteria
 
