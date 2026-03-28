@@ -2356,6 +2356,7 @@ const AddListing = () => {
       const errors = getValidationErrors();
       if (errors.length > 0) {
         setValidationErrors(errors);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
         setSubmitting(false);
         return;
@@ -2602,6 +2603,7 @@ const AddListing = () => {
       const errors = getValidationErrors();
       if (errors.length > 0) {
         setValidationErrors(errors);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
         setSubmitting(false);
         return;
@@ -3087,7 +3089,7 @@ const AddListing = () => {
                     </p>
                   </div>
                   {formData.status === "coming_soon" && (
-                    <div className={cn("space-y-2", hasFieldError("go_live_date") && "ring-1 ring-destructive/20 rounded-md p-2")}>
+                    <div className={cn("space-y-2", <div className={cn("space-y-2", hasFieldError("go_live_date") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>)}>
                       <Label htmlFor="go_live_date">On MLS Date *</Label>
                       <Input
                         id="go_live_date"
@@ -3206,7 +3208,7 @@ const AddListing = () => {
                   
                   {/* Street Address + Unit # */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3", hasFieldError("address") && "ring-1 ring-destructive/20 border-destructive rounded-md p-2")}>
+                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3", <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3", hasFieldError("address") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>)}>
                       <Label htmlFor="address">Street Address *</Label>
                       <AddressAutocomplete
                         value={formData.address}
@@ -3301,7 +3303,7 @@ const AddListing = () => {
 
                   {/* Row 2: City + State */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className={cn("space-y-2", hasFieldError("city") && "ring-1 ring-destructive/20 rounded-md p-2")}>
+                    <div className={cn("space-y-2", <div className={cn("space-y-2", hasFieldError("city") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>)}>
                       <Label htmlFor="city">City/Town *</Label>
                       <Input
                         id="city"
@@ -3315,7 +3317,7 @@ const AddListing = () => {
                         required
                       />
                     </div>
-                    <div className={cn("space-y-2", hasFieldError("state") && "ring-1 ring-destructive/20 rounded-md p-2")}>
+                    <div className={cn("space-y-2", <div className={cn("space-y-2", hasFieldError("state") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>)}>
                       <Label htmlFor="state">State *</Label>
                       <Select
                         value={selectedState}
@@ -3350,7 +3352,7 @@ const AddListing = () => {
                     
                     return (
                       <div className={cn("grid grid-cols-1 gap-4", showNeighborhoods ? "md:grid-cols-3" : "md:grid-cols-2")}>
-                        <div className={cn("space-y-2", hasFieldError("zip_code") && "ring-1 ring-destructive/20 rounded-md p-2")}>
+                        <div className={cn("space-y-2", <div className={cn("space-y-2", hasFieldError("zip_code") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>)}>
                           <Label htmlFor="zip_code">ZIP Code *</Label>
                           <Input
                             id="zip_code"
@@ -3364,7 +3366,7 @@ const AddListing = () => {
                             required
                           />
                         </div>
-                        <div className={cn("space-y-2", hasFieldError("county") && "ring-1 ring-destructive/20 rounded-md p-2")}>
+                        <div className={cn("space-y-2", <div className={cn("space-y-2", hasFieldError("county") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>)}>
                           <Label>County {selectedState === "MA" && "*"}</Label>
                           {!selectedState || availableCounties.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
@@ -3499,7 +3501,7 @@ const AddListing = () => {
                     <div className="space-y-4">
                       {/* Monthly Rent + Rental Fee */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className={cn("space-y-2", hasFieldError("monthly_rent") && "ring-1 ring-destructive/20 rounded-md p-2")}>
+                        <div className={cn("space-y-2", <div className={cn("space-y-2", hasFieldError("monthly_rent") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>)}>
                           <Label htmlFor="monthly_rent">Monthly Rent *</Label>
                           <FormattedInput
                             id="monthly_rent"
@@ -4409,7 +4411,7 @@ const AddListing = () => {
                 {/* Listing Agreement Type */}
                 <div className="space-y-2 border-t pt-6">
                   <Label className="text-xl font-semibold">Listing Agreement</Label>
-                  <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "ring-1 ring-destructive/20 rounded-md p-3")}>
+                  <div className={cn("space-y-3 max-w-md", <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-3")}>)}>
                     <Label>
                       Type of Listing Agreement <span className="text-destructive">*</span>
                     </Label>
