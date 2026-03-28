@@ -74,6 +74,7 @@ interface Listing {
   listing_type: string;
   photos: any[] | null;
   floor_plans?: any[] | null;
+  documents?: any[] | null;
   listing_number?: string | null;
   created_at?: string;
   active_date?: string | null;
