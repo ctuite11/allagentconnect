@@ -166,8 +166,8 @@ const ListingSearch = () => {
   };
 
   return (
-    <div className="flex flex-col bg-white text-neutral-900">
-      <main className="flex-1">
+<div className="bg-white text-neutral-900">
+      <main>
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           <PageHeader
             title="Listing Search"
