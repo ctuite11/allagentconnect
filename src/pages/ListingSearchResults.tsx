@@ -213,10 +213,7 @@ const ListingSearchResults = () => {
     }
   }, [filters, sortColumn, sortDirection]);
 
-  useEffect(() => { handleSearch(); }, []);
-  useEffect(() => {
-    if (listings.length > 0 || loading) handleSearch();
-  }, [sortColumn, sortDirection]);
+  useEffect(() => { handleSearch(); }, [handleSearch]);
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {

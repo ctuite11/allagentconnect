@@ -130,7 +130,7 @@ const ListingSearch = () => {
 
   useEffect(() => {
     fetchResultCount();
-  }, [filters]);
+  }, [fetchResultCount]);
 
   const updateUrlParams = useCallback((f: FilterState) => {
     const params = buildSearchParams(f);
