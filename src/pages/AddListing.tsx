@@ -2465,18 +2465,26 @@ const AddListing = () => {
       }
 
       setHasUnsavedChanges(false);
-      toast.success("Listing changes saved!");
-      const returnTo = location.state?.from;
-      if (returnTo) {
-        navigate(returnTo);
-      } else {
-        navigate("/agent/listings");
+      if (!isAutoSave) {
+        toast.success("Listing changes saved!");
+        const returnTo = location.state?.from;
+        if (returnTo) {
+          navigate(returnTo);
+        } else {
+          navigate("/agent/listings");
+        }
       }
     } catch (error: any) {
       console.error("[handleSaveChanges] Error:", error);
-      toast.error(`Failed to save changes: ${error.message || 'Unknown error'}`);
+      if (!isAutoSave) {
+        toast.error(`Failed to save changes: ${error.message || 'Unknown error'}`);
+      }
     } finally {
-      setSubmitting(false);
+      if (isAutoSave) {
+        setAutoSaving(false);
+      } else {
+        setSubmitting(false);
+      }
     }
   };
 
