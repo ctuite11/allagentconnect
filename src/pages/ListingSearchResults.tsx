@@ -34,6 +34,9 @@ const ListingSearchResults = () => {
     if (searchParams.get("bathsMin")) urlFilters.bathsMin = searchParams.get("bathsMin") || "";
     if (searchParams.get("state")) urlFilters.state = searchParams.get("state") || "MA";
     if (searchParams.get("county")) urlFilters.county = searchParams.get("county") || "";
+    if (searchParams.get("streetNumber")) urlFilters.streetNumber = searchParams.get("streetNumber") || "";
+    if (searchParams.get("streetName")) urlFilters.streetName = searchParams.get("streetName") || "";
+    if (searchParams.get("zipCode")) urlFilters.zipCode = searchParams.get("zipCode") || "";
     return urlFilters;
   });
   
@@ -123,7 +126,8 @@ const ListingSearchResults = () => {
       if (filters.parkingSpaces) query = query.gte("total_parking_spaces", parseInt(filters.parkingSpaces));
       if (filters.state) query = query.eq("state", filters.state);
       if (filters.selectedTowns.length > 0) query = applyLocationFilter(query, filters.selectedTowns);
-      if (filters.streetAddress) query = query.ilike("address", `%${filters.streetAddress}%`);
+      if (filters.streetNumber) query = query.ilike("address", `${filters.streetNumber}%`);
+      if (filters.streetName) query = query.ilike("address", `%${filters.streetName}%`);
       if (filters.zipCode) query = query.ilike("zip_code", `${filters.zipCode}%`);
       if (filters.keywordsInclude) query = query.ilike("description", `%${filters.keywordsInclude}%`);
 
