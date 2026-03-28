@@ -421,23 +421,6 @@ const PropertyDetail = () => {
         listingId={id!}
       />
 
-      {/* Back Button Row - Inline chevron style */}
-      <div className="mx-auto max-w-6xl px-4 pb-2">
-        <button
-          onClick={() => {
-            const fromPage = location.state?.from;
-            if (fromPage) {
-              navigate(fromPage);
-            } else {
-              navigate("/listing-search");
-            }
-          }}
-          className="p-2 -ml-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-      </div>
 
       <main className="flex-1">
         {/* Subtle Agent View Indicator */}
