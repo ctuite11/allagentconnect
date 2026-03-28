@@ -15,7 +15,7 @@ function toTitleCase(str: string): string {
 }
 
 export function buildDisplayAddress(
-  listing: { address: string; city: string; state: string; zip_code: string; condo_details?: any }
+  listing: { address: string; city: string; state: string; zip_code: string; unit_number?: string | null; condo_details?: any }
 ) {
   const city = listing.city || '';
   const state = listing.state || '';
@@ -27,16 +27,18 @@ export function buildDisplayAddress(
   let base = (listing.address || '').trim();
   base = removeCountry(base);
 
-  // Get unit number from condo_details
-  let unit: string | null = null;
-  try {
-    const details =
-      typeof listing.condo_details === 'string'
-        ? JSON.parse(listing.condo_details)
-        : listing.condo_details;
-    unit = details?.unit_number ? String(details.unit_number) : null;
-  } catch {
-    unit = null;
+  // Get unit number — prefer top-level unit_number, fall back to condo_details
+  let unit: string | null = listing.unit_number ? String(listing.unit_number) : null;
+  if (!unit) {
+    try {
+      const details =
+        typeof listing.condo_details === 'string'
+          ? JSON.parse(listing.condo_details)
+          : listing.condo_details;
+      unit = details?.unit_number ? String(details.unit_number) : null;
+    } catch {
+      unit = null;
+    }
   }
 
   if (unit) {

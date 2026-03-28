@@ -2445,7 +2445,12 @@ const AddListing = () => {
 
       setHasUnsavedChanges(false);
       toast.success("Listing changes saved!");
-      navigate("/agent/listings");
+      const returnTo = location.state?.from;
+      if (returnTo) {
+        navigate(returnTo);
+      } else {
+        navigate("/agent/listings");
+      }
     } catch (error: any) {
       console.error("[handleSaveChanges] Error:", error);
       toast.error(`Failed to save changes: ${error.message || 'Unknown error'}`);
@@ -2814,8 +2819,13 @@ const AddListing = () => {
         setDraftId(null);
       }
 
-      // Always navigate to My Listings after save/publish
-      navigate(ROUTES.MY_LISTINGS);
+      // Navigate back to origin or My Listings
+      const returnTo = location.state?.from;
+      if (returnTo) {
+        navigate(returnTo);
+      } else {
+        navigate(ROUTES.MY_LISTINGS);
+      }
     } catch (error: any) {
       console.error("Error creating listing:", error);
       if (error instanceof z.ZodError) {
@@ -4416,20 +4426,30 @@ const AddListing = () => {
                         <Label htmlFor="commission_rate">
                           {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
                         </Label>
-                        <Input
-                          id="commission_rate"
-                          name="buyer_agent_commission_rate"
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
-                          min="0"
-                          max={formData.commission_type === 'percentage' ? "100" : undefined}
-                          placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
-                          value={formData.commission_rate}
-                          onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
-                          autoComplete="off"
-                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="commission_rate"
+                            name="buyer_agent_commission_rate"
+                            type="number"
+                            inputMode="decimal"
+                            step="0.01"
+                            min="0"
+                            max={formData.commission_type === 'percentage' ? "100" : undefined}
+                            placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                            value={formData.commission_rate}
+                            onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
+                            autoComplete="off"
+                            className={cn(
+                              "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                              formData.commission_type === 'percentage' ? "pr-8" : "pl-6"
+                            )}
+                          />
+                          {formData.commission_type === 'percentage' ? (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">%</span>
+                          ) : (
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">$</span>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="commission_notes">Compensation Notes</Label>
@@ -4796,7 +4816,6 @@ const AddListing = () => {
                         type="button"
                         onClick={handleSaveChanges}
                         disabled={submitting || autoSaving}
-                        className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
                       >
                         {autoSaving ? (
                           <>
@@ -4857,7 +4876,6 @@ const AddListing = () => {
                         type="button"
                         disabled={submitting || autoSaving}
                         onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
-                        className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
                       >
                         {submitting ? (
                           <>

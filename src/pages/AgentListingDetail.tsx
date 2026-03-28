@@ -372,10 +372,10 @@ const AgentListingDetail = () => {
               {/* Agent-only action buttons */}
               {isAgentView && (
                 <>
-                  <Button 
+                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate(`/agent/listings/edit/${id}`)}
+                    onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: `/listing/${id}` } })}
                     className="gap-2"
                   >
                     <Edit className="w-4 h-4" />
@@ -564,7 +564,7 @@ const AgentListingDetail = () => {
         </Card>
 
         {/* Photo Gallery */}
-        <Card className="bg-card border-border rounded-xl shadow-sm mb-6 overflow-hidden">
+        <Card className="bg-card border-border rounded-xl shadow-xl mb-6 overflow-hidden ring-1 ring-black/5">
           <div className="relative aspect-[16/9] bg-muted">
             <img
               src={mainPhoto}
