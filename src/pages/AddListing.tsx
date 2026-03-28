@@ -4378,7 +4378,7 @@ const AddListing = () => {
                 {/* Listing Agreement Type */}
                 <div className="space-y-2 border-t pt-6">
                   <Label className="text-xl font-semibold">Listing Agreement</Label>
-                  <div className="space-y-3 max-w-md">
+                  <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "ring-1 ring-destructive/20 rounded-md p-3")}>
                     <Label>
                       Type of Listing Agreement <span className="text-destructive">*</span>
                     </Label>
