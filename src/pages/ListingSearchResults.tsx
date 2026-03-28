@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { applyLocationFilter } from "@/lib/buildLocationFilter";
 import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
-import { parseRadiusParams } from "@/lib/buildSearchParams";
+import { parseAdvancedParams } from "@/lib/buildSearchParams";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { toast } from "sonner";
@@ -39,7 +39,7 @@ const ListingSearchResults = () => {
     if (searchParams.get("streetNumber")) urlFilters.streetNumber = searchParams.get("streetNumber") || "";
     if (searchParams.get("streetName")) urlFilters.streetName = searchParams.get("streetName") || "";
     if (searchParams.get("zipCode")) urlFilters.zipCode = searchParams.get("zipCode") || "";
-    parseRadiusParams(searchParams, urlFilters);
+    parseAdvancedParams(searchParams, urlFilters);
     return urlFilters;
   });
   
@@ -150,7 +150,12 @@ const ListingSearchResults = () => {
       if (filters.streetNumber) query = query.ilike("address", `${filters.streetNumber}%`);
       if (filters.streetName) query = query.ilike("address", `%${filters.streetName}%`);
       if (filters.zipCode) query = query.ilike("zip_code", `${filters.zipCode}%`);
+      if (filters.lotSizeMin) query = query.gte("lot_size", parseFloat(filters.lotSizeMin));
+      if (filters.lotSizeMax) query = query.lte("lot_size", parseFloat(filters.lotSizeMax));
       if (filters.keywordsInclude) query = query.ilike("description", `%${filters.keywordsInclude}%`);
+      if (filters.listingNumber) query = query.ilike("listing_number", `%${filters.listingNumber.replace(/^L-/i, "")}%`);
+      if (filters.listDateFrom) query = query.gte("list_date", filters.listDateFrom);
+      if (filters.listDateTo) query = query.lte("list_date", filters.listDateTo);
 
       const ascending = sortDirection === "asc";
       query = query.order(sortColumn, { ascending, nullsFirst: false });
