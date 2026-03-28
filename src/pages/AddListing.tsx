@@ -2296,8 +2296,11 @@ const AddListing = () => {
     if (!formData.zip_code.trim()) errors.push({ field: "zip_code", label: "ZIP Code" });
 
     if (formData.listing_type === "for_sale") {
-      if (!formData.price || String(formData.price).trim() === "" || Number(formData.price) === 0) {
-        errors.push({ field: "price", label: "List Price" });
+      const hasPrice = formData.price && String(formData.price).trim() !== "" && Number(formData.price) > 0;
+      const hasValidRange = formData.price_range_min && String(formData.price_range_min).trim() !== "" && Number(formData.price_range_min) > 0
+        && formData.price_range_max && String(formData.price_range_max).trim() !== "" && Number(formData.price_range_max) > 0;
+      if (!hasPrice && !hasValidRange) {
+        errors.push({ field: "price", label: "Listing Price or Price Range" });
       }
     } else {
       if (!formData.monthly_rent || String(formData.monthly_rent).trim() === "" || Number(formData.monthly_rent) === 0) {
@@ -3436,8 +3439,8 @@ const AddListing = () => {
                   <Label className="text-lg font-semibold">{formData.listing_type === "for_rent" ? "Pricing & Deposits" : "Pricing"}</Label>
                   {formData.listing_type === "for_sale" ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className={cn("space-y-2", hasFieldError("price") && "ring-1 ring-destructive/20 rounded-md p-2")}>
-                        <Label htmlFor="price">Listing Price *</Label>
+                      <div className={cn("space-y-2", hasFieldError("price") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                        <Label htmlFor="price">Listing Price <span className="text-xs font-normal text-muted-foreground">(or enter Price Range)</span></Label>
                         <FormattedInput
                           id="price"
                           format="currency"
@@ -3465,7 +3468,13 @@ const AddListing = () => {
                             format="currency"
                             placeholder="Min"
                             value={formData.price_range_min}
-                            onChange={(value) => setFormData(prev => ({ ...prev, price_range_min: value }))}
+                            onChange={(value) => {
+                              setFormData(prev => {
+                                const next = { ...prev, price_range_min: value };
+                                if (value && Number(value) > 0 && next.price_range_max && Number(next.price_range_max) > 0) clearFieldError("price");
+                                return next;
+                              });
+                            }}
                             decimals={0}
                             disabled={!!formData.price}
                           />
@@ -3474,7 +3483,13 @@ const AddListing = () => {
                             format="currency"
                             placeholder="Max"
                             value={formData.price_range_max}
-                            onChange={(value) => setFormData(prev => ({ ...prev, price_range_max: value }))}
+                            onChange={(value) => {
+                              setFormData(prev => {
+                                const next = { ...prev, price_range_max: value };
+                                if (value && Number(value) > 0 && next.price_range_min && Number(next.price_range_min) > 0) clearFieldError("price");
+                                return next;
+                              });
+                            }}
                             decimals={0}
                             disabled={!!formData.price}
                           />
