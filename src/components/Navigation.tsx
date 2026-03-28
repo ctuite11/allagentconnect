@@ -62,6 +62,7 @@ const SIDEBAR_MANAGED_PREFIXES = [
   "/my-favorites",
   "/vendor/",
   "/admin/",
+  "/property/",
 ];
 
 const Navigation = () => {

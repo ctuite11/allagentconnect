@@ -433,6 +433,21 @@ const PropertyDetail = () => {
           </div>
         )}
 
+        {/* Back Button Row */}
+        <div className="mx-auto max-w-6xl px-4 pb-2">
+          <button
+            onClick={() => {
+              const fromPage = (location.state as any)?.from;
+              if (fromPage) navigate(fromPage);
+              else navigate(-1);
+            }}
+            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
+
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col lg:flex-row gap-6">
