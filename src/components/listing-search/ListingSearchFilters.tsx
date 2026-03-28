@@ -85,7 +85,7 @@ const parseFormattedNumber = (value: string): string => {
 };
 
 export const initialFilters: FilterState = {
-  propertyTypes: [],
+  propertyTypes: ["single_family", "condo"],
   statuses: ["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "off_market"],
   bedsMin: "",
   bedsMax: "",
