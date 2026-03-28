@@ -99,6 +99,14 @@ const ListingSearch = () => {
       if (filters.streetNumber) query = query.ilike("address", `${filters.streetNumber}%`);
       if (filters.streetName) query = query.ilike("address", `%${filters.streetName}%`);
       if (filters.zipCode) query = query.ilike("zip_code", `${filters.zipCode}%`);
+      if (filters.sqftMin) query = query.gte("square_feet", parseInt(filters.sqftMin));
+      if (filters.sqftMax) query = query.lte("square_feet", parseInt(filters.sqftMax));
+      if (filters.bedsMax) query = query.lte("bedrooms", parseInt(filters.bedsMax));
+      if (filters.bathsMax) query = query.lte("bathrooms", parseFloat(filters.bathsMax));
+      if (filters.yearBuiltMin) query = query.gte("year_built", parseInt(filters.yearBuiltMin));
+      if (filters.yearBuiltMax) query = query.lte("year_built", parseInt(filters.yearBuiltMax));
+      if (filters.lotSizeMin) query = query.gte("lot_size", parseFloat(filters.lotSizeMin));
+      if (filters.lotSizeMax) query = query.lte("lot_size", parseFloat(filters.lotSizeMax));
 
       const { data, error } = await query;
       if (!error && data) {
