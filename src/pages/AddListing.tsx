@@ -3185,7 +3185,7 @@ const AddListing = () => {
                       <Label htmlFor="address">Street Address *</Label>
                       <AddressAutocomplete
                         value={formData.address}
-                        onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
+                        onChange={(val: string) => { setFormData(prev => ({ ...prev, address: val })); if (val.trim()) clearFieldError("address"); }}
                         onPlaceSelect={(place) => {
                           const normalized = normalizeGooglePlace(place);
                           const placeComponents = (place as { address_components?: Array<{ long_name?: string; types?: string[] }> }).address_components || [];
