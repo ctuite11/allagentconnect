@@ -296,8 +296,8 @@ const ClientNeedsDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-20">
-      <main className={`${aacStyles.pageContainer} pb-32`}>
+    <div className="bg-white pt-6">
+      <main className={`${aacStyles.pageContainer} pb-12`}>
         <PageHeader
           title="Communications Center"
           subtitle="Agent-to-agent collaboration and deal flow"
@@ -417,9 +417,9 @@ const ClientNeedsDashboard = () => {
         </AlertDialog>
       </main>
 
-      {/* Sticky Save Footer - Inside page container */}
+      {/* Save Footer */}
       {hasUnsavedChanges && (
-        <div className="sticky bottom-0 bg-white border-t border-zinc-200 z-40 -mx-6 px-6">
+        <div className="bg-white border-t border-zinc-200 px-6 mt-8">
           <div className="py-4 flex items-center justify-between max-w-7xl mx-auto">
             <p className="text-zinc-500 text-sm">
               You have unsaved changes
