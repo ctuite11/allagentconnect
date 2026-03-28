@@ -168,6 +168,9 @@ const ListingSearch = () => {
     if (filters.bathsMin) params.set("bathsMin", filters.bathsMin);
     if (filters.state && filters.state !== "MA") params.set("state", filters.state);
     if (filters.county) params.set("county", filters.county);
+    if (filters.streetNumber) params.set("streetNumber", filters.streetNumber);
+    if (filters.streetName) params.set("streetName", filters.streetName);
+    if (filters.zipCode) params.set("zipCode", filters.zipCode);
     
     navigate(`/listing-results?${params.toString()}`);
   };
@@ -184,6 +187,9 @@ const ListingSearch = () => {
     if (filters.bathsMin) params.set("bathsMin", filters.bathsMin);
     if (filters.state && filters.state !== "MA") params.set("state", filters.state);
     if (filters.county) params.set("county", filters.county);
+    if (filters.streetNumber) params.set("streetNumber", filters.streetNumber);
+    if (filters.streetName) params.set("streetName", filters.streetName);
+    if (filters.zipCode) params.set("zipCode", filters.zipCode);
     
     window.open(`/listing-results?${params.toString()}`, '_blank');
   };
