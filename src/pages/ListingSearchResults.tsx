@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { applyLocationFilter } from "@/lib/buildLocationFilter";
+import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
+import { parseRadiusParams } from "@/lib/buildSearchParams";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { toast } from "sonner";
@@ -37,6 +39,7 @@ const ListingSearchResults = () => {
     if (searchParams.get("streetNumber")) urlFilters.streetNumber = searchParams.get("streetNumber") || "";
     if (searchParams.get("streetName")) urlFilters.streetName = searchParams.get("streetName") || "";
     if (searchParams.get("zipCode")) urlFilters.zipCode = searchParams.get("zipCode") || "";
+    parseRadiusParams(searchParams, urlFilters);
     return urlFilters;
   });
   
@@ -96,6 +99,19 @@ const ListingSearchResults = () => {
     const { data: { user } } = await supabase.auth.getUser();
     const currentUserId = user?.id;
 
+    // If radius is set, get IDs within radius first
+    let radiusIds: string[] | null = null;
+    if (filters.radius && filters.originLat && filters.originLng) {
+      radiusIds = await getListingIdsWithinRadius(
+        filters.originLat, filters.originLng, filters.radius, filters.radiusUnit
+      );
+      if (radiusIds && radiusIds.length === 0) {
+        setListings([]);
+        setLoading(false);
+        return;
+      }
+    }
+
     let query = supabase
       .from("listings")
       .select(`
@@ -107,6 +123,11 @@ const ListingSearchResults = () => {
         documents, floors, active_date, condo_details, price_range_min, price_range_max
       `)
       .limit(500);
+
+      // Apply radius ID filter
+      if (radiusIds) {
+        query = query.in("id", radiusIds);
+      }
 
       if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
       if (filters.internalFilter === "off_market") query = query.eq("status", "off_market");

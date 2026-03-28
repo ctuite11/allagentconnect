@@ -4,6 +4,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { applyLocationFilter } from "@/lib/buildLocationFilter";
+import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
+import { buildSearchParams, parseRadiusParams } from "@/lib/buildSearchParams";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { RotateCcw, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,6 @@ const ListingSearch = () => {
   const navigate = useNavigate();
   
   const [filters, setFilters] = useState<FilterState>(() => {
-    // Initialize from URL params
     const urlFilters = { ...initialFilters };
     
     const propertyTypes = searchParams.get("propertyTypes");
@@ -21,7 +22,6 @@ const ListingSearch = () => {
     
     const statuses = searchParams.get("statuses");
     if (statuses) {
-      // Map legacy "private" to "off_market" for backwards compatibility
       urlFilters.statuses = statuses.split(",").map(s => s === "private" ? "off_market" : s);
     }
     
@@ -34,6 +34,10 @@ const ListingSearch = () => {
     if (searchParams.get("bathsMin")) urlFilters.bathsMin = searchParams.get("bathsMin") || "";
     if (searchParams.get("state")) urlFilters.state = searchParams.get("state") || "MA";
     if (searchParams.get("county")) urlFilters.county = searchParams.get("county") || "";
+    if (searchParams.get("streetNumber")) urlFilters.streetNumber = searchParams.get("streetNumber") || "";
+    if (searchParams.get("streetName")) urlFilters.streetName = searchParams.get("streetName") || "";
+    if (searchParams.get("zipCode")) urlFilters.zipCode = searchParams.get("zipCode") || "";
+    parseRadiusParams(searchParams, urlFilters);
     
     return urlFilters;
   });
@@ -55,56 +59,43 @@ const ListingSearch = () => {
     fetchCounties();
   }, []);
 
-  // Fetch result count when filters change
   // Fetch result count using same visibility rules as the results page
   const fetchResultCount = useCallback(async () => {
     setCountLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+
+      // If radius is set, get IDs within radius first
+      let radiusIds: string[] | null = null;
+      if (filters.radius && filters.originLat && filters.originLng) {
+        radiusIds = await getListingIdsWithinRadius(
+          filters.originLat, filters.originLng, filters.radius, filters.radiusUnit
+        );
+        if (radiusIds && radiusIds.length === 0) {
+          setResultCount(0);
+          setCountLoading(false);
+          return;
+        }
+      }
+
       let query = supabase
         .from("listings")
         .select("id, status, agent_id")
         .limit(500);
 
-      // Apply status filter
-      if (filters.statuses.length > 0) {
-        query = query.in("status", filters.statuses);
+      // Apply radius ID filter
+      if (radiusIds) {
+        query = query.in("id", radiusIds);
       }
 
-      // Apply property type filter
-      if (filters.propertyTypes.length > 0) {
-        query = query.in("property_type", filters.propertyTypes);
-      }
-
-      // Apply price filters
-      if (filters.priceMin) {
-        query = query.gte("price", parseInt(filters.priceMin));
-      }
-      if (filters.priceMax) {
-        query = query.lte("price", parseInt(filters.priceMax));
-      }
-
-      // Apply beds filters
-      if (filters.bedsMin) {
-        query = query.gte("bedrooms", parseInt(filters.bedsMin));
-      }
-
-      // Apply baths filters
-      if (filters.bathsMin) {
-        query = query.gte("bathrooms", parseFloat(filters.bathsMin));
-      }
-
-      // Apply state filter
-      if (filters.state) {
-        query = query.eq("state", filters.state);
-      }
-
-      // Apply town/neighborhood filter
-      if (filters.selectedTowns.length > 0) {
-        query = applyLocationFilter(query, filters.selectedTowns);
-      }
-
-      // Apply address filters
+      if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
+      if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
+      if (filters.priceMin) query = query.gte("price", parseInt(filters.priceMin));
+      if (filters.priceMax) query = query.lte("price", parseInt(filters.priceMax));
+      if (filters.bedsMin) query = query.gte("bedrooms", parseInt(filters.bedsMin));
+      if (filters.bathsMin) query = query.gte("bathrooms", parseFloat(filters.bathsMin));
+      if (filters.state) query = query.eq("state", filters.state);
+      if (filters.selectedTowns.length > 0) query = applyLocationFilter(query, filters.selectedTowns);
       if (filters.streetNumber) query = query.ilike("address", `${filters.streetNumber}%`);
       if (filters.streetName) query = query.ilike("address", `%${filters.streetName}%`);
       if (filters.zipCode) query = query.ilike("zip_code", `${filters.zipCode}%`);
@@ -121,28 +112,12 @@ const ListingSearch = () => {
     }
   }, [filters]);
 
-  // Update count when filters change
   useEffect(() => {
     fetchResultCount();
   }, [filters]);
 
-  // Update URL params when filters change
   const updateUrlParams = useCallback((f: FilterState) => {
-    const params = new URLSearchParams();
-    
-    if (f.propertyTypes.length > 0) params.set("propertyTypes", f.propertyTypes.join(","));
-    if (f.statuses.length > 0) params.set("statuses", f.statuses.join(","));
-    if (f.selectedTowns.length > 0) params.set("towns", f.selectedTowns.join(","));
-    if (f.priceMin) params.set("priceMin", f.priceMin);
-    if (f.priceMax) params.set("priceMax", f.priceMax);
-    if (f.bedsMin) params.set("bedsMin", f.bedsMin);
-    if (f.bathsMin) params.set("bathsMin", f.bathsMin);
-    if (f.state && f.state !== "MA") params.set("state", f.state);
-    if (f.county) params.set("county", f.county);
-    if (f.streetNumber) params.set("streetNumber", f.streetNumber);
-    if (f.streetName) params.set("streetName", f.streetName);
-    if (f.zipCode) params.set("zipCode", f.zipCode);
-    
+    const params = buildSearchParams(f);
     setSearchParams(params, { replace: true });
   }, [setSearchParams]);
 
@@ -157,55 +132,23 @@ const ListingSearch = () => {
   };
 
   const handleViewResults = () => {
-    const params = new URLSearchParams();
-    
-    if (filters.propertyTypes.length > 0) params.set("propertyTypes", filters.propertyTypes.join(","));
-    if (filters.statuses.length > 0) params.set("statuses", filters.statuses.join(","));
-    if (filters.selectedTowns.length > 0) params.set("towns", filters.selectedTowns.join(","));
-    if (filters.priceMin) params.set("priceMin", filters.priceMin);
-    if (filters.priceMax) params.set("priceMax", filters.priceMax);
-    if (filters.bedsMin) params.set("bedsMin", filters.bedsMin);
-    if (filters.bathsMin) params.set("bathsMin", filters.bathsMin);
-    if (filters.state && filters.state !== "MA") params.set("state", filters.state);
-    if (filters.county) params.set("county", filters.county);
-    if (filters.streetNumber) params.set("streetNumber", filters.streetNumber);
-    if (filters.streetName) params.set("streetName", filters.streetName);
-    if (filters.zipCode) params.set("zipCode", filters.zipCode);
-    
-    navigate(`/listing-results?${params.toString()}`);
+    navigate(`/listing-results?${buildSearchParams(filters).toString()}`);
   };
 
   const handleViewResultsNewTab = () => {
-    const params = new URLSearchParams();
-    
-    if (filters.propertyTypes.length > 0) params.set("propertyTypes", filters.propertyTypes.join(","));
-    if (filters.statuses.length > 0) params.set("statuses", filters.statuses.join(","));
-    if (filters.selectedTowns.length > 0) params.set("towns", filters.selectedTowns.join(","));
-    if (filters.priceMin) params.set("priceMin", filters.priceMin);
-    if (filters.priceMax) params.set("priceMax", filters.priceMax);
-    if (filters.bedsMin) params.set("bedsMin", filters.bedsMin);
-    if (filters.bathsMin) params.set("bathsMin", filters.bathsMin);
-    if (filters.state && filters.state !== "MA") params.set("state", filters.state);
-    if (filters.county) params.set("county", filters.county);
-    if (filters.streetNumber) params.set("streetNumber", filters.streetNumber);
-    if (filters.streetName) params.set("streetName", filters.streetName);
-    if (filters.zipCode) params.set("zipCode", filters.zipCode);
-    
-    window.open(`/listing-results?${params.toString()}`, '_blank');
+    window.open(`/listing-results?${buildSearchParams(filters).toString()}`, '_blank');
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-neutral-900">
       <main className="flex-1">
         <div className="max-w-[1280px] mx-auto px-6 py-6">
-          {/* Page Header */}
           <PageHeader
             title="Listing Search"
             subtitle="Search and filter available listings"
             className="mb-8"
           />
           
-          {/* Action Bar */}
           <div className="rounded-3xl border border-neutral-200 bg-white aac-shadow mb-4">
             <div className="px-5 py-4">
               <div className="flex items-center justify-between">
@@ -221,7 +164,6 @@ const ListingSearch = () => {
                   </Button>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* Results counter - clickable */}
                   <button
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
@@ -259,7 +201,6 @@ const ListingSearch = () => {
             </div>
           </div>
 
-          {/* Filter Builder */}
           <ListingSearchFilters
             filters={filters}
             onFiltersChange={handleFiltersChange}
