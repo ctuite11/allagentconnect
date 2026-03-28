@@ -3468,14 +3468,17 @@ const AddListing = () => {
                     <div className="space-y-4">
                       {/* Monthly Rent + Rental Fee */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className={cn("space-y-2", hasFieldError("monthly_rent") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                           <Label htmlFor="monthly_rent">Monthly Rent *</Label>
                           <FormattedInput
                             id="monthly_rent"
                             format="currency"
                             placeholder="2000"
                             value={formData.monthly_rent}
-                            onChange={(value) => setFormData(prev => ({ ...prev, monthly_rent: value }))}
+                            onChange={(value) => {
+                              setFormData(prev => ({ ...prev, monthly_rent: value }));
+                              if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("monthly_rent");
+                            }}
                             decimals={0}
                             required
                           />
