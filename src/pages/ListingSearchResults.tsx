@@ -99,6 +99,19 @@ const ListingSearchResults = () => {
     const { data: { user } } = await supabase.auth.getUser();
     const currentUserId = user?.id;
 
+    // If radius is set, get IDs within radius first
+    let radiusIds: string[] | null = null;
+    if (filters.radius && filters.originLat && filters.originLng) {
+      radiusIds = await getListingIdsWithinRadius(
+        filters.originLat, filters.originLng, filters.radius, filters.radiusUnit
+      );
+      if (radiusIds && radiusIds.length === 0) {
+        setListings([]);
+        setLoading(false);
+        return;
+      }
+    }
+
     let query = supabase
       .from("listings")
       .select(`
@@ -110,6 +123,11 @@ const ListingSearchResults = () => {
         documents, floors, active_date, condo_details, price_range_min, price_range_max
       `)
       .limit(500);
+
+      // Apply radius ID filter
+      if (radiusIds) {
+        query = query.in("id", radiusIds);
+      }
 
       if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
       if (filters.internalFilter === "off_market") query = query.eq("status", "off_market");
