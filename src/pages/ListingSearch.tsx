@@ -99,9 +99,9 @@ const ListingSearch = () => {
         query = query.eq("state", filters.state);
       }
 
-      // Apply town filter
+      // Apply town/neighborhood filter
       if (filters.selectedTowns.length > 0) {
-        query = query.in("city", filters.selectedTowns);
+        query = applyLocationFilter(query, filters.selectedTowns);
       }
 
       const { data, error } = await query;
