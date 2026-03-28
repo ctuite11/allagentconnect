@@ -2281,6 +2281,48 @@ const AddListing = () => {
     }
   };
 
+  // Centralized validation — single source of truth for required fields
+  const getValidationErrors = (): { field: string; label: string }[] => {
+    const errors: { field: string; label: string }[] = [];
+
+    if (!formData.address.trim()) errors.push({ field: "address", label: "Street Address" });
+    if (!formData.city.trim()) errors.push({ field: "city", label: "City/Town" });
+    if (!formData.state.trim()) errors.push({ field: "state", label: "State" });
+    if (!formData.zip_code.trim()) errors.push({ field: "zip_code", label: "ZIP Code" });
+
+    if (formData.listing_type === "for_sale") {
+      if (!formData.price || String(formData.price).trim() === "" || Number(formData.price) === 0) {
+        errors.push({ field: "price", label: "List Price" });
+      }
+    } else {
+      if (!formData.monthly_rent || String(formData.monthly_rent).trim() === "" || Number(formData.monthly_rent) === 0) {
+        errors.push({ field: "monthly_rent", label: "Monthly Rent" });
+      }
+    }
+
+    if (!formData.listing_agreement_type.trim()) {
+      errors.push({ field: "listing_agreement_type", label: "Type of Listing Agreement" });
+    }
+
+    if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
+      errors.push({ field: "county", label: "County (required for MA)" });
+    }
+
+    if (formData.status === "coming_soon" && !formData.go_live_date.trim()) {
+      errors.push({ field: "go_live_date", label: "Go-Live Date (required for Coming Soon)" });
+    }
+
+    return errors;
+  };
+
+  // Helper: check if a field has a validation error
+  const hasFieldError = (field: string) => validationErrors.some(err => err.field === field);
+
+  // Helper: clear a specific field error when value becomes valid
+  const clearFieldError = (field: string) => {
+    setValidationErrors(prev => prev.filter(err => err.field !== field));
+  };
+
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async () => {
     // Get fresh user from server - single source of truth
@@ -2534,39 +2576,15 @@ const AddListing = () => {
         return; // getFreshUserOrRedirect already shows toast and redirects
       }
 
-      // Validate required fields based on listing type
-      const requiredFields = formData.listing_type === "for_sale" 
-        ? { address: formData.address, city: formData.city, state: formData.state, zipCode: formData.zip_code, price: formData.price }
-        : { address: formData.address, city: formData.city, state: formData.state, zipCode: formData.zip_code, monthlyRent: formData.monthly_rent };
-      
-      const missingFields = Object.entries(requiredFields).filter(([_, value]) => !value);
-      if (missingFields.length > 0) {
-        toast.error("Please fill in all required fields.");
+      // Centralized validation
+      const errors = getValidationErrors();
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
         setSubmitting(false);
         return;
       }
-
-      // Validate listing agreement type (required)
-      if (!formData.listing_agreement_type) {
-        setValidationErrors(prev => [...prev, "listing_agreement_type"]);
-        toast.error("Please select a Type of Listing Agreement.");
-        setSubmitting(false);
-        return;
-      }
-
-      // Validate county for MA
-      if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
-        toast.error("Please select a county for Massachusetts listings.");
-        setSubmitting(false);
-        return;
-      }
-
-      // Validate Coming Soon go-live date
-      if (formData.status === "coming_soon" && !formData.go_live_date) {
-        toast.error("Please select a Go-Live date for Coming Soon listings.");
-        setSubmitting(false);
-        return;
-      }
+      setValidationErrors([]);
 
       // Compute auto_activate_on and auto_activate_days
       let computedAutoActivateOn: string | null = null;
@@ -2935,6 +2953,21 @@ const AddListing = () => {
               )}
             </div>
           </div>
+
+          {/* Validation Summary */}
+          {validationErrors.length > 0 && (
+            <Alert variant="destructive" ref={validationSummaryRef} className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Please complete the following required fields:</AlertTitle>
+              <AlertDescription>
+                <ul className="list-disc pl-4 mt-2 space-y-1">
+                  {validationErrors.map(err => (
+                    <li key={err.field}>{err.label} is required</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Form Card */}
           <Card>
@@ -4354,7 +4387,7 @@ const AddListing = () => {
                               listing_agreement_type: newValue,
                             }));
                             if (newValue) {
-                              setValidationErrors(prev => prev.filter(e => e !== "listing_agreement_type"));
+                              clearFieldError("listing_agreement_type");
                             }
                           }}
                         />
@@ -4363,7 +4396,7 @@ const AddListing = () => {
                         </span>
                       </label>
                     ))}
-                    {!formData.listing_agreement_type && validationErrors.includes("listing_agreement_type") && (
+                    {!formData.listing_agreement_type && hasFieldError("listing_agreement_type") && (
                       <p className="text-sm text-destructive">Please select a listing agreement type.</p>
                     )}
                   </div>
