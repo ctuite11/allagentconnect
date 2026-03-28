@@ -39,6 +39,7 @@ const ListingSearchResults = () => {
     if (searchParams.get("streetNumber")) urlFilters.streetNumber = searchParams.get("streetNumber") || "";
     if (searchParams.get("streetName")) urlFilters.streetName = searchParams.get("streetName") || "";
     if (searchParams.get("zipCode")) urlFilters.zipCode = searchParams.get("zipCode") || "";
+    parseRadiusParams(searchParams, urlFilters);
     return urlFilters;
   });
   
