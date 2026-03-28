@@ -4001,6 +4001,12 @@ export type Database = {
         Returns: boolean
       }
       is_verified_agent: { Args: never; Returns: boolean }
+      listings_within_radius: {
+        Args: { origin_lat: number; origin_lng: number; radius_miles: number }
+        Returns: {
+          listing_id: string
+        }[]
+      }
       normalize_listing_address_text: {
         Args: { input: string }
         Returns: string
