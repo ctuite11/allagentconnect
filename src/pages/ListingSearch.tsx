@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { applyLocationFilter } from "@/lib/buildLocationFilter";
 import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
-import { buildSearchParams, parseRadiusParams } from "@/lib/buildSearchParams";
+import { buildSearchParams, parseAdvancedParams } from "@/lib/buildSearchParams";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { RotateCcw, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ const ListingSearch = () => {
     if (searchParams.get("streetNumber")) urlFilters.streetNumber = searchParams.get("streetNumber") || "";
     if (searchParams.get("streetName")) urlFilters.streetName = searchParams.get("streetName") || "";
     if (searchParams.get("zipCode")) urlFilters.zipCode = searchParams.get("zipCode") || "";
-    parseRadiusParams(searchParams, urlFilters);
+    parseAdvancedParams(searchParams, urlFilters);
     
     return urlFilters;
   });
@@ -107,6 +107,12 @@ const ListingSearch = () => {
       if (filters.yearBuiltMax) query = query.lte("year_built", parseInt(filters.yearBuiltMax));
       if (filters.lotSizeMin) query = query.gte("lot_size", parseFloat(filters.lotSizeMin));
       if (filters.lotSizeMax) query = query.lte("lot_size", parseFloat(filters.lotSizeMax));
+      if (filters.garageSpaces) query = query.gte("garage_spaces", parseInt(filters.garageSpaces));
+      if (filters.parkingSpaces) query = query.gte("total_parking_spaces", parseInt(filters.parkingSpaces));
+      if (filters.keywordsInclude) query = query.ilike("description", `%${filters.keywordsInclude}%`);
+      if (filters.listingNumber) query = query.ilike("listing_number", `%${filters.listingNumber.replace(/^L-/i, "")}%`);
+      if (filters.listDateFrom) query = query.gte("list_date", filters.listDateFrom);
+      if (filters.listDateTo) query = query.lte("list_date", filters.listDateTo);
 
       const { data, error } = await query;
       if (!error && data) {
