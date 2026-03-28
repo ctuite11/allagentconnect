@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { applyLocationFilter } from "@/lib/buildLocationFilter";
+import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
+import { parseRadiusParams } from "@/lib/buildSearchParams";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { toast } from "sonner";
