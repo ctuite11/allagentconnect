@@ -496,66 +496,64 @@ const ListingSearchFilters = ({
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Living Area</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        placeholder="Min"
-                        value={filters.sqftMin}
-                        onChange={(e) => updateFilter("sqftMin", e.target.value.replace(/\D/g, ""))}
-                        className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Max"
-                        value={filters.sqftMax}
-                        onChange={(e) => updateFilter("sqftMax", e.target.value.replace(/\D/g, ""))}
-                        className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                    </div>
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1 block">Living Area</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Min"
+                      value={filters.sqftMin}
+                      onChange={(e) => updateFilter("sqftMin", e.target.value.replace(/\D/g, ""))}
+                      className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Max"
+                      value={filters.sqftMax}
+                      onChange={(e) => updateFilter("sqftMax", e.target.value.replace(/\D/g, ""))}
+                      className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
                   </div>
-                  <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Price/SqFt</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        placeholder="Min"
-                        value={filters.pricePerSqFtMin}
-                        onChange={(e) => updateFilter("pricePerSqFtMin", e.target.value.replace(/\D/g, ""))}
-                        className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Max"
-                        value={filters.pricePerSqFt}
-                        onChange={(e) => updateFilter("pricePerSqFt", e.target.value.replace(/\D/g, ""))}
-                        className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                    </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1 block">Price/SqFt</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Min"
+                      value={filters.pricePerSqFtMin}
+                      onChange={(e) => updateFilter("pricePerSqFtMin", e.target.value.replace(/\D/g, ""))}
+                      className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Max"
+                      value={filters.pricePerSqFt}
+                      onChange={(e) => updateFilter("pricePerSqFt", e.target.value.replace(/\D/g, ""))}
+                      className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1 block">Year Built</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="From"
+                      value={filters.yearBuiltMin}
+                      onChange={(e) => updateFilter("yearBuiltMin", e.target.value.replace(/\D/g, ""))}
+                      className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="To"
+                      value={filters.yearBuiltMax}
+                      onChange={(e) => updateFilter("yearBuiltMax", e.target.value.replace(/\D/g, ""))}
+                      className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs text-neutral-500 mb-1 block">Year Built</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        placeholder="From"
-                        value={filters.yearBuiltMin}
-                        onChange={(e) => updateFilter("yearBuiltMin", e.target.value.replace(/\D/g, ""))}
-                        className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                      <Input
-                        type="text"
-                        placeholder="To"
-                        value={filters.yearBuiltMax}
-                        onChange={(e) => updateFilter("yearBuiltMax", e.target.value.replace(/\D/g, ""))}
-                        className="flex-1 h-9 rounded-xl border border-neutral-200 bg-white px-3 text-xs text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                      />
-                    </div>
-                  </div>
                   <div>
                     <Label className="text-xs text-neutral-500 mb-1 block">Parking</Label>
                     <Input
