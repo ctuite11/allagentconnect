@@ -376,7 +376,7 @@ const AgentListingDetail = () => {
                    <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: `/listing/${id}` } })}
+                    onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
                     className="gap-2"
                   >
                     <Edit className="w-4 h-4" />

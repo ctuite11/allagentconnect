@@ -21,7 +21,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { BuyerAgentShowcase } from "./BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "./BuyerCompensationInfoModal";
@@ -41,6 +41,7 @@ interface PropertyDetailRightColumnProps {
 
 export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }: PropertyDetailRightColumnProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, role } = useAuthRole();
   const [isStartingChat, setIsStartingChat] = useState(false);
   
@@ -205,7 +206,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
           <CardContent className="py-4 space-y-3">
             <div className="grid grid-cols-1 gap-2">
               <Button
-                onClick={() => navigate(`/agent/listings/edit/${listing.id}`)}
+                onClick={() => navigate(`/agent/listings/edit/${listing.id}`, { state: { from: location.pathname + location.search } })}
                 className="w-full justify-start gap-2"
               >
                 <Edit2 className="w-4 h-4" />

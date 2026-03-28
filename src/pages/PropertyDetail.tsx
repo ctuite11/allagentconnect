@@ -824,7 +824,7 @@ const PropertyDetail = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/agent/listings/edit/${id}`)}
+                      onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
                       className="w-full justify-start gap-2"
                     >
                       <Edit2 className="w-4 h-4" />
