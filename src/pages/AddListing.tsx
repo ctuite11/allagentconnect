@@ -2361,8 +2361,8 @@ const AddListing = () => {
     }
     // --- End validation ---
 
-    // --- Duplicate listing check (only for live statuses) ---
-    if (isLiveStatus(formData.status)) {
+    // --- Duplicate listing check (only for live statuses, skip for auto-save) ---
+    if (!isAutoSave && isLiveStatus(formData.status)) {
       const dupResult = await checkDuplicateListing({
         address: formData.address,
         city: formData.city,
