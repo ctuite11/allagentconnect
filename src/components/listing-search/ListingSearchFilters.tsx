@@ -563,7 +563,47 @@ const ListingSearchFilters = ({
             <div className="p-3">
               <RadioGroup 
                 value={addressType} 
-                onValueChange={(v) => setAddressType(v as "street" | "location")}
+                onValueChange={(v) => {
+                  const mode = v as "street" | "location";
+                  setAddressType(mode);
+                  setGeoError(null);
+                  if (mode === "location") {
+                    setGeoLoading(true);
+                    if (!navigator.geolocation) {
+                      setGeoError("Geolocation is not supported by your browser");
+                      setGeoLoading(false);
+                      return;
+                    }
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        onFiltersChange({
+                          ...filters,
+                          locationMode: "location",
+                          originLat: String(position.coords.latitude),
+                          originLng: String(position.coords.longitude),
+                        });
+                        setGeoLoading(false);
+                      },
+                      (err) => {
+                        setGeoError(
+                          err.code === 1
+                            ? "Location permission denied. Please allow location access."
+                            : "Unable to get your location. Please try again."
+                        );
+                        setGeoLoading(false);
+                        setAddressType("street");
+                      },
+                      { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                  } else {
+                    onFiltersChange({
+                      ...filters,
+                      locationMode: "street",
+                      originLat: "",
+                      originLng: "",
+                    });
+                  }
+                }}
                 className="flex items-center gap-4 mb-3"
               >
                 <div className="flex items-center gap-1.5">
@@ -572,9 +612,19 @@ const ListingSearchFilters = ({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <RadioGroupItem value="location" id="location" className="h-3.5 w-3.5" />
-                  <Label htmlFor="location" className="text-xs text-neutral-800 cursor-pointer">My Location</Label>
+                  <Label htmlFor="location" className="text-xs text-neutral-800 cursor-pointer">
+                    {geoLoading ? "Getting location..." : "My Location"}
+                  </Label>
                 </div>
               </RadioGroup>
+              {geoError && (
+                <p className="text-xs text-destructive mb-2">{geoError}</p>
+              )}
+              {addressType === "location" && filters.originLat && filters.originLng && (
+                <p className="text-xs text-emerald-600 mb-2">
+                  📍 Location acquired ({parseFloat(filters.originLat).toFixed(4)}, {parseFloat(filters.originLng).toFixed(4)})
+                </p>
+              )}
               <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                 <div>
                   <Label className="text-xs text-neutral-500 mb-1 block">Street #</Label>
@@ -584,6 +634,7 @@ const ListingSearchFilters = ({
                     value={filters.streetNumber}
                     onChange={e => updateFilter("streetNumber", e.target.value)}
                     className="h-8 text-xs"
+                    disabled={addressType === "location"}
                   />
                 </div>
                 <div className="col-span-2">
@@ -594,6 +645,7 @@ const ListingSearchFilters = ({
                     value={filters.streetName}
                     onChange={e => updateFilter("streetName", e.target.value)}
                     className="h-8 text-xs"
+                    disabled={addressType === "location"}
                   />
                 </div>
                 <div>
@@ -604,6 +656,7 @@ const ListingSearchFilters = ({
                     value={filters.zipCode}
                     onChange={e => updateFilter("zipCode", e.target.value.replace(/\D/g, ""))}
                     className="h-8 text-xs"
+                    disabled={addressType === "location"}
                   />
                 </div>
                 <div>
@@ -612,13 +665,13 @@ const ListingSearchFilters = ({
                     type="text"
                     placeholder=""
                     value={filters.radius}
-                    onChange={e => updateFilter("radius", e.target.value)}
+                    onChange={e => updateFilter("radius", e.target.value.replace(/[^\d.]/g, ""))}
                     className="h-8 text-xs"
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-neutral-500 mb-1 block">Miles</Label>
-                  <Select defaultValue="miles">
+                  <Label className="text-xs text-neutral-500 mb-1 block">Unit</Label>
+                  <Select value={filters.radiusUnit} onValueChange={v => updateFilter("radiusUnit", v)}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
