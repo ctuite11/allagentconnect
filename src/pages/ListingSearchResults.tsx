@@ -198,6 +198,7 @@ const ListingSearchResults = () => {
         });
 
         listingsWithAgents = filterVisibleListings(listingsWithAgents, currentUserId);
+        listingsWithAgents = filterByPricePerSqft(listingsWithAgents, filters.pricePerSqFtMin || "", filters.pricePerSqFt || "");
 
         setListings(listingsWithAgents);
       } else {
