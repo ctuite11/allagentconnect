@@ -625,12 +625,12 @@ const ListingCard = ({
                   </svg>}
               </div>
             </div>}
-          {/* Favorite heart indicator */}
-          {interestSignals && interestSignals.saves_count > 0 && (
-            <div className="absolute top-2 right-2 z-10">
-              <div className="w-7 h-7 rounded-full bg-background/90 backdrop-blur-sm shadow-md flex items-center justify-center">
-                <Heart className="w-4 h-4 fill-destructive text-destructive" />
-              </div>
+          {/* Property type badge overlay */}
+          {listing.property_type && (
+            <div className="absolute bottom-2 left-2 z-10">
+              <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-2.5 py-1 text-xs font-medium shadow-md backdrop-blur-sm">
+                {listing.property_type}
+              </span>
             </div>
           )}
           {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && <div className="absolute bottom-2 right-2 z-10">
@@ -702,10 +702,6 @@ const ListingCard = ({
             </p>
           </div>
           
-          {listing.property_type && <div className="flex items-center gap-2 mb-1">
-              <Home className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">{listing.property_type}</p>
-            </div>}
           
           <div className="flex items-center gap-6 text-lg mt-1">
             {listing.bedrooms && <div className="flex items-center gap-1.5">
@@ -722,21 +718,23 @@ const ListingCard = ({
               </div>}
           </div>
 
-          <div className="flex items-center justify-between mt-1 gap-2">
-            {interestSignals && (
+          {interestSignals && (
+            <div className="mt-1">
               <ListingInterestSignals
                 savesCount={interestSignals.saves_count}
                 commentsCount={interestSignals.comments_count}
                 hotsheetMatchCount={interestSignals.hotsheet_match_count}
               />
-            )}
-            {agentInfo && (
+            </div>
+          )}
+          {agentInfo && (
+            <div className="flex justify-end mt-1">
               <ListingAttribution
                 listingAgentName={agentInfo.name}
                 listingAgentCompany={agentInfo.company}
               />
-            )}
-          </div>
+            </div>
+          )}
           
           {/* Open House Info */}
           {nextOpenHouse && (
