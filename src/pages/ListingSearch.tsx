@@ -9,6 +9,7 @@ import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { buildSearchParams, parseAdvancedParams } from "@/lib/buildSearchParams";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { RotateCcw, Search, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const ListingSearch = () => {
@@ -174,21 +175,40 @@ const ListingSearch = () => {
             className="mb-8"
           />
           
-          <div className="rounded-3xl border border-neutral-200 bg-white aac-shadow mb-4">
-            <div className="px-5 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    className="h-9 gap-1.5 text-sm rounded-xl border-neutral-200 text-neutral-700 hover:text-emerald-600 hover:bg-transparent hover:border-neutral-300 transition-colors"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    Reset
-                  </Button>
+          <div className="sticky top-0 z-30 bg-white rounded-3xl border border-neutral-200 aac-shadow mb-4">
+            <div className="px-5 py-3">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReset}
+                  className="h-9 gap-1.5 text-sm rounded-xl border-neutral-200 text-neutral-700 hover:text-emerald-600 hover:bg-transparent hover:border-neutral-300 transition-colors shrink-0"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset
+                </Button>
+
+                {/* Active filter chips */}
+                <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                  {filters.selectedTowns.length > 0 && (
+                    <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                      {filters.selectedTowns.length} {filters.selectedTowns.length === 1 ? 'town' : 'towns'}
+                    </Badge>
+                  )}
+                  {filters.propertyTypes.length > 0 && (
+                    <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                      {filters.propertyTypes.length} {filters.propertyTypes.length === 1 ? 'type' : 'types'}
+                    </Badge>
+                  )}
+                  {filters.statuses.length > 0 && (
+                    <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                      {filters.statuses.length} {filters.statuses.length === 1 ? 'status' : 'statuses'}
+                    </Badge>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
+
+                {/* Results + View Results */}
+                <div className="flex items-center gap-3 shrink-0">
                   <button
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
