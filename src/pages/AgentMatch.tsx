@@ -454,7 +454,7 @@ const AgentMatch = () => {
                   )}
                   
                   {/* Unit field for condos - visible in autocomplete mode */}
-                  {propertyData.property_type === "Condominium" && (
+                  {propertyData.property_type === "condo" && (
                     <div>
                       <Label htmlFor="unit-autocomplete">Unit/Apt (optional)</Label>
                       <Input
@@ -492,7 +492,7 @@ const AgentMatch = () => {
                     />
                   </div>
 
-                  {propertyData.property_type === "Condominium" && (
+                  {propertyData.property_type === "condo" && (
                     <div>
                       <Label htmlFor="unit">Unit/Apt (optional)</Label>
                       <Input
