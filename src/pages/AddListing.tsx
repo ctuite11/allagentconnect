@@ -3446,10 +3446,10 @@ const AddListing = () => {
                           format="currency"
                           placeholder="500000"
                           value={formData.price}
-                          onChange={(value) => {
-                            setFormData(prev => ({ ...prev, price: value }));
-                            if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("price");
-                          }}
+                            onChange={(value) => {
+                             setFormData(prev => ({ ...prev, price: value, price_range_min: "", price_range_max: "" }));
+                             if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("price");
+                           }}
                           decimals={0}
                           required
                           disabled={formData.status === 'cancelled' || formData.status === 'sold'}
@@ -3468,37 +3468,31 @@ const AddListing = () => {
                             format="currency"
                             placeholder="Min"
                             value={formData.price_range_min}
-                            onChange={(value) => {
-                              setFormData(prev => {
-                                const next = { ...prev, price_range_min: value };
-                                if (value && Number(value) > 0 && next.price_range_max && Number(next.price_range_max) > 0) clearFieldError("price");
-                                return next;
-                              });
-                            }}
-                            decimals={0}
-                            disabled={!!formData.price}
+                             onChange={(value) => {
+                               setFormData(prev => {
+                                 const next = { ...prev, price_range_min: value, price: "" };
+                                 if (value && Number(value) > 0 && next.price_range_max && Number(next.price_range_max) > 0) clearFieldError("price");
+                                 return next;
+                               });
+                             }}
+                             decimals={0}
                           />
                           <FormattedInput
                             id="price_range_max"
                             format="currency"
                             placeholder="Max"
                             value={formData.price_range_max}
-                            onChange={(value) => {
-                              setFormData(prev => {
-                                const next = { ...prev, price_range_max: value };
-                                if (value && Number(value) > 0 && next.price_range_min && Number(next.price_range_min) > 0) clearFieldError("price");
-                                return next;
-                              });
-                            }}
-                            decimals={0}
-                            disabled={!!formData.price}
+                             onChange={(value) => {
+                               setFormData(prev => {
+                                 const next = { ...prev, price_range_max: value, price: "" };
+                                 if (value && Number(value) > 0 && next.price_range_min && Number(next.price_range_min) > 0) clearFieldError("price");
+                                 return next;
+                               });
+                             }}
+                             decimals={0}
                           />
                         </div>
-                        {!!formData.price ? (
-                          <p className="text-xs text-muted-foreground">Price range is disabled when a list price is entered.</p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">For listings without an exact price yet</p>
-                        )}
+                         <p className="text-xs text-muted-foreground">Entering a range will clear the list price (and vice versa)</p>
                       </div>
                     </div>
                   ) : (
