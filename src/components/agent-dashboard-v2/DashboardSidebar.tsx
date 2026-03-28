@@ -163,7 +163,13 @@ export function DashboardSidebar({
     const exact = allItems.find((item) => item.route && item.route === path);
     if (exact) return exact.label;
     const prefix = allItems.find((item) => item.route && item.route !== "/" && path.startsWith(item.route));
-    return prefix?.label ?? "Success Hub";
+    if (prefix) return prefix.label;
+
+    // Search-related routes that should always highlight "Search"
+    const searchPrefixes = ["/listing-results", "/idx-search", "/listing-search"];
+    if (searchPrefixes.some((p) => path.startsWith(p))) return "Search";
+
+    return "Success Hub";
   })();
 
   const handleNav = (item: SidebarItem) => {
