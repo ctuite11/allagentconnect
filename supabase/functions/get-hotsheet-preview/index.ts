@@ -129,7 +129,8 @@ serve(async (req) => {
       // Map property types
       const typeMap: Record<string, string> = {
         single_family: "Single Family",
-        condo: "Condominium",
+        condo: "condo",
+        Condominium: "condo",
         multi_family: "Multi Family",
         townhouse: "Townhouse",
         land: "Land",

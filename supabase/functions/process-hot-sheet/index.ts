@@ -143,7 +143,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Map criteria property type values to database values
     const propertyTypeMap: Record<string, string> = {
       'single_family': 'Single Family',
-      'condo': 'Condominium',
+      'condo': 'condo',
+      'Condominium': 'condo',
       'multi_family': 'Multi Family',
       'townhouse': 'Townhouse',
       'land': 'Land',
