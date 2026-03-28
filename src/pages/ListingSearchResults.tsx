@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
+import { filterByPricePerSqft } from "@/lib/filterByPricePerSqft";
 import { applyLocationFilter } from "@/lib/buildLocationFilter";
 import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { parseAdvancedParams } from "@/lib/buildSearchParams";
@@ -198,6 +199,7 @@ const ListingSearchResults = () => {
         });
 
         listingsWithAgents = filterVisibleListings(listingsWithAgents, currentUserId);
+        listingsWithAgents = filterByPricePerSqft(listingsWithAgents, filters.pricePerSqFtMin || "", filters.pricePerSqFt || "");
 
         setListings(listingsWithAgents);
       } else {

@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
+import { filterByPricePerSqft } from "@/lib/filterByPricePerSqft";
 import { applyLocationFilter } from "@/lib/buildLocationFilter";
 import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { buildSearchParams, parseAdvancedParams } from "@/lib/buildSearchParams";
@@ -80,7 +81,7 @@ const ListingSearch = () => {
 
       let query = supabase
         .from("listings")
-        .select("id, status, agent_id")
+        .select("id, status, agent_id, price, square_feet")
         .limit(500);
 
       // Apply radius ID filter
@@ -117,7 +118,8 @@ const ListingSearch = () => {
       const { data, error } = await query;
       if (!error && data) {
         const visible = filterVisibleListings(data, user?.id ?? null);
-        setResultCount(visible.length);
+        const filtered = filterByPricePerSqft(visible, filters.pricePerSqFtMin || "", filters.pricePerSqFt || "");
+        setResultCount(filtered.length);
       }
     } catch (error) {
       console.error("Count error:", error);
