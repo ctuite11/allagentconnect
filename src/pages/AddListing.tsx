@@ -3065,13 +3065,16 @@ const AddListing = () => {
                     </p>
                   </div>
                   {formData.status === "coming_soon" && (
-                    <div className="space-y-2">
+                    <div className={cn("space-y-2", hasFieldError("go_live_date") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                       <Label htmlFor="go_live_date">On MLS Date *</Label>
                       <Input
                         id="go_live_date"
                         type="date"
                         value={formData.go_live_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, go_live_date: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, go_live_date: e.target.value }));
+                          if (e.target.value.trim()) clearFieldError("go_live_date");
+                        }}
                         required
                       />
                       <p className="text-xs text-muted-foreground">
