@@ -1153,6 +1153,49 @@ const AgentListingDetail = () => {
               </Card>
             )}
 
+            {/* Documents - Agent Only */}
+            {isAgentView && listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
+              <Card className="bg-card border-border rounded-xl shadow-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                      <FileText className="w-5 h-5 text-muted-foreground" />
+                      Documents ({listing.documents.length})
+                    </CardTitle>
+                    <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                      Agent Only
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {listing.documents.map((doc: any, index: number) => {
+                      const docUrl = typeof doc === 'string' ? doc : doc.url;
+                      const docName = typeof doc === 'string' ? `Document ${index + 1}` : (doc.name || `Document ${index + 1}`);
+                      const docType = typeof doc === 'object' ? doc.documentType : null;
+                      return (
+                        <a
+                          key={index}
+                          href={docUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                        >
+                          <FileText className="w-5 h-5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{docName}</p>
+                            {docType && (
+                              <p className="text-xs text-muted-foreground capitalize">{docType.replace(/_/g, ' ')}</p>
+                            )}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Additional Notes */}
             <Card className="bg-card border-border rounded-xl shadow-sm">
               <CardHeader className="pb-3">
