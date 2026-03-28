@@ -2922,7 +2922,7 @@ const AddListing = () => {
                   <Button 
                     variant="default" 
                     size="lg" 
-                    onClick={handleSaveChanges} 
+                    onClick={() => handleSaveChanges()} 
                     type="button" 
                     disabled={submitting || autoSaving} 
                     className="gap-2"
@@ -4886,7 +4886,7 @@ const AddListing = () => {
                       </Button>
                       <Button
                         type="button"
-                        onClick={handleSaveChanges}
+                        onClick={() => handleSaveChanges()}
                         disabled={submitting || autoSaving}
                       >
                         {autoSaving ? (
