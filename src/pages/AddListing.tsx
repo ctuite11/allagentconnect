@@ -2859,7 +2859,7 @@ const AddListing = () => {
             {/* Back button - inline chevron style */}
             <div className="flex items-center gap-2 mb-4">
               <button
-                onClick={() => navigate("/agent/listings")}
+                onClick={() => navigate(location.state?.from || "/agent/listings")}
                 className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 aria-label="Go back"
               >
