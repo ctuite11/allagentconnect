@@ -94,7 +94,7 @@ const sectionCard = "bg-white rounded-2xl border border-zinc-200 shadow-[0_1px_2
 // Map property types to icons
 const PROPERTY_TYPES = [
   { value: "Single Family", label: "Single Family", icon: Home },
-  { value: "Condominium", label: "Condo", icon: Building2 },
+  { value: "condo", label: "Condo", icon: Building2 },
   { value: "Multi Family", label: "Multi-Family", icon: Users },
   { value: "Land", label: "Land", icon: MapPin },
   { value: "Commercial", label: "Commercial", icon: Building2 },

@@ -33,7 +33,8 @@ interface SearchCriteria {
  */
 const PROPERTY_TYPE_MAP: Record<string, string> = {
   'single_family': 'Single Family',
-  'condo': 'Condominium',
+  'condo': 'condo',
+  'Condominium': 'condo',
   'multi_family': 'Multi Family',
   'townhouse': 'Townhouse',
   'land': 'Land',
