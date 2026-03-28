@@ -107,6 +107,12 @@ const ListingSearch = () => {
       if (filters.yearBuiltMax) query = query.lte("year_built", parseInt(filters.yearBuiltMax));
       if (filters.lotSizeMin) query = query.gte("lot_size", parseFloat(filters.lotSizeMin));
       if (filters.lotSizeMax) query = query.lte("lot_size", parseFloat(filters.lotSizeMax));
+      if (filters.garageSpaces) query = query.gte("garage_spaces", parseInt(filters.garageSpaces));
+      if (filters.parkingSpaces) query = query.gte("total_parking_spaces", parseInt(filters.parkingSpaces));
+      if (filters.keywordsInclude) query = query.ilike("description", `%${filters.keywordsInclude}%`);
+      if (filters.listingNumber) query = query.ilike("listing_number", `%${filters.listingNumber.replace(/^L-/i, "")}%`);
+      if (filters.listDateFrom) query = query.gte("list_date", filters.listDateFrom);
+      if (filters.listDateTo) query = query.lte("list_date", filters.listDateTo);
 
       const { data, error } = await query;
       if (!error && data) {
