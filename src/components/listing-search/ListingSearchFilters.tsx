@@ -499,7 +499,7 @@ const ListingSearchFilters = ({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs text-neutral-500 mb-1 block">Living Area</Label>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-col space-y-1.5">
                       <Input
                         type="text"
                         placeholder="Min"
@@ -518,7 +518,7 @@ const ListingSearchFilters = ({
                   </div>
                   <div>
                     <Label className="text-xs text-neutral-500 mb-1 block">Price/SqFt</Label>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-col space-y-1.5">
                       <Input
                         type="text"
                         placeholder="Min"
@@ -539,7 +539,7 @@ const ListingSearchFilters = ({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs text-neutral-500 mb-1 block">Year Built</Label>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-col space-y-1.5">
                       <Input
                         type="text"
                         placeholder="From"
