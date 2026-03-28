@@ -3276,24 +3276,28 @@ const AddListing = () => {
 
                   {/* Row 2: City + State */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className={cn("space-y-2", hasFieldError("city") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                       <Label htmlFor="city">City/Town *</Label>
                       <Input
                         id="city"
                         type="text"
                         placeholder="Enter city"
                         value={formData.city}
-                        onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, city: e.target.value }));
+                          if (e.target.value.trim()) clearFieldError("city");
+                        }}
                         required
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className={cn("space-y-2", hasFieldError("state") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                       <Label htmlFor="state">State *</Label>
                       <Select
                         value={selectedState}
                         onValueChange={(value) => {
                           setSelectedState(value);
                           setFormData(prev => ({ ...prev, state: value }));
+                          if (value.trim()) clearFieldError("state");
                         }}
                       >
                         <SelectTrigger className="bg-white border-neutral-200">
@@ -3321,18 +3325,21 @@ const AddListing = () => {
                     
                     return (
                       <div className={cn("grid grid-cols-1 gap-4", showNeighborhoods ? "md:grid-cols-3" : "md:grid-cols-2")}>
-                        <div className="space-y-2">
+                        <div className={cn("space-y-2", hasFieldError("zip_code") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                           <Label htmlFor="zip_code">ZIP Code *</Label>
                           <Input
                             id="zip_code"
                             type="text"
                             placeholder="Enter ZIP code"
                             value={formData.zip_code}
-                            onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
+                            onChange={(e) => {
+                              setFormData(prev => ({ ...prev, zip_code: e.target.value }));
+                              if (e.target.value.trim()) clearFieldError("zip_code");
+                            }}
                             required
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className={cn("space-y-2", hasFieldError("county") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                           <Label>County {selectedState === "MA" && "*"}</Label>
                           {!selectedState || availableCounties.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
@@ -3406,14 +3413,17 @@ const AddListing = () => {
                   <Label className="text-lg font-semibold">{formData.listing_type === "for_rent" ? "Pricing & Deposits" : "Pricing"}</Label>
                   {formData.listing_type === "for_sale" ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      <div className={cn("space-y-2", hasFieldError("price") && "ring-1 ring-destructive/20 rounded-md p-2")}>
                         <Label htmlFor="price">Listing Price *</Label>
                         <FormattedInput
                           id="price"
                           format="currency"
                           placeholder="500000"
                           value={formData.price}
-                          onChange={(value) => setFormData(prev => ({ ...prev, price: value }))}
+                          onChange={(value) => {
+                            setFormData(prev => ({ ...prev, price: value }));
+                            if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("price");
+                          }}
                           decimals={0}
                           required
                           disabled={formData.status === 'cancelled' || formData.status === 'sold'}
