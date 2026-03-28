@@ -97,7 +97,7 @@ function SidebarRow({
         disabled && "opacity-40 cursor-not-allowed",
         !disabled && "cursor-default",
         active
-          ? "bg-[hsl(221,72%,45%)]/15 text-white font-medium"
+          ? "bg-primary/10 text-zinc-100 font-medium"
           : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30"
       )}
     >
