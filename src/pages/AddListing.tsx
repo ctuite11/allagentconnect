@@ -2297,49 +2297,15 @@ const AddListing = () => {
 
     setSubmitting(true);
 
-    // --- Validation (match handleSubmit gates) ---
-    const requiredFields =
-      formData.listing_type === "for_sale"
-        ? {
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zip_code,
-            price: formData.price,
-          }
-        : {
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zip_code,
-            monthlyRent: formData.price,
-          };
-
-    const missingFields = Object.entries(requiredFields).filter(([_, value]) => !value);
-    if (missingFields.length > 0) {
-      toast.error("Please fill in all required fields.");
+    // --- Centralized validation ---
+    const errors = getValidationErrors();
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
       setSubmitting(false);
       return;
     }
-
-    if (!formData.listing_agreement_type) {
-      setValidationErrors((prev) => [...prev, "listing_agreement_type"]);
-      toast.error("Please select a Type of Listing Agreement.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
-      toast.error("Please select a county for Massachusetts listings.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (formData.status === "coming_soon" && !formData.go_live_date) {
-      toast.error("Please select a Go-Live date for Coming Soon listings.");
-      setSubmitting(false);
-      return;
-    }
+    setValidationErrors([]);
     // --- End validation ---
 
     // --- Duplicate listing check (only for live statuses) ---
