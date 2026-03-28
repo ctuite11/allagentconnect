@@ -634,7 +634,7 @@ const ListingCard = ({
             </div>
           )}
           {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && <div className="absolute bottom-2 right-2 z-10">
-              <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-3 py-1.5 text-sm font-medium shadow-md backdrop-blur-sm">
+              <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-2.5 py-1 text-xs font-medium shadow-md backdrop-blur-sm">
                 {listing.neighborhood || (listing as any).attom_data?.neighborhood}
               </span>
             </div>}
@@ -718,21 +718,21 @@ const ListingCard = ({
               </div>}
           </div>
 
-          {interestSignals && (
-            <div className="mt-1">
-              <ListingInterestSignals
-                savesCount={interestSignals.saves_count}
-                commentsCount={interestSignals.comments_count}
-                hotsheetMatchCount={interestSignals.hotsheet_match_count}
-              />
-            </div>
-          )}
-          {agentInfo && (
-            <div className="flex justify-end mt-1">
-              <ListingAttribution
-                listingAgentName={agentInfo.name}
-                listingAgentCompany={agentInfo.company}
-              />
+          {(interestSignals || agentInfo) && (
+            <div className="mt-2 pt-2 border-t border-border/40 flex items-center justify-between w-full">
+              {interestSignals ? (
+                <ListingInterestSignals
+                  savesCount={interestSignals.saves_count}
+                  commentsCount={interestSignals.comments_count}
+                  hotsheetMatchCount={interestSignals.hotsheet_match_count}
+                />
+              ) : <span />}
+              {agentInfo && (
+                <ListingAttribution
+                  listingAgentName={agentInfo.name}
+                  listingAgentCompany={agentInfo.company}
+                />
+              )}
             </div>
           )}
           

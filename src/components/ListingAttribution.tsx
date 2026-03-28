@@ -101,7 +101,7 @@ export function ListingAttribution({
 
   return (
     <span className="text-xs text-muted-foreground">
-      Listed by {listingAgentName}
+      {listingAgentName}
       {listingAgentCompany && ` • ${listingAgentCompany}`}
     </span>
   );
