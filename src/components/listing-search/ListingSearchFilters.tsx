@@ -51,6 +51,10 @@ export interface FilterState {
   streetName: string;
   zipCode: string;
   radius: string;
+  radiusUnit: "miles" | "km";
+  originLat: string;
+  originLng: string;
+  locationMode: "street" | "location";
   keywordsInclude: string;
   keywordsExclude: string;
   keywordMode: "any" | "all";
