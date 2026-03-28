@@ -423,18 +423,8 @@ const PropertyDetail = () => {
 
 
       <main className="flex-1">
-        {/* Subtle Agent View Indicator */}
-        {isAgentView && (
-          <div className="mx-auto max-w-6xl px-4 mb-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              <Info className="w-3 h-3" />
-              Internal view – not shown to clients
-            </span>
-          </div>
-        )}
-
         {/* Back Button Row */}
-        <div className="mx-auto max-w-6xl px-4 pb-2">
+        <div className="mx-auto max-w-6xl px-4 pb-1">
           <button
             onClick={() => {
               const fromPage = (location.state as any)?.from;
@@ -447,6 +437,16 @@ const PropertyDetail = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
         </div>
+
+        {/* Subtle Agent View Indicator — just above photo */}
+        {isAgentView && (
+          <div className="mx-auto max-w-6xl px-4 mb-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+              <Info className="w-3 h-3" />
+              Internal view – not shown to clients
+            </span>
+          </div>
+        )}
 
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
         <div className="mx-auto max-w-6xl px-4">
