@@ -19,7 +19,7 @@ import { normalizeGooglePlace } from "@/lib";
 
 const PROPERTY_TYPES = [
   { value: "Single Family", label: "Single Family" },
-  { value: "Condominium", label: "Condo" },
+  { value: "condo", label: "Condo" },
   { value: "Townhouse", label: "Townhouse" },
   { value: "Multi Family", label: "Multi-Family" },
   { value: "Land", label: "Land" },
