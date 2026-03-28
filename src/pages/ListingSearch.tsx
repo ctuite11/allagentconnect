@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { RotateCcw, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,12 +55,15 @@ const ListingSearch = () => {
   }, []);
 
   // Fetch result count when filters change
+  // Fetch result count using same visibility rules as the results page
   const fetchResultCount = useCallback(async () => {
     setCountLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       let query = supabase
         .from("listings")
-        .select("id", { count: "exact", head: true });
+        .select("id, status, agent_id")
+        .limit(500);
 
       // Apply status filter
       if (filters.statuses.length > 0) {
@@ -99,9 +103,10 @@ const ListingSearch = () => {
         query = query.in("city", filters.selectedTowns);
       }
 
-      const { count, error } = await query;
-      if (!error) {
-        setResultCount(count ?? 0);
+      const { data, error } = await query;
+      if (!error && data) {
+        const visible = filterVisibleListings(data, user?.id ?? null);
+        setResultCount(visible.length);
       }
     } catch (error) {
       console.error("Count error:", error);

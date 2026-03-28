@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { filterVisibleListings } from "@/lib/filterVisibleListings";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { toast } from "sonner";
@@ -165,10 +166,7 @@ const ListingSearchResults = () => {
           };
         });
 
-        listingsWithAgents = listingsWithAgents.filter(listing => {
-          if (listing.status !== 'off_market') return true;
-          return currentUserId && listing.agent_id === currentUserId;
-        });
+        listingsWithAgents = filterVisibleListings(listingsWithAgents, currentUserId);
 
         setListings(listingsWithAgents);
       } else {
