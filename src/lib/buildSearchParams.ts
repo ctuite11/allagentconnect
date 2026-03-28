@@ -48,6 +48,7 @@ export function buildSearchParams(f: FilterState): URLSearchParams {
   if (f.acres) params.set("acres", f.acres);
   // pricePerSqFt — derived value, no raw column; preserved in URL for future use
   if (f.pricePerSqFt) params.set("pricePerSqFt", f.pricePerSqFt);
+  if (f.pricePerSqFtMin) params.set("pricePerSqFtMin", f.pricePerSqFtMin);
 
   return params;
 }
@@ -94,6 +95,7 @@ export function parseAdvancedParams(searchParams: URLSearchParams, f: FilterStat
   if (searchParams.get("rooms")) f.rooms = searchParams.get("rooms") || "";
   if (searchParams.get("acres")) f.acres = searchParams.get("acres") || "";
   if (searchParams.get("pricePerSqFt")) f.pricePerSqFt = searchParams.get("pricePerSqFt") || "";
+  if (searchParams.get("pricePerSqFtMin")) f.pricePerSqFtMin = searchParams.get("pricePerSqFtMin") || "";
 }
 
 /**
