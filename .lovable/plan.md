@@ -1,51 +1,67 @@
 
 
-# Fix Standard Criteria Layout — Each Range Field Gets Its Own Full-Width Row
+# Fix: Price/SqFt Filter — Apply Consistently Without Flicker
 
-## Problem
+## Root Cause
 
-Living Area, Price/SqFt, and Year Built have Min/Max pairs crammed into half-width grid cells alongside other fields. The dual inputs inside a half-width cell look squished and inconsistent with the single-input fields above them.
+`pricePerSqFtMin` and `pricePerSqFt` (max) are stored in filter state and URL but **never applied anywhere**. Neither the count query nor the results query uses them. Any perceived flicker is from general async re-renders, not a double-pass — but the filter literally does nothing right now.
 
-## Solution
+Since Price/SqFt is a derived value (`price / square_feet`) with no database column, it must be applied as a **client-side post-filter**. To prevent count/results mismatch and flicker, both pages must apply the same post-filter logic **before** setting state.
 
-Give each range field (Living Area, Price/SqFt, Year Built) its own full-width row. The Min/Max inputs share that full row, so they have plenty of breathing room.
+## Approach
 
-## File: `src/components/listing-search/ListingSearchFilters.tsx`
+Create a shared utility function and apply it identically in both pages, **before** the count/listings are committed to state.
 
-### Current structure (lines 455-569):
+## Files to modify
+
+### 1. New utility: `src/lib/filterByPricePerSqft.ts`
+
+```typescript
+export function filterByPricePerSqft(
+  listings: any[],
+  minPpsf: string,
+  maxPpsf: string
+): any[] {
+  const min = minPpsf ? parseFloat(minPpsf) : null;
+  const max = maxPpsf ? parseFloat(maxPpsf) : null;
+  if (!min && !max) return listings;
+  
+  return listings.filter(l => {
+    const price = l.price;
+    const sqft = l.square_feet;
+    if (!price || !sqft || sqft <= 0) return false; // exclude invalid
+    const ppsf = price / sqft;
+    if (min && ppsf < min) return false;
+    if (max && ppsf > max) return false;
+    return true;
+  });
+}
 ```
-grid-cols-2: Bedrooms | Total Baths
-grid-cols-2: Rooms    | Acres
-grid-cols-2: Living Area [Min][Max] | Price/SqFt [Min][Max]
-grid-cols-2: Year Built [From][To]  | Parking
-```
 
-### New structure:
-```
-grid-cols-2: Bedrooms | Total Baths
-grid-cols-2: Rooms    | Acres
-full-width:  Living Area  [  Min  ][  Max  ]
-full-width:  Price/SqFt   [  Min  ][  Max  ]
-full-width:  Year Built   [ From  ][  To   ]
-grid-cols-2: Parking  | (empty or future field)
-```
+### 2. `src/pages/ListingSearch.tsx` — count query
 
-### Changes
+After `filterVisibleListings` (line 119), apply the Price/SqFt filter **before** setting count. The count query must also fetch `price` and `square_feet` columns (currently only selects `id, status, agent_id`).
 
-1. **Lines 499-538** — Break the `grid-cols-2` wrapper around Living Area + Price/SqFt into two separate full-width `<div>` blocks, each containing one label + `flex gap-2` with two `flex-1` inputs.
+- Change select to: `"id, status, agent_id, price, square_feet"`
+- After line 119: `const filtered = filterByPricePerSqft(visible, filters.pricePerSqFtMin, filters.pricePerSqFt);`
+- Set count from `filtered.length` instead of `visible.length`
 
-2. **Lines 539-569** — Break the `grid-cols-2` wrapper around Year Built + Parking. Year Built becomes its own full-width row. Parking moves into a new `grid-cols-2` row (with one cell, or paired with Garage if it exists).
+### 3. `src/pages/ListingSearchResults.tsx` — results query
 
-3. Each full-width range row uses `flex gap-2` with `flex-1` on both inputs — same as now, but with double the horizontal space.
+After `filterVisibleListings` (line 200), apply the same post-filter **before** setting listings state.
+
+- After line 200: `listingsWithAgents = filterByPricePerSqft(listingsWithAgents, filters.pricePerSqFtMin, filters.pricePerSqFt);`
+- This ensures the user never sees unfiltered results that then get removed.
+
+## Why this prevents flicker
+
+- The filter runs **synchronously before** `setResultCount` / `setListings`
+- The component never renders intermediate unfiltered data
+- Both pages use the identical function, so count always matches results
 
 ## Not changing
-- Input styling, heights, or border radius
-- Grid layout for single-input fields (Bedrooms, Baths, Rooms, Acres)
-- Any other filter sections
-- Filter state, URL params, or query logic
-
-## Expected result
-- Range fields have generous space for Min/Max side by side
-- Single-input fields stay paired in `grid-cols-2`
-- Clean, consistent vertical rhythm throughout Standard Criteria
+- Database schema (no new columns)
+- UI inputs or layout
+- URL serialization (already works)
+- Any other filters
 
