@@ -8,7 +8,7 @@ import { applyLocationFilter } from "@/lib/buildLocationFilter";
 import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { buildSearchParams, parseAdvancedParams } from "@/lib/buildSearchParams";
 import ListingSearchFilters, { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
-import { RotateCcw, Search, ExternalLink } from "lucide-react";
+import { RotateCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
