@@ -1,47 +1,68 @@
 
 
-# Fix Edit Return Navigation — Preserve Original Listing Origin
+# Fix Draft-Bounce Bug in Auto-Save
 
 ## Problem
-AgentListingDetail hardcodes `{ state: { from: '/listing/${id}' } }` instead of using the actual current path. PropertyDetail and PropertyDetailRightColumn don't pass `state.from` at all. This breaks the chain: Search Results → Listing → Edit → Save should return to Listing (preserving search context).
 
-## Changes
+When editing a non-draft listing (e.g. `back_on_market`), the 3-second debounced auto-save calls `handleSaveDraft(true)`, which forces `status: "draft"` via `buildListingDataFromForm(uploaded, "draft", freshUser.id)`. This silently resets the listing status to draft on every keystroke during editing.
 
-### 1. AgentListingDetail.tsx (line 379)
-Replace hardcoded `/listing/${id}` with dynamic `location.pathname + location.search`:
+This is why the status history shows: `back_on_market → draft → back_on_market` on every save, and why the 48-hour auto-revert edge function may malfunction (it reads the latest history entry).
+
+## Root cause
+
+**Line 367-368**: Auto-save unconditionally calls `handleSaveDraft(true)` regardless of whether the listing is a draft or an existing published/active/back_on_market listing.
+
+**Line 2206**: `handleSaveDraft` always passes `"draft"` as the status override: `buildListingDataFromForm(uploaded, "draft", freshUser.id)`.
+
+## Fix
+
+### File: `src/pages/AddListing.tsx`
+
+**1. Auto-save effect (lines 362-373)**: Add a guard so that when in edit mode (`listingId` is set) and the listing is not a draft, auto-save calls `handleSaveChanges` (which preserves current status) instead of `handleSaveDraft`.
+
 ```tsx
-onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
+useEffect(() => {
+  if (!user || !hasUnsavedChanges) return;
+
+  const debounceTimeout = setTimeout(() => {
+    // In edit mode for non-draft listings, use handleSaveChanges to preserve status
+    if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
+      handleSaveChanges(true); // pass silent flag
+    } else {
+      handleSaveDraft(true);
+    }
+  }, 3000);
+
+  return () => clearTimeout(debounceTimeout);
+}, [user, hasUnsavedChanges, formData, photos, floorPlans, documents, disclosures, propertyFeatures, amenities]);
 ```
 
-### 2. PropertyDetail.tsx (line 827)
-Add origin state:
+**2. handleSaveChanges (~line 2327)**: Add an optional `isAutoSave` parameter (similar to `handleSaveDraft`) so it can run silently without showing toasts or navigating away.
+
 ```tsx
-onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
+const handleSaveChanges = async (isAutoSave = false) => {
+  // ... existing logic ...
+  // When isAutoSave: suppress toast, suppress navigation, use setAutoSaving instead of setSubmitting
+};
 ```
 
-### 3. PropertyDetailRightColumn.tsx (line 208)
-This component receives `listing` as a prop but needs `location`. Add `useLocation()` import and pass origin state:
-```tsx
-onClick={() => navigate(`/agent/listings/edit/${listing.id}`, { state: { from: location.pathname + location.search } })}
-```
+Key changes inside `handleSaveChanges` when `isAutoSave` is true:
+- Use `setAutoSaving(true)` instead of `setSubmitting(true)`
+- Skip the navigation at the end (lines 2458-2463)
+- Skip the success toast (line 2457)
+- Still save the payload with current form status (no "draft" override)
 
-### 4. AddListing.tsx — already correct
-- Line 2448-2452: `handleSaveChanges` already checks `location.state?.from` and navigates there.
-- Line 2825-2827: `handleSubmit` (publish) also checks `location.state?.from`.
-- Line 2249: Draft save navigates to `MY_LISTINGS?status=draft` — this is intentional for new drafts, no change needed.
-- Line 2862: Back button hardcodes `/agent/listings` — update to also respect `location.state?.from`.
+**3. handleNavigateToManagePhotos / handleNavigateToManageFloorPlans (~lines 2496, 2542)**: These already pass `undefined` as the status override, so they correctly preserve the current form status. No change needed.
 
-### 5. AddListing.tsx back button (line 2862)
-Make back button origin-aware:
-```tsx
-onClick={() => navigate(location.state?.from || "/agent/listings")}
-```
+## What this fixes
+
+- Auto-save on a `back_on_market` listing no longer resets status to `draft`
+- Status history stays clean — no phantom `draft` entries
+- The 48-hour auto-revert edge function works correctly because the history is accurate
+- Draft auto-save behavior is unchanged (still forces `"draft"` for new/draft listings)
+
+## One file changed
+`src/pages/AddListing.tsx`
 
 ## No changes to
-- Save logic, status handling, other navigation flows, sidebar, routing
-
-## Expected result
-- Search Results → Listing → Edit → Save → same Listing page
-- Back button on edit page → returns to listing page
-- History preserved so listing page back button → Search Results
-
+- Edge functions, status constants, sidebar, routing, save button behavior, manual save flows
