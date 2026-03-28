@@ -60,7 +60,7 @@ serve(async (req) => {
 
     // Extract unit number for condominiums
     let unitNumber = null;
-    if (listing.property_type === "Condominium" && listing.condo_details) {
+    if ((listing.property_type === "condo" || listing.property_type === "Condominium") && listing.condo_details) {
       unitNumber = listing.condo_details.unit_number;
       console.log(`[auto-fetch-property-data] Detected condo unit number: ${unitNumber}`);
     }
