@@ -3351,6 +3351,7 @@ const AddListing = () => {
                               onValueChange={(value) => {
                                 setSelectedCounty(value);
                                 setFormData(prev => ({ ...prev, county: value }));
+                                if (value && value !== "all") clearFieldError("county");
                               }}
                             >
                               <SelectTrigger className="bg-white border-neutral-200">
