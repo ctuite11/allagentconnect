@@ -41,6 +41,7 @@ interface PropertyDetailRightColumnProps {
 
 export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }: PropertyDetailRightColumnProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, role } = useAuthRole();
   const [isStartingChat, setIsStartingChat] = useState(false);
   
