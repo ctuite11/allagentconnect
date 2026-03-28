@@ -4566,6 +4566,49 @@ const AddListing = () => {
                         {formData.video_url && !/^https?:\/\/.+\..+/.test(formData.video_url) && (
                           <p className="text-sm text-destructive">Please enter a valid URL</p>
                         )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('video-upload')?.click()}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Video File
+                          </Button>
+                          <p className="text-xs text-muted-foreground">Or upload a video file directly (MP4, MOV, WebM)</p>
+                        </div>
+                        <input
+                          id="video-upload"
+                          type="file"
+                          accept="video/mp4,video/quicktime,video/webm"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 100 * 1024 * 1024) {
+                              toast.error("Video must be under 100MB");
+                              return;
+                            }
+                            try {
+                              toast.info("Uploading video...");
+                              const filePath = `${user?.id}/${Date.now()}_${file.name}`;
+                              const { error: uploadError } = await supabase.storage
+                                .from("listing-documents")
+                                .upload(filePath, file);
+                              if (uploadError) throw uploadError;
+                              const { data: { publicUrl } } = supabase.storage
+                                .from("listing-documents")
+                                .getPublicUrl(filePath);
+                              setFormData(prev => ({ ...prev, video_url: publicUrl }));
+                              toast.success("Video uploaded!");
+                            } catch (err: any) {
+                              console.error("Video upload error:", err);
+                              toast.error(`Video upload failed: ${err.message}`);
+                            }
+                            e.target.value = '';
+                          }}
+                          className="hidden"
+                        />
                       </div>
                     </div>
                   </div>
