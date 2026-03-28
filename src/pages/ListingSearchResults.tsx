@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
+import { applyLocationFilter } from "@/lib/buildLocationFilter";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { toast } from "sonner";
@@ -121,7 +122,7 @@ const ListingSearchResults = () => {
       if (filters.garageSpaces) query = query.gte("garage_spaces", parseInt(filters.garageSpaces));
       if (filters.parkingSpaces) query = query.gte("total_parking_spaces", parseInt(filters.parkingSpaces));
       if (filters.state) query = query.eq("state", filters.state);
-      if (filters.selectedTowns.length > 0) query = query.in("city", filters.selectedTowns);
+      if (filters.selectedTowns.length > 0) query = applyLocationFilter(query, filters.selectedTowns);
       if (filters.streetAddress) query = query.ilike("address", `%${filters.streetAddress}%`);
       if (filters.zipCode) query = query.ilike("zip_code", `${filters.zipCode}%`);
       if (filters.keywordsInclude) query = query.ilike("description", `%${filters.keywordsInclude}%`);
