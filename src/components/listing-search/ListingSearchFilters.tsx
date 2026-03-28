@@ -177,7 +177,9 @@ const ListingSearchFilters = ({
   onSearch,
 }: ListingSearchFiltersProps) => {
   const [townSearch, setTownSearch] = useState("");
-  const [addressType, setAddressType] = useState<"street" | "location">("street");
+  const [addressType, setAddressType] = useState<"street" | "location">(filters.locationMode || "street");
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
   const [showAreas, setShowAreas] = useState(true);
   
   // Collapsible section states
