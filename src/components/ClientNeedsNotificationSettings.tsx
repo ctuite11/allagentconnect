@@ -104,26 +104,26 @@ export const ClientNeedsNotificationSettings = () => {
             onValueChange={handleScheduleChange}
             className="space-y-2"
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="immediate" id="immediate" />
-              <Label htmlFor="immediate" className="cursor-pointer text-sm text-zinc-700">
-                Immediately - Get alerts as soon as your preferences match
-              </Label>
-            </div>
+            <div className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-50 ${settings.schedule === "immediate" ? "bg-emerald-50" : ""}`}>
+               <RadioGroupItem value="immediate" id="immediate" />
+               <Label htmlFor="immediate" className={`cursor-pointer text-sm ${settings.schedule === "immediate" ? "font-medium text-emerald-700" : "text-zinc-700"}`}>
+                 Immediately - Get alerts as soon as your preferences match
+               </Label>
+             </div>
 
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="daily" id="daily" />
-              <Label htmlFor="daily" className="cursor-pointer text-sm text-zinc-700">
-                Daily - Receive a daily digest of new matches
-              </Label>
-            </div>
+             <div className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-50 ${settings.schedule === "daily" ? "bg-emerald-50" : ""}`}>
+               <RadioGroupItem value="daily" id="daily" />
+               <Label htmlFor="daily" className={`cursor-pointer text-sm ${settings.schedule === "daily" ? "font-medium text-emerald-700" : "text-zinc-700"}`}>
+                 Daily - Receive a daily digest of new matches
+               </Label>
+             </div>
 
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="weekly" id="weekly" />
-              <Label htmlFor="weekly" className="cursor-pointer text-sm text-zinc-700">
-                Weekly - Receive a weekly summary of new matches
-              </Label>
-            </div>
+             <div className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-50 ${settings.schedule === "weekly" ? "bg-emerald-50" : ""}`}>
+               <RadioGroupItem value="weekly" id="weekly" />
+               <Label htmlFor="weekly" className={`cursor-pointer text-sm ${settings.schedule === "weekly" ? "font-medium text-emerald-700" : "text-zinc-700"}`}>
+                 Weekly - Receive a weekly summary of new matches
+               </Label>
+             </div>
           </RadioGroup>
         </div>
       </CardContent>

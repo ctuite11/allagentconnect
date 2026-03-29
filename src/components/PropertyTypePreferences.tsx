@@ -149,35 +149,35 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border border-zinc-200 rounded-xl p-3 max-h-80 overflow-y-auto bg-white">
           {/* Select all as first checkbox item */}
-          <div className="flex items-center space-x-2 col-span-1 md:col-span-2 pb-2 mb-2 border-b border-zinc-200">
-            <Checkbox
-              id="type-select-all"
-              checked={allSelected}
-              onCheckedChange={selectAll}
-            />
-            <Label
-              htmlFor="type-select-all"
-              className={`cursor-pointer flex-1 text-sm ${allSelected ? "font-medium text-zinc-900" : "text-zinc-700"}`}
-            >
-              Select all
-            </Label>
-          </div>
+          <div className={`flex items-center space-x-2 col-span-1 md:col-span-2 pb-2 mb-2 border-b border-zinc-200 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-50 ${allSelected ? "bg-emerald-50" : ""}`}>
+             <Checkbox
+               id="type-select-all"
+               checked={allSelected}
+               onCheckedChange={selectAll}
+             />
+             <Label
+               htmlFor="type-select-all"
+               className={`cursor-pointer flex-1 text-sm ${allSelected ? "font-medium text-emerald-700" : "text-zinc-700"}`}
+             >
+               Select all
+             </Label>
+           </div>
           {PROPERTY_TYPES.map((type) => {
             const isChecked = selectedTypes.includes(type.value);
             return (
-              <div key={type.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`type-${type.value}`}
-                  checked={isChecked}
-                  onCheckedChange={() => togglePropertyType(type.value)}
-                />
-                <Label
-                  htmlFor={`type-${type.value}`}
-                  className={`cursor-pointer flex-1 text-sm ${isChecked ? "font-medium text-zinc-900" : "text-zinc-600"}`}
-                >
-                  {type.label}
-                </Label>
-              </div>
+              <div key={type.value} className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-50 ${isChecked ? "bg-emerald-50" : ""}`}>
+                 <Checkbox
+                   id={`type-${type.value}`}
+                   checked={isChecked}
+                   onCheckedChange={() => togglePropertyType(type.value)}
+                 />
+                 <Label
+                   htmlFor={`type-${type.value}`}
+                   className={`cursor-pointer flex-1 text-sm ${isChecked ? "font-medium text-emerald-700" : "text-zinc-600"}`}
+                 >
+                   {type.label}
+                 </Label>
+               </div>
             );
           })}
         </div>
