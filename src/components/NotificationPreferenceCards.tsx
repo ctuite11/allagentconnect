@@ -172,7 +172,7 @@ export const NotificationPreferenceCards = () => {
             return (
               <div
                 key={card.key}
-                className={`${aacStyles.card} cursor-pointer hover:bg-neutral-50 transition-colors`}
+                className={`${aacStyles.card} cursor-pointer hover:-translate-y-[1px]`}
                 onClick={() => setOpenDialog({ open: true, category: card.key, title: card.title })}
               >
                 {/* Top row: Icon + Title + Description */}
