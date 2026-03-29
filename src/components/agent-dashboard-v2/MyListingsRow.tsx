@@ -1,24 +1,11 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Eye, Share2, Heart } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 interface MyListingsRowProps {
   listings: SuccessHubSummary["listings"];
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  active: "bg-green-500 text-white",
-  pending: "bg-yellow-500 text-white",
-  coming_soon: "bg-primary text-primary-foreground",
-  off_market: "bg-zinc-400 text-white",
-};
-
-function statusLabel(s: string) {
-  if (s === "coming_soon") return "Coming Soon";
-  if (s === "off_market") return "Off Market";
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function formatPrice(price: number | null) {
@@ -91,24 +78,18 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
             >
               {/* Stats bar */}
               <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
-                    <Eye className="h-3 w-3" /> {listing.view_count.toLocaleString()}
+                    <Eye className="h-3.5 w-3.5" /> {listing.view_count.toLocaleString()}
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <Share2 className="h-3 w-3" /> {listing.showing_request_count}
+                    <Share2 className="h-3.5 w-3.5" /> {listing.showing_request_count}
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <Heart className="h-3 w-3" /> {listing.view_count > 0 ? Math.floor(listing.view_count * 0.1) : 0}
+                    <Heart className="h-3.5 w-3.5" /> {listing.view_count > 0 ? Math.floor(listing.view_count * 0.1) : 0}
                   </span>
                 </div>
-                <Badge
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                    STATUS_COLORS[listing.status] ?? "bg-zinc-200 text-zinc-700"
-                  }`}
-                >
-                  {statusLabel(listing.status)}
-                </Badge>
+                <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
               {/* Photo */}
