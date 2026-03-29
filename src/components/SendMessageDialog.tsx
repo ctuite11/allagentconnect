@@ -605,7 +605,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               onChange={(e) => setCitySearch(e.target.value)}
                               className="h-11 rounded-lg border-neutral-300 bg-white text-sm placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                             />
-                            <div className="bg-neutral-50/50 rounded-lg max-h-60 overflow-y-auto p-2 relative z-10">
+                            <div className="border border-neutral-200 rounded-xl bg-white max-h-60 overflow-y-auto p-2 relative z-10">
                               {selectedCountyId && townsList.length > 0 && (
                                 <button
                                   type="button"
@@ -631,13 +631,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                           <div className="space-y-2">
                             <Label className="text-sm font-medium text-neutral-700">Selected Towns</Label>
-                            <div className="rounded-lg p-3 bg-neutral-50/50 min-h-[200px] max-h-60 overflow-y-auto">
+                            <div className="border border-neutral-200 rounded-xl bg-white p-3 min-h-[200px] max-h-60 overflow-y-auto">
                               {selectedCities.length === 0 ? (
                                 <div className="flex items-center justify-center h-full min-h-[160px]">
                                   <p className="text-sm text-neutral-400">No towns selected</p>
                                 </div>
                               ) : (
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   {selectedCities.length > 1 && (
                                     <button
                                       type="button"
@@ -647,23 +647,23 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                       Remove All
                                     </button>
                                   )}
-                                  <div className="flex flex-wrap gap-2">
-                                    {selectedCities.map((city) => (
-                                      <span
-                                        key={city}
-                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-sm text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-                                      >
+                                  {selectedCities.map((city) => (
+                                    <div
+                                      key={city}
+                                      className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-neutral-50 transition-colors"
+                                    >
+                                      <span className="text-sm text-neutral-800">
                                         {city.includes('-') ? city.replace('-', ' - ') : city}
-                                        <button
-                                          type="button"
-                                          onClick={() => toggleCity(city)}
-                                          className="text-neutral-400 hover:text-destructive text-lg leading-none"
-                                        >
-                                          ×
-                                        </button>
                                       </span>
-                                    ))}
-                                  </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleCity(city)}
+                                        className="text-neutral-300 hover:text-destructive text-lg leading-none"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
