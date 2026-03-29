@@ -190,7 +190,6 @@ export const NotificationPreferenceCards = () => {
                     className={aacStyles.neutralButton}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenDialog({ open: true, category: card.key, title: card.title });
                     }}
                   >
                     <span className="flex items-center gap-1.5">
