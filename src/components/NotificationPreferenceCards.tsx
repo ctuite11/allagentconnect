@@ -172,7 +172,8 @@ export const NotificationPreferenceCards = () => {
             return (
               <div
                 key={card.key}
-                className={aacStyles.card}
+                className={`${aacStyles.card} cursor-pointer hover:bg-neutral-50 transition-colors`}
+                onClick={() => setOpenDialog({ open: true, category: card.key, title: card.title })}
               >
                 {/* Top row: Icon + Title + Description */}
                 <div className="flex items-start gap-3">
@@ -189,7 +190,6 @@ export const NotificationPreferenceCards = () => {
                     className={aacStyles.neutralButton}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenDialog({ open: true, category: card.key, title: card.title });
                     }}
                   >
                     <span className="flex items-center gap-1.5">
@@ -198,7 +198,7 @@ export const NotificationPreferenceCards = () => {
                     </span>
                   </button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1.5">
                       <span className={card.active ? aacStyles.statusDotActive : aacStyles.statusDotMuted} />
                       <span className={card.active ? aacStyles.statusLabelActiveText : aacStyles.statusLabelMutedText}>
