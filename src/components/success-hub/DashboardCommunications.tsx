@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, MessageSquare } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
@@ -56,7 +56,10 @@ export function DashboardCommunications({ conversations }: DashboardCommunicatio
                 onClick={() => navigate(`/messages/${c.conversation_id}`, { state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" } })}
               >
                 <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+                  {c.other_headshot_url && (
+                    <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
+                  )}
+                  <AvatarFallback className="bg-emerald-500 text-white text-xs font-medium">
                     {getInitials(c.other_name)}
                   </AvatarFallback>
                 </Avatar>
