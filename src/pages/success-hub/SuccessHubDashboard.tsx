@@ -60,6 +60,7 @@ export default function SuccessHubDashboard() {
 
   return (
     <PageShell className="bg-secondary/40">
+      <div className="pt-6">
       {/* ── 1. Welcome Header ──────────────────────────── */}
       <div className="mb-4">
         <WelcomeHeader
@@ -97,6 +98,7 @@ export default function SuccessHubDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
         <DashboardCommunications conversations={summary.conversations} />
         <DashboardBuyersTable buyers={summary.buyers} />
+      </div>
       </div>
     </PageShell>
   );
