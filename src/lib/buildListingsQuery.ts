@@ -1,4 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { applyLocationFilter } from "./buildLocationFilter";
 
 interface SearchCriteria {
   statuses?: string[];
@@ -129,54 +130,24 @@ export function buildListingsQuery(
     query = query.ilike("state", criteria.state);
   }
 
-  // Cities and neighborhoods - case-insensitive matching
-  if (criteria.cities.length > 0) {
-    const cityFilters = criteria.cities.map(cityStr => {
-      const parts = cityStr.split(',');
-      const cityPart = parts[0].trim();
-      
-      // Check if it's a city-neighborhood format (e.g., "Boston-Charlestown")
-      if (cityPart.includes('-')) {
-        const [city, neighborhood] = cityPart.split('-').map(s => s.trim());
-        return { city, neighborhood };
-      }
-      
-      return { city: cityPart, neighborhood: null };
-    });
-    
-    // Group by cities that have neighborhoods vs just cities
-    const citiesWithNeighborhoods = cityFilters.filter(f => f.neighborhood);
-    const citiesOnly = cityFilters.filter(f => !f.neighborhood).map(f => f.city);
-    
-    // Build PostgREST filter with wildcards for case-insensitive matching
-    const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
-    
-    if (citiesWithNeighborhoods.length > 0 || citiesOnly.length > 0) {
-      const segments: string[] = [];
-      
-      // Add city-only filters
-      if (citiesOnly.length > 0) {
-        segments.push(...citiesOnly.map(c => `city.ilike.${wild(c)}`));
-      }
-      
-      // Add city+neighborhood filters
-      if (citiesWithNeighborhoods.length > 0) {
-        segments.push(
-          ...citiesWithNeighborhoods.map(f => 
-            `and(city.ilike.${wild(f.city)},neighborhood.ilike.${wild(f.neighborhood!)})`
-          )
-        );
-      }
-      
-      query = query.or(segments.join(','));
-    }
-  }
+  // Cities and neighborhoods — unified case-insensitive matching
+  // Combine cities and standalone neighborhoods into one canonical array
+  // then delegate to the shared applyLocationFilter utility.
+  {
+    const combinedTowns: string[] = [...criteria.cities];
 
-  // Neighborhood filter (standalone, applied on top of city filter)
-  if (criteria.neighborhoods.length > 0) {
-    const wild = (v: string) => `*${String(v).replace(/[*",]/g, ' ').trim()}*`;
-    const hoodSegments = criteria.neighborhoods.map(n => `neighborhood.ilike.${wild(n)}`);
-    query = query.or(hoodSegments.join(','));
+    // Fold standalone neighborhoods into the canonical "City-Neighborhood" or
+    // plain neighborhood format that applyLocationFilter expects.
+    // Standalone neighborhoods without a city prefix are kept as-is (plain city match).
+    for (const n of criteria.neighborhoods) {
+      if (!combinedTowns.includes(n)) {
+        combinedTowns.push(n);
+      }
+    }
+
+    if (combinedTowns.length > 0) {
+      query = applyLocationFilter(query, combinedTowns);
+    }
   }
 
   // Zip code filter
