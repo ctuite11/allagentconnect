@@ -415,19 +415,10 @@ const ClientNeedsDashboard = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </main>
-
-      {/* Save Footer */}
-      {hasUnsavedChanges && (
-        <div className="bg-white border-t border-zinc-200 px-6 mt-8">
-          <div className="py-4 flex items-center justify-between max-w-7xl mx-auto">
-            <p className="text-zinc-500 text-sm">
-              You have unsaved changes
-            </p>
-            <Button 
-              onClick={handleSavePreferences}
-              disabled={saving}
-            >
+        {hasUnsavedChanges && (
+          <div className="mt-8 flex items-center justify-between">
+            <p className="text-muted-foreground text-sm">You have unsaved changes</p>
+            <Button onClick={handleSavePreferences} disabled={saving}>
               {saving ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -438,8 +429,8 @@ const ClientNeedsDashboard = () => {
               )}
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 };
