@@ -17,10 +17,10 @@ export function AppShell({ children }: AppShellProps) {
   useAgentPresence();
 
   return (
-    <div className="h-screen flex w-full">
+    <div className="h-screen flex w-full overflow-hidden">
       <DashboardSidebar isAdmin={isAdmin} />
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain">{children}</div>
       </div>
     </div>
   );
