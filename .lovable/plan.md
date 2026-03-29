@@ -1,22 +1,13 @@
 
 
-# "Add All Towns" Button — Match Search Listings Format
+# Fix: Remove `updated_at` from Success Hub query
 
 ## Change
 
-### `src/components/GeographicPreferencesManager.tsx` (lines 292-294)
+**File:** `src/hooks/useSuccessHubData.ts`
 
-Change:
-```tsx
-{selectedCounty === "all" 
-  ? `✓ Add All Towns from All Counties` 
-  : `✓ Add All Towns in County (${townsList.length})`}
-```
+1. Remove `updated_at` from `.select()` string
+2. Change `.order("updated_at", ...)` to `.order("created_at", ...)`
 
-To:
-```tsx
-{`- Add All Towns (${townsList.length}) -`}
-```
-
-This matches the exact text format used on the search listings page. Single change, no logic affected.
+Two-line fix. No other files affected.
 
