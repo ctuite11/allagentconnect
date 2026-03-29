@@ -86,10 +86,10 @@ export const ClientNeedsNotificationSettings = () => {
   }
 
   return (
-    <Card className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <Card className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <CardHeader className="p-0">
         <div className="flex items-center gap-1.5">
-          <Bell className="h-6 w-6 text-emerald-600" />
+          <Bell className="h-6 w-6 text-emerald-600/80" />
           <CardTitle className="text-base font-medium text-zinc-900">Email Frequency</CardTitle>
         </div>
       </CardHeader>
