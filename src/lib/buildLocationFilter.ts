@@ -7,6 +7,15 @@
  *
  * Splits only on the FIRST hyphen so neighborhood names with hyphens are preserved.
  */
+/**
+ * Escapes special characters for PostgREST ilike patterns.
+ * Prevents %, _, and backslash in city/neighborhood names from being
+ * interpreted as wildcards.
+ */
+function escapeIlike(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
 export function applyLocationFilter<T extends { in: Function; or: Function }>(
   query: T,
   selectedTowns: string[],
@@ -27,20 +36,15 @@ export function applyLocationFilter<T extends { in: Function; or: Function }>(
     }
   }
 
-  // Only plain cities — simple .in() filter
-  if (neighborhoodFilters.length === 0) {
-    return query.in("city", plainCities) as T;
-  }
-
-  // Build an .or() filter string for PostgREST
+  // Build an .or() filter string for PostgREST using case-insensitive ilike
   const parts: string[] = [];
 
-  if (plainCities.length > 0) {
-    parts.push(`city.in.(${plainCities.join(",")})`);
+  for (const city of plainCities) {
+    parts.push(`city.ilike.${escapeIlike(city)}`);
   }
 
   for (const nf of neighborhoodFilters) {
-    parts.push(`and(city.eq.${nf.city},neighborhood.eq.${nf.neighborhood})`);
+    parts.push(`and(city.ilike.${escapeIlike(nf.city)},neighborhood.ilike.${escapeIlike(nf.neighborhood)})`);
   }
 
   return query.or(parts.join(",")) as T;
