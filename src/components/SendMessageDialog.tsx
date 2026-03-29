@@ -433,7 +433,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {!loadingCount && recipientCount !== null && (
               <div className="border border-border rounded-xl p-4">
                 <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-muted-foreground" />
+                  <div className="h-6 w-6 rounded-full bg-[#111317] text-white flex items-center justify-center">
+                    <AACMonogram className="h-3 w-3" />
+                  </div>
                   <span className="text-sm">
                     This will be sent to <strong className="text-foreground font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
                   </span>
