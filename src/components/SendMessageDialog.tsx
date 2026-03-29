@@ -620,7 +620,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               <TownsPicker
                                 towns={townsList}
                                 selectedTowns={selectedCities}
-                                onToggleTown={toggleCity}
+                                onToggleTown={(town) => {
+                                  if (!selectedCities.includes(town)) {
+                                    toggleCity(town);
+                                  }
+                                }}
                                 expandedCities={expandedCities}
                                 onToggleCityExpansion={toggleCityExpansion}
                                 state={state}
