@@ -81,7 +81,8 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
         className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
       >
         {listings.map((listing) => {
-          const photo = listing.photos?.[0] ?? null;
+          const raw = listing.photos?.[0];
+          const photo = typeof raw === "string" ? raw : raw?.url ?? null;
           return (
             <div
               key={listing.id}

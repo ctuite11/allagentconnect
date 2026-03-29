@@ -298,10 +298,11 @@ const AllAgentConnectHome = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {listings.map((listing) => {
-                  const thumb =
+                  const raw =
                     Array.isArray(listing.photos) && listing.photos.length > 0
                       ? listing.photos[0]
                       : null;
+                  const thumb = typeof raw === "string" ? raw : raw?.url ?? null;
                   return (
                     <button
                       key={listing.id}

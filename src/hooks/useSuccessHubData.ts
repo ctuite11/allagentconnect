@@ -36,7 +36,7 @@ export interface SuccessHubSummary {
     city: string;
     state: string;
     status: string;
-    photos: string[] | null;
+    photos: (string | { url: string })[] | null;
     price: number | null;
     view_count: number;
     showing_request_count: number;
