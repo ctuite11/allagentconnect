@@ -632,23 +632,25 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-neutral-700">Selected Towns</Label>
-                            <div className="border border-neutral-200 rounded-xl bg-white p-3 min-h-[200px] max-h-60 overflow-y-auto">
-                              {selectedCities.length === 0 ? (
-                                <div className="flex items-center justify-center h-full min-h-[160px]">
-                                  <p className="text-sm text-neutral-400">No towns selected</p>
-                                </div>
-                              ) : (
-                                <div className="space-y-1">
-                                  {selectedCities.length > 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedCities([])}
-                                      className="text-xs text-destructive hover:underline mb-1 font-medium"
-                                    >
-                                      Remove All
-                                    </button>
-                                  )}
+                             <div className="flex items-center justify-between mb-2">
+                               <Label className="text-sm font-medium text-neutral-700">Selected Towns</Label>
+                               {selectedCities.length > 0 && (
+                                 <button
+                                   type="button"
+                                   onClick={() => setSelectedCities([])}
+                                   className="text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                                 >
+                                   Delete all
+                                 </button>
+                               )}
+                             </div>
+                             <div className="border border-neutral-200 rounded-xl bg-white p-3 min-h-[200px] max-h-60 overflow-y-auto">
+                               {selectedCities.length === 0 ? (
+                                 <div className="flex items-center justify-center h-full min-h-[160px]">
+                                   <p className="text-sm text-neutral-400">No towns selected</p>
+                                 </div>
+                               ) : (
+                                 <div className="space-y-1">
                                   {selectedCities.map((city) => (
                                     <div
                                       key={city}
