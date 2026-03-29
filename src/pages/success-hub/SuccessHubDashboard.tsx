@@ -60,6 +60,7 @@ export default function SuccessHubDashboard() {
 
   return (
     <PageShell className="bg-secondary/40">
+      <div className="pt-6">
       {/* ── 1. Welcome Header ──────────────────────────── */}
       <div className="mb-4">
         <WelcomeHeader
