@@ -196,10 +196,10 @@ export function useSuccessHubData(): {
         // Active buyer relationships — count + preview rows
         supabase
           .from("client_agent_relationships")
-          .select("id,client_id,agent_id,status,updated_at,created_at", { count: "exact" })
+          .select("id,client_id,agent_id,status,created_at", { count: "exact" })
           .eq("agent_id", agentId)
           .eq("status", "active")
-          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
           .limit(8),
 
         // Conversation inbox preview (view is already user-scoped by RLS)
