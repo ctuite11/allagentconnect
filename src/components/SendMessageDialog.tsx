@@ -658,12 +658,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                         {city.includes('-') ? city.replace('-', ' - ') : city}
                                       </span>
                                       <button
-                                        type="button"
-                                        onClick={() => toggleCity(city)}
-                                        className="text-neutral-300 hover:text-destructive text-lg leading-none"
-                                      >
-                                        ×
-                                      </button>
+                                         type="button"
+                                         onClick={() => toggleCity(city)}
+                                         className="ml-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded px-1 text-base leading-none cursor-pointer transition-colors"
+                                       >
+                                         ×
+                                       </button>
                                     </div>
                                   ))}
                                 </div>
