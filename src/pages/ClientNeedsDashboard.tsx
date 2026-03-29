@@ -313,11 +313,11 @@ const ClientNeedsDashboard = () => {
         </section>
 
         {/* My Preferences Section */}
-        <section data-preferences-section>
-          <h2 className={aacStyles.sectionH2}>My Preferences</h2>
+        <section className="mt-10" data-preferences-section>
+          <h2 className="text-[22px] font-semibold text-zinc-900">My Preferences</h2>
           <p className={aacStyles.sectionHelper}>For receiving email notifications only</p>
           
-          <div className="space-y-3 mt-4">
+          <div className="space-y-2 mt-4">
             <PriceRangePreferences 
               agentId={user?.id || ""} 
               onFiltersUpdated={handleFiltersUpdated}
