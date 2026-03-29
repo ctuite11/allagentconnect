@@ -13,7 +13,11 @@
  * interpreted as wildcards.
  */
 function escapeIlike(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+  // Escape ilike wildcards
+  const escaped = value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+  // Wrap in double-quotes to protect commas, parentheses, and other
+  // PostgREST filter-string delimiters that may appear in place names.
+  return `"${escaped}"`;
 }
 
 export function applyLocationFilter<T extends { in: Function; or: Function }>(
