@@ -176,7 +176,7 @@ export const NotificationPreferenceCards = () => {
               >
                 {/* Top row: Icon + Title + Description */}
                 <div className="flex items-start gap-3">
-                  <IconComponent className="h-6 w-6 text-primary" />
+                  <IconComponent className="h-5 w-5 text-primary" />
                   <div className="min-w-0 flex-1">
                     <h4 className={aacStyles.cardTitle}>{card.title}</h4>
                     <p className={aacStyles.cardDesc}>{card.description}</p>
