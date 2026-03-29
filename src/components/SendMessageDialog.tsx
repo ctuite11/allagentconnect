@@ -471,23 +471,21 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
           </div>
         ) : (
-          <div className="space-y-5 p-6">
+          <div className="space-y-6 p-6">
             {/* Recipient Count */}
-            <div className="border border-border rounded-xl p-4">
+            <div className="bg-white rounded-2xl shadow-sm px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg border border-border flex items-center justify-center">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </div>
+                <Users className="h-5 w-5 text-neutral-400" />
                 {loadingCount ? (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-neutral-500">
                     Calculating recipients...
                   </span>
                 ) : recipientCount !== null ? (
-                  <span className="text-sm">
-                    Sending to <strong className="text-foreground font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                  <span className="text-sm text-neutral-700">
+                    Sending to <strong className="text-neutral-900 font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
                   </span>
                 ) : (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-neutral-500">
                     Select criteria to see recipient count
                   </span>
                 )}
@@ -495,25 +493,25 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
 
             {showLocationFields && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* State and County - Always visible */}
-                <div className="rounded-xl border border-border bg-white overflow-hidden">
-                  <div className="px-4 py-3 border-b border-border">
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-6 pt-5 pb-3 border-b border-neutral-100">
                     <div className="flex items-center gap-3">
-                      <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <span className="font-medium text-foreground">Location</span>
+                      <span className="text-base font-semibold text-neutral-900">Location</span>
                       <span className="text-xs font-medium text-destructive">*Required</span>
                     </div>
                   </div>
-                  <div className="p-4">
+                  <div className="p-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-foreground">State</Label>
+                        <Label className="text-sm font-medium text-neutral-700">State</Label>
                         <Select value={state} onValueChange={(val) => setState(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border-border bg-white focus:ring-0 focus:ring-offset-0">
+                          <SelectTrigger className="h-11 rounded-lg border-neutral-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20">
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -526,9 +524,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-foreground">County</Label>
+                        <Label className="text-sm font-medium text-neutral-700">County</Label>
                         <Select value={selectedCountyId} onValueChange={(val) => setSelectedCountyId(val)}>
-                          <SelectTrigger className="h-10 rounded-lg border-border bg-white focus:ring-0 focus:ring-offset-0">
+                          <SelectTrigger className="h-11 rounded-lg border-neutral-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20">
                             <SelectValue placeholder="All Counties" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -547,28 +545,28 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                 {/* Towns & Neighborhoods Section */}
                 <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
-                  <div className="rounded-xl border border-border bg-white overflow-hidden">
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                      <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center justify-between px-6 pt-5 pb-3 hover:bg-neutral-50 transition-colors">
                         <div className="flex items-center gap-3">
-                          <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
-                          <span className="font-medium text-foreground">Towns & Neighborhoods</span>
+                          <span className="text-base font-semibold text-neutral-900">Towns & Neighborhoods</span>
                           {selectedCities.length > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground font-medium">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-medium">
                               {selectedCities.length} selected
                             </span>
                           )}
                         </div>
-                        {townsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                        {townsOpen ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="p-4 pt-2 border-t border-border space-y-4">
+                      <div className="p-6 pt-4 border-t border-neutral-100 space-y-4">
                         {/* Show Areas Yes/No */}
                         <div className="flex items-center gap-4">
-                          <Label className="text-sm font-medium text-foreground">Show Areas</Label>
+                          <Label className="text-sm font-medium text-neutral-700">Show Areas</Label>
                           <div className="flex gap-4">
                             <div className="flex items-center space-x-2">
                               <input
@@ -596,25 +594,22 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         </div>
 
                         {/* Two-column: Towns picker + Selected towns */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-[1fr_1fr] gap-6">
                           <div className="space-y-2">
                             <Input
                               placeholder="Type Full or Partial Name"
                               value={citySearch}
                               onChange={(e) => setCitySearch(e.target.value)}
-                              className="h-10 rounded-lg border-border bg-white text-sm"
+                              className="h-11 rounded-lg border-neutral-300 bg-white text-sm placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                             />
-                            <div className="border border-border rounded-lg bg-white max-h-60 overflow-y-auto p-2 relative z-10">
+                            <div className="bg-neutral-50/50 rounded-lg max-h-60 overflow-y-auto p-2 relative z-10">
                               {selectedCountyId && townsList.length > 0 && (
                                 <button
                                   type="button"
                                   onClick={selectAllTowns}
-                                  className="w-full text-left px-3 py-2 text-sm font-semibold hover:bg-muted/20 rounded-lg mb-1 border-b border-border pb-2 flex items-center gap-2"
+                                  className="w-full text-left px-3 py-2 text-sm text-primary font-medium hover:underline rounded-lg mb-1"
                                 >
-                                  <span className="text-primary">✓</span>
-                                  {selectedCountyId === "all" 
-                                    ? `Add All Towns from All Counties` 
-                                    : `Add All Towns in County (${townsList.length})`}
+                                  - Add All Towns ({townsList.length}) -
                                 </button>
                               )}
                               <TownsPicker
@@ -632,36 +627,40 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-foreground">Selected Towns</Label>
-                            <div className="border border-border rounded-lg p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
+                            <Label className="text-sm font-medium text-neutral-700">Selected Towns</Label>
+                            <div className="rounded-lg p-3 bg-neutral-50/50 min-h-[200px] max-h-60 overflow-y-auto">
                               {selectedCities.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No towns selected</p>
+                                <div className="flex items-center justify-center h-full min-h-[160px]">
+                                  <p className="text-sm text-neutral-400">No towns selected</p>
+                                </div>
                               ) : (
-                                <div className="space-y-1.5">
+                                <div className="space-y-2">
                                   {selectedCities.length > 1 && (
                                     <button
                                       type="button"
                                       onClick={() => setSelectedCities([])}
-                                      className="text-xs text-destructive hover:underline mb-2 font-medium"
+                                      className="text-xs text-destructive hover:underline mb-1 font-medium"
                                     >
                                       Remove All
                                     </button>
                                   )}
-                                  {selectedCities.map((city) => (
-                                    <div 
-                                      key={city}
-                                      className="flex items-center justify-between text-sm py-1.5 px-3 bg-white border border-border rounded-lg"
-                                    >
-                                      <span>{city.includes('-') ? city.replace('-', ' - ') : city}</span>
-                                      <button
-                                        type="button"
-                                        onClick={() => toggleCity(city)}
-                                        className="text-muted-foreground hover:text-destructive text-lg leading-none"
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedCities.map((city) => (
+                                      <span
+                                        key={city}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 text-sm text-neutral-700"
                                       >
-                                        ×
-                                      </button>
-                                    </div>
-                                  ))}
+                                        {city.includes('-') ? city.replace('-', ' - ') : city}
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleCity(city)}
+                                          className="text-neutral-400 hover:text-destructive text-lg leading-none"
+                                        >
+                                          ×
+                                        </button>
+                                      </span>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -675,56 +674,48 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Property Types - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={propertyTypesOpen} onOpenChange={setPropertyTypesOpen}>
-                    <div className="rounded-xl border border-border bg-white overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center justify-between px-6 pt-5 pb-3 hover:bg-neutral-50 transition-colors">
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
-                            <span className="font-medium text-foreground">Property Types</span>
+                            <span className="text-base font-semibold text-neutral-900">Property Types</span>
                             {propertyTypes.length > 0 && (
-                              <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground font-medium">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-medium">
                                 {propertyTypes.length} selected
                               </span>
                             )}
                           </div>
-                          {propertyTypesOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          {propertyTypesOpen ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="p-4 pt-2 border-t border-border">
-                          <div className="grid grid-cols-3 gap-x-6 gap-y-3">
-                            <div className="flex items-center space-x-2.5">
-                              <Checkbox
-                                id="select-all-property-types"
-                                checked={propertyTypes.length === propertyTypeOptions.length}
-                                onCheckedChange={selectAllPropertyTypes}
-                                className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                              />
-                              <Label
-                                htmlFor="select-all-property-types"
-                                className="font-semibold cursor-pointer text-sm"
-                              >
-                                Select All
-                              </Label>
-                            </div>
-                            
+                        <div className="p-6 pt-4 border-t border-neutral-100">
+                          <div className="flex items-center gap-2 mb-4">
+                            <button
+                              type="button"
+                              onClick={selectAllPropertyTypes}
+                              className="text-sm text-primary font-medium hover:underline cursor-pointer"
+                            >
+                              {propertyTypes.length === propertyTypeOptions.length ? "Clear All" : "Select All"}
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
                             {propertyTypeOptions.map((type) => (
-                              <div key={type.value} className="flex items-center space-x-2.5">
-                                <Checkbox
-                                  id={`type-${type.value}`}
-                                  checked={propertyTypes.includes(type.value)}
-                                  onCheckedChange={() => handlePropertyTypeToggle(type.value)}
-                                  className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                />
-                                <label
-                                  htmlFor={`type-${type.value}`}
-                                  className="text-sm cursor-pointer text-foreground"
-                                >
-                                  {type.label}
-                                </label>
-                              </div>
+                              <button
+                                key={type.value}
+                                type="button"
+                                onClick={() => handlePropertyTypeToggle(type.value)}
+                                className={`px-3 py-1.5 rounded-full border text-sm cursor-pointer transition-colors ${
+                                  propertyTypes.includes(type.value)
+                                    ? "border-primary bg-primary text-white"
+                                    : "border-neutral-300 bg-white text-neutral-700 hover:border-primary"
+                                }`}
+                              >
+                                {type.label}
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -736,32 +727,32 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Price Range - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={priceRangeOpen} onOpenChange={setPriceRangeOpen}>
-                    <div className="rounded-xl border border-border bg-white overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center justify-between px-6 pt-5 pb-3 hover:bg-neutral-50 transition-colors">
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                             </svg>
-                            <span className="font-medium text-foreground">Price Range</span>
+                            <span className="text-base font-semibold text-neutral-900">Price Range</span>
                             {(minPrice || maxPrice) && (
-                              <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground font-medium">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-medium">
                                 ${minPriceDisplay || '0'} - ${maxPriceDisplay || '∞'}
                               </span>
                             )}
                           </div>
-                          {priceRangeOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          {priceRangeOpen ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="p-4 pt-2 border-t border-border">
+                        <div className="p-6 pt-4 border-t border-neutral-100">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor="minPrice" className="text-sm font-medium text-foreground">
+                              <Label htmlFor="minPrice" className="text-sm font-medium text-neutral-700">
                                 Minimum Price
                               </Label>
                               <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">$</span>
                                 <Input
                                   id="minPrice"
                                   type="text"
@@ -769,7 +760,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   value={minPriceDisplay}
                                   onChange={(e) => handleMinPriceChange(e.target.value)}
                                   placeholder={category === "renter_need" ? "1,000" : "500,000"}
-                                  className="pl-7 h-10 rounded-lg border-border bg-white"
+                                  className="pl-7 h-11 rounded-lg border-neutral-300 bg-white placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                                   disabled={noMinPrice}
                                 />
                               </div>
@@ -784,19 +775,19 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                       setMinPriceDisplay("");
                                     }
                                   }}
-                                  className="rounded-[4px] border-border"
+                                  className="rounded-[4px] border-neutral-300"
                                 />
-                                <label htmlFor="noMinPrice" className="text-xs text-muted-foreground cursor-pointer">
+                                <label htmlFor="noMinPrice" className="text-sm text-neutral-500 cursor-pointer">
                                   No minimum
                                 </label>
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="maxPrice" className="text-sm font-medium text-foreground">
+                              <Label htmlFor="maxPrice" className="text-sm font-medium text-neutral-700">
                                 Maximum Price
                               </Label>
                               <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">$</span>
                                 <Input
                                   id="maxPrice"
                                   type="text"
@@ -804,7 +795,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   value={maxPriceDisplay}
                                   onChange={(e) => handleMaxPriceChange(e.target.value)}
                                   placeholder={category === "renter_need" ? "5,000" : "2,000,000"}
-                                  className="pl-7 h-10 rounded-lg border-border bg-white"
+                                  className="pl-7 h-11 rounded-lg border-neutral-300 bg-white placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                                   disabled={noMaxPrice}
                                 />
                               </div>
@@ -819,9 +810,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                       setMaxPriceDisplay("");
                                     }
                                   }}
-                                  className="rounded-[4px] border-border"
+                                  className="rounded-[4px] border-neutral-300"
                                 />
-                                <label htmlFor="noMaxPrice" className="text-xs text-muted-foreground cursor-pointer">
+                                <label htmlFor="noMaxPrice" className="text-sm text-neutral-500 cursor-pointer">
                                   No maximum
                                 </label>
                               </div>
@@ -836,26 +827,26 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             )}
 
             {/* Subject & Message */}
-            <div className="space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
               <div className="space-y-2.5">
-                <Label htmlFor="subject" className="text-sm font-medium text-foreground">Subject *</Label>
+                <Label htmlFor="subject" className="text-sm font-medium text-neutral-800">Subject *</Label>
                 <Input
                   id="subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Enter subject line"
-                  className="h-10 rounded-lg border-border bg-white"
+                  className="h-11 rounded-lg border-neutral-300 bg-white placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
               <div className="space-y-2.5">
-                <Label htmlFor="message" className="text-sm font-medium text-foreground">Message *</Label>
+                <Label htmlFor="message" className="text-sm font-medium text-neutral-800">Message *</Label>
                 <Textarea
                   id="message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter your message..."
-                  className="min-h-[150px] rounded-lg border-border bg-white resize-none"
+                  className="min-h-[180px] rounded-lg border-neutral-300 bg-white resize-none placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
