@@ -478,9 +478,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {/* Recipient Count */}
             <div className="bg-white rounded-2xl shadow-sm px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-[#111317] text-white flex items-center justify-center">
-                  <AACMonogram className="h-4 w-4" />
-                </div>
+                <AACMonogram className="h-5 w-5 text-emerald-600/80" />
                 {loadingCount ? (
                   <span className="text-sm text-neutral-500">
                     Calculating recipients...
