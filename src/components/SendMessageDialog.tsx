@@ -14,7 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Send, Users, ArrowLeft, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, ArrowLeft, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import AACMonogram from "@/components/ui/AACMonogram";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -475,7 +476,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {/* Recipient Count */}
             <div className="bg-white rounded-2xl shadow-sm px-5 py-4">
               <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-neutral-400" />
+                <div className="h-8 w-8 rounded-full bg-[#111317] text-white flex items-center justify-center">
+                  <AACMonogram className="h-4 w-4" />
+                </div>
                 {loadingCount ? (
                   <span className="text-sm text-neutral-500">
                     Calculating recipients...
@@ -607,9 +610,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 <button
                                   type="button"
                                   onClick={selectAllTowns}
-                                  className="w-full text-left px-3 py-2 text-sm text-primary font-medium hover:underline rounded-lg mb-1"
+                                  className="w-full text-left text-emerald-600 font-medium hover:bg-neutral-100 px-2 py-1 rounded transition-colors text-sm mb-1"
                                 >
-                                  - Add All Towns ({townsList.length}) -
+                                  Add All Towns ({townsList.length})
                                 </button>
                               )}
                               <TownsPicker
@@ -648,7 +651,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                     {selectedCities.map((city) => (
                                       <span
                                         key={city}
-                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 text-sm text-neutral-700"
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-sm text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
                                       >
                                         {city.includes('-') ? city.replace('-', ' - ') : city}
                                         <button
@@ -694,28 +697,27 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <CollapsibleContent>
                         <div className="p-6 pt-4 border-t border-neutral-100">
                           <div className="flex items-center gap-2 mb-4">
-                            <button
-                              type="button"
-                              onClick={selectAllPropertyTypes}
-                              className="text-sm text-primary font-medium hover:underline cursor-pointer"
-                            >
+                            <Checkbox
+                              id="selectAllPropertyTypes"
+                              checked={propertyTypes.length === propertyTypeOptions.length}
+                              onCheckedChange={() => selectAllPropertyTypes()}
+                            />
+                            <label htmlFor="selectAllPropertyTypes" className="text-sm font-medium text-neutral-700 cursor-pointer">
                               {propertyTypes.length === propertyTypeOptions.length ? "Clear All" : "Select All"}
-                            </button>
+                            </label>
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="grid grid-cols-3 gap-3">
                             {propertyTypeOptions.map((type) => (
-                              <button
-                                key={type.value}
-                                type="button"
-                                onClick={() => handlePropertyTypeToggle(type.value)}
-                                className={`px-3 py-1.5 rounded-full border text-sm cursor-pointer transition-colors ${
-                                  propertyTypes.includes(type.value)
-                                    ? "border-primary bg-primary text-white"
-                                    : "border-neutral-300 bg-white text-neutral-700 hover:border-primary"
-                                }`}
-                              >
-                                {type.label}
-                              </button>
+                              <div key={type.value} className="flex items-center space-x-2 hover:bg-neutral-50 rounded px-1 py-1 transition-colors">
+                                <Checkbox
+                                  id={`pt-${type.value}`}
+                                  checked={propertyTypes.includes(type.value)}
+                                  onCheckedChange={() => handlePropertyTypeToggle(type.value)}
+                                />
+                                <label htmlFor={`pt-${type.value}`} className="text-sm text-neutral-700 cursor-pointer">
+                                  {type.label}
+                                </label>
+                              </div>
                             ))}
                           </div>
                         </div>
