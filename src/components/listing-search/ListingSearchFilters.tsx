@@ -822,7 +822,7 @@ const ListingSearchFilters = ({
                     <div className="min-h-[260px] max-h-[300px] border border-neutral-200 rounded-lg overflow-y-auto p-2 bg-white">
                       <button
                         onClick={addAllTowns}
-                        className="w-full text-left px-2 py-1 text-xs text-neutral-800 hover:text-emerald-600 hover:bg-neutral-100 rounded transition-colors font-medium mb-1"
+                        className="w-full text-left px-2 py-1.5 text-xs text-emerald-600 bg-neutral-100 hover:bg-neutral-200 rounded transition-colors font-medium mb-1"
                       >
                         - Add All Towns ({townsList.length}) -
                       </button>
