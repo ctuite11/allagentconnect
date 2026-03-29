@@ -289,9 +289,7 @@ const GeographicPreferencesManager = ({
                         onClick={handleSelectAll}
                         className="w-full text-left px-2 py-1.5 text-sm font-medium text-emerald-600 bg-neutral-100 hover:bg-neutral-200 rounded transition-colors mb-1"
                       >
-                        {selectedCounty === "all" 
-                          ? `✓ Add All Towns from All Counties` 
-                          : `✓ Add All Towns in County (${townsList.length})`}
+{`- Add All Towns (${townsList.length}) -`}
                       </button>
                     )}
                     <TownsPicker
