@@ -198,7 +198,7 @@ export const NotificationPreferenceCards = () => {
                     </span>
                   </button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1.5">
                       <span className={card.active ? aacStyles.statusDotActive : aacStyles.statusDotMuted} />
                       <span className={card.active ? aacStyles.statusLabelActiveText : aacStyles.statusLabelMutedText}>
