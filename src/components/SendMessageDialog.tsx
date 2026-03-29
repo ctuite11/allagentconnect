@@ -379,7 +379,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 bg-white">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 bg-[#FAFAF8]">
         <div className="p-6 pb-0">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
