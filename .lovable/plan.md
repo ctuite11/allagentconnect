@@ -1,42 +1,23 @@
 
 
-# Fix: Remove Bottom Save Bar From Client Needs Page
+# Fix: DollarSign Icon Size in PriceRangePreferences
 
-## Root cause
-
-Lines 420-442 in `src/pages/ClientNeedsDashboard.tsx` render the save section **outside** `<main>` as a full-width footer-style block with `border-t`, `bg-white`, and `px-6` — creating the horizontal bar effect.
+## Problem
+The `DollarSign` icon in `PriceRangePreferences.tsx` is still `h-6 w-6` — the previous size reduction to `h-5 w-5` didn't persist.
 
 ## Change
 
-### `src/pages/ClientNeedsDashboard.tsx`
+### `src/components/PriceRangePreferences.tsx` (line 303)
 
-Move the save section **inside** `<main>` (before its closing tag) and restyle it as a normal inline action row:
-
-**Remove** (lines 420-442): the current footer block outside `</main>`
-
-**Add** (inside `<main>`, after the AlertDialog, before `</main>`): a simple inline row:
-
+Change:
 ```tsx
-{hasUnsavedChanges && (
-  <div className="mt-8 flex items-center justify-between">
-    <p className="text-zinc-500 text-sm">You have unsaved changes</p>
-    <Button onClick={handleSavePreferences} disabled={saving}>
-      {saving ? (
-        <span className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Saving...
-        </span>
-      ) : (
-        "Save Preferences"
-      )}
-    </Button>
-  </div>
-)}
+<DollarSign className="h-6 w-6 text-emerald-600/80" />
 ```
 
-Key differences:
-- No `border-t`, no `bg-white`, no `px-6` — removes the bar appearance
-- Inside `<main>` — aligns with page content width
-- `mt-8` provides spacing from the form above
-- Same button and dirty-state logic preserved
+To:
+```tsx
+<DollarSign className="h-5 w-5 text-emerald-600/80" />
+```
+
+Single line change. This optically aligns the DollarSign glyph (which has more internal whitespace) with the Home and Bell icons in the other preference cards.
 
