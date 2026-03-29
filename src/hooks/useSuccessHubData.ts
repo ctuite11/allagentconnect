@@ -68,6 +68,7 @@ export interface SuccessHubSummary {
     is_unread: boolean;
     other_user_id: string | null;
     other_name: string | null;
+    other_headshot_url: string | null;
   }>;
 
   activity: Array<{
@@ -438,7 +439,7 @@ export function useSuccessHubData(): {
         otherUserIds.length
           ? supabase
               .from("agent_profiles")
-              .select("id,first_name,last_name")
+              .select("id,first_name,last_name,headshot_url")
               .in("id", otherUserIds)
           : (Promise.resolve({ data: [], error: null }) as any),
 
@@ -475,18 +476,20 @@ export function useSuccessHubData(): {
       logQueryError("hot_sheet_clients(buyer counts)", buyerHscRes.error);
 
       // Conversation names
-      const otherNameById = new Map<string, string>();
+      const otherInfoById = new Map<string, { name: string; headshot: string | null }>();
       for (const ap of (otherAgentsRes.data ?? []) as any[]) {
         const name = [ap.first_name, ap.last_name].filter(Boolean).join(" ").trim();
-        otherNameById.set(String(ap.id), name || "Agent");
+        otherInfoById.set(String(ap.id), { name: name || "Agent", headshot: ap.headshot_url ?? null });
       }
 
-      const conversationsFinal: SuccessHubSummary["conversations"] = conversationsBase.map((c) => ({
-        ...c,
-        other_name: c.other_user_id
-          ? (otherNameById.get(c.other_user_id) ?? "Agent")
-          : "Agent",
-      }));
+      const conversationsFinal: SuccessHubSummary["conversations"] = conversationsBase.map((c) => {
+        const info = c.other_user_id ? otherInfoById.get(c.other_user_id) : null;
+        return {
+          ...c,
+          other_name: info?.name ?? "Agent",
+          other_headshot_url: info?.headshot ?? null,
+        };
+      });
 
       // Buyer details
       const clientById = new Map<string, any>();

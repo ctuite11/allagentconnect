@@ -1,7 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { MessageSquare, ChevronRight } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 import { formatDistanceToNow } from "date-fns";
+
+function getInitials(name: string | null) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 interface CommunicationsPanelProps {
   conversations: SuccessHubSummary["conversations"];
@@ -33,11 +44,14 @@ export function CommunicationsPanel({ conversations }: CommunicationsPanelProps)
               i < topConversations.length - 1 ? "border-b border-border" : ""
             }`}
           >
-            <div
-              className={`mt-1.5 h-2.5 w-2.5 rounded-full flex-shrink-0 ${
-                conv.is_unread ? "bg-primary" : "bg-transparent border border-border"
-              }`}
-            />
+            <Avatar className="h-8 w-8 shrink-0 mt-0.5">
+              {conv.other_headshot_url && (
+                <AvatarImage src={conv.other_headshot_url} alt={conv.other_name ?? ""} />
+              )}
+              <AvatarFallback className="bg-emerald-500 text-white text-xs font-medium">
+                {getInitials(conv.other_name)}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <p className="text-sm font-medium text-foreground truncate">
