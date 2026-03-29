@@ -596,15 +596,17 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           </div>
                         </div>
 
-                        {/* Two-column: Towns picker + Selected towns */}
+                        {/* Search spans full width */}
+                        <Input
+                          placeholder="Type Full or Partial Name"
+                          value={citySearch}
+                          onChange={(e) => setCitySearch(e.target.value)}
+                          className="h-11 rounded-lg border-neutral-300 bg-white text-sm placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        />
+
+                        {/* Two-column: Towns list + Selected towns */}
                         <div className="grid grid-cols-[1fr_1fr] gap-6">
                           <div className="space-y-2">
-                            <Input
-                              placeholder="Type Full or Partial Name"
-                              value={citySearch}
-                              onChange={(e) => setCitySearch(e.target.value)}
-                              className="h-11 rounded-lg border-neutral-300 bg-white text-sm placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                            />
                             <div className="border border-neutral-200 rounded-xl bg-white max-h-60 overflow-y-auto p-2 relative z-10">
                               {selectedCountyId && townsList.length > 0 && (
                                 <button
