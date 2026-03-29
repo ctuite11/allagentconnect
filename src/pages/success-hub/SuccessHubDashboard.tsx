@@ -99,6 +99,7 @@ export default function SuccessHubDashboard() {
         <DashboardCommunications conversations={summary.conversations} />
         <DashboardBuyersTable buyers={summary.buyers} />
       </div>
+      </div>
     </PageShell>
   );
 }
