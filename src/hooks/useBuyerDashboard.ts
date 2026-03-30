@@ -103,7 +103,7 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
                   const { data: matchData } = await query.limit(4);
                   topListings = matchData ?? [];
                   matchCount = topListings.length;
-                  matchCount = count ?? topListings.length;
+                  
                 } catch {
                   // criteria might be malformed
                 }
