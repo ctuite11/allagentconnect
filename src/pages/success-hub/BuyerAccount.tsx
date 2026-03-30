@@ -1,12 +1,11 @@
 import { useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  Home, Heart, Clock
+  ArrowLeft, Home, Heart, Clock
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
@@ -49,19 +48,6 @@ const SECTIONS = [
   { id: "messages", label: "Messages" },
 ] as const;
 
-// ── Section heading ──────────────────────────────────────────────────────────
-
-function SectionHeading({ id, title, count }: { id: string; title: string; count?: number }) {
-  return (
-    <div id={id} className="flex items-center gap-2 mb-5 scroll-mt-32">
-      <h2 className="text-sm font-semibold text-foreground tracking-tight uppercase">{title}</h2>
-      {count != null && (
-        <span className="text-xs text-muted-foreground font-medium">{count}</span>
-      )}
-    </div>
-  );
-}
-
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BuyerAccount() {
@@ -92,8 +78,13 @@ export default function BuyerAccount() {
   if (!client) {
     return (
       <PageShell>
-        <PageHeader title="Buyer Not Found" backTo="/success-hub/buyers" />
-        <p className="text-muted-foreground">No buyer found with that ID.</p>
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => navigate("/success-hub/buyers")} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <h1 className="text-lg font-semibold text-foreground">Buyer Not Found</h1>
+        </div>
+        <p className="text-sm text-muted-foreground">No buyer found with that ID.</p>
       </PageShell>
     );
   }
@@ -107,59 +98,56 @@ export default function BuyerAccount() {
 
   return (
     <PageShell>
-      <PageHeader title={capitalizedName} backTo="/success-hub/buyers" />
+      {/* ── Back row only (no big duplicate title) ─────────────────── */}
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => navigate("/success-hub/buyers")}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <span className="text-sm text-muted-foreground">Back to Buyers</span>
+      </div>
 
-      {/* ── Buyer Summary Card (no repeated large name) ─────────────── */}
-      <div className="mb-8 rounded-2xl border border-border bg-card shadow-sm">
-        <div className="p-6">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{client.email}</p>
-              {client.phone && (
-                <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-6">
-              <StatBlock value={stats.hotSheetCount} label="Hot Sheets" />
-              <StatBlock value={stats.favoritesCount} label="Favorites" />
-              <StatBlock value={stats.messagesCount} label="Messages" />
-            </div>
+      {/* ── Buyer Summary Card (primary identity lives here) ──────── */}
+      <div className="mb-8 rounded-xl border border-border bg-card shadow-sm p-6">
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">{capitalizedName}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
+            {client.phone && (
+              <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 mt-5">
-            <Button
-              size="sm"
-              onClick={() => navigate("/messages")}
-            >
-              <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Message
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCreateHsOpen(true)}
-            >
-              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Hot Sheet
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => toast.info("Edit buyer — coming soon")}
-            >
-              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
-            </Button>
+          <div className="flex items-center gap-6">
+            <StatBlock value={stats.hotSheetCount} label="Hot Sheets" />
+            <StatBlock value={stats.favoritesCount} label="Favorites" />
+            <StatBlock value={stats.messagesCount} label="Messages" />
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-5">
+          <Button size="sm" onClick={() => navigate("/messages")}>
+            <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Message
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setCreateHsOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Hot Sheet
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => toast.info("Edit buyer — coming soon")}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+          </Button>
         </div>
       </div>
 
-      {/* ── Section Nav (scrolls with page, no sticky) ────────────── */}
-      <div className="border-b border-border mb-8 -mx-6 px-6">
-        <nav className="flex items-center gap-1 py-1">
+      {/* ── Section Nav (inline, not sticky) ──────────────────────── */}
+      <div className="border-b border-border mb-8">
+        <nav className="flex items-center gap-1">
           {SECTIONS.map((s) => (
             <button
               key={s.id}
               onClick={() => scrollTo(s.id)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              className={`px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 activeSection === s.id
                   ? "text-primary border-primary"
                   : "text-muted-foreground border-transparent hover:text-foreground"
@@ -171,13 +159,13 @@ export default function BuyerAccount() {
         </nav>
       </div>
 
-      {/* ── Hot Sheets ────────────────────────────────────────────────── */}
+      {/* ── Hot Sheets ────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.hotsheets = el; }} className="mb-12">
-        <SectionHeading id="hotsheets-heading" title="Hot Sheets" count={stats.hotSheetCount} />
+        <SectionHeading title="Hot Sheets" count={stats.hotSheetCount} />
 
         {hotSheets.length === 0 ? (
           <EmptyState
-            icon={<Home className="h-7 w-7 text-muted-foreground/40" />}
+            icon={<Home className="h-5 w-5 text-muted-foreground" />}
             title="No Hot Sheets"
             description="Create a hot sheet to start matching listings for this buyer."
             action={
@@ -192,13 +180,10 @@ export default function BuyerAccount() {
               const pills = criteriaPills(hs.criteria);
               return (
                 <div key={hs.id}>
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Hot Sheet Name:</span>{" "}
-                        <span className="font-medium text-foreground">{hs.name}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-sm font-medium text-foreground">{hs.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
                       </p>
                     </div>
@@ -252,13 +237,13 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Favorites ─────────────────────────────────────────────────── */}
+      {/* ── Favorites ─────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.favorites = el; }} className="mb-12">
-        <SectionHeading id="favorites-heading" title="Favorites" count={stats.favoritesCount} />
+        <SectionHeading title="Favorites" count={stats.favoritesCount} />
 
         {favorites.length === 0 ? (
           <EmptyState
-            icon={<Heart className="h-7 w-7 text-muted-foreground/40" />}
+            icon={<Heart className="h-5 w-5 text-muted-foreground" />}
             title="No Favorites"
             description="This buyer hasn't favorited any listings yet."
           />
@@ -276,20 +261,20 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Activity ──────────────────────────────────────────────────── */}
+      {/* ── Activity ──────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
-        <SectionHeading id="activity-heading" title="Activity" count={activity.length} />
+        <SectionHeading title="Activity" count={activity.length} />
 
         {activity.length === 0 ? (
           <EmptyState
-            icon={<Clock className="h-7 w-7 text-muted-foreground/40" />}
+            icon={<Clock className="h-5 w-5 text-muted-foreground" />}
             title="No Activity"
             description="Comments and activity will appear here."
           />
         ) : (
           <div className="space-y-2">
             {activity.map((item) => (
-              <Card key={item.id} className="border-border bg-card shadow-sm">
+              <Card key={item.id} className="shadow-sm">
                 <CardContent className="p-4">
                   <p className="text-sm text-foreground">{item.comment}</p>
                   <div className="flex items-center gap-2 mt-1.5">
@@ -308,12 +293,12 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Messages ──────────────────────────────────────────────────── */}
+      {/* ── Messages ──────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.messages = el; }} className="mb-12">
-        <SectionHeading id="messages-heading" title="Messages" count={stats.messagesCount} />
+        <SectionHeading title="Messages" count={stats.messagesCount} />
 
         <EmptyState
-          icon={<MessageSquare className="h-7 w-7 text-muted-foreground/40" />}
+          icon={<MessageSquare className="h-5 w-5 text-muted-foreground" />}
           title="Messages"
           description="Open the messaging workspace to communicate with this buyer."
           action={
@@ -324,7 +309,7 @@ export default function BuyerAccount() {
         />
       </section>
 
-      {/* ── Create Hot Sheet Dialog ────────────────────────────────────── */}
+      {/* ── Create Hot Sheet Dialog ────────────────────────────────── */}
       {user?.id && (
         <CreateHotSheetDialog
           open={createHsOpen}
@@ -361,7 +346,20 @@ function StatBlock({ value, label }: { value: number; label: string }) {
   );
 }
 
-// ── Shared empty state ───────────────────────────────────────────────────────
+// ── Section heading ──────────────────────────────────────────────────────────
+
+function SectionHeading({ title, count }: { title: string; count?: number }) {
+  return (
+    <div className="flex items-center gap-2 mb-5">
+      <h2 className="text-sm font-semibold text-foreground tracking-tight uppercase">{title}</h2>
+      {count != null && (
+        <span className="text-xs text-muted-foreground">{count}</span>
+      )}
+    </div>
+  );
+}
+
+// ── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyState({
   icon,
@@ -375,9 +373,9 @@ function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl border border-dashed border-border">
+    <div className="flex flex-col items-center justify-center py-12 text-center rounded-xl border border-dashed border-border">
       {icon}
-      <h3 className="text-sm font-semibold text-foreground mt-3">{title}</h3>
+      <h3 className="text-sm font-medium text-foreground mt-3">{title}</h3>
       <p className="text-sm text-muted-foreground mt-1 max-w-xs">{description}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
