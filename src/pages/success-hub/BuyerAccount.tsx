@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ function MiniListingCard({ listing, onClick }: { listing: any; onClick?: () => v
 export default function BuyerAccount() {
   const { buyerId } = useParams<{ buyerId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthRole();
   const { client, hotSheets, favorites, activity, stats, loading } = useBuyerDashboard(buyerId);
 
   const [createHsOpen, setCreateHsOpen] = useState(false);
