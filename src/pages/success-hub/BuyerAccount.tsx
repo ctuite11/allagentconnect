@@ -63,28 +63,28 @@ function MiniListingCard({ listing, onClick }: { listing: any; onClick?: () => v
   const photo = getFirstPhoto(listing.photos);
 
   return (
-    <Card
-      className="overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg shadow-sm"
+    <div
+      className="overflow-hidden cursor-pointer rounded-2xl border border-neutral-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
       onClick={onClick}
     >
-      <div className="aspect-square bg-muted relative">
+      <div className="aspect-square bg-neutral-100 relative overflow-hidden rounded-t-2xl">
         {photo ? (
           <img src={photo} alt={listing.address} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Home className="h-8 w-8 text-muted-foreground/40" />
+            <Home className="h-8 w-8 text-neutral-300" />
           </div>
         )}
-        <div className="absolute bottom-1.5 left-1.5 bg-black/70 text-white text-xs px-2 py-0.5 rounded font-medium">
+        <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg font-semibold tracking-tight">
           {formatPrice(listing.price || 0)}
         </div>
       </div>
-      <CardContent className="p-3">
-        <p className="text-sm font-medium text-foreground truncate">{listing.address}</p>
-        <p className="text-xs text-muted-foreground truncate">
+      <div className="p-3.5">
+        <p className="text-[13px] font-semibold text-zinc-900 truncate leading-tight">{listing.address}</p>
+        <p className="text-xs text-zinc-500 truncate mt-0.5">
           {[listing.city, listing.state].filter(Boolean).join(", ")} {listing.zip_code}
         </p>
-        <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 mt-2 text-xs text-zinc-400">
           {listing.bedrooms != null && (
             <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{listing.bedrooms}</span>
           )}
@@ -95,8 +95,8 @@ function MiniListingCard({ listing, onClick }: { listing: any; onClick?: () => v
             <span>{listing.square_feet.toLocaleString()} sf</span>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -138,12 +138,12 @@ export default function BuyerAccount() {
     .join(" ");
 
   return (
-    <PageShell className="bg-secondary/40">
+    <PageShell className="bg-white">
       <PageHeader title={capitalizedName} backTo="/success-hub/buyers" />
 
       {/* ── Header Card ────────────────────────────────────────────────────── */}
-      <Card className="mb-8 border border-border bg-card">
-        <CardContent className="p-6">
+      <div className="mb-8 rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="p-6">
           <div className="flex items-start justify-between flex-wrap gap-4">
             {/* Info */}
             <div>
@@ -197,8 +197,8 @@ export default function BuyerAccount() {
               <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* ── Tabs ───────────────────────────────────────────────────────────── */}
       <Tabs defaultValue="hotsheets">
