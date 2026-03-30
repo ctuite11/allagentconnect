@@ -1,35 +1,36 @@
 
 
-# Regenerate Logo SVGs with Outlined Paths + PNG Exports
+# Export AAC Monogram in All Colors and Sizes
 
-## Problem
-Current SVGs use `<text>` elements referencing Manrope font. Gmail and most external environments don't have Manrope installed, so the wordmark falls back to Arial.
+## What
+Generate the AAC command monogram (⌘ symbol) as standalone files in **4 color variants** × **8 sizes** + **4 SVGs** = **36 files total**. Upload all to the `brand-assets` storage bucket.
 
-## Solution
-Regenerate all four logo variants with the "All Agent Connect" wordmark converted to **outlined vector paths** (no font dependency), plus export **high-res PNG versions** (3x / ~840×120px). Upload all eight files to the `brand-assets` storage bucket.
+## Color Variants
+| Variant | Fill Color |
+|---------|-----------|
+| Green | #50C878 |
+| White | #FFFFFF |
+| Black | #000000 |
+| Blue | #0E56F5 |
 
-## Deliverables (8 files)
+## Sizes (PNG)
+16, 32, 64, 128, 180, 256, 512, 1024px — square, transparent background.
 
-| File | Format | Monogram | Text |
-|------|--------|----------|------|
-| `aac-logo-white-outlined.svg` | SVG | White | White |
-| `aac-logo-black-outlined.svg` | SVG | Black | Black |
-| `aac-logo-green-white-outlined.svg` | SVG | Green | White |
-| `aac-logo-green-black-outlined.svg` | SVG | Green | Black |
-| `aac-logo-white.png` | PNG | White | White |
-| `aac-logo-black.png` | PNG | Black | Black |
-| `aac-logo-green-white.png` | PNG | Green | White |
-| `aac-logo-green-black.png` | PNG | Green | Black |
+## SVGs
+One scalable SVG per color variant (4 files), using the existing command monogram path data from `AACMonogram.tsx`.
+
+## File Naming
+- SVGs: `aac-monogram-{color}.svg`
+- PNGs: `aac-monogram-{color}-{size}.png`
+
+Example: `aac-monogram-green-512.png`, `aac-monogram-blue.svg`
 
 ## Technical Approach
-1. Copy the Manrope font file from the skill namespace to `/tmp`
-2. Use Python (`fonttools` + `Pillow`) to:
-   - Extract glyph outlines for "All Agent Connect" from Manrope ExtraBold
-   - Convert to SVG path data with correct spacing and weight 800 metrics
-   - Compose full lockup SVGs (monogram paths + outlined wordmark)
-3. Render PNGs at 3x resolution using the outlined SVGs
-4. Upload all 8 files to the `brand-assets` bucket via Supabase Storage API
+1. Build SVGs from the existing monogram `viewBox="0 0 34 34"` path data with each fill color
+2. Use Python (Pillow/cairosvg) to render PNGs at each size from the SVGs
+3. Upload all 36 files to `brand-assets` bucket via Supabase Storage API
+4. Provide permanent public URLs
 
 ## No project files modified
-All output goes to `brand-assets` storage bucket as downloadable public URLs.
+All output goes to the `brand-assets` storage bucket.
 
