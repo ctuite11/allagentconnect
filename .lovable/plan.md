@@ -1,36 +1,28 @@
 
+The issue is identified: that PNG object exists in storage, but it was uploaded as an empty file.
 
-# Export AAC Monogram in All Colors and Sizes
+What I found:
+- The `brand-assets` bucket is public and readable, so this is not a permissions problem.
+- `aac-logo-green-black.png` exists, but its metadata shows:
+  - `contentLength: 0`
+  - `size: 0`
+  - PNG mime type, but no image data
+- Same problem affects some other PNG logo files too:
+  - `aac-logo-black.png`
+  - `aac-logo-green-white.png`
+  - `aac-logo-green-black.png`
+- The outlined SVG version does exist with real content:
+  - `aac-logo-green-black-outlined.svg` has non-zero size and should be usable.
 
-## What
-Generate the AAC command monogram (⌘ symbol) as standalone files in **4 color variants** × **8 sizes** + **4 SVGs** = **36 files total**. Upload all to the `brand-assets` storage bucket.
+Plan:
+1. Regenerate the whole-logo PNG files so they contain actual image data.
+2. Re-upload the broken PNG assets to the existing `brand-assets` bucket using the same filenames.
+3. Verify each uploaded file has non-zero size and opens correctly.
+4. Return the corrected public URLs, plus recommend using the outlined SVGs when possible for maximum sharpness.
 
-## Color Variants
-| Variant | Fill Color |
-|---------|-----------|
-| Green | #50C878 |
-| White | #FFFFFF |
-| Black | #000000 |
-| Blue | #0E56F5 |
+Expected outcome:
+- `https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-logo-green-black.png` will render normally after re-upload.
+- The SVG URLs should already be the safer option for web/email where supported.
 
-## Sizes (PNG)
-16, 32, 64, 128, 180, 256, 512, 1024px — square, transparent background.
-
-## SVGs
-One scalable SVG per color variant (4 files), using the existing command monogram path data from `AACMonogram.tsx`.
-
-## File Naming
-- SVGs: `aac-monogram-{color}.svg`
-- PNGs: `aac-monogram-{color}-{size}.png`
-
-Example: `aac-monogram-green-512.png`, `aac-monogram-blue.svg`
-
-## Technical Approach
-1. Build SVGs from the existing monogram `viewBox="0 0 34 34"` path data with each fill color
-2. Use Python (Pillow/cairosvg) to render PNGs at each size from the SVGs
-3. Upload all 36 files to `brand-assets` bucket via Supabase Storage API
-4. Provide permanent public URLs
-
-## No project files modified
-All output goes to the `brand-assets` storage bucket.
-
+Technical note:
+This is a storage content issue, not a frontend issue. No app code changes are needed unless you also want me to update any in-app references to point to the outlined SVG versions instead of the PNGs.
