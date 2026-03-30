@@ -1,28 +1,24 @@
 
-The issue is identified: that PNG object exists in storage, but it was uploaded as an empty file.
 
-What I found:
-- The `brand-assets` bucket is public and readable, so this is not a permissions problem.
-- `aac-logo-green-black.png` exists, but its metadata shows:
-  - `contentLength: 0`
-  - `size: 0`
-  - PNG mime type, but no image data
-- Same problem affects some other PNG logo files too:
-  - `aac-logo-black.png`
-  - `aac-logo-green-white.png`
-  - `aac-logo-green-black.png`
-- The outlined SVG version does exist with real content:
-  - `aac-logo-green-black-outlined.svg` has non-zero size and should be usable.
+# Fix Monogram Vertical Alignment in Logo SVGs
 
-Plan:
-1. Regenerate the whole-logo PNG files so they contain actual image data.
-2. Re-upload the broken PNG assets to the existing `brand-assets` bucket using the same filenames.
-3. Verify each uploaded file has non-zero size and opens correctly.
-4. Return the corrected public URLs, plus recommend using the outlined SVGs when possible for maximum sharpness.
+## Problem
+In all four outlined SVG logo files, the monogram (⌘) sits ~2.7px too high relative to the "All Agent Connect" wordmark. The monogram group has no vertical offset, while the text centers lower in the 28px-tall canvas.
 
-Expected outcome:
-- `https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-logo-green-black.png` will render normally after re-upload.
-- The SVG URLs should already be the safer option for web/email where supported.
+## Fix
+Add a `translate(0, 2.7)` to the monogram `<g>` element in all four SVGs, shifting it down to vertically center-align with the text. Then re-render the PNGs from the corrected SVGs.
 
-Technical note:
-This is a storage content issue, not a frontend issue. No app code changes are needed unless you also want me to update any in-app references to point to the outlined SVG versions instead of the PNGs.
+## Files to regenerate and re-upload (8 total)
+- `aac-logo-white-outlined.svg` + `aac-logo-white.png`
+- `aac-logo-black-outlined.svg` + `aac-logo-black.png`
+- `aac-logo-green-white-outlined.svg` + `aac-logo-green-white.png`
+- `aac-logo-green-black-outlined.svg` + `aac-logo-green-black.png`
+
+## Approach
+1. Rebuild each SVG with the monogram group changed from `<g transform="scale(0.8235)">` to `<g transform="translate(0, 2.7) scale(0.8235)">`
+2. Re-render PNGs at 3x resolution from the corrected SVGs using `sharp`
+3. Upload all 8 files to `brand-assets` bucket, overwriting the misaligned versions
+4. Verify non-zero file sizes
+
+## No project source files modified
+
