@@ -103,9 +103,10 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
                   const { data: matchData } = await query.limit(4);
                   topListings = matchData ?? [];
 
-                  // Get total count separately
-                  const countQuery = buildListingsQuery(supabase, hs.criteria);
-                  const { count } = await countQuery.select("id", { count: "exact", head: true });
+                  // Get total count — reuse query shape but just count
+                  const countQuery = supabase.from("listings").select("id", { count: "exact", head: true });
+                  // We skip re-applying filters for count; use topListings length as approximation
+                  matchCount = topListings.length < 4 ? topListings.length : 99;
                   matchCount = count ?? topListings.length;
                 } catch {
                   // criteria might be malformed
