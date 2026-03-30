@@ -13,7 +13,6 @@ import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
-import AACMonogram from "@/components/ui/AACMonogram";
 import { Card, CardContent } from "@/components/ui/card";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -106,17 +105,12 @@ function MiniListingCard({ listing, onClick }: { listing: any; onClick?: () => v
 
 // ── Section heading ──────────────────────────────────────────────────────────
 
-function SectionHeading({ id, icon, title, count }: { id: string; icon: React.ReactNode; title: string; count?: number }) {
+function SectionHeading({ id, title, count }: { id: string; title: string; count?: number }) {
   return (
-    <div id={id} className="flex items-center gap-2.5 mb-5 scroll-mt-32">
-      <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary">
-        {icon}
-      </div>
-      <h2 className="text-base font-semibold text-foreground tracking-tight">{title}</h2>
+    <div id={id} className="flex items-center gap-2 mb-5 scroll-mt-32">
+      <h2 className="text-sm font-semibold text-foreground tracking-tight uppercase">{title}</h2>
       {count != null && (
-        <Badge variant="secondary" className="ml-1 text-[11px] font-medium bg-accent text-accent-foreground">
-          {count}
-        </Badge>
+        <span className="text-xs text-muted-foreground font-medium">{count}</span>
       )}
     </div>
   );
@@ -132,7 +126,6 @@ export default function BuyerAccount() {
   const [createHsOpen, setCreateHsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hotsheets");
 
-  // Refs for scroll-to
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollTo = (id: string) => {
@@ -174,23 +167,16 @@ export default function BuyerAccount() {
       <div className="mb-8 rounded-2xl border border-border bg-card shadow-sm">
         <div className="p-6">
           <div className="flex items-start justify-between flex-wrap gap-4">
-            {/* Identity */}
-            <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 mt-0.5">
-                <AACMonogram className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-foreground tracking-tight">
-                  {capitalizedName}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
-                {client.phone && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
-                )}
-              </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground tracking-tight">
+                {capitalizedName}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
+              {client.phone && (
+                <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
+              )}
             </div>
 
-            {/* Stats */}
             <div className="flex items-center gap-6">
               <StatBlock value={stats.hotSheetCount} label="Hot Sheets" />
               <StatBlock value={stats.favoritesCount} label="Favorites" />
@@ -198,12 +184,10 @@ export default function BuyerAccount() {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2 mt-5">
             <Button
               size="sm"
               onClick={() => navigate("/messages")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Message
             </Button>
@@ -225,17 +209,17 @@ export default function BuyerAccount() {
         </div>
       </div>
 
-      {/* ── Section Nav ───────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border mb-8 -mx-6 px-6">
+      {/* ── Section Nav (not sticky) ──────────────────────────────────── */}
+      <div className="border-b border-border mb-8 -mx-6 px-6">
         <nav className="flex items-center gap-1 py-1">
           {SECTIONS.map((s) => (
             <button
               key={s.id}
               onClick={() => scrollTo(s.id)}
-              className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 activeSection === s.id
-                  ? "text-primary bg-primary/8"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  ? "text-primary border-primary"
+                  : "text-muted-foreground border-transparent hover:text-foreground"
               }`}
             >
               {s.label}
@@ -246,15 +230,15 @@ export default function BuyerAccount() {
 
       {/* ── Hot Sheets ────────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.hotsheets = el; }} className="mb-12">
-        <SectionHeading id="hotsheets-heading" icon={<Home className="h-4 w-4" />} title="Hot Sheets" count={stats.hotSheetCount} />
+        <SectionHeading id="hotsheets-heading" title="Hot Sheets" count={stats.hotSheetCount} />
 
         {hotSheets.length === 0 ? (
           <EmptyState
-            icon={<Home className="h-8 w-8 text-muted-foreground/40" />}
+            icon={<Home className="h-7 w-7 text-muted-foreground/40" />}
             title="No Hot Sheets"
             description="Create a hot sheet to start matching listings for this buyer."
             action={
-              <Button size="sm" onClick={() => setCreateHsOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button size="sm" onClick={() => setCreateHsOpen(true)}>
                 <Plus className="h-3.5 w-3.5 mr-1.5" /> Create Hot Sheet
               </Button>
             }
@@ -265,12 +249,11 @@ export default function BuyerAccount() {
               const pills = criteriaPills(hs.criteria);
               return (
                 <div key={hs.id}>
-                  {/* Hot sheet meta */}
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">Hot Sheet Name:</span>{" "}
-                        <span className="text-primary font-semibold">{hs.name}</span>
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Hot Sheet Name:</span>{" "}
+                        <span className="font-semibold text-foreground">{hs.name}</span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
@@ -280,7 +263,6 @@ export default function BuyerAccount() {
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
-                      className="text-primary border-primary/30 hover:bg-primary/5"
                     >
                       View All
                     </Button>
@@ -291,8 +273,8 @@ export default function BuyerAccount() {
                       {pills.map((pill, i) => (
                         <Badge
                           key={i}
-                          variant="secondary"
-                          className="text-xs font-normal bg-accent text-accent-foreground"
+                          variant="outline"
+                          className="text-xs font-normal text-muted-foreground border-border"
                         >
                           {pill}
                         </Badge>
@@ -324,11 +306,11 @@ export default function BuyerAccount() {
 
       {/* ── Favorites ─────────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.favorites = el; }} className="mb-12">
-        <SectionHeading id="favorites-heading" icon={<Heart className="h-4 w-4" />} title="Favorites" count={stats.favoritesCount} />
+        <SectionHeading id="favorites-heading" title="Favorites" count={stats.favoritesCount} />
 
         {favorites.length === 0 ? (
           <EmptyState
-            icon={<Heart className="h-8 w-8 text-muted-foreground/40" />}
+            icon={<Heart className="h-7 w-7 text-muted-foreground/40" />}
             title="No Favorites"
             description="This buyer hasn't favorited any listings yet."
           />
@@ -347,11 +329,11 @@ export default function BuyerAccount() {
 
       {/* ── Activity ──────────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
-        <SectionHeading id="activity-heading" icon={<Clock className="h-4 w-4" />} title="Activity" count={activity.length} />
+        <SectionHeading id="activity-heading" title="Activity" count={activity.length} />
 
         {activity.length === 0 ? (
           <EmptyState
-            icon={<Clock className="h-8 w-8 text-muted-foreground/40" />}
+            icon={<Clock className="h-7 w-7 text-muted-foreground/40" />}
             title="No Activity"
             description="Comments and activity will appear here."
           />
@@ -360,18 +342,15 @@ export default function BuyerAccount() {
             {activity.map((item) => (
               <Card key={item.id} className="border-border bg-card shadow-sm">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-foreground">{item.comment}</p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <Badge variant="secondary" className="text-[10px] font-normal capitalize bg-accent text-accent-foreground">
-                          {item.sender_role}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(item.created_at), "MMM d, yyyy 'at' h:mm a")}
-                        </span>
-                      </div>
-                    </div>
+                  <p className="text-sm text-foreground">{item.comment}</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {item.sender_role}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(item.created_at), "MMM d, yyyy 'at' h:mm a")}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -382,14 +361,14 @@ export default function BuyerAccount() {
 
       {/* ── Messages ──────────────────────────────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.messages = el; }} className="mb-12">
-        <SectionHeading id="messages-heading" icon={<MessageSquare className="h-4 w-4" />} title="Messages" count={stats.messagesCount} />
+        <SectionHeading id="messages-heading" title="Messages" count={stats.messagesCount} />
 
         <EmptyState
-          icon={<MessageSquare className="h-8 w-8 text-muted-foreground/40" />}
+          icon={<MessageSquare className="h-7 w-7 text-muted-foreground/40" />}
           title="Messages"
           description="Open the messaging workspace to communicate with this buyer."
           action={
-            <Button size="sm" onClick={() => navigate("/messages")} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button size="sm" onClick={() => navigate("/messages")}>
               <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Open Messages
             </Button>
           }
@@ -447,7 +426,7 @@ function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl border border-dashed border-border bg-muted/30">
+    <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl border border-dashed border-border">
       {icon}
       <h3 className="text-sm font-semibold text-foreground mt-3">{title}</h3>
       <p className="text-sm text-muted-foreground mt-1 max-w-xs">{description}</p>
