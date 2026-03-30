@@ -177,11 +177,18 @@ export default function BuyerAccount() {
         </div>
 
         <div className="flex items-center gap-2 mt-5">
+          <Button variant="outline" size="sm" onClick={() => setCreateHsOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Hot Sheet
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
+          </Button>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
                   <Button
+                    variant="outline"
                     size="sm"
                     onClick={handleGeneralMessage}
                     disabled={!buyerOnPlatform || messagingBusy}
@@ -191,7 +198,7 @@ export default function BuyerAccount() {
                     ) : (
                       <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
                     )}
-                    Message
+                    Message Buyer
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -200,12 +207,6 @@ export default function BuyerAccount() {
               )}
             </Tooltip>
           </TooltipProvider>
-          <Button variant="outline" size="sm" onClick={() => setCreateHsOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Hot Sheet
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
-          </Button>
         </div>
       </div>
 
@@ -253,7 +254,7 @@ export default function BuyerAccount() {
                     <div>
                       <p className="text-sm font-medium text-foreground">{hs.name}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
+                        {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match{hs.matchCount !== 1 ? "" : "es"}
                       </p>
                     </div>
                     <Button
@@ -293,16 +294,16 @@ export default function BuyerAccount() {
                             showActions={false}
                           />
                           {buyerOnPlatform && (
-                            <button
+                          <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleListingMessage(listing.id);
                               }}
                               disabled={messagingBusy}
-                              className="absolute top-2 right-2 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card shadow-sm"
+                              className="absolute top-2 right-2 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card shadow-sm"
                               title="Message about this listing"
                             >
-                              <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                              <MessageSquare className="h-3.5 w-3.5 text-foreground hover:text-primary transition-colors" />
                             </button>
                           )}
                         </div>
