@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  Bed, Bath, Home, Heart, Clock
+  Home, Heart, Clock
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
@@ -14,20 +14,9 @@ import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
+import ListingCard from "@/components/ListingCard";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function resolvePhoto(raw: any): string | null {
-  if (!raw) return null;
-  if (typeof raw === "string") return raw;
-  if (raw?.url && typeof raw.url === "string") return raw.url;
-  return null;
-}
-
-function getFirstPhoto(photos: any): string | null {
-  if (!photos || !Array.isArray(photos) || photos.length === 0) return null;
-  return resolvePhoto(photos[0]);
-}
 
 function formatPrice(n: number): string {
   return "$" + n.toLocaleString();
@@ -59,49 +48,6 @@ const SECTIONS = [
   { id: "activity", label: "Activity" },
   { id: "messages", label: "Messages" },
 ] as const;
-
-// ── Mini listing card ────────────────────────────────────────────────────────
-
-function MiniListingCard({ listing, onClick }: { listing: any; onClick?: () => void }) {
-  const photo = getFirstPhoto(listing.photos);
-
-  return (
-    <div
-      className="overflow-hidden cursor-pointer rounded-2xl border border-border/60 bg-card shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg"
-      onClick={onClick}
-    >
-      <div className="aspect-square bg-muted relative overflow-hidden rounded-t-2xl">
-        {photo ? (
-          <img src={photo} alt={listing.address} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Home className="h-8 w-8 text-muted-foreground/40" />
-          </div>
-        )}
-        <div className="absolute bottom-2 left-2 bg-foreground/75 backdrop-blur-sm text-primary-foreground text-xs px-2.5 py-1 rounded-lg font-semibold tracking-tight">
-          {formatPrice(listing.price || 0)}
-        </div>
-      </div>
-      <div className="p-3.5">
-        <p className="text-[13px] font-semibold text-foreground truncate leading-tight">{listing.address}</p>
-        <p className="text-xs text-muted-foreground truncate mt-0.5">
-          {[listing.city, listing.state].filter(Boolean).join(", ")} {listing.zip_code}
-        </p>
-        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/70">
-          {listing.bedrooms != null && (
-            <span className="flex items-center gap-0.5"><Bed className="h-3 w-3" />{listing.bedrooms}</span>
-          )}
-          {listing.bathrooms != null && (
-            <span className="flex items-center gap-0.5"><Bath className="h-3 w-3" />{listing.bathrooms}</span>
-          )}
-          {listing.square_feet != null && (
-            <span>{listing.square_feet.toLocaleString()} sf</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Section heading ──────────────────────────────────────────────────────────
 
@@ -160,18 +106,15 @@ export default function BuyerAccount() {
     .join(" ");
 
   return (
-    <PageShell className="bg-background">
+    <PageShell>
       <PageHeader title={capitalizedName} backTo="/success-hub/buyers" />
 
-      {/* ── Buyer Header ──────────────────────────────────────────────── */}
+      {/* ── Buyer Summary Card (no repeated large name) ─────────────── */}
       <div className="mb-8 rounded-2xl border border-border bg-card shadow-sm">
         <div className="p-6">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-foreground tracking-tight">
-                {capitalizedName}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
+              <p className="text-sm text-muted-foreground">{client.email}</p>
               {client.phone && (
                 <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
               )}
@@ -209,7 +152,7 @@ export default function BuyerAccount() {
         </div>
       </div>
 
-      {/* ── Section Nav (not sticky) ──────────────────────────────────── */}
+      {/* ── Section Nav (scrolls with page, no sticky) ────────────── */}
       <div className="border-b border-border mb-8 -mx-6 px-6">
         <nav className="flex items-center gap-1 py-1">
           {SECTIONS.map((s) => (
@@ -253,7 +196,7 @@ export default function BuyerAccount() {
                     <div>
                       <p className="text-sm">
                         <span className="text-muted-foreground">Hot Sheet Name:</span>{" "}
-                        <span className="font-semibold text-foreground">{hs.name}</span>
+                        <span className="font-medium text-foreground">{hs.name}</span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
@@ -262,7 +205,11 @@ export default function BuyerAccount() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
+                      onClick={() =>
+                        navigate(`/hot-sheets/${hs.id}/review`, {
+                          state: { from: `/success-hub/buyers/${buyerId}` },
+                        })
+                      }
                     >
                       View All
                     </Button>
@@ -283,12 +230,13 @@ export default function BuyerAccount() {
                   )}
 
                   {hs.topListings.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {hs.topListings.map((listing: any) => (
-                        <MiniListingCard
+                        <ListingCard
                           key={listing.id}
                           listing={listing}
-                          onClick={() => navigate(`/listing/${listing.id}`)}
+                          viewMode="compact"
+                          showActions={false}
                         />
                       ))}
                     </div>
@@ -315,12 +263,13 @@ export default function BuyerAccount() {
             description="This buyer hasn't favorited any listings yet."
           />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favorites.map((listing: any) => (
-              <MiniListingCard
+              <ListingCard
                 key={listing.id}
                 listing={listing}
-                onClick={() => navigate(`/listing/${listing.id}`)}
+                viewMode="compact"
+                showActions={false}
               />
             ))}
           </div>

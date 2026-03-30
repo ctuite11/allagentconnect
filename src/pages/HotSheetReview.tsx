@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -251,7 +251,9 @@ interface HotSheet {
 
 const HotSheetReview = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
+  const backTo = (location.state as any)?.from || "/hot-sheets";
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
@@ -905,7 +907,7 @@ if (comments && comments.length > 0) {
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate("/hot-sheets")}
+                onClick={() => navigate(backTo)}
                 className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
                 aria-label="Go back"
               >
