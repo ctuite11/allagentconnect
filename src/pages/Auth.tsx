@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
-import { Logo } from "@/components/brand";
+import AACMonogram from "@/components/ui/AACMonogram";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 
