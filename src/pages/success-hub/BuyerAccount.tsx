@@ -10,10 +10,15 @@ import {
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import ListingCard from "@/components/ListingCard";
+import { findOrCreateConversation } from "@/lib/startConversation";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -54,15 +59,56 @@ export default function BuyerAccount() {
   const { buyerId } = useParams<{ buyerId: string }>();
   const navigate = useNavigate();
   const { user } = useAuthRole();
-  const { client, hotSheets, favorites, activity, stats, loading } = useBuyerDashboard(buyerId);
+  const { client, hotSheets, favorites, activity, conversations, stats, loading, refresh } =
+    useBuyerDashboard(buyerId);
   const [createHsOpen, setCreateHsOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hotsheets");
+  const [messagingBusy, setMessagingBusy] = useState(false);
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollTo = (id: string) => {
     setActiveSection(id);
     sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const buyerOnPlatform = !!client?.agent_user_id;
+
+  // Open general buyer conversation
+  const handleGeneralMessage = async () => {
+    if (!user?.id || !client?.agent_user_id) return;
+    setMessagingBusy(true);
+    try {
+      const convoId = await findOrCreateConversation(user.id, client.agent_user_id);
+      if (convoId) {
+        navigate(`/messages/${convoId}`);
+      } else {
+        toast.error("Could not open conversation.");
+      }
+    } catch {
+      toast.error("Could not open conversation.");
+    } finally {
+      setMessagingBusy(false);
+    }
+  };
+
+  // Open listing-specific buyer conversation
+  const handleListingMessage = async (listingId: string) => {
+    if (!user?.id || !client?.agent_user_id) return;
+    setMessagingBusy(true);
+    try {
+      const convoId = await findOrCreateConversation(user.id, client.agent_user_id, { listingId });
+      if (convoId) {
+        navigate(`/messages/${convoId}`);
+      } else {
+        toast.error("Could not open conversation.");
+      }
+    } catch {
+      toast.error("Could not open conversation.");
+    } finally {
+      setMessagingBusy(false);
+    }
   };
 
   if (loading) {
@@ -96,9 +142,12 @@ export default function BuyerAccount() {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 
+  const generalConversations = conversations.filter((c) => !c.listing_id);
+  const listingConversations = conversations.filter((c) => c.listing_id);
+
   return (
     <PageShell>
-      {/* ── Back row only (no big duplicate title) ─────────────────── */}
+      {/* ── Back row ─────────────────── */}
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate("/success-hub/buyers")}
@@ -109,7 +158,7 @@ export default function BuyerAccount() {
         <span className="text-sm text-muted-foreground">Back to Buyers</span>
       </div>
 
-      {/* ── Buyer Summary Card (primary identity lives here) ──────── */}
+      {/* ── Buyer Summary Card ──────── */}
       <div className="mb-8 rounded-xl border border-border bg-card shadow-sm p-6">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
@@ -128,19 +177,39 @@ export default function BuyerAccount() {
         </div>
 
         <div className="flex items-center gap-2 mt-5">
-          <Button size="sm" onClick={() => navigate("/messages")}>
-            <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Message
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    size="sm"
+                    onClick={handleGeneralMessage}
+                    disabled={!buyerOnPlatform || messagingBusy}
+                  >
+                    {messagingBusy ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    ) : (
+                      <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                    )}
+                    Message
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!buyerOnPlatform && (
+                <TooltipContent>Buyer is not on the platform</TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
           <Button variant="outline" size="sm" onClick={() => setCreateHsOpen(true)}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Hot Sheet
           </Button>
-          <Button variant="outline" size="sm" onClick={() => toast.info("Edit buyer — coming soon")}>
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
           </Button>
         </div>
       </div>
 
-      {/* ── Section Nav (inline, not sticky) ──────────────────────── */}
+      {/* ── Section Nav ──────────────────────── */}
       <div className="border-b border-border mb-8">
         <nav className="flex items-center gap-1">
           {SECTIONS.map((s) => (
@@ -159,7 +228,7 @@ export default function BuyerAccount() {
         </nav>
       </div>
 
-      {/* ── Hot Sheets ────────────────────────────────────────────── */}
+      {/* ── Hot Sheets ────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.hotsheets = el; }} className="mb-12">
         <SectionHeading title="Hot Sheets" count={stats.hotSheetCount} />
 
@@ -217,12 +286,26 @@ export default function BuyerAccount() {
                   {hs.topListings.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {hs.topListings.map((listing: any) => (
-                        <ListingCard
-                          key={listing.id}
-                          listing={listing}
-                          viewMode="compact"
-                          showActions={false}
-                        />
+                        <div key={listing.id} className="relative group">
+                          <ListingCard
+                            listing={listing}
+                            viewMode="compact"
+                            showActions={false}
+                          />
+                          {buyerOnPlatform && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleListingMessage(listing.id);
+                              }}
+                              disabled={messagingBusy}
+                              className="absolute top-2 right-2 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card shadow-sm"
+                              title="Message about this listing"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   ) : (
@@ -237,7 +320,7 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Favorites ─────────────────────────────────────────────── */}
+      {/* ── Favorites ─────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.favorites = el; }} className="mb-12">
         <SectionHeading title="Favorites" count={stats.favoritesCount} />
 
@@ -261,7 +344,7 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Activity ──────────────────────────────────────────────── */}
+      {/* ── Activity ──────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
         <SectionHeading title="Activity" count={activity.length} />
 
@@ -293,23 +376,107 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Messages ──────────────────────────────────────────────── */}
+      {/* ── Messages ──────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.messages = el; }} className="mb-12">
         <SectionHeading title="Messages" count={stats.messagesCount} />
 
-        <EmptyState
-          icon={<MessageSquare className="h-5 w-5 text-muted-foreground" />}
-          title="Messages"
-          description="Open the messaging workspace to communicate with this buyer."
-          action={
-            <Button size="sm" onClick={() => navigate("/messages")}>
-              <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Open Messages
-            </Button>
-          }
-        />
+        {!buyerOnPlatform ? (
+          <EmptyState
+            icon={<MessageSquare className="h-5 w-5 text-muted-foreground" />}
+            title="Buyer Not on Platform"
+            description="This buyer is not registered on the platform. Messaging is available once they join."
+          />
+        ) : conversations.length === 0 ? (
+          <EmptyState
+            icon={<MessageSquare className="h-5 w-5 text-muted-foreground" />}
+            title="No Messages Yet"
+            description="Start a conversation with this buyer."
+            action={
+              <Button size="sm" onClick={handleGeneralMessage} disabled={messagingBusy}>
+                {messagingBusy ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Start Conversation
+              </Button>
+            }
+          />
+        ) : (
+          <div className="space-y-2">
+            {/* General conversations */}
+            {generalConversations.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">General</p>
+                {generalConversations.map((c) => (
+                  <Card
+                    key={c.id}
+                    className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/messages/${c.id}`)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-foreground">General Conversation</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(c.last_message_at), "MMM d, yyyy")}
+                      </span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Listing-specific conversations */}
+            {listingConversations.length > 0 && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">By Listing</p>
+                <div className="space-y-2">
+                  {listingConversations.map((c) => (
+                    <Card
+                      key={c.id}
+                      className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => navigate(`/messages/${c.id}`)}
+                    >
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Home className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">
+                            {c.listing_address || "Listing"}{c.listing_city ? `, ${c.listing_city}` : ""}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(c.last_message_at), "MMM d, yyyy")}
+                        </span>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA to start general if none exists */}
+            {generalConversations.length === 0 && (
+              <div className="pt-2">
+                <Button variant="outline" size="sm" onClick={handleGeneralMessage} disabled={messagingBusy}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Start General Conversation
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
-      {/* ── Create Hot Sheet Dialog ────────────────────────────────── */}
+      {/* ── Edit Buyer Dialog ────────────────────── */}
+      <EditBuyerDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        buyer={client}
+        onSuccess={refresh}
+      />
+
+      {/* ── Create Hot Sheet Dialog ──────────────── */}
       {user?.id && (
         <CreateHotSheetDialog
           open={createHsOpen}

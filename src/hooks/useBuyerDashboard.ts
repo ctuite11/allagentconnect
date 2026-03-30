@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 
@@ -10,6 +10,8 @@ interface BuyerClient {
   phone: string | null;
   client_type: string | null;
   agent_id: string;
+  agent_user_id: string | null;
+  notes: string | null;
 }
 
 interface HotSheetWithMatches {
@@ -21,9 +23,12 @@ interface HotSheetWithMatches {
   topListings: any[];
 }
 
-interface FavoriteListing {
+interface BuyerConversation {
   id: string;
-  listing: any;
+  listing_id: string | null;
+  last_message_at: string;
+  listing_address?: string;
+  listing_city?: string;
 }
 
 interface ActivityItem {
@@ -40,12 +45,14 @@ export interface BuyerDashboardData {
   hotSheets: HotSheetWithMatches[];
   favorites: any[];
   activity: ActivityItem[];
+  conversations: BuyerConversation[];
   stats: {
     hotSheetCount: number;
     favoritesCount: number;
     messagesCount: number;
   };
   loading: boolean;
+  refresh: () => void;
 }
 
 export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardData {
@@ -53,8 +60,11 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
   const [hotSheets, setHotSheets] = useState<HotSheetWithMatches[]>([]);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
-  const [messagesCount, setMessagesCount] = useState(0);
+  const [conversations, setConversations] = useState<BuyerConversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
     if (!buyerId) return;
@@ -65,7 +75,7 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
         // 1. Client record
         const { data: clientData, error: clientErr } = await supabase
           .from("clients")
-          .select("id,first_name,last_name,email,phone,client_type,agent_id")
+          .select("id,first_name,last_name,email,phone,client_type,agent_id,agent_user_id,notes")
           .eq("id", buyerId)
           .maybeSingle();
 
@@ -90,7 +100,6 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
             .in("id", hsIds)
             .order("updated_at", { ascending: false });
 
-          // For each hot sheet, fetch top 4 matched listings
           hsWithMatches = await Promise.all(
             (hsData ?? []).map(async (hs: any) => {
               let topListings: any[] = [];
@@ -98,12 +107,10 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
 
               if (hs.criteria) {
                 try {
-                  // Get top 4 listings
                   const query = buildListingsQuery(supabase, hs.criteria);
                   const { data: matchData } = await query.limit(4);
                   topListings = matchData ?? [];
                   matchCount = topListings.length;
-                  
                 } catch {
                   // criteria might be malformed
                 }
@@ -156,9 +163,56 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
           setActivity([]);
         }
 
-        // 5. Messages count — attempt via conversations linked to agent
-        // Only count if we can reliably map. For now, set 0 as placeholder.
-        setMessagesCount(0);
+        // 5. Buyer conversations (if buyer is on platform)
+        if (clientData.agent_user_id) {
+          const { data: session } = await supabase.auth.getSession();
+          const currentUserId = session?.session?.user?.id;
+
+          if (currentUserId) {
+            const { data: convos } = await supabase
+              .from("conversations")
+              .select("id,listing_id,last_message_at")
+              .or(
+                `and(agent_a_id.eq.${currentUserId},agent_b_id.eq.${clientData.agent_user_id}),and(agent_a_id.eq.${clientData.agent_user_id},agent_b_id.eq.${currentUserId})`
+              )
+              .order("last_message_at", { ascending: false });
+
+            if (convos && convos.length > 0) {
+              // Enrich listing-specific conversations with address
+              const listingIds = convos
+                .filter((c) => c.listing_id)
+                .map((c) => c.listing_id!);
+
+              let listingMap: Record<string, { address: string; city: string }> = {};
+              if (listingIds.length > 0) {
+                const { data: listings } = await supabase
+                  .from("listings")
+                  .select("id,address,city")
+                  .in("id", listingIds);
+
+                (listings ?? []).forEach((l: any) => {
+                  listingMap[l.id] = { address: l.address, city: l.city };
+                });
+              }
+
+              setConversations(
+                convos.map((c) => ({
+                  id: c.id,
+                  listing_id: c.listing_id,
+                  last_message_at: c.last_message_at,
+                  listing_address: c.listing_id ? listingMap[c.listing_id]?.address : undefined,
+                  listing_city: c.listing_id ? listingMap[c.listing_id]?.city : undefined,
+                }))
+              );
+            } else {
+              setConversations([]);
+            }
+          } else {
+            setConversations([]);
+          }
+        } else {
+          setConversations([]);
+        }
       } catch (err) {
         console.error("Error loading buyer dashboard:", err);
       } finally {
@@ -167,18 +221,20 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
     };
 
     load();
-  }, [buyerId]);
+  }, [buyerId, refreshKey]);
 
   return {
     client,
     hotSheets,
     favorites,
     activity,
+    conversations,
     stats: {
       hotSheetCount: hotSheets.length,
       favoritesCount: favorites.length,
-      messagesCount,
+      messagesCount: conversations.length,
     },
     loading,
+    refresh,
   };
 }
