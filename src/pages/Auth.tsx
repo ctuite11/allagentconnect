@@ -752,7 +752,12 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
           <div className="flex justify-center mb-8">
-            <Logo variant="primary" size="lg" />
+            <div className="flex items-center justify-center gap-2">
+              <AACMonogram className="w-10 h-10 text-emerald-500" />
+              <span className="font-extrabold text-xl tracking-tight text-zinc-900" style={{ fontFamily: "Manrope, sans-serif" }}>
+                All Agent Connect
+              </span>
+            </div>
           </div>
           <div className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
             <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -901,7 +906,12 @@ const Auth = () => {
       <div className="w-full max-w-[420px]">
         {/* Logo Only */}
         <div className="flex justify-center mb-8">
-          <Logo variant="primary" size="lg" />
+          <div className="flex items-center justify-center gap-2">
+            <AACMonogram className="w-10 h-10 text-emerald-500" />
+            <span className="font-extrabold text-xl tracking-tight text-zinc-900" style={{ fontFamily: "Manrope, sans-serif" }}>
+              All Agent Connect
+            </span>
+          </div>
         </div>
 
         {/* Form Container */}
