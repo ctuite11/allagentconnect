@@ -98,12 +98,14 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
 
               if (hs.criteria) {
                 try {
+                  // Get top 4 listings
                   const query = buildListingsQuery(supabase, hs.criteria);
-                  const { data: matchData, count } = await query
-                    .limit(4)
-                    .select("*", { count: "exact" });
-
+                  const { data: matchData } = await query.limit(4);
                   topListings = matchData ?? [];
+
+                  // Get total count separately
+                  const countQuery = buildListingsQuery(supabase, hs.criteria);
+                  const { count } = await countQuery.select("id", { count: "exact", head: true });
                   matchCount = count ?? topListings.length;
                 } catch {
                   // criteria might be malformed
