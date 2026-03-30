@@ -245,7 +245,7 @@ export default function BuyerAccount() {
       </div>
 
       {/* ── Hot Sheets ────────────────────────────────────────────────── */}
-      <section ref={(el) => { sectionRefs.current.hotsheets = el; }} className="mb-12">
+      <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.hotsheets = el; }} className="mb-12">
         <SectionHeading id="hotsheets-heading" icon={<Home className="h-4 w-4" />} title="Hot Sheets" count={stats.hotSheetCount} />
 
         {hotSheets.length === 0 ? (
@@ -323,7 +323,7 @@ export default function BuyerAccount() {
       </section>
 
       {/* ── Favorites ─────────────────────────────────────────────────── */}
-      <section ref={(el) => { sectionRefs.current.favorites = el; }} className="mb-12">
+      <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.favorites = el; }} className="mb-12">
         <SectionHeading id="favorites-heading" icon={<Heart className="h-4 w-4" />} title="Favorites" count={stats.favoritesCount} />
 
         {favorites.length === 0 ? (
@@ -346,7 +346,7 @@ export default function BuyerAccount() {
       </section>
 
       {/* ── Activity ──────────────────────────────────────────────────── */}
-      <section ref={(el) => { sectionRefs.current.activity = el; }} className="mb-12">
+      <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
         <SectionHeading id="activity-heading" icon={<Clock className="h-4 w-4" />} title="Activity" count={activity.length} />
 
         {activity.length === 0 ? (
@@ -381,7 +381,7 @@ export default function BuyerAccount() {
       </section>
 
       {/* ── Messages ──────────────────────────────────────────────────── */}
-      <section ref={(el) => { sectionRefs.current.messages = el; }} className="mb-12">
+      <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.messages = el; }} className="mb-12">
         <SectionHeading id="messages-heading" icon={<MessageSquare className="h-4 w-4" />} title="Messages" count={stats.messagesCount} />
 
         <EmptyState
