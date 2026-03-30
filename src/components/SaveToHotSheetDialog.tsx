@@ -270,9 +270,9 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
       if (error) throw error;
 
-      // Insert client associations
+      // Insert client associations + ensure buyer relationships exist
       if (createdHotSheet && selectedClients.length > 0) {
-        const clientAssociations = selectedClients.map((client, index) => ({
+        const clientAssociations = selectedClients.map((client) => ({
           hot_sheet_id: createdHotSheet.id,
           client_id: client.id,
         }));
@@ -283,7 +283,28 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
         if (clientError) {
           console.error("Error associating clients:", clientError);
-          // Don't fail the whole operation
+        }
+
+        // Ensure each client has an active client_agent_relationships row
+        for (const client of selectedClients) {
+          const { data: existing } = await supabase
+            .from("client_agent_relationships")
+            .select("id")
+            .eq("agent_id", user.id)
+            .eq("client_id", client.id)
+            .eq("status", "active")
+            .maybeSingle();
+
+          if (!existing) {
+            await supabase
+              .from("client_agent_relationships")
+              .insert({
+                agent_id: user.id,
+                client_id: client.id,
+                status: "active",
+                crm_client_id: client.id,
+              });
+          }
         }
       }
 
