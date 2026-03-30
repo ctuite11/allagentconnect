@@ -64,10 +64,10 @@ function MiniListingCard({ listing, onClick }: { listing: any; onClick?: () => v
 
   return (
     <Card
-      className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+      className="overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg shadow-sm"
       onClick={onClick}
     >
-      <div className="aspect-[4/3] bg-muted relative">
+      <div className="aspect-square bg-muted relative">
         {photo ? (
           <img src={photo} alt={listing.address} className="w-full h-full object-cover" />
         ) : (
@@ -247,8 +247,8 @@ export default function BuyerAccount() {
               {hotSheets.map((hs) => {
                 const pills = criteriaPills(hs.criteria);
                 return (
-                  <Card key={hs.id} className="border border-border bg-card">
-                    <CardContent className="p-5">
+                  <div key={hs.id}>
+                    <div>
                       {/* HS header */}
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -297,8 +297,8 @@ export default function BuyerAccount() {
                           No matching listings yet.
                         </p>
                       )}
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 );
               })}
             </div>
