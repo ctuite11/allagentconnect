@@ -46,7 +46,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                     <tr
                       key={b.id}
                       className="cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => navigate("/success-hub/buyers")}
+onClick={() => navigate(`/success-hub/buyers/${b.id}`)}
                     >
                       <td className="px-4 py-2.5 font-medium text-foreground truncate max-w-[140px]">{name}</td>
                       <td className="px-4 py-2.5">
