@@ -1,36 +1,128 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ChevronRight } from "lucide-react";
-import { mockBuyers } from "./mockData";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 
-const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
-  active: "default",
-  pending: "secondary",
-  new: "outline",
-};
+interface BuyerRow {
+  clientId: string;
+  name: string;
+  email: string;
+  status: string;
+  hotSheetCount: number;
+}
 
 export default function BuyersList() {
   const navigate = useNavigate();
+  const [buyers, setBuyers] = useState<BuyerRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+
+  const loadBuyers = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get active relationships for this agent
+      const { data: relationships, error: relErr } = await supabase
+        .from("client_agent_relationships")
+        .select("client_id,status,created_at")
+        .eq("agent_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+
+      if (relErr) {
+        console.error("Error loading buyer relationships:", relErr);
+        return;
+      }
+
+      if (!relationships || relationships.length === 0) {
+        setBuyers([]);
+        return;
+      }
+
+      const clientIds = relationships.map((r) => r.client_id).filter(Boolean);
+
+      // Fetch client details + hot sheet counts in parallel
+      const [clientsRes, hscRes] = await Promise.all([
+        supabase
+          .from("clients")
+          .select("id,first_name,last_name,email")
+          .in("id", clientIds),
+        supabase
+          .from("hot_sheet_clients")
+          .select("client_id,hot_sheet_id")
+          .in("client_id", clientIds),
+      ]);
+
+      const clientMap = new Map<string, any>();
+      for (const c of (clientsRes.data ?? [])) {
+        clientMap.set(c.id, c);
+      }
+
+      const hsCountMap = new Map<string, number>();
+      for (const row of (hscRes.data ?? []) as any[]) {
+        const cid = String(row.client_id);
+        hsCountMap.set(cid, (hsCountMap.get(cid) ?? 0) + 1);
+      }
+
+      const rows: BuyerRow[] = clientIds.map((cid) => {
+        const c = clientMap.get(cid);
+        const name = c
+          ? [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email
+          : "";
+        return {
+          clientId: cid,
+          name,
+          email: c?.email ?? "",
+          status: "active",
+          hotSheetCount: hsCountMap.get(cid) ?? 0,
+        };
+      }).filter((r) => r.name);
+
+      setBuyers(rows);
+    } catch (err) {
+      console.error("Error loading buyers:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBuyers();
+  }, []);
 
   return (
     <PageShell className="bg-secondary/40">
       <PageHeader
         title="Your Buyers"
         subtitle="Select a buyer to manage their hot sheets, favorites, and activity."
+        actions={
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <UserPlus className="h-4 w-4 mr-1.5" />
+            New Buyer
+          </Button>
+        }
       />
 
-      {mockBuyers.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : buyers.length === 0 ? (
         <p className="text-muted-foreground text-sm">No buyers yet.</p>
       ) : (
         <div className="space-y-2">
-          {mockBuyers.map((b) => (
+          {buyers.map((b) => (
             <Card
-              key={b.buyerId}
+              key={b.clientId}
               className="cursor-pointer border border-border bg-card hover:border-muted-foreground/30 transition-colors"
-              onClick={() => navigate(`/success-hub/buyers/${b.buyerId}`)}
+              onClick={() => navigate(`/success-hub/buyers/${b.clientId}`)}
             >
               <CardContent className="flex items-center justify-between p-5">
                 <div className="min-w-0">
@@ -38,12 +130,9 @@ export default function BuyersList() {
                   <p className="text-xs text-muted-foreground mt-0.5">{b.email}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <Badge variant={statusVariant[b.status]} className="text-[10px]">{b.status}</Badge>
+                  <span className="text-emerald-600 text-sm font-medium">Active</span>
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                    {b.hotSheets} hot sheet{b.hotSheets !== 1 ? "s" : ""}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                    Last active {b.lastActive}
+                    {b.hotSheetCount} hot sheet{b.hotSheetCount !== 1 ? "s" : ""}
                   </span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
@@ -52,6 +141,12 @@ export default function BuyersList() {
           ))}
         </div>
       )}
+
+      <CreateBuyerDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onSuccess={loadBuyers}
+      />
     </PageShell>
   );
 }
