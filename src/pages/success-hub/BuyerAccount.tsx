@@ -243,61 +243,56 @@ export default function BuyerAccount() {
               }
             />
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {hotSheets.map((hs) => {
                 const pills = criteriaPills(hs.criteria);
                 return (
                   <div key={hs.id}>
-                    <div>
-                      {/* HS header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-semibold text-foreground">{hs.name}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
-                        >
-                          View All
-                        </Button>
-                      </div>
-
-                      {/* Criteria pills */}
-                      {pills.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {pills.map((pill, i) => (
-                            <Badge
-                              key={i}
-                              variant="secondary"
-                              className="text-xs font-normal"
-                            >
-                              {pill}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Top 4 listing cards */}
-                      {hs.topListings.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {hs.topListings.map((listing: any) => (
-                            <MiniListingCard
-                              key={listing.id}
-                              listing={listing}
-                              onClick={() => navigate(`/listing/${listing.id}`)}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground py-4">
-                          No matching listings yet.
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-semibold text-foreground">{hs.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
                         </p>
-                      )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
+                      >
+                        View All
+                      </Button>
                     </div>
+
+                    {pills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {pills.map((pill, i) => (
+                          <Badge
+                            key={i}
+                            variant="secondary"
+                            className="text-xs font-normal"
+                          >
+                            {pill}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {hs.topListings.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {hs.topListings.map((listing: any) => (
+                          <MiniListingCard
+                            key={listing.id}
+                            listing={listing}
+                            onClick={() => navigate(`/listing/${listing.id}`)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-4">
+                        No matching listings yet.
+                      </p>
+                    )}
                   </div>
                 );
               })}
@@ -314,7 +309,7 @@ export default function BuyerAccount() {
               description="This buyer hasn't favorited any listings yet."
             />
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {favorites.map((listing: any) => (
                 <MiniListingCard
                   key={listing.id}
