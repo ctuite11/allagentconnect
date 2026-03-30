@@ -46,18 +46,23 @@ export default function BuyersList() {
         return;
       }
 
-      const clientIds = relationships.map((r) => r.client_id).filter(Boolean);
+      // Collect both client_id (auth user) and crm_client_id (CRM contact) for lookups
+      const authClientIds = relationships.map((r) => r.client_id).filter(Boolean);
+      const crmClientIds = (relationships as any[])
+        .map((r) => r.crm_client_id)
+        .filter(Boolean) as string[];
+      const allCrmIds = [...new Set([...authClientIds, ...crmClientIds])];
 
       // Fetch client details + hot sheet counts in parallel
       const [clientsRes, hscRes] = await Promise.all([
         supabase
           .from("clients")
           .select("id,first_name,last_name,email")
-          .in("id", clientIds),
+          .in("id", allCrmIds),
         supabase
           .from("hot_sheet_clients")
           .select("client_id,hot_sheet_id")
-          .in("client_id", clientIds),
+          .in("client_id", allCrmIds),
       ]);
 
       const clientMap = new Map<string, any>();
@@ -71,19 +76,20 @@ export default function BuyersList() {
         hsCountMap.set(cid, (hsCountMap.get(cid) ?? 0) + 1);
       }
 
-      const rows: BuyerRow[] = clientIds.map((cid) => {
-        const c = clientMap.get(cid);
-        const name = c
-          ? [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email
-          : "";
+      // Build rows: prefer crm_client_id for client lookup, fall back to client_id
+      const rows: BuyerRow[] = relationships.map((r: any) => {
+        const crmId = r.crm_client_id || r.client_id;
+        const c = clientMap.get(crmId) || clientMap.get(r.client_id);
+        if (!c) return null;
+        const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
         return {
-          clientId: cid,
+          clientId: c.id,
           name,
           email: c?.email ?? "",
           status: "active",
-          hotSheetCount: hsCountMap.get(cid) ?? 0,
+          hotSheetCount: hsCountMap.get(c.id) ?? 0,
         };
-      }).filter((r) => r.name);
+      }).filter(Boolean) as BuyerRow[];
 
       setBuyers(rows);
     } catch (err) {
