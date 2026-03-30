@@ -177,7 +177,7 @@ export default function BuyerAccount() {
         </div>
 
         <div className="flex items-center gap-2 mt-5">
-          <Button variant="outline" size="sm" onClick={() => setCreateHsOpen(true)}>
+          <Button size="sm" onClick={() => setCreateHsOpen(true)}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Hot Sheet
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
@@ -203,7 +203,7 @@ export default function BuyerAccount() {
                 </span>
               </TooltipTrigger>
               {!buyerOnPlatform && (
-                <TooltipContent>Buyer is not on the platform</TooltipContent>
+                <TooltipContent>In-app messaging unavailable until buyer has an account</TooltipContent>
               )}
             </Tooltip>
           </TooltipProvider>
@@ -254,7 +254,7 @@ export default function BuyerAccount() {
                     <div>
                       <p className="text-sm font-medium text-foreground">{hs.name}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match{hs.matchCount !== 1 ? "" : "es"}
+                        {hs.matchCount} listing {hs.matchCount === 1 ? "match" : "matches"}
                       </p>
                     </div>
                     <Button
@@ -271,12 +271,12 @@ export default function BuyerAccount() {
                   </div>
 
                   {pills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-4">
+                    <div className="flex flex-wrap gap-1.5 mt-2 mb-4">
                       {pills.map((pill, i) => (
                         <Badge
                           key={i}
                           variant="outline"
-                          className="text-xs font-normal text-muted-foreground border-border"
+                          className="text-xs font-normal text-muted-foreground border-border rounded-md"
                         >
                           {pill}
                         </Badge>
@@ -384,8 +384,8 @@ export default function BuyerAccount() {
         {!buyerOnPlatform ? (
           <EmptyState
             icon={<MessageSquare className="h-5 w-5 text-muted-foreground" />}
-            title="Buyer Not on Platform"
-            description="This buyer is not registered on the platform. Messaging is available once they join."
+            title="Messaging Unavailable"
+            description="In-app messaging is available once this buyer creates an account."
           />
         ) : conversations.length === 0 ? (
           <EmptyState
