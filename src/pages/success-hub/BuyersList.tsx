@@ -31,7 +31,7 @@ export default function BuyersList() {
       // Get active relationships for this agent
       const { data: relationships, error: relErr } = await supabase
         .from("client_agent_relationships")
-        .select("client_id,status,created_at")
+        .select("client_id,crm_client_id,status,created_at")
         .eq("agent_id", user.id)
         .eq("status", "active")
         .order("created_at", { ascending: false });
