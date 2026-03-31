@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  ArrowLeft, Home, Heart, Clock, Eye
+  ArrowLeft, Home, Clock, Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
@@ -14,7 +14,7 @@ import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import ListingCard from "@/components/ListingCard";
+
 import { findOrCreateConversation } from "@/lib/startConversation";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -48,9 +48,7 @@ function criteriaPills(criteria: any): string[] {
 
 const SECTIONS = [
   { id: "hotsheets", label: "Hot Sheets" },
-  { id: "favorites", label: "Favorites" },
   { id: "activity", label: "Activity" },
-  { id: "messages", label: "Messages" },
 ] as const;
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -59,7 +57,7 @@ export default function BuyerAccount() {
   const { buyerId } = useParams<{ buyerId: string }>();
   const navigate = useNavigate();
   const { user } = useAuthRole();
-  const { client, hotSheets, favorites, activity, conversations, stats, loading, refresh } =
+  const { client, hotSheets, activity, conversations, stats, loading, refresh } =
     useBuyerDashboard(buyerId);
   const [createHsOpen, setCreateHsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -142,8 +140,6 @@ export default function BuyerAccount() {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 
-  const generalConversations = conversations.filter((c) => !c.listing_id);
-  const listingConversations = conversations.filter((c) => c.listing_id);
 
   return (
     <PageShell>
@@ -328,29 +324,6 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Favorites ─────────────────────────── */}
-      <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.favorites = el; }} className="mb-12">
-        <SectionHeading title="Favorites" count={stats.favoritesCount} />
-
-        {favorites.length === 0 ? (
-          <EmptyState
-            icon={<Heart className="h-5 w-5 text-muted-foreground" />}
-            title="No Favorites"
-            description="This buyer hasn't favorited any listings yet."
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {favorites.map((listing: any) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                viewMode="compact"
-                showActions={false}
-              />
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* ── Activity ──────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
@@ -384,97 +357,6 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Messages ──────────────────────────── */}
-      <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.messages = el; }} className="mb-12">
-        <SectionHeading title="Messages" count={stats.messagesCount} />
-
-        {!buyerOnPlatform ? (
-          <EmptyState
-            icon={<MessageSquare className="h-5 w-5 text-muted-foreground" />}
-            title="Messaging Unavailable"
-            description="In-app messaging is available once this buyer creates an account."
-          />
-        ) : conversations.length === 0 ? (
-          <EmptyState
-            icon={<MessageSquare className="h-5 w-5 text-muted-foreground" />}
-            title="No Messages Yet"
-            description="Start a conversation with this buyer."
-            action={
-              <Button size="sm" onClick={handleGeneralMessage} disabled={messagingBusy}>
-                {messagingBusy ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                ) : (
-                  <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                )}
-                Start Conversation
-              </Button>
-            }
-          />
-        ) : (
-          <div className="space-y-2">
-            {/* General conversations */}
-            {generalConversations.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">General</p>
-                {generalConversations.map((c) => (
-                  <Card
-                    key={c.id}
-                    className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => navigate(`/messages/${c.id}`)}
-                  >
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-foreground">General Conversation</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(c.last_message_at), "MMM d, yyyy")}
-                      </span>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {/* Listing-specific conversations */}
-            {listingConversations.length > 0 && (
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">By Listing</p>
-                <div className="space-y-2">
-                  {listingConversations.map((c) => (
-                    <Card
-                      key={c.id}
-                      className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => navigate(`/messages/${c.id}`)}
-                    >
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Home className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-foreground">
-                            {c.listing_address || "Listing"}{c.listing_city ? `, ${c.listing_city}` : ""}
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(c.last_message_at), "MMM d, yyyy")}
-                        </span>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* CTA to start general if none exists */}
-            {generalConversations.length === 0 && (
-              <div className="pt-2">
-                <Button variant="outline" size="sm" onClick={handleGeneralMessage} disabled={messagingBusy}>
-                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Start General Conversation
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </section>
 
       {/* ── Edit Buyer Dialog ────────────────────── */}
       <EditBuyerDialog
