@@ -48,9 +48,7 @@ function criteriaPills(criteria: any): string[] {
 
 const SECTIONS = [
   { id: "hotsheets", label: "Hot Sheets" },
-  { id: "favorites", label: "Favorites" },
   { id: "activity", label: "Activity" },
-  { id: "messages", label: "Messages" },
 ] as const;
 
 // ── Page ─────────────────────────────────────────────────────────────────────
