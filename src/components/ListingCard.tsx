@@ -787,6 +787,20 @@ const ListingCard = ({
               </div>
             </div>
           )}
+          {/* Comment entry point when no messages yet but chat is available */}
+          {!chatMessages?.length && !clientComment && onOpenChat && (
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary mt-2 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenChat();
+              }}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              Add Comment
+            </button>
+          )}
           
           {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
             <div className="pt-2 border-t mt-2 space-y-2">
