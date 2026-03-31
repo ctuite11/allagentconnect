@@ -900,7 +900,7 @@ if (comments && comments.length > 0) {
   }
 
   return (
-    <div className="flex flex-col pt-6 px-6 pb-6">
+    <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
       <main className="flex-1 bg-background">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
