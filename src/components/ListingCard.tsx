@@ -613,8 +613,8 @@ const ListingCard = ({
     const totalPhotos = getTotalPhotos();
     const hasMultiplePhotos = totalPhotos > 1;
     
-    return <Card className="overflow-hidden hover:shadow-md transition-shadow">
-        <div className="relative group">
+    return <Card className="overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
+        <div className="relative group flex-shrink-0">
           {onSelect && <div className="absolute top-2 left-2 z-10">
               <div onClick={e => {
             e.stopPropagation();
