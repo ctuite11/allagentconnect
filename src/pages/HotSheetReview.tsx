@@ -878,7 +878,7 @@ if (comments && comments.length > 0) {
               ))}
             </div>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
