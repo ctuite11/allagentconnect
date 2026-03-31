@@ -6,7 +6,7 @@ import { useSuccessHubData } from "@/hooks/useSuccessHubData";
 import { WelcomeHeader } from "@/components/agent-dashboard-v2/WelcomeHeader";
 import { NeedsAttentionPills } from "@/components/success-hub/NeedsAttentionPills";
 import { MyListingsRow } from "@/components/agent-dashboard-v2/MyListingsRow";
-import { ListingsOpportunityCenter } from "@/components/success-hub/ListingsOpportunityCenter";
+import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
 
@@ -76,7 +76,12 @@ export default function SuccessHubDashboard() {
         <NeedsAttentionPills items={summary.attentionItems} />
       </div>
 
-      {/* ── 3. My Listings (horizontal image cards) ───── */}
+      {/* ── 3. Market Activity ──────────────────────── */}
+      <div className="mb-10">
+        <MarketActivityRow />
+      </div>
+
+      {/* ── 4. My Listings (horizontal image cards) ───── */}
       <div className="mb-10">
         {summary.listings.length > 0 ? (
           <MyListingsRow listings={summary.listings} />
@@ -85,16 +90,24 @@ export default function SuccessHubDashboard() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-foreground">My Listings</h3>
             </div>
-            <ListingsOpportunityCenter
-              activeBuyerCount={summary.buyers.length}
-              opportunityCount={summary.attentionItems.length}
-              networkActivityCount={summary.conversations.length}
-            />
+            <div className="rounded-xl border border-border bg-card p-6 text-center">
+              <h4 className="text-base font-semibold text-foreground">
+                No active listings yet
+              </h4>
+              <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+                Add your first listing to start matching with buyers and generating activity.
+              </p>
+              <div className="mt-4">
+                <Button onClick={() => window.location.href = "/agent/listings/new"}>
+                  Add New Listing
+                </Button>
+              </div>
+            </div>
           </>
         )}
       </div>
 
-      {/* ── 4. Communications + Buyers (side-by-side) ── */}
+      {/* ── 5. Communications + Buyers (side-by-side) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
         <DashboardCommunications conversations={summary.conversations} />
         <DashboardBuyersTable buyers={summary.buyers} />
