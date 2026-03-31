@@ -950,11 +950,11 @@ if (comments && comments.length > 0) {
                 </div>
               </div>
               {getCriteriaDisplay().length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                   {getCriteriaDisplay().map((criterion, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-muted border border-border text-foreground rounded-full text-sm"
+                      className="px-2 py-0.5 bg-muted/60 border border-border/60 text-muted-foreground rounded-md text-xs"
                     >
                       {criterion}
                     </span>
