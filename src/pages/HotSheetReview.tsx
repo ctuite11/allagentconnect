@@ -871,12 +871,11 @@ if (comments && comments.length > 0) {
     return (
       <div className="pt-6 px-6 pb-6">
         <div className="mx-auto w-full max-w-7xl">
-            <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
-              ))}
-            </div>
+          <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
+            ))}
           </div>
         </div>
       </div>
