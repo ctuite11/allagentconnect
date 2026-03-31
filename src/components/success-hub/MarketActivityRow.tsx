@@ -129,20 +129,28 @@ export function MarketActivityRow() {
           const newRow = payload.new as any;
           if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
 
-          // Fetch full row with join
+          // Fetch full row
           const { data } = await supabase
             .from("listings")
             .select(`
               id, address, city, state, price, bedrooms, bathrooms, square_feet,
-              photos, status, created_at, agent_id,
-              profiles!listings_agent_id_fkey(company)
+              photos, status, created_at, agent_id
             `)
             .eq("id", newRow.id)
             .maybeSingle();
 
           if (!data) return;
 
-          const parsed = parseListing(data);
+          // Fetch brokerage
+          const companyMap: Record<string, string> = {};
+          const { data: profile } = await supabase
+            .from("agent_profiles")
+            .select("id, company")
+            .eq("id", data.agent_id)
+            .maybeSingle();
+          if (profile?.company) companyMap[profile.id] = profile.company;
+
+          const parsed = parseListing(data, companyMap);
           const visible = filterVisibleListings([parsed], currentUserId);
           if (visible.length === 0) return;
 
