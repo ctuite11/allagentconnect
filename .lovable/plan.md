@@ -1,31 +1,35 @@
 
+## Plan
 
-# Update Logo Assets to Use Correct Brand Green
+Yes — I should give you new links for the corrected lockups.
 
-## Problem
-The logo files in the `brand-assets` bucket use `#50C878` (pastel green) for the monogram, but the brand standard specifies `#22C55E` (Emerald 500) — a brighter, more saturated green. This mismatch makes the exported logos look muted compared to the in-app UI.
+### What I’ll change
+- Re-open the latest outlined logo assets in the storage bucket
+- Move the monogram down further so its visual center aligns with the green inner square, not just the overall wordmark height
+- Re-export the matching PNGs from those corrected SVGs
 
-## Fix
-Replace `#50C878` with `#22C55E` in all logo and monogram assets in the `brand-assets` bucket.
+### Why new links
+- Reusing the same filenames can keep showing stale cached images
+- I’ll publish versioned files so you can compare them immediately without cache issues
 
-## Files to update
+### Assets to regenerate
+- `aac-logo-white-outlined-v2.svg`
+- `aac-logo-black-outlined-v2.svg`
+- `aac-logo-green-white-outlined-v2.svg`
+- `aac-logo-green-black-outlined-v2.svg`
+- Matching `-v2.png` files for all four
 
-**Logo lockups (8 files):**
-- 4 outlined SVGs: swap monogram fill from `#50C878` → `#22C55E`
-- 4 PNGs: re-render from corrected SVGs
+### Calibration approach
+- Start from the most recent logo files
+- Increase the monogram Y offset beyond the current `translate(0, 2.7)`
+- Align by the green center square as the reference point
+- Verify all 8 outputs visually before sharing links
 
-**Standalone monograms — "green" variant (9 files):**
-- `aac-monogram-green.svg`: update fill to `#22C55E`
-- 8 PNGs (`aac-monogram-green-{16,32,64,128,180,256,512,1024}.png`): re-render
+### What I found in the codebase
+- The app itself is not using these storage URLs directly right now
+- `src/components/brand/Logo.tsx` uses the local `aac-logo-master.svg`
+- `src/components/ui/AACMonogram.tsx` uses an inline SVG
+- So this is an exported asset correction, not an in-app component change
 
-**Total: 17 files** overwritten in storage.
-
-## Steps
-1. Download current outlined SVGs and monogram SVG from bucket
-2. Replace all `#50C878` fills with `#22C55E`
-3. Re-render all PNGs using `sharp` at original sizes
-4. Upload all 17 files, overwriting existing versions
-5. Verify non-zero file sizes
-
-## No project source files modified
-
+### Result
+I’ll give you a fresh set of versioned URLs for the corrected logos so you can verify the alignment cleanly.
