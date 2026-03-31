@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  ArrowLeft, Home, Heart, Clock
+  ArrowLeft, Home, Heart, Clock, Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
