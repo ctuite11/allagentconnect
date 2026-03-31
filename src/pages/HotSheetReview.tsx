@@ -869,9 +869,9 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
+      <div className="flex flex-col pt-6 px-6 pb-6">
         <main className="flex-1 bg-background">
-          <div className="container mx-auto px-4 py-8 max-w-5xl">
+          <div className="max-w-7xl mx-auto">
             <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
