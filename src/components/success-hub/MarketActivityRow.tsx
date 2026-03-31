@@ -266,7 +266,7 @@ export function MarketActivityRow() {
                   </span>
                   {listing.square_feet && (
                     <span className="inline-flex items-center gap-0.5">
-                      <Square className="h-3 w-3" /> {listing.square_feet.toLocaleString()}
+                      <Square className="h-3 w-3 text-primary" /> {listing.square_feet.toLocaleString()}
                     </span>
                   )}
                 </div>

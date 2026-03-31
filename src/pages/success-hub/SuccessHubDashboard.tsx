@@ -99,7 +99,7 @@ export default function SuccessHubDashboard() {
               </p>
               <div className="mt-4">
                 <Button onClick={() => window.location.href = "/agent/listings/new"}>
-                  Add New Listing
+                  Add Listing
                 </Button>
               </div>
             </div>
