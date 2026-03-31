@@ -718,15 +718,61 @@ const ListingCard = ({
               </div>}
           </div>
 
-          {(interestSignals || agentInfo) && (
-            <div className="mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full">
-              {interestSignals ? (
-                <ListingInterestSignals
-                  savesCount={interestSignals.saves_count}
-                  commentsCount={interestSignals.comments_count}
-                  hotsheetMatchCount={interestSignals.hotsheet_match_count}
-                />
-              ) : <span />}
+          {/* Comment + Attribution row */}
+          {(onOpenChat || chatMessages?.length || clientComment || agentInfo) && (
+            <div className="mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full gap-2">
+              <div className="flex-1 min-w-0">
+                {chatMessages && chatMessages.length > 0 ? (
+                  <div
+                    className="flex items-start gap-2 text-sm p-2 rounded-md bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenChat?.();
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground text-sm leading-snug truncate">
+                        <span className="font-medium">
+                          {chatMessages[chatMessages.length - 1].sender_role === "agent" ? "You" : "Client"}:
+                        </span>{" "}
+                        "{chatMessages[chatMessages.length - 1].comment}"
+                      </p>
+                      <p className="text-muted-foreground text-xs mt-0.5">
+                        {chatMessages.length} message{chatMessages.length !== 1 ? "s" : ""} ›
+                      </p>
+                    </div>
+                  </div>
+                ) : !chatMessages?.length && clientComment ? (
+                  <div
+                    className="flex items-start gap-2 text-sm p-2 rounded-md bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenChat?.();
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground italic text-sm leading-snug truncate">
+                        Client: "{clientComment}"
+                      </p>
+                      <p className="text-muted-foreground text-xs mt-0.5">1 message ›</p>
+                    </div>
+                  </div>
+                ) : onOpenChat ? (
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenChat();
+                    }}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Add Comment
+                  </button>
+                ) : <span />}
+              </div>
               {agentInfo && (
                 <ListingAttribution
                   listingAgentName={agentInfo.name}
@@ -735,71 +781,16 @@ const ListingCard = ({
               )}
             </div>
           )}
-          
-          {/* Open House Info */}
-          {nextOpenHouse && (
-            <div className={`flex items-center gap-2 text-sm p-2 rounded-md mt-2 ${nextOpenHouse.event_type === 'broker_tour' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300'}`}>
-              <Calendar className="h-4 w-4" />
-              <span className="font-medium">
-                {nextOpenHouse.event_type === 'broker_tour' ? 'Broker Tour' : 'Open House'}: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} - {formatTime(nextOpenHouse.end_time)}
-              </span>
+
+          {/* Interest Signals row */}
+          {interestSignals && (
+            <div className="w-full pt-1">
+              <ListingInterestSignals
+                savesCount={interestSignals.saves_count}
+                commentsCount={interestSignals.comments_count}
+                hotsheetMatchCount={interestSignals.hotsheet_match_count}
+              />
             </div>
-          )}
-          
-          {/* Chat Preview */}
-          {chatMessages && chatMessages.length > 0 && (
-            <div
-              className="flex items-start gap-2 text-sm p-2 rounded-md mt-2 bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenChat?.();
-              }}
-            >
-              <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-foreground text-sm leading-snug truncate">
-                  <span className="font-medium">
-                    {chatMessages[chatMessages.length - 1].sender_role === "agent" ? "You" : "Client"}:
-                  </span>{" "}
-                  "{chatMessages[chatMessages.length - 1].comment}"
-                </p>
-                <p className="text-muted-foreground text-xs mt-0.5">
-                  {chatMessages.length} message{chatMessages.length !== 1 ? "s" : ""} ›
-                </p>
-              </div>
-            </div>
-          )}
-          {/* Fallback: single clientComment without chat array */}
-          {!chatMessages?.length && clientComment && (
-            <div
-              className="flex items-start gap-2 text-sm p-2 rounded-md mt-2 bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenChat?.();
-              }}
-            >
-              <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-foreground italic text-sm leading-snug truncate">
-                  Client: "{clientComment}"
-                </p>
-                <p className="text-muted-foreground text-xs mt-0.5">1 message ›</p>
-              </div>
-            </div>
-          )}
-          {/* Comment entry point when no messages yet but chat is available */}
-          {!chatMessages?.length && !clientComment && onOpenChat && (
-            <button
-              type="button"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary mt-2 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenChat();
-              }}
-            >
-              <MessageSquare className="h-3.5 w-3.5" />
-              Add Comment
-            </button>
           )}
           
           {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
