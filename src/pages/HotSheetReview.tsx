@@ -967,8 +967,8 @@ if (comments && comments.length > 0) {
           </Card>
 
           {/* Controls */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-3 mb-6">
+            <div className="flex flex-wrap items-center gap-3 min-w-0">
               <Checkbox
                 id="select-all"
                 checked={selectedListings.size === listings.length && listings.length > 0}
@@ -991,9 +991,9 @@ if (comments && comments.length > 0) {
                 </>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
