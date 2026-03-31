@@ -140,8 +140,6 @@ export default function BuyerAccount() {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 
-  const generalConversations = conversations.filter((c) => !c.listing_id);
-  const listingConversations = conversations.filter((c) => c.listing_id);
 
   return (
     <PageShell>
