@@ -719,7 +719,7 @@ const ListingCard = ({
           </div>
 
           {(interestSignals || agentInfo) && (
-            <div className="mt-2 pt-2 border-t border-border/40 flex items-center justify-between w-full">
+            <div className="mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full">
               {interestSignals ? (
                 <ListingInterestSignals
                   savesCount={interestSignals.saves_count}

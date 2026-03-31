@@ -886,7 +886,7 @@ if (comments && comments.length > 0) {
 
   if (!hotSheet) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
+      <div className="flex flex-col pt-6 px-6 pb-6">
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-muted-foreground">Hot sheet not found</p>
