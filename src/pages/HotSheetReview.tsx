@@ -869,7 +869,7 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="flex flex-col pt-6 px-6 pb-6">
+      <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
         <main className="flex-1 bg-background">
           <div className="max-w-7xl mx-auto">
             <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
