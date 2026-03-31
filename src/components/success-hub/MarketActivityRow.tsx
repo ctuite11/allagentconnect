@@ -20,6 +20,8 @@ interface MarketListing {
   brokerage: string;
 }
 
+type ListingRow = Omit<MarketListing, "brokerage">;
+
 function formatPrice(price: number | null) {
   if (price == null) return "—";
   return `$${price.toLocaleString()}`;
@@ -53,8 +55,7 @@ export function MarketActivityRow() {
     setTimeout(updateScrollState, 350);
   };
 
-  const parseListing = useCallback((row: any): MarketListing => {
-    const profiles = row.profiles;
+  const parseListing = useCallback((row: any, companyMap: Record<string, string>): MarketListing => {
     return {
       id: row.id,
       address: row.address,
@@ -68,7 +69,7 @@ export function MarketActivityRow() {
       status: row.status,
       created_at: row.created_at,
       agent_id: row.agent_id,
-      brokerage: profiles?.company || "AAC Agent",
+      brokerage: companyMap[row.agent_id] || "AAC Agent",
     };
   }, []);
 
@@ -81,8 +82,7 @@ export function MarketActivityRow() {
       .from("listings")
       .select(`
         id, address, city, state, price, bedrooms, bathrooms, square_feet,
-        photos, status, created_at, agent_id,
-        profiles!listings_agent_id_fkey(company)
+        photos, status, created_at, agent_id
       `)
       .not("status", "in", "(draft,expired)")
       .order("created_at", { ascending: false })
@@ -93,7 +93,22 @@ export function MarketActivityRow() {
       return;
     }
 
-    const parsed = data.map(parseListing);
+    // Fetch brokerage names for the agent_ids
+    const agentIds = [...new Set(data.map((r: any) => r.agent_id))];
+    const companyMap: Record<string, string> = {};
+    if (agentIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("agent_profiles")
+        .select("id, company")
+        .in("id", agentIds);
+      if (profiles) {
+        for (const p of profiles) {
+          if (p.company) companyMap[p.id] = p.company;
+        }
+      }
+    }
+
+    const parsed = data.map((row: any) => parseListing(row, companyMap));
     const visible = filterVisibleListings(parsed, userId).slice(0, 10);
     setListings(visible);
     setLoading(false);
@@ -114,20 +129,28 @@ export function MarketActivityRow() {
           const newRow = payload.new as any;
           if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
 
-          // Fetch full row with join
+          // Fetch full row
           const { data } = await supabase
             .from("listings")
             .select(`
               id, address, city, state, price, bedrooms, bathrooms, square_feet,
-              photos, status, created_at, agent_id,
-              profiles!listings_agent_id_fkey(company)
+              photos, status, created_at, agent_id
             `)
             .eq("id", newRow.id)
             .maybeSingle();
 
           if (!data) return;
 
-          const parsed = parseListing(data);
+          // Fetch brokerage
+          const companyMap: Record<string, string> = {};
+          const { data: profile } = await supabase
+            .from("agent_profiles")
+            .select("id, company")
+            .eq("id", data.agent_id)
+            .maybeSingle();
+          if (profile?.company) companyMap[profile.id] = profile.company;
+
+          const parsed = parseListing(data, companyMap);
           const visible = filterVisibleListings([parsed], currentUserId);
           if (visible.length === 0) return;
 
