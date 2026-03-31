@@ -55,8 +55,7 @@ export function MarketActivityRow() {
     setTimeout(updateScrollState, 350);
   };
 
-  const parseListing = useCallback((row: any): MarketListing => {
-    const profiles = row.profiles;
+  const parseListing = useCallback((row: any, companyMap: Record<string, string>): MarketListing => {
     return {
       id: row.id,
       address: row.address,
@@ -70,7 +69,7 @@ export function MarketActivityRow() {
       status: row.status,
       created_at: row.created_at,
       agent_id: row.agent_id,
-      brokerage: profiles?.company || "AAC Agent",
+      brokerage: companyMap[row.agent_id] || "AAC Agent",
     };
   }, []);
 
