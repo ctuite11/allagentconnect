@@ -893,7 +893,7 @@ if (comments && comments.length > 0) {
               Back to Hot Sheets
             </Button>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
