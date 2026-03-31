@@ -900,9 +900,9 @@ if (comments && comments.length > 0) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-20">
+    <div className="flex flex-col pt-6 px-6 pb-6">
       <main className="flex-1 bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
