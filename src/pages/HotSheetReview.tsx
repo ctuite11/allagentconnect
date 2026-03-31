@@ -869,7 +869,7 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="flex flex-col pt-6 px-6 pb-6">
+      <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
         <main className="flex-1 bg-background">
           <div className="max-w-7xl mx-auto">
             <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
@@ -886,7 +886,7 @@ if (comments && comments.length > 0) {
 
   if (!hotSheet) {
     return (
-      <div className="flex flex-col pt-6 px-6 pb-6">
+      <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-muted-foreground">Hot sheet not found</p>
@@ -900,7 +900,7 @@ if (comments && comments.length > 0) {
   }
 
   return (
-    <div className="flex flex-col pt-6 px-6 pb-6">
+    <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
       <main className="flex-1 bg-background">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -967,8 +967,8 @@ if (comments && comments.length > 0) {
           </Card>
 
           {/* Controls */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-3 mb-6">
+            <div className="flex flex-wrap items-center gap-3 min-w-0">
               <Checkbox
                 id="select-all"
                 checked={selectedListings.size === listings.length && listings.length > 0}
@@ -991,9 +991,9 @@ if (comments && comments.length > 0) {
                 </>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
