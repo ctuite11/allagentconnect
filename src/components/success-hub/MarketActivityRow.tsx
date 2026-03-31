@@ -259,10 +259,10 @@ export function MarketActivityRow() {
                 </p>
                 <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-0.5">
-                    <Bed className="h-3 w-3" /> {listing.bedrooms}
+                    <Bed className="h-3 w-3 text-primary" /> {listing.bedrooms}
                   </span>
                   <span className="inline-flex items-center gap-0.5">
-                    <Bath className="h-3 w-3" /> {listing.bathrooms}
+                    <Bath className="h-3 w-3 text-primary" /> {listing.bathrooms}
                   </span>
                   {listing.square_feet && (
                     <span className="inline-flex items-center gap-0.5">
