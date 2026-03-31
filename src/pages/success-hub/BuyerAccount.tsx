@@ -245,75 +245,82 @@ export default function BuyerAccount() {
             }
           />
         ) : (
-          <div className="space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {hotSheets.map((hs) => {
               const pills = criteriaPills(hs.criteria);
+              // Extract up to 4 photos for the mosaic
+              const mosaicPhotos: (string | undefined)[] = [];
+              for (const listing of hs.topListings) {
+                const photos = listing.photos as any[] | null;
+                if (photos?.length && mosaicPhotos.length < 4) {
+                  const raw = photos[0];
+                  const url = typeof raw === "string" ? raw : raw?.url || undefined;
+                  if (url) mosaicPhotos.push(url);
+                }
+              }
+              while (mosaicPhotos.length < 4) mosaicPhotos.push(undefined);
+
               return (
-                <div key={hs.id}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{hs.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {hs.matchCount} listing {hs.matchCount === 1 ? "match" : "matches"}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        navigate(`/hot-sheets/${hs.id}/review`, {
-                          state: { from: `/success-hub/buyers/${buyerId}` },
-                        })
-                      }
-                    >
-                      View All
-                    </Button>
+                <div
+                  key={hs.id}
+                  onClick={() =>
+                    navigate(`/hot-sheets/${hs.id}/review`, {
+                      state: { from: `/success-hub/buyers/${buyerId}` },
+                    })
+                  }
+                  className="bg-card rounded-2xl border border-border shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden"
+                >
+                  {/* 2x2 Photo Mosaic */}
+                  <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-muted">
+                    {mosaicPhotos.map((src, i) => (
+                      <div key={i} className="relative w-full h-full overflow-hidden">
+                        {src ? (
+                          <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <Home className="h-5 w-5 text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
 
-                  {pills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2 mb-4">
-                      {pills.map((pill, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="text-xs font-normal text-muted-foreground border-border rounded-md"
-                        >
-                          {pill}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  {hs.topListings.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {hs.topListings.map((listing: any) => (
-                        <div key={listing.id} className="relative group">
-                          <ListingCard
-                            listing={listing}
-                            viewMode="compact"
-                            showActions={false}
-                          />
-                          {buyerOnPlatform && (
-                          <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleListingMessage(listing.id);
-                              }}
-                              disabled={messagingBusy}
-                              className="absolute top-2 right-2 z-10 bg-card/90 backdrop-blur-sm border border-border rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card shadow-sm"
-                              title="Message about this listing"
-                            >
-                              <MessageSquare className="h-3.5 w-3.5 text-foreground hover:text-primary transition-colors" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-4">
-                      No matching listings yet.
+                  {/* Card Body */}
+                  <div className="px-4 pt-3 pb-4">
+                    <h3 className="text-base font-semibold text-foreground truncate">{hs.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {hs.matchCount} listing{hs.matchCount === 1 ? " match" : " matches"}
                     </p>
-                  )}
+
+                    {pills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {pills.map((pill, i) => (
+                          <Badge
+                            key={i}
+                            variant="outline"
+                            className="text-xs font-normal text-muted-foreground border-border rounded-md"
+                          >
+                            {pill}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-3">
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/hot-sheets/${hs.id}/review`, {
+                            state: { from: `/success-hub/buyers/${buyerId}` },
+                          });
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1.5" /> View Hot Sheet
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
