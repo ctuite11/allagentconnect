@@ -680,7 +680,7 @@ const ListingCard = ({
               {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
             </div>}
         </div>
-        <CardContent className="p-2.5">
+        <CardContent className="p-2.5 flex flex-col flex-1">
           <div className="flex items-start justify-between mb-1.5">
             <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-primary cursor-pointer text-lg">
               {displayPrice}
