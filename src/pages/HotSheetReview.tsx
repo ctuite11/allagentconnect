@@ -869,9 +869,9 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
+      <div className="flex flex-col pt-6 px-6 pb-6">
         <main className="flex-1 bg-background">
-          <div className="container mx-auto px-4 py-8 max-w-5xl">
+          <div className="max-w-7xl mx-auto">
             <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -886,7 +886,7 @@ if (comments && comments.length > 0) {
 
   if (!hotSheet) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
+      <div className="flex flex-col pt-6 px-6 pb-6">
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-muted-foreground">Hot sheet not found</p>
@@ -900,9 +900,9 @@ if (comments && comments.length > 0) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-20">
+    <div className="flex flex-col pt-6 px-6 pb-6">
       <main className="flex-1 bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
@@ -950,11 +950,11 @@ if (comments && comments.length > 0) {
                 </div>
               </div>
               {getCriteriaDisplay().length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                   {getCriteriaDisplay().map((criterion, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-muted border border-border text-foreground rounded-full text-sm"
+                      className="px-2 py-0.5 bg-muted/60 border border-border/60 text-muted-foreground rounded-md text-xs"
                     >
                       {criterion}
                     </span>

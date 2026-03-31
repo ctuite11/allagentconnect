@@ -613,8 +613,8 @@ const ListingCard = ({
     const totalPhotos = getTotalPhotos();
     const hasMultiplePhotos = totalPhotos > 1;
     
-    return <Card className="overflow-hidden hover:shadow-md transition-shadow">
-        <div className="relative group">
+    return <Card className="overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
+        <div className="relative group flex-shrink-0">
           {onSelect && <div className="absolute top-2 left-2 z-10">
               <div onClick={e => {
             e.stopPropagation();
@@ -680,7 +680,7 @@ const ListingCard = ({
               {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
             </div>}
         </div>
-        <CardContent className="p-2.5">
+        <CardContent className="p-2.5 flex flex-col flex-1">
           <div className="flex items-start justify-between mb-1.5">
             <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-primary cursor-pointer text-lg">
               {displayPrice}
@@ -719,7 +719,7 @@ const ListingCard = ({
           </div>
 
           {(interestSignals || agentInfo) && (
-            <div className="mt-2 pt-2 border-t border-border/40 flex items-center justify-between w-full">
+            <div className="mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full">
               {interestSignals ? (
                 <ListingInterestSignals
                   savesCount={interestSignals.saves_count}
