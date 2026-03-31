@@ -1080,7 +1080,6 @@ if (comments && comments.length > 0) {
             </div>
           )}
         </div>
-      </main>
 
       {/* Chat Drawer */}
       {chatListingId && (
