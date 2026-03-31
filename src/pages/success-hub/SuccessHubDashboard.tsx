@@ -6,7 +6,7 @@ import { useSuccessHubData } from "@/hooks/useSuccessHubData";
 import { WelcomeHeader } from "@/components/agent-dashboard-v2/WelcomeHeader";
 import { NeedsAttentionPills } from "@/components/success-hub/NeedsAttentionPills";
 import { MyListingsRow } from "@/components/agent-dashboard-v2/MyListingsRow";
-import { ListingsOpportunityCenter } from "@/components/success-hub/ListingsOpportunityCenter";
+import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
 
