@@ -1,22 +1,31 @@
 
 
-# Fix Monogram Vertical Alignment in All Logo Files
+# Update Logo Assets to Use Correct Brand Green
 
-## What
-Add `translate(0, 2.7)` to the monogram group in all 4 outlined SVGs, then re-render PNGs and upload all 8 files to the `brand-assets` bucket.
+## Problem
+The logo files in the `brand-assets` bucket use `#50C878` (pastel green) for the monogram, but the brand standard specifies `#22C55E` (Emerald 500) — a brighter, more saturated green. This mismatch makes the exported logos look muted compared to the in-app UI.
+
+## Fix
+Replace `#50C878` with `#22C55E` in all logo and monogram assets in the `brand-assets` bucket.
+
+## Files to update
+
+**Logo lockups (8 files):**
+- 4 outlined SVGs: swap monogram fill from `#50C878` → `#22C55E`
+- 4 PNGs: re-render from corrected SVGs
+
+**Standalone monograms — "green" variant (9 files):**
+- `aac-monogram-green.svg`: update fill to `#22C55E`
+- 8 PNGs (`aac-monogram-green-{16,32,64,128,180,256,512,1024}.png`): re-render
+
+**Total: 17 files** overwritten in storage.
 
 ## Steps
-1. Download the current 4 outlined SVGs from the bucket
-2. Update each SVG's monogram `<g>` from `scale(0.8235)` to `translate(0, 2.7) scale(0.8235)` — wordmark paths stay untouched
-3. Re-render 4 PNGs at 3x resolution (840px wide) using `sharp-cli`
-4. Upload all 8 files to `brand-assets` bucket, overwriting existing versions
-5. Verify all files have non-zero size
+1. Download current outlined SVGs and monogram SVG from bucket
+2. Replace all `#50C878` fills with `#22C55E`
+3. Re-render all PNGs using `sharp` at original sizes
+4. Upload all 17 files, overwriting existing versions
+5. Verify non-zero file sizes
 
-## Files affected
-- `aac-logo-white-outlined.svg` + `.png`
-- `aac-logo-black-outlined.svg` + `.png`
-- `aac-logo-green-white-outlined.svg` + `.png`
-- `aac-logo-green-black-outlined.svg` + `.png`
-
-No project source files modified.
+## No project source files modified
 
