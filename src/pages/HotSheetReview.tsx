@@ -869,7 +869,7 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="pt-6 px-6 pb-6">
+      <div className="min-w-0 pt-6 px-6 pb-6 overflow-x-hidden">
         <div className="mx-auto w-full max-w-7xl">
           <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -884,7 +884,7 @@ if (comments && comments.length > 0) {
 
   if (!hotSheet) {
     return (
-      <div className="pt-6 px-6 pb-6">
+      <div className="min-w-0 pt-6 px-6 pb-6 overflow-x-hidden">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-muted-foreground">Hot sheet not found</p>
@@ -898,7 +898,7 @@ if (comments && comments.length > 0) {
   }
 
   return (
-      <div className="pt-6 px-6 pb-6">
+      <div className="min-w-0 pt-6 px-6 pb-6 overflow-x-hidden">
         <div className="mx-auto w-full max-w-7xl">
             {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
