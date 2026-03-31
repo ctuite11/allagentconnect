@@ -57,7 +57,7 @@ export default function BuyerAccount() {
   const { buyerId } = useParams<{ buyerId: string }>();
   const navigate = useNavigate();
   const { user } = useAuthRole();
-  const { client, hotSheets, favorites, activity, conversations, stats, loading, refresh } =
+  const { client, hotSheets, activity, conversations, stats, loading, refresh } =
     useBuyerDashboard(buyerId);
   const [createHsOpen, setCreateHsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
