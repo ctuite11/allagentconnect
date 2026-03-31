@@ -14,7 +14,7 @@ import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import ListingCard from "@/components/ListingCard";
+
 import { findOrCreateConversation } from "@/lib/startConversation";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
