@@ -1,20 +1,23 @@
 
 
-# Fix Monogram Alignment in Logo Assets (v4)
+# Re-render All Green Monogram Assets with Correct Brand Green
 
 ## Problem
-The v3 logos overcorrected — the monogram is now too low. The green center square of the monogram needs to sit inline with the capital "A" of "All Agent Connect" (vertically centered with the text cap-height).
+The green monogram PNGs in the storage bucket were rendered from an SVG that may have used the muted `#50C878` instead of the brand-correct `#22C55E` (Emerald 500). Need to verify and re-render all green monogram files.
 
-## Changes
-1. **Reduce vertical offset** — pull the monogram back up from `translate(0, 7.0)` to approximately `translate(0, 4.0)` so the center square aligns with the midpoint of the capital letters
-2. **Confirm brand green** — verify all monogram fills use `#22C55E` (Emerald 500), not the muted `#50C878` or `#059669`
-3. Re-render 4 PNGs at 840px from corrected SVGs
-4. Upload all 8 files as `-v4` versions to `brand-assets` bucket
-5. Share new links for verification
+## What I'll Do
+1. Download `aac-monogram-green.svg` from the bucket and verify its fill color
+2. If it uses anything other than `#22C55E`, update the SVG fill to `#22C55E` and re-upload
+3. Re-render all 8 green monogram PNGs (16, 32, 64, 128, 180, 256, 512, 1024px) from the corrected SVG using `sharp`
+4. Upload all files back to the `brand-assets` bucket, overwriting existing versions
+5. Share direct download URLs for all 9 green monogram files (1 SVG + 8 PNGs)
 
-## Files (all in storage bucket, no project source changes)
-- `aac-logo-white-outlined-v4.svg` + `.png`
-- `aac-logo-black-outlined-v4.svg` + `.png`
-- `aac-logo-green-white-outlined-v4.svg` + `.png`
-- `aac-logo-green-black-outlined-v4.svg` + `.png`
+## Deliverables
+- `aac-monogram-green.svg` — verified `#22C55E`
+- `aac-monogram-green-{16,32,64,128,180,256,512,1024}.png` — re-rendered at correct color
+
+All files publicly accessible at:
+`https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green-{size}.png`
+
+## No project source files modified
 
