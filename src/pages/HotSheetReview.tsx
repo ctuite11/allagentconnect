@@ -869,41 +869,38 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
-        <main className="flex-1 bg-background">
-          <div className="max-w-7xl mx-auto">
-            <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
-              ))}
-            </div>
+      <div className="pt-6 px-6 pb-6">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
+            ))}
           </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   if (!hotSheet) {
     return (
-      <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
-        <main className="flex-1 flex items-center justify-center">
+      <div className="pt-6 px-6 pb-6">
+        <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-muted-foreground">Hot sheet not found</p>
             <Button onClick={() => navigate("/hot-sheets")} className="mt-4">
               Back to Hot Sheets
             </Button>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col pt-6 px-6 pb-6 overflow-x-hidden">
-      <main className="flex-1 bg-background">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
+      <div className="pt-6 px-6 pb-6">
+        <div className="mx-auto w-full max-w-7xl">
+            {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
               <button
@@ -1081,7 +1078,6 @@ if (comments && comments.length > 0) {
             </div>
           )}
         </div>
-      </main>
 
       {/* Chat Drawer */}
       {chatListingId && (
