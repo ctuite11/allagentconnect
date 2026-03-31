@@ -326,29 +326,6 @@ export default function BuyerAccount() {
         )}
       </section>
 
-      {/* ── Favorites ─────────────────────────── */}
-      <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.favorites = el; }} className="mb-12">
-        <SectionHeading title="Favorites" count={stats.favoritesCount} />
-
-        {favorites.length === 0 ? (
-          <EmptyState
-            icon={<Heart className="h-5 w-5 text-muted-foreground" />}
-            title="No Favorites"
-            description="This buyer hasn't favorited any listings yet."
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {favorites.map((listing: any) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                viewMode="compact"
-                showActions={false}
-              />
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* ── Activity ──────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
