@@ -107,7 +107,7 @@ export default function SuccessHubDashboard() {
         )}
       </div>
 
-      {/* ── 4. Communications + Buyers (side-by-side) ── */}
+      {/* ── 5. Communications + Buyers (side-by-side) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
         <DashboardCommunications conversations={summary.conversations} />
         <DashboardBuyersTable buyers={summary.buyers} />
