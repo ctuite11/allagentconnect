@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -64,6 +65,15 @@ function build429Response(resetAt: string): Response {
   });
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -101,30 +111,50 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending contact email to agent:", agentEmail);
 
+    const bodyHtml = `
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+        Hi ${escapeHtml(agentName)},
+      </p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+        You received a new message about:
+      </p>
+      <p style="margin:0 0 20px;font-size:16px;font-weight:600;color:#0f172a;">
+        ${escapeHtml(listingAddress)}
+      </p>
+
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
+        <tr><td style="background-color:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Contact Details</p>
+          <p style="margin:0 0 4px;font-size:15px;color:#334155;"><strong>Name:</strong> ${escapeHtml(senderName)}</p>
+          <p style="margin:0 0 0;font-size:15px;color:#334155;"><strong>Email:</strong> ${escapeHtml(senderEmail)}</p>
+          ${senderPhone ? `<p style="margin:4px 0 0;font-size:15px;color:#334155;"><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""}
+        </td></tr>
+      </table>
+
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
+        <tr><td style="background-color:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Message</p>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;">${escapeHtml(message)}</p>
+        </td></tr>
+      </table>
+
+      <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">
+        Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.
+      </p>
+    `;
+
+    const html = buildAacEmail({
+      headline: "New inquiry on your listing",
+      body: bodyHtml,
+      preheader: `New message about ${listingAddress}`,
+    });
+
     const { data, error: emailError } = await resend.emails.send({
       from: "All Agent Connect <noreply@mail.allagentconnect.com>",
       to: [agentEmail],
       replyTo: senderEmail,
       subject: `New inquiry about ${listingAddress}`,
-      html: `
-        <h2>New Contact Message</h2>
-        <p>Hi ${agentName},</p>
-        <p>You have received a new message about your listing at <strong>${listingAddress}</strong>.</p>
-        
-        <h3>Contact Details:</h3>
-        <ul>
-          <li><strong>Name:</strong> ${senderName}</li>
-          <li><strong>Email:</strong> ${senderEmail}</li>
-          ${senderPhone ? `<li><strong>Phone:</strong> ${senderPhone}</li>` : ""}
-        </ul>
-        
-        <h3>Message:</h3>
-        <p>${message}</p>
-        
-        <p>Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.</p>
-        
-        <p>Best regards,<br>Your Real Estate Platform</p>
-      `,
+      html,
     });
 
     if (emailError) {
