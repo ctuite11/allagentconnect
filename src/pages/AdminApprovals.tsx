@@ -577,7 +577,7 @@ export default function AdminApprovals() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pt-20">
+    <div className="pt-6 px-6 pb-6">
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         {/* Header */}
         <PageHeader
