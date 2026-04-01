@@ -438,15 +438,35 @@ const PropertyDetail = () => {
           </button>
         </div>
 
-        {/* Subtle Agent View Indicator — just above photo */}
-        {isAgentView && (
-          <div className="mx-auto max-w-6xl px-4 mb-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              <Info className="w-3 h-3" />
-              Internal view – not shown to clients
-            </span>
+        {/* ========== LISTING HEADER — Address + Price above hero ========== */}
+        <div className="mx-auto max-w-6xl px-4 pb-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+                {buildDisplayAddress(listing as any)}
+              </h1>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                {listing?.city}, {listing?.state} {listing?.zip_code}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">
+                ${listing?.price?.toLocaleString() ?? '—'}
+              </p>
+              {listing?.square_feet && listing.square_feet > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sf
+                </p>
+              )}
+            </div>
           </div>
-        )}
+          {isAgentView && (
+            <p className="text-xs text-muted-foreground mt-1">
+              <Info className="w-3 h-3 inline mr-1 -mt-0.5" />
+              Internal view – not shown to clients
+            </p>
+          )}
+        </div>
 
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
         <div className="mx-auto max-w-6xl px-4">
