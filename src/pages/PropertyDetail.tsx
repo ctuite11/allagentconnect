@@ -424,11 +424,11 @@ const PropertyDetail = () => {
 
 
       <main className="flex-1">
-        {/* Subtle AAC brand mark */}
-        <div className="mx-auto max-w-6xl px-4 pt-4 pb-2">
-          <div className="flex items-center gap-1.5">
-            <AACMonogram className="w-5 h-5 text-emerald-500" />
-            <span className="text-xs font-extrabold tracking-tight text-foreground" style={{ fontFamily: "Manrope, sans-serif" }}>
+        {/* AAC Brand Mark — anchored upper-left */}
+        <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
+          <div className="flex items-center gap-2">
+            <AACMonogram className="w-7 h-7 text-emerald-500" />
+            <span className="text-sm font-extrabold tracking-tight text-foreground" style={{ fontFamily: "Manrope, sans-serif" }}>
               All Agent Connect
             </span>
           </div>
@@ -450,13 +450,14 @@ const PropertyDetail = () => {
         </div>
 
         {/* ========== LISTING HEADER — Address + Price above hero ========== */}
-        <div className="mx-auto max-w-6xl px-4 pb-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+        <div className="mx-auto max-w-6xl px-4 pb-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <h1 className="flex items-baseline gap-1.5 text-xl font-semibold text-foreground tracking-tight">
+              <MapPin className="w-4 h-4 text-muted-foreground shrink-0 relative top-[1px]" />
               {buildDisplayAddress(listing as any)}
             </h1>
             <div className="text-right">
-              <p className="text-lg sm:text-xl font-bold text-foreground">
+              <p className="text-xl font-bold text-foreground">
                 ${listing?.price?.toLocaleString() ?? '—'}
               </p>
               {listing?.square_feet && listing.square_feet > 0 && (
