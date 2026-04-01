@@ -443,7 +443,7 @@ const PropertyDetail = () => {
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <div>
               <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
-                {buildDisplayAddress(listing?.address, (listing as any)?.unit_number)}
+                {buildDisplayAddress(listing as any)}
               </h1>
               <p className="text-muted-foreground text-sm mt-0.5">
                 {listing?.city}, {listing?.state} {listing?.zip_code}
