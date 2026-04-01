@@ -586,22 +586,6 @@ export default function AdminApprovals() {
           className="mb-8"
         />
 
-        {/* DIAGNOSTIC DEBUG PANEL - REMOVE AFTER FIX */}
-        <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl font-mono text-sm">
-          <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG PANEL (remove after fix)</div>
-          <div className="grid grid-cols-2 gap-2 text-yellow-900">
-            <div>isChecking: <span className="font-bold">{String(isChecking)}</span></div>
-            <div>isAdmin: <span className="font-bold">{String(isAdmin)}</span></div>
-            <div>user?.email: <span className="font-bold">{user?.email ?? 'null'}</span></div>
-            <div>SUPABASE_URL: <span className="font-bold text-xs break-all">{import.meta.env.VITE_SUPABASE_URL ?? 'undefined'}</span></div>
-            <div>Profiles Query: <span className="font-bold">{debugInfo.profilesCount ?? 'pending...'}</span> {debugInfo.profilesError && <span className="text-red-600">ERROR: {debugInfo.profilesError}</span>}</div>
-            <div>Settings Query: <span className="font-bold">{debugInfo.settingsCount ?? 'pending...'}</span> {debugInfo.settingsError && <span className="text-red-600">ERROR: {debugInfo.settingsError}</span>}</div>
-            <div>Merged Agents: <span className="font-bold">{debugInfo.mergedCount ?? 'pending...'}</span></div>
-            <div>State Count: <span className="font-bold">{debugInfo.stateCount ?? 'pending...'}</span></div>
-            <div className="col-span-2">Status Distribution: <span className="font-bold">{JSON.stringify(debugInfo.statusDistribution)}</span></div>
-            <div className="col-span-2">filteredAgents.length: <span className="font-bold">{filteredAgents.length}</span> | agents.length: <span className="font-bold">{agents.length}</span></div>
-          </div>
-        </div>
 
         <div className="mb-4 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
           <span className="text-sm text-slate-600">
