@@ -150,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const { data, error: emailError } = await resend.emails.send({
-      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+      from: "All Agent Connect <hello@mail.allagentconnect.com>",
       to: [agentEmail],
       replyTo: senderEmail,
       subject: `New inquiry about ${listingAddress}`,
