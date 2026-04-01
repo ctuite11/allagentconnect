@@ -139,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
       </table>
 
       <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">
-        Please respond to this inquiry at your earliest convenience by replying to this email or contacting them directly.
+        You can reply directly to this email to respond.
       </p>
     `;
 
@@ -150,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const { data, error: emailError } = await resend.emails.send({
-      from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+      from: "All Agent Connect <hello@mail.allagentconnect.com>",
       to: [agentEmail],
       replyTo: senderEmail,
       subject: `New inquiry about ${listingAddress}`,
