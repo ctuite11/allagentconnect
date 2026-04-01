@@ -49,7 +49,8 @@ import {
   Info,
   Users,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  MapPin
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
