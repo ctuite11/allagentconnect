@@ -600,9 +600,9 @@ const PropertyDetail = () => {
                 )}
                 {listing.virtual_tour_url && (
                   <Button
-                    variant={activeMediaTab === 'tour' ? 'default' : 'outline'}
+                    variant="outline"
                     size="sm"
-                    onClick={() => handleMediaTabChange('tour')}
+                    onClick={() => window.open(listing.virtual_tour_url!, '_blank', 'noopener,noreferrer')}
                     className="rounded-full"
                   >
                     <Maximize2 className="w-4 h-4 mr-2" />
@@ -611,9 +611,9 @@ const PropertyDetail = () => {
                 )}
                 {listing.property_website_url && (
                   <Button
-                    variant={activeMediaTab === 'website' ? 'default' : 'outline'}
+                    variant="outline"
                     size="sm"
-                    onClick={() => handleMediaTabChange('website')}
+                    onClick={() => window.open(listing.property_website_url!, '_blank', 'noopener,noreferrer')}
                     className="rounded-full"
                   >
                     <Globe className="w-4 h-4 mr-2" />
