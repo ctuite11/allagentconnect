@@ -548,7 +548,7 @@ export default function AdminApprovals() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] pt-20 flex items-center justify-center">
+      <div className="pt-6 px-6 pb-6 flex items-center justify-center h-full">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="h-8 w-8 text-amber-600" />
