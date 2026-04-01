@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { LoadingScreen } from "@/components/LoadingScreen";
+import AACMonogram from "@/components/ui/AACMonogram";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
