@@ -548,7 +548,7 @@ export default function AdminApprovals() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] pt-20 flex items-center justify-center">
+      <div className="pt-6 px-6 pb-6 flex items-center justify-center h-full">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="h-8 w-8 text-amber-600" />
@@ -577,7 +577,7 @@ export default function AdminApprovals() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pt-20">
+    <div className="pt-6 px-6 pb-6">
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         {/* Header */}
         <PageHeader
@@ -586,22 +586,6 @@ export default function AdminApprovals() {
           className="mb-8"
         />
 
-        {/* DIAGNOSTIC DEBUG PANEL - REMOVE AFTER FIX */}
-        <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl font-mono text-sm">
-          <div className="font-bold text-yellow-800 mb-2">🔍 DEBUG PANEL (remove after fix)</div>
-          <div className="grid grid-cols-2 gap-2 text-yellow-900">
-            <div>isChecking: <span className="font-bold">{String(isChecking)}</span></div>
-            <div>isAdmin: <span className="font-bold">{String(isAdmin)}</span></div>
-            <div>user?.email: <span className="font-bold">{user?.email ?? 'null'}</span></div>
-            <div>SUPABASE_URL: <span className="font-bold text-xs break-all">{import.meta.env.VITE_SUPABASE_URL ?? 'undefined'}</span></div>
-            <div>Profiles Query: <span className="font-bold">{debugInfo.profilesCount ?? 'pending...'}</span> {debugInfo.profilesError && <span className="text-red-600">ERROR: {debugInfo.profilesError}</span>}</div>
-            <div>Settings Query: <span className="font-bold">{debugInfo.settingsCount ?? 'pending...'}</span> {debugInfo.settingsError && <span className="text-red-600">ERROR: {debugInfo.settingsError}</span>}</div>
-            <div>Merged Agents: <span className="font-bold">{debugInfo.mergedCount ?? 'pending...'}</span></div>
-            <div>State Count: <span className="font-bold">{debugInfo.stateCount ?? 'pending...'}</span></div>
-            <div className="col-span-2">Status Distribution: <span className="font-bold">{JSON.stringify(debugInfo.statusDistribution)}</span></div>
-            <div className="col-span-2">filteredAgents.length: <span className="font-bold">{filteredAgents.length}</span> | agents.length: <span className="font-bold">{agents.length}</span></div>
-          </div>
-        </div>
 
         <div className="mb-4 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
           <span className="text-sm text-slate-600">
