@@ -631,43 +631,11 @@ const PropertyDetail = () => {
                 )}
                 </div>
                 
-                {/* Price - Right aligned */}
-                <div className="text-primary font-bold text-lg">
-                  {listing.price ? (
-                    <>
-                      ${listing.price.toLocaleString()}
-                      {listing.square_feet && (
-                        <span className="text-sm font-normal text-muted-foreground ml-1">
-                          · ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sq ft
-                        </span>
-                      )}
-                    </>
-                  ) : listing.price_range_min || listing.price_range_max ? (
-                    <>
-                      {listing.price_range_min && listing.price_range_max
-                        ? `$${listing.price_range_min.toLocaleString()} – $${listing.price_range_max.toLocaleString()}`
-                        : listing.price_range_min
-                          ? `From $${listing.price_range_min.toLocaleString()}`
-                          : `Up to $${listing.price_range_max!.toLocaleString()}`}
-                    </>
-                  ) : (
-                    '$0'
-                  )}
-                </div>
               </div>
 
-              {/* ========== ADDRESS + STATS (INSIDE LEFT COLUMN) - Price is now in photo ========== */}
+              {/* ========== STATS ROW ========== */}
               <div className="mt-4">
-                {/* ROW 1: Address - Title Case, no duplicate city */}
-                <h1 className="text-base md:text-lg font-semibold text-foreground flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-                  {buildDisplayAddress(listing)}
-                  {listing.listing_type === 'for_rent' && (
-                    <span className="text-sm text-muted-foreground font-normal ml-2">(For Rent)</span>
-                  )}
-                </h1>
-
-                {/* ROW 2: Stats - directly under, no gap */}
+                {/* Stats - first content block below media */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
                   {listing.bedrooms && (
                     <div className="flex items-center gap-1">
