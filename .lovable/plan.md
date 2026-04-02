@@ -1,36 +1,35 @@
 
 
-# Swap "Add Comment" and Interest Signals positions in compact ListingCard
+# Refine Property Detail header — 3 adjustments
 
-## Problem
-Currently the footer row (line 722) shows: **Interest Signals (left)** | **Agent Attribution (right)**. The "Add Comment" button sits below that, separated from the agent info. The user wants "Add Comment" inline with the agent attribution row, and the buyer-saved signals moved down.
+## File
+`src/pages/PropertyDetail.tsx`
 
-## Change — `src/components/ListingCard.tsx`
+## Changes
 
-### Lines 721–803 — Restructure the footer area
+### 1. Enlarge AAC logo and move it toward top of page
+- Monogram: `w-7 h-7` → `w-8 h-8`
+- Wordmark: `text-sm` → `text-base`
+- Reduce top padding: `pt-5` → `pt-3` to push logo closer to the top edge
 
-**New order:**
-1. **Comment + Attribution row** (border-t, mt-auto) — left side: Add Comment / chat preview / client comment; right side: agent attribution
-2. **Interest Signals row** — below, no border, lighter treatment
+### 2. Reduce address font size
+- Address `h1`: `text-xl` → `text-lg`
 
-This puts the comment action inline with the agent name, and moves the "X buyers saved" signals underneath.
+### 3. Reduce price font size
+- Price: `text-xl font-bold` → `text-lg font-bold`
+- Tighten gap between address and price: `gap-x-6` → `gap-x-4`
 
-### Specifically:
-- Move the `onOpenChat` / chat preview / client comment blocks (lines 749–803) **into** the `mt-auto pt-2 border-t` row at line 722, on the left side
-- Move `ListingInterestSignals` (lines 723–729) **below** that row as a standalone lighter row
-- Keep `ListingAttribution` on the right side of the top footer row
-
-### Result layout:
+## Result
 ```text
-┌─────────────────────────────┐
-│ [image]                     │
-│ address / price / stats     │
-│ ─────────────────────────── │
-│ 💬 Add Comment    Agent Co. │  ← comment + attribution row
-│ 🔥 2 buyers saved           │  ← interest signals below
-└─────────────────────────────┘
+[AAC logo (larger, near top)]
+
+[← back]
+
+[pin + address (text-lg) ............ price (text-lg)]
+[..................................... price/sf]
+
+[hero image]
 ```
 
-## Scope
-Single file edit: `src/components/ListingCard.tsx`, compact mode section only (~lines 721–803).
+All changes are page-local to `PropertyDetail.tsx` — no other files affected.
 
