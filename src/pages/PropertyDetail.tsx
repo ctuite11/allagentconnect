@@ -425,7 +425,7 @@ const PropertyDetail = () => {
 
       <main className="flex-1">
         {/* AAC Brand Mark — anchored upper-left */}
-         <div className="mx-auto max-w-6xl px-4 pt-3 pb-3">
+         <div className="mx-auto max-w-6xl px-4 pt-1 pb-3">
            <div className="flex items-center gap-2">
              <AACMonogram className="w-8 h-8 text-emerald-500" />
              <span className="text-base font-extrabold tracking-tight text-foreground" style={{ fontFamily: "Manrope, sans-serif" }}>
