@@ -60,6 +60,15 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Schema Changes
+
+All database schema changes must go through versioned migrations. See [Migration Policy](docs/database/MIGRATION_POLICY.md) for full details.
+
+**Every PR with schema changes must include:**
+- A migration file in `supabase/migrations/`
+- An updated `docs/database/schema_snapshot.sql` (run `npm run db:snapshot`)
+- A passing `npm run db:check`
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/95492335-3a75-4285-8d44-828003cae42a) and click on Share -> Publish.
