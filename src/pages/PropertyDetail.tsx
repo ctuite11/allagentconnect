@@ -424,18 +424,20 @@ const PropertyDetail = () => {
 
 
       <main className="flex-1">
-        {/* AAC Brand Mark — anchored upper-left */}
-        <div className="mx-auto max-w-6xl px-4 pt-0 pb-4">
-          <div className="flex items-center gap-2">
-            <AACMonogram className="w-8 h-8 text-emerald-500" />
-            <span className="text-base font-extrabold tracking-tight text-foreground" style={{ fontFamily: "Manrope, sans-serif" }}>
-              All Agent Connect
-            </span>
+        {/* Dark top toolbar — matches sidebar aesthetic */}
+        <div className="bg-zinc-900 w-full">
+          <div className="mx-auto max-w-6xl px-4 py-3">
+            <div className="flex items-center gap-1.5">
+              <AACMonogram className="w-7 h-7 text-emerald-500" />
+              <span className="text-[15px] font-extrabold tracking-tight text-white" style={{ fontFamily: "Manrope, sans-serif" }}>
+                All Agent Connect
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Back Button Row */}
-        <div className="mx-auto max-w-6xl px-4 pb-4">
+        <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
           <button
             onClick={() => {
               const fromPage = (location.state as any)?.from;
