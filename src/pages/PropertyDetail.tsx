@@ -408,7 +408,7 @@ const PropertyDetail = () => {
   const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen bg-background pt-14">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -425,7 +425,7 @@ const PropertyDetail = () => {
 
       <main className="flex-1">
         {/* AAC Brand Mark — anchored upper-left */}
-         <div className="mx-auto max-w-6xl px-4 pt-1 pb-3">
+         <div className="mx-auto max-w-6xl px-4 pt-0 pb-3">
            <div className="flex items-center gap-2">
              <AACMonogram className="w-8 h-8 text-emerald-500" />
              <span className="text-base font-extrabold tracking-tight text-foreground" style={{ fontFamily: "Manrope, sans-serif" }}>
@@ -450,7 +450,7 @@ const PropertyDetail = () => {
         </div>
 
         {/* ========== LISTING HEADER — Address + Price above hero ========== */}
-        <div className="mx-auto max-w-6xl px-4 pb-2">
+        <div className="mx-auto max-w-6xl px-4 pb-1">
            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
                <MapPin className="w-4 h-4 text-muted-foreground shrink-0 relative top-[1px]" />
