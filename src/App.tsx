@@ -284,6 +284,7 @@ const App = () => (
                 <Route path="/idx/property/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <CookieConsent />
             </>
           </TooltipProvider>
         </ThemeProvider>
