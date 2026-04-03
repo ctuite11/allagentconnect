@@ -463,11 +463,6 @@ const PropertyDetail = () => {
                 <p className="text-lg font-bold text-foreground">
                   ${listing?.price?.toLocaleString() ?? '—'}
                 </p>
-                {listing?.square_feet && listing.square_feet > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sf
-                  </p>
-                )}
               </div>
             </div>
           </div>
