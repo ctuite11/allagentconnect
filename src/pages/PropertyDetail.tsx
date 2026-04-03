@@ -408,7 +408,7 @@ const PropertyDetail = () => {
   const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
   return (
-    <div className="min-h-screen bg-background pt-14">
+    <div className="min-h-screen bg-background pt-0">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
