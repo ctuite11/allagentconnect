@@ -1,45 +1,41 @@
 
 
-# Schema Drift Protection
+# Update Schema Drift Protection for Lovable Cloud
 
-## Context
-- `pg_dump` is available in the sandbox
-- No Supabase CLI (not needed — `pg_dump` works directly)
-- No `.github/workflows/` directory exists yet
-- Existing docs at `docs/database/`
+## Problem
+The current GitHub Actions workflow requires manual `PGHOST`/`PGUSER`/etc. secrets to connect to the database and run `pg_dump`. Since the database is managed by Lovable Cloud, those credentials aren't available to configure in GitHub.
 
-## Plan
+## Solution
+Split drift protection into two complementary checks:
 
-### 1. Generate schema snapshot
-Run `pg_dump --schema-only --schema=public` to capture the full structural snapshot (tables, columns, indexes, constraints, enums, views, functions, RLS policies) and save to `docs/database/schema_snapshot.sql`.
+1. **GitHub Actions (no DB needed)** — Verify that whenever migration files change, the snapshot file was also updated in the same PR. This is a pure file-level check requiring zero database credentials.
 
-### 2. Create drift check script
-Create `scripts/check-schema-drift.sh` that:
-- Dumps current schema to a temp file
-- Diffs against committed `docs/database/schema_snapshot.sql`
-- Exits non-zero if differences found
-- Prints a clear message showing what drifted
+2. **Lovable sandbox (has DB access)** — The real `pg_dump` comparison continues to work via `npm run db:check` in the sandbox where PG env vars are already injected. This is where developers actually regenerate and verify the snapshot before committing.
 
-### 3. Add package.json scripts
-```json
-"db:snapshot": "pg_dump --schema-only --schema=public > docs/database/schema_snapshot.sql",
-"db:check": "bash scripts/check-schema-drift.sh"
-```
+## Changes
 
-Note: These use `pg_dump` directly since the Supabase CLI isn't available in this environment. The commands work against the connected database using the preconfigured `pg` env vars.
+### 1. Rewrite `.github/workflows/schema-drift.yml`
+Replace the `pg_dump`-based check with a file-level guard:
+- Trigger on PRs that touch `supabase/migrations/**`
+- Use `git diff` to check if `docs/database/schema_snapshot.sql` was also modified in the PR
+- Fail with a clear message if migrations changed but snapshot wasn't updated
+- No PostgreSQL client install needed, no secrets needed
 
-### 4. Create GitHub Actions workflow
-Create `.github/workflows/schema-drift.yml` that:
-- Triggers on PRs
-- Runs `npm run db:check`
-- Fails the PR if schema has drifted without an updated snapshot
+### 2. Keep `scripts/check-schema-drift.sh` unchanged
+This script still works perfectly inside the Lovable sandbox where `pg_dump` and PG env vars are available. Developers run `npm run db:check` before committing.
 
-### Files created/modified
-- `docs/database/schema_snapshot.sql` (generated)
-- `scripts/check-schema-drift.sh` (new)
-- `.github/workflows/schema-drift.yml` (new)
-- `package.json` (add 2 scripts)
+### 3. Keep `package.json` scripts unchanged
+`db:snapshot` and `db:check` remain as-is — they work in the Lovable sandbox.
 
-### Important caveat
-The CI workflow needs database access to run `pg_dump`. In GitHub Actions, this requires the database connection string as a repository secret. The workflow will include a note about this setup requirement.
+## Result
+- GitHub Actions catches PRs that add migrations without updating the snapshot — no credentials needed
+- `npm run db:check` in the Lovable sandbox does the real `pg_dump` comparison
+- No manual secret management
+- No database password exposure
+- Full drift protection preserved
+
+## Files modified
+- `.github/workflows/schema-drift.yml` (rewrite)
+
+No other files change.
 
