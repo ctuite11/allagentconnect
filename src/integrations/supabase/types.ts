@@ -1471,18 +1471,24 @@ export type Database = {
         Row: {
           conversation_id: string
           created_at: string
+          is_archived: boolean
+          is_muted: boolean
           last_read_at: string | null
           user_id: string
         }
         Insert: {
           conversation_id: string
           created_at?: string
+          is_archived?: boolean
+          is_muted?: boolean
           last_read_at?: string | null
           user_id: string
         }
         Update: {
           conversation_id?: string
           created_at?: string
+          is_archived?: boolean
+          is_muted?: boolean
           last_read_at?: string | null
           user_id?: string
         }
