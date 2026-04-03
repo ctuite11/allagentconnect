@@ -57,6 +57,8 @@ import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
+import { Seo } from "@/components/Seo";
+import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "@/components/BuyerCompensationInfoModal";
