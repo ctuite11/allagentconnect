@@ -15,13 +15,18 @@ fi
 echo "Dumping current schema..."
 pg_dump --schema-only --schema=public > "$TEMPFILE"
 
-if cmp -s "$SNAPSHOT" "$TEMPFILE"; then
+HASH_COMMITTED=$(md5sum "$SNAPSHOT" | cut -d' ' -f1)
+HASH_LIVE=$(md5sum "$TEMPFILE" | cut -d' ' -f1)
+
+if [ "$HASH_COMMITTED" = "$HASH_LIVE" ]; then
   echo "✓ Schema matches committed snapshot. No drift detected."
   exit 0
 else
   echo "✗ SCHEMA DRIFT DETECTED"
   echo ""
-  echo "The committed snapshot does not match the live database."
+  echo "Committed: $HASH_COMMITTED"
+  echo "Live:      $HASH_LIVE"
+  echo ""
   echo "Run 'npm run db:snapshot' and commit the updated file."
   exit 1
 fi
