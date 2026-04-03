@@ -408,7 +408,7 @@ const PropertyDetail = () => {
   const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
   return (
-    <div className="min-h-screen bg-background pt-14">
+    <div className="min-h-screen bg-background pt-0">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -453,10 +453,10 @@ const PropertyDetail = () => {
 
         {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
         <div className="mx-auto max-w-6xl px-4 pb-2">
-          <div className="lg:w-[68%]">
+          <div className="lg:w-[68%] pr-2">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
-                <MapPin className="w-4 h-4 text-muted-foreground shrink-0 relative top-[1px]" />
+                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
                 {buildDisplayAddress(listing as any)}
               </h1>
               <div className="text-right">
