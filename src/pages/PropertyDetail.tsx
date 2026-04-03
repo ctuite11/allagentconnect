@@ -520,6 +520,13 @@ const PropertyDetail = () => {
                       </Badge>
                     </div>
 
+                    {/* DOM Badge - Top Right Overlay */}
+                    {daysOnMarket !== null && (
+                      <Badge variant="outline" className="absolute top-14 right-4 font-mono text-xs bg-white/90 backdrop-blur-sm">
+                        {daysOnMarket} DOM
+                      </Badge>
+                    )}
+
                     {/* Share Button - Top Right Overlay */}
                     <div className="absolute top-4 right-4">
                       <DropdownMenu>
