@@ -26,6 +26,8 @@ import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { Seo } from "@/components/Seo";
+import { getPublicOrigin } from "@/lib/getPublicUrl";
 
 const generateVCard = (agent: AgentProfileData) => {
   const vcard = [

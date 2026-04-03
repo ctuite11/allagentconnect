@@ -1,9 +1,11 @@
 import Footer from "@/components/Footer";
 import { Home } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 const FairHousing = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Fair Housing" description="All Agent Connect's commitment to fair housing and equal opportunity." canonical="https://allagentconnect.com/fair-housing" />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="flex items-center gap-3 mb-8">

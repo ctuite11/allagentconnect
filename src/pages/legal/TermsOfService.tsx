@@ -1,8 +1,10 @@
 import Footer from "@/components/Footer";
+import { Seo } from "@/components/Seo";
 
 const TermsOfService = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Terms of Service" description="Terms of service for All Agent Connect, the private real estate agent collaboration platform." canonical="https://allagentconnect.com/terms" />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
           <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
