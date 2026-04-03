@@ -1,21 +1,45 @@
 
 
-# Add schema documentation to repository
+# Schema Drift Protection
 
-## What
-Copy the two generated documentation files into the project repo at `/docs/database/` so the architecture reference is permanently version-controlled.
+## Context
+- `pg_dump` is available in the sandbox
+- No Supabase CLI (not needed — `pg_dump` works directly)
+- No `.github/workflows/` directory exists yet
+- Existing docs at `docs/database/`
 
-## Changes
+## Plan
 
-### 1. Create `/docs/database/AAC_Schema_Architecture.md`
-Copy the content from the generated `/mnt/documents/AAC_Schema_Architecture.md` into the repo.
+### 1. Generate schema snapshot
+Run `pg_dump --schema-only --schema=public` to capture the full structural snapshot (tables, columns, indexes, constraints, enums, views, functions, RLS policies) and save to `docs/database/schema_snapshot.sql`.
 
-### 2. Create `/docs/database/AAC_ERD.mmd`
-Copy the content from the generated `/mnt/documents/AAC_ERD.mmd` into the repo.
+### 2. Create drift check script
+Create `scripts/check-schema-drift.sh` that:
+- Dumps current schema to a temp file
+- Diffs against committed `docs/database/schema_snapshot.sql`
+- Exits non-zero if differences found
+- Prints a clear message showing what drifted
 
-## Files created
-- `docs/database/AAC_Schema_Architecture.md`
-- `docs/database/AAC_ERD.mmd`
+### 3. Add package.json scripts
+```json
+"db:snapshot": "pg_dump --schema-only --schema=public > docs/database/schema_snapshot.sql",
+"db:check": "bash scripts/check-schema-drift.sh"
+```
 
-No application code changes. No database changes.
+Note: These use `pg_dump` directly since the Supabase CLI isn't available in this environment. The commands work against the connected database using the preconfigured `pg` env vars.
+
+### 4. Create GitHub Actions workflow
+Create `.github/workflows/schema-drift.yml` that:
+- Triggers on PRs
+- Runs `npm run db:check`
+- Fails the PR if schema has drifted without an updated snapshot
+
+### Files created/modified
+- `docs/database/schema_snapshot.sql` (generated)
+- `scripts/check-schema-drift.sh` (new)
+- `.github/workflows/schema-drift.yml` (new)
+- `package.json` (add 2 scripts)
+
+### Important caveat
+The CI workflow needs database access to run `pg_dump`. In GitHub Actions, this requires the database connection string as a repository secret. The workflow will include a note about this setup requirement.
 
