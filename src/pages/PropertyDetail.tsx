@@ -453,7 +453,7 @@ const PropertyDetail = () => {
 
         {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
         <div className="mx-auto max-w-6xl px-4 pb-2">
-          <div className="lg:w-[68%]">
+          <div className="lg:w-[68%] pr-2">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
                 <MapPin className="w-4 h-4 text-muted-foreground shrink-0 relative top-[1px]" />
