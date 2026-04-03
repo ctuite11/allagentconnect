@@ -15,8 +15,9 @@ fi
 echo "Dumping current schema..."
 pg_dump --schema-only --schema=public > "$TEMPFILE"
 
-HASH_COMMITTED=$(md5sum "$SNAPSHOT" | cut -d' ' -f1)
-HASH_LIVE=$(md5sum "$TEMPFILE" | cut -d' ' -f1)
+# Strip pg_dump session tokens and timestamps that change between dumps
+HASH_COMMITTED=$(grep -v '^\\restrict ' "$SNAPSHOT" | grep -v '^-- Dumped by' | md5sum | cut -d' ' -f1)
+HASH_LIVE=$(grep -v '^\\restrict ' "$TEMPFILE" | grep -v '^-- Dumped by' | md5sum | cut -d' ' -f1)
 
 if [ "$HASH_COMMITTED" = "$HASH_LIVE" ]; then
   echo "✓ Schema matches committed snapshot. No drift detected."
