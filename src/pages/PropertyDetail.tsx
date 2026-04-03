@@ -669,11 +669,13 @@ const PropertyDetail = () => {
                       <span className="text-xs text-muted-foreground">Sq Ft</span>
                     </div>
                   )}
-                  {daysOnMarket !== null && (
+                  {listing?.square_feet && listing.square_feet > 0 && (
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{daysOnMarket}</span>
-                      <span className="text-xs text-muted-foreground">DOM</span>
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">
+                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground">/sf</span>
                     </div>
                   )}
                 </div>
