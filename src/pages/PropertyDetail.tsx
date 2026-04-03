@@ -425,17 +425,17 @@ const PropertyDetail = () => {
 
       <main className="flex-1">
         {/* AAC Brand Mark — anchored upper-left */}
-         <div className="mx-auto max-w-6xl px-4 pt-0 pb-3">
-           <div className="flex items-center gap-2">
-             <AACMonogram className="w-8 h-8 text-emerald-500" />
-             <span className="text-base font-extrabold tracking-tight text-foreground" style={{ fontFamily: "Manrope, sans-serif" }}>
+        <div className="mx-auto max-w-6xl px-4 pt-0 pb-4">
+          <div className="flex items-center gap-2">
+            <AACMonogram className="w-8 h-8 text-emerald-500" />
+            <span className="text-base font-extrabold tracking-tight text-foreground" style={{ fontFamily: "Manrope, sans-serif" }}>
               All Agent Connect
             </span>
           </div>
         </div>
 
         {/* Back Button Row */}
-        <div className="mx-auto max-w-6xl px-4 pb-1">
+        <div className="mx-auto max-w-6xl px-4 pb-4">
           <button
             onClick={() => {
               const fromPage = (location.state as any)?.from;
@@ -449,22 +449,24 @@ const PropertyDetail = () => {
           </button>
         </div>
 
-        {/* ========== LISTING HEADER — Address + Price above hero ========== */}
-        <div className="mx-auto max-w-6xl px-4 pb-1">
-           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-             <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
-               <MapPin className="w-4 h-4 text-muted-foreground shrink-0 relative top-[1px]" />
-               {buildDisplayAddress(listing as any)}
-             </h1>
-             <div className="text-right">
-               <p className="text-lg font-bold text-foreground">
-                ${listing?.price?.toLocaleString() ?? '—'}
-              </p>
-              {listing?.square_feet && listing.square_feet > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sf
+        {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
+        <div className="mx-auto max-w-6xl px-4 pb-2">
+          <div className="lg:w-[68%]">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
+                <MapPin className="w-4 h-4 text-muted-foreground shrink-0 relative top-[1px]" />
+                {buildDisplayAddress(listing as any)}
+              </h1>
+              <div className="text-right">
+                <p className="text-lg font-bold text-foreground">
+                  ${listing?.price?.toLocaleString() ?? '—'}
                 </p>
-              )}
+                {listing?.square_feet && listing.square_feet > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sf
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
