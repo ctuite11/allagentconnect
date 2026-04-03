@@ -1,5 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/Seo";
 import HeroSection from "@/components/home-v2/HeroSection";
 import ProofStrip from "@/components/home-v2/ProofStrip";
 import NetworkIntelligence from "@/components/home-v2/NetworkIntelligence";
@@ -10,12 +11,26 @@ import GCIBenefits from "@/components/home-v2/GCIBenefits";
 import FinalCTA from "@/components/home-v2/FinalCTA";
 import FooterV2 from "@/components/home-v2/FooterV2";
 
+const HOMEPAGE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "All Agent Connect",
+  url: "https://allagentconnect.com",
+  description:
+    "A private, agent-only network for off-market and coming-soon listings, powered by real buyer and renter needs.",
+  sameAs: [],
+};
+
 const HomepageV2 = () => {
   return (
     <>
+      <Seo
+        title="See the Market Before It Hits the MLS"
+        description="The private network where agents share off-market listings, buyer demand, and deal intelligence before properties go public."
+        canonical="https://allagentconnect.com"
+        jsonLd={HOMEPAGE_JSON_LD}
+      />
       <Helmet>
-        <title>All Agent Connect — See the Market Before It Hits the MLS</title>
-        <meta name="description" content="The private network where agents share off-market listings, buyer demand, and deal intelligence before properties go public." />
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </Helmet>
 

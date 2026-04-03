@@ -1,9 +1,11 @@
 import Footer from "@/components/Footer";
 import { AlertCircle } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 const Disclosures = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Seo title="Disclosures" description="Platform disclosures for All Agent Connect." canonical="https://allagentconnect.com/disclosures" />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
           <h1 className="text-4xl font-bold mb-8">Disclosures</h1>

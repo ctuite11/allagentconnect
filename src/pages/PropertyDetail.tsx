@@ -57,6 +57,8 @@ import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
+import { Seo } from "@/components/Seo";
+import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "@/components/BuyerCompensationInfoModal";
@@ -409,17 +411,36 @@ const PropertyDetail = () => {
 
   return (
     <div className="min-h-screen bg-background pt-0">
-      <PropertyMetaTags
-        address={listing.address}
-        city={listing.city}
-        state={listing.state}
-        price={listing.price}
-        bedrooms={listing.bedrooms}
-        bathrooms={listing.bathrooms}
-        description={listing.description}
-        photo={mainPhoto}
-        listingType={listing.listing_type}
-        listingId={id!}
+      <Seo
+        title={`${listing.address}, ${listing.city}, ${listing.state}`}
+        description={
+          listing.description
+            ? `$${listing.price.toLocaleString()} — ${listing.bedrooms} bed, ${listing.bathrooms} bath. ${listing.description.substring(0, 120)}…`
+            : `$${listing.price.toLocaleString()} — ${listing.bedrooms} bed, ${listing.bathrooms} bath in ${listing.city}, ${listing.state}`
+        }
+        image={mainPhoto || undefined}
+        canonical={`${getPublicOrigin()}/property/${id}`}
+        type="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "RealEstateListing",
+          name: `${listing.address}, ${listing.city}, ${listing.state}`,
+          url: `${getPublicOrigin()}/property/${id}`,
+          description: listing.description || undefined,
+          ...(mainPhoto ? { image: mainPhoto } : {}),
+          offers: {
+            "@type": "Offer",
+            price: listing.price,
+            priceCurrency: "USD",
+          },
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: listing.address,
+            addressLocality: listing.city,
+            addressRegion: listing.state,
+            postalCode: listing.zip_code,
+          },
+        }}
       />
 
 
