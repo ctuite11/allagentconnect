@@ -2,6 +2,7 @@ import React from "react";
 import { DashboardSidebar } from "@/components/agent-dashboard-v2";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
+import { Seo } from "@/components/Seo";
 
 interface AppShellProps {
   children: React.ReactNode;
