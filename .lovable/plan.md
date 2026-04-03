@@ -1,35 +1,33 @@
 
 
-# Refine Property Detail header — 3 adjustments
+# Fix Property Detail header — move logo up, reposition price
 
 ## File
 `src/pages/PropertyDetail.tsx`
 
 ## Changes
 
-### 1. Enlarge AAC logo and move it toward top of page
-- Monogram: `w-7 h-7` → `w-8 h-8`
-- Wordmark: `text-sm` → `text-base`
-- Reduce top padding: `pt-5` → `pt-3` to push logo closer to the top edge
+### 1. Move AAC logo closer to top
+Reduce padding on the branding row from `pt-3` to `pt-1` so the logo sits near the very top of the page content area.
 
-### 2. Reduce address font size
-- Address `h1`: `text-xl` → `text-lg`
+### 2. Reposition price to right-align above the hero image's right corner
+Currently the price sits in the same row as the address. Instead, restructure the header block so the price block is positioned at the far right, immediately above the hero image — visually anchored to the top-right corner of the photo.
 
-### 3. Reduce price font size
-- Price: `text-xl font-bold` → `text-lg font-bold`
-- Tighten gap between address and price: `gap-x-6` → `gap-x-4`
+The address row and price block will remain in the same `flex justify-between` container (line 454), but the container's bottom padding will be reduced (`pb-4` → `pb-2`) to bring the price closer to the photo's top-right corner, making it feel anchored there.
 
-## Result
+### Layout result
 ```text
-[AAC logo (larger, near top)]
+[AAC logo (moved higher, pt-1)]
 
 [← back]
 
-[pin + address (text-lg) ............ price (text-lg)]
-[..................................... price/sf]
-
-[hero image]
+[pin + address ...................... price]
+[...................................... $/sf]
+[hero image --------------------------------]
 ```
 
-All changes are page-local to `PropertyDetail.tsx` — no other files affected.
+### Technical details
+- Line 428: change `pt-3` → `pt-1`
+- Line 453: change `pb-4` → `pb-2` to tighten gap between price row and hero image
+- All changes in `src/pages/PropertyDetail.tsx` only
 
