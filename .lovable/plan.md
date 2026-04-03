@@ -1,33 +1,36 @@
 
 
-# Fix Property Detail header — move logo up, reposition price
+# Fix Property Detail header — actually move logo up and tighten price position
+
+## Root cause
+The outer wrapper at line 411 has `pt-20` (80px top padding), which is likely there to clear the AppShell navigation bar. The inner `pt-1` on the logo row has no visible effect because the 80px gap above it dominates. The previous changes were correct but too subtle to notice against this large padding.
 
 ## File
 `src/pages/PropertyDetail.tsx`
 
 ## Changes
 
-### 1. Move AAC logo closer to top
-Reduce padding on the branding row from `pt-3` to `pt-1` so the logo sits near the very top of the page content area.
+### 1. Reduce outer top padding
+Line 411: Change `pt-20` → `pt-14` to bring the entire page content closer to the top while still clearing the nav bar. This moves the logo visibly upward.
 
-### 2. Reposition price to right-align above the hero image's right corner
-Currently the price sits in the same row as the address. Instead, restructure the header block so the price block is positioned at the far right, immediately above the hero image — visually anchored to the top-right corner of the photo.
+### 2. Remove remaining inner top padding on logo row
+Line 428: Change `pt-1` → `pt-0` so the logo sits flush at the top of the content area.
 
-The address row and price block will remain in the same `flex justify-between` container (line 454), but the container's bottom padding will be reduced (`pb-4` → `pb-2`) to bring the price closer to the photo's top-right corner, making it feel anchored there.
+### 3. Tighten spacing between price row and hero image
+Line 453: Change `pb-2` → `pb-1` to bring the price block closer to the hero image's top-right corner.
 
-### Layout result
+## Result
 ```text
-[AAC logo (moved higher, pt-1)]
+[nav bar]
+─── less gap (pt-14 instead of pt-20) ───
+[AAC logo (flush, no inner padding)]
 
 [← back]
 
-[pin + address ...................... price]
-[...................................... $/sf]
-[hero image --------------------------------]
+[pin + address .................. price]
+[................................... $/sf]
+[hero image ─────────────────────────────]
 ```
 
-### Technical details
-- Line 428: change `pt-3` → `pt-1`
-- Line 453: change `pb-4` → `pb-2` to tighten gap between price row and hero image
-- All changes in `src/pages/PropertyDetail.tsx` only
+The logo will move noticeably higher, and the price will sit tighter against the hero image's top-right corner. All changes page-local to `PropertyDetail.tsx`.
 
