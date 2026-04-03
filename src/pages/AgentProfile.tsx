@@ -217,8 +217,28 @@ const AgentProfile = () => {
     },
   ].filter(Boolean) as { icon: typeof Phone; label: string; href: string }[];
 
+  const agentFullName = `${agent.first_name} ${agent.last_name}`;
+  const agentProfileUrl = `${getPublicOrigin()}/agent/${agent.aac_id || agent.id}`;
+
   return (
     <div className="flex-1 bg-background min-h-screen">
+      <Seo
+        title={`${agentFullName} — ${agent.title || "Realtor"} at ${agent.company || "All Agent Connect"}`}
+        description={agent.bio?.substring(0, 155) || `${agentFullName} is a real estate professional on All Agent Connect.`}
+        image={agent.headshot_url || undefined}
+        canonical={agentProfileUrl}
+        type="profile"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Person",
+          name: agentFullName,
+          url: agentProfileUrl,
+          jobTitle: agent.title || "Realtor",
+          worksFor: { "@type": "Organization", name: agent.company || undefined },
+          ...(agent.headshot_url ? { image: agent.headshot_url } : {}),
+          ...(agent.bio ? { description: agent.bio.substring(0, 200) } : {}),
+        }}
+      />
       {/* Back nav */}
       <div className="max-w-6xl mx-auto px-8 pt-6">
         <button
