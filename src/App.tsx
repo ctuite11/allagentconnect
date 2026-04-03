@@ -95,6 +95,7 @@ import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import Navigation from "./components/Navigation";
 import VersionStamp from "./components/VersionStamp";
 import { NewMessageToastListener } from "./components/NewMessageToastListener";
+import CookieConsent from "./components/CookieConsent";
 
 // Success Hub v2
 import SuccessHubDashboard from "./pages/success-hub/SuccessHubDashboard";
