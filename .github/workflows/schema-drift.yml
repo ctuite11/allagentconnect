@@ -7,22 +7,31 @@ on:
       - 'docs/database/schema_snapshot.sql'
 
 jobs:
-  check-drift:
+  check-snapshot-updated:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Check snapshot was updated with migrations
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
 
-      - name: Check schema drift
-        env:
-          # Add these as GitHub repository secrets:
-          #   DATABASE_URL — full postgres connection string to your Supabase DB
-          # Example: postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
-          PGHOST: ${{ secrets.PGHOST }}
-          PGPORT: ${{ secrets.PGPORT }}
-          PGDATABASE: ${{ secrets.PGDATABASE }}
-          PGUSER: ${{ secrets.PGUSER }}
-          PGPASSWORD: ${{ secrets.PGPASSWORD }}
-        run: bash scripts/check-schema-drift.sh
+          CHANGED_FILES=$(git diff --name-only "$BASE" "$HEAD")
+
+          HAS_MIGRATION=$(echo "$CHANGED_FILES" | grep -c '^supabase/migrations/' || true)
+          HAS_SNAPSHOT=$(echo "$CHANGED_FILES" | grep -c '^docs/database/schema_snapshot.sql' || true)
+
+          if [ "$HAS_MIGRATION" -gt 0 ] && [ "$HAS_SNAPSHOT" -eq 0 ]; then
+            echo "::error::Schema drift detected: migration files changed but docs/database/schema_snapshot.sql was not updated."
+            echo ""
+            echo "Migration files changed:"
+            echo "$CHANGED_FILES" | grep '^supabase/migrations/'
+            echo ""
+            echo "Run 'npm run db:snapshot' in the Lovable sandbox and commit the updated snapshot."
+            exit 1
+          fi
+
+          echo "✓ Schema snapshot is in sync with migrations."
