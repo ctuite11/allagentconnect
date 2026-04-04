@@ -105,8 +105,8 @@ serve(async (req) => {
   <meta property="og:url" content="${pageUrl}" />
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:image" content="${photoUrl}" />
-  <meta property="og:image:secure_url" content="${photoUrl}" />
+  <meta property="og:image" content="${ogImageUrl}" />
+  <meta property="og:image:secure_url" content="${ogImageUrl}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
@@ -118,7 +118,7 @@ serve(async (req) => {
   <meta name="twitter:url" content="${pageUrl}" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${photoUrl}" />
+  <meta name="twitter:image" content="${rawPhotoUrl}" />
   <meta name="twitter:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
 
   <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;padding:24px;}</style>
