@@ -68,11 +68,14 @@ serve(async (req) => {
       return new Response("Listing not found", { status: 404, headers: corsHeaders });
     }
 
-    // Photo URL resolution
-    let photoUrl = "https://allagentconnect.com/og-default.png";
+    // Dynamic OG image — SVG composed with property photo + price badge
+    const ogImageUrl = `${supabaseUrl}/functions/v1/listing-og-image?id=${listingId}`;
+
+    // Fallback raw photo for twitter:image (some platforms prefer raster)
+    let rawPhotoUrl = "https://allagentconnect.com/og-default.png";
     if (Array.isArray(listing.photos) && listing.photos.length) {
       const first = listing.photos[0];
-      photoUrl = typeof first === "string" ? first : first?.url || photoUrl;
+      rawPhotoUrl = typeof first === "string" ? first : first?.url || rawPhotoUrl;
     }
 
     // Build title/description
