@@ -12,3 +12,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /agent-dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /password-reset
+Disallow: /pending-verification
+Disallow: /client
+
+Sitemap: https://allagentconnect.com/sitemap.xml

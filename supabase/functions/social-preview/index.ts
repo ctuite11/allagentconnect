@@ -68,11 +68,14 @@ serve(async (req) => {
       return new Response("Listing not found", { status: 404, headers: corsHeaders });
     }
 
-    // Photo URL resolution
-    let photoUrl = "https://allagentconnect.com/og-default.png";
+    // Dynamic OG image — SVG composed with property photo + price badge
+    const ogImageUrl = `${supabaseUrl}/functions/v1/listing-og-image?id=${listingId}`;
+
+    // Fallback raw photo for twitter:image (some platforms prefer raster)
+    let rawPhotoUrl = "https://allagentconnect.com/og-default.png";
     if (Array.isArray(listing.photos) && listing.photos.length) {
       const first = listing.photos[0];
-      photoUrl = typeof first === "string" ? first : first?.url || photoUrl;
+      rawPhotoUrl = typeof first === "string" ? first : first?.url || rawPhotoUrl;
     }
 
     // Build title/description
@@ -102,8 +105,8 @@ serve(async (req) => {
   <meta property="og:url" content="${pageUrl}" />
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:image" content="${photoUrl}" />
-  <meta property="og:image:secure_url" content="${photoUrl}" />
+  <meta property="og:image" content="${ogImageUrl}" />
+  <meta property="og:image:secure_url" content="${ogImageUrl}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
@@ -115,7 +118,7 @@ serve(async (req) => {
   <meta name="twitter:url" content="${pageUrl}" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${photoUrl}" />
+  <meta name="twitter:image" content="${rawPhotoUrl}" />
   <meta name="twitter:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
 
   <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;padding:24px;}</style>
