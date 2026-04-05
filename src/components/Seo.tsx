@@ -4,7 +4,7 @@ const SITE_NAME = "All Agent Connect";
 const DEFAULT_TITLE = "All Agent Connect | Real Estate Agent Collaboration Platform";
 const DEFAULT_DESCRIPTION =
   "All Agent Connect is a professional collaboration platform for real estate agents to connect, share listings, manage buyers, and close deals faster.";
-const DEFAULT_IMAGE = "https://allagentconnect.com/og-image.jpg";
+const DEFAULT_IMAGE = "https://allagentconnect.com/og-image.jpg?v=20260404-2";
 const SITE_URL = "https://allagentconnect.com";
 
 interface SeoProps {
