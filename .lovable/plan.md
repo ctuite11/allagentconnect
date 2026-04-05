@@ -1,30 +1,57 @@
 
 
-# Use Uploaded Homepage Screenshot as OG Image
+# Facebook 403 — Confirmed Netlify Hosting Issue
 
-## Problem
-The current OG image has visibility issues (bottom half too dark). The user has provided a clean homepage screenshot that already looks correct — bright, branded, with the hero section clearly visible.
+## Correction
 
-## Solution
-Use the uploaded screenshot (`Screen_Shot_2026-04-04_at_9.36.09_PM.png`) directly as the OG image. Crop/resize to exactly 1200×630 and export as `public/og-image.jpg`.
+The live site `allagentconnect.com` is hosted on **Netlify**, not Lovable. The previous suggestion to contact Lovable support was incorrect. This is a Netlify hosting/security layer issue.
 
-## Steps
+## Status
 
-1. Copy the uploaded screenshot to a working directory
-2. Use Python/Pillow to resize/crop to exactly 1200×630 (the image is already close to this aspect ratio)
-3. Export as optimized JPEG to `public/og-image.jpg`
-4. QA — verify the image looks clean at thumbnail scale
+All repo-side OG and SEO implementation is already correct. No code changes are needed.
 
-## What the OG image will show
-- Full homepage hero: dark background, person on couch with laptop
-- "The private network where agents share pre-market intelligence" headline
-- AAC monogram + wordmark in top-left
-- "Verified Agent Network" pill
-- "Request access" button
-- No cookie banner (the uploaded screenshot is already clean)
+## Diagnosis Step
 
-## Files changed
-- `public/og-image.jpg` (replaced with the uploaded screenshot)
+Run this curl to confirm the block:
 
-No code changes needed — all meta tag references already point to this file.
+```text
+curl -I -A "facebookexternalhit/1.1" https://allagentconnect.com
+```
+
+- **If 403** → confirmed block at Netlify or a proxy/WAF in front of it
+- **If 200** → Facebook cache issue; just re-scrape in the debugger
+
+## Fix (Netlify-side)
+
+Check and remove any block affecting social crawlers in:
+
+1. **Netlify Firewall / Traffic Rules** — Look for IP-based or user-agent-based deny rules
+2. **Netlify Rate Limiting** — Check if rate limiting is enabled and blocking bot user-agents
+3. **Bot Protection** — Disable or whitelist social crawlers if Netlify's bot protection is active
+4. **Upstream Proxy/WAF** — If Cloudflare or another proxy sits in front of Netlify, check its firewall rules and bot management settings
+
+### Required Outcome
+
+- `https://allagentconnect.com` returns **HTTP 200** to `facebookexternalhit`
+- Returned HTML includes existing OG meta tags
+- No challenge, deny, or rate limit applies to social crawlers
+
+### Crawlers to Whitelist
+
+- `facebookexternalhit`
+- `Twitterbot`
+- `LinkedInBot`
+- `Slackbot`
+- `WhatsApp`
+
+## After the Fix
+
+1. Go to [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
+2. Paste `https://allagentconnect.com`
+3. Click **Scrape Again** twice
+4. Preview should render correctly
+
+## No Code Changes Required
+
+The `netlify.toml`, `index.html`, `robots.txt`, `og-image.jpg`, and `Seo.tsx` are all correct.
 
