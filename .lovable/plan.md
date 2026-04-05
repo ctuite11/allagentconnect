@@ -1,21 +1,33 @@
 
 
-# Fix AAC Monogram Visibility on OG Image
+# Replace OG Image with Homepage Screenshot (No Cookie Banner)
 
 ## Problem
-The monogram was added at ~36px — far too small to be visible in social preview thumbnails (which render at ~300–400px wide). Facebook's debugger confirms it's invisible.
+The current OG image (brightened aerial photo) doesn't match the homepage. The user wants the actual homepage hero as the social share image — the guy on the couch with the headline text — but without the cookie consent banner.
 
-## Fix
-Re-composite the monogram onto the existing hero photo at a much larger size (~80–100px) in the top-left corner, matching the homepage nav placement. Use the SVG source at `src/assets/aac-logo-master.svg`, render it in brand green (#50C878), and overlay it with enough size to be clearly visible even at thumbnail scale.
+## Solution
+Use browser tools to screenshot the homepage at 1200x630 after dismissing or hiding the cookie banner, then save as `public/og-image.jpg`.
 
 ## Steps
-1. Convert the AAC monogram SVG to a PNG at ~100px using cairosvg or Pillow
-2. Overlay onto the existing `public/og-image.jpg` at top-left with ~40px padding
-3. Export as optimized JPEG, overwriting `public/og-image.jpg`
-4. QA the output to confirm visibility
+
+1. **Navigate to homepage** in sandbox preview at 1200x630 viewport
+2. **Dismiss the cookie banner** (click Accept or Essential Only) so it's not in the screenshot
+3. **Capture screenshot** of the full hero section at exactly 1200x630
+4. **Process with Python/Pillow** — crop/resize to exact 1200x630 if needed, export as optimized JPEG
+5. **Overwrite `public/og-image.jpg`** — no code changes needed since all references already point to this file
+6. **QA** — verify the image shows: hero photo (guy on couch), headline text, AAC branding in header, no cookie banner, no cropping issues
+
+## What the OG image will show
+- Full homepage hero: dark background, person on couch with laptop
+- "The private network where agents share pre-market intelligence" headline
+- AAC monogram + wordmark in top-left
+- "Verified Agent Network" pill
+- Request Access button
+- No cookie banner
+- No nav buttons that look out of place at thumbnail scale
 
 ## Files changed
-- `public/og-image.jpg` (regenerated with visible monogram)
+- `public/og-image.jpg` (replaced with homepage screenshot)
 
-No code changes needed — references already point to this file.
+No changes to `index.html`, `Seo.tsx`, or any other code — references already point to this file.
 
