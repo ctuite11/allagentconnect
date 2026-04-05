@@ -1,57 +1,27 @@
 
 
-# Facebook 403 — Confirmed Netlify Hosting Issue
+# Cache-Bust OG Image URL for Facebook
 
-## Correction
+## Changes
 
-The live site `allagentconnect.com` is hosted on **Netlify**, not Lovable. The previous suggestion to contact Lovable support was incorrect. This is a Netlify hosting/security layer issue.
+### 1. `index.html`
+Update three meta tags to use versioned URL `https://allagentconnect.com/og-image.jpg?v=20260404-2`:
+- `og:image`
+- `og:image:secure_url`
+- `twitter:image`
 
-## Status
-
-All repo-side OG and SEO implementation is already correct. No code changes are needed.
-
-## Diagnosis Step
-
-Run this curl to confirm the block:
-
-```text
-curl -I -A "facebookexternalhit/1.1" https://allagentconnect.com
+### 2. `src/components/Seo.tsx`
+Update `DEFAULT_IMAGE` constant:
+```
+const DEFAULT_IMAGE = "https://allagentconnect.com/og-image.jpg?v=20260404-2";
 ```
 
-- **If 403** → confirmed block at Netlify or a proxy/WAF in front of it
-- **If 200** → Facebook cache issue; just re-scrape in the debugger
+### Not changed
+- Listing-specific OG image logic
+- Any other meta tags or SEO configuration
 
-## Fix (Netlify-side)
-
-Check and remove any block affecting social crawlers in:
-
-1. **Netlify Firewall / Traffic Rules** — Look for IP-based or user-agent-based deny rules
-2. **Netlify Rate Limiting** — Check if rate limiting is enabled and blocking bot user-agents
-3. **Bot Protection** — Disable or whitelist social crawlers if Netlify's bot protection is active
-4. **Upstream Proxy/WAF** — If Cloudflare or another proxy sits in front of Netlify, check its firewall rules and bot management settings
-
-### Required Outcome
-
-- `https://allagentconnect.com` returns **HTTP 200** to `facebookexternalhit`
-- Returned HTML includes existing OG meta tags
-- No challenge, deny, or rate limit applies to social crawlers
-
-### Crawlers to Whitelist
-
-- `facebookexternalhit`
-- `Twitterbot`
-- `LinkedInBot`
-- `Slackbot`
-- `WhatsApp`
-
-## After the Fix
-
-1. Go to [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
-2. Paste `https://allagentconnect.com`
-3. Click **Scrape Again** twice
-4. Preview should render correctly
-
-## No Code Changes Required
-
-The `netlify.toml`, `index.html`, `robots.txt`, `og-image.jpg`, and `Seo.tsx` are all correct.
+### After publish
+1. View source on live site → confirm `?v=20260404-2` in meta tags
+2. Open `https://allagentconnect.com/og-image.jpg?v=20260404-2` directly → confirm newest image
+3. Facebook Sharing Debugger → Scrape Again twice
 
