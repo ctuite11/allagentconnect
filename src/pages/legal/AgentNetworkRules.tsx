@@ -7,7 +7,8 @@ const AgentNetworkRules = () => {
       <Seo title="Agent Network Rules" description="Code of conduct and professional standards for agents on All Agent Connect." canonical="https://allagentconnect.com/agent-network-rules" />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
-          <h1 className="text-4xl font-bold mb-8">Agent Network Rules</h1>
+          <h1 className="text-4xl font-bold mb-3">Agent Network Rules</h1>
+          <p className="text-muted-foreground mb-8">Professional standards and code of conduct for agents on the All Agent Connect network.</p>
           
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-6">
             <section>
@@ -104,7 +105,7 @@ const AgentNetworkRules = () => {
 
             <section className="pt-6 border-t">
               <p className="text-sm text-muted-foreground">
-                Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                Last updated: April 2026
               </p>
             </section>
           </div>

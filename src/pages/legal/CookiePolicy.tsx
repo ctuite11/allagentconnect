@@ -7,7 +7,8 @@ const CookiePolicy = () => {
       <Seo title="Cookie Policy" description="Cookie policy for All Agent Connect." canonical="https://allagentconnect.com/cookies" />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
-          <h1 className="text-4xl font-bold mb-8">Cookie Policy</h1>
+          <h1 className="text-4xl font-bold mb-3">Cookie Policy</h1>
+          <p className="text-muted-foreground mb-8">This page outlines how All Agent Connect handles cookies on the platform.</p>
           
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-6">
             <section>
@@ -98,7 +99,7 @@ const CookiePolicy = () => {
 
             <section className="pt-6 border-t">
               <p className="text-sm text-muted-foreground">
-                Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                Last updated: April 2026
               </p>
             </section>
           </div>
