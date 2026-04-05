@@ -7,7 +7,8 @@ const FairHousing = () => {
       <Seo title="Fair Housing" description="All Agent Connect's commitment to fair housing and equal opportunity." canonical="https://allagentconnect.com/fair-housing" />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
-          <h1 className="text-4xl font-bold mb-8">Fair Housing</h1>
+          <h1 className="text-4xl font-bold mb-3">Fair Housing</h1>
+          <p className="text-muted-foreground mb-8">All Agent Connect's commitment to equal housing opportunity and fair housing compliance.</p>
           
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-6">
             <section>
@@ -90,7 +91,7 @@ const FairHousing = () => {
 
             <section className="pt-6 border-t">
               <p className="text-sm text-muted-foreground">
-                Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                Last updated: April 2026
               </p>
             </section>
           </div>
