@@ -1,60 +1,63 @@
 
 
-# Export Full AAC Database for Migration
+# Generate SQL Import Scripts for New Supabase Project
 
-## What You Already Have (In Your Git Repo)
+## Overview
 
-| Asset | Location | Status |
-|-------|----------|--------|
-| Schema (77 tables, indexes, constraints, FKs, views, functions, triggers) | `supabase/migrations/` (203 files) | ✅ Complete |
-| RLS policies (245) | Included in migrations | ✅ Complete |
-| Edge functions (58) | `supabase/functions/` | ✅ Complete |
-| Config | `supabase/config.toml` | ✅ Complete |
+Create ready-to-run SQL import scripts from the 78 exported CSVs. You'll paste these into your new Supabase SQL Editor after applying the schema migrations.
 
-## What This Export Will Produce
+## Prerequisites (You Do First)
 
-All **table data** exported as CSV files to `/mnt/documents/` — one file per table.
+1. Apply all 203 migrations from `supabase/migrations/` to your new project (via `supabase db push` or pasting sequentially in SQL Editor)
+2. Tables must exist before running import scripts
 
-## Execution Plan
+## What I'll Generate
 
-### Step 1 — Export all table data as CSVs
+### `/mnt/documents/aac_import/README.md`
+Step-by-step instructions for running the import in your new Supabase SQL Editor.
 
-Run `psql` queries against every populated table and write CSVs to `/mnt/documents/aac_export/`. Tables include:
+### `/mnt/documents/aac_import/` — SQL files in dependency order
 
-- `profiles`, `user_roles`, `agent_profiles`, `agent_settings`
-- `listings`, `listing_stats`, `listing_status_history`, `listing_price_history`
-- `clients`, `client_agent_relationships`, `client_needs`
-- `conversations`, `conversation_participants`, `conversation_messages`
-- `hot_sheets`, `hot_sheet_clients`, `hot_sheet_comments`, `hot_sheet_listing_status`, `hot_sheet_sent_listings`
-- `favorites`, `favorite_price_history`
-- `buyer_workspaces`, `buyer_workspace_members`, `buyer_workspace_invites`, `buyer_credentials`, `buyer_qualifications`
-- `email_jobs`, `email_templates`, `email_campaigns`, `email_sends`
-- `agent_early_access`, `agent_invites`, `agent_license_uploads`
-- `share_tokens`, `invite_events`
-- `teams`, `team_members`
-- `feature_flags`, `audit_logs`, `counties`, `saved_searches`
-- `seller_matches`, `seller_match_outcomes`, `agent_match_submissions`, `agent_match_deliveries`
-- All remaining tables
+| File | Tables | Rows |
+|------|--------|------|
+| `01_profiles_roles.sql` | profiles, user_roles | 31 |
+| `02_agent_core.sql` | agent_profiles, agent_settings, agent_early_access, agent_invites | 135 |
+| `03_counties_flags.sql` | counties, feature_flags | 11 |
+| `04_clients.sql` | clients, client_needs, client_agent_relationships | 202 |
+| `05_listings.sql` | listings, listing_stats, listing_status_history, listing_price_history, listing_drafts, listing_shares, listing_views | 442 |
+| `06_conversations.sql` | conversations, conversation_participants, conversation_messages | 48 |
+| `07_hot_sheets.sql` | hot_sheets, hot_sheet_clients, hot_sheet_sent_listings | 9 |
+| `08_buyer_workspaces.sql` | buyer_workspaces, buyer_workspace_members, buyer_workspace_invites | 3 |
+| `09_email.sql` | email_templates, email_jobs, email_events | 237 |
+| `10_independent.sql` | share_tokens, invite_events, favorites, notification_preferences, ad_packages, testimonials, deleted_users, agent_messages, agent_notifications, agent_buyer_coverage_areas, agent_match_submissions, agent_proposal_incentives | 570 |
+| `11_large_tables.sql` | public_records_cache, rate_limits, audit_logs | 1,794 |
 
-### Step 2 — Generate row counts summary
+### Approach
 
-Produce a manifest showing which tables have data and how many rows, so you know what matters.
+- Read each CSV, convert to `INSERT INTO ... VALUES (...)` with proper escaping
+- Handle NULLs, timestamps, UUIDs, JSON, arrays, and quoted text
+- All inserts use `ON CONFLICT DO NOTHING` for safe re-runs
+- Large tables chunked into batches of 500 rows
+- Dependency order prevents FK violations
 
-### Step 3 — Document secrets needed
+## Technical Details
 
-Output a checklist of all server-side secrets your edge functions reference (from scanning the function code).
-
-## What This Does NOT Export (Manual Steps)
-
-| Item | Why | What To Do |
-|------|-----|------------|
-| **Auth users** (`auth.users`) | Protected schema, no client access | Export via Lovable Cloud → Users panel, or re-register users |
-| **Storage files** | Binary assets in buckets | Download from Cloud → Storage, re-upload to new project |
-| **Auth Hook config** | Dashboard-level setting | Manually configure in new Supabase dashboard: Auth → Hooks → Send Email Hook |
+- Python script reads CSVs from `/mnt/documents/aac_export/`
+- Outputs 11 numbered SQL files + README to `/mnt/documents/aac_import/`
+- Empty tables (40) are skipped entirely
+- Special handling for PostgreSQL array columns (`{}` syntax) and JSONB columns
 
 ## Deliverables
 
-- `/mnt/documents/aac_export/` — all table CSVs
-- `/mnt/documents/aac_export/manifest.txt` — row counts per table
-- `/mnt/documents/aac_export/secrets_checklist.txt` — required secrets list
+- 11 SQL files ready to paste into Supabase SQL Editor in order
+- `README.md` with step-by-step instructions
+- All files downloadable from `/mnt/documents/aac_import/`
+
+## What This Does NOT Cover
+
+- **Schema** — apply the 203 migrations first
+- **Auth users** — must re-register or use Supabase Admin API
+- **Storage files** — download from Lovable Cloud, upload to new buckets
+- **Edge functions** — deploy via `supabase functions deploy`
+- **Secrets** — configure per `secrets_checklist.txt`
 
