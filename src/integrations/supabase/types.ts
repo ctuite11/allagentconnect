@@ -2668,6 +2668,10 @@ export type Database = {
           cooling_types: Json | null
           county: string | null
           created_at: string
+          dcmls_error: string | null
+          dcmls_last_updated_at: string | null
+          dcmls_published_at: string | null
+          dcmls_status: string
           deposit_requirements: Json | null
           description: string | null
           disclosures: Json | null
@@ -2725,6 +2729,7 @@ export type Database = {
           property_styles: Json | null
           property_type: string | null
           property_website_url: string | null
+          publish_to_dcmls: boolean
           rental_fee: number | null
           rental_fee_text: string | null
           residential_exemption: string | null
@@ -2789,6 +2794,10 @@ export type Database = {
           cooling_types?: Json | null
           county?: string | null
           created_at?: string
+          dcmls_error?: string | null
+          dcmls_last_updated_at?: string | null
+          dcmls_published_at?: string | null
+          dcmls_status?: string
           deposit_requirements?: Json | null
           description?: string | null
           disclosures?: Json | null
@@ -2846,6 +2855,7 @@ export type Database = {
           property_styles?: Json | null
           property_type?: string | null
           property_website_url?: string | null
+          publish_to_dcmls?: boolean
           rental_fee?: number | null
           rental_fee_text?: string | null
           residential_exemption?: string | null
@@ -2910,6 +2920,10 @@ export type Database = {
           cooling_types?: Json | null
           county?: string | null
           created_at?: string
+          dcmls_error?: string | null
+          dcmls_last_updated_at?: string | null
+          dcmls_published_at?: string | null
+          dcmls_status?: string
           deposit_requirements?: Json | null
           description?: string | null
           disclosures?: Json | null
@@ -2967,6 +2981,7 @@ export type Database = {
           property_styles?: Json | null
           property_type?: string | null
           property_website_url?: string | null
+          publish_to_dcmls?: boolean
           rental_fee?: number | null
           rental_fee_text?: string | null
           residential_exemption?: string | null
