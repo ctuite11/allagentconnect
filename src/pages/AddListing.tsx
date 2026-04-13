@@ -45,6 +45,8 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
+import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
+import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -2178,6 +2180,17 @@ const AddListing = () => {
       is_relisting: true,
       original_listing_id: originalListingId,
     } : {}),
+
+    // DCMLS publish fields
+    ...buildDcmlsPayload(
+      publishToDcmls,
+      dcmlsPublishedAt,
+      {
+        address: (formData.address || "Draft").trim(),
+        price: formData.price ? parseFloat(formData.price) : null,
+        property_type: formData.property_type || null,
+      }
+    ),
     };
   };
 
