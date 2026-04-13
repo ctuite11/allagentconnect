@@ -687,6 +687,16 @@ const EditListing: React.FC = () => {
                   </div>
                 )}
 
+                {/* DCMLS Publishing */}
+                <div className="border-t pt-4">
+                  <DcmlsPublishControl
+                    checked={publishToDcmls}
+                    onCheckedChange={setPublishToDcmls}
+                    dcmlsStatus={dcmlsStatus}
+                    dcmlsError={dcmlsError}
+                  />
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <Button
                     type="submit"
