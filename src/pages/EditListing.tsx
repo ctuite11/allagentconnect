@@ -13,6 +13,8 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { getNeighborhoodsForLocation } from "@/lib/locationData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADD_LISTING_EDIT_STATUSES, LISTING_STATUS } from "@/constants/status";
+import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
+import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
 
 const EditListing: React.FC = () => {
   const { user } = useAuthRole();
@@ -58,6 +60,12 @@ const EditListing: React.FC = () => {
   const [taxYear, setTaxYear] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+
+  // DCMLS publish state
+  const [publishToDcmls, setPublishToDcmls] = useState(false);
+  const [dcmlsStatus, setDcmlsStatus] = useState<string>('not_published');
+  const [dcmlsError, setDcmlsError] = useState<string | null>(null);
+  const [dcmlsPublishedAt, setDcmlsPublishedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !id) return;
