@@ -652,6 +652,12 @@ const AddListing = () => {
           fiscal_year: (data as any).fiscal_year?.toString() || "",
           residential_exemption: (data as any).residential_exemption || "",
         }));
+
+        // Load DCMLS publish state
+        setPublishToDcmls(data.publish_to_dcmls || false);
+        setDcmlsStatus(data.dcmls_status || 'not_published');
+        setDcmlsError(data.dcmls_error || null);
+        setDcmlsPublishedAt(data.dcmls_published_at || null);
         
         // Load photos from database
         if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
