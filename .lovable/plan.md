@@ -1,63 +1,64 @@
 
 
-# Generate SQL Import Scripts for New Supabase Project
+# DCMLS Product Surface — Badge, Filter, Homepage Section
 
 ## Overview
 
-Create ready-to-run SQL import scripts from the 78 exported CSVs. You'll paste these into your new Supabase SQL Editor after applying the schema migrations.
+Wire up the existing DCMLS publish system into visible UI across three surfaces: a badge on listing cards, a search filter toggle, and a homepage exclusive listings section.
 
-## Prerequisites (You Do First)
+## 1. DCMLS Badge on Listing Cards
 
-1. Apply all 203 migrations from `supabase/migrations/` to your new project (via `supabase db push` or pasting sequentially in SQL Editor)
-2. Tables must exist before running import scripts
+**Files**: `ListingCard.tsx`, `SearchListingCard.tsx`, `ListingCardShell.tsx`
 
-## What I'll Generate
+Add a small green pill badge ("DCMLS") positioned top-left over the photo area when:
+```ts
+listing.publish_to_dcmls === true && listing.dcmls_status === "published"
+```
 
-### `/mnt/documents/aac_import/README.md`
-Step-by-step instructions for running the import in your new Supabase SQL Editor.
+- **ListingCardShell** (used by ListingCard in list mode): Add optional `publish_to_dcmls` and `dcmls_status` to `ShellListingData` interface. Render badge over photo slot.
+- **ListingCard** (grid/compact modes): Add badge in the photo container for grid and compact view modes. Pass DCMLS fields through.
+- **SearchListingCard**: Add `publish_to_dcmls` and `dcmls_status` to `SearchListing` interface. Render badge over photo in both desktop and mobile layouts.
+- Badge style: `bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full absolute top-2 left-2 z-10`
+- Show nothing when false.
 
-### `/mnt/documents/aac_import/` — SQL files in dependency order
+## 2. DCMLS Filter Toggle in Search
 
-| File | Tables | Rows |
-|------|--------|------|
-| `01_profiles_roles.sql` | profiles, user_roles | 31 |
-| `02_agent_core.sql` | agent_profiles, agent_settings, agent_early_access, agent_invites | 135 |
-| `03_counties_flags.sql` | counties, feature_flags | 11 |
-| `04_clients.sql` | clients, client_needs, client_agent_relationships | 202 |
-| `05_listings.sql` | listings, listing_stats, listing_status_history, listing_price_history, listing_drafts, listing_shares, listing_views | 442 |
-| `06_conversations.sql` | conversations, conversation_participants, conversation_messages | 48 |
-| `07_hot_sheets.sql` | hot_sheets, hot_sheet_clients, hot_sheet_sent_listings | 9 |
-| `08_buyer_workspaces.sql` | buyer_workspaces, buyer_workspace_members, buyer_workspace_invites | 3 |
-| `09_email.sql` | email_templates, email_jobs, email_events | 237 |
-| `10_independent.sql` | share_tokens, invite_events, favorites, notification_preferences, ad_packages, testimonials, deleted_users, agent_messages, agent_notifications, agent_buyer_coverage_areas, agent_match_submissions, agent_proposal_incentives | 570 |
-| `11_large_tables.sql` | public_records_cache, rate_limits, audit_logs | 1,794 |
+**Files**: `ListingSearchFilters.tsx`, `ListingSearch.tsx`
 
-### Approach
+- Add `dcmlsOnly: boolean` to `FilterState` interface (default `false`)
+- Add to `initialFilters`: `dcmlsOnly: false`
+- In the filter UI, add a switch/toggle in the primary filter row (near the top, same level as property type/status):
+  - Label: "DCMLS Only"
+  - Uses the `Switch` component
+- In `ListingSearch.tsx`, pass `filters.dcmlsOnly` into the query builder's `dcmlsOnly` field (already supported by `buildListingsQuery.ts`)
 
-- Read each CSV, convert to `INSERT INTO ... VALUES (...)` with proper escaping
-- Handle NULLs, timestamps, UUIDs, JSON, arrays, and quoted text
-- All inserts use `ON CONFLICT DO NOTHING` for safe re-runs
-- Large tables chunked into batches of 500 rows
-- Dependency order prevents FK violations
+## 3. Consumer Homepage — Exclusive Listings Section
 
-## Technical Details
+**File**: New component `DcmlsExclusiveListings.tsx`, update `ConsumerHome.tsx`
 
-- Python script reads CSVs from `/mnt/documents/aac_export/`
-- Outputs 11 numbered SQL files + README to `/mnt/documents/aac_import/`
-- Empty tables (40) are skipped entirely
-- Special handling for PostgreSQL array columns (`{}` syntax) and JSONB columns
+- Create `src/components/DcmlsExclusiveListings.tsx`:
+  - Query `listings` table with `applyDcmlsFilter`, order by `created_at desc`, limit 6
+  - Render as a responsive grid of simplified listing cards (photo, price, address, beds/baths/sqft)
+  - Title: "Homes You Won't Find Anywhere Else"
+  - Subtitle: "Exclusive listings from our agent network"
+- In `ConsumerHome.tsx`, add this section between Featured Properties and the Ad Banner
 
-## Deliverables
+## 4. No Other Changes
 
-- 11 SQL files ready to paste into Supabase SQL Editor in order
-- `README.md` with step-by-step instructions
-- All files downloadable from `/mnt/documents/aac_import/`
+- No schema changes needed (columns already exist)
+- No storage/photo migration work
+- No draft badges or extra labels
+- Keep it clean and premium
 
-## What This Does NOT Cover
+## Files Changed
 
-- **Schema** — apply the 203 migrations first
-- **Auth users** — must re-register or use Supabase Admin API
-- **Storage files** — download from Lovable Cloud, upload to new buckets
-- **Edge functions** — deploy via `supabase functions deploy`
-- **Secrets** — configure per `secrets_checklist.txt`
+| File | Change |
+|------|--------|
+| `src/components/ListingCard.tsx` | Add DCMLS badge in grid/compact photo area |
+| `src/components/ListingCardShell.tsx` | Add DCMLS badge over photo, extend interface |
+| `src/components/listing-search/SearchListingCard.tsx` | Add DCMLS badge, extend interface |
+| `src/components/listing-search/ListingSearchFilters.tsx` | Add `dcmlsOnly` to FilterState + Switch toggle |
+| `src/pages/ListingSearch.tsx` | Pass `dcmlsOnly` to query builder |
+| `src/components/DcmlsExclusiveListings.tsx` | New — homepage exclusive listings grid |
+| `src/pages/ConsumerHome.tsx` | Add DcmlsExclusiveListings section |
 
