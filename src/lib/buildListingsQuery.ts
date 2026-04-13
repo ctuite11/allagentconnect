@@ -221,6 +221,11 @@ export function buildListingsQuery(
     query = query.gt("square_feet", 0);
   }
 
+  // DCMLS-only filter: restrict to published DCMLS listings
+  if (criteria.dcmlsOnly) {
+    query = applyDcmlsFilter(query);
+  }
+
   // Default ordering
   query = query.order("created_at", { ascending: false });
 
