@@ -130,6 +130,11 @@ const EditListing: React.FC = () => {
         setNumUnits(listing.num_units || "");
         setGrossIncome(listing.gross_income || "");
         setOperatingExpenses(listing.operating_expenses || "");
+        // Load DCMLS state
+        setPublishToDcmls(data.publish_to_dcmls || false);
+        setDcmlsStatus(data.dcmls_status || 'not_published');
+        setDcmlsError(data.dcmls_error || null);
+        setDcmlsPublishedAt(data.dcmls_published_at || null);
       }
 
       setLoading(false);
@@ -241,6 +246,16 @@ const EditListing: React.FC = () => {
       go_live_date: goLiveDate || null,
       auto_activate_days: status === LISTING_STATUS.NEW && typeof autoActivateDays === "number" ? autoActivateDays : null,
       auto_activate_on: computedAutoActivateOn,
+      // DCMLS publish fields
+      ...buildDcmlsPayload(
+        publishToDcmls,
+        dcmlsPublishedAt,
+        {
+          address,
+          price: typeof price === 'number' ? price : (typeof price === 'string' ? parseFloat(price) : null),
+          property_type: propertyType,
+        }
+      ),
     };
 
     // Add type-specific fields
