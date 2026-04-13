@@ -4593,6 +4593,16 @@ const AddListing = () => {
                   />
                 </div>
 
+                {/* DCMLS Publishing */}
+                <div className="border-t pt-6">
+                  <DcmlsPublishControl
+                    checked={publishToDcmls}
+                    onCheckedChange={setPublishToDcmls}
+                    dcmlsStatus={dcmlsStatus}
+                    dcmlsError={dcmlsError}
+                  />
+                </div>
+
                 {/* Media & Documents */}
                 <div className="space-y-6 border-t pt-6">
                   <Label className="text-xl font-semibold">Media & Documents</Label>
