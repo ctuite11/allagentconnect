@@ -45,6 +45,8 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
+import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
+import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -161,6 +163,12 @@ const AddListing = () => {
   // Clone listing state (set when navigating from AgentListingDetail "Clone as New Listing")
   const [isRelisting, setIsRelisting] = useState(false);
   const [originalListingId, setOriginalListingId] = useState<string | null>(null);
+
+  // DCMLS publish state
+  const [publishToDcmls, setPublishToDcmls] = useState(false);
+  const [dcmlsStatus, setDcmlsStatus] = useState<string>('not_published');
+  const [dcmlsError, setDcmlsError] = useState<string | null>(null);
+  const [dcmlsPublishedAt, setDcmlsPublishedAt] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     status: initialStatus,
@@ -646,6 +654,12 @@ const AddListing = () => {
           fiscal_year: (data as any).fiscal_year?.toString() || "",
           residential_exemption: (data as any).residential_exemption || "",
         }));
+
+        // Load DCMLS publish state
+        setPublishToDcmls(data.publish_to_dcmls || false);
+        setDcmlsStatus(data.dcmls_status || 'not_published');
+        setDcmlsError(data.dcmls_error || null);
+        setDcmlsPublishedAt(data.dcmls_published_at || null);
         
         // Load photos from database
         if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
@@ -2166,6 +2180,17 @@ const AddListing = () => {
       is_relisting: true,
       original_listing_id: originalListingId,
     } : {}),
+
+    // DCMLS publish fields
+    ...buildDcmlsPayload(
+      publishToDcmls,
+      dcmlsPublishedAt,
+      {
+        address: (formData.address || "Draft").trim(),
+        price: formData.price ? parseFloat(formData.price) : null,
+        property_type: formData.property_type || null,
+      }
+    ),
     };
   };
 
@@ -4565,6 +4590,16 @@ const AddListing = () => {
                     value={formData.additional_notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, additional_notes: e.target.value }))}
                     rows={4}
+                  />
+                </div>
+
+                {/* DCMLS Publishing */}
+                <div className="border-t pt-6">
+                  <DcmlsPublishControl
+                    checked={publishToDcmls}
+                    onCheckedChange={setPublishToDcmls}
+                    dcmlsStatus={dcmlsStatus}
+                    dcmlsError={dcmlsError}
                   />
                 </div>
 

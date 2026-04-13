@@ -13,6 +13,8 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { getNeighborhoodsForLocation } from "@/lib/locationData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADD_LISTING_EDIT_STATUSES, LISTING_STATUS } from "@/constants/status";
+import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
+import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
 
 const EditListing: React.FC = () => {
   const { user } = useAuthRole();
@@ -58,6 +60,12 @@ const EditListing: React.FC = () => {
   const [taxYear, setTaxYear] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+
+  // DCMLS publish state
+  const [publishToDcmls, setPublishToDcmls] = useState(false);
+  const [dcmlsStatus, setDcmlsStatus] = useState<string>('not_published');
+  const [dcmlsError, setDcmlsError] = useState<string | null>(null);
+  const [dcmlsPublishedAt, setDcmlsPublishedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -122,6 +130,11 @@ const EditListing: React.FC = () => {
         setNumUnits(listing.num_units || "");
         setGrossIncome(listing.gross_income || "");
         setOperatingExpenses(listing.operating_expenses || "");
+        // Load DCMLS state
+        setPublishToDcmls(data.publish_to_dcmls || false);
+        setDcmlsStatus(data.dcmls_status || 'not_published');
+        setDcmlsError(data.dcmls_error || null);
+        setDcmlsPublishedAt(data.dcmls_published_at || null);
       }
 
       setLoading(false);
@@ -233,6 +246,16 @@ const EditListing: React.FC = () => {
       go_live_date: goLiveDate || null,
       auto_activate_days: status === LISTING_STATUS.NEW && typeof autoActivateDays === "number" ? autoActivateDays : null,
       auto_activate_on: computedAutoActivateOn,
+      // DCMLS publish fields
+      ...buildDcmlsPayload(
+        publishToDcmls,
+        dcmlsPublishedAt,
+        {
+          address,
+          price: typeof price === 'number' ? price : (typeof price === 'string' ? parseFloat(price) : null),
+          property_type: propertyType,
+        }
+      ),
     };
 
     // Add type-specific fields
@@ -663,6 +686,16 @@ const EditListing: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {/* DCMLS Publishing */}
+                <div className="border-t pt-4">
+                  <DcmlsPublishControl
+                    checked={publishToDcmls}
+                    onCheckedChange={setPublishToDcmls}
+                    dcmlsStatus={dcmlsStatus}
+                    dcmlsError={dcmlsError}
+                  />
+                </div>
 
                 <div className="flex gap-3 pt-4">
                   <Button
