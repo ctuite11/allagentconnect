@@ -162,6 +162,12 @@ const AddListing = () => {
   const [isRelisting, setIsRelisting] = useState(false);
   const [originalListingId, setOriginalListingId] = useState<string | null>(null);
 
+  // DCMLS publish state
+  const [publishToDcmls, setPublishToDcmls] = useState(false);
+  const [dcmlsStatus, setDcmlsStatus] = useState<string>('not_published');
+  const [dcmlsError, setDcmlsError] = useState<string | null>(null);
+  const [dcmlsPublishedAt, setDcmlsPublishedAt] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     status: initialStatus,
     listing_type: "for_sale",
