@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import { LISTING_STATUS, isComingSoon } from "@/constants/status";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import DcmlsBadge from "@/components/DcmlsBadge";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,8 @@ interface SearchListing {
   documents?: any;
   floors?: number | null;
   lot_size?: number | null;
+  publish_to_dcmls?: boolean;
+  dcmls_status?: string;
 }
 
 interface SearchListingCardProps {
@@ -276,6 +279,7 @@ export const SearchListingCard = ({
           <div className="flex-shrink-0 w-64">
             {/* A. Photo */}
             <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-muted">
+              <DcmlsBadge listing={listing} />
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
@@ -486,6 +490,7 @@ export const SearchListingCard = ({
                 </button>
               )}
               <div className="relative h-[75px] w-[100px] overflow-hidden rounded bg-muted">
+                <DcmlsBadge listing={listing} />
                 {photoUrl ? (
                   <img src={photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ListingCardShell } from "@/components/ListingCardShell";
+import DcmlsBadge from "@/components/DcmlsBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
@@ -615,6 +616,7 @@ const ListingCard = ({
     
     return <Card className="overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
         <div className="relative group flex-shrink-0">
+          <DcmlsBadge listing={listing as any} />
           {onSelect && <div className="absolute top-2 left-2 z-10">
               <div onClick={e => {
             e.stopPropagation();

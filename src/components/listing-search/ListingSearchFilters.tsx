@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -70,6 +71,7 @@ export interface FilterState {
   acres: string;
   pricePerSqFt: string;
   pricePerSqFtMin: string;
+  dcmlsOnly: boolean;
 }
 
 // Format number with commas for display
@@ -130,6 +132,7 @@ export const initialFilters: FilterState = {
   acres: "",
   pricePerSqFt: "",
   pricePerSqFtMin: "",
+  dcmlsOnly: false,
 };
 
 // Use centralized status constants
@@ -266,6 +269,14 @@ const ListingSearchFilters = ({
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white shadow-none overflow-hidden">
         <div className="p-5">
+        {/* DCMLS Toggle */}
+        <div className="flex items-center gap-2 mb-4">
+          <Switch
+            checked={filters.dcmlsOnly}
+            onCheckedChange={(checked) => updateFilter("dcmlsOnly", checked)}
+          />
+          <Label className="text-xs font-semibold text-neutral-900 cursor-pointer">DCMLS Only</Label>
+        </div>
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           
