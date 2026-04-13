@@ -70,6 +70,7 @@ export interface FilterState {
   acres: string;
   pricePerSqFt: string;
   pricePerSqFtMin: string;
+  dcmlsOnly: boolean;
 }
 
 // Format number with commas for display
@@ -130,6 +131,7 @@ export const initialFilters: FilterState = {
   acres: "",
   pricePerSqFt: "",
   pricePerSqFtMin: "",
+  dcmlsOnly: false,
 };
 
 // Use centralized status constants
