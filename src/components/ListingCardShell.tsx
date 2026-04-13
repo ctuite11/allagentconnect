@@ -24,6 +24,7 @@ import {
   TrendingDown, RefreshCw, Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
+import DcmlsBadge from "@/components/DcmlsBadge";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,8 @@ export interface ShellListingData {
   listing_type?: string | null;
   listing_number?: string | null;
   neighborhood?: string | null;
+  publish_to_dcmls?: boolean;
+  dcmls_status?: string;
 }
 
 export interface ListingCardShellProps {
@@ -198,6 +201,7 @@ export function ListingCardShell({
         {/* ── Photo with Banners ────────────────────────────────────────── */}
         <div className={`relative ${photoClass} flex-shrink-0`}>
           {photoOverlay}
+          <DcmlsBadge listing={listing} />
 
           {photoUrl ? (
             <img

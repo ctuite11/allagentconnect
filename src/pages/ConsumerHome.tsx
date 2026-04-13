@@ -5,6 +5,7 @@ import FeaturedPropertyShowcase from "@/components/FeaturedPropertyShowcase";
 import AdBanner from "@/components/AdBanner";
 import { MapPin, Users, Shield } from "lucide-react";
 import PropertySearchHero from "@/components/PropertySearchHero";
+import DcmlsExclusiveListings from "@/components/DcmlsExclusiveListings";
 
 const benefits = [
   {
@@ -48,6 +49,9 @@ const ConsumerHome = () => {
             <FeaturedPropertyShowcase />
           </div>
         </section>
+
+        {/* DCMLS Exclusive Listings */}
+        <DcmlsExclusiveListings />
 
         {/* Vendor Advertisement Banner */}
         <section className="py-8 bg-background">
