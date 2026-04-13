@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { applyLocationFilter } from "./buildLocationFilter";
+import { applyDcmlsFilter } from "./dcmlsFilter";
 
 interface SearchCriteria {
   statuses?: string[];
@@ -27,6 +28,9 @@ interface SearchCriteria {
   onlyBrokerTours?: boolean;
   brokerTourDays?: string;
   maxPricePerSqft?: number;
+
+  // DCMLS filter — when true, only show DCMLS-published listings
+  dcmlsOnly?: boolean;
 }
 
 /**
@@ -80,6 +84,7 @@ export function buildListingsQuery(
     onlyBrokerTours: rawCriteria.onlyBrokerTours || false,
     brokerTourDays: rawCriteria.brokerTourDays || "",
     maxPricePerSqft: rawCriteria.maxPricePerSqft || 0,
+    dcmlsOnly: rawCriteria.dcmlsOnly || false,
   };
 
   // Listing type filter (for_sale / for_rent)
