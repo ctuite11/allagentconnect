@@ -4,6 +4,7 @@ import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
+import { Seo } from "@/components/Seo";
 
 export default function MessagingWorkspace() {
   const { id } = useParams<{ id: string }>();
@@ -11,7 +12,9 @@ export default function MessagingWorkspace() {
   useAgentPresence();
 
   return (
-    <div className="h-[calc(100vh-2rem)] p-6 flex gap-5 bg-zinc-50">
+    <>
+      <Seo title="Messaging" />
+      <div className="h-[calc(100vh-2rem)] p-6 flex gap-5 bg-zinc-50">
       {/* Left — Conversations List */}
       <div className="w-[380px] flex-shrink-0 bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
         <ConversationsList
@@ -30,5 +33,6 @@ export default function MessagingWorkspace() {
         onOpenChange={setNewMessageOpen}
       />
     </div>
+    </>
   );
 }

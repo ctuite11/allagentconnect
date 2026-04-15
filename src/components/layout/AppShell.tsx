@@ -19,7 +19,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="h-screen flex w-full overflow-hidden">
-      <Seo noindex title="Dashboard" />
+      {/* Page title is controlled by mounted route components, not by layout */}
       <DashboardSidebar isAdmin={isAdmin} />
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">{children}</div>

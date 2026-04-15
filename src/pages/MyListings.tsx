@@ -18,6 +18,7 @@ import { OpenHouseDialog } from "@/components/OpenHouseDialog";
 import { ViewOpenHousesDialog } from "@/components/ViewOpenHousesDialog";
 import { ReverseProspectDialog } from "@/components/ReverseProspectDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
+import { Seo } from "@/components/Seo";
 import { EmailShareModal } from "@/components/EmailShareModal";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -1117,7 +1118,9 @@ const MyListings = () => {
   }
 
   return (
-    <PageShell className="pb-8">
+    <>
+      <Seo title="My Listings" />
+      <PageShell className="pb-8">
       <MyListingsView
         listings={listings}
         onEdit={handleEdit}
@@ -1226,6 +1229,7 @@ const MyListings = () => {
         listingAddress={emailListing ? `${emailListing.address}, ${emailListing.city}` : ""}
       />
       </PageShell>
+    </>
   );
 };
 

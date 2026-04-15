@@ -45,8 +45,8 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
-import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
-import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
+import { dcmlsPublishSnapshot } from "@/lib/dcmlsPublishPayload";
+import { Seo } from "@/components/Seo";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -164,12 +164,6 @@ const AddListing = () => {
   const [isRelisting, setIsRelisting] = useState(false);
   const [originalListingId, setOriginalListingId] = useState<string | null>(null);
 
-  // DCMLS publish state
-  const [publishToDcmls, setPublishToDcmls] = useState(false);
-  const [dcmlsStatus, setDcmlsStatus] = useState<string>('not_published');
-  const [dcmlsError, setDcmlsError] = useState<string | null>(null);
-  const [dcmlsPublishedAt, setDcmlsPublishedAt] = useState<string | null>(null);
-
   const [formData, setFormData] = useState({
     status: initialStatus,
     listing_type: "for_sale",
@@ -199,6 +193,8 @@ const AddListing = () => {
     additional_notes: "",
     go_live_date: "",
     auto_activate_on: null as Date | null,
+    // DCMLS publish decision
+    show_on_dcmls: false as boolean,
     // New date fields
     list_date: new Date().toLocaleDateString('en-CA'),
     expiration_date: "",
@@ -654,12 +650,6 @@ const AddListing = () => {
           fiscal_year: (data as any).fiscal_year?.toString() || "",
           residential_exemption: (data as any).residential_exemption || "",
         }));
-
-        // Load DCMLS publish state
-        setPublishToDcmls(data.publish_to_dcmls || false);
-        setDcmlsStatus(data.dcmls_status || 'not_published');
-        setDcmlsError(data.dcmls_error || null);
-        setDcmlsPublishedAt(data.dcmls_published_at || null);
         
         // Load photos from database
         if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
@@ -1999,6 +1989,8 @@ const AddListing = () => {
       return null;
     }
     
+    const dcmlsSnapshot = dcmlsPublishSnapshot(formData.show_on_dcmls);
+    
     const minimalPayload = {
       agent_id: user.id,
       status: 'draft',
@@ -2006,7 +1998,8 @@ const AddListing = () => {
       city: formData.city || 'TBD',
       state: formData.state || 'MA',
       zip_code: formData.zip_code || '00000',
-      price: formData.price ? parseFloat(formData.price) : 0
+      price: formData.price ? parseFloat(formData.price) : 0,
+      ...dcmlsSnapshot,
     };
     
     console.log('ensureDraftListing: Creating initial draft with payload:', minimalPayload);
@@ -2175,22 +2168,14 @@ const AddListing = () => {
       pet_options: petOptions,
     } : {}),
 
+    // DCMLS publish state - atomic snapshot ensures consistency
+    ...dcmlsPublishSnapshot(formData.show_on_dcmls),
+
     // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
     ...(isRelisting ? {
       is_relisting: true,
       original_listing_id: originalListingId,
     } : {}),
-
-    // DCMLS publish fields
-    ...buildDcmlsPayload(
-      publishToDcmls,
-      dcmlsPublishedAt,
-      {
-        address: (formData.address || "Draft").trim(),
-        price: formData.price ? parseFloat(formData.price) : null,
-        property_type: formData.property_type || null,
-      }
-    ),
     };
   };
 
@@ -2886,7 +2871,9 @@ const AddListing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <>
+      <Seo title="Add Listing" />
+      <div className="min-h-screen bg-background pt-20">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header Section */}
@@ -2918,6 +2905,50 @@ const AddListing = () => {
                 Signed in as: <span className="font-medium">{user.email}</span>
               </p>
             )}
+          </div>
+
+          {/* DCMLS Publish Decision - Prominent Control Right After Header */}
+          <div className="mb-6 border-b pb-6">
+            <div className="bg-white dark:bg-slate-950 border rounded-lg p-6">
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold mb-2">Publish to DCMLS?</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This is a required decision. Choose whether to publish this listing to the DCMLS system for wider distribution.
+                  </p>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md hover:bg-muted transition-colors">
+                      <input
+                        type="radio"
+                        name="show_on_dcmls"
+                        value="yes"
+                        checked={formData.show_on_dcmls === true}
+                        onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: true }))}
+                        className="w-4 h-4"
+                      />
+                      <span className="font-medium text-foreground">Yes, publish to DCMLS</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md hover:bg-muted transition-colors">
+                      <input
+                        type="radio"
+                        name="show_on_dcmls"
+                        value="no"
+                        checked={formData.show_on_dcmls === false}
+                        onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: false }))}
+                        className="w-4 h-4"
+                      />
+                      <span className="font-medium text-foreground">No, keep as internal only</span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    ℹ️ Published listings are visible to external DCMLS consumers. Internal-only listings are for AAC agents only.
+                  </p>
+                </div>
+                <div className="flex items-center justify-center w-20 h-20 rounded-lg bg-muted/50">
+                  <Lock className="w-10 h-10 text-muted-foreground/50" />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons - Sticky Top Bar */}
@@ -4593,16 +4624,6 @@ const AddListing = () => {
                   />
                 </div>
 
-                {/* DCMLS Publishing */}
-                <div className="border-t pt-6">
-                  <DcmlsPublishControl
-                    checked={publishToDcmls}
-                    onCheckedChange={setPublishToDcmls}
-                    dcmlsStatus={dcmlsStatus}
-                    dcmlsError={dcmlsError}
-                  />
-                </div>
-
                 {/* Media & Documents */}
                 <div className="space-y-6 border-t pt-6">
                   <Label className="text-xl font-semibold">Media & Documents</Label>
@@ -5104,6 +5125,7 @@ const AddListing = () => {
         </Dialog>
       )}
     </div>
+    </>
   );
 };
 

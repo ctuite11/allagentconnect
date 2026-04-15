@@ -13,6 +13,7 @@ import { LISTING_TYPE_LABELS } from "@/constants/status";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/page-header";
+import { Seo } from "@/components/Seo";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -167,6 +168,7 @@ export default function DraftListings() {
 
   return (
     <PageShell>
+      <Seo title="Draft Listings" />
       <PageHeader
         title="Drafts"
         subtitle="Manage your saved drafts."

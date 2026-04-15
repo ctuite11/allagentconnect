@@ -9,15 +9,17 @@ import { MyListingsRow } from "@/components/agent-dashboard-v2/MyListingsRow";
 import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
+import { Seo } from "@/components/Seo";
 
 export default function SuccessHubDashboard() {
   const { summary, loading, error } = useSuccessHubData();
 
-  // Loading state
-  if (loading) {
-    return (
-      <PageShell className="bg-secondary/40">
-        <div className="space-y-6">
+  return (
+    <>
+      <Seo title="Dashboard" />
+      {loading ? (
+        <PageShell className="bg-secondary/40">
+          <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Skeleton className="h-14 w-14 rounded-full" />
             <div className="space-y-2">
@@ -37,12 +39,7 @@ export default function SuccessHubDashboard() {
           </div>
         </div>
       </PageShell>
-    );
-  }
-
-  // Error state
-  if (error || !summary) {
-    return (
+    ) : error || !summary ? (
       <PageShell className="bg-secondary/40">
         <Card className="border border-border bg-card">
           <CardContent className="py-12 text-center">
@@ -53,12 +50,7 @@ export default function SuccessHubDashboard() {
           </CardContent>
         </Card>
       </PageShell>
-    );
-  }
-
-  const { profile } = summary;
-
-  return (
+    ) : (
     <PageShell className="bg-secondary/40">
       <div className="pt-6">
       {/* ── 1. Welcome Header ──────────────────────────── */}
@@ -114,5 +106,7 @@ export default function SuccessHubDashboard() {
       </div>
       </div>
     </PageShell>
+    )}
+  </>
   );
 }

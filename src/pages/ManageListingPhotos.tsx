@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { ChevronLeft, Trash2, Upload } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { Seo } from '@/components/Seo';
 
 type Photo = {
   url: string;
@@ -259,6 +260,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
 
   return (
     <div className="container mx-auto p-6 pt-20 max-w-7xl space-y-6">
+      <Seo title="Manage Photos" />
       {/* Header with inline back button */}
       <div className="flex items-center justify-between">
         <PageHeader
