@@ -78,6 +78,13 @@ import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
 import HomepageV2 from "./pages/HomepageV2";
+import DcmlsHome from "./pages/DcmlsHome";
+import { isDcmlsHost } from "./lib/host";
+
+/** Renders the DCMLS homepage on directconnectmls.com, AAC homepage elsewhere. */
+function HostHomeSwitch() {
+  return isDcmlsHost() ? <DcmlsHome /> : <HomepageV2 />;
+}
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
 import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
@@ -156,7 +163,7 @@ const App = () => (
               <Navigation />
               <NewMessageToastListener />
               <Routes>
-                <Route path="/" element={<HomepageV2 />} />
+                <Route path="/" element={<HostHomeSwitch />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/agent-match" element={<AgentMatch />} />
                 <Route path="/seller-listing/:id" element={<SellerListingDetail />} />
