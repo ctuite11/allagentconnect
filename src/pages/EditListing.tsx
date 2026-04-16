@@ -277,15 +277,24 @@ const EditListing: React.FC = () => {
       if (operatingExpenses) listingData.operating_expenses = typeof operatingExpenses === "string" ? parseFloat(operatingExpenses) : operatingExpenses;
     }
 
-    const { error } = await supabase
+    const { data: updatedRows, error } = await supabase
       .from("listings")
       .update(listingData)
-      .eq("id", id);
+      .eq("id", id)
+      .select("id");
 
     if (error) {
       setSaving(false);
       console.error("Error updating listing", error);
       toast.error(error.message);
+      return;
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      setSaving(false);
+      const msg = "Update failed: no rows changed (likely permission or ID mismatch).";
+      console.error("[EditListing]", msg, { id });
+      toast.error(msg);
       return;
     }
 
