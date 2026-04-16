@@ -56,9 +56,9 @@ export default function SuccessHubDashboard() {
       {/* ── 1. Welcome Header ──────────────────────────── */}
       <div className="mb-4">
         <WelcomeHeader
-          firstName={summary.firstName ?? "Agent"}
-          lastName={summary.lastName ?? ""}
-          headshotUrl={summary.headshotUrl ?? null}
+          firstName={summary.profile?.first_name ?? "Agent"}
+          lastName={summary.profile?.last_name ?? ""}
+          headshotUrl={summary.profile?.headshot_url ?? null}
           aacId={summary.agentId ? `AAC-${summary.agentId.slice(0, 8)}` : undefined}
         />
       </div>
