@@ -1,85 +1,76 @@
 
+The user wants domain guidance, no code changes. Let me check current project URLs and any custom domain setup.
 
-# Fix DCMLS Persistence, Duplicate Save Bar, and Visibility
+Current project URLs (from context):
+- Preview: https://id-preview--95492335-3a75-4285-8d44-828003cae42a.lovable.app
+- Published: https://allagentconnect.lovable.app
+- Custom domain already attached: https://allagentconnect.com
 
-## Investigation results
+Key consideration: This single project serves BOTH brands (AAC + DCMLS) via the shared-database architecture. There's no separate `/dcmls` route — DCMLS surfaces are integrated (badge on cards, "DCMLS Only" filter, "Homes You Won't Find Anywhere Else" homepage section). So `directconnectmls.com` would land on the same `/` homepage as `allagentconnect.com` unless we add domain-based routing later (out of scope).
 
-**DB state (59 total listings):**
-- `publish_to_dcmls=true` AND `dcmls_status='published'`: **2 rows** (correctly visible)
-- 1 row has `dcmls_status='draft'` with `publish_to_dcmls=false` (toggled off — but `'draft'` is not a recognized state in the filter convention `not_published | published | hidden | error`)
-- 1 expired listing has `dcmls_status='published'` but `status='expired'` — filtered out (correct)
+# Domain Move Plan: directconnectmls.com → allagentconnect project
 
-**Schema:**
-- `dcmls_status` has NO check constraint, so any string is accepted (no DB-level rejection causing silent failures)
-- RLS on UPDATE: `is_verified_agent() AND auth.uid() = agent_id` — works for the listing's owner
+## 1. Project confirmation
 
-## Root causes
+Yes — this `allagentconnect` project (ID `95492335-3a75-4285-8d44-828003cae42a`) is the real DCMLS build. Evidence:
+- DCMLS publish system lives here (`publish_to_dcmls`, `dcmls_status` columns on `listings`)
+- DCMLS UI surfaces just shipped here: badge on listing cards, "DCMLS Only" search filter, "Homes You Won't Find Anywhere Else" homepage section
+- Add/Edit Listing flows write DCMLS fields here (`AddListing.tsx`, `EditListing.tsx`)
+- 59 listings live in this project's database; 2 currently flagged published-to-DCMLS
 
-### 1. DCMLS toggle does not persist (AddListing/edit mode)
+The standalone "DCMLS" Lovable project you currently have `directconnectmls.com` attached to is the wrong one — it has none of this.
 
-**Two different DCMLS payload helpers exist and conflict:**
+## 2. Target URL in this project
 
-- `src/lib/dcmlsPublishPayload.ts` → `dcmlsPublishSnapshot()` writes `dcmls_status: 'published' | 'draft'`
-- `src/lib/dcmlsFilter.ts` → `buildDcmlsPayload()` writes `dcmls_status: 'published' | 'hidden' | 'error'` plus timestamps
+Point `directconnectmls.com` at this project's published deployment:
+- **Published URL**: `https://allagentconnect.lovable.app`
+- Already-attached custom domain (for reference): `https://allagentconnect.com`
 
-`AddListing.tsx` (used for both add AND edit) uses `dcmlsPublishSnapshot` — writes `'draft'` when off. `EditListing.tsx` uses `buildDcmlsPayload` — writes `'hidden'`.
+Both `allagentconnect.com` and (after the move) `directconnectmls.com` will serve the same app from this project.
 
-The form state is `formData.show_on_dcmls` (radio buttons) in `AddListing.tsx` and `publishToDcmls` (checkbox) in `EditListing.tsx`. **The state loads correctly on edit hydration in EditListing, but `AddListing.tsx` (which is also reached as the primary edit path) does NOT hydrate `show_on_dcmls` from the row** — confirmed by checking initial state (`show_on_dcmls: false`) with no setter from a load effect. So when a user edits in the AddListing edit-mode flow, the radio is reset to "No" on every page load, and saving overwrites the DB value back to `false / 'draft'`.
+## 3. Detach from the wrong project
 
-### 2. Duplicate sticky save bar
+In the **standalone DCMLS Lovable project**:
+- Open Project Settings → Domains
+- Remove `directconnectmls.com`
+- Remove `www.directconnectmls.com`
+- Wait ~1–2 minutes for the removal to register before re-attaching elsewhere
 
-`AddListing.tsx` has both:
-- Line 2955: `sticky top-0` action bar
-- Line 4949: `sticky bottom-0` action bar (duplicate buttons — Preview + Save Changes/Draft + Publish)
+## 4. Attach to this project
 
-Both bars call the same handlers, so functionally OK, but visually duplicated.
+In **this allagentconnect project** → Project Settings → Domains → Connect Domain:
+1. Add `directconnectmls.com` (root)
+2. Add `www.directconnectmls.com` separately (www is not auto-added)
+3. At your DNS registrar set:
+   - `A` record: name `@`, value `185.158.133.1`
+   - `A` record: name `www`, value `185.158.133.1`
+   - `TXT` record: name `_lovable`, value provided by the connect dialog
+4. If you use Cloudflare proxy, expand "Advanced" in the connect dialog and check "Domain uses Cloudflare or a similar proxy" (switches to CNAME verification)
+5. Wait for status to move: Verifying → Setting up → Active (usually minutes; up to 72h max)
 
-### 3. Visibility
+## 5. Primary domain choice
 
-The 2 properly-flagged listings DO satisfy the filter and will appear. Older listings the user thinks they "edited to publish" actually saved as `publish_to_dcmls=false / dcmls_status='draft'` because of root cause #1 (no hydration in AddListing edit mode → reverts on every save).
+This project will then have three custom domains attached:
+- `allagentconnect.com` (already Active)
+- `directconnectmls.com` (new)
+- `www.directconnectmls.com` (new)
 
-## Fixes
+Recommendation:
+- Keep `allagentconnect.com` as the **Primary** for the AAC brand (it's already live, SEO established, sitemap and `robots.txt` reference it)
+- For the DCMLS pair, set `directconnectmls.com` as the primary between the two so `www.directconnectmls.com` 301s to it (cleaner canonical, matches `allagentconnect.com`'s www-less convention)
 
-### Fix A — Single source of truth for DCMLS payload
+Important caveat (no code change requested, just so you know what to expect):
+- Both domains will serve the **same homepage and the same app**. There is no domain-aware routing yet, so `directconnectmls.com/` will look identical to `allagentconnect.com/`. Visitors will see the AAC consumer homepage with the new "Homes You Won't Find Anywhere Else" DCMLS section embedded.
+- If you want `directconnectmls.com` to land on a DCMLS-specific surface (e.g., auto-apply the DCMLS-only filter, different hero, different brand), that's a follow-up code task — say the word and I'll plan it.
 
-Replace the simple `dcmlsPublishSnapshot` usage in `AddListing.tsx` with `buildDcmlsPayload` from `src/lib/dcmlsFilter.ts` (same one EditListing uses), so both pages write `'published' | 'hidden' | 'error'` consistently with timestamps.
+## What I'm NOT doing
+- No app code changes
+- No schema changes
+- No SEO/sitemap/robots edits
+- No domain-based routing logic (separate task if you want it)
 
-Also normalize the existing 1 row currently sitting at `dcmls_status='draft'` to `'hidden'` via a small migration so it conforms.
-
-### Fix B — Hydrate `show_on_dcmls` in AddListing edit-mode load
-
-In `AddListing.tsx`, where the existing listing is fetched and state is populated for edit mode, add:
-```ts
-show_on_dcmls: data.publish_to_dcmls === true && data.dcmls_status === 'published'
-```
-Also load `dcmls_published_at`, `dcmls_status`, `dcmls_error` into refs/state for display + payload preservation.
-
-### Fix C — Detect 0-row updates (no silent failures)
-
-After `supabase.from('listings').update(...).eq('id', id)`, switch to `.select()` and check `data.length === 1`; if 0, surface a toast: "Update failed: no rows changed (likely permission or ID mismatch)."
-
-Apply in both `AddListing.handleSaveChanges` and `EditListing` save handler.
-
-### Fix D — Remove duplicate sticky bottom bar
-
-In `AddListing.tsx`, delete the entire `sticky bottom-0` block (around lines 4948–5010). Keep the top sticky bar (line 2955) as the single action bar.
-
-### Fix E — Add a CHECK constraint on `dcmls_status`
-
-Migration to enforce allowed values (`not_published`, `published`, `hidden`, `error`) so future inconsistent writes (like `'draft'`) fail loudly instead of silently corrupting visibility.
-
-## Files changed
-
-| File | Change |
-|------|--------|
-| `src/pages/AddListing.tsx` | Use `buildDcmlsPayload`; hydrate `show_on_dcmls` + `dcmlsPublishedAt` in edit-load effect; add `.select()` + 0-row check; **remove bottom sticky bar (lines ~4948–5010)** |
-| `src/pages/EditListing.tsx` | Add `.select()` + 0-row check on update |
-| `src/lib/dcmlsPublishPayload.ts` | Delete (replaced by `buildDcmlsPayload`) and update any other importers |
-| `supabase/migrations/<ts>_dcmls_status_normalize.sql` | `UPDATE listings SET dcmls_status='hidden' WHERE dcmls_status='draft'`; add `CHECK (dcmls_status IN ('not_published','published','hidden','error'))` |
-
-## Returned answers (for the user)
-
-1. **Persistence root cause**: AddListing edit-mode never hydrated `show_on_dcmls` from DB, so saving always wrote `false`. Two competing payload helpers also wrote conflicting values (`'draft'` vs `'hidden'`). **Fields written after fix**: `publish_to_dcmls`, `dcmls_status`, `dcmls_published_at`, `dcmls_last_updated_at`, `dcmls_error`.
-2. **Duplicate save bar**: Removed bottom sticky block (~lines 4948–5010) in `src/pages/AddListing.tsx`. Top sticky bar remains; both used identical handlers so no functionality lost.
-3. **Visibility counts**: 59 total listings, 2 currently visible on DCMLS. Older "published" attempts failed because of #1. Post-fix, toggling + saving will persist correctly and appear immediately on DCMLS.
-
+## Verification checklist after attach
+- `directconnectmls.com` status = Active in Project Settings → Domains
+- `www.directconnectmls.com` status = Active
+- Visiting `https://directconnectmls.com` loads the same homepage as `https://allagentconnect.com`
+- The DCMLS section "Homes You Won't Find Anywhere Else" renders with the 2 currently-published listings
