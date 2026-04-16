@@ -45,7 +45,7 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
-import { dcmlsPublishSnapshot } from "@/lib/dcmlsPublishPayload";
+import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
 import { Seo } from "@/components/Seo";
 
 // State name to abbreviation mapping
@@ -159,6 +159,8 @@ const AddListing = () => {
    const originalPriceRef = useRef<number | null>(null);
    const originalStatusRef = useRef<string | null>(null);
    const backendStatusRef = useRef<string | null>(null);
+   // Preserve the original DCMLS first-publish timestamp across saves
+   const dcmlsPublishedAtRef = useRef<string | null>(null);
 
   // Clone listing state (set when navigating from AgentListingDetail "Clone as New Listing")
   const [isRelisting, setIsRelisting] = useState(false);
@@ -1989,7 +1991,15 @@ const AddListing = () => {
       return null;
     }
     
-    const dcmlsSnapshot = dcmlsPublishSnapshot(formData.show_on_dcmls);
+    const dcmlsSnapshot = buildDcmlsPayload(
+      formData.show_on_dcmls,
+      dcmlsPublishedAtRef.current,
+      {
+        address: formData.address,
+        price: formData.price ? parseFloat(formData.price) : null,
+        property_type: formData.property_type,
+      }
+    );
     
     const minimalPayload = {
       agent_id: user.id,
@@ -2168,8 +2178,16 @@ const AddListing = () => {
       pet_options: petOptions,
     } : {}),
 
-    // DCMLS publish state - atomic snapshot ensures consistency
-    ...dcmlsPublishSnapshot(formData.show_on_dcmls),
+    // DCMLS publish state - validates required fields and writes status + timestamps atomically
+    ...buildDcmlsPayload(
+      formData.show_on_dcmls,
+      dcmlsPublishedAtRef.current,
+      {
+        address: formData.address,
+        price: formData.price ? parseFloat(formData.price) : null,
+        property_type: formData.property_type,
+      }
+    ),
 
     // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
     ...(isRelisting ? {
