@@ -79,7 +79,10 @@ const DcmlsExclusiveListings = () => {
                       <Home className="w-10 h-10 text-muted-foreground/40" />
                     </div>
                   )}
-                  <span className="absolute top-2 left-2 z-10 inline-flex items-center bg-emerald-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                  <span
+                    className="absolute top-2 left-2 z-10 inline-flex items-center text-white text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full shadow-sm"
+                    style={{ backgroundColor: "#0E56F5" }}
+                  >
                     DCMLS
                   </span>
                 </div>
