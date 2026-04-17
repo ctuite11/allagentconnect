@@ -2,7 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
 
@@ -22,6 +28,21 @@ const AUTHED_ITEMS: NavItem[] = [
   { label: "Saved Homes", to: "/saved", authed: true },
   { label: "Hot Sheets", to: "/searches", authed: true },
   { label: "Account", to: "/account", authed: true },
+];
+
+interface PageLink {
+  label: string;
+  to: string;
+  external?: boolean;
+}
+
+const PAGES_LINKS: PageLink[] = [
+  { label: "About", to: "https://allagentconnect.com", external: true },
+  { label: "Contact", to: "mailto:hello@allagentconnect.com", external: true },
+  { label: "Privacy", to: "/privacy" },
+  { label: "Terms", to: "/terms" },
+  { label: "Fair Housing", to: "/fair-housing" },
+  { label: "Disclosures", to: "/disclosures" },
 ];
 
 const DcmlsConsumerHeader: React.FC = () => {
@@ -55,6 +76,23 @@ const DcmlsConsumerHeader: React.FC = () => {
     return location.pathname === path;
   };
 
+  const renderPageLink = (p: PageLink, className?: string) =>
+    p.external ? (
+      <a
+        key={p.to}
+        href={p.to}
+        target={p.to.startsWith("mailto:") ? undefined : "_blank"}
+        rel={p.to.startsWith("mailto:") ? undefined : "noreferrer"}
+        className={className}
+      >
+        {p.label}
+      </a>
+    ) : (
+      <Link key={p.to} to={p.to} className={className}>
+        {p.label}
+      </Link>
+    );
+
   return (
     <header className="border-b border-border/60 bg-background/95 backdrop-blur sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -85,6 +123,28 @@ const DcmlsConsumerHeader: React.FC = () => {
               <Link to={item.to}>{item.label}</Link>
             </Button>
           ))}
+
+          {/* Pages dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground gap-1"
+              >
+                Pages
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {PAGES_LINKS.map((p) => (
+                <DropdownMenuItem key={p.to} asChild>
+                  {renderPageLink(p, "w-full cursor-pointer text-sm")}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {signedIn ? (
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               Sign Out
@@ -125,6 +185,7 @@ const DcmlsConsumerHeader: React.FC = () => {
                   <Link to={item.to}>{item.label}</Link>
                 </Button>
               ))}
+
               {signedIn ? (
                 <Button
                   variant="ghost"
@@ -147,6 +208,21 @@ const DcmlsConsumerHeader: React.FC = () => {
                   </Button>
                 </div>
               )}
+
+              {/* Pages section (mobile) */}
+              <div className="mt-6 pt-4 border-t border-border/60">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-semibold px-3 mb-2">
+                  Pages
+                </div>
+                <div className="flex flex-col">
+                  {PAGES_LINKS.map((p) =>
+                    renderPageLink(
+                      p,
+                      "px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-accent transition-colors",
+                    ),
+                  )}
+                </div>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
