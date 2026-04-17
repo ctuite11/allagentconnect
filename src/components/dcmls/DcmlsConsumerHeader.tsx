@@ -2,13 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
 
@@ -22,9 +16,11 @@ interface NavItem {
 
 const PUBLIC_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
+  { label: "Our Agents", to: "/our-agents" },
 ];
 const AUTHED_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
+  { label: "Our Agents", to: "/our-agents" },
   { label: "Saved Homes", to: "/saved", authed: true },
   { label: "Hot Sheets", to: "/searches", authed: true },
   { label: "Account", to: "/account", authed: true },
@@ -124,26 +120,8 @@ const DcmlsConsumerHeader: React.FC = () => {
             </Button>
           ))}
 
-          {/* Pages dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground gap-1"
-              >
-                Pages
-                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {PAGES_LINKS.map((p) => (
-                <DropdownMenuItem key={p.to} asChild>
-                  {renderPageLink(p, "w-full cursor-pointer text-sm")}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+
 
           {signedIn ? (
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
