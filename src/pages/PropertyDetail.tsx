@@ -752,29 +752,12 @@ const PropertyDetail = () => {
                 </Card>
               )}
               
-              {/* Brokerage Strip - SECONDARY (below agent) */}
-              <Card className="rounded-2xl shadow-sm border">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                      <img
-                        src={agentLogo}
-                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Listing courtesy of</p>
-                      <p className="text-sm font-medium truncate">
-                        {agentProfile?.company || "Brokerage"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Brokerage Strip — shared primitive */}
+              <BrokerageStrip
+                label="Listing courtesy of"
+                brokerageName={agentProfile?.company}
+                logoUrl={agentLogo}
+              />
 
               {/* ========== AGENT QUICK ACTIONS (stays in sidebar) ========== */}
               {isAgentView && (
