@@ -30,33 +30,7 @@ const DcmlsHome: React.FC = () => {
       />
 
       <div className="bg-background min-h-screen flex flex-col">
-        {/* Top nav — DCMLS lockup with AAC identity */}
-        <header className="border-b border-border/60">
-          <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <AACMonogram
-                className="w-7 h-7 transition-colors"
-                // AAC Blue — primary brand color
-              />
-              <span
-                className="font-semibold tracking-tight text-foreground text-[15px]"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              >
-                Direct Connect <span style={{ color: AAC_BLUE }}>MLS</span>
-              </span>
-            </Link>
-            <nav className="flex items-center gap-2">
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/browse?dcmls=1">Browse</Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link to="/auth">Agent Sign In</Link>
-              </Button>
-            </nav>
-          </div>
-          {/* Apply AAC Blue to monogram via inline style override */}
-          <style>{`header a .w-7 { color: ${AAC_BLUE}; }`}</style>
-        </header>
+        <DcmlsConsumerHeader />
 
         <main className="flex-1">
           {/* Hero */}
