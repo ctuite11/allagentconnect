@@ -293,14 +293,6 @@ const DcmlsAuth = () => {
             )}
 
             {/* Secondary agent link — never primary */}
-            <div className="mt-10 text-center">
-              <Link
-                to="/auth"
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Are you an agent? Agent sign in →
-              </Link>
-            </div>
           </div>
         </main>
       </div>

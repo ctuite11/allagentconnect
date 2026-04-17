@@ -69,11 +69,6 @@ const DcmlsHome: React.FC = () => {
                   <Link to="/browse?dcmls=1">Browse Listings</Link>
                 </Button>
               </div>
-              <div className="mt-6">
-                <Link to="/auth" className="text-xs text-muted-foreground hover:text-foreground">
-                  Are you an agent? Agent sign in →
-                </Link>
-              </div>
             </div>
           </section>
 
