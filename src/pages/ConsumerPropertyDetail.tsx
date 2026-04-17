@@ -50,6 +50,19 @@ import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
+import { PropertyHeader } from "@/components/property/PropertyHeader";
+import { PropertyFactsRow } from "@/components/property/PropertyFactsRow";
+import { BrokerageStrip } from "@/components/property/BrokerageStrip";
+import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
+import {
+  propertyPageContainer,
+  propertyHeroGap,
+  propertyMediaCol,
+  propertyRailCol,
+  propertyRailSticky,
+  propertyRailStack,
+  propertyHeroMedia,
+} from "@/components/property/propertyTokens";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 // ContactAgentDialog removed — buyer CTA is in-app messaging only
 import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
@@ -321,33 +334,20 @@ const ConsumerPropertyDetail = () => {
       </div>
 
       <main className="flex-1">
-        {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
-        <div className="mx-auto max-w-6xl px-4 pb-2">
-          <div className="lg:w-[68%] pr-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
-                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
-                {buildDisplayAddress(listing as any)}
-              </h1>
-              <div className="text-right">
-                <p className="text-lg font-bold text-foreground">
-                  ${listing?.price?.toLocaleString() ?? '—'}
-                  {listing.listing_type === 'for_rent' && (
-                    <span className="text-sm font-normal text-muted-foreground ml-1">/ mo</span>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ========== LISTING HEADER — shared primitive ========== */}
+        <PropertyHeader
+          address={buildDisplayAddress(listing as any)}
+          price={listing?.price ?? null}
+          priceSuffix={listing.listing_type === 'for_rent' ? '/ mo' : undefined}
+        />
 
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col lg:flex-row gap-6">
+        <div className={propertyPageContainer}>
+          <div className={`flex flex-col lg:flex-row ${propertyHeroGap}`}>
 
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
-            <div className="lg:w-[68%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]">
+            <div className={propertyMediaCol}>
+              <div className={propertyHeroMedia}>
                 <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                   {activeMediaTab === 'photos' && (
@@ -430,74 +430,27 @@ const ConsumerPropertyDetail = () => {
                 </div>
               </div>
 
-              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
-              <div className="flex items-center gap-2 mt-6 flex-wrap">
-                <Button variant={activeMediaTab === 'photos' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('photos')} className="rounded-full">
-                  <Home className="w-4 h-4 mr-2" />Photos
-                </Button>
-                {listing.video_url && (
-                  <Button variant={activeMediaTab === 'video' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('video')} className="rounded-full">
-                    <Video className="w-4 h-4 mr-2" />Video
-                  </Button>
-                )}
-                {listing.virtual_tour_url && (
-                  <Button variant={activeMediaTab === 'tour' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('tour')} className="rounded-full">
-                    <Maximize2 className="w-4 h-4 mr-2" />3D Tour
-                  </Button>
-                )}
-                {listing.property_website_url && (
-                  <Button variant={activeMediaTab === 'website' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('website')} className="rounded-full">
-                    <Globe className="w-4 h-4 mr-2" />Website
-                  </Button>
-                )}
-              </div>
+              {/* Media Type Tabs — shared primitive */}
+              <MediaTabBar
+                active={activeMediaTab as MediaTab}
+                onChange={(tab) => handleMediaTabChange(tab)}
+                hasVideo={!!listing.video_url}
+                hasTour={!!listing.virtual_tour_url}
+                hasWebsite={!!listing.property_website_url}
+              />
 
-              {/* ========== STATS ROW — AAC-style compact facts row ========== */}
-              <div className="mt-4">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
-                  {listing.bedrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
-                      <span className="text-xs text-muted-foreground">Beds</span>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bath className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
-                      <span className="text-xs text-muted-foreground">Baths</span>
-                    </div>
-                  )}
-                  {listing.square_feet && (
-                    <div className="flex items-center gap-1">
-                      <Square className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                      <span className="text-xs text-muted-foreground">Sq Ft</span>
-                    </div>
-                  )}
-                  {listing?.square_feet && listing.square_feet > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/sf</span>
-                    </div>
-                  )}
-                  {daysOnMarket !== null && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{daysOnMarket}</span>
-                      <span className="text-xs text-muted-foreground">DOM</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* ========== STATS ROW — shared primitive ========== */}
+              <PropertyFactsRow
+                bedrooms={listing.bedrooms}
+                bathrooms={listing.bathrooms}
+                squareFeet={listing.square_feet}
+                price={listing.price}
+                daysOnMarket={daysOnMarket}
+              />
             </div>
 
             {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
-            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
+            <div className={`${propertyRailCol} ${propertyRailStack} ${propertyRailSticky}`}>
 
               {/* Your Agent Card (attribution masking) */}
               {stickyAgentProfile ? (
@@ -662,36 +615,16 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Brokerage Strip - SECONDARY (below agent card, AAC-style) */}
+              {/* Brokerage Strip — shared primitive */}
               {(() => {
                 const displayAgent = stickyAgentProfile || agentProfile;
                 if (!displayAgent) return null;
-                const brokerageLogo = displayAgent.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
                 return (
-                  <Card className="rounded-2xl shadow-sm border">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                          <img
-                            src={brokerageLogo}
-                            alt={`${displayAgent.company || 'Brokerage'} logo`}
-                            className="h-full w-full object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                            }}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                            {stickyAgentProfile ? 'Represented by' : 'Listing courtesy of'}
-                          </p>
-                          <p className="text-sm font-medium truncate">
-                            {displayAgent.company || displayAgent.office_name || "Brokerage"}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <BrokerageStrip
+                    label={stickyAgentProfile ? 'Represented by' : 'Listing courtesy of'}
+                    brokerageName={displayAgent.company || displayAgent.office_name}
+                    logoUrl={displayAgent.logo_url}
+                  />
                 );
               })()}
 

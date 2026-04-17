@@ -58,6 +58,19 @@ import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { Seo } from "@/components/Seo";
+import { PropertyHeader } from "@/components/property/PropertyHeader";
+import { PropertyFactsRow } from "@/components/property/PropertyFactsRow";
+import { BrokerageStrip } from "@/components/property/BrokerageStrip";
+import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
+import {
+  propertyPageContainer,
+  propertyHeroGap,
+  propertyMediaCol,
+  propertyRailCol,
+  propertyRailSticky,
+  propertyRailStack,
+  propertyHeroMedia,
+} from "@/components/property/propertyTokens";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
@@ -472,30 +485,19 @@ const PropertyDetail = () => {
           </button>
         </div>
 
-        {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
-        <div className="mx-auto max-w-6xl px-4 pb-2">
-          <div className="lg:w-[68%] pr-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
-                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
-                {buildDisplayAddress(listing as any)}
-              </h1>
-              <div className="text-right">
-                <p className="text-lg font-bold text-foreground">
-                  ${listing?.price?.toLocaleString() ?? '—'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ========== LISTING HEADER — shared primitive ========== */}
+        <PropertyHeader
+          address={buildDisplayAddress(listing as any)}
+          price={listing?.price ?? null}
+        />
 
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col lg:flex-row gap-6">
-            
+        <div className={propertyPageContainer}>
+          <div className={`flex flex-col lg:flex-row ${propertyHeroGap}`}>
+
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
-            <div className="lg:w-[68%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]">
+            <div className={propertyMediaCol}>
+              <div className={propertyHeroMedia}>
                 <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
@@ -623,98 +625,39 @@ const PropertyDetail = () => {
                   </div>
               </div>
 
-              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
-              <div className="flex items-center justify-between gap-2 mt-6">
-                <div className="flex items-center gap-2">
-                <Button
-                  variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleMediaTabChange('photos')}
-                  className="rounded-full"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Photos
-                </Button>
-                {listing.video_url && (
-                  <Button
-                    variant={activeMediaTab === 'video' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleMediaTabChange('video')}
-                    className="rounded-full"
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    Video
-                  </Button>
-                )}
-                {listing.virtual_tour_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(listing.virtual_tour_url!, '_blank', 'noopener,noreferrer')}
-                    className="rounded-full"
-                  >
-                    <Maximize2 className="w-4 h-4 mr-2" />
-                    3D Tour
-                  </Button>
-                )}
-                {listing.property_website_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(listing.property_website_url!, '_blank', 'noopener,noreferrer')}
-                    className="rounded-full"
-                  >
-                    <Globe className="w-4 h-4 mr-2" />
-                    Website
-                  </Button>
-                )}
-                </div>
-                
-              </div>
+              {/* Media Type Tabs — shared primitive (AAC: tour/website open externally) */}
+              <MediaTabBar
+                active={activeMediaTab as MediaTab}
+                onChange={(tab) => {
+                  if (tab === "tour" && listing.virtual_tour_url) {
+                    window.open(listing.virtual_tour_url, "_blank", "noopener,noreferrer");
+                    return;
+                  }
+                  if (tab === "website" && listing.property_website_url) {
+                    window.open(listing.property_website_url, "_blank", "noopener,noreferrer");
+                    return;
+                  }
+                  handleMediaTabChange(tab);
+                }}
+                hasVideo={!!listing.video_url}
+                hasTour={!!listing.virtual_tour_url}
+                hasWebsite={!!listing.property_website_url}
+              />
 
-              {/* ========== STATS ROW ========== */}
-              <div className="mt-4">
-                {/* Stats - first content block below media */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
-                  {listing.bedrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
-                      <span className="text-xs text-muted-foreground">Beds</span>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bath className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
-                      <span className="text-xs text-muted-foreground">Baths</span>
-                    </div>
-                  )}
-                  {listing.square_feet && (
-                    <div className="flex items-center gap-1">
-                      <Square className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                      <span className="text-xs text-muted-foreground">Sq Ft</span>
-                    </div>
-                  )}
-                  {listing?.square_feet && listing.square_feet > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/sf</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* ========== STATS ROW — shared primitive ========== */}
+              <PropertyFactsRow
+                bedrooms={listing.bedrooms}
+                bathrooms={listing.bathrooms}
+                squareFeet={listing.square_feet}
+                price={listing.price}
+              />
 
             </div>
 
 
             {/* RIGHT COLUMN - Hero Sidebar (~32%) - Clean, no internal scrolling */}
-            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
-              
+            <div className={`${propertyRailCol} ${propertyRailStack} ${propertyRailSticky}`}>
+
               {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
                 <Card className="rounded-3xl shadow-md border-2">
@@ -809,29 +752,12 @@ const PropertyDetail = () => {
                 </Card>
               )}
               
-              {/* Brokerage Strip - SECONDARY (below agent) */}
-              <Card className="rounded-2xl shadow-sm border">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                      <img
-                        src={agentLogo}
-                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Listing courtesy of</p>
-                      <p className="text-sm font-medium truncate">
-                        {agentProfile?.company || "Brokerage"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Brokerage Strip — shared primitive */}
+              <BrokerageStrip
+                label="Listing courtesy of"
+                brokerageName={agentProfile?.company}
+                logoUrl={agentLogo}
+              />
 
               {/* ========== AGENT QUICK ACTIONS (stays in sidebar) ========== */}
               {isAgentView && (
