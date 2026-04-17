@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { isDcmlsHost } from "@/lib/host";
 
 /**
  * Routes that use their own minimal headers (no global Navigation).
