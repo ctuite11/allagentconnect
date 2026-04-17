@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import { Button } from "@/components/ui/button";
-import { Heart, Search, Bell, ArrowRight } from "lucide-react";
+import { Heart, Flame, Bell, ArrowRight } from "lucide-react";
 
 const AAC_GREEN = "#50C878";
 
@@ -100,13 +100,13 @@ const DcmlsAccount = () => {
               className="group border border-border/60 rounded-xl p-6 bg-card hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between mb-6">
-                <Search className="w-5 h-5 text-muted-foreground" />
+                <Flame className="w-5 h-5 text-muted-foreground" />
                 <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
               </div>
               <p className="text-3xl font-semibold text-foreground tracking-tight">
                 {loading ? "—" : stats.searches}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">Saved Searches</p>
+              <p className="text-sm text-muted-foreground mt-1">Hot Sheets</p>
             </Link>
 
             <div className="border border-border/60 rounded-xl p-6 bg-card">
@@ -130,7 +130,7 @@ const DcmlsAccount = () => {
                 <Link to="/browse?dcmls=1">Browse Listings</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/client/hotsheets/new">New Saved Search</Link>
+                <Link to="/searches/new">New Hot Sheet</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link to="/saved">View Saved Homes</Link>

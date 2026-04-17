@@ -18,7 +18,7 @@ const PUBLIC_ITEMS: NavItem[] = [{ label: "Browse", to: "/browse?dcmls=1" }];
 const AUTHED_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
   { label: "Saved Homes", to: "/saved", authed: true },
-  { label: "Saved Searches", to: "/searches", authed: true },
+  { label: "Hot Sheets", to: "/searches", authed: true },
   { label: "Account", to: "/account", authed: true },
 ];
 

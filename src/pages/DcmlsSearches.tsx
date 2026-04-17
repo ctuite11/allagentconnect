@@ -68,12 +68,12 @@ const DcmlsSearches = () => {
   }, [navigate]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this saved search? You'll stop receiving alerts.")) return;
+    if (!confirm("Delete this Hot Sheet? You'll stop receiving alerts.")) return;
     const { error } = await supabase.from("hot_sheets").delete().eq("id", id);
     if (error) {
-      toast.error("Could not delete search");
+      toast.error("Could not delete Hot Sheet");
     } else {
-      toast.success("Saved search deleted");
+      toast.success("Hot Sheet deleted");
       setSearches((s) => s.filter((x) => x.id !== id));
     }
   };
