@@ -24,6 +24,7 @@ import {
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { LISTING_SEARCH_STATUSES, PROPERTY_TYPES } from "@/constants/status";
+import { isDcmlsHost } from "@/lib/host";
 
 export interface FilterState {
   propertyTypes: string[];
@@ -269,14 +270,16 @@ const ListingSearchFilters = ({
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white shadow-none overflow-hidden">
         <div className="p-5">
-        {/* DCMLS Toggle */}
-        <div className="flex items-center gap-2 mb-4">
-          <Switch
-            checked={filters.dcmlsOnly}
-            onCheckedChange={(checked) => updateFilter("dcmlsOnly", checked)}
-          />
-          <Label className="text-xs font-semibold text-neutral-900 cursor-pointer">DCMLS Only</Label>
-        </div>
+        {/* DCMLS Toggle — hidden on DCMLS host (always-on there) */}
+        {!isDcmlsHost() && (
+          <div className="flex items-center gap-2 mb-4">
+            <Switch
+              checked={filters.dcmlsOnly}
+              onCheckedChange={(checked) => updateFilter("dcmlsOnly", checked)}
+            />
+            <Label className="text-xs font-semibold text-neutral-900 cursor-pointer">DCMLS Only</Label>
+          </div>
+        )}
         {/* ROW 1: 3-Column Grid - Property Type (narrow) | Status+Date+Price (wide) | Standard Criteria */}
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           

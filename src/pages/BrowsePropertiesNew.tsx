@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { useUserRole } from "@/hooks/useUserRole";
+import { isDcmlsHost } from "@/lib/host";
+import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 
 const BrowsePropertiesNew = () => {
   const navigate = useNavigate();
@@ -101,6 +103,9 @@ const BrowsePropertiesNew = () => {
       if (criteria.minLivingArea) queryParams.minSqft = parseFloat(criteria.minLivingArea);
       if (criteria.maxLivingArea) queryParams.maxSqft = parseFloat(criteria.maxLivingArea);
 
+      // Force DCMLS-only filter on directconnectmls.com
+      if (isDcmlsHost()) queryParams.dcmlsOnly = true;
+
       const query = buildListingsQuery(supabase, queryParams).limit(200);
       const { data, error } = await query;
 
@@ -154,17 +159,21 @@ const BrowsePropertiesNew = () => {
     navigate(`/search?${params.toString()}`);
   };
 
+  const dcmls = isDcmlsHost();
+
   return (
-    <div className="min-h-screen flex flex-col pt-20">
-      <ActiveAgentBanner />
+    <div className={`min-h-screen flex flex-col ${dcmls ? "" : "pt-20"}`}>
+      {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-6">
-            <PageTitle className="mb-2">Property Search</PageTitle>
+            <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
             <p className="text-muted-foreground">
-              Advanced search with comprehensive filters
+              {dcmls
+                ? "Off-market and coming-soon listings shared by network agents"
+                : "Advanced search with comprehensive filters"}
             </p>
           </div>
 
