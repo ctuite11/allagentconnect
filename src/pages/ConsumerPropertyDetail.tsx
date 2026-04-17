@@ -300,20 +300,20 @@ const ConsumerPropertyDetail = () => {
       />
 
       {/* Back Button Row */}
-      <div className="mx-auto max-w-6xl px-4 pb-2 flex items-center gap-2">
+      <div className="mx-auto max-w-6xl px-4 pt-5 pb-3 flex items-center gap-2">
         <button
           onClick={() => {
             const lastSearch = sessionStorage.getItem("buyer_last_search_url");
             navigate(lastSearch || "/browse");
           }}
-          className="p-2 -ml-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
+          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           aria-label="Go back"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <button
           onClick={() => navigate("/client/dashboard")}
-          className="p-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
+          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           aria-label="Back to dashboard"
         >
           <Home className="h-5 w-5" />
@@ -321,6 +321,26 @@ const ConsumerPropertyDetail = () => {
       </div>
 
       <main className="flex-1">
+        {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
+        <div className="mx-auto max-w-6xl px-4 pb-2">
+          <div className="lg:w-[68%] pr-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
+                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
+                {buildDisplayAddress(listing as any)}
+              </h1>
+              <div className="text-right">
+                <p className="text-lg font-bold text-foreground">
+                  ${listing?.price?.toLocaleString() ?? '—'}
+                  {listing.listing_type === 'for_rent' && (
+                    <span className="text-sm font-normal text-muted-foreground ml-1">/ mo</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col lg:flex-row gap-6">
@@ -348,17 +368,19 @@ const ConsumerPropertyDetail = () => {
                     <iframe src={listing.property_website_url} className="w-full h-full" />
                   )}
 
-                  {/* Status Badge & AAC ID - Top Left */}
+                  {/* Status Badge - Top Left (NO AAC# for consumer view) */}
                   <div className="absolute top-4 left-4 flex items-center gap-2">
-                    {listing.listing_number && (
-                      <Badge variant="outline" className="font-mono text-xs bg-white/90 backdrop-blur-sm">
-                        AAC #{listing.listing_number}
-                      </Badge>
-                    )}
                     <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
                       {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
                     </Badge>
                   </div>
+
+                  {/* DOM Badge - Top Right Overlay */}
+                  {daysOnMarket !== null && (
+                    <Badge variant="outline" className="absolute top-14 right-4 font-mono text-xs bg-white/90 backdrop-blur-sm">
+                      {daysOnMarket} DOM
+                    </Badge>
+                  )}
 
                   {/* Share + Favorite - Top Right */}
                   <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -408,8 +430,8 @@ const ConsumerPropertyDetail = () => {
                 </div>
               </div>
 
-              {/* Media Type Tabs */}
-              <div className="flex items-center gap-2 mt-5 flex-wrap">
+              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
+              <div className="flex items-center gap-2 mt-6 flex-wrap">
                 <Button variant={activeMediaTab === 'photos' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('photos')} className="rounded-full">
                   <Home className="w-4 h-4 mr-2" />Photos
                 </Button>
@@ -430,48 +452,45 @@ const ConsumerPropertyDetail = () => {
                 )}
               </div>
 
-              {/* Price + Address Header — Compass/Apple hierarchy */}
-              <div className="mt-6">
-                <div className="flex items-baseline gap-3 flex-wrap">
-                  <p className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-                    ${listing.price.toLocaleString()}
-                  </p>
-                  {listing.square_feet && (
-                    <span className="text-sm text-muted-foreground">
-                      ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sq ft
-                    </span>
+              {/* ========== STATS ROW — AAC-style compact facts row ========== */}
+              <div className="mt-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
+                  {listing.bedrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bed className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
+                      <span className="text-xs text-muted-foreground">Beds</span>
+                    </div>
                   )}
-                  {listing.listing_type === 'for_rent' && (
-                    <span className="text-sm text-muted-foreground">/ month</span>
-                  )}
-                </div>
-
-                <h1 className="mt-2 text-lg md:text-xl font-medium text-foreground flex items-start gap-1.5">
-                  <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1.5" />
-                  <span>{buildDisplayAddress(listing)}</span>
-                </h1>
-
-                <div className="mt-3 pb-4 border-b border-border/60 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                  {listing.bedrooms != null && (
-                    <span><span className="font-semibold text-foreground">{listing.bedrooms}</span> Beds</span>
-                  )}
-                  {listing.bathrooms != null && (
-                    <>
-                      <span className="text-border">·</span>
-                      <span><span className="font-semibold text-foreground">{listing.bathrooms}</span> Baths</span>
-                    </>
+                  {listing.bathrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bath className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
+                      <span className="text-xs text-muted-foreground">Baths</span>
+                    </div>
                   )}
                   {listing.square_feet && (
-                    <>
-                      <span className="text-border">·</span>
-                      <span><span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span> Sq Ft</span>
-                    </>
+                    <div className="flex items-center gap-1">
+                      <Square className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground">Sq Ft</span>
+                    </div>
+                  )}
+                  {listing?.square_feet && listing.square_feet > 0 && (
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">
+                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground">/sf</span>
+                    </div>
                   )}
                   {daysOnMarket !== null && (
-                    <>
-                      <span className="text-border">·</span>
-                      <span><span className="font-semibold text-foreground">{daysOnMarket}</span> days on market</span>
-                    </>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{daysOnMarket}</span>
+                      <span className="text-xs text-muted-foreground">DOM</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -643,7 +662,39 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Buyer Actions — flush, no card chrome */}
+              {/* Brokerage Strip - SECONDARY (below agent card, AAC-style) */}
+              {(() => {
+                const displayAgent = stickyAgentProfile || agentProfile;
+                if (!displayAgent) return null;
+                const brokerageLogo = displayAgent.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
+                return (
+                  <Card className="rounded-2xl shadow-sm border">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                          <img
+                            src={brokerageLogo}
+                            alt={`${displayAgent.company || 'Brokerage'} logo`}
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            {stickyAgentProfile ? 'Represented by' : 'Listing courtesy of'}
+                          </p>
+                          <p className="text-sm font-medium truncate">
+                            {displayAgent.company || displayAgent.office_name || "Brokerage"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+
               <ScheduleShowingDialog
                 listingId={listing.id}
                 listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
