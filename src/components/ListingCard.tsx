@@ -614,7 +614,10 @@ const ListingCard = ({
     const totalPhotos = getTotalPhotos();
     const hasMultiplePhotos = totalPhotos > 1;
     
-    return <Card className="overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
+    return <Card
+        className="overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full cursor-pointer"
+        onClick={() => navigate(`/property/${listing.id}`)}
+      >
         <div className="relative group flex-shrink-0">
           <DcmlsBadge listing={listing as any} />
           {onSelect && <div className="absolute top-2 left-2 z-10">
