@@ -282,7 +282,7 @@ const ConsumerPropertyDetail = () => {
     : null;
 
   const compensationDisplay = getCompensationDisplay();
-  void agentProfile?.logo_url;
+  
 
   return (
     <div className="min-h-screen bg-background pt-20">
