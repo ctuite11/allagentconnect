@@ -56,8 +56,8 @@ const DcmlsConsumerHeader: React.FC = () => {
   return (
     <header className="border-b border-border/60 bg-background/95 backdrop-blur sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <AACMonogram className="w-7 h-7" style={{ color: AAC_BLUE }} />
+        <Link to="/" className="flex items-center gap-2.5" style={{ color: AAC_BLUE }}>
+          <AACMonogram className="w-7 h-7" />
           <span
             className="font-semibold tracking-tight text-foreground text-[15px]"
             style={{ fontFamily: "Manrope, sans-serif" }}
