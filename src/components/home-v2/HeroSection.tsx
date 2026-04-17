@@ -18,7 +18,7 @@ const HeroSection = () => {
       <div className="absolute top-1/3 left-0 w-[560px] h-[560px] rounded-full bg-aac opacity-[0.07] blur-[140px] pointer-events-none" />
 
       {/* Top access row */}
-      <div className="relative z-10 flex items-center justify-between w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] pt-12 mb-12">
+      <div className="relative z-10 flex items-center justify-between w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] py-5">
         <div className="flex items-center gap-1.5">
           <AACMonogram className="w-8 h-8 text-[#50c878]" />
           <span className="font-['Manrope'] font-semibold text-white text-lg tracking-[-0.4px] whitespace-nowrap">
@@ -28,48 +28,51 @@ const HeroSection = () => {
         <div className="flex items-center gap-5">
           <a
             href="/auth?mode=register"
-            className="font-['Manrope'] font-semibold text-white text-[13px] bg-[#50c878] hover:bg-[#3dba68] transition-colors px-[14px] py-[6px] rounded-full"
+            className="font-['Manrope'] font-semibold text-black bg-[#50C878] hover:bg-[#45b96d] transition-colors h-11 px-6 rounded-full inline-flex items-center text-sm shadow-sm"
           >
             Request Access
           </a>
-          <a href="/auth" className="font-['Manrope'] font-medium text-white/80 text-sm hover:text-white transition-colors">
+          <a href="/auth" className="font-['Manrope'] font-medium text-white/85 hover:text-white text-sm transition-colors">
             Sign in
           </a>
         </div>
       </div>
 
       {/* Hero content */}
-      <div className="relative z-10 flex flex-col justify-center flex-1 px-6 lg:px-[100px] pt-20 pb-32 max-w-[1440px] mx-auto w-full">
-        <div className="max-w-[580px] flex flex-col">
+      <div className="relative z-10 flex flex-col justify-center flex-1 w-full max-w-[1440px] mx-auto py-28 md:py-32">
+        <div className="max-w-[620px] ml-8 md:ml-16 lg:ml-24 flex flex-col">
           {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/5 border border-white/10 rounded-full w-fit mt-4">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/10 border border-white/15 backdrop-blur-md rounded-full w-fit">
             <span className="w-[7px] h-[7px] rounded-full bg-[#50c878] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-white/80 text-sm tracking-[0.28px]">
+            <span className="font-['Manrope'] font-medium text-white/90 text-sm tracking-[0.28px]">
               Verified Agent Network
             </span>
           </div>
 
           {/* Headline */}
           <h1
-            className="mt-6 font-['Manrope'] font-extrabold text-white text-[clamp(38px,4.8vw,64px)] tracking-[-2.5px] leading-[1.07]"
-            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
+            className="mt-6 font-['Manrope'] font-semibold text-white text-5xl md:text-7xl tracking-tight leading-[0.95]"
+            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)", textWrap: "balance" as any }}
           >
-            The private network where agents share pre-market intelligence.
+            See the market before it happens.
           </h1>
 
           {/* Sub-headline */}
-          <p className="mt-5 font-['Manrope'] font-medium text-white/50 text-[17px] leading-[1.75] tracking-[0.2px]">
+          <p className="mt-5 font-['Manrope'] font-medium text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
             Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.
           </p>
 
           {/* CTA */}
           <div className="flex items-center gap-4 mt-8 flex-wrap">
-            <button className="h-auto inline-flex items-center gap-2.5 px-[20px] py-[11px] bg-[#50c878] rounded-[90px] border-[5px] border-[#50c87866] hover:bg-[#3dba68] transition-colors font-['Manrope'] font-bold text-white text-base">
+            <a
+              href="/auth?mode=register"
+              className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-['Manrope'] font-semibold text-black text-base shadow-sm"
+            >
               Request access
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M7.5 5l5 5-5 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M7.5 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
+            </a>
           </div>
         </div>
       </div>

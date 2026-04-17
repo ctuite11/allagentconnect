@@ -49,26 +49,29 @@ const GCIBenefits = () => {
       {/* Top fade */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#060b17f0] via-[#060b1760] to-[#060b1790] pointer-events-none" />
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-28 flex flex-col items-center gap-20">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 md:py-24 flex flex-col items-center gap-16">
         {/* Headline + CTA */}
-        <div className="flex flex-col items-center text-center gap-7 max-w-[680px]">
-          <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-white/5 border border-white/10 rounded-full">
+        <div className="flex flex-col items-center text-center gap-6 max-w-3xl">
+          <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-white/10 border border-white/15 backdrop-blur-md rounded-full">
             <span className="w-[7px] h-[7px] rounded-full bg-[#50c878] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-white/80 text-[14px] tracking-[0.28px]">GCI driven by better connections</span>
+            <span className="font-['Manrope'] font-medium text-white/90 text-[14px] tracking-[0.28px]">GCI driven by better connections</span>
           </div>
-          <h2 className="font-['Manrope'] font-extrabold text-white text-[clamp(28px,4vw,50px)] tracking-[-2px] leading-[1.18]">
-            GCI driven by better<br />information and faster<br />connections.
+          <h2 className="font-['Manrope'] font-semibold text-white text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
+            GCI driven by better information and faster connections.
           </h2>
-          <p className="font-['Manrope'] font-medium text-white/50 text-[16px] leading-[1.7]">
+          <p className="font-['Manrope'] font-medium text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
             All Agent Connect gives agents the intelligence edge to close more deals and grow GCI with verified peers across brokerages.
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-4 pt-1">
-            <button className="h-auto inline-flex items-center gap-3 pl-7 pr-6 py-[14px] bg-[#50c878] rounded-[90px] border-[5px] border-[#50c87866] hover:bg-[#3dba68] transition-colors font-['Manrope'] font-bold text-white text-[16px]">
+          <div className="flex flex-wrap justify-center items-center gap-4 pt-2">
+            <a
+              href="/auth?mode=register"
+              className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-['Manrope'] font-semibold text-black text-base shadow-sm"
+            >
               Request access
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <path d="M7.5 5l5 5-5 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M7.5 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
+            </a>
           </div>
         </div>
 

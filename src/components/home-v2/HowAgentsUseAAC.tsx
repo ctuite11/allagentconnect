@@ -15,20 +15,20 @@ const HowAgentsUseAAC = () => {
   });
 
   return (
-    <section className="w-full pt-[120px] pb-28 px-6 relative bg-white">
-      <div className="max-w-[1200px] mx-auto flex flex-col gap-16">
+    <section className="w-full py-20 md:py-24 px-6 relative bg-white">
+      <div className="max-w-6xl mx-auto flex flex-col gap-14">
         {/* Header */}
-        <div className="flex flex-col items-center gap-5 text-center max-w-[600px] mx-auto">
+        <div className="flex flex-col items-center gap-5 text-center max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-[#0E56F50f] border border-[#0E56F526] rounded-full">
             <span className="font-['Manrope'] font-semibold text-[14px] tracking-[0.28px]" style={{ color: AAC_BLUE }}>Agent workflow</span>
           </div>
-          <h2 className="font-['Manrope'] font-semibold text-[#0f172a] text-[clamp(30px,4vw,46px)] leading-[1.18]" style={{ letterSpacing: "-0.02em" }}>
+          <h2 className="font-['Manrope'] font-semibold text-[#0f172a] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
             How Agents Work Inside<br />The AAC Network
           </h2>
         </div>
 
         {/* Three cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 [&>div]:rounded-3xl [&>div]:hover:-translate-y-1 [&>div]:transition-all [&>div]:duration-300">
           {/* Card 1 — Discover */}
           <div
             className="flex flex-col rounded-2xl overflow-hidden"
