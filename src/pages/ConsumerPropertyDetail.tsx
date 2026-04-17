@@ -662,7 +662,39 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Buyer Actions — flush, no card chrome */}
+              {/* Brokerage Strip - SECONDARY (below agent card, AAC-style) */}
+              {(() => {
+                const displayAgent = stickyAgentProfile || agentProfile;
+                if (!displayAgent) return null;
+                const brokerageLogo = displayAgent.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
+                return (
+                  <Card className="rounded-2xl shadow-sm border">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                          <img
+                            src={brokerageLogo}
+                            alt={`${displayAgent.company || 'Brokerage'} logo`}
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            {stickyAgentProfile ? 'Represented by' : 'Listing courtesy of'}
+                          </p>
+                          <p className="text-sm font-medium truncate">
+                            {displayAgent.company || displayAgent.office_name || "Brokerage"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+
               <ScheduleShowingDialog
                 listingId={listing.id}
                 listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
