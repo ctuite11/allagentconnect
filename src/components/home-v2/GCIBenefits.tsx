@@ -45,11 +45,11 @@ const GCIBenefits = () => {
         {/* Headline + CTA */}
         <div className="flex flex-col items-center text-center gap-6 max-w-3xl">
           <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-white/10 border border-white/15 backdrop-blur-md rounded-full">
-            <span className="w-[7px] h-[7px] rounded-full bg-[#50c878] shrink-0" />
-            <span className="font-['Manrope'] font-medium text-white/90 text-[14px] tracking-[0.28px]">GCI driven by better connections</span>
+            <span className="h-2 w-2 rounded-full bg-[#50c878] shrink-0" />
+            <span className="font-['Manrope'] font-medium text-white/90 text-[14px] tracking-[0.28px] leading-none">GCI driven by better intelligence</span>
           </div>
           <h2 className="font-['Manrope'] font-semibold text-white text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
-            GCI driven by better information and faster connections.
+            More GCI through better intelligence and faster connections.
           </h2>
           <p className="font-['Manrope'] font-medium text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
             All Agent Connect gives agents the intelligence edge to close more deals and grow GCI with verified peers across brokerages.
