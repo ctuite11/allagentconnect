@@ -1,31 +1,33 @@
 
-Root cause confirmed: the published DCMLS site is live, but the homepage still uses the old `src/pages/DcmlsHome.tsx` nav and hero CTAs. The newer consumer-first header exists in `src/components/dcmls/DcmlsConsumerHeader.tsx`, and `/consumer/auth` is live, but the homepage itself was never switched to use that consumer-first surface.
 
-Plan:
-1. Update `src/pages/DcmlsHome.tsx`
-   - Replace homepage top-right `Agent Sign In` CTA with:
-     - `Sign In`
-     - `Create Account`
-     - small secondary `Agent Login`
-   - Update hero CTA block to consumer-first CTAs as well.
-   - Point primary auth links to `/consumer/auth?mode=signin` and `/consumer/auth?mode=signup`.
+## Root cause
 
-2. Reuse the canonical DCMLS header
-   - Prefer rendering `DcmlsConsumerHeader` on the homepage so the homepage and inner DCMLS pages stay consistent.
-   - Keep AAC domain behavior unchanged.
+The global `<Navigation />` component (AAC header) renders on all routes except `HIDE_NAV_ROUTES` / sidebar-managed routes. On `directconnectmls.com`, consumer routes like `/saved`, `/searches`, `/account`, `/find-agent`, `/browse` render **both** the AAC `Navigation` AND the `DcmlsConsumerHeader` → double header (visible in screenshot).
 
-3. Verify directconnectmls.com testing flow
-   - Homepage shows consumer-first CTAs.
-   - `Create Account` opens buyer signup.
-   - `Sign In` opens buyer sign-in.
-   - `Agent Login` still routes to `/auth`.
-   - Anonymous save/favorite redirects remain pointed to `/consumer/auth?mode=signup&from=<current-path>`.
+The DCMLS header itself is correct. The fix is to suppress the global AAC Navigation entirely on the DCMLS host.
 
-Files to change:
-- `src/pages/DcmlsHome.tsx`
-- possibly minor shared styling alignment in `src/components/dcmls/DcmlsConsumerHeader.tsx` only if needed for homepage parity
+## Fix (one file)
 
-Expected result after publish:
-- `directconnectmls.com` homepage visibly shows the new consumer funnel
-- buyers can test the full top-of-funnel directly on the live DCMLS site
-- agent login remains available as a secondary path
+**`src/components/Navigation.tsx`** — add a host check at the top of the render guard:
+
+```ts
+// DCMLS host is consumer-only and uses DcmlsConsumerHeader on every page.
+// The global AAC Navigation must never render there.
+if (isDcmlsHost()) return null;
+```
+
+Place this immediately before the existing `HIDE_NAV_ROUTES.includes(...)` check (around line 253), and add the import for `isDcmlsHost` from `@/lib/host`.
+
+## Result after publish
+
+- `directconnectmls.com` shows **only** the DCMLS consumer header (Browse, Agent Search, Saved Homes, Hot Sheets, Account, Sign Out when logged in; Browse, Agent Search, Sign In, Create Account when logged out).
+- AAC host (`allagentconnect.com`) is unaffected — global Navigation continues to render exactly as before.
+- No agent-facing UI is reachable from the DCMLS surface.
+
+## Files changed
+- `src/components/Navigation.tsx` (add host guard + import)
+
+## Test
+- Publish, then on `directconnectmls.com` visit `/`, `/saved`, `/searches`, `/account`, `/browse`, `/find-agent` → only one header (DCMLS).
+- On `allagentconnect.com` visit `/favorites`, `/browse` → AAC Navigation still renders as before.
+
