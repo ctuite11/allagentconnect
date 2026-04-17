@@ -485,30 +485,19 @@ const PropertyDetail = () => {
           </button>
         </div>
 
-        {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
-        <div className="mx-auto max-w-6xl px-4 pb-2">
-          <div className="lg:w-[68%] pr-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
-                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
-                {buildDisplayAddress(listing as any)}
-              </h1>
-              <div className="text-right">
-                <p className="text-lg font-bold text-foreground">
-                  ${listing?.price?.toLocaleString() ?? '—'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ========== LISTING HEADER — shared primitive ========== */}
+        <PropertyHeader
+          address={buildDisplayAddress(listing as any)}
+          price={listing?.price ?? null}
+        />
 
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col lg:flex-row gap-6">
-            
+        <div className={propertyPageContainer}>
+          <div className={`flex flex-col lg:flex-row ${propertyHeroGap}`}>
+
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
-            <div className="lg:w-[68%]">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]">
+            <div className={propertyMediaCol}>
+              <div className={propertyHeroMedia}>
                 <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
