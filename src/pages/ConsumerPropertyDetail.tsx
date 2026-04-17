@@ -282,7 +282,7 @@ const ConsumerPropertyDetail = () => {
     : null;
 
   const compensationDisplay = getCompensationDisplay();
-  const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
+  void agentProfile?.logo_url;
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -643,38 +643,11 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Brokerage Strip */}
-              {stickyAgentProfile && (
-                <Card className="rounded-2xl shadow-sm border">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                        <img
-                          src={stickyAgentProfile.logo_url || DEFAULT_BROKERAGE_LOGO_URL}
-                          alt={`${stickyAgentProfile.company || 'Brokerage'} logo`}
-                          className="h-full w-full object-contain"
-                          onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL; }}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Courtesy of</p>
-                        <p className="text-sm font-medium truncate">{stickyAgentProfile.company || "Brokerage"}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Buyer Actions */}
-              <Card className="rounded-2xl">
-                <CardContent className="py-4 px-4 space-y-2">
-                  <ScheduleShowingDialog
-                    listingId={listing.id}
-                    listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
-                  />
-                  {/* SaveToHotSheet not available on single listing view */}
-                </CardContent>
-              </Card>
+              {/* Buyer Actions — flush, no card chrome */}
+              <ScheduleShowingDialog
+                listingId={listing.id}
+                listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+              />
             </div>
           </div>
         </div>
