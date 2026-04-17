@@ -250,6 +250,9 @@ const Navigation = () => {
   };
 
   // Hide global navigation on minimal/public funnel pages FIRST (before any loading states)
+  // DCMLS host is consumer-only and uses DcmlsConsumerHeader on every page.
+  if (isDcmlsHost()) return null;
+
   // This prevents any flash of navigation on funnel pages
   if (HIDE_NAV_ROUTES.includes(location.pathname)) return null;
 
