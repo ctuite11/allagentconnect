@@ -624,6 +624,18 @@ const ConsumerPropertyDetail = () => {
         </div>
         {/* END HERO GRID */}
 
+        {/* Listing agent attribution — represented buyers only.
+            Assigned (sticky) agent is the primary contact above; this line is
+            attribution-only: muted, no link, no contact details, no hover. */}
+        {stickyAgentProfile && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
+          <div className="mx-auto max-w-6xl px-4 pt-3">
+            <p className="text-xs text-muted-foreground/80">
+              Listing courtesy of {agentProfile.first_name} {agentProfile.last_name}
+              {agentProfile.company ? ` • ${agentProfile.company}` : ""}
+            </p>
+          </div>
+        )}
+
         {/* ========== MAIN CONTENT BELOW ========== */}
         <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
