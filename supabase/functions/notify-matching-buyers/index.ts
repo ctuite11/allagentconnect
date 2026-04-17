@@ -22,6 +22,18 @@ interface Listing {
   neighborhood?: string | null;
 }
 
+/**
+ * CANONICAL ROUTING (post-consolidation):
+ * - Hot Sheet matching is OWNED by `send-new-match-notification`
+ *   (cron + listing-trigger near-realtime). It enforces:
+ *     • acceptance gate (no-spam-before-accept)
+ *     • status-aware dedup via hot_sheet_sent_listings
+ *     • routes to BUYER/CLIENT, never the agent
+ *
+ * - This function ONLY handles legacy `client_needs` matching.
+ *   It also fires `send-new-match-notification` for the same listing
+ *   so hot-sheet recipients get near-realtime delivery.
+ */
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,7 +45,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Find matching client needs
+    // 1) Fan-out to canonical hot-sheet matcher (near-realtime path)
+    //    Fire-and-forget; cron remains the safety net.
+    try {
+      supabase.functions.invoke("send-new-match-notification", {
+        body: { trigger: "listing", listing_id: listing.listing_id },
+      }).then(({ error }) => {
+        if (error) console.error("[notify-matching-buyers] hot-sheet fanout error:", error);
+      });
+    } catch (e) {
+      console.error("[notify-matching-buyers] hot-sheet fanout invoke threw:", e);
+    }
+
+    // 2) Legacy client_needs matching (kept for backward compatibility)
     let clientNeedsQuery = supabase
       .from("client_needs")
       .select("*, profiles!client_needs_submitted_by_fkey(email, first_name, last_name)");
@@ -46,27 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: matchingNeeds, error: needsError } = await clientNeedsQuery;
     if (needsError) throw needsError;
 
-    // Find matching hot sheets
-    const { data: hotSheets, error: hotSheetsError } = await supabase
-      .from("hot_sheets")
-      .select("*, profiles!hot_sheets_user_id_fkey(email, first_name, last_name)")
-      .eq("is_active", true);
-
-    if (hotSheetsError) throw hotSheetsError;
-
-    // Filter hot sheets based on criteria
-    const matchingHotSheets = hotSheets?.filter((sheet: any) => {
-      const criteria = sheet.criteria;
-      if (criteria.state && criteria.state !== listing.state) return false;
-      if (criteria.cities?.length > 0 && !criteria.cities.some((c: string) => c.toLowerCase().includes(listing.city?.toLowerCase()))) return false;
-      if (criteria.minPrice && listing.price < criteria.minPrice) return false;
-      if (criteria.maxPrice && listing.price > criteria.maxPrice) return false;
-      if (criteria.bedrooms && listing.bedrooms && listing.bedrooms < criteria.bedrooms) return false;
-      if (criteria.bathrooms && listing.bathrooms && listing.bathrooms < criteria.bathrooms) return false;
-      return true;
-    }) || [];
-
-    // Get agent info for the listing
+    // Listing agent (for reply_to)
     const { data: listingData } = await supabase
       .from("listings")
       .select("agent_id")
@@ -82,8 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
     const agentName = agentProfile ? `${agentProfile.first_name} ${agentProfile.last_name}`.trim() : "An agent";
     const agentEmail = agentProfile?.email || "";
 
-    // Combine recipients (dedupe by email)
-    const recipientsMap = new Map();
+    const recipientsMap = new Map<string, { email: string; first_name: string; source: string }>();
     matchingNeeds?.forEach((need: any) => {
       if (need.profiles?.email) {
         recipientsMap.set(need.profiles.email, {
@@ -93,27 +96,17 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
     });
-    matchingHotSheets?.forEach((sheet: any) => {
-      if (sheet.profiles?.email) {
-        recipientsMap.set(sheet.profiles.email, {
-          email: sheet.profiles.email,
-          first_name: sheet.profiles.first_name,
-          source: "hot_sheet",
-        });
-      }
-    });
 
     const recipients = Array.from(recipientsMap.values());
-    console.log(`[notify-matching-buyers] Enqueuing ${recipients.length} jobs`);
+    console.log(`[notify-matching-buyers] client_needs recipients: ${recipients.length}`);
 
     if (recipients.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, message: "No matching buyers found", queued: 0 }),
+        JSON.stringify({ success: true, queued: 0, hot_sheet_fanout: "invoked" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Enqueue jobs
     const emailJobs = recipients.map((recipient) => ({
       payload: {
         provider: "resend",
@@ -138,7 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
           contentHtml: `
             <h2>🏡 New Property Alert!</h2>
             <p>Hi ${recipient.first_name || "there"},</p>
-            <p>A new property just hit the market that matches your ${recipient.source === "hot_sheet" ? "hot sheet criteria" : "buyer preferences"}!</p>
+            <p>A new property just hit the market that matches your buyer preferences!</p>
             <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="margin: 0 0 10px;">${listing.address}</h3>
               <p style="margin: 5px 0;">📍 ${listing.city}, ${listing.state}</p>
@@ -154,7 +147,6 @@ const handler = async (req: Request): Promise<Response> => {
     }));
 
     const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
-
     if (insertError) {
       console.error("[notify-matching-buyers] Failed to enqueue:", insertError);
       throw new Error("Failed to queue emails");
@@ -165,7 +157,7 @@ const handler = async (req: Request): Promise<Response> => {
         success: true,
         queued: emailJobs.length,
         client_needs_matches: matchingNeeds?.length || 0,
-        hot_sheet_matches: matchingHotSheets.length,
+        hot_sheet_fanout: "invoked",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
