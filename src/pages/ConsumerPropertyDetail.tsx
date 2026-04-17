@@ -547,7 +547,7 @@ const ConsumerPropertyDetail = () => {
                       <Button
                         size="lg"
                         className="w-full gap-2"
-                        onClick={handleMessageYourAgent}
+                        onClick={() => handleMessageAgent(stickyAgentId)}
                       >
                         <MessageSquare className="h-5 w-5" />
                         Message your agent
@@ -568,6 +568,70 @@ const ConsumerPropertyDetail = () => {
                         }
                         defaultSubject={`Question about ${listing.address}, ${listing.city}`}
                       />
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : agentProfile ? (
+                <Card className="rounded-3xl shadow-md border-2">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <AgentAvatar
+                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                        headshotUrl={agentProfile.headshot_url ?? null}
+                        userId={agentProfile.id}
+                        size="xl"
+                        avatarClassName="w-16 h-16 border-2 border-border"
+                        fallbackClassName="bg-muted"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing Agent</p>
+                        <p className="font-bold text-lg leading-tight">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5 text-sm">
+                      {agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                          <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
+                          <span className="text-muted-foreground text-xs ml-auto">Mobile</span>
+                        </a>
+                      )}
+                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
+                          <span className="text-muted-foreground text-xs ml-auto">Office</span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-2.5 hover:text-primary transition">
+                          <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium truncate">{agentProfile.email}</span>
+                        </a>
+                      )}
+                      {agentProfile.social_links?.website && (
+                        <a href={agentProfile.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-primary hover:underline">
+                          <Globe className="w-4 h-4 flex-shrink-0" />
+                          <span className="font-medium">Website</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Button
+                        size="lg"
+                        className="w-full gap-2"
+                        onClick={() => handleMessageAgent(agentProfile.id)}
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                        Message listing agent
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -624,17 +688,6 @@ const ConsumerPropertyDetail = () => {
         </div>
         {/* END HERO GRID */}
 
-        {/* Listing agent attribution — represented buyers only.
-            Assigned (sticky) agent is the primary contact above; this line is
-            attribution-only: muted, no link, no contact details, no hover. */}
-        {stickyAgentProfile && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
-          <div className="mx-auto max-w-6xl px-4 pt-3">
-            <p className="text-xs text-muted-foreground/80">
-              Listing courtesy of {agentProfile.first_name} {agentProfile.last_name}
-              {agentProfile.company ? ` • ${agentProfile.company}` : ""}
-            </p>
-          </div>
-        )}
 
         {/* ========== MAIN CONTENT BELOW ========== */}
         <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
@@ -678,6 +731,16 @@ const ConsumerPropertyDetail = () => {
                 agent={agentProfile}
                 isAgentView={false}
               />
+
+              {/* Listing agent attribution — represented buyers only.
+                  Sticky agent is the primary contact; this is muted,
+                  no link, no contact details, no hover. */}
+              {stickyAgentProfile && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
+                <p className="text-xs text-muted-foreground/80 px-1">
+                  Listing courtesy of {agentProfile.first_name} {agentProfile.last_name}
+                  {agentProfile.company ? ` • ${agentProfile.company}` : ""}
+                </p>
+              )}
 
               {/* Map */}
               <Card className="rounded-3xl">
@@ -733,11 +796,14 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Buyer Agent Showcase */}
-              <BuyerAgentShowcase
-                listingZip={listing.zip_code}
-                listingId={listing.id}
-              />
+              {/* Buyer Agent Showcase — only when buyer is unrepresented.
+                  Represented buyers already have a sticky agent. */}
+              {!stickyAgentProfile && (
+                <BuyerAgentShowcase
+                  listingZip={listing.zip_code}
+                  listingId={listing.id}
+                />
+              )}
 
               {/* ATTOM Property Data */}
               {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
