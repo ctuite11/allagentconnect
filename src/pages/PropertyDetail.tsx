@@ -625,18 +625,33 @@ const PropertyDetail = () => {
                   </div>
               </div>
 
-              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
-              <div className="flex items-center justify-between gap-2 mt-6">
-                <div className="flex items-center gap-2">
-                <Button
-                  variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleMediaTabChange('photos')}
-                  className="rounded-full"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Photos
-                </Button>
+              {/* Media Type Tabs — shared primitive (AAC: tour/website open externally) */}
+              <MediaTabBar
+                active={activeMediaTab as MediaTab}
+                onChange={(tab) => {
+                  if (tab === "tour" && listing.virtual_tour_url) {
+                    window.open(listing.virtual_tour_url, "_blank", "noopener,noreferrer");
+                    return;
+                  }
+                  if (tab === "website" && listing.property_website_url) {
+                    window.open(listing.property_website_url, "_blank", "noopener,noreferrer");
+                    return;
+                  }
+                  handleMediaTabChange(tab);
+                }}
+                hasVideo={!!listing.video_url}
+                hasTour={!!listing.virtual_tour_url}
+                hasWebsite={!!listing.property_website_url}
+              />
+
+              {/* ========== STATS ROW — shared primitive ========== */}
+              <PropertyFactsRow
+                bedrooms={listing.bedrooms}
+                bathrooms={listing.bathrooms}
+                squareFeet={listing.square_feet}
+                price={listing.price}
+              />
+
                 {listing.video_url && (
                   <Button
                     variant={activeMediaTab === 'video' ? 'default' : 'outline'}
