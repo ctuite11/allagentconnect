@@ -274,6 +274,33 @@ const DcmlsAuth = () => {
                 </button>
               )}
             </div>
+
+            {/* Buyer benefits — only on signup mode */}
+            {!isLogin && !isForgot && (
+              <div className="mt-10 pt-8 border-t border-border/50">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-4 text-center">
+                  What your account unlocks
+                </p>
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-foreground/80">
+                  <li>· Save homes</li>
+                  <li>· Favorites</li>
+                  <li>· Hot Sheets</li>
+                  <li>· New listing alerts</li>
+                  <li>· Invite your agent</li>
+                  <li>· Showing requests</li>
+                </ul>
+              </div>
+            )}
+
+            {/* Secondary agent link — never primary */}
+            <div className="mt-10 text-center">
+              <Link
+                to="/auth"
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Are you an agent? Agent sign in →
+              </Link>
+            </div>
           </div>
         </main>
       </div>
