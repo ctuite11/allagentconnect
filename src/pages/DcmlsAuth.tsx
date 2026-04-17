@@ -32,10 +32,13 @@ const loginSchema = z.object({
 const DcmlsAuth = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const redirectTo = params.get("redirect") || "/account";
-  const initialMode = params.get("mode") === "register" ? false : true;
+  // Accept both `redirect` (legacy) and `from` (new). Default destination is /account on DCMLS.
+  const redirectTo = params.get("from") || params.get("redirect") || "/account";
+  // Accept `mode=signup|signin` (new) and legacy `mode=register`. Default = signin.
+  const modeParam = params.get("mode");
+  const initialIsLogin = modeParam !== "register" && modeParam !== "signup";
 
-  const [isLogin, setIsLogin] = useState(initialMode);
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [isForgot, setIsForgot] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
