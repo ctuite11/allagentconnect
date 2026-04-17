@@ -1,31 +1,36 @@
 
-User wants the DCMLS lockup files to match the AAC logo's font and sizing conventions.
+Two-part task:
 
-AAC wordmark spec (from `src/components/brand/Logo.tsx`):
-- Font: `Inter, system-ui, sans-serif`
-- Size: 22px in a 220×48 viewBox
-- Weight: 600
-- Letter-spacing: -0.01em
-- Colors: "All Agent " in #0E56F5, "Connect" in #16A34A
-- Monogram (when paired): from `aac-logo-master.svg`, sized via `h-{size}` class, width auto
+**Part 1 — Regenerate DCMLS lockups correctly**
+Output to `/mnt/documents/dcmls-logos/` as `_v2` files:
+- Wordmark: Inter, 600, 22px, -0.01em (matches `src/components/brand/Logo.tsx`)
+- Monogram: current AAC blue mark from `src/assets/aac-logo-master.svg` (NOT the old command-icon from `AACMonogram.tsx`)
+- 48px lockup height, 9px gap
+- Color rule: monogram all `#0E56F5`, "Direct Connect MLS" single color (dark on light, white on dark), no blue on "MLS"
+- Files: `dcmls-lockup-light_v2.svg/png`, `dcmls-lockup-dark_v2.svg/png`, `dcmls-lockup-transparent_v2.svg/png`
+- QA each PNG before delivery
 
-The DCMLS lockups I generated likely used a different font (probably Manrope/DM Sans or default sans) and arbitrary monogram-to-wordmark proportions. Need to regenerate to match AAC exactly.
+**Part 2 — Remove old logo files from the codebase**
 
-## Plan
+Old/legacy logo files to delete:
+- `src/components/ui/AACLogo.tsx` (uses Manrope + old monogram)
+- `src/components/ui/AACMonogram.tsx` (old command-style icon)
+- `src/components/ui/src/components/ui/AACLogo.tsx` (empty/orphan duplicate path)
+- `src/design-assets/figma-logo/AACLogoFigmaExport.tsx` (Figma reference, also old icon)
+- `public/aac-monogram-green.svg` (old green monogram asset)
 
-Regenerate the DCMLS lockup SVG/PNG set to match AAC's typographic system:
+Before deleting, search the codebase for any imports of these files. Known consumer:
+- `src/components/dcmls/DcmlsConsumerHeader.tsx` imports `@/components/ui/AACMonogram`
 
-1. **Font**: Inter, weight 600, letter-spacing -0.01em (same as AAC `Logo.tsx`)
-2. **Sizing/proportions**: Match AAC's monogram-to-wordmark ratio — viewBox height 48 with monogram filling the height and wordmark at 22px font-size, 9px gap (mirrors `AllAgentConnectLogo` Figma export spacing rhythm)
-3. **Colors** (per locked rule from prior turn):
-   - Monogram: full `#0E56F5` (AAC blue)
-   - Wordmark "Direct Connect MLS": single color — `#0F172A` on light variant, `#FFFFFF` on dark variant, NO blue on "MLS"
-4. **Variants to regenerate** (overwrite existing files in `/mnt/documents/dcmls-logos/`):
-   - `dcmls-lockup-light.svg` + `.png` (dark text on white)
-   - `dcmls-lockup-dark.svg` + `.png` (white text on dark)
-   - `dcmls-lockup-transparent.svg` + `.png` (dark text, no bg)
-   - Monogram-only files unchanged (already correct)
-5. **PNG export**: render at 1600px wide via librsvg, embed Inter from Google Fonts in SVG `<defs>` so rasterization picks it up
-6. **QA**: convert each PNG to a thumbnail and inspect for font rendering + proportions before delivering
+Plan:
+1. Search for all references to each file (`AACMonogram`, `AACLogo` from `ui/`, `AACLogoFigmaExport`, `aac-monogram-green.svg`)
+2. Replace each consumer with the canonical `Logo` from `@/components/brand/Logo` (icon variant for monogram-only usages like `DcmlsConsumerHeader`)
+3. Delete the legacy files
+4. Keep `src/components/brand/Logo.tsx` and `src/assets/aac-logo-master.svg` as the only source of truth
 
-No code changes to the project repo — artifact regeneration only, output to `/mnt/documents/dcmls-logos/`.
+Canonical sources kept:
+- `src/components/brand/Logo.tsx`
+- `src/assets/aac-logo-master.svg`
+- `mem://style/brand/monogram-variants-and-assets-v2-locked` (memory unchanged)
+
+Execution order in default mode: search references → swap imports → delete legacy files → regenerate DCMLS `_v2` artifacts → QA → deliver.
