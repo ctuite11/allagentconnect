@@ -154,18 +154,8 @@ const DcmlsConsumerHeader: React.FC = () => {
             </div>
           </SheetContent>
         </Sheet>
-
-        {/* Desktop secondary agent link — small, never primary */}
-        {!signedIn && (
-          <Link
-            to="/auth"
-            className="hidden md:block absolute right-6 top-[60px] text-[11px] text-muted-foreground hover:text-foreground"
-            style={{ position: "fixed" }}
-          >
-            {/* Visually-suppressed; rendered inline below header for desktop */}
-          </Link>
-        )}
       </div>
+
       {!signedIn && (
         <div className="hidden md:flex max-w-6xl mx-auto px-6 -mt-1 pb-1 justify-end">
           <Link
