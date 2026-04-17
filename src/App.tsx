@@ -82,6 +82,7 @@ import DcmlsHome from "./pages/DcmlsHome";
 import DcmlsAuth from "./pages/DcmlsAuth";
 import DcmlsSaved from "./pages/DcmlsSaved";
 import DcmlsSearches from "./pages/DcmlsSearches";
+import DcmlsHotSheetNew from "./pages/DcmlsHotSheetNew";
 import DcmlsAccount from "./pages/DcmlsAccount";
 import { isDcmlsHost } from "./lib/host";
 
@@ -282,6 +283,7 @@ const App = () => (
                 {/* DCMLS consumer routes — protected; redirect to /auth keeps host-aware switch */}
                 <Route path="/saved" element={<RouteGuard requireAuth><DcmlsSaved /></RouteGuard>} />
                 <Route path="/searches" element={<RouteGuard requireAuth><DcmlsSearches /></RouteGuard>} />
+                <Route path="/searches/new" element={<RouteGuard requireAuth><DcmlsHotSheetNew /></RouteGuard>} />
                 <Route path="/account" element={<RouteGuard requireAuth><DcmlsAccount /></RouteGuard>} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />

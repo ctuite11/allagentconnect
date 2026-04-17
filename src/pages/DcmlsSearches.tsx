@@ -4,9 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import { Button } from "@/components/ui/button";
-import { Bell, Search, Plus, Trash2 } from "lucide-react";
+import { Bell, Flame, Plus, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const HOT_SHEET_HELP =
+  "Your personalized live listing feed. Get alerted when matching homes hit the network.";
 
 interface SavedSearch {
   id: string;
@@ -64,12 +68,12 @@ const DcmlsSearches = () => {
   }, [navigate]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this saved search? You'll stop receiving alerts.")) return;
+    if (!confirm("Delete this Hot Sheet? You'll stop receiving alerts.")) return;
     const { error } = await supabase.from("hot_sheets").delete().eq("id", id);
     if (error) {
-      toast.error("Could not delete search");
+      toast.error("Could not delete Hot Sheet");
     } else {
-      toast.success("Saved search deleted");
+      toast.success("Hot Sheet deleted");
       setSearches((s) => s.filter((x) => x.id !== id));
     }
   };
@@ -90,8 +94,8 @@ const DcmlsSearches = () => {
   return (
     <>
       <Seo
-        title="Saved Searches — Direct Connect MLS"
-        description="Your saved searches and email alerts on Direct Connect MLS."
+        title="Hot Sheets — Direct Connect MLS"
+        description="Your personalized live listing feeds. Get alerted when matching homes hit the network."
         canonical="https://directconnectmls.com/searches"
       />
       <div className="min-h-screen bg-background flex flex-col">
@@ -100,32 +104,48 @@ const DcmlsSearches = () => {
         <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-12 md:py-16">
           <div className="flex items-start justify-between mb-10 gap-4 flex-wrap">
             <div>
-              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-                Saved Searches
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Get notified the moment a matching home hits the network.
-              </p>
+              <div className="inline-flex items-center gap-2 mb-3">
+                <Flame className="w-4 h-4 text-foreground/70" />
+                <span className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-medium">
+                  Live Listing Feed
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+                  Hot Sheets
+                </h1>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" aria-label="What is a Hot Sheet?" className="text-muted-foreground hover:text-foreground transition-colors">
+                        <Info className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">{HOT_SHEET_HELP}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <p className="text-muted-foreground mt-2 max-w-xl">{HOT_SHEET_HELP}</p>
             </div>
             <Button asChild>
-              <Link to="/client/hotsheets/new">
+              <Link to="/searches/new">
                 <Plus className="w-4 h-4 mr-1.5" />
-                New Saved Search
+                New Hot Sheet
               </Link>
             </Button>
           </div>
 
           {!loading && searches.length === 0 && (
             <div className="border border-border/60 rounded-2xl p-16 text-center bg-muted/20">
-              <Search className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
+              <Flame className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
               <h2 className="text-xl font-semibold text-foreground mb-2">
-                No saved searches yet
+                No Hot Sheets yet
               </h2>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Create a saved search to receive email alerts when new homes match what you're looking for.
+                {HOT_SHEET_HELP}
               </p>
               <Button asChild>
-                <Link to="/client/hotsheets/new">Create your first search</Link>
+                <Link to="/searches/new">Create your first Hot Sheet</Link>
               </Button>
             </div>
           )}
