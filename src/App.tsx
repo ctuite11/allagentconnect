@@ -79,11 +79,20 @@ import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
 import HomepageV2 from "./pages/HomepageV2";
 import DcmlsHome from "./pages/DcmlsHome";
+import DcmlsAuth from "./pages/DcmlsAuth";
+import DcmlsSaved from "./pages/DcmlsSaved";
+import DcmlsSearches from "./pages/DcmlsSearches";
+import DcmlsAccount from "./pages/DcmlsAccount";
 import { isDcmlsHost } from "./lib/host";
 
 /** Renders the DCMLS homepage on directconnectmls.com, AAC homepage elsewhere. */
 function HostHomeSwitch() {
   return isDcmlsHost() ? <DcmlsHome /> : <HomepageV2 />;
+}
+
+/** Renders DCMLS-branded auth on DCMLS host, AAC auth elsewhere. */
+function HostAuthSwitch() {
+  return isDcmlsHost() ? <DcmlsAuth /> : <Auth />;
 }
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
@@ -170,7 +179,7 @@ const App = () => (
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
                 <Route path="/home" element={<Index />} />
                 {/* Auth routes */}
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth" element={<HostAuthSwitch />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
                 <Route path="/pending-verification" element={<PendingVerification />} />
