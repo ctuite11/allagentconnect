@@ -22,9 +22,11 @@ interface NavItem {
 
 const PUBLIC_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
+  { label: "Our Agents", to: "/our-agents" },
 ];
 const AUTHED_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
+  { label: "Our Agents", to: "/our-agents" },
   { label: "Saved Homes", to: "/saved", authed: true },
   { label: "Hot Sheets", to: "/searches", authed: true },
   { label: "Account", to: "/account", authed: true },
