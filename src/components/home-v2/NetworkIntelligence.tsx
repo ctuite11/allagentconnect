@@ -33,11 +33,12 @@ const NetworkIntelligence = () => {
 
         {/* Dashboard image */}
         <div className="relative z-10 w-full max-w-[900px] mx-auto">
-          <div className="rounded-[28px] border-[10px] border-[#292d32] shadow-[0_32px_80px_rgba(41,45,50,0.22)] overflow-hidden">
+          <div className="rounded-[28px] border-[10px] border-[#1a1d22] shadow-[0_48px_120px_rgba(15,23,42,0.38),0_16px_40px_rgba(15,23,42,0.18)] overflow-hidden">
             <img
               src="https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-3.png"
               alt="Platform dashboard"
               className="w-full h-auto block"
+              style={{ filter: "contrast(1.15) saturate(1.05)" }}
             />
           </div>
 

@@ -17,14 +17,6 @@ const features = [
     icon: <><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></>,
     title: "Meaningful increases in agent production",
   },
-  {
-    icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
-    title: "Built by agents, for agents",
-  },
-  {
-    icon: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>,
-    title: "Verified peer connections, and clearer paths to deals",
-  },
 ];
 
 const GCIBenefits = () => {
@@ -75,8 +67,8 @@ const GCIBenefits = () => {
           </div>
         </div>
 
-        {/* 2×3 feature grid */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-12">
+        {/* 2×2 feature grid */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-12 max-w-3xl">
           {features.map((f, i) => (
             <div key={i} className="flex flex-col gap-3.5">
               <div
