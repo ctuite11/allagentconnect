@@ -1,38 +1,31 @@
 
+Root cause confirmed: the published DCMLS site is live, but the homepage still uses the old `src/pages/DcmlsHome.tsx` nav and hero CTAs. The newer consumer-first header exists in `src/components/dcmls/DcmlsConsumerHeader.tsx`, and `/consumer/auth` is live, but the homepage itself was never switched to use that consumer-first surface.
 
-## Issue: DCMLS consumer auth changes not visible
+Plan:
+1. Update `src/pages/DcmlsHome.tsx`
+   - Replace homepage top-right `Agent Sign In` CTA with:
+     - `Sign In`
+     - `Create Account`
+     - small secondary `Agent Login`
+   - Update hero CTA block to consumer-first CTAs as well.
+   - Point primary auth links to `/consumer/auth?mode=signin` and `/consumer/auth?mode=signup`.
 
-The user is on `/` (preview origin = `id-preview--...lovable.app`, not a DCMLS host). The DCMLS consumer header only renders on DCMLS hosts or when `?dcmls=1` is in the URL. So the new dual CTA header may not be showing because:
+2. Reuse the canonical DCMLS header
+   - Prefer rendering `DcmlsConsumerHeader` on the homepage so the homepage and inner DCMLS pages stay consistent.
+   - Keep AAC domain behavior unchanged.
 
-1. They're viewing on the preview/AAC host without the `?dcmls=1` override.
-2. OR the homepage on DCMLS is not actually rendering `DcmlsConsumerHeader`.
-3. OR the buttons exist but they expected the changes elsewhere (e.g. `/auth` page itself).
+3. Verify directconnectmls.com testing flow
+   - Homepage shows consumer-first CTAs.
+   - `Create Account` opens buyer signup.
+   - `Sign In` opens buyer sign-in.
+   - `Agent Login` still routes to `/auth`.
+   - Anonymous save/favorite redirects remain pointed to `/consumer/auth?mode=signup&from=<current-path>`.
 
-Let me investigate what actually renders on the DCMLS surface and verify the wiring is correct.
+Files to change:
+- `src/pages/DcmlsHome.tsx`
+- possibly minor shared styling alignment in `src/components/dcmls/DcmlsConsumerHeader.tsx` only if needed for homepage parity
 
-### Investigation steps
-
-1. Check `src/pages/Index.tsx` (or whatever `/` renders) to confirm it branches on `isDcmlsHost()` and renders the DCMLS header.
-2. Check `src/App.tsx` to confirm `/consumer/auth` is wired to `DcmlsAuth`.
-3. Check current state of `DcmlsConsumerHeader.tsx` to confirm dual CTA is in place.
-4. Check what the published DCMLS site (`directconnectmls.com`) actually serves — Lovable preview vs published deploy may differ. Changes only appear after publish.
-
-### Likely root causes
-
-- **Most likely**: User is checking `directconnectmls.com` (production), but the project hasn't been republished since the changes. Lovable preview reflects latest code; custom domains require publish.
-- **Possible**: User is on preview origin without `?dcmls=1`, so the AAC header renders instead.
-- **Possible**: Homepage isn't host-aware and always renders the AAC layout.
-
-### Plan
-
-Once approved, switch to default mode and:
-
-1. Verify `DcmlsConsumerHeader` has the dual CTA (Sign In + Create Account + secondary Agent link) — read the file.
-2. Verify the DCMLS homepage and key consumer routes (`/`, `/browse`, property detail) actually render `DcmlsConsumerHeader` when `isDcmlsHost()` is true.
-3. Verify `/consumer/auth` route is registered in `App.tsx` and resolves to `DcmlsAuth`.
-4. If wiring is broken, fix it. If wiring is correct, instruct the user to either:
-   - Append `?dcmls=1` to the preview URL to see DCMLS skin, OR
-   - Publish the project so `directconnectmls.com` picks up the latest changes.
-
-No new features. Pure verification + any wiring fix needed.
-
+Expected result after publish:
+- `directconnectmls.com` homepage visibly shows the new consumer funnel
+- buyers can test the full top-of-funnel directly on the live DCMLS site
+- agent login remains available as a secondary path
