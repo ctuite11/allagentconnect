@@ -430,8 +430,8 @@ const ConsumerPropertyDetail = () => {
                 </div>
               </div>
 
-              {/* Media Type Tabs */}
-              <div className="flex items-center gap-2 mt-5 flex-wrap">
+              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
+              <div className="flex items-center gap-2 mt-6 flex-wrap">
                 <Button variant={activeMediaTab === 'photos' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('photos')} className="rounded-full">
                   <Home className="w-4 h-4 mr-2" />Photos
                 </Button>
@@ -452,48 +452,45 @@ const ConsumerPropertyDetail = () => {
                 )}
               </div>
 
-              {/* Price + Address Header — Compass/Apple hierarchy */}
-              <div className="mt-6">
-                <div className="flex items-baseline gap-3 flex-wrap">
-                  <p className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-                    ${listing.price.toLocaleString()}
-                  </p>
-                  {listing.square_feet && (
-                    <span className="text-sm text-muted-foreground">
-                      ${Math.round(listing.price / listing.square_feet).toLocaleString()}/sq ft
-                    </span>
+              {/* ========== STATS ROW — AAC-style compact facts row ========== */}
+              <div className="mt-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
+                  {listing.bedrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bed className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
+                      <span className="text-xs text-muted-foreground">Beds</span>
+                    </div>
                   )}
-                  {listing.listing_type === 'for_rent' && (
-                    <span className="text-sm text-muted-foreground">/ month</span>
-                  )}
-                </div>
-
-                <h1 className="mt-2 text-lg md:text-xl font-medium text-foreground flex items-start gap-1.5">
-                  <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1.5" />
-                  <span>{buildDisplayAddress(listing)}</span>
-                </h1>
-
-                <div className="mt-3 pb-4 border-b border-border/60 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                  {listing.bedrooms != null && (
-                    <span><span className="font-semibold text-foreground">{listing.bedrooms}</span> Beds</span>
-                  )}
-                  {listing.bathrooms != null && (
-                    <>
-                      <span className="text-border">·</span>
-                      <span><span className="font-semibold text-foreground">{listing.bathrooms}</span> Baths</span>
-                    </>
+                  {listing.bathrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bath className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
+                      <span className="text-xs text-muted-foreground">Baths</span>
+                    </div>
                   )}
                   {listing.square_feet && (
-                    <>
-                      <span className="text-border">·</span>
-                      <span><span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span> Sq Ft</span>
-                    </>
+                    <div className="flex items-center gap-1">
+                      <Square className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground">Sq Ft</span>
+                    </div>
+                  )}
+                  {listing?.square_feet && listing.square_feet > 0 && (
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">
+                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground">/sf</span>
+                    </div>
                   )}
                   {daysOnMarket !== null && (
-                    <>
-                      <span className="text-border">·</span>
-                      <span><span className="font-semibold text-foreground">{daysOnMarket}</span> days on market</span>
-                    </>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{daysOnMarket}</span>
+                      <span className="text-xs text-muted-foreground">DOM</span>
+                    </div>
                   )}
                 </div>
               </div>
