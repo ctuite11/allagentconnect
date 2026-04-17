@@ -1,7 +1,3 @@
-// AACMonogram — canonical AAC brand monogram (current blue mark geometry from aac-logo-master.svg).
-// Uses currentColor so any consumer can recolor via Tailwind text-* classes.
-// This is the single source of truth for the monogram glyph used across the app.
-
 interface AACMonogramProps {
   className?: string;
   size?: number;
@@ -9,16 +5,21 @@ interface AACMonogramProps {
 
 export default function AACMonogram({ className = "w-8 h-8", size }: AACMonogramProps) {
   const sizeProps = size ? { width: size, height: size } : {};
+
   return (
     <svg
-      viewBox="0 0 1024 1024"
+      viewBox="0 0 34 34"
       fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-hidden="true"
       {...sizeProps}
     >
-      <path d="m502 77h22l10 3 9 5 10 9 238 238 8 7 14 15 5 4 7 8 12 12 9 10 7 14 5 17 1 6v449l-4 16-5 13-7 11-9 10-9 8-14 8-12 5-14 3h-329l-18-4-16-7-12-9-9-9-7-10-7-14-4-13-2-12v-248l4-16 6-11 9-10 11-7 11-4 15-2h206l1 1v50l-3 16-6 15-7 12-11 12-9 8-11 7-15 6-14 3-13 1h-24l-10 3-4 2-2 4-2 5v86l5 10 7 4 4 1h182l8-3 6-7 1-3v-324l-3-16-5-13-8-14-6-8-8-7-8-9-8-7-38-38-4-5-8-7-14-15-81-81v-2l-4-2-8-6-8-2h-7l-9 3-10 9-136 136-15 16-10 9-10 11-8 13-7 15-4 16-1 8v335l-2 20-4 17-6 16-9 16-9 12-12 13-14 11-13 8-13 6-15 5-14 3-10 1h-11v-526l4-16 8-16 6-8 253-253 5-6h2l2-4 32-32 10-6 9-3z" />
+      <path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z" />
+      <path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z" />
+      <path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z" />
+      <path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z" />
+      <path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z" />
     </svg>
   );
 }
