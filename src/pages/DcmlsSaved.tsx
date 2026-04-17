@@ -47,7 +47,7 @@ const DcmlsSaved = () => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/auth?redirect=/saved");
+        navigate("/consumer/auth?mode=signup&from=/saved");
         return;
       }
       const { data, error } = await supabase
