@@ -50,6 +50,19 @@ import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
+import { PropertyHeader } from "@/components/property/PropertyHeader";
+import { PropertyFactsRow } from "@/components/property/PropertyFactsRow";
+import { BrokerageStrip } from "@/components/property/BrokerageStrip";
+import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
+import {
+  propertyPageContainer,
+  propertyHeroGap,
+  propertyMediaCol,
+  propertyRailCol,
+  propertyRailSticky,
+  propertyRailStack,
+  propertyHeroMedia,
+} from "@/components/property/propertyTokens";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 // ContactAgentDialog removed — buyer CTA is in-app messaging only
 import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";

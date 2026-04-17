@@ -58,6 +58,19 @@ import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { Seo } from "@/components/Seo";
+import { PropertyHeader } from "@/components/property/PropertyHeader";
+import { PropertyFactsRow } from "@/components/property/PropertyFactsRow";
+import { BrokerageStrip } from "@/components/property/BrokerageStrip";
+import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
+import {
+  propertyPageContainer,
+  propertyHeroGap,
+  propertyMediaCol,
+  propertyRailCol,
+  propertyRailSticky,
+  propertyRailStack,
+  propertyHeroMedia,
+} from "@/components/property/propertyTokens";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
