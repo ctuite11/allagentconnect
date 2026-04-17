@@ -652,86 +652,12 @@ const PropertyDetail = () => {
                 price={listing.price}
               />
 
-                {listing.video_url && (
-                  <Button
-                    variant={activeMediaTab === 'video' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleMediaTabChange('video')}
-                    className="rounded-full"
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    Video
-                  </Button>
-                )}
-                {listing.virtual_tour_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(listing.virtual_tour_url!, '_blank', 'noopener,noreferrer')}
-                    className="rounded-full"
-                  >
-                    <Maximize2 className="w-4 h-4 mr-2" />
-                    3D Tour
-                  </Button>
-                )}
-                {listing.property_website_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(listing.property_website_url!, '_blank', 'noopener,noreferrer')}
-                    className="rounded-full"
-                  >
-                    <Globe className="w-4 h-4 mr-2" />
-                    Website
-                  </Button>
-                )}
-                </div>
-                
-              </div>
-
-              {/* ========== STATS ROW ========== */}
-              <div className="mt-4">
-                {/* Stats - first content block below media */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
-                  {listing.bedrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
-                      <span className="text-xs text-muted-foreground">Beds</span>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bath className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
-                      <span className="text-xs text-muted-foreground">Baths</span>
-                    </div>
-                  )}
-                  {listing.square_feet && (
-                    <div className="flex items-center gap-1">
-                      <Square className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                      <span className="text-xs text-muted-foreground">Sq Ft</span>
-                    </div>
-                  )}
-                  {listing?.square_feet && listing.square_feet > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/sf</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
             </div>
 
 
             {/* RIGHT COLUMN - Hero Sidebar (~32%) - Clean, no internal scrolling */}
-            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
-              
+            <div className={`${propertyRailCol} ${propertyRailStack} ${propertyRailSticky}`}>
+
               {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
                 <Card className="rounded-3xl shadow-md border-2">
