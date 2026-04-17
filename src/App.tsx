@@ -266,8 +266,9 @@ const App = () => (
                   <Route path="/admin/invites" element={<AdminInviteAudit />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
-                  <Route path="/agent/:id" element={<RouteGuard requireRole="agent"><AgentProfile /></RouteGuard>} />
                 </Route>
+                {/* Public agent profile — viewable by anonymous DCMLS visitors and AAC users alike */}
+                <Route path="/agent/:id" element={<AgentProfile />} />
                 {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
