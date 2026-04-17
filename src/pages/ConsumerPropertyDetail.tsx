@@ -300,20 +300,20 @@ const ConsumerPropertyDetail = () => {
       />
 
       {/* Back Button Row */}
-      <div className="mx-auto max-w-6xl px-4 pb-2 flex items-center gap-2">
+      <div className="mx-auto max-w-6xl px-4 pt-5 pb-3 flex items-center gap-2">
         <button
           onClick={() => {
             const lastSearch = sessionStorage.getItem("buyer_last_search_url");
             navigate(lastSearch || "/browse");
           }}
-          className="p-2 -ml-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
+          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           aria-label="Go back"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <button
           onClick={() => navigate("/client/dashboard")}
-          className="p-2 rounded-md hover:bg-muted transition-colors text-neutral-700 hover:text-neutral-900"
+          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           aria-label="Back to dashboard"
         >
           <Home className="h-5 w-5" />
@@ -321,6 +321,26 @@ const ConsumerPropertyDetail = () => {
       </div>
 
       <main className="flex-1">
+        {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
+        <div className="mx-auto max-w-6xl px-4 pb-2">
+          <div className="lg:w-[68%] pr-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
+                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
+                {buildDisplayAddress(listing as any)}
+              </h1>
+              <div className="text-right">
+                <p className="text-lg font-bold text-foreground">
+                  ${listing?.price?.toLocaleString() ?? '—'}
+                  {listing.listing_type === 'for_rent' && (
+                    <span className="text-sm font-normal text-muted-foreground ml-1">/ mo</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col lg:flex-row gap-6">
@@ -348,17 +368,19 @@ const ConsumerPropertyDetail = () => {
                     <iframe src={listing.property_website_url} className="w-full h-full" />
                   )}
 
-                  {/* Status Badge & AAC ID - Top Left */}
+                  {/* Status Badge - Top Left (NO AAC# for consumer view) */}
                   <div className="absolute top-4 left-4 flex items-center gap-2">
-                    {listing.listing_number && (
-                      <Badge variant="outline" className="font-mono text-xs bg-white/90 backdrop-blur-sm">
-                        AAC #{listing.listing_number}
-                      </Badge>
-                    )}
                     <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
                       {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
                     </Badge>
                   </div>
+
+                  {/* DOM Badge - Top Right Overlay */}
+                  {daysOnMarket !== null && (
+                    <Badge variant="outline" className="absolute top-14 right-4 font-mono text-xs bg-white/90 backdrop-blur-sm">
+                      {daysOnMarket} DOM
+                    </Badge>
+                  )}
 
                   {/* Share + Favorite - Top Right */}
                   <div className="absolute top-4 right-4 flex items-center gap-2">
