@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import DcmlsExclusiveListings from "@/components/DcmlsExclusiveListings";
 import Footer from "@/components/Footer";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
+import DcmlsWhatsInside from "@/components/dcmls/DcmlsWhatsInside";
 
 // AAC brand identity — applied to DCMLS surface
 const AAC_BLUE = "#0E56F5";
@@ -105,6 +106,9 @@ const DcmlsHome: React.FC = () => {
               <DcmlsExclusiveListings />
             </div>
           </section>
+
+          {/* What's Inside — value of creating an account */}
+          <DcmlsWhatsInside />
         </main>
 
         <Footer />
