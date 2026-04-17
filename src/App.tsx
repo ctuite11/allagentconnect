@@ -85,6 +85,7 @@ import DcmlsSearches from "./pages/DcmlsSearches";
 import DcmlsHotSheetNew from "./pages/DcmlsHotSheetNew";
 import DcmlsAccount from "./pages/DcmlsAccount";
 import { isDcmlsHost } from "./lib/host";
+import { useAuthRole } from "./hooks/useAuthRole";
 
 /** Renders the DCMLS homepage on directconnectmls.com, AAC homepage elsewhere. */
 function HostHomeSwitch() {
@@ -94,6 +95,18 @@ function HostHomeSwitch() {
 /** Renders DCMLS-branded auth on DCMLS host, AAC auth elsewhere. */
 function HostAuthSwitch() {
   return isDcmlsHost() ? <DcmlsAuth /> : <Auth />;
+}
+
+/**
+ * Routes /property/:id to the right surface:
+ * - Agents/admins → PropertyDetail (agent management view)
+ * - Buyers & unauthenticated visitors → ConsumerPropertyDetail (polished consumer page)
+ */
+function PropertyDetailSwitch() {
+  const { role, loading } = useAuthRole();
+  if (loading) return null;
+  const isAgentOrAdmin = role === "agent" || role === "admin";
+  return isAgentOrAdmin ? <PropertyDetail /> : <ConsumerPropertyDetail />;
 }
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
@@ -259,7 +272,7 @@ const App = () => (
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
                 <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
-                <Route path="/property/:id" element={<PropertyDetail />} />
+                <Route path="/property/:id" element={<PropertyDetailSwitch />} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowsePropertiesNew />} />
