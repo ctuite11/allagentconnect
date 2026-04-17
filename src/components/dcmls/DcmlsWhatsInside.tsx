@@ -7,13 +7,14 @@ import {
   UserPlus,
   Handshake,
   BellRing,
+  type LucideIcon,
 } from "lucide-react";
 
 const AAC_BLUE = "#0E56F5";
 const AAC_GREEN = "#50C878";
 
 type Feature = {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   title: string;
   desc: string;
 };
