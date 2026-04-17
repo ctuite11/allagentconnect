@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import VersionStamp from "@/components/VersionStamp";
+import { isDcmlsHost } from "@/lib/host";
+import DcmlsFooter from "@/components/dcmls/DcmlsFooter";
 
 const Footer = () => {
+  if (isDcmlsHost()) return <DcmlsFooter />;
   return (
     <footer className="bg-card border-t border-border py-12">
       <div className="container mx-auto px-4">
