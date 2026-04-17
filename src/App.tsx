@@ -288,7 +288,7 @@ const App = () => (
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
                 {/* Public consumer auth surface — used on DCMLS host (directconnectmls.com) */}
-                <Route path="/consumer/auth" element={<ConsumerAuth />} />
+                <Route path="/consumer/auth" element={<DcmlsAuth />} />
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
                 <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
                 <Route path="/client/hotsheets/new" element={<RouteGuard requireAuth><ClientCreateHotsheetNew /></RouteGuard>} />
