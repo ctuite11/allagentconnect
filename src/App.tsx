@@ -279,6 +279,10 @@ const App = () => (
                 <Route path="/client/create-hotsheet" element={<Navigate to="/client/hotsheets/new" replace />} />
                 <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/client/favorites" element={<RouteGuard requireAuth><Favorites /></RouteGuard>} />
+                {/* DCMLS consumer routes — protected; redirect to /auth keeps host-aware switch */}
+                <Route path="/saved" element={<RouteGuard requireAuth><DcmlsSaved /></RouteGuard>} />
+                <Route path="/searches" element={<RouteGuard requireAuth><DcmlsSearches /></RouteGuard>} />
+                <Route path="/account" element={<RouteGuard requireAuth><DcmlsAccount /></RouteGuard>} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
