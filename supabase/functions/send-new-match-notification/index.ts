@@ -17,6 +17,23 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Optional near-realtime mode: when invoked from a listing trigger with
+    // { trigger: "listing", listing_id }, we still process all active hot
+    // sheets — the canonical matcher dedupes per (hot_sheet_id, listing_id,
+    // status_at_send) so this is safe to call frequently.
+    let triggerListingId: string | null = null;
+    try {
+      if (req.headers.get("content-type")?.includes("application/json")) {
+        const body = await req.json().catch(() => null);
+        triggerListingId = body?.listing_id ?? null;
+        if (triggerListingId) {
+          console.log(`[send-new-match-notification] near-realtime trigger for listing ${triggerListingId}`);
+        }
+      }
+    } catch {
+      // ignore body parse errors — cron invocations have no body
+    }
+
     // Fetch active hot sheets with owner details
     const { data: hotSheets, error: fetchError } = await supabase
       .from("hot_sheets")
