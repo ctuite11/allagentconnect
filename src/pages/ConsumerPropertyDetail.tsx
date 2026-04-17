@@ -54,6 +54,7 @@ import { PropertyHeader } from "@/components/property/PropertyHeader";
 import { PropertyFactsRow } from "@/components/property/PropertyFactsRow";
 import { BrokerageStrip } from "@/components/property/BrokerageStrip";
 import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
+import { SectionWrapper } from "@/components/property/SectionWrapper";
 import {
   propertyPageContainer,
   propertyHeroGap,
@@ -651,26 +652,22 @@ const ConsumerPropertyDetail = () => {
                 const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
 
                 return (
-                  <Card className="rounded-3xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <FileText className="w-5 h-5" />
-                        Overview
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm leading-relaxed text-foreground space-y-4">
-                      <p className="whitespace-pre-wrap">{visibleText}</p>
-                      {isLong && (
-                        <button
-                          type="button"
-                          onClick={() => setDescriptionExpanded(v => !v)}
-                          className="text-primary font-medium text-sm"
-                        >
-                          {descriptionExpanded ? 'Read less' : 'Read more'}
-                        </button>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <SectionWrapper
+                    title="Overview"
+                    icon={<FileText className="w-5 h-5" />}
+                    contentClassName="space-y-4"
+                  >
+                    <p className="whitespace-pre-wrap">{visibleText}</p>
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setDescriptionExpanded(v => !v)}
+                        className="text-primary font-medium text-sm"
+                      >
+                        {descriptionExpanded ? 'Read less' : 'Read more'}
+                      </button>
+                    )}
+                  </SectionWrapper>
                 );
               })()}
 
@@ -692,21 +689,16 @@ const ConsumerPropertyDetail = () => {
               )}
 
               {/* Map */}
-              <Card className="rounded-3xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <MapPin className="h-5 w-5" />
-                    Location
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PropertyMap
-                    address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
-                    latitude={listing.latitude}
-                    longitude={listing.longitude}
-                  />
-                </CardContent>
-              </Card>
+              <SectionWrapper
+                title="Location"
+                icon={<MapPin className="h-5 w-5" />}
+              >
+                <PropertyMap
+                  address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
+                  latitude={listing.latitude}
+                  longitude={listing.longitude}
+                />
+              </SectionWrapper>
             </div>
 
             {/* RIGHT COLUMN - Consumer content */}
@@ -756,99 +748,86 @@ const ConsumerPropertyDetail = () => {
 
               {/* ATTOM Property Data */}
               {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
-                <Card className="rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-base">Property Data</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {listing.attom_data.property_type && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Property Type:</span>
-                        <span className="font-semibold">{listing.attom_data.property_type}</span>
-                      </div>
-                    )}
-                    {listing.attom_data.stories && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Stories:</span>
-                        <span className="font-semibold">{listing.attom_data.stories}</span>
-                      </div>
-                    )}
-                    {listing.attom_data.parking_spaces && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Parking Spaces:</span>
-                        <span className="font-semibold">{listing.attom_data.parking_spaces}</span>
-                      </div>
-                    )}
-                    {listing.attom_data.zoning && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Zoning:</span>
-                        <span className="font-semibold">{listing.attom_data.zoning}</span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <SectionWrapper title="Property Data" contentClassName="space-y-2">
+                  {listing.attom_data.property_type && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Property Type:</span>
+                      <span className="font-semibold">{listing.attom_data.property_type}</span>
+                    </div>
+                  )}
+                  {listing.attom_data.stories && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Stories:</span>
+                      <span className="font-semibold">{listing.attom_data.stories}</span>
+                    </div>
+                  )}
+                  {listing.attom_data.parking_spaces && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Parking Spaces:</span>
+                      <span className="font-semibold">{listing.attom_data.parking_spaces}</span>
+                    </div>
+                  )}
+                  {listing.attom_data.zoning && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Zoning:</span>
+                      <span className="font-semibold">{listing.attom_data.zoning}</span>
+                    </div>
+                  )}
+                </SectionWrapper>
               )}
 
               {/* Schools */}
               {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
-                <Card className="rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <GraduationCap className="h-5 w-5" />
-                      Nearby Schools
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {listing.schools_data.schools.slice(0, 5).map((school: any, index: number) => (
-                      <div key={index} className="pb-3 border-b last:border-0 last:pb-0">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-semibold text-sm">{school.name}</h4>
-                          {school.rating && <Badge variant="secondary">{school.rating}/10</Badge>}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{school.level} • {school.distance} mi</p>
+                <SectionWrapper
+                  title="Nearby Schools"
+                  icon={<GraduationCap className="h-5 w-5" />}
+                  contentClassName="space-y-3"
+                >
+                  {listing.schools_data.schools.slice(0, 5).map((school: any, index: number) => (
+                    <div key={index} className="pb-3 border-b last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-semibold text-sm">{school.name}</h4>
+                        {school.rating && <Badge variant="secondary">{school.rating}/10</Badge>}
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                      <p className="text-xs text-muted-foreground">{school.level} • {school.distance} mi</p>
+                    </div>
+                  ))}
+                </SectionWrapper>
               )}
 
               {/* Walk Score */}
               {listing.walk_score_data && (
-                <Card className="rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Footprints className="h-5 w-5" />
-                      Walk Score
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {listing.walk_score_data.walkscore && (
-                      <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-sm">Walk Score</span>
-                          <span className="text-2xl font-bold text-primary">{listing.walk_score_data.walkscore}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{listing.walk_score_data.description}</p>
+                <SectionWrapper
+                  title="Walk Score"
+                  icon={<Footprints className="h-5 w-5" />}
+                  contentClassName="space-y-3"
+                >
+                  {listing.walk_score_data.walkscore && (
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm">Walk Score</span>
+                        <span className="text-2xl font-bold text-primary">{listing.walk_score_data.walkscore}</span>
                       </div>
-                    )}
-                    {listing.walk_score_data.transit && (
-                      <div className="pt-2 border-t">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Transit Score</span>
-                          <span className="text-xl font-bold">{listing.walk_score_data.transit.score}</span>
-                        </div>
+                      <p className="text-xs text-muted-foreground">{listing.walk_score_data.description}</p>
+                    </div>
+                  )}
+                  {listing.walk_score_data.transit && (
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Transit Score</span>
+                        <span className="text-xl font-bold">{listing.walk_score_data.transit.score}</span>
                       </div>
-                    )}
-                    {listing.walk_score_data.bike && (
-                      <div className="pt-2 border-t">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Bike Score</span>
-                          <span className="text-xl font-bold">{listing.walk_score_data.bike.score}</span>
-                        </div>
+                    </div>
+                  )}
+                  {listing.walk_score_data.bike && (
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Bike Score</span>
+                        <span className="text-xl font-bold">{listing.walk_score_data.bike.score}</span>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    </div>
+                  )}
+                </SectionWrapper>
               )}
 
               {/* ATTRIBUTION MASKING (BUYER UI):
