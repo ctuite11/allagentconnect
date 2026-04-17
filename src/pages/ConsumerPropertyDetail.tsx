@@ -110,9 +110,9 @@ const ConsumerPropertyDetail = () => {
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
-  const handleMessageYourAgent = async () => {
+  const handleMessageAgent = async (targetAgentId: string | null | undefined) => {
     try {
-      if (!stickyAgentId || !listing?.id) return;
+      if (!targetAgentId || !listing?.id) return;
 
       const { data, error } = await supabase.auth.getUser();
       if (error) {
@@ -128,7 +128,7 @@ const ConsumerPropertyDetail = () => {
 
       const conversationId = await findOrCreateConversation(
         userId,
-        stickyAgentId,
+        targetAgentId,
         { listingId: listing.id }
       );
 
