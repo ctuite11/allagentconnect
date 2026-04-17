@@ -44,11 +44,11 @@ const NetworkIntelligence = () => {
 
           {/* Desktop floating badges */}
           <div
-            className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
+            className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl"
             style={{ top: "10%", left: "0%", transform: "translateX(-52%)" }}
           >
             <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-shield-tick.svg" alt="" className="w-[18px] h-[18px] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">For those clients looking for privacy</span>
+            <span className="font-['Manrope'] font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">For those clients looking for privacy</span>
           </div>
 
           <div
@@ -68,11 +68,11 @@ const NetworkIntelligence = () => {
           </div>
 
           <div
-            className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
+            className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl"
             style={{ top: "60%", right: "4%", transform: "translateX(52%)" }}
           >
             <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-star.svg" alt="" className="w-[18px] h-[18px] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">Direct seller + buyer-agent opportunities</span>
+            <span className="font-['Manrope'] font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">Direct seller + buyer-agent opportunities</span>
           </div>
         </div>
       </div>
@@ -80,9 +80,9 @@ const NetworkIntelligence = () => {
       {/* Mobile badge grid */}
       <div className="md:hidden w-full max-w-[900px] mx-auto mt-6 grid grid-cols-2 gap-3 px-2">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_4px_16px_rgba(41,45,50,0.16)]">
+          <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl">
             <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-shield-tick.svg" alt="" className="w-4 h-4 shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] leading-[1.4]">For those clients looking for privacy</span>
+            <span className="font-['Manrope'] font-semibold text-slate-900 text-[12px] leading-[1.4]">For those clients looking for privacy</span>
           </div>
           <div className="flex items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_4px_16px_rgba(41,45,50,0.16)]">
             <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-chart-1.svg" alt="" className="w-4 h-4 shrink-0" />
@@ -94,9 +94,9 @@ const NetworkIntelligence = () => {
             <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-archive-tick.svg" alt="" className="w-4 h-4 shrink-0" />
             <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] leading-[1.4]">Access the Unlisted</span>
           </div>
-          <div className="flex items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_4px_16px_rgba(41,45,50,0.16)]">
+          <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl">
             <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-star.svg" alt="" className="w-4 h-4 shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] leading-[1.4]">Direct seller + buyer-agent opportunities</span>
+            <span className="font-['Manrope'] font-semibold text-slate-900 text-[12px] leading-[1.4]">Direct seller + buyer-agent opportunities</span>
           </div>
         </div>
       </div>
