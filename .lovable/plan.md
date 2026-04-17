@@ -1,76 +1,38 @@
 
-The user wants domain guidance, no code changes. Let me check current project URLs and any custom domain setup.
 
-Current project URLs (from context):
-- Preview: https://id-preview--95492335-3a75-4285-8d44-828003cae42a.lovable.app
-- Published: https://allagentconnect.lovable.app
-- Custom domain already attached: https://allagentconnect.com
+## Issue: DCMLS consumer auth changes not visible
 
-Key consideration: This single project serves BOTH brands (AAC + DCMLS) via the shared-database architecture. There's no separate `/dcmls` route — DCMLS surfaces are integrated (badge on cards, "DCMLS Only" filter, "Homes You Won't Find Anywhere Else" homepage section). So `directconnectmls.com` would land on the same `/` homepage as `allagentconnect.com` unless we add domain-based routing later (out of scope).
+The user is on `/` (preview origin = `id-preview--...lovable.app`, not a DCMLS host). The DCMLS consumer header only renders on DCMLS hosts or when `?dcmls=1` is in the URL. So the new dual CTA header may not be showing because:
 
-# Domain Move Plan: directconnectmls.com → allagentconnect project
+1. They're viewing on the preview/AAC host without the `?dcmls=1` override.
+2. OR the homepage on DCMLS is not actually rendering `DcmlsConsumerHeader`.
+3. OR the buttons exist but they expected the changes elsewhere (e.g. `/auth` page itself).
 
-## 1. Project confirmation
+Let me investigate what actually renders on the DCMLS surface and verify the wiring is correct.
 
-Yes — this `allagentconnect` project (ID `95492335-3a75-4285-8d44-828003cae42a`) is the real DCMLS build. Evidence:
-- DCMLS publish system lives here (`publish_to_dcmls`, `dcmls_status` columns on `listings`)
-- DCMLS UI surfaces just shipped here: badge on listing cards, "DCMLS Only" search filter, "Homes You Won't Find Anywhere Else" homepage section
-- Add/Edit Listing flows write DCMLS fields here (`AddListing.tsx`, `EditListing.tsx`)
-- 59 listings live in this project's database; 2 currently flagged published-to-DCMLS
+### Investigation steps
 
-The standalone "DCMLS" Lovable project you currently have `directconnectmls.com` attached to is the wrong one — it has none of this.
+1. Check `src/pages/Index.tsx` (or whatever `/` renders) to confirm it branches on `isDcmlsHost()` and renders the DCMLS header.
+2. Check `src/App.tsx` to confirm `/consumer/auth` is wired to `DcmlsAuth`.
+3. Check current state of `DcmlsConsumerHeader.tsx` to confirm dual CTA is in place.
+4. Check what the published DCMLS site (`directconnectmls.com`) actually serves — Lovable preview vs published deploy may differ. Changes only appear after publish.
 
-## 2. Target URL in this project
+### Likely root causes
 
-Point `directconnectmls.com` at this project's published deployment:
-- **Published URL**: `https://allagentconnect.lovable.app`
-- Already-attached custom domain (for reference): `https://allagentconnect.com`
+- **Most likely**: User is checking `directconnectmls.com` (production), but the project hasn't been republished since the changes. Lovable preview reflects latest code; custom domains require publish.
+- **Possible**: User is on preview origin without `?dcmls=1`, so the AAC header renders instead.
+- **Possible**: Homepage isn't host-aware and always renders the AAC layout.
 
-Both `allagentconnect.com` and (after the move) `directconnectmls.com` will serve the same app from this project.
+### Plan
 
-## 3. Detach from the wrong project
+Once approved, switch to default mode and:
 
-In the **standalone DCMLS Lovable project**:
-- Open Project Settings → Domains
-- Remove `directconnectmls.com`
-- Remove `www.directconnectmls.com`
-- Wait ~1–2 minutes for the removal to register before re-attaching elsewhere
+1. Verify `DcmlsConsumerHeader` has the dual CTA (Sign In + Create Account + secondary Agent link) — read the file.
+2. Verify the DCMLS homepage and key consumer routes (`/`, `/browse`, property detail) actually render `DcmlsConsumerHeader` when `isDcmlsHost()` is true.
+3. Verify `/consumer/auth` route is registered in `App.tsx` and resolves to `DcmlsAuth`.
+4. If wiring is broken, fix it. If wiring is correct, instruct the user to either:
+   - Append `?dcmls=1` to the preview URL to see DCMLS skin, OR
+   - Publish the project so `directconnectmls.com` picks up the latest changes.
 
-## 4. Attach to this project
+No new features. Pure verification + any wiring fix needed.
 
-In **this allagentconnect project** → Project Settings → Domains → Connect Domain:
-1. Add `directconnectmls.com` (root)
-2. Add `www.directconnectmls.com` separately (www is not auto-added)
-3. At your DNS registrar set:
-   - `A` record: name `@`, value `185.158.133.1`
-   - `A` record: name `www`, value `185.158.133.1`
-   - `TXT` record: name `_lovable`, value provided by the connect dialog
-4. If you use Cloudflare proxy, expand "Advanced" in the connect dialog and check "Domain uses Cloudflare or a similar proxy" (switches to CNAME verification)
-5. Wait for status to move: Verifying → Setting up → Active (usually minutes; up to 72h max)
-
-## 5. Primary domain choice
-
-This project will then have three custom domains attached:
-- `allagentconnect.com` (already Active)
-- `directconnectmls.com` (new)
-- `www.directconnectmls.com` (new)
-
-Recommendation:
-- Keep `allagentconnect.com` as the **Primary** for the AAC brand (it's already live, SEO established, sitemap and `robots.txt` reference it)
-- For the DCMLS pair, set `directconnectmls.com` as the primary between the two so `www.directconnectmls.com` 301s to it (cleaner canonical, matches `allagentconnect.com`'s www-less convention)
-
-Important caveat (no code change requested, just so you know what to expect):
-- Both domains will serve the **same homepage and the same app**. There is no domain-aware routing yet, so `directconnectmls.com/` will look identical to `allagentconnect.com/`. Visitors will see the AAC consumer homepage with the new "Homes You Won't Find Anywhere Else" DCMLS section embedded.
-- If you want `directconnectmls.com` to land on a DCMLS-specific surface (e.g., auto-apply the DCMLS-only filter, different hero, different brand), that's a follow-up code task — say the word and I'll plan it.
-
-## What I'm NOT doing
-- No app code changes
-- No schema changes
-- No SEO/sitemap/robots edits
-- No domain-based routing logic (separate task if you want it)
-
-## Verification checklist after attach
-- `directconnectmls.com` status = Active in Project Settings → Domains
-- `www.directconnectmls.com` status = Active
-- Visiting `https://directconnectmls.com` loads the same homepage as `https://allagentconnect.com`
-- The DCMLS section "Homes You Won't Find Anywhere Else" renders with the 2 currently-published listings
