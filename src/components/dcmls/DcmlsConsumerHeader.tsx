@@ -14,9 +14,13 @@ interface NavItem {
   authed?: boolean;
 }
 
-const PUBLIC_ITEMS: NavItem[] = [{ label: "Browse", to: "/browse?dcmls=1" }];
+const PUBLIC_ITEMS: NavItem[] = [
+  { label: "Browse", to: "/browse?dcmls=1" },
+  { label: "Agent Search", to: "/find-agent" },
+];
 const AUTHED_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
+  { label: "Agent Search", to: "/find-agent" },
   { label: "Saved Homes", to: "/saved", authed: true },
   { label: "Hot Sheets", to: "/searches", authed: true },
   { label: "Account", to: "/account", authed: true },
