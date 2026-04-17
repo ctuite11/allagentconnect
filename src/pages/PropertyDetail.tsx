@@ -62,6 +62,7 @@ import { PropertyHeader } from "@/components/property/PropertyHeader";
 import { PropertyFactsRow } from "@/components/property/PropertyFactsRow";
 import { BrokerageStrip } from "@/components/property/BrokerageStrip";
 import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
+import { SectionWrapper } from "@/components/property/SectionWrapper";
 import {
   propertyPageContainer,
   propertyHeroGap,
@@ -815,45 +816,41 @@ const PropertyDetail = () => {
                 const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
                 
                 return (
-                  <Card className="rounded-3xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <FileText className="w-5 h-5" />
-                        Overview
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm leading-relaxed text-foreground space-y-4">
-                      <p className="whitespace-pre-wrap">{visibleText}</p>
-                      {isLong && (
-                        <button
-                          type="button"
-                          onClick={() => setDescriptionExpanded(v => !v)}
-                          className="text-primary font-medium text-sm"
-                        >
-                          {descriptionExpanded ? 'Read less' : 'Read more'}
-                        </button>
-                      )}
-                      
-                      {/* Agent-Only: Broker Remarks (cleaned & deduplicated) */}
-                      {isAgentView && (() => {
-                        const cleaned = cleanBrokerComments(listing.broker_comments);
-                        if (!cleaned) return null;
-                        return (
-                          <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-3">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
-                                Broker Remarks
-                              </span>
-                              <Badge variant="outline" className="text-xs">Agent Only</Badge>
-                            </div>
-                            <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
-                              {cleaned}
-                            </p>
+                  <SectionWrapper
+                    title="Overview"
+                    icon={<FileText className="w-5 h-5" />}
+                    contentClassName="space-y-4"
+                  >
+                    <p className="whitespace-pre-wrap">{visibleText}</p>
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setDescriptionExpanded(v => !v)}
+                        className="text-primary font-medium text-sm"
+                      >
+                        {descriptionExpanded ? 'Read less' : 'Read more'}
+                      </button>
+                    )}
+
+                    {/* Agent-Only: Broker Remarks (cleaned & deduplicated) */}
+                    {isAgentView && (() => {
+                      const cleaned = cleanBrokerComments(listing.broker_comments);
+                      if (!cleaned) return null;
+                      return (
+                        <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-3">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                              Broker Remarks
+                            </span>
+                            <Badge variant="outline" className="text-xs">Agent Only</Badge>
                           </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
+                          <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
+                            {cleaned}
+                          </p>
+                        </div>
+                      );
+                    })()}
+                  </SectionWrapper>
                 );
               })()}
 
