@@ -79,11 +79,20 @@ import AgentMatch from "./pages/AgentMatch";
 import DesignMockup from "./pages/DesignMockup";
 import HomepageV2 from "./pages/HomepageV2";
 import DcmlsHome from "./pages/DcmlsHome";
+import DcmlsAuth from "./pages/DcmlsAuth";
+import DcmlsSaved from "./pages/DcmlsSaved";
+import DcmlsSearches from "./pages/DcmlsSearches";
+import DcmlsAccount from "./pages/DcmlsAccount";
 import { isDcmlsHost } from "./lib/host";
 
 /** Renders the DCMLS homepage on directconnectmls.com, AAC homepage elsewhere. */
 function HostHomeSwitch() {
   return isDcmlsHost() ? <DcmlsHome /> : <HomepageV2 />;
+}
+
+/** Renders DCMLS-branded auth on DCMLS host, AAC auth elsewhere. */
+function HostAuthSwitch() {
+  return isDcmlsHost() ? <DcmlsAuth /> : <Auth />;
 }
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
@@ -170,7 +179,7 @@ const App = () => (
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
                 <Route path="/home" element={<Index />} />
                 {/* Auth routes */}
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth" element={<HostAuthSwitch />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
                 <Route path="/pending-verification" element={<PendingVerification />} />
@@ -270,6 +279,10 @@ const App = () => (
                 <Route path="/client/create-hotsheet" element={<Navigate to="/client/hotsheets/new" replace />} />
                 <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/client/favorites" element={<RouteGuard requireAuth><Favorites /></RouteGuard>} />
+                {/* DCMLS consumer routes — protected; redirect to /auth keeps host-aware switch */}
+                <Route path="/saved" element={<RouteGuard requireAuth><DcmlsSaved /></RouteGuard>} />
+                <Route path="/searches" element={<RouteGuard requireAuth><DcmlsSearches /></RouteGuard>} />
+                <Route path="/account" element={<RouteGuard requireAuth><DcmlsAccount /></RouteGuard>} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
