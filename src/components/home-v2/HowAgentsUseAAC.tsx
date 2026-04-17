@@ -15,7 +15,7 @@ const HowAgentsUseAAC = () => {
   });
 
   return (
-    <section className="w-full py-20 md:py-24 px-6 relative bg-white">
+    <section className="w-full pt-4 md:pt-8 pb-20 md:pb-24 px-6 relative bg-white">
       <div className="max-w-6xl mx-auto flex flex-col gap-14">
         {/* Header */}
         <div className="flex flex-col items-center gap-5 text-center max-w-2xl mx-auto">

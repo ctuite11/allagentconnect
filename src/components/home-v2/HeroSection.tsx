@@ -28,7 +28,7 @@ const HeroSection = () => {
         <div className="flex items-center gap-5">
           <a
             href="/auth?mode=register"
-            className="font-['Manrope'] font-semibold text-black bg-[#50C878] hover:bg-[#45b96d] transition-colors h-11 px-6 rounded-full inline-flex items-center text-sm shadow-sm"
+            className="font-['Manrope'] font-semibold text-white bg-transparent border border-white/40 hover:bg-white/10 hover:border-white/70 transition-colors h-11 px-6 rounded-full inline-flex items-center text-sm"
           >
             Request Access
           </a>
@@ -39,8 +39,8 @@ const HeroSection = () => {
       </div>
 
       {/* Hero content */}
-      <div className="relative z-10 flex flex-col justify-center flex-1 w-full max-w-[1440px] mx-auto py-28 md:py-32">
-        <div className="max-w-[620px] ml-8 md:ml-16 lg:ml-24 flex flex-col">
+      <div className="relative z-10 flex flex-col justify-center flex-1 w-full max-w-[1440px] mx-auto py-28 md:py-32" style={{ transform: "translateY(-30px)" }}>
+        <div className="max-w-[580px] ml-8 md:ml-16 lg:ml-24 flex flex-col">
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/10 border border-white/15 backdrop-blur-md rounded-full w-fit">
             <span className="w-[7px] h-[7px] rounded-full bg-[#50c878] shrink-0" />
