@@ -147,29 +147,12 @@ const DcmlsConsumerHeader: React.FC = () => {
                   >
                     <Link to="/consumer/auth?mode=signup">Create Account</Link>
                   </Button>
-                  <Link
-                    to="/auth"
-                    className="text-xs text-muted-foreground hover:text-foreground text-center mt-3"
-                  >
-                    Are you an agent? Agent sign in →
-                  </Link>
                 </div>
               )}
             </div>
           </SheetContent>
         </Sheet>
       </div>
-
-      {!signedIn && (
-        <div className="hidden md:flex max-w-6xl mx-auto px-6 -mt-1 pb-1 justify-end">
-          <Link
-            to="/auth"
-            className="text-[11px] text-muted-foreground hover:text-foreground"
-          >
-            Agent? Sign in here →
-          </Link>
-        </div>
-      )}
     </header>
   );
 };
