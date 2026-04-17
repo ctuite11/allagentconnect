@@ -239,14 +239,14 @@ const AgentProfile = () => {
           ...(agent.bio ? { description: agent.bio.substring(0, 200) } : {}),
         }}
       />
-      {/* Back nav */}
+      {/* Back nav — destination depends on auth context */}
       <div className="max-w-6xl mx-auto px-8 pt-6">
         <button
-          onClick={() => navigate("/our-members")}
+          onClick={() => navigate(user ? "/our-members" : -1 as any)}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Network
+          {user ? "Back to Network" : "Back"}
         </button>
       </div>
 
