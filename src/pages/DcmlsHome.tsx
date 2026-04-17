@@ -59,12 +59,20 @@ const DcmlsHome: React.FC = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild size="lg">
-                  <Link to="/browse?dcmls=1">Browse DCMLS Listings</Link>
+                <Button asChild size="lg" className="text-white" style={{ backgroundColor: AAC_BLUE }}>
+                  <Link to="/consumer/auth?mode=signup">Create Account</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link to="/auth">Agent Sign In</Link>
+                  <Link to="/consumer/auth?mode=signin">Sign In</Link>
                 </Button>
+                <Button asChild size="lg" variant="ghost">
+                  <Link to="/browse?dcmls=1">Browse Listings</Link>
+                </Button>
+              </div>
+              <div className="mt-6">
+                <Link to="/auth" className="text-xs text-muted-foreground hover:text-foreground">
+                  Are you an agent? Agent sign in →
+                </Link>
               </div>
             </div>
           </section>
