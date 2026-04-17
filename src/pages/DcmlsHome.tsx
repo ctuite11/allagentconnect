@@ -4,7 +4,7 @@ import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import DcmlsExclusiveListings from "@/components/DcmlsExclusiveListings";
 import Footer from "@/components/Footer";
-import AACMonogram from "@/components/ui/AACMonogram";
+import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 
 // AAC brand identity — applied to DCMLS surface
 const AAC_BLUE = "#0E56F5";
