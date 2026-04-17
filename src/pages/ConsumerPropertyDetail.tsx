@@ -430,74 +430,27 @@ const ConsumerPropertyDetail = () => {
                 </div>
               </div>
 
-              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
-              <div className="flex items-center gap-2 mt-6 flex-wrap">
-                <Button variant={activeMediaTab === 'photos' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('photos')} className="rounded-full">
-                  <Home className="w-4 h-4 mr-2" />Photos
-                </Button>
-                {listing.video_url && (
-                  <Button variant={activeMediaTab === 'video' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('video')} className="rounded-full">
-                    <Video className="w-4 h-4 mr-2" />Video
-                  </Button>
-                )}
-                {listing.virtual_tour_url && (
-                  <Button variant={activeMediaTab === 'tour' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('tour')} className="rounded-full">
-                    <Maximize2 className="w-4 h-4 mr-2" />3D Tour
-                  </Button>
-                )}
-                {listing.property_website_url && (
-                  <Button variant={activeMediaTab === 'website' ? 'default' : 'outline'} size="sm" onClick={() => handleMediaTabChange('website')} className="rounded-full">
-                    <Globe className="w-4 h-4 mr-2" />Website
-                  </Button>
-                )}
-              </div>
+              {/* Media Type Tabs — shared primitive */}
+              <MediaTabBar
+                active={activeMediaTab as MediaTab}
+                onChange={(tab) => handleMediaTabChange(tab)}
+                hasVideo={!!listing.video_url}
+                hasTour={!!listing.virtual_tour_url}
+                hasWebsite={!!listing.property_website_url}
+              />
 
-              {/* ========== STATS ROW — AAC-style compact facts row ========== */}
-              <div className="mt-4">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
-                  {listing.bedrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
-                      <span className="text-xs text-muted-foreground">Beds</span>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bath className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
-                      <span className="text-xs text-muted-foreground">Baths</span>
-                    </div>
-                  )}
-                  {listing.square_feet && (
-                    <div className="flex items-center gap-1">
-                      <Square className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                      <span className="text-xs text-muted-foreground">Sq Ft</span>
-                    </div>
-                  )}
-                  {listing?.square_feet && listing.square_feet > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/sf</span>
-                    </div>
-                  )}
-                  {daysOnMarket !== null && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{daysOnMarket}</span>
-                      <span className="text-xs text-muted-foreground">DOM</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* ========== STATS ROW — shared primitive ========== */}
+              <PropertyFactsRow
+                bedrooms={listing.bedrooms}
+                bathrooms={listing.bathrooms}
+                squareFeet={listing.square_feet}
+                price={listing.price}
+                daysOnMarket={daysOnMarket}
+              />
             </div>
 
             {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
-            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
+            <div className={`${propertyRailCol} ${propertyRailStack} ${propertyRailSticky}`}>
 
               {/* Your Agent Card (attribution masking) */}
               {stickyAgentProfile ? (
@@ -662,36 +615,16 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Brokerage Strip - SECONDARY (below agent card, AAC-style) */}
+              {/* Brokerage Strip — shared primitive */}
               {(() => {
                 const displayAgent = stickyAgentProfile || agentProfile;
                 if (!displayAgent) return null;
-                const brokerageLogo = displayAgent.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
                 return (
-                  <Card className="rounded-2xl shadow-sm border">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                          <img
-                            src={brokerageLogo}
-                            alt={`${displayAgent.company || 'Brokerage'} logo`}
-                            className="h-full w-full object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                            }}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                            {stickyAgentProfile ? 'Represented by' : 'Listing courtesy of'}
-                          </p>
-                          <p className="text-sm font-medium truncate">
-                            {displayAgent.company || displayAgent.office_name || "Brokerage"}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <BrokerageStrip
+                    label={stickyAgentProfile ? 'Represented by' : 'Listing courtesy of'}
+                    brokerageName={displayAgent.company || displayAgent.office_name}
+                    logoUrl={displayAgent.logo_url}
+                  />
                 );
               })()}
 
