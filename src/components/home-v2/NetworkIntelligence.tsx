@@ -2,7 +2,7 @@ import React from "react";
 
 const NetworkIntelligence = () => {
   return (
-    <section className="w-full bg-white flex flex-col items-center pt-28 pb-0 px-6">
+    <section className="w-full bg-white flex flex-col items-center py-20 md:py-24 px-6">
       {/* Section label pill */}
       <div className="mb-6 inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-[#2537ff0f] border border-[#2537ff26] rounded-full">
         <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-chart-1.svg" alt="" className="w-4 h-4 shrink-0" />
@@ -10,11 +10,11 @@ const NetworkIntelligence = () => {
       </div>
 
       {/* Headline + sub */}
-      <div className="flex flex-col items-center gap-4 mb-12 max-w-[820px] w-full text-center">
-        <h2 className="font-['Manrope'] font-bold text-[#292d32] text-[clamp(30px,3.8vw,52px)] tracking-[-2px] leading-[1.18]">
+      <div className="flex flex-col items-center gap-5 mb-12 max-w-4xl w-full text-center">
+        <h2 className="font-['Manrope'] font-semibold text-[#292d32] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
           Operate on network intelligence,<br className="hidden sm:block" /> not the public feed.
         </h2>
-        <p className="font-['Manrope'] font-medium text-[#40424d] text-[17px] leading-[1.7] max-w-[540px]">
+        <p className="font-['Manrope'] font-medium text-[#40424d] text-lg md:text-xl leading-relaxed max-w-2xl">
           Your centralized workspace for managing coming-soon listings, private inventory, and active buyer and renter needs.
         </p>
       </div>

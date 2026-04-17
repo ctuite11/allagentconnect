@@ -55,7 +55,7 @@ const FooterV2 = () => {
     <footer className="w-full bg-[#070708]">
       <div className="w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] pt-24 pb-0">
         {/* Main grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_auto_auto_auto_1fr] gap-12 xl:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_auto_auto_auto_1fr] gap-12">
           {/* Brand */}
           <div className="flex flex-col gap-6 max-w-[320px]">
             <div className="flex items-center gap-3">
@@ -117,16 +117,16 @@ const FooterV2 = () => {
               </p>
             </div>
             <div className="relative h-14">
-              <div className="absolute inset-0 bg-[#ffffff0d] rounded-full border border-[#ffffff26]" />
+              <div className="absolute inset-0 bg-white/5 rounded-full border border-white/10" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email address"
-                className="absolute inset-0 w-full h-full bg-transparent rounded-full pl-5 pr-36 text-white text-base font-['Manrope'] placeholder-[#ffffff50] outline-none"
+                className="absolute inset-0 w-full h-full bg-transparent rounded-full pl-5 pr-36 text-white text-base font-['Manrope'] placeholder-white/40 outline-none"
               />
               <div className="absolute top-[5px] right-[5px] h-[44px]">
-                <Button className="h-full px-5 bg-aac rounded-full text-white text-sm font-semibold font-['Manrope'] hover:bg-aac-hover whitespace-nowrap">
+                <Button className="h-full px-5 bg-[#50C878] rounded-full text-black text-sm font-semibold font-['Manrope'] hover:bg-[#45b96d] whitespace-nowrap shadow-sm">
                   Subscribe
                 </Button>
               </div>
