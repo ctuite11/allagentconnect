@@ -126,26 +126,8 @@ const DcmlsConsumerHeader: React.FC = () => {
             </Button>
           ))}
 
-          {/* Pages dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground gap-1"
-              >
-                Pages
-                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {PAGES_LINKS.map((p) => (
-                <DropdownMenuItem key={p.to} asChild>
-                  {renderPageLink(p, "w-full cursor-pointer text-sm")}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+
 
           {signedIn ? (
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
