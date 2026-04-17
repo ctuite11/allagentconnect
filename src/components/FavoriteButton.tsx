@@ -38,7 +38,14 @@ const FavoriteButton = ({ listingId, size = "lg", variant = "secondary", classNa
 
   const handleToggleFavorite = async () => {
     if (!userId) {
-      toast.error("Please sign in to save favorites");
+      // DCMLS host → consumer signup flow; AAC host → agent auth surface
+      const { isDcmlsHost } = await import("@/lib/host");
+      if (isDcmlsHost()) {
+        const from = window.location.pathname + window.location.search;
+        window.location.href = `/consumer/auth?mode=signup&from=${encodeURIComponent(from)}`;
+      } else {
+        toast.error("Please sign in to save favorites");
+      }
       return;
     }
 

@@ -32,10 +32,13 @@ const loginSchema = z.object({
 const DcmlsAuth = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const redirectTo = params.get("redirect") || "/account";
-  const initialMode = params.get("mode") === "register" ? false : true;
+  // Accept both `redirect` (legacy) and `from` (new). Default destination is /account on DCMLS.
+  const redirectTo = params.get("from") || params.get("redirect") || "/account";
+  // Accept `mode=signup|signin` (new) and legacy `mode=register`. Default = signin.
+  const modeParam = params.get("mode");
+  const initialIsLogin = modeParam !== "register" && modeParam !== "signup";
 
-  const [isLogin, setIsLogin] = useState(initialMode);
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [isForgot, setIsForgot] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -270,6 +273,33 @@ const DcmlsAuth = () => {
                     : "Already have an account? Sign in"}
                 </button>
               )}
+            </div>
+
+            {/* Buyer benefits — only on signup mode */}
+            {!isLogin && !isForgot && (
+              <div className="mt-10 pt-8 border-t border-border/50">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-4 text-center">
+                  What your account unlocks
+                </p>
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-foreground/80">
+                  <li>· Save homes</li>
+                  <li>· Favorites</li>
+                  <li>· Hot Sheets</li>
+                  <li>· New listing alerts</li>
+                  <li>· Invite your agent</li>
+                  <li>· Showing requests</li>
+                </ul>
+              </div>
+            )}
+
+            {/* Secondary agent link — never primary */}
+            <div className="mt-10 text-center">
+              <Link
+                to="/auth"
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Are you an agent? Agent sign in →
+              </Link>
             </div>
           </div>
         </main>

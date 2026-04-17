@@ -88,9 +88,19 @@ const DcmlsConsumerHeader: React.FC = () => {
               Sign Out
             </Button>
           ) : (
-            <Button asChild size="sm">
-              <Link to="/auth">Sign In</Link>
-            </Button>
+            <div className="flex items-center gap-2 pl-2">
+              <Button asChild variant="ghost" size="sm" className="text-foreground">
+                <Link to="/consumer/auth?mode=signin">Sign In</Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                className="text-white"
+                style={{ backgroundColor: AAC_BLUE }}
+              >
+                <Link to="/consumer/auth?mode=signup">Create Account</Link>
+              </Button>
+            </div>
           )}
         </nav>
 
@@ -122,14 +132,40 @@ const DcmlsConsumerHeader: React.FC = () => {
                   Sign Out
                 </Button>
               ) : (
-                <Button asChild className="mt-2">
-                  <Link to="/auth">Sign In</Link>
-                </Button>
+                <div className="flex flex-col gap-2 mt-2">
+                  <Button asChild variant="outline">
+                    <Link to="/consumer/auth?mode=signin">Sign In</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    className="text-white"
+                    style={{ backgroundColor: AAC_BLUE }}
+                  >
+                    <Link to="/consumer/auth?mode=signup">Create Account</Link>
+                  </Button>
+                  <Link
+                    to="/auth"
+                    className="text-xs text-muted-foreground hover:text-foreground text-center mt-3"
+                  >
+                    Are you an agent? Agent sign in →
+                  </Link>
+                </div>
               )}
             </div>
           </SheetContent>
         </Sheet>
       </div>
+
+      {!signedIn && (
+        <div className="hidden md:flex max-w-6xl mx-auto px-6 -mt-1 pb-1 justify-end">
+          <Link
+            to="/auth"
+            className="text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            Agent? Sign in here →
+          </Link>
+        </div>
+      )}
     </header>
   );
 };
