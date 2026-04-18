@@ -186,21 +186,7 @@ export default function BuyerAccount() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-semibold text-foreground">{capitalizedName}</h1>
-              <span
-                className={
-                  buyerOnPlatform
-                    ? "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200"
-                }
-              >
-                <span
-                  className={
-                    "w-1.5 h-1.5 rounded-full " +
-                    (buyerOnPlatform ? "bg-emerald-500" : "bg-amber-500")
-                  }
-                />
-                {buyerOnPlatform ? "Active" : "Invite Pending"}
-              </span>
+              <BuyerStatusBadge status={buyerStatus} />
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
             {client.phone && (
