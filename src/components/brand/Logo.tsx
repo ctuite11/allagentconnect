@@ -30,16 +30,16 @@ export const Logo: React.FC<LogoProps> = ({
   const isIcon = variant === "icon";
 
   if (isIcon) {
-    // Icon-only mark — APPROVED command-style AAC monogram (canonical)
+    // Icon-only mark — APPROVED command-style AAC monogram (canonical).
     // The legacy house-mark has been deprecated and archived.
     return (
-      <AACMonogram
-        className={`${sizeClasses[size]} w-auto ${className}`}
-        // AACMonogram uses currentColor; wrap with brand color
-        // eslint-disable-next-line react/forbid-dom-props
-        // @ts-expect-error style allowed at runtime
+      <span
+        className={`inline-flex ${sizeClasses[size]} ${className}`}
         style={{ color: ACC_BLUE }}
-      />
+        aria-label="All Agent Connect"
+      >
+        <AACMonogram className="h-full w-auto" />
+      </span>
     );
   }
 
