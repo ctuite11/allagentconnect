@@ -7,14 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { BuyerStatusBadge, getBuyerStatus, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  ArrowLeft, Home, Clock, Eye, Archive, ArchiveRestore
+  ArrowLeft, Home, Clock, Eye, UserMinus
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
-import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
-import { archiveBuyerRelationship, restoreBuyerRelationship } from "@/components/success-hub/ArchiveBuyerAction";
+import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,7 +64,7 @@ export default function BuyerAccount() {
     useBuyerDashboard(buyerId);
   const [createHsOpen, setCreateHsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [statusOpen, setStatusOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hotsheets");
   const [messagingBusy, setMessagingBusy] = useState(false);
 
@@ -78,31 +77,11 @@ export default function BuyerAccount() {
 
   const buyerOnPlatform = !!client?.agent_user_id;
 
-  // Resolve unified buyer status (shared with My Buyers)
-  const [buyerStatus, setBuyerStatus] = useState<BuyerStatus>("invite_pending");
+  // System-derived only: pending_invite | active
+  const [buyerStatus, setBuyerStatus] = useState<BuyerStatus>("pending_invite");
   useEffect(() => {
-    if (!client?.id || !client?.agent_id) return;
-    let cancelled = false;
-    (async () => {
-      const { data: rel } = await supabase
-        .from("client_agent_relationships")
-        .select("status,ended_at")
-        .eq("agent_id", client.agent_id)
-        .or(`crm_client_id.eq.${client.id},client_id.eq.${client.id}`)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled) return;
-      setBuyerStatus(
-        getBuyerStatus({
-          agent_user_id: client.agent_user_id,
-          relationship_status: rel?.status,
-          relationship_ended_at: rel?.ended_at,
-        }),
-      );
-    })();
-    return () => { cancelled = true; };
-  }, [client?.id, client?.agent_id, client?.agent_user_id]);
+    setBuyerStatus(getBuyerStatus({ agent_user_id: client?.agent_user_id }));
+  }, [client?.agent_user_id]);
   const handleGeneralMessage = async () => {
     if (!user?.id || !client?.agent_user_id) return;
     setMessagingBusy(true);
@@ -211,40 +190,14 @@ export default function BuyerAccount() {
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setStatusOpen(true)}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Update Status
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
+            onClick={() => setRemoveOpen(true)}
+          >
+            <UserMinus className="h-3.5 w-3.5 mr-1.5" /> Remove as Buyer Client
           </Button>
-          {buyerStatus === "archived" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (!client?.agent_id || !client?.id) return;
-                const ok = await restoreBuyerRelationship({
-                  agentId: client.agent_id,
-                  buyerId: client.id,
-                });
-                if (ok) refresh();
-              }}
-            >
-              <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" /> Restore Buyer
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (!client?.agent_id || !client?.id) return;
-                const ok = await archiveBuyerRelationship({
-                  agentId: client.agent_id,
-                  buyerId: client.id,
-                });
-                if (ok) refresh();
-              }}
-            >
-              <Archive className="h-3.5 w-3.5 mr-1.5" /> Archive Buyer
-            </Button>
-          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -436,21 +389,14 @@ export default function BuyerAccount() {
         onSuccess={refresh}
       />
 
-      {/* ── Update Status Dialog ─────────────────── */}
-      <UpdateStatusDialog
-        open={statusOpen}
-        onOpenChange={setStatusOpen}
-        buyer={
-          client
-            ? {
-                id: client.id,
-                agent_id: client.agent_id,
-                agent_user_id: client.agent_user_id,
-              }
-            : null
-        }
-        currentStatus={buyerStatus}
-        onSuccess={refresh}
+      {/* ── Remove Buyer Client Dialog ───────────── */}
+      <RemoveBuyerClientDialog
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+        buyerName={capitalizedName}
+        agentId={client?.agent_id}
+        buyerId={client?.id}
+        onRemoved={() => navigate("/success-hub/buyers")}
       />
 
       {/* ── Create Hot Sheet Dialog ──────────────── */}
