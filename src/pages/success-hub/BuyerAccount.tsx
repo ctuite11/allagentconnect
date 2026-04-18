@@ -212,22 +212,6 @@ export default function BuyerAccount() {
             >
               <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" /> Restore Buyer
             </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (!client?.agent_id || !client?.id) return;
-                const ok = await archiveBuyerRelationship({
-                  agentId: client.agent_id,
-                  buyerId: client.id,
-                });
-                if (ok) refresh();
-              }}
-            >
-              <Archive className="h-3.5 w-3.5 mr-1.5" /> Archive Buyer
-            </Button>
-          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -419,21 +403,14 @@ export default function BuyerAccount() {
         onSuccess={refresh}
       />
 
-      {/* ── Update Status Dialog ─────────────────── */}
-      <UpdateStatusDialog
-        open={statusOpen}
-        onOpenChange={setStatusOpen}
-        buyer={
-          client
-            ? {
-                id: client.id,
-                agent_id: client.agent_id,
-                agent_user_id: client.agent_user_id,
-              }
-            : null
-        }
-        currentStatus={buyerStatus}
-        onSuccess={refresh}
+      {/* ── Remove Buyer Client Dialog ───────────── */}
+      <RemoveBuyerClientDialog
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+        buyerName={capitalizedName}
+        agentId={client?.agent_id}
+        buyerId={client?.id}
+        onRemoved={() => navigate("/success-hub/buyers")}
       />
 
       {/* ── Create Hot Sheet Dialog ──────────────── */}
