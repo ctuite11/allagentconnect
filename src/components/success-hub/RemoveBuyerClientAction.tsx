@@ -21,22 +21,55 @@ export async function removeBuyerClient(opts: {
   agentId: string;
   buyerId: string;
 }): Promise<boolean> {
-  const { error, data } = await supabase
-    .from("client_agent_relationships")
-    .update({ status: "inactive", ended_at: new Date().toISOString() })
-    .eq("agent_id", opts.agentId)
-    .or(`crm_client_id.eq.${opts.buyerId},client_id.eq.${opts.buyerId}`)
-    .select("id");
-  if (error) {
-    console.error("removeBuyerClient error:", error);
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      console.error("removeBuyerClient auth error: no authenticated user");
+      toast.error("Couldn't remove this buyer client. Please sign in and try again.");
+      return false;
+    }
+
+    if (opts.agentId !== user.id) {
+      console.error("removeBuyerClient agent mismatch:", {
+        passedAgentId: opts.agentId,
+        authUserId: user.id,
+        buyerId: opts.buyerId,
+      });
+    }
+
+    const { data, error } = await supabase.rpc("agent_end_client_relationship", {
+      p_client_id: opts.buyerId,
+    });
+
+    if (error) {
+      console.error("removeBuyerClient Supabase error:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        status: (error as any).status,
+        buyerId: opts.buyerId,
+        agentId: user.id,
+      });
+      toast.error("Couldn't remove this buyer client. Please try again.");
+      return false;
+    }
+
+    console.info("removeBuyerClient success:", {
+      rowsAffected: data,
+      buyerId: opts.buyerId,
+      agentId: user.id,
+    });
+    toast.success("Removed from buyer clients. They're still in Contacts.");
+    return true;
+  } catch (err) {
+    console.error("removeBuyerClient unexpected error:", err);
     toast.error("Couldn't remove this buyer client. Please try again.");
     return false;
   }
-  if (!data || data.length === 0) {
-    console.warn("removeBuyerClient: no relationship rows updated", opts);
-  }
-  toast.success("Removed from buyer clients. They're still in Contacts.");
-  return true;
 }
 
 interface RemoveBuyerClientDialogProps {
