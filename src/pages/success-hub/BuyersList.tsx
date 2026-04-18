@@ -4,10 +4,11 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2, Pencil } from "lucide-react";
+import { ChevronRight, UserPlus, Loader2, Pencil, CircleDot } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
+import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
 import {
   BuyerStatusBadge,
   getBuyerStatus,
