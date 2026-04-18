@@ -4,9 +4,10 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
+import { ChevronRight, UserPlus, Loader2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
+import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import {
   BuyerStatusBadge,
   getBuyerStatus,
@@ -20,6 +21,12 @@ interface BuyerRow {
   clientId: string;
   name: string;
   email: string;
+  phone: string | null;
+  firstName: string;
+  lastName: string;
+  agentId: string;
+  agentUserId: string | null;
+  notes: string | null;
   status: BuyerStatus;
   hotSheetCount: number;
   createdAt: string; // relationship_created_at
