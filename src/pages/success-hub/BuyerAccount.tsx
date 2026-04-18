@@ -7,14 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { BuyerStatusBadge, getBuyerStatus, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  ArrowLeft, Home, Clock, Eye, Archive, ArchiveRestore
+  ArrowLeft, Home, Clock, Eye, UserMinus
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
-import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
-import { archiveBuyerRelationship, restoreBuyerRelationship } from "@/components/success-hub/ArchiveBuyerAction";
+import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";

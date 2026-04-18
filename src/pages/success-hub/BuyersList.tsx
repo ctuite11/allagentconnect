@@ -4,12 +4,11 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2, Pencil, CircleDot, MoreHorizontal, Archive, ArchiveRestore } from "lucide-react";
+import { ChevronRight, UserPlus, Loader2, Pencil, MoreHorizontal, UserMinus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
-import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
-import { archiveBuyerRelationship, restoreBuyerRelationship } from "@/components/success-hub/ArchiveBuyerAction";
+import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,11 +36,14 @@ interface BuyerRow {
   notes: string | null;
   status: BuyerStatus;
   hotSheetCount: number;
-  createdAt: string; // relationship_created_at
+  createdAt: string;
   updatedAt: string;
 }
 
 type FilterKey = "all" | BuyerStatus;
+
+/** Relationship statuses considered "still a buyer client" for My Buyers. */
+const ACTIVE_REL_STATUSES = new Set(["active", "invited", "pending"]);
 
 export default function BuyersList() {
   const navigate = useNavigate();
@@ -50,7 +52,7 @@ export default function BuyersList() {
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [editBuyer, setEditBuyer] = useState<BuyerRow | null>(null);
-  const [statusBuyer, setStatusBuyer] = useState<BuyerRow | null>(null);
+  const [removeBuyer, setRemoveBuyer] = useState<BuyerRow | null>(null);
 
   const loadBuyers = async () => {
     setLoading(true);
@@ -58,7 +60,6 @@ export default function BuyersList() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get all relationships for this agent (any status — we filter in UI)
       const { data: relationships, error: relErr } = await supabase
         .from("client_agent_relationships")
         .select("client_id,crm_client_id,status,created_at,ended_at")
@@ -70,14 +71,20 @@ export default function BuyersList() {
         return;
       }
 
-      if (!relationships || relationships.length === 0) {
+      // Only relationships that are still active count as buyer clients.
+      // Excludes: ended, archived, closed, inactive (legacy values).
+      const liveRelationships = (relationships ?? []).filter((r: any) =>
+        ACTIVE_REL_STATUSES.has((r.status ?? "").toLowerCase()) && !r.ended_at,
+      );
+
+      if (liveRelationships.length === 0) {
         setBuyers([]);
         return;
       }
 
-      const authClientIds = relationships.map((r) => r.client_id).filter(Boolean);
-      const crmClientIds = (relationships as any[])
-        .map((r) => r.crm_client_id)
+      const authClientIds = liveRelationships.map((r: any) => r.client_id).filter(Boolean);
+      const crmClientIds = liveRelationships
+        .map((r: any) => r.crm_client_id)
         .filter(Boolean) as string[];
       const allCrmIds = [...new Set([...authClientIds, ...crmClientIds])];
 
@@ -93,9 +100,7 @@ export default function BuyersList() {
       ]);
 
       const clientMap = new Map<string, any>();
-      for (const c of (clientsRes.data ?? [])) {
-        clientMap.set(c.id, c);
-      }
+      for (const c of (clientsRes.data ?? [])) clientMap.set(c.id, c);
 
       const hsCountMap = new Map<string, number>();
       for (const row of (hscRes.data ?? []) as any[]) {
@@ -103,16 +108,12 @@ export default function BuyersList() {
         hsCountMap.set(cid, (hsCountMap.get(cid) ?? 0) + 1);
       }
 
-      const rows: BuyerRow[] = relationships.map((r: any) => {
+      const rows: BuyerRow[] = liveRelationships.map((r: any) => {
         const crmId = r.crm_client_id || r.client_id;
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
         if (!c) return null;
         const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
-        const status = getBuyerStatus({
-          agent_user_id: c.agent_user_id,
-          relationship_status: r.status,
-          relationship_ended_at: r.ended_at,
-        });
+        const status = getBuyerStatus({ agent_user_id: c.agent_user_id });
         return {
           clientId: c.id,
           name,
@@ -142,15 +143,11 @@ export default function BuyersList() {
     loadBuyers();
   }, []);
 
-  // Counts per status for tab pills
   const counts = useMemo(() => {
     const c: Record<FilterKey, number> = {
       all: buyers.length,
       active: 0,
-      invite_pending: 0,
-      inactive: 0,
-      closed: 0,
-      archived: 0,
+      pending_invite: 0,
     };
     for (const b of buyers) c[b.status] += 1;
     return c;
@@ -250,18 +247,6 @@ export default function BuyersList() {
                     <Pencil className="h-3 w-3 mr-1" />
                     Edit
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2.5 text-[11px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setStatusBuyer(b);
-                    }}
-                  >
-                    <CircleDot className="h-3 w-3 mr-1" />
-                    Status
-                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -278,35 +263,16 @@ export default function BuyersList() {
                       align="end"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {b.status === "archived" ? (
-                        <DropdownMenuItem
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const ok = await restoreBuyerRelationship({
-                              agentId: b.agentId,
-                              buyerId: b.clientId,
-                            });
-                            if (ok) loadBuyers();
-                          }}
-                        >
-                          <ArchiveRestore className="h-3.5 w-3.5 mr-2" />
-                          Restore Buyer
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const ok = await archiveBuyerRelationship({
-                              agentId: b.agentId,
-                              buyerId: b.clientId,
-                            });
-                            if (ok) loadBuyers();
-                          }}
-                        >
-                          <Archive className="h-3.5 w-3.5 mr-2" />
-                          Archive Buyer
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRemoveBuyer(b);
+                        }}
+                      >
+                        <UserMinus className="h-3.5 w-3.5 mr-2" />
+                        Remove as Buyer Client
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <ChevronRight className="h-4 w-4 text-slate-300" />
@@ -341,20 +307,13 @@ export default function BuyersList() {
         onSuccess={loadBuyers}
       />
 
-      <UpdateStatusDialog
-        open={!!statusBuyer}
-        onOpenChange={(o) => { if (!o) setStatusBuyer(null); }}
-        buyer={
-          statusBuyer
-            ? {
-                id: statusBuyer.clientId,
-                agent_id: statusBuyer.agentId,
-                agent_user_id: statusBuyer.agentUserId,
-              }
-            : null
-        }
-        currentStatus={statusBuyer?.status ?? "active"}
-        onSuccess={loadBuyers}
+      <RemoveBuyerClientDialog
+        open={!!removeBuyer}
+        onOpenChange={(o) => { if (!o) setRemoveBuyer(null); }}
+        buyerName={removeBuyer?.name}
+        agentId={removeBuyer?.agentId}
+        buyerId={removeBuyer?.clientId}
+        onRemoved={loadBuyers}
       />
     </PageShell>
   );
