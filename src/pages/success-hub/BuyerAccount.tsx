@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
+import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,6 +64,7 @@ export default function BuyerAccount() {
     useBuyerDashboard(buyerId);
   const [createHsOpen, setCreateHsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hotsheets");
   const [messagingBusy, setMessagingBusy] = useState(false);
 
@@ -207,6 +209,9 @@ export default function BuyerAccount() {
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setStatusOpen(true)}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Update Status
           </Button>
           <TooltipProvider>
             <Tooltip>
@@ -396,6 +401,23 @@ export default function BuyerAccount() {
         open={editOpen}
         onOpenChange={setEditOpen}
         buyer={client}
+        onSuccess={refresh}
+      />
+
+      {/* ── Update Status Dialog ─────────────────── */}
+      <UpdateStatusDialog
+        open={statusOpen}
+        onOpenChange={setStatusOpen}
+        buyer={
+          client
+            ? {
+                id: client.id,
+                agent_id: client.agent_id,
+                agent_user_id: client.agent_user_id,
+              }
+            : null
+        }
+        currentStatus={buyerStatus}
         onSuccess={refresh}
       />
 

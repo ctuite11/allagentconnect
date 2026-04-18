@@ -4,10 +4,11 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2, Pencil } from "lucide-react";
+import { ChevronRight, UserPlus, Loader2, Pencil, CircleDot } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
+import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
 import {
   BuyerStatusBadge,
   getBuyerStatus,
@@ -42,6 +43,7 @@ export default function BuyersList() {
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [editBuyer, setEditBuyer] = useState<BuyerRow | null>(null);
+  const [statusBuyer, setStatusBuyer] = useState<BuyerRow | null>(null);
 
   const loadBuyers = async () => {
     setLoading(true);
@@ -241,6 +243,18 @@ export default function BuyersList() {
                     <Pencil className="h-3 w-3 mr-1" />
                     Edit
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-[11px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setStatusBuyer(b);
+                    }}
+                  >
+                    <CircleDot className="h-3 w-3 mr-1" />
+                    Status
+                  </Button>
                   <ChevronRight className="h-4 w-4 text-slate-300" />
                 </div>
               </CardContent>
@@ -267,12 +281,25 @@ export default function BuyersList() {
                 email: editBuyer.email,
                 phone: editBuyer.phone,
                 notes: editBuyer.notes,
-                agent_id: editBuyer.agentId,
-                agent_user_id: editBuyer.agentUserId,
               }
             : null
         }
-        initialStatus={editBuyer?.status}
+        onSuccess={loadBuyers}
+      />
+
+      <UpdateStatusDialog
+        open={!!statusBuyer}
+        onOpenChange={(o) => { if (!o) setStatusBuyer(null); }}
+        buyer={
+          statusBuyer
+            ? {
+                id: statusBuyer.clientId,
+                agent_id: statusBuyer.agentId,
+                agent_user_id: statusBuyer.agentUserId,
+              }
+            : null
+        }
+        currentStatus={statusBuyer?.status ?? "active"}
         onSuccess={loadBuyers}
       />
     </PageShell>
