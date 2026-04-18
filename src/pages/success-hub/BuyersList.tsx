@@ -74,7 +74,7 @@ export default function BuyersList() {
       const [clientsRes, hscRes] = await Promise.all([
         supabase
           .from("clients")
-          .select("id,first_name,last_name,email,agent_user_id,updated_at")
+          .select("id,first_name,last_name,email,phone,notes,agent_id,agent_user_id,updated_at")
           .in("id", allCrmIds),
         supabase
           .from("hot_sheet_clients")
@@ -107,6 +107,12 @@ export default function BuyersList() {
           clientId: c.id,
           name,
           email: c?.email ?? "",
+          phone: c?.phone ?? null,
+          firstName: c?.first_name ?? "",
+          lastName: c?.last_name ?? "",
+          agentId: c?.agent_id ?? "",
+          agentUserId: c?.agent_user_id ?? null,
+          notes: c?.notes ?? null,
           status,
           hotSheetCount: hsCountMap.get(c.id) ?? 0,
           createdAt: r.created_at ?? c.updated_at ?? "",
