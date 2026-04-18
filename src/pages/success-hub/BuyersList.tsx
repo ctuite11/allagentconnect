@@ -229,6 +229,18 @@ export default function BuyersList() {
                   <span className="text-[11px] text-slate-500 whitespace-nowrap">
                     {b.hotSheetCount} hot sheet{b.hotSheetCount !== 1 ? "s" : ""}
                   </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-[11px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditBuyer(b);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
                   <ChevronRight className="h-4 w-4 text-slate-300" />
                 </div>
               </CardContent>
@@ -240,6 +252,27 @@ export default function BuyersList() {
       <CreateBuyerDialog
         open={showCreate}
         onOpenChange={setShowCreate}
+        onSuccess={loadBuyers}
+      />
+
+      <EditBuyerDialog
+        open={!!editBuyer}
+        onOpenChange={(o) => { if (!o) setEditBuyer(null); }}
+        buyer={
+          editBuyer
+            ? {
+                id: editBuyer.clientId,
+                first_name: editBuyer.firstName,
+                last_name: editBuyer.lastName,
+                email: editBuyer.email,
+                phone: editBuyer.phone,
+                notes: editBuyer.notes,
+                agent_id: editBuyer.agentId,
+                agent_user_id: editBuyer.agentUserId,
+              }
+            : null
+        }
+        initialStatus={editBuyer?.status}
         onSuccess={loadBuyers}
       />
     </PageShell>
