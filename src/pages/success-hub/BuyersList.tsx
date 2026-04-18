@@ -316,7 +316,12 @@ export default function BuyersList() {
         buyerName={removeBuyer?.name}
         agentId={removeBuyer?.agentId}
         buyerId={removeBuyer?.clientId}
-        onRemoved={loadBuyers}
+        onRemoved={() => {
+          if (removeBuyer) {
+            setBuyers((prev) => prev.filter((x) => x.clientId !== removeBuyer.clientId));
+          }
+          loadBuyers();
+        }}
       />
     </PageShell>
   );
