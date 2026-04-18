@@ -15,13 +15,19 @@ import {
   type BuyerStatus,
 } from "@/lib/buyerStatus";
 
-/** Manually editable lifecycle stages (excludes invite_pending which is system-derived). */
-const EDITABLE_STATUSES: Exclude<BuyerStatus, "invite_pending">[] = [
+/**
+ * Manually editable lifecycle stages.
+ * Excludes:
+ *  - invite_pending → system-derived from missing agent_user_id
+ *  - archived → record-management action, handled separately (Archive / Restore)
+ */
+const EDITABLE_STATUSES: Array<"active" | "inactive" | "closed"> = [
   "active",
   "inactive",
   "closed",
-  "archived",
 ];
+
+type EditableStatus = (typeof EDITABLE_STATUSES)[number];
 
 interface UpdateStatusDialogProps {
   open: boolean;
@@ -37,7 +43,7 @@ interface UpdateStatusDialogProps {
 }
 
 function statusToRelationshipFields(
-  status: Exclude<BuyerStatus, "invite_pending">,
+  status: EditableStatus,
 ): { status: string; ended_at: string | null } {
   if (status === "active") return { status: "active", ended_at: null };
   return { status, ended_at: new Date().toISOString() };
@@ -50,11 +56,13 @@ export function UpdateStatusDialog({
   currentStatus,
   onSuccess,
 }: UpdateStatusDialogProps) {
-  // Default the selector to the manual stage; if currently invite_pending, default to "active".
-  const initial: Exclude<BuyerStatus, "invite_pending"> =
-    currentStatus === "invite_pending" ? "active" : currentStatus;
+  // Default the selector to a manual stage. invite_pending and archived are not editable here.
+  const initial: EditableStatus =
+    currentStatus === "active" || currentStatus === "inactive" || currentStatus === "closed"
+      ? currentStatus
+      : "active";
 
-  const [status, setStatus] = useState<Exclude<BuyerStatus, "invite_pending">>(initial);
+  const [status, setStatus] = useState<EditableStatus>(initial);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -100,7 +108,7 @@ export function UpdateStatusDialog({
             <Label htmlFor="update-status">Stage</Label>
             <Select
               value={status}
-              onValueChange={(v) => setStatus(v as Exclude<BuyerStatus, "invite_pending">)}
+              onValueChange={(v) => setStatus(v as EditableStatus)}
             >
               <SelectTrigger id="update-status">
                 <SelectValue />

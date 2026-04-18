@@ -4,11 +4,18 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2, Pencil, CircleDot } from "lucide-react";
+import { ChevronRight, UserPlus, Loader2, Pencil, CircleDot, MoreHorizontal, Archive, ArchiveRestore } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
+import { archiveBuyerRelationship, restoreBuyerRelationship } from "@/components/success-hub/ArchiveBuyerAction";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   BuyerStatusBadge,
   getBuyerStatus,
@@ -255,6 +262,53 @@ export default function BuyersList() {
                     <CircleDot className="h-3 w-3 mr-1" />
                     Status
                   </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label="More actions"
+                      >
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {b.status === "archived" ? (
+                        <DropdownMenuItem
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const ok = await restoreBuyerRelationship({
+                              agentId: b.agentId,
+                              buyerId: b.clientId,
+                            });
+                            if (ok) loadBuyers();
+                          }}
+                        >
+                          <ArchiveRestore className="h-3.5 w-3.5 mr-2" />
+                          Restore Buyer
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const ok = await archiveBuyerRelationship({
+                              agentId: b.agentId,
+                              buyerId: b.clientId,
+                            });
+                            if (ok) loadBuyers();
+                          }}
+                        >
+                          <Archive className="h-3.5 w-3.5 mr-2" />
+                          Archive Buyer
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <ChevronRight className="h-4 w-4 text-slate-300" />
                 </div>
               </CardContent>

@@ -7,13 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { BuyerStatusBadge, getBuyerStatus, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  ArrowLeft, Home, Clock, Eye
+  ArrowLeft, Home, Clock, Eye, Archive, ArchiveRestore
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { UpdateStatusDialog } from "@/components/success-hub/UpdateStatusDialog";
+import { archiveBuyerRelationship, restoreBuyerRelationship } from "@/components/success-hub/ArchiveBuyerAction";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
@@ -213,6 +214,37 @@ export default function BuyerAccount() {
           <Button variant="outline" size="sm" onClick={() => setStatusOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Update Status
           </Button>
+          {buyerStatus === "archived" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!client?.agent_id || !client?.id) return;
+                const ok = await restoreBuyerRelationship({
+                  agentId: client.agent_id,
+                  buyerId: client.id,
+                });
+                if (ok) refresh();
+              }}
+            >
+              <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" /> Restore Buyer
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!client?.agent_id || !client?.id) return;
+                const ok = await archiveBuyerRelationship({
+                  agentId: client.agent_id,
+                  buyerId: client.id,
+                });
+                if (ok) refresh();
+              }}
+            >
+              <Archive className="h-3.5 w-3.5 mr-1.5" /> Archive Buyer
+            </Button>
+          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
