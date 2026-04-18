@@ -21,15 +21,19 @@ export async function removeBuyerClient(opts: {
   agentId: string;
   buyerId: string;
 }): Promise<boolean> {
-  const { error } = await supabase
+  const { error, data } = await supabase
     .from("client_agent_relationships")
-    .update({ status: "ended", ended_at: new Date().toISOString() })
+    .update({ status: "inactive", ended_at: new Date().toISOString() })
     .eq("agent_id", opts.agentId)
-    .or(`crm_client_id.eq.${opts.buyerId},client_id.eq.${opts.buyerId}`);
+    .or(`crm_client_id.eq.${opts.buyerId},client_id.eq.${opts.buyerId}`)
+    .select("id");
   if (error) {
-    console.error(error);
+    console.error("removeBuyerClient error:", error);
     toast.error("Couldn't remove this buyer client. Please try again.");
     return false;
+  }
+  if (!data || data.length === 0) {
+    console.warn("removeBuyerClient: no relationship rows updated", opts);
   }
   toast.success("Removed from buyer clients. They're still in Contacts.");
   return true;

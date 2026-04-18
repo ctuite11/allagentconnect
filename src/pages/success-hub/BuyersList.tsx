@@ -44,6 +44,7 @@ type FilterKey = "all" | BuyerStatus;
 
 /** Relationship statuses considered "still a buyer client" for My Buyers. */
 const ACTIVE_REL_STATUSES = new Set(["active", "invited", "pending"]);
+const ENDED_REL_STATUSES = new Set(["ended", "inactive", "archived", "closed", "declined"]);
 
 export default function BuyersList() {
   const navigate = useNavigate();
@@ -72,10 +73,13 @@ export default function BuyersList() {
       }
 
       // Only relationships that are still active count as buyer clients.
-      // Excludes: ended, archived, closed, inactive (legacy values).
-      const liveRelationships = (relationships ?? []).filter((r: any) =>
-        ACTIVE_REL_STATUSES.has((r.status ?? "").toLowerCase()) && !r.ended_at,
-      );
+      // Excludes: ended, inactive, archived, closed, declined.
+      const liveRelationships = (relationships ?? []).filter((r: any) => {
+        const status = (r.status ?? "").toLowerCase();
+        if (r.ended_at) return false;
+        if (ENDED_REL_STATUSES.has(status)) return false;
+        return ACTIVE_REL_STATUSES.has(status);
+      });
 
       if (liveRelationships.length === 0) {
         setBuyers([]);
@@ -312,7 +316,12 @@ export default function BuyersList() {
         buyerName={removeBuyer?.name}
         agentId={removeBuyer?.agentId}
         buyerId={removeBuyer?.clientId}
-        onRemoved={loadBuyers}
+        onRemoved={() => {
+          if (removeBuyer) {
+            setBuyers((prev) => prev.filter((x) => x.clientId !== removeBuyer.clientId));
+          }
+          loadBuyers();
+        }}
       />
     </PageShell>
   );
