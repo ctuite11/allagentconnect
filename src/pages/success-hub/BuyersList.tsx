@@ -44,6 +44,7 @@ type FilterKey = "all" | BuyerStatus;
 
 /** Relationship statuses considered "still a buyer client" for My Buyers. */
 const ACTIVE_REL_STATUSES = new Set(["active", "invited", "pending"]);
+const ENDED_REL_STATUSES = new Set(["ended", "inactive", "archived", "closed", "declined"]);
 
 export default function BuyersList() {
   const navigate = useNavigate();
