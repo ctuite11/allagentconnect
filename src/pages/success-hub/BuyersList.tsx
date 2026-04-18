@@ -264,14 +264,13 @@ export default function BuyersList() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
                           setRemoveBuyer(b);
                         }}
                       >
                         <UserMinus className="h-3.5 w-3.5 mr-2" />
-                        Remove as Buyer Client
+                        Remove Buyer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
