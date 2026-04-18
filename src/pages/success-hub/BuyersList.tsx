@@ -73,10 +73,13 @@ export default function BuyersList() {
       }
 
       // Only relationships that are still active count as buyer clients.
-      // Excludes: ended, archived, closed, inactive (legacy values).
-      const liveRelationships = (relationships ?? []).filter((r: any) =>
-        ACTIVE_REL_STATUSES.has((r.status ?? "").toLowerCase()) && !r.ended_at,
-      );
+      // Excludes: ended, inactive, archived, closed, declined.
+      const liveRelationships = (relationships ?? []).filter((r: any) => {
+        const status = (r.status ?? "").toLowerCase();
+        if (r.ended_at) return false;
+        if (ENDED_REL_STATUSES.has(status)) return false;
+        return ACTIVE_REL_STATUSES.has(status);
+      });
 
       if (liveRelationships.length === 0) {
         setBuyers([]);
