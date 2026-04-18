@@ -4,9 +4,10 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
+import { ChevronRight, UserPlus, Loader2, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
+import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import {
   BuyerStatusBadge,
   getBuyerStatus,
@@ -20,6 +21,12 @@ interface BuyerRow {
   clientId: string;
   name: string;
   email: string;
+  phone: string | null;
+  firstName: string;
+  lastName: string;
+  agentId: string;
+  agentUserId: string | null;
+  notes: string | null;
   status: BuyerStatus;
   hotSheetCount: number;
   createdAt: string; // relationship_created_at
@@ -34,6 +41,7 @@ export default function BuyersList() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [editBuyer, setEditBuyer] = useState<BuyerRow | null>(null);
 
   const loadBuyers = async () => {
     setLoading(true);
@@ -67,7 +75,7 @@ export default function BuyersList() {
       const [clientsRes, hscRes] = await Promise.all([
         supabase
           .from("clients")
-          .select("id,first_name,last_name,email,agent_user_id,updated_at")
+          .select("id,first_name,last_name,email,phone,notes,agent_id,agent_user_id,updated_at")
           .in("id", allCrmIds),
         supabase
           .from("hot_sheet_clients")
@@ -100,6 +108,12 @@ export default function BuyersList() {
           clientId: c.id,
           name,
           email: c?.email ?? "",
+          phone: c?.phone ?? null,
+          firstName: c?.first_name ?? "",
+          lastName: c?.last_name ?? "",
+          agentId: c?.agent_id ?? "",
+          agentUserId: c?.agent_user_id ?? null,
+          notes: c?.notes ?? null,
           status,
           hotSheetCount: hsCountMap.get(c.id) ?? 0,
           createdAt: r.created_at ?? c.updated_at ?? "",
@@ -215,6 +229,18 @@ export default function BuyersList() {
                   <span className="text-[11px] text-slate-500 whitespace-nowrap">
                     {b.hotSheetCount} hot sheet{b.hotSheetCount !== 1 ? "s" : ""}
                   </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-[11px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditBuyer(b);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
                   <ChevronRight className="h-4 w-4 text-slate-300" />
                 </div>
               </CardContent>
@@ -226,6 +252,27 @@ export default function BuyersList() {
       <CreateBuyerDialog
         open={showCreate}
         onOpenChange={setShowCreate}
+        onSuccess={loadBuyers}
+      />
+
+      <EditBuyerDialog
+        open={!!editBuyer}
+        onOpenChange={(o) => { if (!o) setEditBuyer(null); }}
+        buyer={
+          editBuyer
+            ? {
+                id: editBuyer.clientId,
+                first_name: editBuyer.firstName,
+                last_name: editBuyer.lastName,
+                email: editBuyer.email,
+                phone: editBuyer.phone,
+                notes: editBuyer.notes,
+                agent_id: editBuyer.agentId,
+                agent_user_id: editBuyer.agentUserId,
+              }
+            : null
+        }
+        initialStatus={editBuyer?.status}
         onSuccess={loadBuyers}
       />
     </PageShell>
