@@ -77,7 +77,7 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
               className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-xl border border-border bg-card cursor-pointer hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
             >
               {/* Stats bar */}
-              <div className="flex items-center justify-between px-3 pt-3 pb-2">
+              <div className="flex items-center px-3 pt-3 pb-2">
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
                     <Eye className="h-3.5 w-3.5" /> {listing.view_count.toLocaleString()}
@@ -89,7 +89,6 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
                     <Heart className="h-3.5 w-3.5" /> {listing.view_count > 0 ? Math.floor(listing.view_count * 0.1) : 0}
                   </span>
                 </div>
-                <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
               {/* Photo */}
@@ -106,6 +105,9 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
                     No photo
                   </div>
                 )}
+                <div className="absolute top-2 left-2">
+                  <ListingStatusBadge status={listing.status} size="sm" />
+                </div>
               </div>
 
               {/* Details */}

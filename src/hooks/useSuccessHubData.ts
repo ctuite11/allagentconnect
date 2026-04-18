@@ -400,12 +400,13 @@ export function useSuccessHubData(): {
       const attentionItems: SuccessHubSummary["attentionItems"] = [];
 
       if (pendingInviteCount > 0) {
+        const plural = pendingInviteCount > 1 ? "s" : "";
         attentionItems.push({
           id: "pending-invites",
           type: "invite",
-          label: `You have ${pendingInviteCount} pending invite${pendingInviteCount > 1 ? "s" : ""}`,
-          sub: `${pendingInviteCount} buyer${pendingInviteCount > 1 ? "s" : ""} haven't accepted yet`,
-          path: "/hot-sheets",
+          label: `You have ${pendingInviteCount} pending invite${plural}`,
+          sub: `${pendingInviteCount} invite${plural} awaiting acceptance`,
+          path: "/success-hub/buyers",
           count: pendingInviteCount,
         });
       }

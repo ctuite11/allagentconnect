@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Bed, Bath, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
+import { ListingStatusBadge } from "@/components/ui/status-badge";
 
 interface MarketListing {
   id: string;
@@ -239,8 +240,11 @@ export function MarketActivityRow() {
                     No photo
                   </div>
                 )}
+                <div className="absolute top-2 left-2">
+                  <ListingStatusBadge status={listing.status} size="sm" />
+                </div>
                 {isNew(listing.created_at) && (
-                  <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
                     New
                   </span>
                 )}
