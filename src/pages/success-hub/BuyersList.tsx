@@ -14,13 +14,6 @@ import {
   BUYER_STATUS_CONFIG,
   type BuyerStatus,
 } from "@/lib/buyerStatus";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface BuyerRow {
@@ -33,15 +26,7 @@ interface BuyerRow {
   updatedAt: string;
 }
 
-type SortKey = "newest" | "updated" | "name" | "hotsheets";
 type FilterKey = "all" | BuyerStatus;
-
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Newest Added" },
-  { value: "updated", label: "Last Updated" },
-  { value: "name", label: "Name A–Z" },
-  { value: "hotsheets", label: "Most Hot Sheets" },
-];
 
 export default function BuyersList() {
   const navigate = useNavigate();
@@ -49,7 +34,6 @@ export default function BuyersList() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
-  const [sort, setSort] = useState<SortKey>("newest");
 
   const loadBuyers = async () => {
     setLoading(true);
@@ -152,23 +136,10 @@ export default function BuyersList() {
   const visible = useMemo(() => {
     let list = buyers;
     if (filter !== "all") list = list.filter((b) => b.status === filter);
-    const sorted = [...list];
-    switch (sort) {
-      case "newest":
-        sorted.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-        break;
-      case "updated":
-        sorted.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
-        break;
-      case "name":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "hotsheets":
-        sorted.sort((a, b) => b.hotSheetCount - a.hotSheetCount);
-        break;
-    }
-    return sorted;
-  }, [buyers, filter, sort]);
+    return [...list].sort((a, b) =>
+      (b.createdAt || "").localeCompare(a.createdAt || ""),
+    );
+  }, [buyers, filter]);
 
   const tabs: { key: FilterKey; label: string }[] = [
     { key: "all", label: "All" },
@@ -188,49 +159,34 @@ export default function BuyersList() {
         }
       />
 
-      {/* Filter tabs + sort */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {tabs.map((t) => {
-            const active = filter === t.key;
-            const count = counts[t.key];
-            return (
-              <button
-                key={t.key}
-                onClick={() => setFilter(t.key)}
+      {/* Filter tabs */}
+      <div className="mb-5 flex flex-wrap items-center gap-1.5">
+        {tabs.map((t) => {
+          const active = filter === t.key;
+          const count = counts[t.key];
+          return (
+            <button
+              key={t.key}
+              onClick={() => setFilter(t.key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
+                active
+                  ? "bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300",
+              )}
+            >
+              {t.label}
+              <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                  active
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground/40",
+                  "text-[10px] tabular-nums",
+                  active ? "text-white/70" : "text-slate-400",
                 )}
               >
-                {t.label}
-                <span
-                  className={cn(
-                    "text-[10px] tabular-nums",
-                    active ? "text-background/70" : "text-muted-foreground/70",
-                  )}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
-          <SelectTrigger className="h-8 w-[180px] text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
@@ -246,20 +202,20 @@ export default function BuyersList() {
           {visible.map((b) => (
             <Card
               key={b.clientId}
-              className="cursor-pointer border border-border bg-card hover:border-muted-foreground/30 transition-colors"
+              className="cursor-pointer border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/20 hover:shadow-sm transition-all"
               onClick={() => navigate(`/success-hub/buyers/${b.clientId}`)}
             >
               <CardContent className="flex items-center justify-between p-5">
                 <div className="min-w-0">
-                  <p className="font-medium text-sm text-foreground">{b.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{b.email}</p>
+                  <p className="font-medium text-sm text-slate-900">{b.name}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{b.email}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <BuyerStatusBadge status={b.status} />
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                  <span className="text-[11px] text-slate-500 whitespace-nowrap">
                     {b.hotSheetCount} hot sheet{b.hotSheetCount !== 1 ? "s" : ""}
                   </span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                  <ChevronRight className="h-4 w-4 text-slate-300" />
                 </div>
               </CardContent>
             </Card>
