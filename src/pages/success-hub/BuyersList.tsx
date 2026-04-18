@@ -149,8 +149,8 @@ export default function BuyersList() {
   return (
     <PageShell>
       <PageHeader
-        title="Your Buyers"
-        subtitle="Select a buyer to manage their hot sheets, favorites, and activity."
+        title="My Buyers"
+        subtitle="Manage buyer hot sheets, favorites, invites, and activity."
         actions={
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <UserPlus className="h-4 w-4 mr-1.5" />
