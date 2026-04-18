@@ -1,3 +1,9 @@
+# Host-aware root favicon: DCMLS domains get the blue monogram; everything else gets AAC.
+# This handles browsers' implicit /favicon.ico request that fires before JS runs.
+/favicon.ico  /favicons/dcmls/favicon.ico  200!  Host=directconnectmls.com
+/favicon.ico  /favicons/dcmls/favicon.ico  200!  Host=www.directconnectmls.com
+/favicon.ico  /favicons/aac/favicon.ico    200!
+
 # Legacy marketing page redirects (301! forces redirect before SPA fallback)
 /howitworks / 301!
 /how-it-works / 301!
