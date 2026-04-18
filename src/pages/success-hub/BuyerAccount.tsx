@@ -198,20 +198,6 @@ export default function BuyerAccount() {
           >
             <UserMinus className="h-3.5 w-3.5 mr-1.5" /> Remove as Buyer Client
           </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (!client?.agent_id || !client?.id) return;
-                const ok = await restoreBuyerRelationship({
-                  agentId: client.agent_id,
-                  buyerId: client.id,
-                });
-                if (ok) refresh();
-              }}
-            >
-              <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" /> Restore Buyer
-            </Button>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
