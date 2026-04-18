@@ -235,41 +235,39 @@ export default function BuyersList() {
                   <span className="text-[11px] text-slate-500 whitespace-nowrap">
                     {b.hotSheetCount} hot sheet{b.hotSheetCount !== 1 ? "s" : ""}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2.5 text-[11px] font-medium text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditBuyer(b);
-                    }}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-7 w-7 p-0 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                        className="h-7 w-7 p-0 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="More actions"
                       >
-                        <MoreHorizontal className="h-3.5 w-3.5" />
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
+                      className="w-44"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditBuyer(b);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5 mr-2 text-slate-500" />
+                        Edit Buyer
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
                           setRemoveBuyer(b);
                         }}
                       >
-                        <UserMinus className="h-3.5 w-3.5 mr-2" />
+                        <UserMinus className="h-3.5 w-3.5 mr-2 text-slate-500" />
                         Remove Buyer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
