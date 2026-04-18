@@ -73,7 +73,7 @@ export function RemoveBuyerClientDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Remove {buyerName ? `${buyerName} ` : ""}as a buyer client?
+            Remove {buyerName ? buyerName : "this buyer"}?
           </AlertDialogTitle>
           <AlertDialogDescription>
             They'll be removed from My Buyers and your buyer workflows. Their

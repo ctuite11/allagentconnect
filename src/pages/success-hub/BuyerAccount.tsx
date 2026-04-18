@@ -193,10 +193,9 @@ export default function BuyerAccount() {
           <Button
             variant="outline"
             size="sm"
-            className="text-destructive border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
             onClick={() => setRemoveOpen(true)}
           >
-            <UserMinus className="h-3.5 w-3.5 mr-1.5" /> Remove as Buyer Client
+            <UserMinus className="h-3.5 w-3.5 mr-1.5" /> Remove Buyer
           </Button>
           <TooltipProvider>
             <Tooltip>
