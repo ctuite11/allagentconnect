@@ -158,7 +158,24 @@ export default function BuyerAccount() {
       <div className="mb-8 rounded-xl border border-border bg-card shadow-sm p-6">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">{capitalizedName}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg font-semibold text-foreground">{capitalizedName}</h1>
+              <span
+                className={
+                  buyerOnPlatform
+                    ? "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200"
+                }
+              >
+                <span
+                  className={
+                    "w-1.5 h-1.5 rounded-full " +
+                    (buyerOnPlatform ? "bg-emerald-500" : "bg-amber-500")
+                  }
+                />
+                {buyerOnPlatform ? "Active" : "Invite Pending"}
+              </span>
+            </div>
             <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
             {client.phone && (
               <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
@@ -199,7 +216,7 @@ export default function BuyerAccount() {
                 </span>
               </TooltipTrigger>
               {!buyerOnPlatform && (
-                <TooltipContent>In-app messaging unavailable until buyer has an account</TooltipContent>
+                <TooltipContent>Available once the buyer accepts their invite</TooltipContent>
               )}
             </Tooltip>
           </TooltipProvider>
@@ -264,10 +281,10 @@ export default function BuyerAccount() {
                       state: { from: `/success-hub/buyers/${buyerId}` },
                     })
                   }
-                  className="bg-card rounded-2xl border border-border shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden"
+                  className="bg-card rounded-2xl border border-border shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden flex flex-col h-full"
                 >
-                  {/* 2x2 Photo Mosaic */}
-                  <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-muted">
+                  {/* 2x2 Photo Mosaic — fixed aspect for alignment */}
+                  <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-muted shrink-0">
                     {mosaicPhotos.map((src, i) => (
                       <div key={i} className="relative w-full h-full overflow-hidden">
                         {src ? (
@@ -281,28 +298,32 @@ export default function BuyerAccount() {
                     ))}
                   </div>
 
-                  {/* Card Body */}
-                  <div className="px-4 pt-3 pb-4">
+                  {/* Card Body — flex column so CTA pins to bottom */}
+                  <div className="px-4 pt-3 pb-4 flex flex-col flex-1">
                     <h3 className="text-base font-semibold text-foreground truncate">{hs.name}</h3>
                     <p className="text-sm text-muted-foreground mt-0.5">
                       {hs.matchCount} listing{hs.matchCount === 1 ? " match" : " matches"}
                     </p>
 
-                    {pills.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {pills.map((pill, i) => (
-                          <Badge
-                            key={i}
-                            variant="outline"
-                            className="text-xs font-normal text-muted-foreground border-border rounded-md"
-                          >
-                            {pill}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    {/* Reserved chips area — fixed min-height keeps cards aligned even when chips vary */}
+                    <div className="mt-2 min-h-[52px]">
+                      {pills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {pills.map((pill, i) => (
+                            <Badge
+                              key={i}
+                              variant="outline"
+                              className="text-xs font-normal text-muted-foreground border-border rounded-md"
+                            >
+                              {pill}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                    <div className="mt-3">
+                    {/* CTA pinned to bottom */}
+                    <div className="mt-auto pt-3">
                       <Button
                         size="sm"
                         className="w-full"
