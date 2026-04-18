@@ -1,8 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { BuyerStatusBadge, getBuyerStatus, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
   ArrowLeft, Home, Clock, Eye
