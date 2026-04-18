@@ -41,6 +41,7 @@ export default function BuyersList() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [editBuyer, setEditBuyer] = useState<BuyerRow | null>(null);
 
   const loadBuyers = async () => {
     setLoading(true);
