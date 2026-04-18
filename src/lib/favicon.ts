@@ -37,15 +37,24 @@ function addLink(rel: string, href: string, attrs: Record<string, string> = {}) 
   document.head.appendChild(link);
 }
 
+// Cache-bust query so browsers/CDNs don't serve a stale favicon from a previous deploy.
+const FAVICON_VERSION = "20260418-2";
+
 export function applyFaviconForHost(): void {
   if (typeof document === "undefined") return;
 
-  const base = isDcmlsHost() ? "/favicons/dcmls" : "/favicons/aac";
+  const isDcmls = isDcmlsHost();
+  const base = isDcmls ? "/favicons/dcmls" : "/favicons/aac";
+  const v = `?v=${FAVICON_VERSION}`;
+
+  // Temporary debug log to verify host detection in production.
+  // eslint-disable-next-line no-console
+  console.log("favicon brand:", isDcmls ? "dcmls" : "aac", "host:", window.location.hostname);
 
   removeExistingIconLinks();
 
-  addLink("icon", `${base}/favicon.ico`, { sizes: "any" });
-  addLink("icon", `${base}/favicon-32x32.png`, { type: "image/png", sizes: "32x32" });
-  addLink("icon", `${base}/favicon-16x16.png`, { type: "image/png", sizes: "16x16" });
-  addLink("apple-touch-icon", `${base}/apple-touch-icon.png`, { sizes: "180x180" });
+  addLink("icon", `${base}/favicon.ico${v}`, { sizes: "any" });
+  addLink("icon", `${base}/favicon-32x32.png${v}`, { type: "image/png", sizes: "32x32" });
+  addLink("icon", `${base}/favicon-16x16.png${v}`, { type: "image/png", sizes: "16x16" });
+  addLink("apple-touch-icon", `${base}/apple-touch-icon.png${v}`, { sizes: "180x180" });
 }
