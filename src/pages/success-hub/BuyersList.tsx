@@ -253,21 +253,23 @@ export default function BuyersList() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <DropdownMenuItem
+                        className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900"
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditBuyer(b);
                         }}
                       >
-                        <Pencil className="h-3.5 w-3.5 mr-2 text-slate-500" />
+                        <Pencil className="h-3.5 w-3.5 mr-2 text-slate-400" />
                         Edit Buyer
                       </DropdownMenuItem>
                       <DropdownMenuItem
+                        className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900"
                         onClick={(e) => {
                           e.stopPropagation();
                           setRemoveBuyer(b);
                         }}
                       >
-                        <UserMinus className="h-3.5 w-3.5 mr-2 text-slate-500" />
+                        <UserMinus className="h-3.5 w-3.5 mr-2 text-slate-400" />
                         Remove Buyer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
