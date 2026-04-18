@@ -1,41 +1,60 @@
 
-I found the issue: the generated file changed the monogram itself. Your uploaded reference shows the correct DCMLS icon already. What you want is not a new logo mark — just that existing DCMLS icon lockup rebuilt to follow AAC sizing, font, and spacing rules.
+Goal: replace the failed signature set with a Gmail-specific artifact set where AAC and DCMLS are built from one shared master template and differ only by monogram color and wordmark text.
 
-Updated implementation plan:
+What I’ll use as the fixed source of truth
+- Monogram geometry: `src/components/ui/AACMonogram.tsx`
+- Typography spec: `src/components/brand/Logo.tsx` (`Inter`, `22px`, `600`, `-0.01em`)
+- No legacy asset inheritance, no outlined-text fallback, no font substitution in the master SVGs
 
-1. Use the uploaded DCMLS icon as the source of truth
-- Keep the exact blue DCMLS symbol from your reference
-- Do not use the AAC house mark
-- Do not use the old command-style AAC monogram
-- Do not change the DCMLS icon geometry
+Build approach
+1. Create one shared lockup template
+- One master geometry for both brands with identical:
+  - canvas height
+  - monogram render box
+  - text size/weight/tracking
+  - icon-to-text gap
+  - baseline alignment
+  - total lockup height
+- Swap only:
+  - monogram color (`#16A34A` AAC, `#0E56F5` DCMLS)
+  - wordmark text (`All Agent Connect`, `Direct Connect MLS`)
 
-2. Match AAC typography exactly
-- Pull the wordmark spec from `src/components/brand/Logo.tsx`
-- Inter, 22px, 600 weight, `-0.01em` letter-spacing
-- Keep text as: `Direct Connect MLS`
-- Single text color only:
-  - dark on light/transparent
-  - white on dark
+2. Regenerate Gmail-ready outputs only
+- Transparent PNGs optimized for signature use:
+  - `60px` tall standard
+  - `120px` tall retina
+- Tight crop with equal top/bottom padding
+- Crisp text rendering
+- Matching master SVGs using the same vertical metrics and lockup logic
 
-3. Match AAC lockup proportions
-- Rebuild the DCMLS lockup so it follows AAC’s visual rhythm only:
-  - 48px lockup height
-  - AAC-style icon-to-text scale relationship
-  - AAC-style horizontal spacing/gap
-  - vertical alignment tuned so the icon and cap height feel consistent
+3. QA against the failure criteria
+- Create one stacked comparison image exactly like the user’s screenshot layout
+- Verify AAC and DCMLS are visually matched in:
+  - text size
+  - weight
+  - tracking
+  - icon/text gap
+  - overall height
+  - baseline alignment
+- If any one of those differs visually, regenerate before delivery
 
-4. Regenerate corrected assets as a fresh revision
-- `dcmls-lockup-light_v6.svg/png`
-- `dcmls-lockup-dark_v6.svg/png`
-- `dcmls-lockup-transparent_v6.svg/png`
+4. Package deliverables
+- New folder with only the corrected Gmail-ready set
+- `brand-lockups-signature.zip`
+- Include `README.txt` with exact usage guidance for Gmail:
+  - standard `60px` version
+  - retina `120px` version
+  - transparent-background recommendation
 
-5. QA before delivery
-- Verify the monogram matches your uploaded reference, not AAC
-- Verify font/style matches AAC wordmark rules
-- Verify spacing feels like AAC without altering the DCMLS symbol
-- Verify no unintended color treatment on `MLS`
+Scope
+- Artifact-only
+- No code changes unless inspection reveals the export source itself still depends on a legacy asset path; if so, I’ll isolate the generator from repo fallbacks rather than altering app branding
 
-Scope for this pass:
-- Artifact correction only
-- No repo branding swaps
-- No additional logo cleanup until the corrected DCMLS lockup is visually approved
+Expected output set
+- AAC transparent PNG `60px`
+- AAC transparent PNG `120px`
+- DCMLS transparent PNG `60px`
+- DCMLS transparent PNG `120px`
+- Matching AAC/DCMLS transparent SVG masters
+- One stacked QA sample proving parity
+- ZIP package with README
