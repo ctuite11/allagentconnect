@@ -1,8 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { BuyerStatusBadge, getBuyerStatus, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
   ArrowLeft, Home, Clock, Eye
@@ -73,7 +75,31 @@ export default function BuyerAccount() {
 
   const buyerOnPlatform = !!client?.agent_user_id;
 
-  // Open general buyer conversation
+  // Resolve unified buyer status (shared with My Buyers)
+  const [buyerStatus, setBuyerStatus] = useState<BuyerStatus>("invite_pending");
+  useEffect(() => {
+    if (!client?.id || !client?.agent_id) return;
+    let cancelled = false;
+    (async () => {
+      const { data: rel } = await supabase
+        .from("client_agent_relationships")
+        .select("status,ended_at")
+        .eq("agent_id", client.agent_id)
+        .or(`crm_client_id.eq.${client.id},client_id.eq.${client.id}`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      setBuyerStatus(
+        getBuyerStatus({
+          agent_user_id: client.agent_user_id,
+          relationship_status: rel?.status,
+          relationship_ended_at: rel?.ended_at,
+        }),
+      );
+    })();
+    return () => { cancelled = true; };
+  }, [client?.id, client?.agent_id, client?.agent_user_id]);
   const handleGeneralMessage = async () => {
     if (!user?.id || !client?.agent_user_id) return;
     setMessagingBusy(true);
@@ -160,21 +186,7 @@ export default function BuyerAccount() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-semibold text-foreground">{capitalizedName}</h1>
-              <span
-                className={
-                  buyerOnPlatform
-                    ? "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200"
-                }
-              >
-                <span
-                  className={
-                    "w-1.5 h-1.5 rounded-full " +
-                    (buyerOnPlatform ? "bg-emerald-500" : "bg-amber-500")
-                  }
-                />
-                {buyerOnPlatform ? "Active" : "Invite Pending"}
-              </span>
+              <BuyerStatusBadge status={buyerStatus} />
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
             {client.phone && (
