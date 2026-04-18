@@ -147,7 +147,7 @@ export default function BuyersList() {
   ];
 
   return (
-    <PageShell className="bg-secondary/40">
+    <PageShell>
       <PageHeader
         title="Your Buyers"
         subtitle="Select a buyer to manage their hot sheets, favorites, and activity."
@@ -202,10 +202,10 @@ export default function BuyersList() {
           {visible.map((b) => (
             <Card
               key={b.clientId}
-              className="cursor-pointer border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/20 hover:shadow-sm transition-all"
+              className="cursor-pointer border border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm transition-all duration-180"
               onClick={() => navigate(`/success-hub/buyers/${b.clientId}`)}
             >
-              <CardContent className="flex items-center justify-between p-5">
+              <CardContent className="flex items-center justify-between px-6 py-5">
                 <div className="min-w-0">
                   <p className="font-medium text-sm text-slate-900">{b.name}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{b.email}</p>
