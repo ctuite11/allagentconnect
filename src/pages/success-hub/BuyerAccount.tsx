@@ -75,7 +75,31 @@ export default function BuyerAccount() {
 
   const buyerOnPlatform = !!client?.agent_user_id;
 
-  // Open general buyer conversation
+  // Resolve unified buyer status (shared with My Buyers)
+  const [buyerStatus, setBuyerStatus] = useState<BuyerStatus>("invite_pending");
+  useEffect(() => {
+    if (!client?.id || !client?.agent_id) return;
+    let cancelled = false;
+    (async () => {
+      const { data: rel } = await supabase
+        .from("client_agent_relationships")
+        .select("status,ended_at")
+        .eq("agent_id", client.agent_id)
+        .or(`crm_client_id.eq.${client.id},client_id.eq.${client.id}`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      setBuyerStatus(
+        getBuyerStatus({
+          agent_user_id: client.agent_user_id,
+          relationship_status: rel?.status,
+          relationship_ended_at: rel?.ended_at,
+        }),
+      );
+    })();
+    return () => { cancelled = true; };
+  }, [client?.id, client?.agent_id, client?.agent_user_id]);
   const handleGeneralMessage = async () => {
     if (!user?.id || !client?.agent_user_id) return;
     setMessagingBusy(true);
