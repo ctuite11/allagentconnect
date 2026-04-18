@@ -64,7 +64,7 @@ export default function BuyerAccount() {
     useBuyerDashboard(buyerId);
   const [createHsOpen, setCreateHsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [statusOpen, setStatusOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hotsheets");
   const [messagingBusy, setMessagingBusy] = useState(false);
 
@@ -77,31 +77,11 @@ export default function BuyerAccount() {
 
   const buyerOnPlatform = !!client?.agent_user_id;
 
-  // Resolve unified buyer status (shared with My Buyers)
-  const [buyerStatus, setBuyerStatus] = useState<BuyerStatus>("invite_pending");
+  // System-derived only: pending_invite | active
+  const [buyerStatus, setBuyerStatus] = useState<BuyerStatus>("pending_invite");
   useEffect(() => {
-    if (!client?.id || !client?.agent_id) return;
-    let cancelled = false;
-    (async () => {
-      const { data: rel } = await supabase
-        .from("client_agent_relationships")
-        .select("status,ended_at")
-        .eq("agent_id", client.agent_id)
-        .or(`crm_client_id.eq.${client.id},client_id.eq.${client.id}`)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled) return;
-      setBuyerStatus(
-        getBuyerStatus({
-          agent_user_id: client.agent_user_id,
-          relationship_status: rel?.status,
-          relationship_ended_at: rel?.ended_at,
-        }),
-      );
-    })();
-    return () => { cancelled = true; };
-  }, [client?.id, client?.agent_id, client?.agent_user_id]);
+    setBuyerStatus(getBuyerStatus({ agent_user_id: client?.agent_user_id }));
+  }, [client?.agent_user_id]);
   const handleGeneralMessage = async () => {
     if (!user?.id || !client?.agent_user_id) return;
     setMessagingBusy(true);
@@ -210,10 +190,14 @@ export default function BuyerAccount() {
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setStatusOpen(true)}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Update Status
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
+            onClick={() => setRemoveOpen(true)}
+          >
+            <UserMinus className="h-3.5 w-3.5 mr-1.5" /> Remove as Buyer Client
           </Button>
-          {buyerStatus === "archived" ? (
             <Button
               variant="outline"
               size="sm"
