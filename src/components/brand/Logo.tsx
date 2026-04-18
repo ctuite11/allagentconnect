@@ -1,5 +1,5 @@
 import React from "react";
-import aacLogoMaster from "@/assets/aac-logo-master.svg";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 interface LogoProps {
   variant?: "primary" | "reversed" | "icon" | "email";
@@ -18,29 +18,27 @@ const sizeClasses = {
   "5xl": "h-28",
 };
 
-// Primary colors - LOGO ASSET COLORS
-const SLATE_900 = "#0F172A";
+// Primary brand colors
 const ACC_BLUE = "#0E56F5"; // Royal Blue - Brand primary
-const WHITE = "#FFFFFF";
-const CONNECT_GREEN = "#16A34A"; // Wordmark "Connect" color - refined green
+const CONNECT_GREEN = "#16A34A"; // Wordmark "Connect" color
 
-export const Logo: React.FC<LogoProps> = ({ 
-  variant = "primary", 
+export const Logo: React.FC<LogoProps> = ({
+  variant = "primary",
   className = "",
-  size = "md"
+  size = "md",
 }) => {
-  const isReversed = variant === "reversed";
   const isIcon = variant === "icon";
-  const primaryColor = isReversed ? WHITE : SLATE_900;
-  const accentColor = ACC_BLUE; // Logo uses brand Royal Blue
 
   if (isIcon) {
-    // Icon-only mark - AAC house monogram (SVG with locked colors)
+    // Icon-only mark — APPROVED command-style AAC monogram (canonical)
+    // The legacy house-mark has been deprecated and archived.
     return (
-      <img
-        src={aacLogoMaster}
-        alt="All Agent Connect"
+      <AACMonogram
         className={`${sizeClasses[size]} w-auto ${className}`}
+        // AACMonogram uses currentColor; wrap with brand color
+        // eslint-disable-next-line react/forbid-dom-props
+        // @ts-expect-error style allowed at runtime
+        style={{ color: ACC_BLUE }}
       />
     );
   }
@@ -54,7 +52,6 @@ export const Logo: React.FC<LogoProps> = ({
       className={`${sizeClasses[size]} w-auto ${className}`}
       aria-label="All Agent Connect"
     >
-      {/* Wordmark - "All Agent Connect" */}
       <text
         x="0"
         y="32"
@@ -63,7 +60,7 @@ export const Logo: React.FC<LogoProps> = ({
         fontWeight="600"
         letterSpacing="-0.01em"
       >
-        <tspan fill={accentColor}>All Agent </tspan>
+        <tspan fill={ACC_BLUE}>All Agent </tspan>
         <tspan fill={CONNECT_GREEN}>Connect</tspan>
       </text>
     </svg>
@@ -72,19 +69,19 @@ export const Logo: React.FC<LogoProps> = ({
 
 // Email-safe version using inline styles (no external fonts required) - text only
 export const LogoEmailSafe: React.FC<{ reversed?: boolean }> = ({ reversed = false }) => {
-  const accentColor = ACC_BLUE; // Logo uses brand Royal Blue
-  
   return (
-    <p style={{ 
-      margin: 0,
-      fontFamily: 'Arial, Helvetica, sans-serif',
-      fontSize: '20px',
-      fontWeight: 700,
-      letterSpacing: '-0.01em'
-    }}>
-      <span style={{ color: accentColor }}>All </span>
-      <span style={{ color: accentColor }}>Agent </span>
-      <span style={{ color: '#16A34A' }}>Connect</span>
+    <p
+      style={{
+        margin: 0,
+        fontFamily: "Arial, Helvetica, sans-serif",
+        fontSize: "20px",
+        fontWeight: 700,
+        letterSpacing: "-0.01em",
+      }}
+    >
+      <span style={{ color: ACC_BLUE }}>All </span>
+      <span style={{ color: ACC_BLUE }}>Agent </span>
+      <span style={{ color: "#16A34A" }}>Connect</span>
     </p>
   );
 };
