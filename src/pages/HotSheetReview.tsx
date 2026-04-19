@@ -964,7 +964,7 @@ if (comments && comments.length > 0) {
           </Card>
 
           {/* Helper text — pre-send state */}
-          {!invitesSent && (
+          {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) && (
             <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
               <p className="text-sm text-zinc-700">
                 You haven't shared any listings yet. Select listings below to send your first batch.
@@ -1014,7 +1014,7 @@ if (comments && comments.length > 0) {
                   <SelectItem value="price-low">Price: Low to High</SelectItem>
                 </SelectContent>
               </Select>
-              {!invitesSent && unacceptedCount > 0 ? (
+              {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                 <Button
                   onClick={() => {
                     if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
@@ -1026,7 +1026,11 @@ if (comments && comments.length > 0) {
                   disabled={sending || clientCount === 0}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  {sending ? "Sending…" : "Send Listings & Invite"}
+                  {sending
+                    ? "Sending…"
+                    : unacceptedCount > 0
+                    ? "Send Listings & Invite"
+                    : "Send Listings"}
                 </Button>
               ) : !invitesSent && acceptedCount > 0 ? (
                 <DropdownMenu>
