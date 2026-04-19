@@ -119,7 +119,7 @@ export function BuyerCreatedNextStepDialog({
               disabled={sending}
               className="w-full text-slate-500 hover:text-slate-900 font-normal"
             >
-              Do this later
+              Do This Later
             </Button>
           </div>
         </div>
