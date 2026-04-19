@@ -1,31 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-// Navigation removed - rendered globally in App.tsx
-import Footer from "@/components/Footer";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Check, ShieldCheck, Heart, Flame, MessageSquare, Eye } from "lucide-react";
 import { setPrimaryAgentId } from "@/utils/agentTracking";
 import { validatePassword } from "@/lib/passwordPolicy";
-import { PasswordChecklist } from "@/components/PasswordChecklist";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 const ClientInvitationSetup = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   const invitationToken = searchParams.get("invitation_token") || "";
   const initialEmail = searchParams.get("email") || "";
   const agentId = searchParams.get("agent_id") || "";
   const clientId = searchParams.get("client_id") || "";
-  
+  const initialFirstName = searchParams.get("first_name") || "";
+  const initialLastName = searchParams.get("last_name") || "";
+
   const [phase, setPhase] = useState<"form" | "success">("form");
   const [email, setEmail] = useState(initialEmail);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState(initialFirstName);
+  const [lastName, setLastName] = useState(initialLastName);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,8 +32,8 @@ const ClientInvitationSetup = () => {
   const [tokenValid, setTokenValid] = useState(false);
   const [agentFirstName, setAgentFirstName] = useState<string>("");
   const isEmailLocked = !!initialEmail;
+  const hasNameFromInvite = !!(initialFirstName && initialLastName);
 
-  // Validate token and fetch agent info on mount
   useEffect(() => {
     const validateToken = async () => {
       if (!invitationToken) {
@@ -42,7 +41,6 @@ const ClientInvitationSetup = () => {
         setIsValidatingToken(false);
         return;
       }
-
       try {
         const { data, error } = await supabase
           .from("share_tokens")
@@ -58,18 +56,13 @@ const ClientInvitationSetup = () => {
           setTokenValid(false);
         } else {
           setTokenValid(true);
-          
-          // Fetch agent info
           if (agentId) {
             const { data: agentData } = await supabase
               .from("agent_profiles")
               .select("first_name")
               .eq("id", agentId)
               .maybeSingle();
-            
-            if (agentData) {
-              setAgentFirstName(agentData.first_name);
-            }
+            if (agentData) setAgentFirstName(agentData.first_name);
           }
         }
       } catch (error) {
@@ -80,37 +73,46 @@ const ClientInvitationSetup = () => {
         setIsValidatingToken(false);
       }
     };
-
     validateToken();
   }, [invitationToken, agentId]);
 
+  const passwordResults = useMemo(() => validatePassword(password).results, [password]);
+  const compactRules = useMemo(() => {
+    // Map full rules → compact labels
+    const map: Record<string, string> = {
+      length: "8+ characters",
+      uppercase: "Uppercase",
+      lowercase: "Lowercase",
+      number: "Number",
+      symbol: "Symbol",
+    };
+    return passwordResults.map((r) => ({ ...r, short: map[r.id] || r.label }));
+  }, [passwordResults]);
+
+  const passwordsMatch =
+    confirmPassword.length > 0 && password === confirmPassword;
+
   const handleActivation = async () => {
-    // Validation
     if (!email || !email.trim()) {
       toast.error("Please enter your email to continue.");
       return;
     }
-
     if (!firstName.trim() || !lastName.trim()) {
       toast.error("Please enter your first and last name.");
       return;
     }
-
     const { allPass } = validatePassword(password);
     if (!allPass) {
       toast.error("Password does not meet all requirements");
       return;
     }
-
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      // Check if email already exists
       const { data: existingUser } = await supabase
         .from("profiles")
         .select("id")
@@ -124,7 +126,6 @@ const ClientInvitationSetup = () => {
         return;
       }
 
-      // Create the account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -132,15 +133,9 @@ const ClientInvitationSetup = () => {
           emailRedirectTo: `${window.location.origin}/client-hot-sheet/${invitationToken}`,
         },
       });
-
       if (signUpError) throw signUpError;
+      if (!authData.user) throw new Error("Account creation failed");
 
-      if (!authData.user) {
-        throw new Error("Account creation failed");
-      }
-
-      // Persist first/last name to profiles — update-first, fallback insert
-      // Do NOT include email; the auth trigger or existing row owns that field.
       const userId = authData.user.id;
       const nameFields = { first_name: firstName.trim(), last_name: lastName.trim() };
 
@@ -149,7 +144,6 @@ const ClientInvitationSetup = () => {
         .update(nameFields)
         .eq("id", userId);
 
-      // If no row existed yet (trigger hasn't fired), insert minimally
       if (!updateError && count === 0) {
         const { error: insertError } = await supabase
           .from("profiles")
@@ -159,33 +153,19 @@ const ClientInvitationSetup = () => {
         throw updateError;
       }
 
-      // Assign buyer role
       const { error: roleError } = await supabase
         .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: "buyer",
-        });
+        .insert({ user_id: authData.user.id, role: "buyer" });
+      if (roleError) console.error("Error assigning buyer role:", roleError);
 
-      if (roleError) {
-        console.error("Error assigning buyer role:", roleError);
-        // Don't fail the whole process if this fails
-      }
-
-      // Atomically end any existing active relationship and create a new active one
       if (agentId) {
         const { error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
           _agent_id: agentId,
           _crm_client_id: clientId || null,
         });
-
-        if (relationshipError) {
-          console.error("Error creating relationship:", relationshipError);
-          // Don't fail the whole process if this fails
-        }
+        if (relationshipError) console.error("Error creating relationship:", relationshipError);
       }
 
-      // Mark token as accepted
       const { error: tokenUpdateError } = await supabase
         .from("share_tokens")
         .update({
@@ -193,23 +173,12 @@ const ClientInvitationSetup = () => {
           accepted_by_user_id: authData.user.id,
         })
         .eq("token", invitationToken);
+      if (tokenUpdateError) console.error("Error updating token:", tokenUpdateError);
 
-      if (tokenUpdateError) {
-        console.error("Error updating token:", tokenUpdateError);
-        // Don't fail the whole process if this fails
-      }
-
-      // Sync tracking so banner + any downstream logic reflects the new agent
       if (agentId) setPrimaryAgentId(agentId);
 
-      // Show success phase
       setPhase("success");
-      
-      // Auto-redirect after 2 seconds
-      setTimeout(() => {
-        navigate(`/client-hot-sheet/${invitationToken}`);
-      }, 2000);
-
+      setTimeout(() => navigate(`/client-hot-sheet/${invitationToken}`), 2000);
     } catch (error: any) {
       console.error("Activation error:", error);
       toast.error(error.message || "Failed to activate account. Please try again.");
@@ -220,10 +189,10 @@ const ClientInvitationSetup = () => {
 
   if (isValidatingToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-muted-foreground">Validating invitation...</p>
+          <Loader2 className="h-7 w-7 animate-spin mx-auto text-zinc-400" />
+          <p className="text-sm text-zinc-500">Validating invitation…</p>
         </div>
       </div>
     );
@@ -231,180 +200,229 @@ const ClientInvitationSetup = () => {
 
   if (!tokenValid) {
     return (
-      <div className="min-h-screen pt-20">
-        <main className="container mx-auto px-4 py-16">
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader>
-              <CardTitle className="text-2xl text-destructive">Invalid Invitation</CardTitle>
-              <CardDescription>
-                This invitation link is invalid, has expired, or has already been used.
-                {agentFirstName ? ` Please contact ${agentFirstName} for a new invitation.` : " Please contact your agent for a new invitation."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate("/")}>Return Home</Button>
-            </CardContent>
-          </Card>
-        </main>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <AACMonogram className="w-10 h-10 mx-auto text-[#0E56F5]" />
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              Invitation Unavailable
+            </h1>
+            <p className="text-sm text-zinc-500">
+              This invitation link is invalid, has expired, or has already been used.
+              {agentFirstName ? ` Please contact ${agentFirstName} for a new invitation.` : " Please contact your agent for a new invitation."}
+            </p>
+          </div>
+          <Button onClick={() => navigate("/")} variant="outline" className="rounded-xl">
+            Return Home
+          </Button>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background pt-20">
-      <main className="container mx-auto px-4 py-16">
-        <div className="max-w-2xl mx-auto">
-          {phase === "form" && (
-            <Card className="shadow-lg">
-              <CardHeader className="p-8">
-                <CardTitle className="text-2xl">Create Your Secure Login</CardTitle>
-                <CardDescription className="text-base pt-2">
-                  We've pre-loaded your account using {agentFirstName ? `${agentFirstName}'s` : "your agent's"} invitation.
-                  All you need to do now is create a password to activate your access.
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="p-8 pt-0">
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleActivation();
-                  }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      readOnly={isEmailLocked}
-                      className={isEmailLocked ? "bg-muted" : ""}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                    {isEmailLocked && (
-                      <p className="text-xs text-muted-foreground">
-                        Email provided by {agentFirstName || "your agent"}
-                      </p>
-                    )}
-                  </div>
+  if (phase === "success") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-emerald-50 p-4">
+              <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">You're In</h1>
+            <p className="text-sm text-zinc-500 max-w-sm mx-auto">
+              Your All Agent Connect account is now active. Redirecting you to your home search…
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate(`/client-hot-sheet/${invitationToken}`)}
+            className="h-11 px-6 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC]"
+          >
+            Continue to My Workspace
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
+  const benefits = [
+    { icon: Eye, label: "View curated listings" },
+    { icon: Heart, label: "Save favorite homes" },
+    { icon: Flame, label: "Receive Hot Sheets instantly" },
+    { icon: MessageSquare, label: "Private communication with your agent" },
+  ];
+
+  const inviterName = agentFirstName || "Your agent";
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Minimal top bar */}
+      <header className="border-b border-zinc-100">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-zinc-900">
+            <AACMonogram className="w-7 h-7 text-[#0E56F5]" />
+            <span className="text-[15px] font-semibold tracking-tight">All Agent Connect</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 text-[12px] text-zinc-500">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Secure invitation</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-6 py-12 lg:py-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          {/* Left — narrative + benefits */}
+          <div className="space-y-8 lg:pt-4">
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0E56F5]/8 text-[#0E56F5] px-3 py-1 text-[12px] font-medium">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Private invitation
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-[1.15]">
+                You've Been Invited to All Agent Connect
+              </h1>
+              <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
+                {inviterName} invited you to view listings, save favorites, receive Hot Sheets,
+                and communicate privately. Create your password to activate your account.
+              </p>
+            </div>
+
+            <ul className="space-y-3">
+              {benefits.map(({ icon: Icon, label }) => (
+                <li key={label} className="flex items-center gap-3 text-[14px] text-zinc-700">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-50 border border-zinc-100">
+                    <Icon className="w-4 h-4 text-zinc-600" />
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Right — activation card */}
+          <div className="lg:pl-4">
+            <div className="max-w-md mx-auto lg:mx-0 lg:ml-auto rounded-3xl border border-zinc-200 bg-white shadow-sm p-7 sm:p-8">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleActivation();
+                }}
+                className="space-y-5"
+              >
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-[13px] text-zinc-600">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    readOnly={isEmailLocked}
+                    className={isEmailLocked ? "h-11 rounded-xl bg-zinc-50 text-zinc-700" : "h-11 rounded-xl"}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {!hasNameFromInvite && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="firstName" className="text-[13px] text-zinc-600">First name</Label>
                       <Input
                         id="firstName"
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="First name"
+                        placeholder="First"
+                        className="h-11 rounded-xl"
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="lastName" className="text-[13px] text-zinc-600">Last name</Label>
                       <Input
                         id="lastName"
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Last name"
+                        placeholder="Last"
+                        className="h-11 rounded-xl"
                         required
                       />
                     </div>
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a secure password"
-                      required
-                    />
-                    <div className="mt-2">
-                      <PasswordChecklist password={password} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm your password"
-                      required
-                    />
-                    {confirmPassword.length > 0 && (
-                      <PasswordChecklist password={password} confirmPassword={confirmPassword} showMatch />
-                    )}
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Activating...
-                      </>
-                    ) : (
-                      "Activate My Account"
-                    )}
-                  </Button>
-
-                  <p className="mt-4 text-xs text-muted-foreground text-center">
-                    By clicking Activate My Account, you agree to All Agent Connect's{" "}
-                    <a href="/terms" className="underline">Terms of Use</a> and{" "}
-                    <a href="/privacy" className="underline">Privacy Policy</a> and consent to
-                    receive communications about your home search from {agentFirstName || "your agent"} and All
-                    Agent Connect. You can opt out at any time. Property information is deemed
-                    reliable but not guaranteed and is subject to change without notice.
-                  </p>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {phase === "success" && (
-            <Card className="shadow-lg text-center">
-              <CardContent className="p-10 space-y-6">
-                <div className="flex justify-center">
-                  <div className="rounded-full bg-muted p-4">
-                    <CheckCircle2 className="h-12 w-12 text-primary" />
+                <div className="space-y-1.5">
+                  <Label htmlFor="password" className="text-[13px] text-zinc-600">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Create a password"
+                    className="h-11 rounded-xl"
+                    required
+                  />
+                  {/* Compact inline password rules */}
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
+                    {compactRules.map((rule) => (
+                      <span
+                        key={rule.id}
+                        className={`inline-flex items-center gap-1 text-[11.5px] ${
+                          rule.valid ? "text-emerald-600" : "text-zinc-400"
+                        }`}
+                      >
+                        <Check className="w-3 h-3" strokeWidth={rule.valid ? 3 : 2} />
+                        {rule.short}
+                      </span>
+                    ))}
                   </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold">You're All Set</h2>
-                  <p className="text-base text-muted-foreground max-w-md mx-auto">
-                    Your All Agent Connect account is now active.
-                    Your personalized home search is ready whenever you are.
-                  </p>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirmPassword" className="text-[13px] text-zinc-600">Confirm password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm password"
+                    className="h-11 rounded-xl"
+                    required
+                  />
+                  {confirmPassword.length > 0 && (
+                    <p className={`text-[11.5px] pt-0.5 ${passwordsMatch ? "text-emerald-600" : "text-rose-500"}`}>
+                      {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                    </p>
+                  )}
                 </div>
 
                 <Button
-                  onClick={() => navigate(`/client-hot-sheet/${invitationToken}`)}
-                  size="lg"
-                  className="w-full max-w-xs mx-auto h-12"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-11 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC] text-white font-medium"
                 >
-                  View My Hot Sheet
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Activating…
+                    </>
+                  ) : (
+                    "Join All Agent Connect"
+                  )}
                 </Button>
-              </CardContent>
-            </Card>
-          )}
+
+                <p className="text-[11.5px] text-zinc-400 text-center leading-relaxed">
+                  By joining, you agree to our{" "}
+                  <a href="/terms" className="underline hover:text-zinc-600">Terms</a> and{" "}
+                  <a href="/privacy" className="underline hover:text-zinc-600">Privacy Policy</a>.
+                </p>
+              </form>
+            </div>
+          </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };
