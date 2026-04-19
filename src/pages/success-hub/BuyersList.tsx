@@ -301,7 +301,32 @@ export default function BuyersList() {
         open={showCreate}
         onOpenChange={setShowCreate}
         onSuccess={loadBuyers}
+        onCreated={(b) => setNextStepBuyer(b)}
       />
+
+      <BuyerCreatedNextStepDialog
+        buyer={nextStepBuyer}
+        onClose={() => setNextStepBuyer(null)}
+        onCreateHotSheet={(b) => setHotSheetForBuyer(b)}
+      />
+
+      {currentUserId && hotSheetForBuyer && (
+        <CreateHotSheetDialog
+          open={!!hotSheetForBuyer}
+          onOpenChange={(o) => { if (!o) setHotSheetForBuyer(null); }}
+          userId={currentUserId}
+          onSuccess={() => {
+            setHotSheetForBuyer(null);
+            loadBuyers();
+          }}
+          preSelectedClients={[{
+            id: hotSheetForBuyer.id,
+            first_name: hotSheetForBuyer.firstName,
+            last_name: hotSheetForBuyer.lastName,
+            email: hotSheetForBuyer.email,
+          }]}
+        />
+      )}
 
       <EditBuyerDialog
         open={!!editBuyer}
