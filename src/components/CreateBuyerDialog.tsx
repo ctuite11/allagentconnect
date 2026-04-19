@@ -14,10 +14,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
+interface CreatedBuyerPayload {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 interface CreateBuyerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (created?: CreatedBuyerPayload) => void;
 }
 
 export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyerDialogProps) {
@@ -90,9 +97,15 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
       if (relErr) failWithStep("insert client_agent_relationships", relErr);
 
       toast.success("Buyer created successfully.");
+      const createdPayload: CreatedBuyerPayload = {
+        id: client.id,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+      };
       resetForm();
       onOpenChange(false);
-      onSuccess();
+      onSuccess(createdPayload);
     } catch (err: any) {
       console.error("Error creating buyer:", {
         message: err?.message,
