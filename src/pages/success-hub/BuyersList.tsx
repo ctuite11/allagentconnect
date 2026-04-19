@@ -130,20 +130,20 @@ export default function BuyersList() {
         noindex
       />
 
-      <div className="max-w-6xl mx-auto pt-2 pb-12">
+      <div className="max-w-5xl mx-auto pt-2 pb-10">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-6">
+        <div className="mb-4 flex items-start justify-between gap-6">
           <div className="min-w-0">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-950">
               My Buyers
             </h1>
-            <p className="mt-1 text-sm text-slate-500 font-normal">
+            <p className="mt-1 text-base md:text-lg text-slate-500 font-normal">
               Manage buyer hot sheets, favorites, invites, and activity.
             </p>
           </div>
           <Button
             onClick={() => setShowCreate(true)}
-            className="h-9 rounded-full px-4 shrink-0"
+            className="h-10 rounded-full px-4 shrink-0"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             New Buyer
@@ -151,7 +151,7 @@ export default function BuyersList() {
         </div>
 
         {/* Filter pills */}
-        <div className="flex flex-wrap gap-2 mb-5">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {filterPills.map((pill) => {
             const active = filter === pill.key;
             return (
@@ -160,7 +160,7 @@ export default function BuyersList() {
                 type="button"
                 onClick={() => setFilter(pill.key)}
                 className={cn(
-                  "h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
+                  "h-10 px-3 rounded-full text-sm font-medium transition-colors",
                   active
                     ? "bg-slate-950 text-white"
                     : "bg-white border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50"
@@ -184,7 +184,7 @@ export default function BuyersList() {
             onCreate={() => setShowCreate(true)}
           />
         ) : (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2.5">
             {filtered.map((b) => (
               <BuyerCard
                 key={b.clientId}
@@ -219,24 +219,24 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         }
       }}
       className={cn(
-        "group cursor-pointer rounded-2xl border border-slate-200 bg-white",
-        "shadow-sm hover:shadow-md hover:-translate-y-px",
-        "transition-all duration-200",
-        "px-7 py-6 flex items-center justify-between gap-6"
+        "group cursor-pointer rounded-xl border border-slate-200 bg-white",
+        "shadow-sm hover:shadow-md hover:border-slate-300",
+        "transition-all duration-150",
+        "px-5 py-4 flex items-center justify-between gap-4"
       )}
     >
       <div className="min-w-0">
-        <p className="text-2xl font-semibold text-slate-950 truncate">{buyer.name}</p>
-        <p className="mt-1.5 text-lg text-slate-500 truncate">{buyer.email}</p>
+        <p className="text-xl font-semibold text-slate-950 truncate">{buyer.name}</p>
+        <p className="mt-0.5 text-base text-slate-500 truncate">{buyer.email}</p>
         {buyer.phone && (
-          <p className="text-base text-slate-400 truncate">{buyer.phone}</p>
+          <p className="text-sm text-slate-400 truncate">{buyer.phone}</p>
         )}
       </div>
 
-      <div className="flex items-center gap-5 shrink-0">
+      <div className="flex items-center gap-3 shrink-0">
         <span
           className={cn(
-            "inline-flex items-center h-9 px-4 rounded-full text-sm font-medium",
+            "inline-flex items-center h-7 px-2.5 rounded-full text-xs font-medium",
             isPending
               ? "bg-amber-50 text-amber-700 border border-amber-200"
               : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -244,10 +244,10 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         >
           {isPending ? "Pending Invite" : "Active"}
         </span>
-        <span className="hidden sm:inline text-base font-medium text-slate-500 whitespace-nowrap">
+        <span className="hidden sm:inline text-sm font-medium text-slate-500 whitespace-nowrap">
           {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
         </span>
-        <ChevronRight className="h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
       </div>
     </div>
   );
