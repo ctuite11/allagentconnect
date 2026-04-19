@@ -6,10 +6,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
-import { toast } from "sonner";
 import { useState } from "react";
-import { Loader2, Mail, ListPlus, ArrowRight } from "lucide-react";
+import { Mail, ListPlus, ArrowRight } from "lucide-react";
+import { ReviewBuyerInviteDialog } from "./ReviewBuyerInviteDialog";
 
 export interface CreatedBuyer {
   id: string;
