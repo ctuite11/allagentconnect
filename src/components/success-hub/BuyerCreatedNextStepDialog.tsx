@@ -68,48 +68,34 @@ export function BuyerCreatedNextStepDialog({
         </DialogHeader>
 
         <div className="space-y-2 pt-2">
-          <button
-            onClick={handleInviteNow}
-            disabled={sending}
-            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-zinc-900 text-white font-medium text-[14px] hover:bg-zinc-800 transition-colors disabled:opacity-60"
-          >
-            <span className="inline-flex items-center gap-2.5">
-              {sending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Mail className="w-4 h-4" />
-              )}
-              Invite {buyer.firstName || "buyer"} to join now
-            </span>
-            <ArrowRight className="w-4 h-4 opacity-80" />
-          </button>
-
-          <button
-            onClick={handleInviteNow}
-            disabled={sending}
-            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-zinc-900 text-white font-medium text-[14px] hover:bg-zinc-800 transition-colors disabled:opacity-60"
-          >
-            <span className="inline-flex items-center gap-2.5">
-              {sending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Mail className="w-4 h-4" />
-              )}
-              Invite Client Now
-            </span>
-            <ArrowRight className="w-4 h-4 opacity-80" />
-          </button>
-
+          {/* Primary — best next action */}
           <button
             onClick={handleCreateHotSheet}
             disabled={sending}
-            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium text-[14px] hover:bg-slate-50 hover:border-slate-300 transition-colors disabled:opacity-60"
+            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-zinc-900 text-white font-medium text-[14px] hover:bg-zinc-800 transition-colors disabled:opacity-60"
           >
             <span className="inline-flex items-center gap-2.5">
-              <ListPlus className="w-4 h-4 text-slate-500" />
+              <ListPlus className="w-4 h-4" />
               Send Invite with Hot Sheet
             </span>
-            <ArrowRight className="w-4 h-4 text-slate-400" />
+            <ArrowRight className="w-4 h-4 opacity-80" />
+          </button>
+
+          {/* Secondary */}
+          <button
+            onClick={handleInviteNow}
+            disabled={sending}
+            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-white border border-zinc-200 text-zinc-900 font-medium text-[14px] hover:bg-zinc-50 hover:border-zinc-300 transition-colors disabled:opacity-60"
+          >
+            <span className="inline-flex items-center gap-2.5">
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin text-zinc-500" />
+              ) : (
+                <Mail className="w-4 h-4 text-zinc-500" />
+              )}
+              Invite Client Now
+            </span>
+            <ArrowRight className="w-4 h-4 text-zinc-400" />
           </button>
 
           <div className="pt-1">
