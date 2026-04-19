@@ -85,13 +85,29 @@ export function BuyerCreatedNextStepDialog({
           </button>
 
           <button
+            onClick={handleInviteNow}
+            disabled={sending}
+            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-zinc-900 text-white font-medium text-[14px] hover:bg-zinc-800 transition-colors disabled:opacity-60"
+          >
+            <span className="inline-flex items-center gap-2.5">
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Mail className="w-4 h-4" />
+              )}
+              Invite Client Now
+            </span>
+            <ArrowRight className="w-4 h-4 opacity-80" />
+          </button>
+
+          <button
             onClick={handleCreateHotSheet}
             disabled={sending}
             className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium text-[14px] hover:bg-slate-50 hover:border-slate-300 transition-colors disabled:opacity-60"
           >
             <span className="inline-flex items-center gap-2.5">
               <ListPlus className="w-4 h-4 text-slate-500" />
-              Create a Hot Sheet
+              Send Invite with Hot Sheet
             </span>
             <ArrowRight className="w-4 h-4 text-slate-400" />
           </button>
@@ -103,7 +119,7 @@ export function BuyerCreatedNextStepDialog({
               disabled={sending}
               className="w-full text-slate-500 hover:text-slate-900 font-normal"
             >
-              Do this later
+              Do This Later
             </Button>
           </div>
         </div>
