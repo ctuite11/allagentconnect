@@ -30,6 +30,7 @@ const HIDE_NAV_ROUTES = [
   "/agent-match",          // Seller match funnel
   "/pending-verification", // Pending verification
   "/homepage-v2",          // HomepageV2 has its own nav
+  "/client-invite",        // Buyer invite acceptance — focused conversion page
 ];
 
 /**
