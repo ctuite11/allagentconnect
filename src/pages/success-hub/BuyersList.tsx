@@ -1,27 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
-import { PageHeader } from "@/components/ui/page-header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { Seo } from "@/components/Seo";
+import { cn } from "@/lib/utils";
 
 interface BuyerRow {
   clientId: string;
   name: string;
   email: string;
+  phone?: string | null;
   status: string;
   hotSheetCount: number;
 }
+
+type FilterKey = "all" | "active" | "pending";
 
 export default function BuyersList() {
   const navigate = useNavigate();
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [filter, setFilter] = useState<FilterKey>("all");
 
   const loadBuyers = async () => {
     setLoading(true);
@@ -29,7 +32,6 @@ export default function BuyersList() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get active + pending relationships for this agent
       const { data: relationships, error: relErr } = await supabase
         .from("client_agent_relationships")
         .select("client_id,crm_client_id,status,created_at")
@@ -47,18 +49,16 @@ export default function BuyersList() {
         return;
       }
 
-      // Collect both client_id (auth user) and crm_client_id (CRM contact) for lookups
       const authClientIds = relationships.map((r) => r.client_id).filter(Boolean);
       const crmClientIds = (relationships as any[])
         .map((r) => r.crm_client_id)
         .filter(Boolean) as string[];
       const allCrmIds = [...new Set([...authClientIds, ...crmClientIds])];
 
-      // Fetch client details + hot sheet counts in parallel
       const [clientsRes, hscRes] = await Promise.all([
         supabase
           .from("clients")
-          .select("id,first_name,last_name,email")
+          .select("id,first_name,last_name,email,phone")
           .in("id", allCrmIds),
         supabase
           .from("hot_sheet_clients")
@@ -77,7 +77,6 @@ export default function BuyersList() {
         hsCountMap.set(cid, (hsCountMap.get(cid) ?? 0) + 1);
       }
 
-      // Build rows: prefer crm_client_id for client lookup, fall back to client_id
       const rows: BuyerRow[] = relationships.map((r: any) => {
         const crmId = r.crm_client_id || r.client_id;
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
@@ -87,6 +86,7 @@ export default function BuyersList() {
           clientId: c.id,
           name,
           email: c?.email ?? "",
+          phone: c?.phone ?? null,
           status: r.status,
           hotSheetCount: hsCountMap.get(c.id) ?? 0,
         };
@@ -104,58 +104,97 @@ export default function BuyersList() {
     loadBuyers();
   }, []);
 
+  const counts = useMemo(() => ({
+    all: buyers.length,
+    active: buyers.filter((b) => b.status === "active").length,
+    pending: buyers.filter((b) => b.status === "pending").length,
+  }), [buyers]);
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return buyers;
+    return buyers.filter((b) => b.status === filter);
+  }, [buyers, filter]);
+
+  const filterPills: { key: FilterKey; label: string }[] = [
+    { key: "all", label: `All${counts.all ? ` · ${counts.all}` : ""}` },
+    { key: "active", label: `Active${counts.active ? ` · ${counts.active}` : ""}` },
+    { key: "pending", label: `Pending Invite${counts.pending ? ` · ${counts.pending}` : ""}` },
+  ];
+
   return (
-    <PageShell className="bg-secondary/40">
+    <PageShell className="bg-white">
       <Seo
         title="Buyers | All Agent Connect"
         description="View and manage buyer accounts, activity, and connected workflows inside All Agent Connect."
         canonical="https://allagentconnect.com/success-hub/buyers"
         noindex
       />
-      <PageHeader
-        title="Your Buyers"
-        subtitle="Select a buyer to manage their hot sheets, favorites, and activity."
-        actions={
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <UserPlus className="h-4 w-4 mr-1.5" />
+
+      <div className="max-w-6xl mx-auto pt-10 md:pt-14 pb-20">
+        {/* Header */}
+        <div className="mb-10 flex items-start justify-between gap-6">
+          <div className="min-w-0">
+            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-slate-950">
+              My Buyers
+            </h1>
+            <p className="mt-3 text-xl md:text-2xl text-slate-500 font-normal">
+              Manage buyer hot sheets, favorites, invites, and activity.
+            </p>
+          </div>
+          <Button
+            onClick={() => setShowCreate(true)}
+            className="h-11 rounded-full px-5 shrink-0"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
             New Buyer
           </Button>
-        }
-      />
+        </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        {/* Filter pills */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {filterPills.map((pill) => {
+            const active = filter === pill.key;
+            return (
+              <button
+                key={pill.key}
+                type="button"
+                onClick={() => setFilter(pill.key)}
+                className={cn(
+                  "h-12 px-5 rounded-full text-base font-medium transition-colors",
+                  active
+                    ? "bg-slate-950 text-white"
+                    : "bg-white border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                )}
+              >
+                {pill.label}
+              </button>
+            );
+          })}
         </div>
-      ) : buyers.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No buyers yet.</p>
-      ) : (
-        <div className="space-y-2">
-          {buyers.map((b) => (
-            <Card
-              key={b.clientId}
-              className="cursor-pointer border border-border bg-card hover:border-muted-foreground/30 transition-colors"
-              onClick={() => navigate(`/success-hub/buyers/${b.clientId}`)}
-            >
-              <CardContent className="flex items-center justify-between p-5">
-                <div className="min-w-0">
-                  <p className="font-medium text-sm text-foreground">{b.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{b.email}</p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className={`text-sm font-medium ${b.status === "pending" ? "text-amber-600" : "text-emerald-600"}`}>
-                    {b.status === "pending" ? "Pending" : "Active"}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                    {b.hotSheetCount} hot sheet{b.hotSheetCount !== 1 ? "s" : ""}
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+
+        {/* List */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            hasAny={buyers.length > 0}
+            filter={filter}
+            onCreate={() => setShowCreate(true)}
+          />
+        ) : (
+          <div className="flex flex-col gap-5">
+            {filtered.map((b) => (
+              <BuyerCard
+                key={b.clientId}
+                buyer={b}
+                onOpen={() => navigate(`/success-hub/buyers/${b.clientId}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <CreateBuyerDialog
         open={showCreate}
@@ -163,5 +202,89 @@ export default function BuyersList() {
         onSuccess={loadBuyers}
       />
     </PageShell>
+  );
+}
+
+function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
+  const isPending = buyer.status === "pending";
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className={cn(
+        "group cursor-pointer rounded-2xl border border-slate-200 bg-white",
+        "shadow-sm hover:shadow-md hover:-translate-y-px",
+        "transition-all duration-200",
+        "px-7 py-6 flex items-center justify-between gap-6"
+      )}
+    >
+      <div className="min-w-0">
+        <p className="text-2xl font-semibold text-slate-950 truncate">{buyer.name}</p>
+        <p className="mt-1.5 text-lg text-slate-500 truncate">{buyer.email}</p>
+        {buyer.phone && (
+          <p className="text-base text-slate-400 truncate">{buyer.phone}</p>
+        )}
+      </div>
+
+      <div className="flex items-center gap-5 shrink-0">
+        <span
+          className={cn(
+            "inline-flex items-center h-9 px-4 rounded-full text-sm font-medium",
+            isPending
+              ? "bg-amber-50 text-amber-700 border border-amber-200"
+              : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+          )}
+        >
+          {isPending ? "Pending Invite" : "Active"}
+        </span>
+        <span className="hidden sm:inline text-base font-medium text-slate-500 whitespace-nowrap">
+          {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
+        </span>
+        <ChevronRight className="h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({
+  hasAny,
+  filter,
+  onCreate,
+}: {
+  hasAny: boolean;
+  filter: FilterKey;
+  onCreate: () => void;
+}) {
+  if (hasAny) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white px-8 py-14 text-center">
+        <p className="text-xl font-semibold text-slate-950">
+          No buyers in this view
+        </p>
+        <p className="mt-2 text-base text-slate-500">
+          Try a different filter to see {filter === "active" ? "pending" : "active"} buyers.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-8 py-16 text-center max-w-xl mx-auto">
+      <h2 className="text-2xl font-semibold text-slate-950">No buyers yet</h2>
+      <p className="mt-3 text-base text-slate-500">
+        Create your first buyer to start building hot sheets and tracking activity.
+      </p>
+      <Button onClick={onCreate} className="mt-6 h-11 rounded-full px-6">
+        <UserPlus className="h-4 w-4 mr-2" />
+        New Buyer
+      </Button>
+    </div>
   );
 }
