@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
+import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,12 +56,16 @@ export default function BuyersList() {
   const [filter, setFilter] = useState<FilterKey>("all");
   const [editBuyer, setEditBuyer] = useState<BuyerRow | null>(null);
   const [removeBuyer, setRemoveBuyer] = useState<BuyerRow | null>(null);
+  const [nextStepBuyer, setNextStepBuyer] = useState<CreatedBuyer | null>(null);
+  const [hotSheetForBuyer, setHotSheetForBuyer] = useState<CreatedBuyer | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const loadBuyers = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUserId(user.id);
 
       const { data: relationships, error: relErr } = await supabase
         .from("client_agent_relationships")
@@ -117,7 +123,12 @@ export default function BuyersList() {
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
         if (!c) return null;
         const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
-        const status = getBuyerStatus({ agent_user_id: c.agent_user_id });
+        // Authoritative: derive from the relationship row, not the CRM contact flag.
+        const status = getBuyerStatus({
+          relationship_client_id: r.client_id,
+          relationship_status: r.status,
+          relationship_ended_at: r.ended_at,
+        });
         return {
           clientId: c.id,
           name,
@@ -290,7 +301,32 @@ export default function BuyersList() {
         open={showCreate}
         onOpenChange={setShowCreate}
         onSuccess={loadBuyers}
+        onCreated={(b) => setNextStepBuyer(b)}
       />
+
+      <BuyerCreatedNextStepDialog
+        buyer={nextStepBuyer}
+        onClose={() => setNextStepBuyer(null)}
+        onCreateHotSheet={(b) => setHotSheetForBuyer(b)}
+      />
+
+      {currentUserId && hotSheetForBuyer && (
+        <CreateHotSheetDialog
+          open={!!hotSheetForBuyer}
+          onOpenChange={(o) => { if (!o) setHotSheetForBuyer(null); }}
+          userId={currentUserId}
+          onSuccess={() => {
+            setHotSheetForBuyer(null);
+            loadBuyers();
+          }}
+          preSelectedClients={[{
+            id: hotSheetForBuyer.id,
+            first_name: hotSheetForBuyer.firstName,
+            last_name: hotSheetForBuyer.lastName,
+            email: hotSheetForBuyer.email,
+          }]}
+        />
+      )}
 
       <EditBuyerDialog
         open={!!editBuyer}
