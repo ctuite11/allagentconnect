@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, ArrowRight } from "lucide-react";
 
 export interface ReviewInviteBuyer {
+  /** CRM clients.id — required for the share_token payload */
   id: string;
   firstName: string;
   lastName: string;
@@ -97,25 +97,103 @@ export function ReviewBuyerInviteDialog({
 
     setSending(true);
     try {
-      await invokeEdgeFunction("send-buyer-workspace-invite", {
-        firstName: buyer.firstName,
-        lastName: buyer.lastName,
-        email: buyer.email,
+      // 1) Auth context — the agent must be signed in
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      if (!user) throw new Error("Your session has expired. Please sign in again.");
+
+      // 2) Create the share token (agent → client invite, no hot sheet yet)
+      const token = crypto.randomUUID();
+      const tokenPayload = {
+        type: "client_hotsheet_invite" as const,
+        client_id: buyer.id,
+        client_email: buyer.email.toLowerCase(),
+        suppress_initial_matches: true,
+        invite_only: true,
+      };
+
+      console.log("[ReviewBuyerInvite] creating share_token", {
+        agent_id: user.id,
+        payload: tokenPayload,
       });
+
+      const { data: tokenRow, error: tokenError } = await supabase
+        .from("share_tokens")
+        .insert({
+          token,
+          agent_id: user.id,
+          payload: tokenPayload,
+        })
+        .select("id, token")
+        .single();
+
+      if (tokenError || !tokenRow) {
+        console.error("[ReviewBuyerInvite] share_token insert failed", {
+          message: tokenError?.message,
+          details: (tokenError as any)?.details,
+          hint: (tokenError as any)?.hint,
+          code: (tokenError as any)?.code,
+        });
+        throw new Error(tokenError?.message || "Could not create invite token.");
+      }
+
+      // 3) Build the invite acceptance link the email CTA will point to
+      const hotSheetLink =
+        `${window.location.origin}/client-invite` +
+        `?invitation_token=${encodeURIComponent(tokenRow.token)}` +
+        `&email=${encodeURIComponent(buyer.email.toLowerCase())}` +
+        `&agent_id=${encodeURIComponent(user.id)}` +
+        `&client_id=${encodeURIComponent(buyer.id)}`;
+
+      const invitePayload = {
+        invitedEmail: buyer.email.toLowerCase(),
+        inviterName: agentName,
+        hotSheetName: "Your private buyer workspace",
+        hotSheetLink,
+        tokenId: tokenRow.id,
+        clientId: buyer.id,
+        mode: "invite_only" as const,
+        // Pass through agent-edited copy (function may use these in the future)
+        customSubject: subject,
+        customMessage: body,
+      };
+
+      console.log("[ReviewBuyerInvite] invoking send-hot-sheet-invite", invitePayload);
+
+      // 4) Send the invite email via the canonical agent→client function
+      const { data: sendData, error: sendError } = await supabase.functions.invoke(
+        "send-hot-sheet-invite",
+        { body: invitePayload },
+      );
+
+      if (sendError) {
+        // Surface every available diagnostic to the console
+        const ctx = (sendError as any).context;
+        let responseBody: unknown = null;
+        try {
+          responseBody = ctx?.body ? await ctx.body : null;
+        } catch {
+          /* ignore */
+        }
+        console.error("[ReviewBuyerInvite] send-hot-sheet-invite failed", {
+          message: sendError.message,
+          name: sendError.name,
+          status: ctx?.status ?? null,
+          statusText: ctx?.statusText ?? null,
+          responseBody,
+          sendData,
+        });
+        throw new Error(sendError.message || "Email send failed.");
+      }
+
+      console.log("[ReviewBuyerInvite] send success", sendData);
       toast.success(`Invite sent to ${fullName}.`);
       onSent?.();
       onClose();
     } catch (err: any) {
-      // Real error to console for debugging
       console.error("[ReviewBuyerInvite] send failed:", err);
-      // Friendly message to the user
-      const detail =
-        typeof err?.message === "string" &&
-        !err.message.includes("non-2xx")
-          ? ` (${err.message})`
-          : "";
       toast.error(
-        `Couldn't send the invite. Please review the email details and try again.${detail}`,
+        "Couldn't send the invite. Please try again or contact support if this continues.",
       );
     } finally {
       setSending(false);
