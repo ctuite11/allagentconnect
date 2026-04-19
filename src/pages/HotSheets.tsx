@@ -347,6 +347,12 @@ const HotSheets = ({
         <PageHeader
           title="Buyer HotSheets"
           subtitle="Collections of listings curated for each buyer or renter client."
+          actions={
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Client HotSheet
+            </Button>
+          }
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
           {[1, 2, 3].map((i) => (
