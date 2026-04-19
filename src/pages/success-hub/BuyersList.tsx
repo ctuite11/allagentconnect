@@ -130,20 +130,20 @@ export default function BuyersList() {
         noindex
       />
 
-      <div className="max-w-6xl mx-auto pt-10 md:pt-14 pb-20">
+      <div className="max-w-6xl mx-auto pt-2 pb-12">
         {/* Header */}
-        <div className="mb-10 flex items-start justify-between gap-6">
+        <div className="mb-6 flex items-start justify-between gap-6">
           <div className="min-w-0">
-            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-slate-950">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
               My Buyers
             </h1>
-            <p className="mt-3 text-xl md:text-2xl text-slate-500 font-normal">
+            <p className="mt-1 text-sm text-slate-500 font-normal">
               Manage buyer hot sheets, favorites, invites, and activity.
             </p>
           </div>
           <Button
             onClick={() => setShowCreate(true)}
-            className="h-11 rounded-full px-5 shrink-0"
+            className="h-9 rounded-full px-4 shrink-0"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             New Buyer
@@ -151,7 +151,7 @@ export default function BuyersList() {
         </div>
 
         {/* Filter pills */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-2 mb-5">
           {filterPills.map((pill) => {
             const active = filter === pill.key;
             return (
@@ -160,7 +160,7 @@ export default function BuyersList() {
                 type="button"
                 onClick={() => setFilter(pill.key)}
                 className={cn(
-                  "h-12 px-5 rounded-full text-base font-medium transition-colors",
+                  "h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
                   active
                     ? "bg-slate-950 text-white"
                     : "bg-white border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50"
@@ -264,11 +264,11 @@ function EmptyState({
 }) {
   if (hasAny) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white px-8 py-14 text-center">
-        <p className="text-xl font-semibold text-slate-950">
+      <div className="rounded-xl border border-slate-200 bg-white px-5 py-8 text-center">
+        <p className="text-sm font-medium text-slate-950">
           No buyers in this view
         </p>
-        <p className="mt-2 text-base text-slate-500">
+        <p className="mt-1 text-sm text-slate-500">
           Try a different filter to see {filter === "active" ? "pending" : "active"} buyers.
         </p>
       </div>
@@ -276,12 +276,12 @@ function EmptyState({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-8 py-16 text-center max-w-xl mx-auto">
-      <h2 className="text-2xl font-semibold text-slate-950">No buyers yet</h2>
-      <p className="mt-3 text-base text-slate-500">
+    <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
+      <h2 className="text-base font-semibold text-slate-950">No buyers yet</h2>
+      <p className="mt-1.5 text-sm text-slate-500">
         Create your first buyer to start building hot sheets and tracking activity.
       </p>
-      <Button onClick={onCreate} className="mt-6 h-11 rounded-full px-6">
+      <Button onClick={onCreate} className="mt-5 h-9 rounded-full px-4">
         <UserPlus className="h-4 w-4 mr-2" />
         New Buyer
       </Button>
