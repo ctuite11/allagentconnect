@@ -132,18 +132,18 @@ export default function BuyersList() {
 
       <div className="max-w-5xl mx-auto pt-2 pb-10">
         {/* Header */}
-        <div className="mb-4 flex items-start justify-between gap-6">
+        <div className="mb-8 flex items-start justify-between gap-6">
           <div className="min-w-0">
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-950">
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
               My Buyers
             </h1>
-            <p className="mt-1 text-base md:text-lg text-slate-500 font-normal">
+            <p className="text-sm text-zinc-500 mt-0.5">
               Manage buyer hot sheets, favorites, invites, and activity.
             </p>
           </div>
           <Button
             onClick={() => setShowCreate(true)}
-            className="h-10 rounded-full px-4 shrink-0"
+            className="h-9 rounded-full px-4 shrink-0"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             New Buyer
@@ -151,7 +151,7 @@ export default function BuyersList() {
         </div>
 
         {/* Filter pills */}
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-2 mb-6">
           {filterPills.map((pill) => {
             const active = filter === pill.key;
             return (
@@ -160,10 +160,10 @@ export default function BuyersList() {
                 type="button"
                 onClick={() => setFilter(pill.key)}
                 className={cn(
-                  "h-10 px-3 rounded-full text-sm font-medium transition-colors",
+                  "h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
                   active
-                    ? "bg-slate-950 text-white"
-                    : "bg-white border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                    ? "bg-zinc-900 text-white"
+                    : "bg-white border border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50"
                 )}
               >
                 {pill.label}
@@ -175,7 +175,7 @@ export default function BuyersList() {
         {/* List */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
@@ -184,7 +184,7 @@ export default function BuyersList() {
             onCreate={() => setShowCreate(true)}
           />
         ) : (
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2">
             {filtered.map((b) => (
               <BuyerCard
                 key={b.clientId}
@@ -219,24 +219,24 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         }
       }}
       className={cn(
-        "group cursor-pointer rounded-xl border border-slate-200 bg-white",
-        "shadow-sm hover:shadow-md hover:border-slate-300",
+        "group cursor-pointer rounded-2xl border border-zinc-200 bg-white",
+        "shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:border-zinc-300",
         "transition-all duration-150",
         "px-5 py-4 flex items-center justify-between gap-4"
       )}
     >
       <div className="min-w-0">
-        <p className="text-xl font-semibold text-slate-950 truncate">{buyer.name}</p>
-        <p className="mt-0.5 text-base text-slate-500 truncate">{buyer.email}</p>
+        <p className="text-base font-semibold text-zinc-900 truncate">{buyer.name}</p>
+        <p className="text-sm text-zinc-500 mt-0.5 truncate">{buyer.email}</p>
         {buyer.phone && (
-          <p className="text-sm text-slate-400 truncate">{buyer.phone}</p>
+          <p className="text-xs text-zinc-400 truncate">{buyer.phone}</p>
         )}
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
         <span
           className={cn(
-            "inline-flex items-center h-7 px-2.5 rounded-full text-xs font-medium",
+            "inline-flex items-center h-6 px-2 rounded-full text-xs font-medium",
             isPending
               ? "bg-amber-50 text-amber-700 border border-amber-200"
               : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -244,10 +244,10 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         >
           {isPending ? "Pending Invite" : "Active"}
         </span>
-        <span className="hidden sm:inline text-sm font-medium text-slate-500 whitespace-nowrap">
+        <span className="hidden sm:inline text-xs text-zinc-500 whitespace-nowrap">
           {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
         </span>
-        <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-0.5" />
       </div>
     </div>
   );
@@ -264,11 +264,11 @@ function EmptyState({
 }) {
   if (hasAny) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-5 py-8 text-center">
-        <p className="text-sm font-medium text-slate-950">
+      <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-8 text-center">
+        <p className="text-sm font-semibold text-zinc-900">
           No buyers in this view
         </p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-zinc-500">
           Try a different filter to see {filter === "active" ? "pending" : "active"} buyers.
         </p>
       </div>
@@ -276,9 +276,9 @@ function EmptyState({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
-      <h2 className="text-base font-semibold text-slate-950">No buyers yet</h2>
-      <p className="mt-1.5 text-sm text-slate-500">
+    <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-8 text-center">
+      <h2 className="text-sm font-semibold text-zinc-900">No buyers yet</h2>
+      <p className="mt-1 text-sm text-zinc-500">
         Create your first buyer to start building hot sheets and tracking activity.
       </p>
       <Button onClick={onCreate} className="mt-5 h-9 rounded-full px-4">
