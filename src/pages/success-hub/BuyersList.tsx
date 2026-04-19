@@ -219,24 +219,24 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         }
       }}
       className={cn(
-        "group cursor-pointer rounded-xl border border-slate-200 bg-white",
-        "shadow-sm hover:shadow-md hover:border-slate-300",
+        "group cursor-pointer rounded-2xl border border-zinc-200 bg-white",
+        "shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:border-zinc-300",
         "transition-all duration-150",
         "px-5 py-4 flex items-center justify-between gap-4"
       )}
     >
       <div className="min-w-0">
-        <p className="text-xl font-semibold text-slate-950 truncate">{buyer.name}</p>
-        <p className="mt-0.5 text-base text-slate-500 truncate">{buyer.email}</p>
+        <p className="text-base font-semibold text-zinc-900 truncate">{buyer.name}</p>
+        <p className="text-sm text-zinc-500 mt-0.5 truncate">{buyer.email}</p>
         {buyer.phone && (
-          <p className="text-sm text-slate-400 truncate">{buyer.phone}</p>
+          <p className="text-xs text-zinc-400 truncate">{buyer.phone}</p>
         )}
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
         <span
           className={cn(
-            "inline-flex items-center h-7 px-2.5 rounded-full text-xs font-medium",
+            "inline-flex items-center h-6 px-2 rounded-full text-xs font-medium",
             isPending
               ? "bg-amber-50 text-amber-700 border border-amber-200"
               : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -244,10 +244,10 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         >
           {isPending ? "Pending Invite" : "Active"}
         </span>
-        <span className="hidden sm:inline text-sm font-medium text-slate-500 whitespace-nowrap">
+        <span className="hidden sm:inline text-xs text-zinc-500 whitespace-nowrap">
           {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
         </span>
-        <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-0.5" />
       </div>
     </div>
   );
@@ -264,11 +264,11 @@ function EmptyState({
 }) {
   if (hasAny) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-5 py-8 text-center">
-        <p className="text-sm font-medium text-slate-950">
+      <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-8 text-center">
+        <p className="text-sm font-semibold text-zinc-900">
           No buyers in this view
         </p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-zinc-500">
           Try a different filter to see {filter === "active" ? "pending" : "active"} buyers.
         </p>
       </div>
@@ -276,9 +276,9 @@ function EmptyState({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
-      <h2 className="text-base font-semibold text-slate-950">No buyers yet</h2>
-      <p className="mt-1.5 text-sm text-slate-500">
+    <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-8 text-center">
+      <h2 className="text-sm font-semibold text-zinc-900">No buyers yet</h2>
+      <p className="mt-1 text-sm text-zinc-500">
         Create your first buyer to start building hot sheets and tracking activity.
       </p>
       <Button onClick={onCreate} className="mt-5 h-9 rounded-full px-4">
