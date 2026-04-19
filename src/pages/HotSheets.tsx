@@ -345,12 +345,12 @@ const HotSheets = ({
           noindex
         />
         <PageHeader
-          title="Buyer HotSheets"
+          title="Buyer Hot Sheets"
           subtitle="Collections of listings curated for each buyer or renter client."
           actions={
             <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create New Client HotSheet
+              Create New Client Hot Sheet
             </Button>
           }
         />
@@ -383,14 +383,14 @@ const HotSheets = ({
       />
       <PageShell className="pb-8">
         <PageHeader
-          title="Buyer HotSheets"
+          title="Buyer Hot Sheets"
           subtitle="Collections of listings curated for each buyer or renter client."
           actions={
             <Button
               onClick={() => setCreateDialogOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create New Client HotSheet
+              Create New Client Hot Sheet
             </Button>
           }
         />
@@ -406,7 +406,7 @@ const HotSheets = ({
               onClick={() => setCreateDialogOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create New Client HotSheet
+              Create New Client Hot Sheet
             </Button>
           </div>
         ) : (

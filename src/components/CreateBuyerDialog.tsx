@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormattedInput } from "@/components/ui/formatted-input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -163,11 +164,13 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="buyer-phone">Phone (optional)</Label>
-            <Input
+            <FormattedInput
               id="buyer-phone"
               type="tel"
+              inputMode="numeric"
+              format="phone"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(val) => setPhone(val)}
               placeholder="(555) 555-5555"
             />
           </div>

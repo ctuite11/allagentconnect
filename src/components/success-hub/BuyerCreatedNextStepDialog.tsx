@@ -72,7 +72,7 @@ export function BuyerCreatedNextStepDialog({
           <button
             onClick={handleCreateHotSheet}
             disabled={sending}
-            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-zinc-900 text-white font-medium text-[14px] hover:bg-zinc-800 transition-colors disabled:opacity-60"
+            className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-[#0E56F5] text-white font-medium text-[14px] hover:bg-[#0B47CC] transition-colors disabled:opacity-60"
           >
             <span className="inline-flex items-center gap-2.5">
               <ListPlus className="w-4 h-4" />
