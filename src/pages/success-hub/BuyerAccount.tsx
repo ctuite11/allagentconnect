@@ -184,9 +184,6 @@ export default function BuyerAccount() {
         </div>
 
         <div className="flex items-center gap-2 mt-5">
-          <Button size="sm" onClick={() => setCreateHsOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Hot Sheet
-          </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
           </Button>

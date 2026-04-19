@@ -1012,7 +1012,7 @@ if (comments && comments.length > 0) {
                   disabled={sending || clientCount === 0}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  {sending ? "Sending…" : "Send First Batch"}
+                  {sending ? "Sending…" : "Send Listings & Invite"}
                 </Button>
               ) : !invitesSent && acceptedCount > 0 ? (
                 <DropdownMenu>
