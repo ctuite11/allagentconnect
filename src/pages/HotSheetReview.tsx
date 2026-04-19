@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, ArrowLeft } from "lucide-react";
+import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, ArrowLeft, Pencil } from "lucide-react";
+import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -257,6 +258,7 @@ const HotSheetReview = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
+  const [editCriteriaOpen, setEditCriteriaOpen] = useState(false);
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [agentDisplayName, setAgentDisplayName] = useState("Your agent");
   const [listings, setListings] = useState<Listing[]>([]);
@@ -929,8 +931,17 @@ if (comments && comments.length > 0) {
 
           {/* Search Criteria */}
           <Card className="mb-8">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Search Criteria</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditCriteriaOpen(true)}
+                className="rounded-full h-8 px-3 border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+              >
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
@@ -1131,6 +1142,16 @@ if (comments && comments.length > 0) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {hotSheet && (
+        <EditHotsheetCriteriaDialog
+          open={editCriteriaOpen}
+          onOpenChange={setEditCriteriaOpen}
+          hotSheetId={hotSheet.id}
+          initialCriteria={hotSheet.criteria}
+          onUpdate={fetchHotSheetAndListings}
+        />
+      )}
 
     </div>
   );
