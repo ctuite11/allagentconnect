@@ -26,42 +26,14 @@ const debugLog = (...args: any[]) => {
 
 function getGmapsKey(): {
   apiKey?: string;
-  source: "url" | "storage" | "env" | "missing";
+  source: "env" | "missing";
 } {
-  const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
-  const urlKey =
-    typeof window !== "undefined"
-      ? (new URLSearchParams(window.location.search).get("gmaps_key") ??
-        undefined)
-      : undefined;
-
-  const storedKey =
-    typeof window !== "undefined"
-      ? (window.localStorage.getItem(GMAPS_KEY_STORAGE) ?? undefined)
-      : undefined;
-
-  // Correct priority: URL > localStorage > env
-  const apiKey = urlKey || storedKey || envKey;
-
-  // Persist the url key for convenience (preview only)
-  if (typeof window !== "undefined" && urlKey) {
-    try {
-      window.localStorage.setItem(GMAPS_KEY_STORAGE, urlKey);
-    } catch {
-      // ignore
-    }
-  }
-
-  const source: "url" | "storage" | "env" | "missing" = urlKey
-    ? "url"
-    : storedKey
-      ? "storage"
-      : envKey
-        ? "env"
-        : "missing";
-
-  return { apiKey: apiKey || undefined, source };
+  return {
+    apiKey,
+    source: apiKey ? "env" : "missing",
+  };
 }
 
 function isPlacesReady(): boolean {

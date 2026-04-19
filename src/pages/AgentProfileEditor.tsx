@@ -46,6 +46,7 @@ import HeaderBackgroundSelector from "@/components/profile-editor/HeaderBackgrou
 import { PageHeader } from "@/components/ui/page-header";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import AgentProposalIncentivesForm from "@/components/proposals/AgentProposalIncentivesForm";
+import { Seo } from "@/components/Seo";
 
 
 interface SocialLinks {
@@ -546,6 +547,12 @@ setHeaderBackgroundType(profile.header_background_type || "color");
   if (loading) {
     return (
       <div className="min-h-screen bg-white pt-24">
+        <Seo
+          title="Profile | All Agent Connect"
+          description="Edit your professional profile, branding, and agent-facing presence inside All Agent Connect."
+          canonical="https://allagentconnect.com/agent-profile-editor"
+          noindex
+        />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="animate-pulse text-zinc-500">Loading profile...</div>
@@ -557,6 +564,12 @@ setHeaderBackgroundType(profile.header_background_type || "color");
 
   return (
     <>
+      <Seo
+        title="Profile | All Agent Connect"
+        description="Edit your professional profile, branding, and agent-facing presence inside All Agent Connect."
+        canonical="https://allagentconnect.com/agent-profile-editor"
+        noindex
+      />
       <PageShell className="pb-32">
         {/* Header with inline back button */}
         <div className="flex items-center justify-between mb-8">

@@ -101,7 +101,7 @@ export default function ClientCreateHotsheetNew() {
       if (error.message?.includes("No active agent relationship")) {
         toast.error("No active agent relationship found");
       } else if (error.message?.includes("CRM client record")) {
-        toast.error("Your agent hasn't added you as a client yet. Please ask them to add you first.");
+        toast.error("Your agent has not set up your account yet. Please ask them to finish setup first.");
       } else {
         toast.error("Failed to create saved search");
       }
@@ -118,7 +118,7 @@ export default function ClientCreateHotsheetNew() {
         <div className={aacStyles.card}>
           <h2 className={aacStyles.sectionH2}>Create New Saved Search</h2>
           <p className={`${aacStyles.cardDesc} mt-1 mb-6`}>
-            Set up a saved search to receive notifications when matching properties
+            Set up a saved search to receive notifications when matching homes
             become available
           </p>
 

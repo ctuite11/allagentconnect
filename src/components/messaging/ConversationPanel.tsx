@@ -56,10 +56,10 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
         <MessageSquare className="w-12 h-12 text-zinc-200 mb-4" />
         <h3 className="text-lg font-semibold text-zinc-900 mb-1">
-          Select a conversation
+          Select a message
         </h3>
         <p className="text-sm text-zinc-400">
-          Choose a thread from the right to start messaging
+          Choose a conversation from the left to keep chatting
         </p>
       </div>
     );
@@ -173,7 +173,7 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
       <div className="flex-1 overflow-y-auto px-6 py-5 bg-zinc-50">
         {messages.length === 0 ? (
           <div className="text-center text-zinc-400 py-12 text-sm">
-            No messages yet. Start the conversation!
+            No messages yet. Send the first message when you are ready.
           </div>
         ) : (
           threadElements

@@ -114,7 +114,11 @@ const socialIconMap = [
   { key: "twitter", icon: Twitter },
 ] as const;
 
-const AgentProfile = () => {
+interface AgentProfileProps {
+  publicMode?: boolean;
+}
+
+const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const { id: idOrCode } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthRole();
@@ -151,7 +155,7 @@ const AgentProfile = () => {
       if (agentError) throw agentError;
       if (!agentData) {
         toast.error("Agent not found");
-        navigate("/our-members");
+        navigate(publicMode ? "/our-agents" : "/our-members");
         return;
       }
 
@@ -239,14 +243,14 @@ const AgentProfile = () => {
           ...(agent.bio ? { description: agent.bio.substring(0, 200) } : {}),
         }}
       />
-      {/* Back nav — destination depends on auth context */}
+      {/* Back nav */}
       <div className="max-w-6xl mx-auto px-8 pt-6">
         <button
-          onClick={() => navigate(user ? "/our-members" : -1 as any)}
+          onClick={() => navigate(publicMode ? "/our-agents" : "/our-members")}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          {user ? "Back to Network" : "Back"}
+          {publicMode ? "Back to Agents" : "Back to Network"}
         </button>
       </div>
 
@@ -318,7 +322,11 @@ const AgentProfile = () => {
               className="rounded-md"
               disabled={isStartingChat}
               onClick={async () => {
-                if (!user?.id || !agent.id) return;
+                if (!user?.id) {
+                  navigate("/auth");
+                  return;
+                }
+                if (!agent.id) return;
                 setIsStartingChat(true);
                 try {
                   const convoId = await findOrCreateConversation(user.id, agent.id);
@@ -331,7 +339,7 @@ const AgentProfile = () => {
               }}
             >
               <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-              Message {agent.first_name}
+              Send a Message
             </Button>
           </div>
 
@@ -458,7 +466,7 @@ const AgentProfile = () => {
             <p className="text-sm text-muted-foreground text-center">
               No active listings.{" "}
               <button
-                onClick={() => navigate("/listing-search")}
+                onClick={() => navigate(publicMode ? "/browse" : "/listing-search")}
                 className="text-primary hover:underline"
               >
                 Browse all listings

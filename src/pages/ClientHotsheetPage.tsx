@@ -172,7 +172,7 @@ const ClientHotsheetPage = () => {
         .single();
 
       if (hotSheetError || !hotSheetData) {
-        throw hotSheetError || new Error("Hotsheet not found");
+        throw hotSheetError || new Error("Saved search not found");
       }
 
       console.log("Client hotsheet hotSheet", hotSheetData);
@@ -237,7 +237,7 @@ const ClientHotsheetPage = () => {
         (typeof err === "string" ? err : JSON.stringify(err));
 
       setError(
-        `We couldn't load this hotsheet. (${reason}) Please contact your agent or try the link again.`
+        `We could not load this saved search. (${reason}) Please contact your agent or try the link again.`
       );
       setLoading(false);
     }
@@ -272,7 +272,7 @@ const ClientHotsheetPage = () => {
     return (
       <div className="min-h-screen flex flex-col pt-20">
         <main className="flex-1 flex items-center justify-center px-4">
-          <p className="text-muted-foreground text-lg">Loading your hotsheet…</p>
+          <p className="text-muted-foreground text-lg">Loading your saved search...</p>
         </main>
         <Footer />
       </div>
@@ -286,7 +286,7 @@ const ClientHotsheetPage = () => {
           <Card className="max-w-md w-full p-6 text-center">
             <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
             <p className="text-muted-foreground mb-4">
-              We couldn't load this hotsheet. Please contact your agent or try the link again.
+              We could not load this saved search. Please contact your agent or try the link again.
             </p>
             <Button onClick={() => navigate("/")}>Back to home</Button>
           </Card>
@@ -332,7 +332,7 @@ const ClientHotsheetPage = () => {
               <DialogDescription className="pt-4 space-y-4 text-base leading-relaxed">
                 <p className="text-foreground/90">
                   {agentProfile.first_name} has curated a personalized collection of homes for you. 
-                  To continue exploring your private hot sheet, please set up your All Agent Connect login.
+                  To continue exploring your saved search, please set up your All Agent Connect login.
                 </p>
                 <div className="pt-2">
                   <p className="font-medium text-foreground/90 mb-3">Creating your login ensures you can:</p>
@@ -343,7 +343,7 @@ const ClientHotsheetPage = () => {
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="text-primary mt-0.5">•</span>
-                      <span className="text-foreground/80">Save and organize your favorites</span>
+                      <span className="text-foreground/80">Save and organize your saved homes</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="text-primary mt-0.5">•</span>
@@ -376,7 +376,7 @@ const ClientHotsheetPage = () => {
     <div className="min-h-screen flex flex-col pt-20">
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Back to Dashboard */}
+          {/* Back to Account */}
           <Button
             variant="ghost"
             size="sm"
@@ -384,13 +384,13 @@ const ClientHotsheetPage = () => {
             onClick={() => navigate("/client/dashboard")}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to Your Account
           </Button>
 
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-lg font-medium">
-              Hotsheet Name:{" "}
-              <span className="text-[#0E56F5]">{hotSheet?.name || "Your Custom Hotsheet"}</span>
+              Saved Search:{" "}
+              <span className="text-[#0E56F5]">{hotSheet?.name || "Your Custom Saved Search"}</span>
             </h1>
             <Button
               variant="outline"
@@ -399,7 +399,7 @@ const ClientHotsheetPage = () => {
               onClick={() => navigate("/client/hotsheets/new")}
             >
               <Plus className="w-4 h-4" />
-              Create New Hot Sheet
+              Create New Saved Search
             </Button>
           </div>
 
@@ -535,7 +535,7 @@ const ClientHotsheetPage = () => {
           {/* Listings Count */}
           <div className="mb-4">
             <p className="text-lg font-semibold">
-              {listings.length} {listings.length === 1 ? "Property" : "Properties"} Found
+              {listings.length} {listings.length === 1 ? "Home" : "Homes"} Found
             </p>
           </div>
 
@@ -543,7 +543,7 @@ const ClientHotsheetPage = () => {
           {listings.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No properties match your criteria yet.</p>
+                <p className="text-muted-foreground">No homes match your search yet.</p>
               </CardContent>
             </Card>
           ) : (

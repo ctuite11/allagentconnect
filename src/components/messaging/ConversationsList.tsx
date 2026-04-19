@@ -11,10 +11,23 @@ import { cn } from "@/lib/utils";
 
 interface ConversationsListProps {
   selectedId: string | undefined;
-  onNewMessage: () => void;
+  onNewMessage?: () => void;
+  showNewMessageButton?: boolean;
+  routeBase?: string;
+  heading?: string;
+  searchPlaceholder?: string;
+  emptyStateLabel?: string;
 }
 
-export function ConversationsList({ selectedId, onNewMessage }: ConversationsListProps) {
+export function ConversationsList({
+  selectedId,
+  onNewMessage,
+  showNewMessageButton = true,
+  routeBase = "/messages",
+  heading = "Recent chats",
+  searchPlaceholder = "Search name, message, or address",
+  emptyStateLabel = "No conversations yet",
+}: ConversationsListProps) {
   const navigate = useNavigate();
   const { threads, loading } = useConversationThreads();
   const [search, setSearch] = useState("");
@@ -68,7 +81,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-[15px] font-semibold text-zinc-900 tracking-[-0.01em]">
-              Recent chats
+              {heading}
             </h2>
             {totalUnread > 0 && (
               <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold leading-none">
@@ -76,14 +89,16 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
               </span>
             )}
           </div>
-          <button
-            onClick={onNewMessage}
-            className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:bg-zinc-100 rounded-lg transition-colors px-2 py-1.5 text-[13px] font-semibold"
-            title="New message"
-          >
-            <SquarePen className="w-4 h-4" />
-            <span>Create New</span>
-          </button>
+          {showNewMessageButton && onNewMessage && (
+            <button
+              onClick={onNewMessage}
+              className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:bg-zinc-100 rounded-lg transition-colors px-2 py-1.5 text-[13px] font-semibold"
+              title="New message"
+            >
+              <SquarePen className="w-4 h-4" />
+              <span>New Message</span>
+            </button>
+          )}
         </div>
 
         {/* Search */}
@@ -93,7 +108,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, message etc."
+            placeholder={searchPlaceholder}
             className="w-full h-9 rounded-full bg-zinc-100 border-0 pl-9 pr-3 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
           />
         </div>
@@ -116,7 +131,7 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-[13px] text-zinc-400">
-              {search ? "No matching conversations" : "No conversations yet"}
+              {search ? "No matching messages" : emptyStateLabel}
             </p>
           </div>
         ) : (
@@ -128,14 +143,14 @@ export function ConversationsList({ selectedId, onNewMessage }: ConversationsLis
                 role="button"
                 tabIndex={0}
                 onClick={() =>
-                  navigate(`/messages/${thread.id}`, {
-                    state: { from: "/messages", fromLabel: "Back to Messages" },
+                  navigate(`${routeBase}/${thread.id}`, {
+                    state: { from: routeBase, fromLabel: "Back to Messages" },
                   })
                 }
                 onKeyDown={(e) => {
                   if (e.key === "Enter")
-                    navigate(`/messages/${thread.id}`, {
-                      state: { from: "/messages", fromLabel: "Back to Messages" },
+                    navigate(`${routeBase}/${thread.id}`, {
+                      state: { from: routeBase, fromLabel: "Back to Messages" },
                     });
                 }}
                 className={cn(

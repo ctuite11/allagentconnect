@@ -45,7 +45,7 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
-import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
+import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
 
 // State name to abbreviation mapping
@@ -159,8 +159,6 @@ const AddListing = () => {
    const originalPriceRef = useRef<number | null>(null);
    const originalStatusRef = useRef<string | null>(null);
    const backendStatusRef = useRef<string | null>(null);
-   // Preserve the original DCMLS first-publish timestamp across saves
-   const dcmlsPublishedAtRef = useRef<string | null>(null);
 
   // Clone listing state (set when navigating from AgentListingDetail "Clone as New Listing")
   const [isRelisting, setIsRelisting] = useState(false);
@@ -651,12 +649,9 @@ const AddListing = () => {
           assessed_value: (data as any).assessed_value?.toString() || "",
           fiscal_year: (data as any).fiscal_year?.toString() || "",
           residential_exemption: (data as any).residential_exemption || "",
-          // DCMLS publish state — hydrate from DB so toggle persists across edits
-          show_on_dcmls: data.publish_to_dcmls === true && data.dcmls_status === 'published',
+          // Preserve existing DB publish state when editing to avoid accidental resets.
+          show_on_dcmls: dcmlsShowOnFromRecord(data as any),
         }));
-
-        // Preserve original DCMLS first-publish timestamp so subsequent saves don't reset it
-        dcmlsPublishedAtRef.current = (data as any).dcmls_published_at ?? null;
         
         // Load photos from database
         if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
@@ -1996,15 +1991,7 @@ const AddListing = () => {
       return null;
     }
     
-    const dcmlsSnapshot = buildDcmlsPayload(
-      formData.show_on_dcmls,
-      dcmlsPublishedAtRef.current,
-      {
-        address: formData.address,
-        price: formData.price ? parseFloat(formData.price) : null,
-        property_type: formData.property_type,
-      }
-    );
+    const dcmlsSnapshot = dcmlsPublishSnapshot(formData.show_on_dcmls);
     
     const minimalPayload = {
       agent_id: user.id,
@@ -2183,16 +2170,8 @@ const AddListing = () => {
       pet_options: petOptions,
     } : {}),
 
-    // DCMLS publish state - validates required fields and writes status + timestamps atomically
-    ...buildDcmlsPayload(
-      formData.show_on_dcmls,
-      dcmlsPublishedAtRef.current,
-      {
-        address: formData.address,
-        price: formData.price ? parseFloat(formData.price) : null,
-        property_type: formData.property_type,
-      }
-    ),
+    // DCMLS publish state - atomic snapshot ensures consistency
+    ...dcmlsPublishSnapshot(formData.show_on_dcmls),
 
     // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
     ...(isRelisting ? {
@@ -2249,13 +2228,18 @@ const AddListing = () => {
       const { agent_id, ...updatePayload } = payload;
       
       if (draftId) {
-        const { error } = await supabase
+        const { data: updatedDraft, error } = await supabase
           .from("listings")
           .update(updatePayload)
-          .eq("id", draftId);
+          .eq("id", draftId)
+          .select("id")
+          .maybeSingle();
         if (error) {
           console.error('Error updating draft listing:', error);
           throw error;
+        }
+        if (!updatedDraft) {
+          throw new Error("Draft update was blocked or not found.");
         }
         console.log('Draft updated successfully, id:', draftId);
       } else {
@@ -2455,22 +2439,19 @@ const AddListing = () => {
       // Remove agent_id from update payload (it's immutable after creation)
       const { agent_id, ...updatePayload } = payload;
 
-      const { data: updatedRows, error } = await supabase
+      const { data: updatedListing, error } = await supabase
         .from("listings")
         .update(updatePayload)
         .eq("id", targetId)
-        .select("id");
+        .select("id")
+        .maybeSingle();
 
       if (error) {
         console.error('[handleSaveChanges] Error updating listing:', error);
         throw error;
       }
-
-      if (!updatedRows || updatedRows.length === 0) {
-        const msg = "Update failed: no rows changed (likely permission or ID mismatch).";
-        console.error('[handleSaveChanges]', msg, { targetId });
-        toast.error(msg);
-        throw new Error(msg);
+      if (!updatedListing) {
+        throw new Error("Listing update was blocked or not found.");
       }
 
       // Track price changes if applicable
@@ -2763,18 +2744,16 @@ const AddListing = () => {
         // UPDATE existing listing
         console.log("[AddListing] Updating existing listing:", targetListingId);
         
-        const { data: updatedRows, error } = await supabase
+        const { data: updatedListing, error } = await supabase
           .from("listings")
           .update(listingData)
           .eq("id", targetListingId)
-          .select("id");
+          .select("id")
+          .maybeSingle();
 
         if (error) throw error;
-        if (!updatedRows || updatedRows.length === 0) {
-          const msg = "Update failed: no rows changed (likely permission or ID mismatch).";
-          console.error('[AddListing handleSubmit]', msg, { targetListingId });
-          toast.error(msg);
-          throw new Error(msg);
+        if (!updatedListing) {
+          throw new Error("Listing update was blocked or not found.");
         }
         resultListingId = targetListingId;
 
@@ -4983,7 +4962,6 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Footer save bar removed — top sticky action bar is the single source of save actions */}
               </form>
             </CardContent>
           </Card>

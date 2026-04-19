@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { DASHBOARD_FILTER_STATUSES, LISTING_STATUS_LABELS } from "@/constants/status";
 import { humanizeSnakeCase } from "@/lib/format";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
+import { Seo } from "@/components/Seo";
 interface Listing {
   id: string;
   address: string;
@@ -75,9 +76,6 @@ const AgentDashboard = () => {
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
     return motivationalQuotes[dayOfYear % motivationalQuotes.length];
   };
-  useEffect(() => {
-    document.title = "Agent Dashboard - All Agent Connect";
-  }, []);
   
   // Scroll to listings section if hash is present
   useEffect(() => {
@@ -130,7 +128,8 @@ const AgentDashboard = () => {
     if (user && location.state?.reload) {
       loadData(user.id);
       // Clear the state to prevent reload loops
-      window.history.replaceState({}, document.title);
+      // Title is controlled by SuccessHubDashboard or other route component via Seo
+      window.history.replaceState({}, SuccessHubDashboard.name || "Dashboard");
     }
   }, [location.state, user]);
 
@@ -469,7 +468,9 @@ const AgentDashboard = () => {
   };
   
   return (
-    <div className="min-h-screen bg-white" style={{ backgroundColor: '#FFFFFF' }}>
+    <>
+      <Seo title="Agent Dashboard" />
+      <div className="min-h-screen bg-white" style={{ backgroundColor: '#FFFFFF' }}>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Hero Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8 sm:mb-12 animate-fade-in">
@@ -763,6 +764,7 @@ const AgentDashboard = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </>
   );
 };
 export default AgentDashboard;

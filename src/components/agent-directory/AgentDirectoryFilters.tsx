@@ -5,6 +5,7 @@ interface AgentDirectoryFiltersProps {
   setSortOrder: (order: "a-z" | "z-a") => void;
   resultCount: number;
   searchQuery?: string;
+  itemLabel?: string;
 }
 
 const AgentDirectoryFilters = ({
@@ -12,13 +13,14 @@ const AgentDirectoryFilters = ({
   setSortOrder,
   resultCount,
   searchQuery,
+  itemLabel = "Agents",
 }: AgentDirectoryFiltersProps) => {
   return (
     <div className="border-b border-zinc-200 py-6">
       <div className="mx-auto max-w-[1200px] px-6 flex items-center justify-between">
         {/* Left: Result Count */}
         <div className="text-[15px] font-medium text-zinc-900">
-          {resultCount} Agents Found{searchQuery ? ` for "${searchQuery}"` : ""}
+          {resultCount} {itemLabel} Found{searchQuery ? ` for "${searchQuery}"` : ""}
         </div>
 
         {/* Right: Sort Dropdown Only */}
@@ -27,8 +29,8 @@ const AgentDirectoryFilters = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="a-z">Agent Last Name A-Z</SelectItem>
-            <SelectItem value="z-a">Agent Last Name Z-A</SelectItem>
+            <SelectItem value="a-z">Name A-Z</SelectItem>
+            <SelectItem value="z-a">Name Z-A</SelectItem>
           </SelectContent>
         </Select>
       </div>

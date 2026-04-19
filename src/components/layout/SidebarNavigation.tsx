@@ -55,9 +55,9 @@ const listingItems: NavItem[] = [
 
 const clientItems: NavItem[] = [
   { title: "My Contacts", url: "/my-clients", icon: UserCircle },
-  { title: "Hot Sheets", url: "/hot-sheets", icon: Bell },
+  { title: "Hot Sheets", url: "/agent/hot-sheets", icon: Bell },
   { title: "Showing Requests", url: "/showing-requests", icon: ClipboardList },
-  { title: "Favorites", url: "/favorites", icon: Heart },
+  { title: "Favorites", url: "/my-favorites", icon: Heart },
 ];
 
 const insightItems: NavItem[] = [
@@ -141,7 +141,7 @@ export function SidebarNavigation() {
   // Messages injected into client group
   const clientItemsWithMessages: NavItem[] = [
     ...clientItems,
-    { title: "Messages", url: "/messages", icon: MessageSquare },
+    { title: "Messages", url: "/agent/messages", icon: MessageSquare },
   ];
 
   return (

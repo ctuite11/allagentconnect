@@ -4,8 +4,7 @@ import Footer from "@/components/Footer";
 import FeaturedPropertyShowcase from "@/components/FeaturedPropertyShowcase";
 import AdBanner from "@/components/AdBanner";
 import { MapPin, Users, Shield } from "lucide-react";
-import PropertySearchHero from "@/components/PropertySearchHero";
-import DcmlsExclusiveListings from "@/components/DcmlsExclusiveListings";
+import DCMLSHero from "@/components/DCMLSHero";
 
 const benefits = [
   {
@@ -33,9 +32,9 @@ const ConsumerHome = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="pt-20">
-        {/* Modern, unified hero */}
-        <PropertySearchHero />
+      <main>
+        {/* Premium dark hero */}
+        <DCMLSHero />
 
         {/* Featured Properties */}
         <section className="py-16 bg-background">
@@ -49,9 +48,6 @@ const ConsumerHome = () => {
             <FeaturedPropertyShowcase />
           </div>
         </section>
-
-        {/* DCMLS Exclusive Listings */}
-        <DcmlsExclusiveListings />
 
         {/* Vendor Advertisement Banner */}
         <section className="py-8 bg-background">

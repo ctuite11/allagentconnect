@@ -10,6 +10,7 @@ import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotific
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
+import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
 import { aacStyles } from "@/ui/aacStyles";
 import {
@@ -297,6 +298,12 @@ const ClientNeedsDashboard = () => {
 
   return (
     <div className="bg-white pt-6">
+      <Seo
+        title="Comms | All Agent Connect"
+        description="Manage buyer needs, agent communications, and active opportunity matching inside All Agent Connect."
+        canonical="https://allagentconnect.com/client-needs"
+        noindex
+      />
       <main className={`${aacStyles.pageContainer} pb-12`}>
         <PageHeader
           title="Communications Center"

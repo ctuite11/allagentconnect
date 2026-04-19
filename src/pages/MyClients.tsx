@@ -29,6 +29,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { Seo } from "@/components/Seo";
 
 // Helper function for title case display (safe transform, doesn't modify stored data)
 const toTitleCase = (str: string) => {
@@ -63,6 +64,7 @@ interface Client {
   relationship_status?: "active" | "ended" | "none";
   relationship_ended_at?: string | null;
   relationship_created_at?: string | null;
+  relationship_user_id?: string | null;
 }
 
 const MyClients = () => {
@@ -350,25 +352,116 @@ const MyClients = () => {
     if (!endRelClient) return;
     setEndingRelationship(true);
     try {
-      const idToEnd = (endRelClient as any).relationship_user_id || endRelClient.id;
-      const { error } = await supabase.rpc("agent_end_client_relationship", {
-        p_client_id: idToEnd,
+      const selectedBuyerId = endRelClient.id;
+      const selectedBuyerCrmClientId = endRelClient.id;
+      const selectedBuyerRelationshipClientId = endRelClient.relationship_user_id || null;
+
+      console.log("[MyClients] Remove Buyer: selection", {
+        selectedBuyerId,
+        selectedBuyerCrmClientId,
+        selectedBuyerRelationshipClientId,
       });
-      if (error) throw error;
-      toast.success("Relationship ended");
-      // Keep CRM contact row; update relationship status locally
+
+      let relationshipRow: any = null;
+
+      // 1) CRM-first lookup covers pending and CRM-linked active rows.
+      const { data: crmRel, error: crmRelError } = await supabase
+        .from("client_agent_relationships")
+        .select("id, agent_id, client_id, crm_client_id, status, ended_at, created_at")
+        .eq("agent_id", user.id)
+        .eq("crm_client_id", selectedBuyerCrmClientId)
+        .in("status", ["active", "pending"])
+        .is("ended_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (crmRelError) {
+        console.error("[MyClients] Remove Buyer: CRM lookup error", {
+          code: crmRelError.code,
+          message: crmRelError.message,
+          details: crmRelError.details,
+          hint: crmRelError.hint,
+        });
+      }
+
+      relationshipRow = crmRel || null;
+
+      // 2) Fallback to auth-linked client_id for accepted buyers.
+      if (!relationshipRow && selectedBuyerRelationshipClientId) {
+        const { data: authRel, error: authRelError } = await supabase
+          .from("client_agent_relationships")
+          .select("id, agent_id, client_id, crm_client_id, status, ended_at, created_at")
+          .eq("agent_id", user.id)
+          .eq("client_id", selectedBuyerRelationshipClientId)
+          .in("status", ["active", "pending"])
+          .is("ended_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (authRelError) {
+          console.error("[MyClients] Remove Buyer: auth lookup error", {
+            code: authRelError.code,
+            message: authRelError.message,
+            details: authRelError.details,
+            hint: authRelError.hint,
+          });
+        }
+
+        relationshipRow = authRel || null;
+      }
+
+      console.log("[MyClients] Remove Buyer: relationship row found", relationshipRow);
+
+      if (!relationshipRow?.id) {
+        throw new Error("No active or pending relationship row found for this buyer");
+      }
+
+      const updatePayload = {
+        status: "ended",
+        ended_at: new Date().toISOString(),
+      };
+
+      console.log("[MyClients] Remove Buyer: update payload", updatePayload);
+
+      const { error: endError } = await (supabase as any).rpc("agent_end_client_relationship_by_id", {
+        p_relationship_id: relationshipRow.id,
+      });
+
+      if (endError) {
+        console.error("[MyClients] Remove Buyer: update error", {
+          code: endError.code,
+          message: endError.message,
+          details: endError.details,
+          hint: endError.hint,
+        });
+        throw endError;
+      }
+
+      toast.success("Buyer removed");
+
+      // Optimistic local update so active-filtered views drop this row immediately.
       setClients((prev) =>
         prev.map((c) =>
           c.id === endRelClient.id
-            ? { ...c, relationship_status: "ended" as const, relationship_ended_at: new Date().toISOString() }
+            ? { ...c, relationship_status: "ended" as const, relationship_ended_at: updatePayload.ended_at }
             : c
         )
       );
+
       setEndRelClient(null);
-      fetchClients(user.id);
+
+      // Re-fetch to ensure server truth is reflected across views.
+      await fetchClients(user.id);
     } catch (error: any) {
-      console.error("[MyClients] agent_end_client_relationship error", error);
-      toast.error(error.message || "Failed to end relationship");
+      console.error("[MyClients] Remove Buyer failed", {
+        code: error?.code,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+      });
+      toast.error(error?.message || "Failed to remove buyer");
     } finally {
       setEndingRelationship(false);
     }
@@ -530,6 +623,12 @@ const MyClients = () => {
   if (loading) {
     return (
       <PageShell className="flex-1 flex items-center justify-center">
+        <Seo
+          title="Contacts | All Agent Connect"
+          description="Manage clients, contacts, and relationship workflows inside All Agent Connect."
+          canonical="https://allagentconnect.com/my-clients"
+          noindex
+        />
         <p className="text-zinc-500">Loading contacts...</p>
       </PageShell>
     );
@@ -537,6 +636,12 @@ const MyClients = () => {
 
   return (
     <TooltipProvider>
+      <Seo
+        title="Contacts | All Agent Connect"
+        description="Manage clients, contacts, and relationship workflows inside All Agent Connect."
+        canonical="https://allagentconnect.com/my-clients"
+        noindex
+      />
       <PageShell className="py-8">
         <PageHeader
             title="My Contacts"

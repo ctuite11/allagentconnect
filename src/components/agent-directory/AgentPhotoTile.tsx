@@ -19,6 +19,7 @@ type Props = {
   agent: Agent;
   onClick: (id: string) => void;
   isOnline?: boolean;
+  hideDirectContact?: boolean;
 };
 
 function titleCase(s: string) {
@@ -31,7 +32,7 @@ function titleCase(s: string) {
     .join(" ");
 }
 
-export default function AgentPhotoTile({ agent, onClick, isOnline }: Props) {
+export default function AgentPhotoTile({ agent, onClick, isOnline, hideDirectContact = false }: Props) {
   const rawName =
     [agent.first_name, agent.last_name].filter(Boolean).join(" ") || "Agent";
   const fullName = titleCase(rawName);
@@ -80,12 +81,18 @@ export default function AgentPhotoTile({ agent, onClick, isOnline }: Props) {
           <div className="mt-2 text-[14px] leading-[18px] text-zinc-600 truncate">
             {brokerage || <span className="text-transparent">.</span>}
           </div>
-          <div className="mt-1 text-[14px] leading-[18px] text-zinc-600 truncate">
-            {agent.email || <span className="text-transparent">.</span>}
-          </div>
-          <div className="mt-1 text-[14px] leading-[18px] text-zinc-600 truncate">
-            {agent.cell_phone || agent.phone ? `M: ${formatPhoneNumber(agent.cell_phone || agent.phone)}` : <span className="text-transparent">.</span>}
-          </div>
+          {hideDirectContact ? (
+            <div className="mt-3 text-[13px] font-medium text-primary">View profile</div>
+          ) : (
+            <>
+              <div className="mt-1 text-[14px] leading-[18px] text-zinc-600 truncate">
+                {agent.email || <span className="text-transparent">.</span>}
+              </div>
+              <div className="mt-1 text-[14px] leading-[18px] text-zinc-600 truncate">
+                {agent.cell_phone || agent.phone ? `M: ${formatPhoneNumber(agent.cell_phone || agent.phone)}` : <span className="text-transparent">.</span>}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </button>

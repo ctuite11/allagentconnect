@@ -1,11 +1,6 @@
 import { Helmet } from "react-helmet-async";
-
-const SITE_NAME = "All Agent Connect";
-const DEFAULT_TITLE = "All Agent Connect | Real Estate Agent Collaboration Platform";
-const DEFAULT_DESCRIPTION =
-  "All Agent Connect is a professional collaboration platform for real estate agents to connect, share listings, manage buyers, and close deals faster.";
-const DEFAULT_IMAGE = "https://allagentconnect.com/og-image.jpg?v=20260404-2";
-const SITE_URL = "https://allagentconnect.com";
+import { useLocation } from "react-router-dom";
+import { getBrandForRoute } from "@/lib/branding";
 
 interface SeoProps {
   title?: string;
@@ -19,28 +14,51 @@ interface SeoProps {
 }
 
 /**
- * Reusable SEO component for AAC.
- * Renders title, meta description, canonical, robots, OG, Twitter, and optional JSON-LD.
+ * Reusable SEO component that dynamically brands based on current route.
+ * AAC routes get AAC branding, DCMLS routes get DCMLS branding.
  */
 export function Seo({
   title,
-  description = DEFAULT_DESCRIPTION,
-  image = DEFAULT_IMAGE,
+  description,
+  image,
   url,
   type = "website",
   noindex = false,
   canonical,
   jsonLd,
 }: SeoProps) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
-  const canonicalUrl = canonical || url || SITE_URL;
-  const imageUrl = image.startsWith("http") ? image : `${SITE_URL}${image}`;
+  const location = useLocation();
+  const brand = getBrandForRoute(location.pathname);
+
+  const defaultSiteName = "All Agent Connect";
+  const defaultTitle = "All Agent Connect";
+  const defaultDescription = "Private real estate agent collaboration platform.";
+
+  const siteName = brand.siteName || defaultSiteName;
+  const baseTitle = title || brand.title || defaultTitle;
+  const fullTitle = baseTitle.toLowerCase().includes(siteName.toLowerCase())
+    ? baseTitle
+    : `${baseTitle} | ${siteName}`;
+
+  const resolvedDescription = description || brand.description || defaultDescription;
+
+  const autoCanonical =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}`
+      : `${brand.siteUrl}${location.pathname}`;
+
+  const canonicalUrl = canonical || autoCanonical;
+  const imageUrl = image?.startsWith("http") ? image : `${brand.siteUrl}${image || brand.ogImage}`;
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
-      <meta name="description" content={description} />
+      <meta name="description" content={resolvedDescription} />
       <link rel="canonical" href={canonicalUrl} />
+      <link rel="icon" href={brand.favicon} />
+      <link rel="shortcut icon" href={brand.favicon} />
+      <link rel="apple-touch-icon" href={brand.favicon} />
+      <meta name="theme-color" content={brand.themeColor} />
 
       {noindex ? (
         <meta name="robots" content="noindex, nofollow" />
@@ -52,19 +70,19 @@ export function Seo({
       <meta property="og:type" content={type} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={resolvedDescription} />
       <meta property="og:image" content={imageUrl} />
       <meta property="og:image:secure_url" content={imageUrl} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:site_name" content={brand.siteName} />
       <meta property="og:locale" content="en_US" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:url" content={canonicalUrl} />
       <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:description" content={resolvedDescription} />
       <meta name="twitter:image" content={imageUrl} />
 
       {/* JSON-LD */}

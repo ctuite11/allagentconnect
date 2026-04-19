@@ -9,28 +9,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormattedInput } from "@/components/ui/formatted-input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-interface CreatedBuyerPayload {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
 interface CreateBuyerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  /** Fired after both clients + relationship inserts succeed. Used to open the next-step modal. */
-  onCreated?: (buyer: CreatedBuyerPayload) => void;
 }
 
-export function CreateBuyerDialog({ open, onOpenChange, onSuccess, onCreated }: CreateBuyerDialogProps) {
+export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyerDialogProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,6 +42,17 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess, onCreated }: 
 
     setSaving(true);
     try {
+      const failWithStep = (step: string, error: any): never => {
+        console.error(`[CreateBuyerDialog] ${step} failed`, {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+          hint: error?.hint,
+          raw: error,
+        });
+        throw new Error(error?.message || `${step} failed`);
+      };
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please sign in.");
@@ -74,45 +75,33 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess, onCreated }: 
         .select("id")
         .single();
 
-      if (clientErr) throw clientErr;
-      console.log("[CreateBuyer] created clients row:", client);
+      if (clientErr) failWithStep("insert clients", clientErr);
 
       // 2. Insert client_agent_relationships
-      // NOTE: client_id refs auth.users(id) — leave null until buyer accepts invite.
-      // crm_client_id refs clients(id) — the CRM contact bridge.
-      const relPayload = {
-        agent_id: user.id,
-        crm_client_id: client.id,
-        status: "pending" as const,
-      };
-      console.log("[CreateBuyer] relationship insert payload:", relPayload);
-
       const { error: relErr } = await supabase
         .from("client_agent_relationships")
-        .insert(relPayload);
+        .insert({
+          agent_id: user.id,
+          client_id: null,
+          status: "pending",
+          crm_client_id: client.id,
+        } as any);
 
-      if (relErr) throw relErr;
+      if (relErr) failWithStep("insert client_agent_relationships", relErr);
 
       toast.success("Buyer created successfully.");
-      const createdPayload: CreatedBuyerPayload = {
-        id: client.id,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
-      };
       resetForm();
       onOpenChange(false);
       onSuccess();
-      onCreated?.(createdPayload);
     } catch (err: any) {
       console.error("Error creating buyer:", {
-        code: err?.code,
         message: err?.message,
+        code: err?.code,
         details: err?.details,
         hint: err?.hint,
         raw: err,
       });
-      toast.error(err?.message || "Failed to create buyer.");
+      toast.error(err?.message || "Can't add buyer. Try again.");
     } finally {
       setSaving(false);
     }
@@ -161,12 +150,11 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess, onCreated }: 
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="buyer-phone">Phone (optional)</Label>
-            <FormattedInput
+            <Input
               id="buyer-phone"
               type="tel"
-              format="phone"
               value={phone}
-              onChange={(val) => setPhone(val)}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="(555) 555-5555"
             />
           </div>

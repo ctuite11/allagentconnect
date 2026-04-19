@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
+import { Seo } from "@/components/Seo";
 
 const cardClass =
   "bg-white rounded-2xl border border-zinc-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
@@ -63,6 +64,7 @@ export default function Messages() {
 
   return (
     <PageShell>
+      <Seo title="Messaging" />
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

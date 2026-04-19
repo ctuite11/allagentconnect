@@ -13,6 +13,7 @@ import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { Seo } from "@/components/Seo";
 
 interface BuyerCollection {
   clientId: string;
@@ -29,7 +30,17 @@ const getInitials = (first?: string, last?: string): string => {
   return f + l || "?";
 };
 
-const HotSheets = () => {
+interface HotSheetsProps {
+  isPublicMode?: boolean;
+  isAgentMode?: boolean;
+  isBuyerMode?: boolean;
+}
+
+const HotSheets = ({
+  isPublicMode = false,
+  isAgentMode = false,
+  isBuyerMode = false,
+}: HotSheetsProps) => {
   const navigate = useNavigate();
   const [collections, setCollections] = useState<BuyerCollection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,10 +55,39 @@ const HotSheets = () => {
   const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
   // Keep raw hot sheets for dialog lookups
   const [rawHotSheets, setRawHotSheets] = useState<any[]>([]);
+  const buyerMode = isBuyerMode;
 
   useEffect(() => {
+    if (buyerMode) return;
     checkAuth();
-  }, []);
+  }, [buyerMode]);
+
+  if (buyerMode) {
+    return (
+      <>
+        <Seo
+          title="Saved Searches | All Agent Connect"
+          description="Review and manage your saved home searches and listing alerts."
+          canonical="https://allagentconnect.com/hot-sheets"
+          noindex
+        />
+        <div className="min-h-screen flex flex-col">
+          <PageShell className="flex-1">
+            <div className="max-w-3xl mx-auto py-6 space-y-4">
+              <h1 className="text-2xl font-semibold text-foreground">Saved Searches</h1>
+              <p className="text-sm text-muted-foreground">
+                Save a search once and come back to it whenever you want to see fresh listings.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <Button onClick={() => navigate("/hot-sheets/new")}>Create Saved Search</Button>
+                <Button variant="outline" onClick={() => navigate("/client/dashboard")}>Back to Dashboard</Button>
+              </div>
+            </div>
+          </PageShell>
+        </div>
+      </>
+    );
+  }
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -267,6 +307,12 @@ const HotSheets = () => {
   if (loading) {
     return (
       <PageShell>
+        <Seo
+          title="Hot Sheets | All Agent Connect"
+          description="Review saved listing feeds, curated market opportunities, and client-focused inventory updates."
+          canonical="https://allagentconnect.com/hot-sheets"
+          noindex
+        />
         <PageHeader
           title="Buyer HotSheets"
           subtitle="Collections of listings curated for each buyer or renter client."
@@ -292,6 +338,12 @@ const HotSheets = () => {
 
   return (
     <>
+      <Seo
+        title="Hot Sheets | All Agent Connect"
+        description="Review saved listing feeds, curated market opportunities, and client-focused inventory updates."
+        canonical="https://allagentconnect.com/hot-sheets"
+        noindex
+      />
       <PageShell className="pb-8">
         <PageHeader
           title="Buyer HotSheets"

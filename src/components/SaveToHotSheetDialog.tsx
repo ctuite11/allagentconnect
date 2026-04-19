@@ -285,14 +285,14 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
           console.error("Error associating clients:", clientError);
         }
 
-        // Ensure each client has an active client_agent_relationships row
+        // Ensure each client has a pending/active client_agent_relationships row
         for (const client of selectedClients) {
           const { data: existing } = await supabase
             .from("client_agent_relationships")
             .select("id")
             .eq("agent_id", user.id)
-            .eq("client_id", client.id)
-            .eq("status", "active")
+            .eq("crm_client_id", client.id)
+            .in("status", ["active", "pending"])
             .maybeSingle();
 
           if (!existing) {
@@ -300,8 +300,8 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
               .from("client_agent_relationships")
               .insert({
                 agent_id: user.id,
-                client_id: client.id,
-                status: "active",
+                client_id: null,
+                status: "pending",
                 crm_client_id: client.id,
               });
           }

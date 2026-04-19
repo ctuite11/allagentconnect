@@ -40,12 +40,12 @@ const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard" },
   { label: "Search", icon: Search, route: "/listing-search" },
   { label: "Comms", icon: Radio, route: "/client-needs" },
-  { label: "Messages", icon: MessageSquare, route: "/messages" },
+  { label: "Messages", icon: MessageSquare, route: "/agent/messages" },
   { label: "Buyers", icon: Users, route: "/success-hub/buyers" },
   { label: "Agent Network", icon: Users, route: "/our-members" },
   { label: "Contacts", icon: Contact, route: "/my-clients" },
   { label: "Listings", icon: List, route: "/agent/listings" },
-  { label: "HotSheets", icon: Flame, route: "/hot-sheets" },
+  { label: "HotSheets", icon: Flame, route: "/agent/hot-sheets" },
   { label: "Profile", icon: UserCircle, route: "/agent-profile-editor" },
 ];
 

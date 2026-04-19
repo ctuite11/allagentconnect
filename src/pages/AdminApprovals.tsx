@@ -40,6 +40,7 @@ import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 import { Pill, type PillVariant } from "@/components/ui/pill";
+import { Seo } from "@/components/Seo";
 
 interface Agent {
   id: string;
@@ -538,7 +539,17 @@ export default function AdminApprovals() {
   };
 
   if (isChecking) {
-    return <LoadingScreen message="Checking admin access..." />;
+    return (
+      <>
+        <Seo
+          title="Admin | All Agent Connect"
+          description="Review approvals, manage access, and oversee administrative workflows inside All Agent Connect."
+          canonical="https://allagentconnect.com/admin/approvals"
+          noindex
+        />
+        <LoadingScreen message="Checking admin access..." />
+      </>
+    );
   }
 
   if (!user) {
@@ -549,6 +560,12 @@ export default function AdminApprovals() {
   if (!isAdmin) {
     return (
       <div className="pt-6 px-6 pb-6 flex items-center justify-center h-full">
+        <Seo
+          title="Admin | All Agent Connect"
+          description="Review approvals, manage access, and oversee administrative workflows inside All Agent Connect."
+          canonical="https://allagentconnect.com/admin/approvals"
+          noindex
+        />
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="h-8 w-8 text-amber-600" />
@@ -578,6 +595,12 @@ export default function AdminApprovals() {
 
   return (
     <div className="pt-6 px-6 pb-6">
+      <Seo
+        title="Admin | All Agent Connect"
+        description="Review approvals, manage access, and oversee administrative workflows inside All Agent Connect."
+        canonical="https://allagentconnect.com/admin/approvals"
+        noindex
+      />
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         {/* Header */}
         <PageHeader

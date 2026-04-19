@@ -11,6 +11,7 @@ import ListingSearchFilters, { FilterState, initialFilters } from "@/components/
 import { RotateCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Seo } from "@/components/Seo";
 
 const ListingSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -170,6 +171,12 @@ const ListingSearch = () => {
 
   return (
 <div className="bg-white text-neutral-900">
+      <Seo
+        title="Search | All Agent Connect"
+        description="Search listings, off-market opportunities, and agent-shared inventory inside All Agent Connect."
+        canonical="https://allagentconnect.com/listing-search"
+        noindex
+      />
       <main>
         <div className="max-w-[1280px] mx-auto px-6 py-6">
           <PageHeader

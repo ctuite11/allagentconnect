@@ -66,7 +66,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
         return;
       }
 
-      toast.success("Message sent successfully! The agent will get back to you soon.");
+      toast.success("Message sent successfully. The agent will follow up soon.");
       setOpen(false);
       setFormData({
         sender_name: "",
@@ -104,7 +104,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
         <DialogHeader>
           <DialogTitle>Contact {agentName}</DialogTitle>
           <DialogDescription>
-            Send a message to this agent about their services
+            Send a note and let them know what you are looking for.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -150,7 +150,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
               id="subject"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              placeholder="What's this about?"
+              placeholder="How can they help?"
               maxLength={200}
             />
             {errors.subject && <p className="text-sm text-destructive">{errors.subject}</p>}
@@ -162,7 +162,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
               id="message"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              placeholder="Your message here"
+              placeholder="Tell them about the home search or move you have in mind"
               rows={5}
               maxLength={1000}
             />

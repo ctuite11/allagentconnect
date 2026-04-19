@@ -1,76 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2, Pencil, MoreHorizontal, UserMinus } from "lucide-react";
+import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
-import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
-import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
-import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
-import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  BuyerStatusBadge,
-  getBuyerStatus,
-  BUYER_STATUS_ORDER,
-  BUYER_STATUS_CONFIG,
-  type BuyerStatus,
-} from "@/lib/buyerStatus";
-import { cn } from "@/lib/utils";
+import { Seo } from "@/components/Seo";
 
 interface BuyerRow {
   clientId: string;
   name: string;
   email: string;
-  phone: string | null;
-  firstName: string;
-  lastName: string;
-  agentId: string;
-  agentUserId: string | null;
-  notes: string | null;
-  status: BuyerStatus;
+  status: string;
   hotSheetCount: number;
-  createdAt: string;
-  updatedAt: string;
 }
-
-type FilterKey = "all" | BuyerStatus;
-
-/** Relationship statuses considered "still a buyer client" for My Buyers. */
-const ACTIVE_REL_STATUSES = new Set(["active", "invited", "pending"]);
-const ENDED_REL_STATUSES = new Set(["ended", "inactive", "archived", "closed", "declined"]);
 
 export default function BuyersList() {
   const navigate = useNavigate();
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [filter, setFilter] = useState<FilterKey>("all");
-  const [editBuyer, setEditBuyer] = useState<BuyerRow | null>(null);
-  const [removeBuyer, setRemoveBuyer] = useState<BuyerRow | null>(null);
-  const [nextStepBuyer, setNextStepBuyer] = useState<CreatedBuyer | null>(null);
-  const [hotSheetForBuyer, setHotSheetForBuyer] = useState<CreatedBuyer | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const loadBuyers = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      setCurrentUserId(user.id);
 
+      // Get active + pending relationships for this agent
       const { data: relationships, error: relErr } = await supabase
         .from("client_agent_relationships")
-        .select("client_id,crm_client_id,status,created_at,ended_at")
+        .select("client_id,crm_client_id,status,created_at")
         .eq("agent_id", user.id)
+        .in("status", ["active", "pending"])
         .order("created_at", { ascending: false });
 
       if (relErr) {
@@ -78,30 +42,23 @@ export default function BuyersList() {
         return;
       }
 
-      // Only relationships that are still active count as buyer clients.
-      // Excludes: ended, inactive, archived, closed, declined.
-      const liveRelationships = (relationships ?? []).filter((r: any) => {
-        const status = (r.status ?? "").toLowerCase();
-        if (r.ended_at) return false;
-        if (ENDED_REL_STATUSES.has(status)) return false;
-        return ACTIVE_REL_STATUSES.has(status);
-      });
-
-      if (liveRelationships.length === 0) {
+      if (!relationships || relationships.length === 0) {
         setBuyers([]);
         return;
       }
 
-      const authClientIds = liveRelationships.map((r: any) => r.client_id).filter(Boolean);
-      const crmClientIds = liveRelationships
-        .map((r: any) => r.crm_client_id)
+      // Collect both client_id (auth user) and crm_client_id (CRM contact) for lookups
+      const authClientIds = relationships.map((r) => r.client_id).filter(Boolean);
+      const crmClientIds = (relationships as any[])
+        .map((r) => r.crm_client_id)
         .filter(Boolean) as string[];
       const allCrmIds = [...new Set([...authClientIds, ...crmClientIds])];
 
+      // Fetch client details + hot sheet counts in parallel
       const [clientsRes, hscRes] = await Promise.all([
         supabase
           .from("clients")
-          .select("id,first_name,last_name,email,phone,notes,agent_id,agent_user_id,updated_at")
+          .select("id,first_name,last_name,email")
           .in("id", allCrmIds),
         supabase
           .from("hot_sheet_clients")
@@ -110,7 +67,9 @@ export default function BuyersList() {
       ]);
 
       const clientMap = new Map<string, any>();
-      for (const c of (clientsRes.data ?? [])) clientMap.set(c.id, c);
+      for (const c of (clientsRes.data ?? [])) {
+        clientMap.set(c.id, c);
+      }
 
       const hsCountMap = new Map<string, number>();
       for (const row of (hscRes.data ?? []) as any[]) {
@@ -118,31 +77,18 @@ export default function BuyersList() {
         hsCountMap.set(cid, (hsCountMap.get(cid) ?? 0) + 1);
       }
 
-      const rows: BuyerRow[] = liveRelationships.map((r: any) => {
+      // Build rows: prefer crm_client_id for client lookup, fall back to client_id
+      const rows: BuyerRow[] = relationships.map((r: any) => {
         const crmId = r.crm_client_id || r.client_id;
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
         if (!c) return null;
         const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
-        // Authoritative: derive from the relationship row, not the CRM contact flag.
-        const status = getBuyerStatus({
-          relationship_client_id: r.client_id,
-          relationship_status: r.status,
-          relationship_ended_at: r.ended_at,
-        });
         return {
           clientId: c.id,
           name,
           email: c?.email ?? "",
-          phone: c?.phone ?? null,
-          firstName: c?.first_name ?? "",
-          lastName: c?.last_name ?? "",
-          agentId: c?.agent_id ?? "",
-          agentUserId: c?.agent_user_id ?? null,
-          notes: c?.notes ?? null,
-          status,
+          status: r.status,
           hotSheetCount: hsCountMap.get(c.id) ?? 0,
-          createdAt: r.created_at ?? c.updated_at ?? "",
-          updatedAt: c.updated_at ?? r.created_at ?? "",
         };
       }).filter(Boolean) as BuyerRow[];
 
@@ -158,34 +104,17 @@ export default function BuyersList() {
     loadBuyers();
   }, []);
 
-  const counts = useMemo(() => {
-    const c: Record<FilterKey, number> = {
-      all: buyers.length,
-      active: 0,
-      pending_invite: 0,
-    };
-    for (const b of buyers) c[b.status] += 1;
-    return c;
-  }, [buyers]);
-
-  const visible = useMemo(() => {
-    let list = buyers;
-    if (filter !== "all") list = list.filter((b) => b.status === filter);
-    return [...list].sort((a, b) =>
-      (b.createdAt || "").localeCompare(a.createdAt || ""),
-    );
-  }, [buyers, filter]);
-
-  const tabs: { key: FilterKey; label: string }[] = [
-    { key: "all", label: "All" },
-    ...BUYER_STATUS_ORDER.map((s) => ({ key: s as FilterKey, label: BUYER_STATUS_CONFIG[s].label })),
-  ];
-
   return (
-    <PageShell>
+    <PageShell className="bg-secondary/40">
+      <Seo
+        title="Buyers | All Agent Connect"
+        description="View and manage buyer accounts, activity, and connected workflows inside All Agent Connect."
+        canonical="https://allagentconnect.com/success-hub/buyers"
+        noindex
+      />
       <PageHeader
-        title="My Buyers"
-        subtitle="Manage buyer hot sheets, favorites, invites, and activity."
+        title="Your Buyers"
+        subtitle="Select a buyer to manage their hot sheets, favorites, and activity."
         actions={
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <UserPlus className="h-4 w-4 mr-1.5" />
@@ -194,102 +123,33 @@ export default function BuyersList() {
         }
       />
 
-      {/* Filter tabs */}
-      <div className="mb-5 flex flex-wrap items-center gap-1.5">
-        {tabs.map((t) => {
-          const active = filter === t.key;
-          const count = counts[t.key];
-          return (
-            <button
-              key={t.key}
-              onClick={() => setFilter(t.key)}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                active
-                  ? "bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300",
-              )}
-            >
-              {t.label}
-              <span
-                className={cn(
-                  "text-[10px] tabular-nums",
-                  active ? "text-white/70" : "text-slate-400",
-                )}
-              >
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
-      ) : visible.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {filter === "all" ? "No buyers yet." : "No buyers in this status."}
-        </p>
+      ) : buyers.length === 0 ? (
+        <p className="text-muted-foreground text-sm">No buyers yet.</p>
       ) : (
         <div className="space-y-2">
-          {visible.map((b) => (
+          {buyers.map((b) => (
             <Card
               key={b.clientId}
-              className="cursor-pointer border border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm transition-all duration-180"
+              className="cursor-pointer border border-border bg-card hover:border-muted-foreground/30 transition-colors"
               onClick={() => navigate(`/success-hub/buyers/${b.clientId}`)}
             >
-              <CardContent className="flex items-center justify-between px-6 py-5">
+              <CardContent className="flex items-center justify-between p-5">
                 <div className="min-w-0">
-                  <p className="font-medium text-sm text-slate-900">{b.name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{b.email}</p>
+                  <p className="font-medium text-sm text-foreground">{b.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{b.email}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <BuyerStatusBadge status={b.status} />
-                  <span className="text-[11px] text-slate-500 whitespace-nowrap">
+                  <span className={`text-sm font-medium ${b.status === "pending" ? "text-amber-600" : "text-emerald-600"}`}>
+                    {b.status === "pending" ? "Pending" : "Active"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                     {b.hotSheetCount} hot sheet{b.hotSheetCount !== 1 ? "s" : ""}
                   </span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label="More actions"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-44"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <DropdownMenuItem
-                        className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditBuyer(b);
-                        }}
-                      >
-                        <Pencil className="h-3.5 w-3.5 mr-2 text-slate-400" />
-                        Edit Buyer
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-900"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRemoveBuyer(b);
-                        }}
-                      >
-                        <UserMinus className="h-3.5 w-3.5 mr-2 text-slate-400" />
-                        Remove Buyer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <ChevronRight className="h-4 w-4 text-slate-300" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
               </CardContent>
             </Card>
@@ -301,63 +161,6 @@ export default function BuyersList() {
         open={showCreate}
         onOpenChange={setShowCreate}
         onSuccess={loadBuyers}
-        onCreated={(b) => setNextStepBuyer(b)}
-      />
-
-      <BuyerCreatedNextStepDialog
-        buyer={nextStepBuyer}
-        onClose={() => setNextStepBuyer(null)}
-        onCreateHotSheet={(b) => setHotSheetForBuyer(b)}
-      />
-
-      {currentUserId && hotSheetForBuyer && (
-        <CreateHotSheetDialog
-          open={!!hotSheetForBuyer}
-          onOpenChange={(o) => { if (!o) setHotSheetForBuyer(null); }}
-          userId={currentUserId}
-          onSuccess={() => {
-            setHotSheetForBuyer(null);
-            loadBuyers();
-          }}
-          preSelectedClients={[{
-            id: hotSheetForBuyer.id,
-            first_name: hotSheetForBuyer.firstName,
-            last_name: hotSheetForBuyer.lastName,
-            email: hotSheetForBuyer.email,
-          }]}
-        />
-      )}
-
-      <EditBuyerDialog
-        open={!!editBuyer}
-        onOpenChange={(o) => { if (!o) setEditBuyer(null); }}
-        buyer={
-          editBuyer
-            ? {
-                id: editBuyer.clientId,
-                first_name: editBuyer.firstName,
-                last_name: editBuyer.lastName,
-                email: editBuyer.email,
-                phone: editBuyer.phone,
-                notes: editBuyer.notes,
-              }
-            : null
-        }
-        onSuccess={loadBuyers}
-      />
-
-      <RemoveBuyerClientDialog
-        open={!!removeBuyer}
-        onOpenChange={(o) => { if (!o) setRemoveBuyer(null); }}
-        buyerName={removeBuyer?.name}
-        agentId={removeBuyer?.agentId}
-        buyerId={removeBuyer?.clientId}
-        onRemoved={() => {
-          if (removeBuyer) {
-            setBuyers((prev) => prev.filter((x) => x.clientId !== removeBuyer.clientId));
-          }
-          loadBuyers();
-        }}
       />
     </PageShell>
   );

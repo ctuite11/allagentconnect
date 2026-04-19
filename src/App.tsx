@@ -30,17 +30,20 @@ import AddRentalListing from "./pages/AddRentalListing";
 import PropertyDetail from "./pages/PropertyDetail";
 import AgentDetailRedirect from "./pages/AgentDetailRedirect";
 import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
-import AgentProfile from "./pages/AgentProfile";
 import AgentProfileEditor from "./pages/AgentProfileEditor";
 import ManageTeam from "./pages/ManageTeam";
 import TeamProfile from "./pages/TeamProfile";
 import ManageCoverageAreas from "./pages/ManageCoverageAreas";
 import BrowsePropertiesNew from "./pages/BrowsePropertiesNew";
 import SearchResults from "./pages/SearchResults";
+import PublicSearchResults from "./pages/PublicSearchResults";
 import OurAgents from "./pages/OurAgents";
+import PublicOurAgents from "./pages/PublicOurAgents";
 import Favorites from "./pages/Favorites";
+import BuyerFavorites from "./pages/BuyerFavorites";
 import MyFavorites from "./pages/MyFavorites";
 import HotSheets from "./pages/HotSheets";
+import BuyerHotSheets from "./pages/BuyerHotSheets";
 import HotSheetReview from "./pages/HotSheetReview";
 import HotSheetBuyerDetail from "./pages/HotSheetBuyerDetail";
 import MyClients from "./pages/MyClients";
@@ -76,38 +79,10 @@ import ShareLinkHandler from "./pages/ShareLinkHandler";
 import LandingPage from "./pages/LandingPage";
 import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import DesignMockup from "./pages/DesignMockup";
 import HomepageV2 from "./pages/HomepageV2";
-import DcmlsHome from "./pages/DcmlsHome";
-import DcmlsAuth from "./pages/DcmlsAuth";
-import DcmlsSaved from "./pages/DcmlsSaved";
-import DcmlsSearches from "./pages/DcmlsSearches";
-import DcmlsHotSheetNew from "./pages/DcmlsHotSheetNew";
-import DcmlsAccount from "./pages/DcmlsAccount";
-import { isDcmlsHost } from "./lib/host";
-import { useAuthRole } from "./hooks/useAuthRole";
-
-/** Renders the DCMLS homepage on directconnectmls.com, AAC homepage elsewhere. */
-function HostHomeSwitch() {
-  return isDcmlsHost() ? <DcmlsHome /> : <HomepageV2 />;
-}
-
-/** Renders DCMLS-branded auth on DCMLS host, AAC auth elsewhere. */
-function HostAuthSwitch() {
-  return isDcmlsHost() ? <DcmlsAuth /> : <Auth />;
-}
-
-/**
- * Routes /property/:id to the right surface:
- * - Agents/admins → PropertyDetail (agent management view)
- * - Buyers & unauthenticated visitors → ConsumerPropertyDetail (polished consumer page)
- */
-function PropertyDetailSwitch() {
-  const { role, loading } = useAuthRole();
-  if (loading) return null;
-  const isAgentOrAdmin = role === "agent" || role === "admin";
-  return isAgentOrAdmin ? <PropertyDetail /> : <ConsumerPropertyDetail />;
-}
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
 import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
@@ -149,12 +124,44 @@ import Disclosures from "./pages/legal/Disclosures";
 import Messages from "./pages/Messages";
 import Conversation from "./pages/Conversation";
 import MessagingWorkspace from "./pages/MessagingWorkspace";
+import BuyerMessagingWorkspace from "./pages/BuyerMessagingWorkspace";
+import PublicAgentProfile from "./pages/PublicAgentProfile";
+import Footer from "./components/Footer";
+import { useAuthRole } from "./hooks/useAuthRole";
 
 // Legacy redirect for /client-hot-sheet/:token → /client/hotsheet/:token
 function LegacyClientHotSheetRedirect() {
   const { token } = useParams();
   const location = useLocation();
   return <Navigate to={`/client/hotsheet/${token}${location.search}`} replace />;
+}
+
+function FavoritesEntry() {
+  const { role, loading } = useAuthRole();
+  if (loading) return null;
+  if (role === "agent" || role === "admin") return <Navigate to="/my-favorites" replace />;
+  if (role === "buyer") return <BuyerFavorites />;
+  return <Navigate to="/auth" replace />;
+}
+
+function HotSheetsEntry() {
+  const { role, loading } = useAuthRole();
+  if (loading) return null;
+  if (role === "agent" || role === "admin") return <Navigate to="/agent/hot-sheets" replace />;
+  if (role === "buyer") return <BuyerHotSheets />;
+  return <Navigate to="/auth" replace />;
+}
+
+function MessagesEntry() {
+  const { role, loading } = useAuthRole();
+  const { id } = useParams();
+  const location = useLocation();
+  if (loading) return null;
+  if (role === "agent" || role === "admin") {
+    return <Navigate to={`/agent/messages${id ? `/${id}` : ""}${location.search}`} replace />;
+  }
+  if (role === "buyer") return <BuyerMessagingWorkspace />;
+  return <Navigate to="/auth" replace />;
 }
 
 /** Layout route: wraps children in AppShell (sidebar + header) */
@@ -186,14 +193,16 @@ const App = () => (
               <Navigation />
               <NewMessageToastListener />
               <Routes>
-                <Route path="/" element={<HostHomeSwitch />} />
+                <Route path="/" element={<HomepageV2 />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/agent-match" element={<AgentMatch />} />
+                <Route path="/agent-match" element={<><AgentMatch /><Footer /></>} />
                 <Route path="/seller-listing/:id" element={<SellerListingDetail />} />
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
                 <Route path="/home" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
                 {/* Auth routes */}
-                <Route path="/auth" element={<HostAuthSwitch />} />
+                <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
                 <Route path="/pending-verification" element={<PendingVerification />} />
@@ -237,21 +246,21 @@ const App = () => (
                   <Route path="/agent-profile-editor" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
                   <Route path="/manage-team" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
                   <Route path="/manage-coverage-areas" element={<RouteGuard requireRole="agent"><ManageCoverageAreas /></RouteGuard>} />
-                  <Route path="/our-members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
-                  <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} /></RouteGuard>} />
-                  <Route path="/listing-search" element={<ListingSearch />} />
-                  <Route path="/listing-results" element={<ListingSearchResults />} />
+                  <Route path="/our-members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} isAgentMode /></RouteGuard>} />
+                  <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} isAgentMode /></RouteGuard>} />
+                  <Route path="/listing-search" element={<RouteGuard requireRole="agent"><ListingSearch /></RouteGuard>} />
+                  <Route path="/listing-results" element={<RouteGuard requireRole="agent"><ListingSearchResults /></RouteGuard>} />
                   <Route path="/agent-search" element={<MLSPINSearch />} />
-                  <Route path="/favorites" element={<Favorites />} />
                   <Route path="/my-favorites" element={<MyFavorites />} />
-                  <Route path="/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets /></RouteGuard>} />
+                  <Route path="/agent/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets isAgentMode /></RouteGuard>} />
                   <Route path="/agent/off-market" element={<Navigate to="/agent/listings?status=off_market" replace />} />
                   <Route path="/hot-sheets/:id/review" element={<RouteGuard requireRole="agent"><HotSheetReview /></RouteGuard>} />
                   <Route path="/hot-sheets/buyer/:clientId" element={<RouteGuard requireRole="agent"><HotSheetBuyerDetail /></RouteGuard>} />
                   <Route path="/my-clients" element={<RouteGuard requireRole="agent"><MyClients /></RouteGuard>} />
                   <Route path="/my-clients/:clientId/favorites" element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>} />
-                  <Route path="/messages" element={<RouteGuard requireRole={["agent", "buyer"]}><MessagingWorkspace /></RouteGuard>} />
-                  <Route path="/messages/:id" element={<RouteGuard requireRole={["agent", "buyer"]}><MessagingWorkspace /></RouteGuard>} />
+                  <Route path="/agent/favorites" element={<Navigate to="/my-favorites" replace />} />
+                  <Route path="/agent/messages" element={<RouteGuard requireRole="agent"><MessagingWorkspace isAgentMode /></RouteGuard>} />
+                  <Route path="/agent/messages/:id" element={<RouteGuard requireRole="agent"><MessagingWorkspace isAgentMode /></RouteGuard>} />
                   <Route path="/showing-requests" element={<RouteGuard requireRole="agent"><ShowingRequests /></RouteGuard>} />
                   <Route path="/analytics" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
                   <Route path="/analytics/:id" element={<RouteGuard requireRole="agent"><ListingAnalytics /></RouteGuard>} />
@@ -267,39 +276,37 @@ const App = () => (
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
-                {/* Public agent profile — viewable by anonymous DCMLS visitors and AAC users alike */}
-                <Route path="/agent/:id" element={<AgentProfile />} />
                 {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
                 <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
-                <Route path="/property/:id" element={<PropertyDetailSwitch />} />
+                <Route path="/property/:id" element={<><PropertyDetail /><Footer /></>} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowsePropertiesNew />} />
-                <Route path="/search" element={<SearchResults />} />
-                <Route path="/our-agents" element={<OurAgents />} />
-                <Route path="/agents" element={<OurAgents />} />
-                <Route path="/find-agent" element={<OurAgents />} />
+                <Route path="/search" element={<PublicSearchResults />} />
+                <Route path="/our-agents" element={<PublicOurAgents />} />
+                <Route path="/agents" element={<PublicOurAgents />} />
+                <Route path="/find-agent" element={<PublicOurAgents />} />
+                <Route path="/agent/:id" element={<PublicAgentProfile />} />
+                <Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
+                <Route path="/hot-sheets" element={<RouteGuard requireAuth><HotSheetsEntry /></RouteGuard>} />
+                <Route path="/hot-sheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
+                <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
                 {/* Legacy consumer routes */}
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
-                {/* Public consumer auth surface — used on DCMLS host (directconnectmls.com) */}
-                <Route path="/consumer/auth" element={<DcmlsAuth />} />
+                <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
                 <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
-                <Route path="/client/hotsheets/new" element={<RouteGuard requireAuth><ClientCreateHotsheetNew /></RouteGuard>} />
-                <Route path="/client/create-hotsheet" element={<Navigate to="/client/hotsheets/new" replace />} />
+                <Route path="/client/hotsheets/new" element={<Navigate to="/hot-sheets/new" replace />} />
+                <Route path="/client/create-hotsheet" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
-                <Route path="/client/favorites" element={<RouteGuard requireAuth><Favorites /></RouteGuard>} />
-                {/* DCMLS consumer routes — protected; redirect to /auth keeps host-aware switch */}
-                <Route path="/saved" element={<RouteGuard requireAuth><DcmlsSaved /></RouteGuard>} />
-                <Route path="/searches" element={<RouteGuard requireAuth><DcmlsSearches /></RouteGuard>} />
-                <Route path="/searches/new" element={<RouteGuard requireAuth><DcmlsHotSheetNew /></RouteGuard>} />
-                <Route path="/account" element={<RouteGuard requireAuth><DcmlsAccount /></RouteGuard>} />
+                <Route path="/client/favorites" element={<Navigate to="/favorites" replace />} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />

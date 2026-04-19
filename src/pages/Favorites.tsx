@@ -36,7 +36,17 @@ interface Favorite {
   listings: Listing;
 }
 
-const Favorites = () => {
+interface FavoritesProps {
+  isPublicMode?: boolean;
+  isAgentMode?: boolean;
+  isBuyerMode?: boolean;
+}
+
+const Favorites = ({
+  isPublicMode = false,
+  isAgentMode = false,
+  isBuyerMode = false,
+}: FavoritesProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -45,6 +55,7 @@ const Favorites = () => {
   const [commentDialogOpen, setCommentDialogOpen] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
+  const buyerMode = isBuyerMode || (!isAgentMode && !isPublicMode);
 
   useEffect(() => {
     checkAuth();
@@ -53,7 +64,7 @@ const Favorites = () => {
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("Please sign in to view favorites");
+      toast.error(buyerMode ? "Please sign in to view your saved homes" : "Please sign in to view favorites");
       navigate("/auth");
       return;
     }
@@ -94,7 +105,7 @@ const Favorites = () => {
       setFavorites((data || []) as any);
     } catch (error: any) {
       console.error("Error fetching favorites:", error);
-      toast.error("Failed to load favorites");
+      toast.error(buyerMode ? "Failed to load your saved homes" : "Failed to load favorites");
     } finally {
       setLoading(false);
     }
@@ -110,16 +121,16 @@ const Favorites = () => {
       if (error) throw error;
 
       setFavorites(favorites.filter(fav => fav.id !== favoriteId));
-      toast.success("Removed from favorites");
+      toast.success(buyerMode ? "Removed from saved homes" : "Removed from favorites");
     } catch (error: any) {
       console.error("Error removing favorite:", error);
-      toast.error("Failed to remove favorite");
+      toast.error(buyerMode ? "Failed to remove saved home" : "Failed to remove favorite");
     }
   };
 
   const handleSendComment = async (listingId: string, agentId: string) => {
     if (!comment.trim()) {
-      toast.error("Please enter a comment");
+      toast.error(buyerMode ? "Please enter a message" : "Please enter a comment");
       return;
     }
 
@@ -152,12 +163,12 @@ const Favorites = () => {
 
       if (error) throw error;
 
-      toast.success("Comment sent to agent");
+      toast.success(buyerMode ? "Message sent" : "Comment sent to agent");
       setComment("");
       setCommentDialogOpen(null);
     } catch (error: any) {
       console.error("Error sending comment:", error);
-      toast.error("Failed to send comment");
+      toast.error(buyerMode ? "Failed to send message" : "Failed to send comment");
     } finally {
       setSendingComment(false);
     }
@@ -194,7 +205,7 @@ const Favorites = () => {
       <div className="min-h-screen flex flex-col pt-20">
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-muted-foreground">Loading favorites...</p>
+            <p className="text-muted-foreground">{buyerMode ? "Loading your saved homes..." : "Loading favorites..."}</p>
           </div>
         </main>
       </div>
@@ -208,17 +219,19 @@ const Favorites = () => {
           {/* Header */}
           <div className="mb-8">
             <PageTitle icon={<Heart className="h-8 w-8 fill-current text-red-500" />} className="mb-2">
-              My Favorites
+              {buyerMode ? "Your Saved Homes" : "My Favorites"}
             </PageTitle>
             <p className="text-muted-foreground">
-              Manage your favorite properties so you don't lose track of them.
+              {buyerMode
+                ? "Review the listings you have saved to revisit later."
+                : "Manage your favorite properties so you don't lose track of them."}
             </p>
           </div>
 
           {/* Favorites Count */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold">
-              Favorites ({favorites.length})
+              {buyerMode ? `Saved Homes (${favorites.length})` : `Favorites (${favorites.length})`}
             </h2>
           </div>
 
@@ -227,11 +240,13 @@ const Favorites = () => {
             <Card className="p-12 border border-neutral-200">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">No favorites yet</h3>
+                <h3 className="text-xl font-semibold mb-2">{buyerMode ? "No saved homes yet" : "No favorites yet"}</h3>
                 <p className="text-muted-foreground mb-6">
-                  Start browsing properties and save your favorites to keep track of them.
+                  {buyerMode
+                    ? "Start browsing homes and save the ones you want to revisit."
+                    : "Start browsing properties and save your favorites to keep track of them."}
                 </p>
-                <Button onClick={() => navigate("/browse")}>Browse Properties</Button>
+                <Button onClick={() => navigate("/browse")}>{buyerMode ? "Browse Homes" : "Browse Properties"}</Button>
               </div>
             </Card>
           ) : (
@@ -301,54 +316,56 @@ const Favorites = () => {
                           View Details
                         </Button>
                         
-                        <Dialog 
-                          open={commentDialogOpen === listing.id} 
-                          onOpenChange={(open) => {
-                            setCommentDialogOpen(open ? listing.id : null);
-                            if (!open) setComment("");
-                          }}
-                        >
-                          <DialogTrigger asChild>
-                            <Button variant="secondary" size="icon">
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Comment on Property</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  Send a comment or question to the listing agent
-                                </p>
-                                <Textarea
-                                  placeholder="Enter your comment or question..."
-                                  value={comment}
-                                  onChange={(e) => setComment(e.target.value)}
-                                  rows={4}
-                                />
+                        {buyerMode && (
+                          <Dialog 
+                            open={commentDialogOpen === listing.id} 
+                            onOpenChange={(open) => {
+                              setCommentDialogOpen(open ? listing.id : null);
+                              if (!open) setComment("");
+                            }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button variant="secondary" size="icon">
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Send a Note</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    Send a question or note about this home
+                                  </p>
+                                  <Textarea
+                                    placeholder="What would you like to ask about this home?"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    rows={4}
+                                  />
+                                </div>
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setCommentDialogOpen(null);
+                                      setComment("");
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleSendComment(listing.id, listing.agent_id)}
+                                    disabled={sendingComment || !comment.trim()}
+                                  >
+                                    Send Message
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="flex gap-2 justify-end">
-                                <Button
-                                  variant="outline"
-                                  onClick={() => {
-                                    setCommentDialogOpen(null);
-                                    setComment("");
-                                  }}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  onClick={() => handleSendComment(listing.id, listing.agent_id)}
-                                  disabled={sendingComment || !comment.trim()}
-                                >
-                                  Send Comment
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogContent>
+                          </Dialog>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -360,7 +377,7 @@ const Favorites = () => {
       </main>
 
       {/* Footer only on public client route, not inside agent app shell */}
-      {location.pathname.startsWith("/client") && <Footer />}
+      {(buyerMode || location.pathname.startsWith("/client")) && <Footer />}
     </div>
   );
 };

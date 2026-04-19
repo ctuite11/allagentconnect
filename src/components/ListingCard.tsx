@@ -67,6 +67,7 @@ interface ListingCardProps {
   showActions?: boolean;
   onSelect?: (id: string) => void;
   isSelected?: boolean;
+  hideMlsMeta?: boolean;
   agentInfo?: {
     name: string;
     company?: string | null;
@@ -94,6 +95,7 @@ const ListingCard = ({
   showActions = true,
   onSelect,
   isSelected = false,
+  hideMlsMeta = false,
   agentInfo = null,
   clientComment,
   chatMessages,
@@ -690,14 +692,16 @@ const ListingCard = ({
             <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-primary cursor-pointer text-lg">
               {displayPrice}
             </p>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">
-                ID# {listing.listing_number}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                DOM {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
-              </p>
-            </div>
+            {!hideMlsMeta && (
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">
+                  ID# {listing.listing_number}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  DOM {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
+                </p>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>

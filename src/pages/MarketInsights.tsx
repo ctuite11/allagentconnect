@@ -11,6 +11,7 @@ import { MapPin, Bed, Bath, Square, TrendingUp, TrendingDown, Calendar, DollarSi
 import { differenceInDays, format, subDays, subMonths } from "date-fns";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
+import { Seo } from "@/components/Seo";
 
 interface SoldListing {
   id: string;
@@ -194,6 +195,12 @@ const MarketInsights = () => {
 
   return (
     <div className="min-h-screen flex flex-col pt-20">
+      <Seo
+        title="Analytics | All Agent Connect"
+        description="Review market insights, analytics, and activity trends inside All Agent Connect."
+        canonical="https://allagentconnect.com/market-insights"
+        noindex
+      />
       <main className="flex-1 bg-white">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}

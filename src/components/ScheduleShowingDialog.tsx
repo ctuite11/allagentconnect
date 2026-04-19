@@ -23,9 +23,18 @@ const showingRequestSchema = z.object({
 interface ScheduleShowingDialogProps {
   listingId: string;
   listingAddress: string;
+  triggerLabel?: string;
+  triggerClassName?: string;
+  triggerVariant?: "default" | "outline" | "secondary";
 }
 
-const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDialogProps) => {
+const ScheduleShowingDialog = ({
+  listingId,
+  listingAddress,
+  triggerLabel = "Schedule Showing",
+  triggerClassName,
+  triggerVariant = "default",
+}: ScheduleShowingDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -134,9 +143,9 @@ const ScheduleShowingDialog = ({ listingId, listingAddress }: ScheduleShowingDia
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2">
+        <Button size="lg" variant={triggerVariant} className={`gap-2 ${triggerClassName || ""}`}>
           <Calendar className="h-5 w-5" />
-          Schedule Showing
+          {triggerLabel}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">

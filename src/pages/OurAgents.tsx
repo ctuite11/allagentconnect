@@ -17,6 +17,7 @@ import { Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { z } from "zod";
 import { PageHeader } from "@/components/ui/page-header";
 import { LISTING_STATUS } from "@/constants/status";
+import { Seo } from "@/components/Seo";
 
 interface EnrichedAgent {
   id: string;
@@ -52,9 +53,17 @@ interface County {
 
 interface OurAgentsProps {
   defaultAgentMode?: boolean;
+  isPublicMode?: boolean;
+  isAgentMode?: boolean;
+  isBuyerMode?: boolean;
 }
 
-const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
+const OurAgents = ({
+  defaultAgentMode = false,
+  isPublicMode = false,
+  isAgentMode = false,
+  isBuyerMode = false,
+}: OurAgentsProps) => {
   const navigate = useNavigate();
   const { user, role, loading: authLoading } = useAuthRole();
   
@@ -70,8 +79,8 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"a-z" | "z-a">("a-z");
   
-  // View mode - default based on prop
-  const [isAgentMode, setIsAgentMode] = useState(defaultAgentMode);
+  const effectiveAgentMode = isAgentMode || defaultAgentMode;
+  const effectivePublicMode = isPublicMode || !effectiveAgentMode;
   
   // Message dialog
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
@@ -81,13 +90,11 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const isAuthenticatedAgent = role === "agent";
-  
   // Page titles based on mode
-  const pageTitle = isAgentMode ? "AAC Referral Network" : "Trusted Agents";
-  const pageSubtitle = isAgentMode 
+  const pageTitle = effectiveAgentMode ? "AAC Referral Network" : "Find an Agent";
+  const pageSubtitle = effectiveAgentMode 
     ? "A private network of vetted agents for referrals, introductions, and trusted collaboration."
-    : "Connect directly with vetted local professionals";
+    : "Browse experienced local agents and open a profile to learn more about who you want to work with.";
 
   useEffect(() => {
     fetchData();
@@ -250,7 +257,7 @@ const OurAgents = ({ defaultAgentMode = false }: OurAgentsProps) => {
   }, [counties]);
 
 /** Sub-component that wraps the grid with batch presence */
-function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]; onViewProfile: (id: string) => void }) {
+function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }: { agents: EnrichedAgent[]; onViewProfile: (id: string) => void; hideDirectContact?: boolean }) {
   const userIds = useMemo(() => agents.map((a) => a.id), [agents]);
   const presenceMap = useAgentPresenceBatch(userIds);
 
@@ -262,6 +269,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]
           agent={agent}
           onClick={onViewProfile}
           isOnline={presenceMap.get(agent.id)?.isOnline}
+          hideDirectContact={hideDirectContact}
         />
       ))}
     </div>
@@ -358,13 +366,21 @@ function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Seo
+        title={effectivePublicMode ? "Find an Agent | All Agent Connect" : "Agent Network | All Agent Connect"}
+        description={effectivePublicMode
+          ? "Browse local real estate agents, compare profiles, and connect with someone who fits your move."
+          : "Browse the All Agent Connect member network, discover agents, and build professional connections."}
+        canonical={effectivePublicMode ? "https://allagentconnect.com/our-agents" : "https://allagentconnect.com/our-members"}
+        noindex={!effectivePublicMode}
+      />
       <main className="flex-1 pb-12">
         {/* Page Header + Search */}
         <section className="border-b border-zinc-200 bg-white py-8">
           <div className="mx-auto w-full max-w-[1200px] px-6">
             <PageHeader
-              title="AAC Referral Network"
-              subtitle="A private network of vetted agents for referrals, introductions, and trusted collaboration."
+              title={pageTitle}
+              subtitle={pageSubtitle}
             />
             
             {/* Search Bar - Left Aligned */}
@@ -373,7 +389,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
                 <Input
                   type="text"
-                  placeholder="Search by name, company, city, or ZIP..."
+                  placeholder={effectivePublicMode ? "Search by name, city, or brokerage..." : "Search by name, company, city, or ZIP..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-12 pl-12 pr-4 text-[15px] border-zinc-300 rounded-lg"
@@ -389,6 +405,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]
           setSortOrder={setSortOrder}
           resultCount={filteredAgents.length}
           searchQuery={searchQuery}
+          itemLabel="Agents"
         />
 
         {/* Agent Grid */}
@@ -402,13 +419,13 @@ function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">
                   {searchQuery || selectedState || selectedCounties.length > 0
-                    ? "No agents found matching your criteria."
-                    : "No agents available at the moment."}
+                    ? effectivePublicMode ? "No agents matched your search." : "No agents found matching your criteria."
+                    : effectivePublicMode ? "No agents are available right now." : "No agents available at the moment."}
                 </p>
               </div>
             ) : (
               <>
-                <AgentPhotoTileGrid agents={filteredAgents} onViewProfile={handleViewProfile} />
+                <AgentPhotoTileGrid agents={filteredAgents} onViewProfile={handleViewProfile} hideDirectContact={effectivePublicMode} />
 
                 {/* Pagination Controls */}
                 {totalCount > PAGE_SIZE && (
@@ -444,7 +461,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]
         </section>
 
         {/* CTA Section — only on public routes */}
-        {!defaultAgentMode && (
+        {effectivePublicMode && (
           <section className="bg-primary py-12 text-primary-foreground">
             <div className="container mx-auto px-4 text-center">
               <h2 className="mb-3 text-2xl font-bold">
@@ -465,7 +482,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile }: { agents: EnrichedAgent[]
       </main>
 
       {/* Footer — only on public routes */}
-      {!defaultAgentMode && <Footer />}
+      {effectivePublicMode && <Footer />}
 
       {/* Message Dialog */}
       <Dialog open={messageDialogOpen} onOpenChange={(open) => {

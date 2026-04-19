@@ -7,6 +7,8 @@ type CorsResult = {
 const isAllowedOrigin = (origin: string) =>
   origin === "https://allagentconnect.com" ||
   origin === "https://www.allagentconnect.com" ||
+  origin === "https://directconnectmls.com" ||
+  origin === "https://www.directconnectmls.com" ||
   origin.endsWith(".netlify.app") ||
   origin === "http://localhost" ||
   origin.startsWith("http://localhost:");

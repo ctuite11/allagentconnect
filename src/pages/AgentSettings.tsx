@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { toast } from "@/hooks/use-toast";
 import { Check, X, Eye, EyeOff, Lock, CreditCard } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 export default function AgentSettings() {
   // Password state
@@ -58,6 +59,12 @@ export default function AgentSettings() {
   if (loading) {
     return (
       <div className="p-8">
+        <Seo
+          title="Settings | All Agent Connect"
+          description="Manage account preferences, platform settings, and configuration inside All Agent Connect."
+          canonical="https://allagentconnect.com/settings"
+          noindex
+        />
         <div className="h-8 w-48 bg-zinc-100 rounded animate-pulse mb-4" />
         <div className="h-4 w-72 bg-zinc-100 rounded animate-pulse" />
       </div>
@@ -66,6 +73,12 @@ export default function AgentSettings() {
 
   return (
     <div className="p-6 md:p-8 max-w-2xl">
+      <Seo
+        title="Settings | All Agent Connect"
+        description="Manage account preferences, platform settings, and configuration inside All Agent Connect."
+        canonical="https://allagentconnect.com/settings"
+        noindex
+      />
       <PageHeader
         title="Settings"
         subtitle="Manage your subscription and account security."

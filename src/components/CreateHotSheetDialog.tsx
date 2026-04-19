@@ -856,14 +856,14 @@ export function CreateHotSheetDialog({
 
           if (insertError) throw insertError;
 
-          // Ensure each client has an active client_agent_relationships row
+          // Ensure each client has a pending/active client_agent_relationships row
           for (const client of selectedClients) {
             const { data: existing } = await supabase
               .from("client_agent_relationships")
               .select("id")
               .eq("agent_id", userId)
-              .eq("client_id", client.id)
-              .eq("status", "active")
+              .eq("crm_client_id", client.id)
+              .in("status", ["active", "pending"])
               .maybeSingle();
 
             if (!existing) {
@@ -871,8 +871,8 @@ export function CreateHotSheetDialog({
                 .from("client_agent_relationships")
                 .insert({
                   agent_id: userId,
-                  client_id: client.id,
-                  status: "active",
+                  client_id: null,
+                  status: "pending",
                   crm_client_id: client.id,
                 });
             }
@@ -920,14 +920,14 @@ export function CreateHotSheetDialog({
 
           if (clientError) throw clientError;
 
-          // Ensure each client has an active client_agent_relationships row
+          // Ensure each client has a pending/active client_agent_relationships row
           for (const client of selectedClients) {
             const { data: existing } = await supabase
               .from("client_agent_relationships")
               .select("id")
               .eq("agent_id", userId)
-              .eq("client_id", client.id)
-              .eq("status", "active")
+              .eq("crm_client_id", client.id)
+              .in("status", ["active", "pending"])
               .maybeSingle();
 
             if (!existing) {
@@ -935,8 +935,8 @@ export function CreateHotSheetDialog({
                 .from("client_agent_relationships")
                 .insert({
                   agent_id: userId,
-                  client_id: client.id,
-                  status: "active",
+                  client_id: null,
+                  status: "pending",
                   crm_client_id: client.id,
                 });
             }

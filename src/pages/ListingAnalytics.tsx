@@ -13,6 +13,7 @@ import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Cl
 import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
+import { Seo } from "@/components/Seo";
 
 interface ListingStats {
   listing_id: string;
@@ -63,7 +64,6 @@ const ListingAnalytics = () => {
   const [statusHistory, setStatusHistory] = useState<StatusHistory[]>([]);
 
   useEffect(() => {
-    document.title = "Listing Analytics - All Agent Connect";
     loadListings();
   }, []);
 
@@ -274,7 +274,9 @@ const ListingAnalytics = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <>
+      <Seo title="Listing Analytics" />
+      <div className="min-h-screen bg-background pt-20">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <button

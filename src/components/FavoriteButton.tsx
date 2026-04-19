@@ -9,9 +9,20 @@ interface FavoriteButtonProps {
   size?: "default" | "sm" | "lg" | "icon";
   variant?: "default" | "secondary" | "outline";
   className?: string;
+  labels?: {
+    signIn?: string;
+    default?: string;
+    saved?: string;
+  };
 }
 
-const FavoriteButton = ({ listingId, size = "lg", variant = "secondary", className = "" }: FavoriteButtonProps) => {
+const FavoriteButton = ({
+  listingId,
+  size = "lg",
+  variant = "secondary",
+  className = "",
+  labels,
+}: FavoriteButtonProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -86,8 +97,8 @@ const FavoriteButton = ({ listingId, size = "lg", variant = "secondary", classNa
   };
 
   const getButtonText = () => {
-    if (!userId) return "Sign In to Save";
-    return isFavorite ? "Saved" : "Save";
+    if (!userId) return labels?.signIn || "Sign In to Save";
+    return isFavorite ? labels?.saved || "Saved" : labels?.default || "Save";
   };
 
   return (

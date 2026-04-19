@@ -10,12 +10,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Grid3x3, List, MapPin } from "lucide-react";
+import { Grid3x3, List, MapPin, Map } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import PropertyMap from "@/components/PropertyMap";
+import { Seo } from "@/components/Seo";
 
 const useQuery = () => new URLSearchParams(useLocation().search);
 
-const SearchResults = () => {
+interface SearchResultsProps {
+  isPublicMode?: boolean;
+  isAgentMode?: boolean;
+  isBuyerMode?: boolean;
+}
+
+const SearchResults = ({
+  isPublicMode = false,
+  isAgentMode = false,
+  isBuyerMode = false,
+}: SearchResultsProps) => {
   const navigate = useNavigate();
   const search = useLocation().search;
   const [listings, setListings] = useState<any[]>([]);
@@ -23,7 +35,11 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<string>("newest");
-  const [viewType, setViewType] = useState<"grid" | "list">("grid");
+  const [viewType, setViewType] = useState<"grid" | "list" | "map">("grid");
+  const publicMode = isPublicMode;
+  const buyerMode = isBuyerMode;
+  const agentMode = isAgentMode;
+  const showInternalSelectionTools = agentMode;
 
   const filters = useMemo(() => {
     const params = new URLSearchParams(search);
@@ -155,7 +171,6 @@ const SearchResults = () => {
     };
 
     fetchResults();
-    document.title = `Search Results${filters.statuses?.length ? ` • ${filters.statuses.join("/")}` : ""}`;
   }, [filters]);
 
   // Sort listings based on selected option
@@ -241,14 +256,16 @@ const SearchResults = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pt-20">
-      <ActiveAgentBanner />
+    <>
+      <Seo title={publicMode || buyerMode ? "Homes" : "Search Results"} />
+      <div className="min-h-screen flex flex-col pt-20">
+      {!publicMode && !buyerMode && <ActiveAgentBanner />}
       <main className="flex-1 bg-white">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-6">
             <div className="flex items-center justify-between">
-              <PageTitle>Search Results</PageTitle>
-              <Button onClick={() => navigate(`/browse${search}`)}>Modify Search</Button>
+              <PageTitle>{publicMode || buyerMode ? "Homes Matching Your Search" : "Search Results"}</PageTitle>
+              <Button onClick={() => navigate(`/browse${search}`)}>{publicMode || buyerMode ? "Edit Search" : "Modify Search"}</Button>
             </div>
             {filters.state && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
@@ -266,7 +283,7 @@ const SearchResults = () => {
           {/* Results Count */}
           <div className="mb-4">
             <Button variant="outline" disabled>
-              {loading ? "Loading…" : `${listings.length} Properties Found`}
+              {loading ? "Loading..." : `${listings.length} ${publicMode || buyerMode ? "Homes" : "Properties"} Found`}
             </Button>
           </div>
 
@@ -291,21 +308,25 @@ const SearchResults = () => {
 
               {/* Action Toolbar */}
               <div className="flex items-center gap-2 flex-wrap">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleSelectAll}
-                >
-                  {selectedListings.size === listings.length ? "Deselect All" : "Select All"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleKeepSelected}
-                  disabled={selectedListings.size === 0}
-                >
-                  Keep Selected
-                </Button>
+                {showInternalSelectionTools && (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleSelectAll}
+                    >
+                      {selectedListings.size === listings.length ? "Deselect All" : "Select All"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleKeepSelected}
+                      disabled={selectedListings.size === 0}
+                    >
+                      Keep Selected
+                    </Button>
+                  </>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -318,16 +339,18 @@ const SearchResults = () => {
                   size="sm"
                   onClick={handleShare}
                 >
-                  Share
+                  Share Search
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleSaveToWishList}
-                  disabled={selectedListings.size === 0}
-                >
-                  Add to Favorites
-                </Button>
+                {showInternalSelectionTools && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleSaveToWishList}
+                    disabled={selectedListings.size === 0}
+                  >
+                    Add to Favorites
+                  </Button>
+                )}
               </div>
 
               {/* View Toggle */}
@@ -346,45 +369,65 @@ const SearchResults = () => {
                 >
                   <List className="h-4 w-4" />
                 </Button>
+                <Button
+                  variant={viewType === "map" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewType("map")}
+                >
+                  <Map className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           )}
 
           {loading ? (
             <div className="text-center py-12 bg-card rounded-lg border">
-              <p className="text-muted-foreground">Loading properties...</p>
+              <p className="text-muted-foreground">Loading homes...</p>
             </div>
           ) : listings.length === 0 ? (
             <div className="text-center py-12 bg-card rounded-lg border">
-              <p className="text-muted-foreground mb-4">No properties found matching your criteria</p>
+              <p className="text-muted-foreground mb-4">No homes matched your search</p>
               <Button variant="outline" onClick={() => navigate("/browse")}>Adjust Filters</Button>
             </div>
           ) : (
-            <div className={viewType === "grid" ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-              {sortedListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  viewMode="compact"
-                  showActions={false}
-                  onSelect={toggleListingSelection}
-                  isSelected={selectedListings.has(listing.id)}
-                  agentInfo={
-                    (listing as any).agent_profile
-                      ? {
-                          name: `${(listing as any).agent_profile.first_name} ${(listing as any).agent_profile.last_name}`.trim(),
-                          company: (listing as any).agent_profile.company
-                        }
-                      : null
-                  }
+            viewType === "map" ? (
+              <div className="bg-card rounded-lg border p-4">
+                <PropertyMap
+                  listings={sortedListings}
+                  onListingClick={(listingId) => navigate(`/property/${listingId}`)}
                 />
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className={viewType === "grid" ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+                {sortedListings.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    viewMode="compact"
+                    showActions={false}
+                    hideMlsMeta={publicMode || buyerMode}
+                    onSelect={showInternalSelectionTools ? toggleListingSelection : undefined}
+                    isSelected={showInternalSelectionTools ? selectedListings.has(listing.id) : false}
+                    agentInfo={
+                      publicMode || buyerMode
+                        ? null
+                        : (listing as any).agent_profile
+                        ? {
+                            name: `${(listing as any).agent_profile.first_name} ${(listing as any).agent_profile.last_name}`.trim(),
+                            company: (listing as any).agent_profile.company
+                          }
+                        : null
+                    }
+                  />
+                ))}
+              </div>
+            )
           )}
         </div>
       </main>
       <Footer />
     </div>
+    </>
   );
 };
 

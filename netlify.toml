@@ -64,6 +64,21 @@
   to = "/.netlify/functions/showing-requests"
   status = 200
 
+[[redirects]]
+  from = "/api/attom-health"
+  to = "/.netlify/functions/attom-health"
+  status = 200
+
+[[redirects]]
+  from = "/api/attom-property-enrichment"
+  to = "/.netlify/functions/attom-property-enrichment"
+  status = 200
+
+[[redirects]]
+  from = "/api/aac-sync-listing"
+  to = "/.netlify/functions/aac-sync-listing"
+  status = 200
+
 # SPA fallback (MUST be last — all client routes fall through to React Router)
 [[redirects]]
   from = "/*"
