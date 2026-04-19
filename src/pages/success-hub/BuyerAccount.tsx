@@ -59,10 +59,24 @@ const SECTIONS = [
 export default function BuyerAccount() {
   const { buyerId } = useParams<{ buyerId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthRole();
   const { client, hotSheets, activity, conversations, stats, loading, refresh } =
     useBuyerDashboard(buyerId);
-  const [createHsOpen, setCreateHsOpen] = useState(false);
+  // Lazy init: if URL signals create-hot-sheet intent, dialog is "open" from first render.
+  // It still only renders once `client` is loaded, so it appears in the same paint as the page —
+  // no flash of bare state before the popup.
+  const [createHsOpen, setCreateHsOpen] = useState(
+    () => searchParams.get("createHotSheet") === "1"
+  );
+  useEffect(() => {
+    if (searchParams.get("createHotSheet") === "1") {
+      const next = new URLSearchParams(searchParams);
+      next.delete("createHotSheet");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hotsheets");
@@ -173,6 +187,11 @@ export default function BuyerAccount() {
             <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
             {client.phone && (
               <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
+            )}
+            {buyerStatus === "pending_invite" && (
+              <p className="text-sm text-zinc-500 mt-2">
+                Invite your buyer to unlock favorites, searches, and live activity.
+              </p>
             )}
           </div>
 
