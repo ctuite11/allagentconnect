@@ -50,7 +50,7 @@ const SIDEBAR_MANAGED_PREFIXES = [
   "/listing-intel",
   "/client-needs",
   "/agent/hot-sheets",
-  "/hot-sheets/",
+  "/hot-sheets",
   "/my-clients",
   "/showing-requests",
   "/agent/messages",
