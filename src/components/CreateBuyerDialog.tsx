@@ -66,16 +66,21 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
         .single();
 
       if (clientErr) throw clientErr;
+      console.log("[CreateBuyer] created clients row:", client);
 
       // 2. Insert client_agent_relationships
+      // NOTE: client_id refs auth.users(id) — leave null until buyer accepts invite.
+      // crm_client_id refs clients(id) — the CRM contact bridge.
+      const relPayload = {
+        agent_id: user.id,
+        crm_client_id: client.id,
+        status: "pending" as const,
+      };
+      console.log("[CreateBuyer] relationship insert payload:", relPayload);
+
       const { error: relErr } = await supabase
         .from("client_agent_relationships")
-        .insert({
-          agent_id: user.id,
-          client_id: client.id,
-          status: "active",
-          crm_client_id: client.id,
-        });
+        .insert(relPayload);
 
       if (relErr) throw relErr;
 
