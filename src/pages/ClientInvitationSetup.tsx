@@ -35,7 +35,9 @@ const ClientInvitationSetup = () => {
   const [agentFirstName, setAgentFirstName] = useState<string>("");
   const isEmailLocked = !!initialEmail;
   const hasNameFromInvite = !!(initialFirstName && initialLastName);
-  const postAcceptPath = `/client/hotsheet/${invitationToken}`;
+  // All buyer invites land on the dashboard first — stable, simple, and
+  // avoids brittle deep-link dependencies on hot_sheet_id / token payload.
+  const postAcceptPath = "/client/dashboard";
 
   useEffect(() => {
     const validateToken = async () => {
