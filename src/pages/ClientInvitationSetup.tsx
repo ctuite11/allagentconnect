@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, Check, ShieldCheck, Heart, Flame, MessageSquare, Eye } from "lucide-react";
@@ -113,27 +114,35 @@ const ClientInvitationSetup = () => {
 
     setIsSubmitting(true);
     try {
-      const { data: existingUser } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (existingUser) {
-        toast.error("An account with this email already exists. Please log in instead.");
-        setIsSubmitting(false);
-        navigate(`/auth?redirect=/client-hot-sheet/${invitationToken}`);
-        return;
-      }
+      const normalizedEmail = email.trim().toLowerCase();
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/client-hot-sheet/${invitationToken}`,
         },
       });
-      if (signUpError) throw signUpError;
+
+      const existingAccountMsg =
+        "This email has already been invited. Please sign in or activate your account using the link in your invitation email.";
+
+      if (signUpError) {
+        if (signUpError.message.toLowerCase().includes("already")) {
+          toast.error(existingAccountMsg);
+          navigate(`/auth?redirect=${encodeURIComponent(`/client-hot-sheet/${invitationToken}`)}`);
+          return;
+        }
+        throw signUpError;
+      }
+
+      // Supabase can return a user with empty identities for existing emails.
+      if (authData?.user && authData.user.identities?.length === 0) {
+        toast.error(existingAccountMsg);
+        navigate(`/auth?redirect=${encodeURIComponent(`/client-hot-sheet/${invitationToken}`)}`);
+        return;
+      }
+
       if (!authData.user) throw new Error("Account creation failed");
 
       const userId = authData.user.id;
@@ -147,7 +156,7 @@ const ClientInvitationSetup = () => {
       if (!updateError && count === 0) {
         const { error: insertError } = await supabase
           .from("profiles")
-          .insert([{ id: userId, email, ...nameFields }]);
+          .insert([{ id: userId, email: normalizedEmail, ...nameFields }]);
         if (insertError) throw insertError;
       } else if (updateError) {
         throw updateError;
@@ -355,9 +364,8 @@ const ClientInvitationSetup = () => {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="password" className="text-[13px] text-zinc-600">Password</Label>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password"
@@ -382,9 +390,8 @@ const ClientInvitationSetup = () => {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="confirmPassword" className="text-[13px] text-zinc-600">Confirm password</Label>
-                  <Input
+                  <PasswordInput
                     id="confirmPassword"
-                    type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm password"

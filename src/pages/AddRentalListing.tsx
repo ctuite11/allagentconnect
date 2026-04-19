@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1188,9 +1189,8 @@ const AddRentalListing = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="lockbox_code">Lockbox Code</Label>
-                        <Input
+                        <PasswordInput
                           id="lockbox_code"
-                          type="password"
                           placeholder="1234"
                           value={formData.lockbox_code}
                           onChange={(e) => setFormData({ ...formData, lockbox_code: e.target.value })}

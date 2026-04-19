@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
@@ -74,7 +75,6 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   
   // Registration fields
   const [firstName, setFirstName] = useState("");
@@ -1089,24 +1089,15 @@ const Auth = () => {
                   <Label htmlFor="password" className="text-[13px] font-medium text-neutral-700">
                     Password
                   </Label>
-                  <div className="relative mt-1.5">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 pr-10 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+                  <PasswordInput
+                    id="password"
+                    placeholder="••••••••"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    containerClassName="mt-1.5"
+                    className="h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                  />
                 </div>
               )}
 
@@ -1123,14 +1114,14 @@ const Auth = () => {
                   <Label htmlFor="confirmPassword" className="text-[13px] font-medium text-neutral-700">
                     Confirm Password
                   </Label>
-                  <Input
+                  <PasswordInput
                     id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                    containerClassName="mt-1.5"
+                    className="h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
                   />
                   {confirmPassword.length > 0 && (
                     <div className="flex items-center gap-2 text-sm mt-2">

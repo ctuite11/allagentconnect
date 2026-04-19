@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { toast } from "@/hooks/use-toast";
-import { Check, X, Eye, EyeOff, Lock, CreditCard } from "lucide-react";
+import { Check, X, Lock, CreditCard } from "lucide-react";
 import { Seo } from "@/components/Seo";
 
 export default function AgentSettings() {
@@ -14,7 +15,6 @@ export default function AgentSettings() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -141,21 +141,11 @@ export default function AgentSettings() {
             <div className="space-y-4 max-w-sm">
               <div className="space-y-1.5">
                 <Label htmlFor="newPassword">New password</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+                <PasswordInput
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
               </div>
 
               {newPassword && (
@@ -175,9 +165,8 @@ export default function AgentSettings() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="confirmPassword">Confirm password</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
