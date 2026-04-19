@@ -36,21 +36,23 @@ export function BuyersTable({ buyers }: BuyersTableProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
-                </p>
               </div>
-              <Badge
-                className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                  buyer.status === "active"
-                    ? "bg-green-500/15 text-green-700 border-green-500/20"
-                    : "bg-yellow-500/15 text-yellow-700 border-yellow-500/20"
-                }`}
-                variant="outline"
-              >
-                {buyer.status === "active" ? "Active" : "Pending"}
-              </Badge>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
+              <div className="flex items-center gap-4 shrink-0">
+                <Badge
+                  className={`h-7 px-3 text-sm font-medium rounded-full ${
+                    buyer.status === "active"
+                      ? "bg-green-500/15 text-green-700 border-green-500/20 hover:bg-green-500/15"
+                      : "bg-yellow-500/15 text-yellow-700 border-yellow-500/20 hover:bg-yellow-500/15"
+                  }`}
+                  variant="outline"
+                >
+                  {buyer.status === "active" ? "Active" : "Pending Invite"}
+                </Badge>
+                <span className="text-sm text-zinc-500 whitespace-nowrap">
+                  {buyer.hotSheetCount} Hot Sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
+                </span>
+                <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-500 transition-colors" />
+              </div>
             </button>
           );
         })}
