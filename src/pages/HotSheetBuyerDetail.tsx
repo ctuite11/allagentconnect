@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -92,6 +92,8 @@ function CriteriaPills({ criteria }: { criteria: any }) {
 const HotSheetBuyerDetail = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state as any)?.from || "/agent/hot-sheets";
   const [loading, setLoading] = useState(true);
   const [buyer, setBuyer] = useState<BuyerInfo | null>(null);
   const [hotSheets, setHotSheets] = useState<LinkedHotSheet[]>([]);
@@ -120,7 +122,7 @@ const HotSheetBuyerDetail = () => {
 
       if (!rel) {
         toast.error("This buyer was removed.");
-        navigate("/hot-sheets", { replace: true });
+        navigate(backTo, { replace: true });
         return;
       }
 
@@ -199,7 +201,7 @@ const HotSheetBuyerDetail = () => {
   if (loading) {
     return (
       <PageShell>
-        <PageHeader title="Buyer Detail" backTo="/hot-sheets" className="mb-8" />
+        <PageHeader title="Buyer Detail" backTo={backTo} className="mb-8" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2].map((i) => (
             <div key={i} className="rounded-2xl border border-zinc-200 bg-zinc-50 animate-pulse">
@@ -223,7 +225,7 @@ const HotSheetBuyerDetail = () => {
 
   return (
     <PageShell className="pb-8">
-      <PageHeader title={displayName} backTo="/hot-sheets" className="mb-2" />
+      <PageHeader title={displayName} backTo={backTo} className="mb-2" />
 
       {/* Buyer info row */}
       <div className="flex items-center gap-3 mb-8">

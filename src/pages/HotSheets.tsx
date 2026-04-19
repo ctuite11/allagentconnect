@@ -271,7 +271,7 @@ const HotSheets = ({
     if (collection.hotSheets.length === 1) {
       navigate(`/hot-sheets/${collection.hotSheets[0].id}/review`);
     } else {
-      navigate(`/hot-sheets/buyer/${collection.clientId}`);
+      navigate(`/hot-sheets/buyer/${collection.clientId}`, { state: { from: "/agent/hot-sheets" } });
     }
   };
 
