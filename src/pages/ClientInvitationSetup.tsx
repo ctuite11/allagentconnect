@@ -22,12 +22,13 @@ const ClientInvitationSetup = () => {
   const initialFirstName = searchParams.get("first_name") || "";
   const initialLastName = searchParams.get("last_name") || "";
 
-  const [phase, setPhase] = useState<"form" | "success">("form");
+  const [phase, setPhase] = useState<"form" | "signin" | "success">("form");
   const [email, setEmail] = useState(initialEmail);
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [signinPassword, setSigninPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
@@ -114,6 +115,10 @@ const ClientInvitationSetup = () => {
 
     setIsSubmitting(true);
     try {
+      // Always clear any existing session before buyer sign-up.
+      // This prevents an agent/admin session from contaminating the buyer activation flow.
+      await supabase.auth.signOut();
+
       const normalizedEmail = email.trim().toLowerCase();
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -124,22 +129,19 @@ const ClientInvitationSetup = () => {
         },
       });
 
-      const existingAccountMsg =
-        "This email has already been invited. Please sign in or activate your account using the link in your invitation email.";
-
       if (signUpError) {
         if (signUpError.message.toLowerCase().includes("already")) {
-          toast.error(existingAccountMsg);
-          navigate(`/auth?redirect=${encodeURIComponent(`/client-hot-sheet/${invitationToken}`)}`);
+          // Account exists — stay on buyer-branded page, switch to sign-in phase
+          setPhase("signin");
           return;
         }
         throw signUpError;
       }
 
-      // Supabase can return a user with empty identities for existing emails.
+      // Supabase returns a user with empty identities when email already exists.
       if (authData?.user && authData.user.identities?.length === 0) {
-        toast.error(existingAccountMsg);
-        navigate(`/auth?redirect=${encodeURIComponent(`/client-hot-sheet/${invitationToken}`)}`);
+        // Account exists — stay on buyer-branded page, switch to sign-in phase
+        setPhase("signin");
         return;
       }
 
@@ -196,6 +198,56 @@ const ClientInvitationSetup = () => {
     }
   };
 
+  // Called when an existing-account buyer signs in to accept their invitation
+  const handleSignIn = async () => {
+    if (!signinPassword) {
+      toast.error("Please enter your password.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      // Ensure clean slate — clear any admin/agent session
+      await supabase.auth.signOut();
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password: signinPassword,
+      });
+      if (error) throw error;
+      if (!data.user) throw new Error("Sign in failed — please try again.");
+
+      const userId = data.user.id;
+
+      if (agentId) {
+        const { error: relErr } = await supabase.rpc("activate_agent_relationship", {
+          _agent_id: agentId,
+          _crm_client_id: clientId || null,
+        });
+        if (relErr) console.error("Error activating relationship:", relErr);
+      }
+
+      const { error: tokenErr } = await supabase
+        .from("share_tokens")
+        .update({
+          accepted_at: new Date().toISOString(),
+          accepted_by_user_id: userId,
+        })
+        .eq("token", invitationToken);
+      if (tokenErr) console.error("Error updating token:", tokenErr);
+
+      if (agentId) setPrimaryAgentId(agentId);
+
+      setPhase("success");
+      setTimeout(() => navigate(`/client-hot-sheet/${invitationToken}`), 2000);
+    } catch (error: any) {
+      console.error("Sign-in error:", error);
+      toast.error(error.message || "Sign in failed. Please check your password and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isValidatingToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -225,6 +277,81 @@ const ClientInvitationSetup = () => {
             Return Home
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (phase === "signin") {
+    return (
+      <div className="min-h-screen bg-white">
+        <header className="border-b border-zinc-100">
+          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-zinc-900">
+              <AACMonogram className="w-7 h-7 text-[#0E56F5]" />
+              <span className="text-[15px] font-semibold tracking-tight">All Agent Connect</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 text-[12px] text-zinc-500">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Secure invitation</span>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-md mx-auto px-6 py-20">
+          <div className="space-y-6">
+            <div className="space-y-2 text-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0E56F5]/8 text-[#0E56F5] px-3 py-1 text-[12px] font-medium">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Account found
+              </span>
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Sign In to Accept Invitation</h1>
+              <p className="text-[14px] text-zinc-500 leading-relaxed">
+                An account already exists for <strong className="text-zinc-700">{email}</strong>.
+                Sign in with your password to accept this invitation and access your workspace.
+              </p>
+            </div>
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleSignIn(); }}
+              className="rounded-3xl border border-zinc-200 bg-white shadow-sm p-7 space-y-5"
+            >
+              <div className="space-y-1.5">
+                <Label htmlFor="signin-email" className="text-[13px] text-zinc-600">Email</Label>
+                <Input
+                  id="signin-email"
+                  type="email"
+                  value={email}
+                  readOnly
+                  className="h-11 rounded-xl bg-zinc-50 text-zinc-700"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="signin-password" className="text-[13px] text-zinc-600">Password</Label>
+                <PasswordInput
+                  id="signin-password"
+                  value={signinPassword}
+                  onChange={(e) => setSigninPassword(e.target.value)}
+                  placeholder="Your password"
+                  className="h-11 rounded-xl"
+                  autoFocus
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-11 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC] text-white font-medium"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in…
+                  </>
+                ) : (
+                  "Sign In & Accept Invitation"
+                )}
+              </Button>
+            </form>
+          </div>
+        </main>
       </div>
     );
   }
