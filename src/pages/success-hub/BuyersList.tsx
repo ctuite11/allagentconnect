@@ -201,7 +201,18 @@ export default function BuyersList() {
       <CreateBuyerDialog
         open={showCreate}
         onOpenChange={setShowCreate}
-        onSuccess={loadBuyers}
+        onSuccess={(created) => {
+          loadBuyers();
+          if (created) setCreatedBuyer(created);
+        }}
+      />
+
+      <BuyerCreatedNextStepDialog
+        buyer={createdBuyer}
+        onClose={() => setCreatedBuyer(null)}
+        onCreateHotSheet={(b) =>
+          navigate(`/success-hub/buyers/${b.id}?createHotSheet=1`)
+        }
       />
     </PageShell>
   );
