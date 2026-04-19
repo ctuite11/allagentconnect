@@ -80,6 +80,7 @@ export default function BuyerAccount() {
   }, []);
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [editingHotSheet, setEditingHotSheet] = useState<{ id: string; criteria: any } | null>(null);
   const [activeSection, setActiveSection] = useState<string>("hotsheets");
   const [messagingBusy, setMessagingBusy] = useState(false);
 
@@ -299,8 +300,21 @@ export default function BuyerAccount() {
                       state: { from: `/success-hub/buyers/${buyerId}` },
                     })
                   }
-                  className="bg-card rounded-2xl border border-border shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden flex flex-col h-full"
+                  className="relative bg-card rounded-2xl border border-border shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden flex flex-col h-full"
                 >
+                  {/* Edit pencil — top right over mosaic */}
+                  <button
+                    type="button"
+                    aria-label="Edit hot sheet"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
+                    }}
+                    className="absolute top-2 right-2 z-10 h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm border border-border shadow-sm flex items-center justify-center hover:bg-white transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-foreground" />
+                  </button>
+
                   {/* 2x2 Photo Mosaic — fixed aspect for alignment */}
                   <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-muted shrink-0">
                     {mosaicPhotos.map((src, i) => (
@@ -435,6 +449,20 @@ export default function BuyerAccount() {
             toast.success("Hot Sheet created");
             setCreateHsOpen(false);
             navigate(`/hot-sheets/${hsId}/review`);
+          }}
+        />
+      )}
+
+      {/* ── Edit Hot Sheet Dialog ────────────────── */}
+      {editingHotSheet && (
+        <EditHotsheetCriteriaDialog
+          open={!!editingHotSheet}
+          onOpenChange={(open) => !open && setEditingHotSheet(null)}
+          hotSheetId={editingHotSheet.id}
+          initialCriteria={editingHotSheet.criteria}
+          onUpdate={() => {
+            refresh();
+            setEditingHotSheet(null);
           }}
         />
       )}
