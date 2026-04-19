@@ -931,8 +931,17 @@ if (comments && comments.length > 0) {
 
           {/* Search Criteria */}
           <Card className="mb-8">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Search Criteria</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditCriteriaOpen(true)}
+                className="rounded-full h-8 px-3 border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+              >
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
