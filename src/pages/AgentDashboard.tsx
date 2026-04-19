@@ -128,8 +128,8 @@ const AgentDashboard = () => {
     if (user && location.state?.reload) {
       loadData(user.id);
       // Clear the state to prevent reload loops
-      // Title is controlled by SuccessHubDashboard or other route component via Seo
-      window.history.replaceState({}, SuccessHubDashboard.name || "Dashboard");
+      // Title is controlled by route component via Seo
+      window.history.replaceState({}, "");
     }
   }, [location.state, user]);
 
