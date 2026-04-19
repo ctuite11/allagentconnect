@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
 import { useAuthRole } from "@/hooks/useAuthRole";

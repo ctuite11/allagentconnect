@@ -127,7 +127,38 @@ const HotSheets = ({
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      const sheets = (hsData || []) as any[];
+      const sheetsRaw = (hsData || []) as any[];
+
+      // 1b. Filter out hot sheets linked to removed/inactive buyers.
+      // Keep: active + pending. Hide: anything else.
+      const { data: relRows } = await supabase
+        .from("client_agent_relationships")
+        .select("crm_client_id, client_id, status")
+        .eq("agent_id", userId)
+        .in("status", ["active", "pending"]);
+
+      const visibleClientIds = new Set<string>();
+      (relRows || []).forEach((r: any) => {
+        if (r.crm_client_id) visibleClientIds.add(String(r.crm_client_id));
+        if (r.client_id) visibleClientIds.add(String(r.client_id));
+      });
+
+      const sheets = sheetsRaw
+        .map((s: any) => {
+          const links = s.hot_sheet_clients || [];
+          if (links.length === 0) return s; // criteria-only sheet
+          const filteredLinks = links.filter((hsc: any) =>
+            hsc.client_id && visibleClientIds.has(String(hsc.client_id))
+          );
+          return { ...s, hot_sheet_clients: filteredLinks };
+        })
+        .filter((s: any) => {
+          const original = sheetsRaw.find((o: any) => o.id === s.id);
+          const hadClients = (original?.hot_sheet_clients || []).length > 0;
+          if (!hadClients) return true;
+          return (s.hot_sheet_clients || []).length > 0;
+        });
+
       setRawHotSheets(sheets);
 
       if (!sheets.length) {
