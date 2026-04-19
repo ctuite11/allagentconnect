@@ -122,6 +122,10 @@ interface Listing {
   listing_exclusions?: string | null;
   documents?: any[] | null;
   listing_agreement_types?: any;
+  annual_property_tax?: number | null;
+  tax_assessment_value?: number | null;
+  neighborhood?: string | null;
+  walk_score_data?: any;
 }
 
 interface AgentProfile {

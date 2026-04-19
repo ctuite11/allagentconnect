@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Grid3x3, List, MapPin, Map } from "lucide-react";
+import { Grid3x3, List, MapPin, Map as MapIcon } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import PropertyMap from "@/components/PropertyMap";
 import { Seo } from "@/components/Seo";
