@@ -258,6 +258,7 @@ const HotSheetReview = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
+  const [editCriteriaOpen, setEditCriteriaOpen] = useState(false);
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [agentDisplayName, setAgentDisplayName] = useState("Your agent");
   const [listings, setListings] = useState<Listing[]>([]);
