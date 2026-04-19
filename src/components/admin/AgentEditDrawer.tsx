@@ -363,7 +363,7 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
           <AlertDialogHeader>
             <AlertDialogTitle>Delete client?</AlertDialogTitle>
             <AlertDialogDescription>
-              Delete <strong>{deleteClientTarget?.name}</strong>? This removes them from all hotsheets and relationships. This cannot be undone.
+              Delete <strong>{deleteClientTarget?.name}</strong>? This removes them from all Hot Sheets and relationships. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
