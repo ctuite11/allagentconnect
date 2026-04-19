@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
+import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
 import { Seo } from "@/components/Seo";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ export default function BuyersList() {
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [createdBuyer, setCreatedBuyer] = useState<CreatedBuyer | null>(null);
   const [filter, setFilter] = useState<FilterKey>("all");
 
   const loadBuyers = async () => {
