@@ -143,7 +143,9 @@ export function ReviewBuyerInviteDialog({
         `?invitation_token=${encodeURIComponent(tokenRow.token)}` +
         `&email=${encodeURIComponent(buyer.email.toLowerCase())}` +
         `&agent_id=${encodeURIComponent(user.id)}` +
-        `&client_id=${encodeURIComponent(buyer.id)}`;
+        `&client_id=${encodeURIComponent(buyer.id)}` +
+        (buyer.firstName ? `&first_name=${encodeURIComponent(buyer.firstName)}` : "") +
+        (buyer.lastName ? `&last_name=${encodeURIComponent(buyer.lastName)}` : "");
 
       const invitePayload = {
         invitedEmail: buyer.email.toLowerCase(),
