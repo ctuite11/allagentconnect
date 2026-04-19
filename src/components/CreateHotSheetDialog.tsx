@@ -1084,15 +1084,17 @@ export function CreateHotSheetDialog({
                   Contact Information <span className="text-[#0E56F5]">*</span>
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                   className="shadow-sm"
-                    size="sm"
-                    onClick={() => setShowClientPicker(true)}
-                  >
-                    <UserPlus className="mr-1.5 h-4 w-4" />
-                    {selectedClients.length > 0 ? "Select / Change Contact" : "Add Contact"}
-                  </Button>
+                  {!lockedToClient && (
+                    <Button
+                      type="button"
+                     className="shadow-sm"
+                      size="sm"
+                      onClick={() => setShowClientPicker(true)}
+                    >
+                      <UserPlus className="mr-1.5 h-4 w-4" />
+                      {selectedClients.length > 0 ? "Select / Change Contact" : "Add Contact"}
+                    </Button>
+                  )}
                   {selectedClients.length > 0 && (
                     <Button
                       type="button"
