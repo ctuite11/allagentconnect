@@ -1238,7 +1238,7 @@ export type Database = {
       client_agent_relationships: {
         Row: {
           agent_id: string
-          client_id: string
+          client_id: string | null
           created_at: string | null
           crm_client_id: string | null
           ended_at: string | null
@@ -1248,7 +1248,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
-          client_id: string
+          client_id?: string | null
           created_at?: string | null
           crm_client_id?: string | null
           ended_at?: string | null
@@ -1258,7 +1258,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
-          client_id?: string
+          client_id?: string | null
           created_at?: string | null
           crm_client_id?: string | null
           ended_at?: string | null
