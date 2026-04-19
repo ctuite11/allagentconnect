@@ -61,9 +61,9 @@ export function BuyerCreatedNextStepDialog({
     <Dialog open={!!buyer} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle className="text-lg">Buyer created</DialogTitle>
+          <DialogTitle className="text-lg">Buyer Added</DialogTitle>
           <DialogDescription>
-            {name} is set up. What would you like to do next?
+            {name} has been added to My Buyers. What would you like to do next?
           </DialogDescription>
         </DialogHeader>
 
