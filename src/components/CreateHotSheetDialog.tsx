@@ -39,6 +39,7 @@ interface CreateHotSheetDialogProps {
     email: string;
     phone?: string | null;
   }>;
+  lockedToClient?: boolean;
 }
 
 export function CreateHotSheetDialog({
@@ -51,6 +52,7 @@ export function CreateHotSheetDialog({
   hotSheetId,
   editMode = false,
   preSelectedClients,
+  lockedToClient = false,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -1082,15 +1084,17 @@ export function CreateHotSheetDialog({
                   Contact Information <span className="text-[#0E56F5]">*</span>
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                   className="shadow-sm"
-                    size="sm"
-                    onClick={() => setShowClientPicker(true)}
-                  >
-                    <UserPlus className="mr-1.5 h-4 w-4" />
-                    {selectedClients.length > 0 ? "Select / Change Contact" : "Add Contact"}
-                  </Button>
+                  {!lockedToClient && (
+                    <Button
+                      type="button"
+                     className="shadow-sm"
+                      size="sm"
+                      onClick={() => setShowClientPicker(true)}
+                    >
+                      <UserPlus className="mr-1.5 h-4 w-4" />
+                      {selectedClients.length > 0 ? "Select / Change Contact" : "Add Contact"}
+                    </Button>
+                  )}
                   {selectedClients.length > 0 && (
                     <Button
                       type="button"
@@ -1110,26 +1114,31 @@ export function CreateHotSheetDialog({
                 <div className="space-y-2">
                   <Label>Selected Contacts</Label>
                   <div className="space-y-2 p-3 bg-white rounded-md border border-neutral-200">
-                    {selectedClients.map((client) => (
-                      <div key={client.id} className="flex items-center justify-between p-2 bg-white rounded border border-neutral-200">
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{client.first_name} {client.last_name}</div>
-                          <div className="text-xs text-muted-foreground">{client.email}</div>
-                          {client.phone && (
-                            <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
+                    {selectedClients.map((client) => {
+                      const isLocked = lockedToClient && client.id === clientId;
+                      return (
+                        <div key={client.id} className="flex items-center justify-between p-2 bg-white rounded border border-neutral-200">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{client.first_name} {client.last_name}</div>
+                            <div className="text-xs text-muted-foreground">{client.email}</div>
+                            {client.phone && (
+                              <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
+                            )}
+                          </div>
+                          {!isLocked && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveClient(client.id)}
+                              className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              Remove
+                            </Button>
                           )}
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveClient(client.id)}
-                          className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ) : (

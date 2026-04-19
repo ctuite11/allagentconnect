@@ -406,6 +406,7 @@ export default function BuyerAccount() {
           userId={user.id}
           clientId={client.id}
           clientName={capitalizedName}
+          lockedToClient
           preSelectedClients={[{
             id: client.id,
             first_name: client.first_name,
