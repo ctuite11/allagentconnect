@@ -1143,6 +1143,16 @@ if (comments && comments.length > 0) {
         </AlertDialogContent>
       </AlertDialog>
 
+      {hotSheet && (
+        <EditHotsheetCriteriaDialog
+          open={editCriteriaOpen}
+          onOpenChange={setEditCriteriaOpen}
+          hotSheetId={hotSheet.id}
+          initialCriteria={hotSheet.criteria}
+          onUpdate={fetchHotSheetAndListings}
+        />
+      )}
+
     </div>
   );
 };
