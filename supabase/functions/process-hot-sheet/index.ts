@@ -482,6 +482,69 @@ const handler = async (req: Request): Promise<Response> => {
         console.log("Recipients:", recipients);
         console.log("Listing count:", newListings.length);
         console.log("Hot sheet:", hotSheet.name);
+
+        // ── Agent copy email (gated by notification_preferences) ─────────────
+        // When the buyer is sent invite + listings, also send a separate copy
+        // to the agent so they have a record of exactly what went out.
+        try {
+          const { data: agentProfile2 } = await adminClient
+            .from("agent_profiles")
+            .select("email, first_name")
+            .eq("id", hotSheet.user_id)
+            .maybeSingle();
+
+          const { data: agentPrefs } = await adminClient
+            .from("notification_preferences")
+            .select("new_matches_enabled")
+            .eq("user_id", hotSheet.user_id)
+            .maybeSingle();
+
+          // Default ON if no preference row exists; only skip if explicitly off
+          const notificationsEnabled = !agentPrefs || agentPrefs.new_matches_enabled !== false;
+          const agentEmail = agentProfile2?.email?.toLowerCase().trim();
+
+          if (notificationsEnabled && agentEmail) {
+            const buyerLabel = clientName || "your buyer";
+            const agentCopyHtml = `
+              <div style="margin: 0 0 16px 0; padding: 12px 16px; background-color: #f3f4f6; border-radius: 8px; color: #374151; font-size: 13px;">
+                <strong>Copy of what your buyer received</strong><br>
+                Sent to: ${buyerLabel}${recipients.length ? ` (${recipients.join(", ")})` : ""}<br>
+                Hot Sheet: ${hotSheet.name}
+              </div>
+              ${fullListingsHtml}
+            `;
+
+            const { error: agentCopyError } = await adminClient.from("email_jobs").insert({
+              idempotency_key: `hotsheet-agent-copy:${hotSheet.id}:${Date.now()}`,
+              payload: {
+                provider: "resend",
+                template: "hot-sheet-alert",
+                to: [agentEmail],
+                subject: `Copy: Hot Sheet sent to ${buyerLabel}`,
+                variables: {
+                  userName: agentProfile2?.first_name || "there",
+                  hotSheetName: hotSheet.name,
+                  matchCount: newListings.length,
+                  listingsHtml: agentCopyHtml,
+                },
+              },
+            });
+
+            if (agentCopyError) {
+              console.warn("⚠️ Failed to enqueue agent copy email:", agentCopyError);
+            } else {
+              console.log("✅ Agent copy email enqueued for:", agentEmail);
+            }
+          } else {
+            console.log("Skipping agent copy — notifications disabled or no agent email", {
+              hasPrefs: !!agentPrefs,
+              notificationsEnabled,
+              hasAgentEmail: !!agentEmail,
+            });
+          }
+        } catch (agentCopyErr) {
+          console.warn("⚠️ Agent copy email failed (non-fatal):", agentCopyErr);
+        }
       } else {
         console.log("No recipients configured - skipping email");
       }
