@@ -264,11 +264,11 @@ function EmptyState({
 }) {
   if (hasAny) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white px-8 py-14 text-center">
-        <p className="text-xl font-semibold text-slate-950">
+      <div className="rounded-xl border border-slate-200 bg-white px-5 py-8 text-center">
+        <p className="text-sm font-medium text-slate-950">
           No buyers in this view
         </p>
-        <p className="mt-2 text-base text-slate-500">
+        <p className="mt-1 text-sm text-slate-500">
           Try a different filter to see {filter === "active" ? "pending" : "active"} buyers.
         </p>
       </div>
@@ -276,12 +276,12 @@ function EmptyState({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-8 py-16 text-center max-w-xl mx-auto">
-      <h2 className="text-2xl font-semibold text-slate-950">No buyers yet</h2>
-      <p className="mt-3 text-base text-slate-500">
+    <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
+      <h2 className="text-base font-semibold text-slate-950">No buyers yet</h2>
+      <p className="mt-1.5 text-sm text-slate-500">
         Create your first buyer to start building hot sheets and tracking activity.
       </p>
-      <Button onClick={onCreate} className="mt-6 h-11 rounded-full px-6">
+      <Button onClick={onCreate} className="mt-5 h-9 rounded-full px-4">
         <UserPlus className="h-4 w-4 mr-2" />
         New Buyer
       </Button>
