@@ -39,6 +39,7 @@ interface CreateHotSheetDialogProps {
     email: string;
     phone?: string | null;
   }>;
+  lockedToClient?: boolean;
 }
 
 export function CreateHotSheetDialog({
@@ -51,6 +52,7 @@ export function CreateHotSheetDialog({
   hotSheetId,
   editMode = false,
   preSelectedClients,
+  lockedToClient = false,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
