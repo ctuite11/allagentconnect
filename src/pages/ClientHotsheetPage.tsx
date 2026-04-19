@@ -278,6 +278,13 @@ const ClientHotsheetPage = () => {
         err?.hint ||
         (typeof err === "string" ? err : JSON.stringify(err));
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        toast.error("We could not open this specific shared hot sheet. Taking you to your dashboard.");
+        navigate("/client/dashboard", { replace: true });
+        return;
+      }
+
       setError(
         `We could not load this saved search. (${reason}) Please contact your agent or try the link again.`
       );

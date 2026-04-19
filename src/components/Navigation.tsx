@@ -33,6 +33,11 @@ const HIDE_NAV_ROUTES = [
   "/client-invite",        // Buyer invite acceptance — focused conversion page
 ];
 
+const HIDE_NAV_PREFIXES = [
+  "/client/hotsheet/",     // Shared invite hotsheet view has its own focused layout
+  "/client-hot-sheet/",    // Legacy alias kept for compatibility
+];
+
 /**
  * Routes managed by AppShell sidebar — hide top nav to avoid double-header.
  * Uses startsWith matching.
@@ -259,6 +264,9 @@ const Navigation = () => {
 
   // This prevents any flash of navigation on funnel pages
   if (HIDE_NAV_ROUTES.includes(location.pathname)) return null;
+
+  // Hide global nav on shared invite hotsheet routes (prefix-based token paths)
+  if (HIDE_NAV_PREFIXES.some(prefix => location.pathname.startsWith(prefix))) return null;
 
   // Hide global navigation on sidebar-managed routes (AppShell provides nav)
   if (SIDEBAR_MANAGED_PREFIXES.some(prefix => location.pathname.startsWith(prefix))) return null;

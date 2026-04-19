@@ -35,6 +35,7 @@ const ClientInvitationSetup = () => {
   const [agentFirstName, setAgentFirstName] = useState<string>("");
   const isEmailLocked = !!initialEmail;
   const hasNameFromInvite = !!(initialFirstName && initialLastName);
+  const postAcceptPath = `/client/hotsheet/${invitationToken}`;
 
   useEffect(() => {
     const validateToken = async () => {
@@ -125,7 +126,7 @@ const ClientInvitationSetup = () => {
         email: normalizedEmail,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/client-hot-sheet/${invitationToken}`,
+          emailRedirectTo: `${window.location.origin}${postAcceptPath}`,
         },
       });
 
@@ -189,7 +190,7 @@ const ClientInvitationSetup = () => {
       if (agentId) setPrimaryAgentId(agentId);
 
       setPhase("success");
-      setTimeout(() => navigate(`/client-hot-sheet/${invitationToken}`), 2000);
+      setTimeout(() => navigate(postAcceptPath, { replace: true }), 2000);
     } catch (error: any) {
       console.error("Activation error:", error);
       toast.error(error.message || "Failed to activate account. Please try again.");
@@ -239,7 +240,7 @@ const ClientInvitationSetup = () => {
       if (agentId) setPrimaryAgentId(agentId);
 
       setPhase("success");
-      setTimeout(() => navigate(`/client-hot-sheet/${invitationToken}`), 2000);
+      setTimeout(() => navigate(postAcceptPath, { replace: true }), 2000);
     } catch (error: any) {
       console.error("Sign-in error:", error);
       toast.error(error.message || "Sign in failed. Please check your password and try again.");
@@ -372,7 +373,7 @@ const ClientInvitationSetup = () => {
             </p>
           </div>
           <Button
-            onClick={() => navigate(`/client-hot-sheet/${invitationToken}`)}
+            onClick={() => navigate(postAcceptPath, { replace: true })}
             className="h-11 px-6 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC]"
           >
             Continue to My Workspace
