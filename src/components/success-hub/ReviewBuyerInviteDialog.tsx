@@ -34,14 +34,13 @@ const DEFAULT_SUBJECT =
 const buildDefaultBody = (firstName: string, agentName: string) =>
   `Hi ${firstName || "there"},
 
-I've added you to All Agent Connect so I can share listings, hot sheets, and updates with you directly.
+I've added you to All Agent Connect so I can share listings, Hot Sheets, and updates with you directly.
 
-Click below to join and view what I send you.
-
-{invite link}
+Use the button in this email to join and access your private buyer workspace.
 
 Thanks,
-${agentName || "Your agent"}`;
+${agentName || "Your agent"}
+hello@allagentconnect.com`;
 
 export function ReviewBuyerInviteDialog({
   buyer,
@@ -180,7 +179,7 @@ export function ReviewBuyerInviteDialog({
               disabled={sending}
             />
             <p className="text-[12px] text-zinc-500">
-              <span className="font-mono">{"{invite link}"}</span> will be replaced with a secure join link when the email is sent.
+              A secure invitation button will be added automatically when the email is sent.
             </p>
           </div>
 
