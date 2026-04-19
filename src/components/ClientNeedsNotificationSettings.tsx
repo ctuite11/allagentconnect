@@ -5,16 +5,22 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell } from "lucide-react";
 
+type Frequency = "immediate" | "daily" | "weekly" | "off";
+
 interface NotificationSettings {
-  schedule: "immediate" | "daily" | "weekly";
+  frequency: Frequency;
 }
 
+const OPTIONS: { value: Frequency; label: string; description: string }[] = [
+  { value: "immediate", label: "Immediately", description: "Get a copy of every invite + listing email sent to your buyers, plus buyer activity" },
+  { value: "daily", label: "Daily Digest", description: "One daily summary of buyer activity" },
+  { value: "weekly", label: "Weekly Digest", description: "One weekly summary of buyer activity" },
+  { value: "off", label: "Off", description: "Don't send me buyer notification copies" },
+];
+
 export const ClientNeedsNotificationSettings = () => {
-  const [settings, setSettings] = useState<NotificationSettings>({
-    schedule: "immediate",
-  });
+  const [settings, setSettings] = useState<NotificationSettings>({ frequency: "immediate" });
   const [loading, setLoading] = useState(true);
-  const [hasInitialSelection, setHasInitialSelection] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -31,16 +37,15 @@ export const ClientNeedsNotificationSettings = () => {
         .eq("user_id", user.id)
         .single();
 
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
+      if (error && error.code !== "PGRST116") throw error;
 
       if (data) {
         const prefs = data as any;
-        setSettings({
-          schedule: (prefs.client_needs_schedule ?? "immediate") as "immediate" | "daily" | "weekly",
-        });
-        setHasInitialSelection(true);
+        // If master gate is off → "off"; otherwise use the schedule
+        const frequency: Frequency = prefs.new_matches_enabled === false
+          ? "off"
+          : ((prefs.client_needs_schedule ?? "immediate") as Frequency);
+        setSettings({ frequency });
       }
     } catch (error) {
       console.error("Error fetching notification settings:", error);
@@ -54,27 +59,31 @@ export const ClientNeedsNotificationSettings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const isOff = newSettings.frequency === "off";
+      const payload: any = {
+        user_id: user.id,
+        client_needs_enabled: !isOff,
+        new_matches_enabled: !isOff,
+      };
+      // Only persist schedule when not off; preserve last cadence otherwise
+      if (!isOff) {
+        payload.client_needs_schedule = newSettings.frequency;
+      }
+
       const { error } = await supabase
         .from("notification_preferences")
-        .upsert({
-          user_id: user.id,
-          client_needs_enabled: true,
-          client_needs_schedule: newSettings.schedule,
-        }, {
-          onConflict: 'user_id'
-        });
+        .upsert(payload, { onConflict: "user_id" });
 
       if (error) throw error;
 
       setSettings(newSettings);
-      setHasInitialSelection(true);
     } catch (error) {
       console.error("Error updating notification settings:", error);
     }
   };
 
-  const handleScheduleChange = (value: string) => {
-    updateSettings({ ...settings, schedule: value as "immediate" | "daily" | "weekly" });
+  const handleFrequencyChange = (value: string) => {
+    updateSettings({ frequency: value as Frequency });
   };
 
   if (loading) {
@@ -90,42 +99,37 @@ export const ClientNeedsNotificationSettings = () => {
       <CardHeader className="p-0">
         <div className="flex items-center gap-1.5">
           <Bell className="h-5 w-5 text-emerald-600/80" />
-          <CardTitle className="text-base font-medium text-zinc-900">Email Frequency</CardTitle>
+          <CardTitle className="text-base font-medium text-zinc-900">Buyer Notifications</CardTitle>
         </div>
+        <p className="text-sm text-zinc-500 mt-1">
+          Controls invite copies, buyer listing sends, and buyer activity emails.
+        </p>
       </CardHeader>
-      <CardContent className="space-y-4 p-0">
-        {/* Notification Schedule */}
-        <div className="space-y-3">
-          <Label className="text-sm text-zinc-500">
-            How often would you like to receive notifications?
-          </Label>
-          <RadioGroup
-            value={settings.schedule}
-            onValueChange={handleScheduleChange}
-            className="space-y-2"
-          >
-            <div className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-zinc-50 ${settings.schedule === "immediate" ? "bg-zinc-100" : ""}`}>
-               <RadioGroupItem value="immediate" id="immediate" />
-               <Label htmlFor="immediate" className={`cursor-pointer text-sm ${settings.schedule === "immediate" ? "font-medium text-zinc-900" : "text-zinc-700"}`}>
-                 Immediately - Get alerts as soon as your preferences match
-               </Label>
-             </div>
-
-             <div className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-zinc-50 ${settings.schedule === "daily" ? "bg-zinc-100" : ""}`}>
-               <RadioGroupItem value="daily" id="daily" />
-               <Label htmlFor="daily" className={`cursor-pointer text-sm ${settings.schedule === "daily" ? "font-medium text-zinc-900" : "text-zinc-700"}`}>
-                 Daily - Receive a daily digest of new matches
-               </Label>
-             </div>
-
-             <div className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-zinc-50 ${settings.schedule === "weekly" ? "bg-zinc-100" : ""}`}>
-               <RadioGroupItem value="weekly" id="weekly" />
-               <Label htmlFor="weekly" className={`cursor-pointer text-sm ${settings.schedule === "weekly" ? "font-medium text-zinc-900" : "text-zinc-700"}`}>
-                 Weekly - Receive a weekly summary of new matches
-               </Label>
-             </div>
-          </RadioGroup>
-        </div>
+      <CardContent className="space-y-4 p-0 mt-3">
+        <RadioGroup
+          value={settings.frequency}
+          onValueChange={handleFrequencyChange}
+          className="space-y-2"
+        >
+          {OPTIONS.map((opt) => {
+            const active = settings.frequency === opt.value;
+            return (
+              <div
+                key={opt.value}
+                className={`flex items-start gap-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-zinc-50 ${active ? "bg-zinc-100" : ""}`}
+              >
+                <RadioGroupItem value={opt.value} id={`buyer-notif-${opt.value}`} className="mt-0.5" />
+                <Label
+                  htmlFor={`buyer-notif-${opt.value}`}
+                  className={`cursor-pointer text-sm leading-snug ${active ? "font-medium text-zinc-900" : "text-zinc-700"}`}
+                >
+                  <span className="block">{opt.label}</span>
+                  <span className="block text-xs text-zinc-500 font-normal">{opt.description}</span>
+                </Label>
+              </div>
+            );
+          })}
+        </RadioGroup>
       </CardContent>
     </Card>
   );

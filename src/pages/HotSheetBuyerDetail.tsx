@@ -4,8 +4,10 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Clock, AlertCircle, Home, MapPin } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, Home, MapPin, Pencil } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
+import { toast } from "sonner";
 
 interface BuyerInfo {
   firstName: string;
@@ -94,6 +96,7 @@ const HotSheetBuyerDetail = () => {
   const [buyer, setBuyer] = useState<BuyerInfo | null>(null);
   const [hotSheets, setHotSheets] = useState<LinkedHotSheet[]>([]);
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>("not_invited");
+  const [editingHotSheet, setEditingHotSheet] = useState<{ id: string; criteria: any } | null>(null);
 
   useEffect(() => {
     if (clientId) fetchBuyerData();
@@ -104,6 +107,22 @@ const HotSheetBuyerDetail = () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Guard: if this buyer no longer has an active/pending relationship
+      // with this agent, redirect away from the active workspace.
+      const { data: rel } = await supabase
+        .from("client_agent_relationships")
+        .select("status")
+        .eq("agent_id", user.id)
+        .or(`crm_client_id.eq.${clientId},client_id.eq.${clientId}`)
+        .in("status", ["active", "pending"])
+        .maybeSingle();
+
+      if (!rel) {
+        toast.error("This buyer was removed.");
+        navigate("/hot-sheets", { replace: true });
+        return;
+      }
 
       const [clientRes, hscRes, tokensRes] = await Promise.all([
         supabase.from("clients").select("first_name, last_name, email").eq("id", clientId!).maybeSingle(),
@@ -226,8 +245,21 @@ const HotSheetBuyerDetail = () => {
             <div
               key={hs.id}
               onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
-              className="bg-white border border-zinc-200 rounded-2xl shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden"
+              className="relative bg-white border border-zinc-200 rounded-2xl shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden"
             >
+              {/* Edit pencil — top right */}
+              <button
+                type="button"
+                aria-label="Edit hot sheet"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
+                }}
+                className="absolute top-2 right-2 z-10 h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm border border-zinc-200 shadow-sm flex items-center justify-center hover:bg-white transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5 text-zinc-700" />
+              </button>
+
               {/* 2x2 Photo Mosaic */}
               <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-zinc-200">
                 <PhotoCell src={hs.photos[0]} />
@@ -251,6 +283,20 @@ const HotSheetBuyerDetail = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Edit Hot Sheet Dialog */}
+      {editingHotSheet && (
+        <EditHotsheetCriteriaDialog
+          open={!!editingHotSheet}
+          onOpenChange={(open) => !open && setEditingHotSheet(null)}
+          hotSheetId={editingHotSheet.id}
+          initialCriteria={editingHotSheet.criteria}
+          onUpdate={() => {
+            fetchBuyerData();
+            setEditingHotSheet(null);
+          }}
+        />
       )}
     </PageShell>
   );
