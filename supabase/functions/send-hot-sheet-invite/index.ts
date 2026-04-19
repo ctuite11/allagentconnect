@@ -164,12 +164,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("[send-hot-sheet-invite] Enqueuing job for:", invitedEmail, "mode:", mode);
 
+    const subject = inviteOnly
+      ? `${inviterName} invited you to All Agent Connect`
+      : `${inviterName} shared a Hot Sheet with you`;
+
     const jobPayload = {
       provider: "resend",
       template: "hot-sheet-invite",
       to: invitedEmail,
-      subject: `${inviterName} shared a Hot Sheet with you`,
-      variables: { inviterName, hotSheetName, hotSheetLink, teasers },
+      subject,
+      variables: { inviterName, hotSheetName, hotSheetLink, teasers, inviteOnly },
     };
 
     // Build insert row — include idempotency_key if we have one

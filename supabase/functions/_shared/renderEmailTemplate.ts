@@ -46,6 +46,26 @@ export function renderEmailTemplate(
         </div>
       `).join("");
 
+      const isInviteOnly = variables.inviteOnly === true || !variables.hotSheetName;
+
+      if (isInviteOnly) {
+        return buildAacEmail({
+          headline: "You've Been Invited to Join All Agent Connect",
+          body: `
+            <p style="margin:0 0 12px;">${variables.inviterName} has invited you to <strong>All Agent Connect</strong> — a private buyer workspace where you can:</p>
+            <ul style="margin:0 0 16px;padding:0 0 0 20px;color:#334155;line-height:1.7;">
+              <li>Receive personalized Hot Sheets</li>
+              <li>Save favorite homes</li>
+              <li>Track listings and updates</li>
+              <li>Communicate directly with your agent</li>
+              <li>Stay organized during your home search</li>
+            </ul>
+            <p style="margin:16px 0 0;color:#475569;font-size:14px;">Once you join, any Hot Sheets and listings your agent shares will be waiting for you.</p>`,
+          ctaLabel: "Join All Agent Connect",
+          ctaUrl: variables.hotSheetLink,
+        });
+      }
+
       return buildAacEmail({
         headline: "You've Been Invited to View a Hot Sheet",
         body: `
