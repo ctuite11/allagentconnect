@@ -83,6 +83,48 @@ const ClientHotsheetPage = () => {
     });
   }, [tokenData]);
 
+  // Persist invite acceptance for signed-in buyers so dashboard can reliably
+  // restore shared hot sheets from accepted tokens.
+  useEffect(() => {
+    const markTokenAccepted = async () => {
+      if (!token || !tokenData || !currentUser) return;
+
+      const payload = (tokenData.payload as any) || {};
+      const tokenEmail = String(payload?.client_email || payload?.email || "").toLowerCase().trim();
+      const currentEmail = (currentUser.email || "").toLowerCase().trim();
+
+      // Do not claim acceptance for a different intended recipient.
+      if (tokenEmail && currentEmail && tokenEmail !== currentEmail) return;
+
+      // Skip if already accepted by someone else.
+      if (tokenData.accepted_by_user_id && tokenData.accepted_by_user_id !== currentUser.id) return;
+
+      if (tokenData.accepted_by_user_id === currentUser.id && tokenData.accepted_at) return;
+
+      const acceptedAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("share_tokens")
+        .update({
+          accepted_at: tokenData.accepted_at || acceptedAt,
+          accepted_by_user_id: currentUser.id,
+        })
+        .eq("token", token);
+
+      if (error) {
+        console.error("Failed to persist token acceptance", error);
+        return;
+      }
+
+      setTokenData((prev: any) => ({
+        ...prev,
+        accepted_at: prev?.accepted_at || acceptedAt,
+        accepted_by_user_id: currentUser.id,
+      }));
+    };
+
+    void markTokenAccepted();
+  }, [token, tokenData, currentUser]);
+
   const validateAndLoadHotsheet = async () => {
     try {
       setLoading(true);

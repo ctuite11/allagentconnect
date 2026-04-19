@@ -136,7 +136,8 @@ serve(async (req) => {
     console.error("Invite update failed:", updateErr);
   }
 
-  // If there's a sticky agent, create agent relationship for the friend
+  // If there's a sticky agent, attach it as the buyer's active agent and
+  // ensure there is at least one direct conversation thread for /messages.
   const stickyAgentId = invite.agent_id;
   if (stickyAgentId) {
     // Ensure buyer role exists for friend
@@ -146,19 +147,55 @@ serve(async (req) => {
       .select()
       .maybeSingle(); // ignore conflict
 
-    // Create agent relationship
-    const { error: relErr } = await supabaseAdmin
-      .from("client_agent_relationships")
-      .insert({
-        client_id: userId,
-        agent_id: stickyAgentId,
-        status: "active",
-      })
-      .select()
+    // Activate relationship as the authenticated buyer. This safely replaces
+    // any existing active relationship instead of failing on one-active rules.
+    const { error: relErr } = await supabaseUser.rpc("activate_agent_relationship", {
+      _agent_id: stickyAgentId,
+      _crm_client_id: null,
+    });
+
+    if (relErr) {
+      console.error("Agent relationship activation failed:", relErr);
+    }
+
+    // Seed a reusable 1:1 conversation so buyers don't land on an empty /messages view.
+    const { data: existingConversation, error: convoLookupErr } = await supabaseAdmin
+      .from("conversations")
+      .select("id")
+      .or(`and(agent_a_id.eq.${userId},agent_b_id.eq.${stickyAgentId}),and(agent_a_id.eq.${stickyAgentId},agent_b_id.eq.${userId})`)
+      .is("listing_id", null)
       .maybeSingle();
 
-    if (relErr && relErr.code !== "23505") {
-      console.error("Agent relationship creation failed:", relErr);
+    if (convoLookupErr) {
+      console.error("Conversation lookup failed:", convoLookupErr);
+    } else if (!existingConversation) {
+      const { data: newConversation, error: convoCreateErr } = await supabaseAdmin
+        .from("conversations")
+        .insert({
+          agent_a_id: stickyAgentId,
+          agent_b_id: userId,
+          listing_id: null,
+        })
+        .select("id")
+        .maybeSingle();
+
+      if (convoCreateErr) {
+        console.error("Conversation create failed:", convoCreateErr);
+      } else if (newConversation?.id) {
+        const { error: participantErr } = await supabaseAdmin
+          .from("conversation_participants")
+          .upsert(
+            [
+              { conversation_id: newConversation.id, user_id: stickyAgentId },
+              { conversation_id: newConversation.id, user_id: userId },
+            ],
+            { onConflict: "conversation_id,user_id" }
+          );
+
+        if (participantErr) {
+          console.error("Conversation participant upsert failed:", participantErr);
+        }
+      }
     }
   }
 
