@@ -35,9 +35,59 @@ const ClientInvitationSetup = () => {
   const [agentFirstName, setAgentFirstName] = useState<string>("");
   const isEmailLocked = !!initialEmail;
   const hasNameFromInvite = !!(initialFirstName && initialLastName);
-  // All buyer invites land on the dashboard first — stable, simple, and
-  // avoids brittle deep-link dependencies on hot_sheet_id / token payload.
   const postAcceptPath = "/client/dashboard";
+
+  const markInviteHandoff = () => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem("aac_invite_acceptance_handoff", String(Date.now()));
+  };
+
+  const ensureBuyerSession = async (normalizedEmail: string, plainPassword: string, expectedUserId?: string) => {
+    let { data: { session } } = await supabase.auth.getSession();
+
+    if (!session?.user) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password: plainPassword,
+      });
+      if (signInError || !signInData.user) {
+        throw new Error("Your account was created, but we could not sign you in automatically. Please sign in to complete invite acceptance.");
+      }
+      session = signInData.session;
+    }
+
+    if (!session?.user) {
+      throw new Error("We could not establish your buyer session. Please try again.");
+    }
+
+    if (expectedUserId && session.user.id !== expectedUserId) {
+      throw new Error("Session mismatch detected. Please sign out and retry your invitation link.");
+    }
+
+    return session.user.id;
+  };
+
+  const ensureActiveRelationship = async (userId: string, invitingAgentId: string, crmClientId?: string) => {
+    const { error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
+      _agent_id: invitingAgentId,
+      _crm_client_id: crmClientId || null,
+    });
+    if (relationshipError) {
+      throw new Error("We could not attach your inviting agent to this account. Please try again.");
+    }
+
+    const { data: relationshipCheck, error: relationshipCheckError } = await supabase
+      .from("client_agent_relationships")
+      .select("id")
+      .eq("client_id", userId)
+      .eq("agent_id", invitingAgentId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (relationshipCheckError || !relationshipCheck) {
+      throw new Error("Invite accepted, but your agent relationship was not activated. Please retry this invite link.");
+    }
+  };
 
   useEffect(() => {
     const validateToken = async () => {
@@ -150,7 +200,7 @@ const ClientInvitationSetup = () => {
 
       if (!authData.user) throw new Error("Account creation failed");
 
-      const userId = authData.user.id;
+      const userId = await ensureBuyerSession(normalizedEmail, password, authData.user.id);
       const nameFields = { first_name: firstName.trim(), last_name: lastName.trim() };
 
       const { error: updateError, count } = await supabase
@@ -169,30 +219,28 @@ const ClientInvitationSetup = () => {
 
       const { error: roleError } = await supabase
         .from("user_roles")
-        .insert({ user_id: authData.user.id, role: "buyer" });
+        .insert({ user_id: userId, role: "buyer" });
       if (roleError) console.error("Error assigning buyer role:", roleError);
 
-      if (agentId) {
-        const { error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
-          _agent_id: agentId,
-          _crm_client_id: clientId || null,
-        });
-        if (relationshipError) console.error("Error creating relationship:", relationshipError);
+      if (!agentId) {
+        throw new Error("Invitation is missing agent context. Please request a new invitation link.");
       }
+      await ensureActiveRelationship(userId, agentId, clientId || undefined);
 
       const { error: tokenUpdateError } = await supabase
         .from("share_tokens")
         .update({
           accepted_at: new Date().toISOString(),
-          accepted_by_user_id: authData.user.id,
+          accepted_by_user_id: userId,
         })
         .eq("token", invitationToken);
-      if (tokenUpdateError) console.error("Error updating token:", tokenUpdateError);
+      if (tokenUpdateError) {
+        throw new Error("Your account is ready, but we could not finalize the invite token. Please retry from your invitation email.");
+      }
 
       if (agentId) setPrimaryAgentId(agentId);
 
       setPhase("success");
-      setTimeout(() => navigate(postAcceptPath, { replace: true }), 2000);
     } catch (error: any) {
       console.error("Activation error:", error);
       toast.error(error.message || "Failed to activate account. Please try again.");
@@ -222,13 +270,10 @@ const ClientInvitationSetup = () => {
 
       const userId = data.user.id;
 
-      if (agentId) {
-        const { error: relErr } = await supabase.rpc("activate_agent_relationship", {
-          _agent_id: agentId,
-          _crm_client_id: clientId || null,
-        });
-        if (relErr) console.error("Error activating relationship:", relErr);
+      if (!agentId) {
+        throw new Error("Invitation is missing agent context. Please request a new invitation link.");
       }
+      await ensureActiveRelationship(userId, agentId, clientId || undefined);
 
       const { error: tokenErr } = await supabase
         .from("share_tokens")
@@ -237,12 +282,13 @@ const ClientInvitationSetup = () => {
           accepted_by_user_id: userId,
         })
         .eq("token", invitationToken);
-      if (tokenErr) console.error("Error updating token:", tokenErr);
+      if (tokenErr) {
+        throw new Error("Signed in, but we could not finalize the invite token. Please retry from your invitation email.");
+      }
 
       if (agentId) setPrimaryAgentId(agentId);
 
       setPhase("success");
-      setTimeout(() => navigate(postAcceptPath, { replace: true }), 2000);
     } catch (error: any) {
       console.error("Sign-in error:", error);
       toast.error(error.message || "Sign in failed. Please check your password and try again.");
@@ -371,14 +417,17 @@ const ClientInvitationSetup = () => {
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">You're In</h1>
             <p className="text-sm text-zinc-500 max-w-sm mx-auto">
-              Your All Agent Connect account is now active. Redirecting you to your home search…
+              Your All Agent Connect account is active and connected to your inviting agent.
             </p>
           </div>
           <Button
-            onClick={() => navigate(postAcceptPath, { replace: true })}
+            onClick={() => {
+              markInviteHandoff();
+              navigate(postAcceptPath, { replace: true });
+            }}
             className="h-11 px-6 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC]"
           >
-            Continue to My Workspace
+            Go to My Workspace
           </Button>
         </div>
       </div>

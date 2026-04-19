@@ -66,6 +66,7 @@ interface Favorite {
 export default function ClientDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [relationshipHydrating, setRelationshipHydrating] = useState(false);
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [relationshipId, setRelationshipId] = useState<string | null>(null);
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
@@ -81,15 +82,46 @@ export default function ClientDashboard() {
     checkAuth();
   }, []);
 
+  const consumeInviteHandoffMarker = () => {
+    if (typeof window === "undefined") return false;
+    const raw = sessionStorage.getItem("aac_invite_acceptance_handoff");
+    if (!raw) return false;
+
+    sessionStorage.removeItem("aac_invite_acceptance_handoff");
+
+    const ts = Number(raw);
+    if (!Number.isFinite(ts)) return false;
+
+    const ageMs = Date.now() - ts;
+    return ageMs >= 0 && ageMs <= 10 * 60 * 1000;
+  };
+
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate("/consumer/auth");
       return;
     }
+
+    const cameFromInviteAcceptance = consumeInviteHandoffMarker();
+    if (cameFromInviteAcceptance) {
+      setRelationshipHydrating(true);
+    }
+
     setCurrentUserId(user.id);
-    await Promise.all([loadAgentRelationship(user.id), loadHotSheets(user.id), loadFavorites(user.id)]);
-    setLoading(false);
+
+    try {
+      const relationshipFound = await loadAgentRelationship(user.id);
+      await Promise.all([loadHotSheets(user.id), loadFavorites(user.id)]);
+
+      if (cameFromInviteAcceptance && !relationshipFound) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1200));
+        await loadAgentRelationship(user.id);
+      }
+    } finally {
+      setRelationshipHydrating(false);
+      setLoading(false);
+    }
   };
 
   const loadAgentRelationship = async (userId: string) => {
@@ -130,7 +162,14 @@ export default function ClientDashboard() {
           setCrmClientId(crmRow?.id ?? null);
         }
       }
+
+      return true;
     }
+
+    setRelationshipId(null);
+    setAgent(null);
+    setCrmClientId(null);
+    return false;
   };
 
   const loadHotSheets = async (userId: string) => {
@@ -280,8 +319,11 @@ export default function ClientDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-sm text-muted-foreground">
+          {relationshipHydrating ? "Connecting your inviting agent..." : "Loading your dashboard..."}
+        </p>
       </div>
     );
   }
