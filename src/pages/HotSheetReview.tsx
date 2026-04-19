@@ -963,6 +963,20 @@ if (comments && comments.length > 0) {
             </CardContent>
           </Card>
 
+          {/* Helper text — pre-send state */}
+          {!invitesSent && (
+            <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <p className="text-sm text-zinc-700">
+                You haven't shared any listings yet. Select listings below to send your first batch.
+              </p>
+              {unacceptedCount > 0 && (
+                <p className="text-xs text-zinc-500 mt-1">
+                  Your buyer will receive these listings along with an invitation to join.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Controls */}
           <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-3 mb-6">
             <div className="flex flex-wrap items-center gap-3 min-w-0">
