@@ -45,7 +45,7 @@ const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Agent Network", icon: Users, route: "/our-members" },
   { label: "Contacts", icon: Contact, route: "/my-clients" },
   { label: "Listings", icon: List, route: "/agent/listings" },
-  { label: "HotSheets", icon: Flame, route: "/agent/hot-sheets" },
+  { label: "Hot Sheets", icon: Flame, route: "/agent/hot-sheets" },
   { label: "Profile", icon: UserCircle, route: "/agent-profile-editor" },
 ];
 
