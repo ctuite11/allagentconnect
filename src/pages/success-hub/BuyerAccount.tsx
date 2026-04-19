@@ -188,6 +188,11 @@ export default function BuyerAccount() {
             {client.phone && (
               <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
             )}
+            {buyerStatus === "pending_invite" && (
+              <p className="text-sm text-zinc-500 mt-2">
+                Invite your buyer to unlock favorites, searches, and live activity.
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-6">
