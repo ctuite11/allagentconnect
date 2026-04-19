@@ -374,7 +374,7 @@ const SearchResults = ({
                   size="icon"
                   onClick={() => setViewType("map")}
                 >
-                  <Map className="h-4 w-4" />
+                  <MapIcon className="h-4 w-4" />
                 </Button>
               </div>
             </div>
