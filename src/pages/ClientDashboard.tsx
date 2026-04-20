@@ -209,7 +209,7 @@ export default function ClientDashboard() {
     for (const t of acceptedTokenRows || []) {
       const p = (t.payload as any) ?? {};
       if (p.type !== "client_hotsheet_invite") continue;
-      if (t.agent_id !== activeAgentId) continue;
+      if (activeAgentId && p.agent_id && p.agent_id !== activeAgentId) continue;
 
       const hsId = String(p.hot_sheet_id ?? "");
       if (!hsId) continue;
