@@ -40,62 +40,8 @@ export async function removeBuyerClient(opts: {
       });
     }
 
-    // CRM-first lookup (buyerId in this dialog is CRM client id).
-    let relationshipRow: { id: string } | null = null;
-
-    const { data: crmRel, error: crmRelError } = await supabase
-      .from("client_agent_relationships")
-      .select("id")
-      .eq("agent_id", user.id)
-      .eq("crm_client_id", opts.buyerId)
-      .in("status", ["active", "pending"])
-      .is("ended_at", null)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (crmRelError) {
-      console.error("removeBuyerClient CRM relationship lookup error:", {
-        code: crmRelError.code,
-        message: crmRelError.message,
-        details: crmRelError.details,
-        hint: crmRelError.hint,
-      });
-    }
-
-    relationshipRow = crmRel || null;
-
-    // Fallback: if caller passed an auth user id, handle that too.
-    if (!relationshipRow) {
-      const { data: authRel, error: authRelError } = await supabase
-        .from("client_agent_relationships")
-        .select("id")
-        .eq("agent_id", user.id)
-        .eq("client_id", opts.buyerId)
-        .in("status", ["active", "pending"])
-        .is("ended_at", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (authRelError) {
-        console.error("removeBuyerClient auth relationship lookup error:", {
-          code: authRelError.code,
-          message: authRelError.message,
-          details: authRelError.details,
-          hint: authRelError.hint,
-        });
-      }
-
-      relationshipRow = authRel || null;
-    }
-
-    if (!relationshipRow?.id) {
-      throw new Error("No active or pending relationship row found for this buyer");
-    }
-
-    const { data, error } = await (supabase as any).rpc("agent_end_client_relationship_by_id", {
-      p_relationship_id: relationshipRow.id,
+    const { data, error } = await supabase.rpc("agent_end_client_relationship", {
+      p_client_id: opts.buyerId,
     });
 
     if (error) {
@@ -114,7 +60,6 @@ export async function removeBuyerClient(opts: {
 
     console.info("removeBuyerClient success:", {
       rowsAffected: data,
-      relationshipId: relationshipRow.id,
       buyerId: opts.buyerId,
       agentId: user.id,
     });
