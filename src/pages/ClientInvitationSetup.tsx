@@ -74,6 +74,17 @@ const ClientInvitationSetup = () => {
     });
     if (relationshipError) {
       console.error("Relationship activation error:", relationshipError);
+      const backendError = [
+        relationshipError.code,
+        relationshipError.message,
+        relationshipError.details,
+        relationshipError.hint,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+      if (import.meta.env.DEV && backendError) {
+        throw new Error(`We could not attach your inviting agent to this account. (${backendError})`);
+      }
       throw new Error("We could not attach your inviting agent to this account. Please try again.");
     }
 
@@ -87,6 +98,17 @@ const ClientInvitationSetup = () => {
 
     if (relationshipCheckError) {
       console.error("Relationship verification error:", relationshipCheckError);
+      const verificationError = [
+        relationshipCheckError.code,
+        relationshipCheckError.message,
+        relationshipCheckError.details,
+        relationshipCheckError.hint,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+      if (import.meta.env.DEV && verificationError) {
+        throw new Error(`Invite accepted, but we could not verify your agent relationship. (${verificationError})`);
+      }
       throw new Error("Invite accepted, but we could not verify your agent relationship. Please retry this invite link.");
     }
     if (!relationshipCheck) {
