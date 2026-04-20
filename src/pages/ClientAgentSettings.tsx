@@ -124,13 +124,13 @@ const ClientAgentSettings = () => {
                 <CardHeader>
                   <CardTitle>No Active Agent</CardTitle>
                   <CardDescription>
-                    You currently don't have an active agent relationship on All Agent Connect.
-                    You can connect with an agent by accepting their invitation.
+                    Keep your account active while you continue your home search.
+                    You can find and connect with a new agent at any time.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button onClick={() => navigate("/")}>
-                    Browse Properties
+                    Continue Your Home Search
                   </Button>
                 </CardContent>
               </Card>
@@ -139,7 +139,7 @@ const ClientAgentSettings = () => {
                 <CardHeader>
                   <CardTitle>Your Agent</CardTitle>
                   <CardDescription>
-                    You're currently working with this agent on All Agent Connect
+                    You're currently working with this agent
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -202,8 +202,9 @@ const ClientAgentSettings = () => {
                         <AlertDialogHeader>
                           <AlertDialogTitle>End Relationship?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to end your relationship with {agent.first_name} {agent.last_name} on All Agent Connect? 
-                            You can always connect with a different agent later.
+                            You can keep your account active after ending this relationship.
+                            Your saved homes, searches, and profile stay with you, and you can
+                            find a new agent later.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

@@ -68,16 +68,14 @@ const ClientInvitationSetup = () => {
   };
 
   const ensureActiveRelationship = async (userId: string, invitingAgentId: string, crmClientId?: string) => {
-    console.log("[ensureActiveRelationship] calling RPC", { userId, invitingAgentId, crmClientId: crmClientId ?? null });
     const { data: rpcResult, error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
       _agent_id: invitingAgentId,
       _crm_client_id: crmClientId || null,
     });
     if (relationshipError) {
-      console.error("[ensureActiveRelationship] RPC error:", relationshipError);
-      throw new Error(`We could not attach your inviting agent to this account. (${relationshipError.message})`);
+      console.error("Relationship activation error:", relationshipError);
+      throw new Error("We could not attach your inviting agent to this account. Please try again.");
     }
-    console.log("[ensureActiveRelationship] RPC succeeded, new relationship id:", rpcResult);
 
     const { data: relationshipCheck, error: relationshipCheckError } = await supabase
       .from("client_agent_relationships")
@@ -87,21 +85,14 @@ const ClientInvitationSetup = () => {
       .eq("status", "active")
       .maybeSingle();
 
-    console.log("[ensureActiveRelationship] verification query result:", { relationshipCheck, relationshipCheckError });
-
     if (relationshipCheckError) {
-      console.error("[ensureActiveRelationship] verification query error:", relationshipCheckError);
-      throw new Error(`Invite accepted, but we could not verify your agent relationship. (${relationshipCheckError.message})`);
+      console.error("Relationship verification error:", relationshipCheckError);
+      throw new Error("Invite accepted, but we could not verify your agent relationship. Please retry this invite link.");
     }
     if (!relationshipCheck) {
-      console.warn("[ensureActiveRelationship] RPC succeeded but row not visible to buyer — possible RLS policy gap");
-      // RPC returned success (rpcResult is the new row ID), so the relationship was created.
-      // The query returning null is most likely an RLS policy not granting buyers SELECT on their own rows.
-      // Trust the RPC result and continue.
       if (!rpcResult) {
         throw new Error("Invite accepted, but your agent relationship was not activated. Please retry this invite link.");
       }
-      console.log("[ensureActiveRelationship] Trusting RPC result despite invisible row; proceeding.");
     }
   };
 

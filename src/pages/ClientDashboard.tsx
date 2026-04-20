@@ -111,12 +111,13 @@ export default function ClientDashboard() {
     setCurrentUserId(user.id);
 
     try {
-      const relationshipFound = await loadAgentRelationship(user.id);
-      await Promise.all([loadHotSheets(user.id), loadFavorites(user.id)]);
+      const activeAgentId = await loadAgentRelationship(user.id);
+      await Promise.all([loadHotSheets(user.id, activeAgentId), loadFavorites(user.id)]);
 
-      if (cameFromInviteAcceptance && !relationshipFound) {
+      if (cameFromInviteAcceptance && !activeAgentId) {
         await new Promise((resolve) => window.setTimeout(resolve, 1200));
-        await loadAgentRelationship(user.id);
+        const retriedAgentId = await loadAgentRelationship(user.id);
+        await loadHotSheets(user.id, retriedAgentId);
       }
     } finally {
       setRelationshipHydrating(false);
@@ -163,16 +164,22 @@ export default function ClientDashboard() {
         }
       }
 
-      return true;
+      return relationship.agent_id as string;
     }
 
     setRelationshipId(null);
     setAgent(null);
     setCrmClientId(null);
-    return false;
+    return null;
   };
 
-  const loadHotSheets = async (userId: string) => {
+  const loadHotSheets = async (userId: string, activeAgentId: string | null) => {
+    if (!activeAgentId) {
+      setHotSheets([]);
+      setShareTokenByHotSheetId({});
+      return;
+    }
+
     // Get buyer profile email for fallback matching
     const { data: profile } = await supabase
       .from("profiles")
@@ -202,6 +209,7 @@ export default function ClientDashboard() {
     for (const t of acceptedTokenRows || []) {
       const p = (t.payload as any) ?? {};
       if (p.type !== "client_hotsheet_invite") continue;
+      if (t.agent_id !== activeAgentId) continue;
 
       const hsId = String(p.hot_sheet_id ?? "");
       if (!hsId) continue;
@@ -359,7 +367,7 @@ export default function ClientDashboard() {
                 Your Agent
               </CardTitle>
               <CardDescription>
-                {agent ? "Your current All Agent Connect representative" : "You're not currently working with an agent"}
+                  {agent ? "Your current agent relationship" : "Keep your account active while you continue your home search"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -413,10 +421,10 @@ export default function ClientDashboard() {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
-                    You're not currently working with an agent on All Agent Connect.
+                    Continue your home search, keep your account active, and connect with a new agent when you're ready.
                   </p>
                   <Button onClick={() => navigate("/browse")}>
-                    Browse Properties
+                    Continue Your Home Search
                   </Button>
                 </div>
               )}
@@ -601,10 +609,8 @@ export default function ClientDashboard() {
               End relationship with {agent?.first_name} {agent?.last_name}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to end your relationship with {agent?.first_name}{" "}
-              {agent?.last_name} on All Agent Connect? You'll still be able to view your
-              saved homes and searches, but new activity will no longer be connected to
-              this agent.
+              You can keep your account active after ending this relationship. Your saved homes,
+              searches, and profile stay with you, and you can find a new agent any time.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
