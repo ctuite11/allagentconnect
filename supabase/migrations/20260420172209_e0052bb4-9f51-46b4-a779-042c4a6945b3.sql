@@ -1,0 +1,1 @@
+DELETE FROM public.agent_invites WHERE lower(invitee_email) = 'chris.tuite@compass.com';
