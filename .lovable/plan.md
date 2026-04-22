@@ -1,26 +1,57 @@
 
-## Audit + purge `chris@directconnectmls.com`
 
-⚠️ **Heads up before approval**: `chris@directconnectmls.com` is very likely your **admin account** (per memory: `auth/admin-access-logic-standard` — admin user is `chris@allagentconnect.com`, but `directconnectmls.com` is one of your custom domains and may be the same person). Purging it would lock you out of admin.
+## Goal
+Make "Remove Buyer" a clean wipe of buyer-workflow state for THIS agent, while preserving the CRM contact in Contacts so you can reconnect later. Also clarify the cross-agent question.
 
-### Step 1 — Audit (read-only)
+## Important clarification (cross-agent isolation)
+The `clients` table is **per-agent**: each agent has their own `clients` row for the same person (keyed by `agent_id` + `lower(email)`). So another agent adding "chris.tuite@compass.com" was never blocked by your row — they get their own. The duplicate error you hit earlier was because YOUR own prior `clients` row still existed. Removing buyers does NOT affect any other agent's ability to add the same person.
 
-Run the same 27-surface sweep as before, plus check `user_roles` for `admin` role attached to any resolved user ID. Output a single counts table.
+## What "Remove Buyer" will do (new behavior)
 
-### Step 2 — Decision gate
+For the targeted CRM contact (`p_client_id`) belonging to the calling agent:
 
-If the resolved user has the **`admin` role** OR the email matches your active login, **STOP** and surface the finding instead of purging. You confirm before I delete.
+1. End the relationship in `client_agent_relationships` (status=`inactive`, `ended_at=now()`) — covers both `client_id` (auth user) and `crm_client_id` (CRM row) matches. *(already happening)*
+2. **Delete this agent's hot sheets for that buyer** — `DELETE FROM hot_sheets WHERE user_id = auth.uid() AND client_id = p_client_id`.
+3. **Delete hot sheet membership rows** — `DELETE FROM hot_sheet_clients WHERE client_id = p_client_id` for hot sheets owned by this agent (join-scoped).
+4. Cascade-clean dependent rows on those hot sheets (`hot_sheet_sent_listings`, `hot_sheet_comments`, `hot_sheet_listing_status`, `hot_sheet_notifications`, `hot_sheet_favorites`) scoped to the deleted hot sheet IDs.
+5. **Keep the `clients` row** — buyer remains in Contacts with full history (name, email, phone, notes).
 
-If it's just a stale test/CRM record with no admin role, proceed to Step 3.
+Net result: My Buyers no longer shows them, your hot sheets/comments tied to them are gone, the CRM contact stays editable in Contacts, and re-adding them as a buyer later just re-activates the relationship via the existing `activate_agent_relationship` / "Add to Buyers" flow.
 
-### Step 3 — Purge (only if safe)
+## Implementation
 
-FK-safe deletion across all surfaces with rows, then invoke `delete-users` edge function for the auth account, then re-verify zero.
+### A. New migration — replace `agent_end_client_relationship`
+Rewrite the function to perform the cascading wipe in one transaction, scoped strictly to `auth.uid()`:
 
-### Scope guardrails
+```text
+- resolve hot_sheet_ids owned by auth.uid() with client_id = p_client_id
+- delete dependents (sent_listings, comments, listing_status, notifications, favorites) where hot_sheet_id IN (...)
+- delete hot_sheet_clients where hot_sheet_id IN (...)
+- delete hot_sheets where id IN (...)
+- update client_agent_relationships -> inactive (existing behavior)
+- return rows_affected for the relationship update
+- DO NOT touch public.clients
+```
 
-- No schema changes.
-- Other users untouched — every query scoped by resolved IDs/email.
-- Admin-protection gate before any destructive action.
+Keep `SECURITY DEFINER`, `search_path=public`, and the existing "no active/pending relationship" guard.
 
-**Approve to run the audit. I will not delete without showing you the audit first if admin role is detected.**
+### B. Frontend — no behavior change required
+`RemoveBuyerClientAction.tsx` already calls `agent_end_client_relationship`. Toast copy updated to: *"Buyer removed. Hot sheets and history cleared. They're still in Contacts."*
+
+### C. Add Buyer re-flow safety net
+Already shipped: `CreateBuyerDialog` catches `23505` and tells you the contact exists. After this change you can either:
+- Use the existing contact via the "Add to Buyers" action in Contacts (preferred), or
+- Delete the contact in Contacts first if you want a fresh row.
+
+No further change needed there.
+
+## Files changed
+- `supabase/migrations/<timestamp>_rewrite_agent_end_client_relationship_cascade.sql` (new)
+- `src/components/success-hub/RemoveBuyerClientAction.tsx` (toast copy only)
+
+## Verification after merge
+1. Pick a test buyer with hot sheets. Confirm counts in `hot_sheets`, `hot_sheet_clients`, `client_agent_relationships` for that `crm_client_id`.
+2. Click Remove Buyer.
+3. Re-query: hot sheets = 0, hot_sheet_clients = 0, relationship = inactive, `clients` row still present.
+4. Open Contacts → buyer is there. Click "Add to Buyers" → relationship re-activates without 23505 error.
+
