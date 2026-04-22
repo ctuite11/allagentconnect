@@ -67,6 +67,8 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
         return;
       }
 
+      const normalizedEmail = email.trim().toLowerCase();
+
       // 1. Insert into clients
       const { data: client, error: clientErr } = await supabase
         .from("clients")
@@ -75,7 +77,7 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
           agent_user_id: user.id,
           first_name: firstName.trim(),
           last_name: lastName.trim(),
-          email: email.trim().toLowerCase(),
+          email: normalizedEmail,
           phone: phone.trim() || null,
           client_type: "buyer",
           source: "manual",
@@ -83,7 +85,27 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
         .select("id")
         .single();
 
-      if (clientErr) failWithStep("insert clients", clientErr);
+      if (clientErr) {
+        // Friendly handling for duplicate email under same agent
+        if (
+          clientErr.code === "23505" ||
+          /clients_agent_email_unique/i.test(clientErr.message || "")
+        ) {
+          const { data: existing } = await supabase
+            .from("clients")
+            .select("id, first_name, last_name, email, client_type")
+            .eq("agent_id", user.id)
+            .ilike("email", normalizedEmail)
+            .maybeSingle();
+
+          const name = existing
+            ? `${existing.first_name ?? ""} ${existing.last_name ?? ""}`.trim() || normalizedEmail
+            : normalizedEmail;
+          toast.error(`A contact with this email already exists (${name}). Open Contacts to edit it.`);
+          return;
+        }
+        failWithStep("insert clients", clientErr);
+      }
 
       // 2. Insert client_agent_relationships
       const { error: relErr } = await supabase
