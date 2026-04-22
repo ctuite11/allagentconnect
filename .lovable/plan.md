@@ -1,57 +1,51 @@
 
 
 ## Goal
-Make "Remove Buyer" a clean wipe of buyer-workflow state for THIS agent, while preserving the CRM contact in Contacts so you can reconnect later. Also clarify the cross-agent question.
+Hard-delete `chris.tuite@compass.com` from the system so you can re-test the buyer add + email flow from scratch.
 
-## Important clarification (cross-agent isolation)
-The `clients` table is **per-agent**: each agent has their own `clients` row for the same person (keyed by `agent_id` + `lower(email)`). So another agent adding "chris.tuite@compass.com" was never blocked by your row — they get their own. The duplicate error you hit earlier was because YOUR own prior `clients` row still existed. Removing buyers does NOT affect any other agent's ability to add the same person.
+## Scope
+This is a one-off data wipe via migration (DELETE statements require migration per project policy — `psql` insert/select access can't DELETE).
 
-## What "Remove Buyer" will do (new behavior)
+## What gets wiped
 
-For the targeted CRM contact (`p_client_id`) belonging to the calling agent:
+For every `clients` row with `lower(email) = 'chris.tuite@compass.com'` (across all agents) and the matching `auth.users` row if one exists:
 
-1. End the relationship in `client_agent_relationships` (status=`inactive`, `ended_at=now()`) — covers both `client_id` (auth user) and `crm_client_id` (CRM row) matches. *(already happening)*
-2. **Delete this agent's hot sheets for that buyer** — `DELETE FROM hot_sheets WHERE user_id = auth.uid() AND client_id = p_client_id`.
-3. **Delete hot sheet membership rows** — `DELETE FROM hot_sheet_clients WHERE client_id = p_client_id` for hot sheets owned by this agent (join-scoped).
-4. Cascade-clean dependent rows on those hot sheets (`hot_sheet_sent_listings`, `hot_sheet_comments`, `hot_sheet_listing_status`, `hot_sheet_notifications`, `hot_sheet_favorites`) scoped to the deleted hot sheet IDs.
-5. **Keep the `clients` row** — buyer remains in Contacts with full history (name, email, phone, notes).
-
-Net result: My Buyers no longer shows them, your hot sheets/comments tied to them are gone, the CRM contact stays editable in Contacts, and re-adding them as a buyer later just re-activates the relationship via the existing `activate_agent_relationship` / "Add to Buyers" flow.
+1. **Hot sheet workflow data** (scoped to any hot sheets where this person is the buyer):
+   - `hot_sheet_sent_listings`, `hot_sheet_comments`, `hot_sheet_listing_status`, `hot_sheet_notifications`, `hot_sheet_favorites`
+   - `hot_sheet_clients` membership rows
+   - `hot_sheets` rows where `client_id` matches
+2. **Relationships**: `client_agent_relationships` rows where `client_id` or `crm_client_id` matches any of the above
+3. **CRM contact rows**: `clients` rows with that email (every agent's copy)
+4. **Auth user** (if Chris ever signed up): the `auth.users` row + cascading auth-side data (profiles, user_roles, favorites, buyer_qualifications, buyer_credentials, notification_preferences, conversation_participants, hot_sheet_comments by sender, etc.) — handled by calling the existing `delete-users` Edge Function with `emails: ['chris.tuite@compass.com']`, which already does this cleanup safely.
+5. **Email plumbing** (so re-sends aren't suppressed): remove `chris.tuite@compass.com` from `suppressed_emails` and `email_unsubscribe_tokens`.
 
 ## Implementation
 
-### A. New migration — replace `agent_end_client_relationship`
-Rewrite the function to perform the cascading wipe in one transaction, scoped strictly to `auth.uid()`:
-
+### Step 1 — Migration: wipe CRM-side data
+New migration `wipe_chris_tuite_compass_test_data.sql`:
 ```text
-- resolve hot_sheet_ids owned by auth.uid() with client_id = p_client_id
-- delete dependents (sent_listings, comments, listing_status, notifications, favorites) where hot_sheet_id IN (...)
-- delete hot_sheet_clients where hot_sheet_id IN (...)
-- delete hot_sheets where id IN (...)
-- update client_agent_relationships -> inactive (existing behavior)
-- return rows_affected for the relationship update
-- DO NOT touch public.clients
+- gather client_ids: SELECT id FROM clients WHERE lower(email)='chris.tuite@compass.com'
+- gather hot_sheet_ids: SELECT id FROM hot_sheets WHERE client_id IN (...)
+- delete from hot_sheet_sent_listings/comments/listing_status/notifications/favorites WHERE hot_sheet_id IN (...)
+- delete from hot_sheet_clients WHERE hot_sheet_id IN (...) OR client_id IN (...)
+- delete from hot_sheets WHERE id IN (...)
+- delete from client_agent_relationships WHERE client_id IN (...) OR crm_client_id IN (...)
+- delete from suppressed_emails WHERE lower(email)='chris.tuite@compass.com'
+- delete from email_unsubscribe_tokens WHERE lower(email)='chris.tuite@compass.com'
+- delete from clients WHERE lower(email)='chris.tuite@compass.com'
 ```
+Wrapped in a `DO $$ ... $$` block so it's transactional.
 
-Keep `SECURITY DEFINER`, `search_path=public`, and the existing "no active/pending relationship" guard.
+### Step 2 — Invoke `delete-users` for the auth account
+After migration is applied, call the existing `delete-users` Edge Function once with `{ emails: ['chris.tuite@compass.com'] }`. It already handles auth.users deletion + FK blocker cleanup (profiles, user_roles, etc.). If no auth user exists, it returns "not found" gracefully.
 
-### B. Frontend — no behavior change required
-`RemoveBuyerClientAction.tsx` already calls `agent_end_client_relationship`. Toast copy updated to: *"Buyer removed. Hot sheets and history cleared. They're still in Contacts."*
+## Files
+- `supabase/migrations/<timestamp>_wipe_chris_tuite_compass_test_data.sql` (new)
 
-### C. Add Buyer re-flow safety net
-Already shipped: `CreateBuyerDialog` catches `23505` and tells you the contact exists. After this change you can either:
-- Use the existing contact via the "Add to Buyers" action in Contacts (preferred), or
-- Delete the contact in Contacts first if you want a fresh row.
-
-No further change needed there.
-
-## Files changed
-- `supabase/migrations/<timestamp>_rewrite_agent_end_client_relationship_cascade.sql` (new)
-- `src/components/success-hub/RemoveBuyerClientAction.tsx` (toast copy only)
-
-## Verification after merge
-1. Pick a test buyer with hot sheets. Confirm counts in `hot_sheets`, `hot_sheet_clients`, `client_agent_relationships` for that `crm_client_id`.
-2. Click Remove Buyer.
-3. Re-query: hot sheets = 0, hot_sheet_clients = 0, relationship = inactive, `clients` row still present.
-4. Open Contacts → buyer is there. Click "Add to Buyers" → relationship re-activates without 23505 error.
+## Verification (after run)
+- `SELECT count(*) FROM clients WHERE lower(email)='chris.tuite@compass.com'` → 0
+- `SELECT count(*) FROM client_agent_relationships ...` → 0
+- `SELECT count(*) FROM suppressed_emails WHERE lower(email)='chris.tuite@compass.com'` → 0
+- Auth listing → no user with that email
+- You can now re-add him from My Buyers without 23505 and the welcome email will fire fresh.
 
