@@ -63,7 +63,7 @@ export async function removeBuyerClient(opts: {
       buyerId: opts.buyerId,
       agentId: user.id,
     });
-    toast.success("Removed from buyer clients. They're still in Contacts.");
+    toast.success("Buyer removed. Hot sheets and history cleared. They're still in Contacts.");
     return true;
   } catch (err) {
     console.error("removeBuyerClient unexpected error:", err);
