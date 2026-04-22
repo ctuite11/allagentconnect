@@ -653,55 +653,66 @@ if (comments && comments.length > 0) {
       // ── 3) Build invite list (create tokens for clients that don't have one) ─
       const invitePromises: Promise<any>[] = [];
       let skippedCount = 0;
+      let resendCount = 0;
+      let freshCount = 0;
 
       for (const clientId of recipientClientIds) {
         const clientData = clientMap.get(clientId);
         if (!clientData?.email) { skippedCount++; continue; }
 
-        // If token already exists for this client → skip (resend is handled separately)
-        if (existingTokenByClientId.has(clientId)) {
-          console.log(`[handleSendInvites] Token already exists for client ${clientId} — skipping`);
-          skippedCount++;
-          continue;
+        let tokenId: string;
+        let finalToken: string;
+        let mode: "initial" | "resend";
+
+        const existing = existingTokenByClientId.get(clientId);
+        if (existing) {
+          // Token already exists → send as resend so the email actually goes out.
+          tokenId = existing.id;
+          finalToken = existing.token;
+          mode = "resend";
+          resendCount++;
+          console.log(`[handleSendInvites] Reusing existing token for client ${clientId} (resend)`);
+        } else {
+          // Generate token (UUID is the established format in this app)
+          const token = crypto.randomUUID();
+
+          const { data: newTokenRow, error: tokenError } = await supabase
+            .from("share_tokens")
+            .insert({
+              token,
+              agent_id: user.id,
+              payload: {
+                type: "client_hotsheet_invite",
+                client_id: clientId,
+                client_email: clientData.email,
+                hot_sheet_id: hotSheet.id,
+                suppress_initial_matches: true,
+              },
+            })
+            .select("id, token")
+            .single();
+
+          if (tokenError) {
+            console.error(`[handleSendInvites] Token insert error for ${clientId}:`, tokenError);
+            skippedCount++;
+            continue;
+          }
+
+          tokenId = newTokenRow.id;
+          finalToken = newTokenRow.token ?? token;
+          mode = "initial";
+          freshCount++;
+
+          // Audit log (fire-and-forget — non-critical)
+          supabase.from("invite_events").insert({
+            token_id: tokenId,
+            hot_sheet_id: hotSheet.id,
+            client_id: clientId,
+            client_email: clientData.email,
+            event_type: "token_created",
+            actor_user_id: user.id,
+          }).then(() => {});
         }
-
-        // Generate token (UUID is the established format in this app)
-        const token = crypto.randomUUID();
-
-        const { data: newTokenRow, error: tokenError } = await supabase
-          .from("share_tokens")
-          .insert({
-            token,
-            agent_id: user.id,
-            payload: {
-              type: "client_hotsheet_invite",
-              client_id: clientId,
-              client_email: clientData.email,
-              hot_sheet_id: hotSheet.id,
-              suppress_initial_matches: true,
-            },
-          })
-          .select("id, token")
-          .single();
-
-        if (tokenError) {
-          console.error(`[handleSendInvites] Token insert error for ${clientId}:`, tokenError);
-          skippedCount++;
-          continue;
-        }
-
-        const tokenId = newTokenRow.id;
-        const finalToken = newTokenRow.token ?? token;
-
-        // Audit log (fire-and-forget — non-critical)
-        supabase.from("invite_events").insert({
-          token_id: tokenId,
-          hot_sheet_id: hotSheet.id,
-          client_id: clientId,
-          client_email: clientData.email,
-          event_type: "token_created",
-          actor_user_id: user.id,
-        }).then(() => {});
 
         const hotSheetLink =
           `${window.location.origin}/client-invite` +
@@ -709,6 +720,10 @@ if (comments && comments.length > 0) {
           `&email=${encodeURIComponent(clientData.email)}` +
           `&agent_id=${encodeURIComponent(user.id)}` +
           `&client_id=${encodeURIComponent(clientId)}`;
+
+        console.log(
+          `[handleSendInvites] enqueue attempt → ${clientData.email} (mode=${mode}, tokenId=${tokenId})`,
+        );
 
         invitePromises.push(
           supabase.functions.invoke("send-hot-sheet-invite", {
@@ -720,37 +735,50 @@ if (comments && comments.length > 0) {
               hotSheetId: hotSheet.id,
               tokenId,
               clientId,
-              mode: "initial",
+              mode,
             },
-          })
+          }).then((res) => {
+            if (res.error) {
+              console.error(
+                `[handleSendInvites] enqueue FAILED for ${clientData.email}:`,
+                res.error,
+              );
+            } else {
+              console.log(
+                `[handleSendInvites] enqueue OK for ${clientData.email} → jobId=${(res.data as any)?.jobId} skipped=${(res.data as any)?.skipped ?? false}`,
+              );
+            }
+            return res;
+          }),
         );
       }
 
       if (invitePromises.length === 0) {
-        toast.info(
-          skippedCount > 0
-            ? "All clients already have invites — use Resend to re-send."
-            : "No clients with valid emails found."
-        );
-        setInvitesSent(true);
+        // No emails were attempted — do NOT show success.
+        toast.error("No clients with valid emails found.");
         return;
       }
 
       // ── 4) Await all sends; collect partial failures ──────────────────────
       const results = await Promise.all(invitePromises);
       const failures = results.filter((r) => r.error);
+      const succeeded = results.length - failures.length;
 
       if (failures.length > 0) {
         console.error("[handleSendInvites] Partial failures:", failures.map((f) => f.error));
         toast.error(
-          `Sent ${results.length - failures.length}, failed ${failures.length}. Check console for details.`
+          `Queued ${succeeded}, failed ${failures.length}. Check console for details.`
         );
         // Don't set invitesSent if any failed — let agent retry
         return;
       }
 
       setInvitesSent(true);
-      toast.success(`Invites sent (${results.length} client${results.length !== 1 ? "s" : ""})`);
+      toast.success(
+        `Invites queued (${succeeded} client${succeeded !== 1 ? "s" : ""}` +
+          (resendCount > 0 ? ` — ${resendCount} resend${resendCount !== 1 ? "s" : ""}` : "") +
+          ")",
+      );
     } catch (e: any) {
       console.error("[HotSheetReview] handleSendInvites error", e);
       toast.error(e?.message ?? "Failed to send invites");
