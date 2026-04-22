@@ -171,17 +171,23 @@ Deno.serve(async (req) => {
           }
 
           try {
-            await sendEmail(job, RESEND_API_KEY);
+            const { providerMessageId } = await sendEmail(job, RESEND_API_KEY);
 
             await safeUpdateJob(
               job.id,
-              { status: "sent" },
+              {
+                status: "sent",
+                provider_message_id: providerMessageId,
+                delivery_status: "sent",
+                delivery_status_at: new Date().toISOString(),
+              },
               { stage: "mark_sent" },
             );
 
             await logEvent(job.id, "sent", {
               template,
               to,
+              provider_message_id: providerMessageId,
               duration_ms: Date.now() - startedAt,
             });
 
