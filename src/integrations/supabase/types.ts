@@ -1695,6 +1695,10 @@ export type Database = {
           event: string
           id: number
           job_id: string
+          provider_event_at: string | null
+          provider_message_id: string | null
+          recipient_email: string | null
+          source: string
         }
         Insert: {
           created_at?: string
@@ -1702,6 +1706,10 @@ export type Database = {
           event: string
           id?: number
           job_id: string
+          provider_event_at?: string | null
+          provider_message_id?: string | null
+          recipient_email?: string | null
+          source?: string
         }
         Update: {
           created_at?: string
@@ -1709,6 +1717,10 @@ export type Database = {
           event?: string
           id?: number
           job_id?: string
+          provider_event_at?: string | null
+          provider_message_id?: string | null
+          recipient_email?: string | null
+          source?: string
         }
         Relationships: [
           {
@@ -1718,39 +1730,55 @@ export type Database = {
             referencedRelation: "email_jobs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "email_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs_delivery_status"
+            referencedColumns: ["job_id"]
+          },
         ]
       }
       email_jobs: {
         Row: {
           attempts: number
           created_at: string
+          delivery_status: string | null
+          delivery_status_at: string | null
           id: string
           idempotency_key: string | null
           last_error: string | null
           max_attempts: number
           payload: Json
+          provider_message_id: string | null
           run_after: string
           status: string
         }
         Insert: {
           attempts?: number
           created_at?: string
+          delivery_status?: string | null
+          delivery_status_at?: string | null
           id?: string
           idempotency_key?: string | null
           last_error?: string | null
           max_attempts?: number
           payload: Json
+          provider_message_id?: string | null
           run_after?: string
           status?: string
         }
         Update: {
           attempts?: number
           created_at?: string
+          delivery_status?: string | null
+          delivery_status_at?: string | null
           id?: string
           idempotency_key?: string | null
           last_error?: string | null
           max_attempts?: number
           payload?: Json
+          provider_message_id?: string | null
           run_after?: string
           status?: string
         }
@@ -2408,6 +2436,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "email_jobs"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_events_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs_delivery_status"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "invite_events_token_id_fkey"
@@ -3853,6 +3888,51 @@ export type Database = {
           },
         ]
       }
+      email_jobs_delivery_status: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          delivery_status: string | null
+          delivery_status_at: string | null
+          job_id: string | null
+          last_error: string | null
+          max_attempts: number | null
+          provider_message_id: string | null
+          queue_status: string | null
+          recipient: string | null
+          subject: string | null
+          template: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          delivery_status?: string | null
+          delivery_status_at?: string | null
+          job_id?: string | null
+          last_error?: string | null
+          max_attempts?: number | null
+          provider_message_id?: string | null
+          queue_status?: string | null
+          recipient?: never
+          subject?: never
+          template?: never
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          delivery_status?: string | null
+          delivery_status_at?: string | null
+          job_id?: string | null
+          last_error?: string | null
+          max_attempts?: number | null
+          provider_message_id?: string | null
+          queue_status?: string | null
+          recipient?: never
+          subject?: never
+          template?: never
+        }
+        Relationships: []
+      }
       seller_matches_public: {
         Row: {
           archived_at: string | null
@@ -3949,11 +4029,14 @@ export type Database = {
         Returns: {
           attempts: number
           created_at: string
+          delivery_status: string | null
+          delivery_status_at: string | null
           id: string
           idempotency_key: string | null
           last_error: string | null
           max_attempts: number
           payload: Json
+          provider_message_id: string | null
           run_after: string
           status: string
         }[]
