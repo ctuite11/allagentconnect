@@ -55,10 +55,25 @@ Deno.serve(async (req) => {
     event: string,
     detail: Record<string, unknown>,
   ) => {
+    const providerMessageId =
+      typeof detail.provider_message_id === "string"
+        ? (detail.provider_message_id as string)
+        : null;
+    const recipient =
+      typeof detail.to === "string"
+        ? (detail.to as string)
+        : Array.isArray(detail.to)
+          ? (detail.to as unknown[]).filter((x) => typeof x === "string").join(",")
+          : null;
+
     const { error } = await supabase.from("email_events").insert({
       job_id: jobId,
       event,
       detail,
+      provider_message_id: providerMessageId,
+      recipient_email: recipient,
+      provider_event_at: new Date().toISOString(),
+      source: "worker",
     });
 
     if (error) {
@@ -171,17 +186,23 @@ Deno.serve(async (req) => {
           }
 
           try {
-            await sendEmail(job, RESEND_API_KEY);
+            const { providerMessageId } = await sendEmail(job, RESEND_API_KEY);
 
             await safeUpdateJob(
               job.id,
-              { status: "sent" },
+              {
+                status: "sent",
+                provider_message_id: providerMessageId,
+                delivery_status: "sent",
+                delivery_status_at: new Date().toISOString(),
+              },
               { stage: "mark_sent" },
             );
 
             await logEvent(job.id, "sent", {
               template,
               to,
+              provider_message_id: providerMessageId,
               duration_ms: Date.now() - startedAt,
             });
 

@@ -115,3 +115,6 @@ verify_jwt = false
 
 [functions.listing-og-image]
 verify_jwt = false
+
+[functions.resend-webhook]
+verify_jwt = false

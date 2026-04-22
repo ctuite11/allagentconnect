@@ -4,7 +4,7 @@ import { renderEmailTemplate } from "./renderEmailTemplate.ts";
 export async function sendEmail(
   job: EmailJob,
   resendApiKey: string,
-): Promise<void> {
+): Promise<{ providerMessageId: string | null }> {
   const FROM_EMAIL = Deno.env.get("RESEND_FROM") || "hello@mail.allagentconnect.com";
   const FROM_NAME = Deno.env.get("RESEND_FROM_NAME") || "All Agent Connect";
 
@@ -44,4 +44,12 @@ export async function sendEmail(
       `Resend API ${res.status}: ${JSON.stringify(err)}`,
     );
   }
+
+  const data = await res.json().catch(() => ({} as Record<string, unknown>));
+  const providerMessageId =
+    typeof (data as { id?: unknown }).id === "string"
+      ? (data as { id: string }).id
+      : null;
+
+  return { providerMessageId };
 }
