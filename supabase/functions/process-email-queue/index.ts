@@ -55,10 +55,25 @@ Deno.serve(async (req) => {
     event: string,
     detail: Record<string, unknown>,
   ) => {
+    const providerMessageId =
+      typeof detail.provider_message_id === "string"
+        ? (detail.provider_message_id as string)
+        : null;
+    const recipient =
+      typeof detail.to === "string"
+        ? (detail.to as string)
+        : Array.isArray(detail.to)
+          ? (detail.to as unknown[]).filter((x) => typeof x === "string").join(",")
+          : null;
+
     const { error } = await supabase.from("email_events").insert({
       job_id: jobId,
       event,
       detail,
+      provider_message_id: providerMessageId,
+      recipient_email: recipient,
+      provider_event_at: new Date().toISOString(),
+      source: "worker",
     });
 
     if (error) {
