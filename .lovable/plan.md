@@ -1,72 +1,71 @@
 
 
-## Buyer Search Filter Bar Parity — `BrowsePropertiesNew.tsx`
+## Buyer Search 1:1 Port — Acceptance Checklist Locked
 
-### Scope (locked)
-- **Only file edited:** `src/pages/BrowsePropertiesNew.tsx`
-- **Untouched:** `App.tsx`, route wiring, `BuyerSearch.tsx`, `BuyerLayout`, `BuyerPortalHeader`, `PropertyMap`, `UnifiedPropertySearch`, `ListingCard`, `buildListingsQuery`, all data fetching logic
-- **No new files**, no new routes
+### Status
+Acceptance checklist accepted as the binding contract. No code, no exploration, no edits until local source is provided.
 
-### What changes
+### Preconditions — currently UNMET
+- [ ] Local `src/pages/BrowsePropertiesNew.tsx` full file (top-to-bottom, all imports)
+- [ ] Full source for every non-standard import that file uses (price slider, custom card variants, helpers, hooks)
+- [ ] Exact import paths preserved as written locally
 
-Replace the current filter bar with an inline pill-styled toolbar matching the local screenshot:
+Per Section A: if any required source is missing, task is blocked and must stop. **It is currently blocked.**
 
-```text
-[🔍 Search city/ZIP] [For Sale | For Rent] [Price ▾] [Beds & baths ▾] [Property type ▾] [⚙ More Filters] [Save Search] [Update]
-```
+### Execution order (once source is pasted)
 
-### Implementation
+**Phase 1 — Import Inventory (read-only)**
+- Parse every `import` line in pasted local file
+- Produce inventory table classifying each as: `exists-identical` / `exists-different` / `missing`
+- Surface every `missing` item explicitly
+- If anything in `missing` was not pasted → stop and request before proceeding
 
-**1. Add three inline `Popover` dropdowns** between the For Sale/Rent toggle and the More Filters button:
+**Phase 2 — Dependency Port**
+- Create each `missing` file at the exact local import path
+- Verbatim source — no merging, renaming, or re-homing
 
-- **Price ▾**
-  - Trigger: `h-9 rounded-full border-zinc-200 px-4 text-[13px]` + `ChevronDown`
-  - Dynamic label: `"Price"` / `"$500k – $1M"` / `"Up to $1M"` / `"$500k+"`
-  - Content: Min/Max `Input` fields + Reset / Apply buttons
-  - On Apply: writes `criteria.minPrice`, `criteria.maxPrice`
+**Phase 3 — Main File Replacement**
+- Overwrite `src/pages/BrowsePropertiesNew.tsx` with local source verbatim
+- Zero restyling. Zero refactoring. Zero behavioral change.
+- Allowed adaptations only:
+  1. Supabase import normalized to `@/integrations/supabase/client` if local path differs
+  2. `forceBuyer` prop/wrapper compatibility — only if strictly required to keep `BuyerSearch.tsx` route contract working (will flag and ask, not guess)
 
-- **Beds & baths ▾**
-  - Dynamic label: `"Beds & baths"` / `"2+ bd, 1+ ba"`
-  - Content: two segmented rows (`Any | 1+ | 2+ | 3+ | 4+ | 5+`) for bedrooms and bathrooms + Reset / Apply
-  - On Apply: writes `criteria.bedrooms`, `criteria.bathrooms`
+**Phase 4 — Route-Safety Guardrails (untouched)**
+- `App.tsx`
+- `src/pages/BuyerSearch.tsx`
+- `BuyerLayout`
+- `BuyerPortalHeader`
+- Buyer chain stays: `/client/search` → `BuyerSearch` → `<BrowsePropertiesNew forceBuyer />`
+- Buyer search does not collapse into shared public/DCMLS flow
 
-- **Property type ▾**
-  - Dynamic label: `"Property type"` / `"3 selected"` / single name when one selected
-  - Content: checkbox list (`single_family`, `condo`, `multi_family`, `townhouse`, `land`, `other`) + Reset / Apply
-  - On Apply: writes `criteria.propertyTypes`
+**Phase 5 — Validation**
+- TypeScript check
+- Fix only errors caused by the port, at call sites, minimally
+- Pre-existing unrelated errors flagged, not fixed
 
-Each popover uses local draft state and only commits to `criteria` on Apply. Existing `useEffect` chain triggers `fetchListings()` automatically when `criteria` updates.
+### Final delivery format (Section G)
+1. Files created — with paths
+2. Files replaced — with paths
+3. Forced adaptations — exact lines + reason
+4. Confirmation route-safety files untouched
+5. Validation summary — pass/fail + residual unrelated issues
 
-**2. Rename "Filters" → "More Filters"**
-- Keep `SlidersHorizontal` icon and existing `Sheet` wrapping `UnifiedPropertySearch` for advanced filters
-- Active count badge stays
+### Fail conditions enforced (auto-reject triggers)
+- Reconstruction from screenshot/memory → rejected
+- Unrequested route/layout refactor → rejected
+- Out-of-scope edits without necessity → rejected
+- Guessing a missing dependency → rejected (must stop and ask)
+- Styling/UX improvements not in local source → rejected
 
-**3. Pill styling pass**
-- All trigger buttons: `h-9 rounded-full px-4 text-[13px]`
-- Search input: `rounded-full pl-9 h-9` with `Search` icon at `left-3`
-- For Sale/Rent toggle: `rounded-full` outer container, inner segments `rounded-full`, active = `bg-[#0E56F5] text-white`
-- Save Search: ghost pill
-- Update: `bg-[#0E56F5] hover:bg-[#0B46CC] rounded-full px-5`
-- Outer flex gap: `gap-2.5`
+### One-line execution rule (binding)
+*Local source is the spec; port dependencies first, then replace `BrowsePropertiesNew.tsx` verbatim, with only mandatory integration adaptations.*
 
-**4. Strictly preserved**
-- All `useState`, `useEffect`, `fetchListings`, `buildQueryParams`, URL hydration, `sessionStorage`, Supabase query, agent map fetch
-- `forceBuyer` prop and conditional rendering (DCMLS branch + `ActiveAgentBanner`)
-- Map panel (52/48 split, sticky `PropertyMap`)
-- Results panel (header, sort, grid, `ListingCard`)
-- `criteria` shape — new popovers write into existing fields, no schema changes
+### Your next action
+Paste in your next message:
+1. Full contents of local `src/pages/BrowsePropertiesNew.tsx`
+2. Full contents of every non-standard component/util/hook it imports (price slider especially)
+3. The exact import paths used locally for those dependencies
 
-### Out of scope
-- Google Maps "Oops" runtime error in screenshot (API key referrer config — not a layout fix; `PropertyMap.tsx` untouched per locked constraints)
-
-### Acceptance
-1. Filter bar visually matches local screenshot: search → toggle → 3 inline dropdowns → More Filters → Save Search → Update
-2. Each dropdown writes to existing `criteria` and triggers refetch via existing effect
-3. "More Filters" still opens the Sheet with full `UnifiedPropertySearch`
-4. No changes to map, results grid, data fetching, route, or any other file
-5. TypeScript clean
-
-### Deliverables
-- Single edit to `src/pages/BrowsePropertiesNew.tsx` (return block + 3 popover draft state hooks + minor imports: `Popover`, `Checkbox`, additional lucide icons)
-- Confirmation no other files touched
+Until that arrives, no files will be opened or edited.
 
