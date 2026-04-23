@@ -1,60 +1,53 @@
 
 
-## Restore `src/pages/BrowsePropertiesNew.tsx` from already-provided local source
+## Restore `BrowsePropertiesNew.tsx` from the previously sent local source
 
-### State of intake
-The local source bundle was already delivered in chunks 1–12 in this thread. Intake is complete. Not restarting it.
-
-What is in context from the prior bundle:
-- Full `src/pages/BrowsePropertiesNew.tsx` local source
-- `src/components/search/UnifiedPropertySearch.tsx`
-- `buildListingsQuery` helper
-- `PropertyMap`
-- `ActiveAgentBanner` (buyer shell banner)
-- Supporting imports referenced inline
-
-This is sufficient to perform the restore. No additional paste required.
+### Read of your message
+You're confirming the local source bundle you already pasted is the correct, approved version. The job is to restore `src/pages/BrowsePropertiesNew.tsx` to that version exactly. No rebuild, no reinterpretation.
 
 ### Scope (locked, single file)
 Edit only:
 - `src/pages/BrowsePropertiesNew.tsx`
 
-Do not touch:
+Untouched:
 - `App.tsx`, `BuyerSearch.tsx`, `BuyerLayout`, `BuyerPortalHeader`
-- `ListingCard`, `UnifiedPropertySearch`, `PropertyMap`, `buildListingsQuery`, `ActiveAgentBanner`, `DcmlsConsumerHeader`
-- routing, hooks, data layer, any other file
+- `ListingCard`, `UnifiedPropertySearch`, `PropertyMap`, `buildListingsQuery`
+- `ActiveAgentBanner`, `DcmlsConsumerHeader`
+- routing, hooks, data layer, every other file
 
 ### Action
-Overwrite `src/pages/BrowsePropertiesNew.tsx` verbatim with the local source already provided in the prior chunks.
+1. Pull the full local `BrowsePropertiesNew.tsx` source out of the earlier chunked paste in this thread (chat_search if needed to reassemble in order)
+2. Overwrite `src/pages/BrowsePropertiesNew.tsx` verbatim with that content
+3. No edits, no reformatting, no "improvements"
 
-### Allowed integration adaptations (only if strictly required, flagged in report)
-1. Supabase import normalized to `@/integrations/supabase/client` if local path differs
-2. `forceBuyer` prop signature preserved so `BuyerSearch.tsx` route contract keeps working unchanged
+### Allowed integration adaptations (only if strictly required, flagged in report — not silent)
+1. Supabase import normalized to `@/integrations/supabase/client` if the local path differs
+2. `forceBuyer` prop signature preserved so `BuyerSearch.tsx` keeps rendering `<BrowsePropertiesNew forceBuyer />` unchanged
 
-Any other deviation will be surfaced before applying — not silently changed.
+Anything beyond these two: stop and report before applying.
 
 ### Hard constraints
 - No redesign, no rebuild, no new components, no new UX
-- No styling changes not present in local source
-- No Google Places ownership added
+- No styling not present in local source
+- No Google Places ownership added inside this page
 - No route changes
 - No "while I'm here" cleanup
-- No reconstruction from memory or screenshots — verbatim from the pasted local source only
+- No reconstruction from memory or screenshots — verbatim from the pasted chunks only
+
+### If a referenced symbol in the pasted source can't be resolved
+Stop and name the exact missing item (file + symbol + reason). Do not restart intake. Do not guess.
 
 ### Verification after overwrite
-- Buyer toolbar present as in local
-- Inline pill filter bar present as in local
-- Manual search logic: 5-digit → `zipCode`, comma-separated → `towns`, empty → resets both, Enter applies
+- Buyer toolbar matches local
+- Inline pill filter bar matches local
+- Manual search: 5-digit → `zipCode`, comma-separated → `towns`, empty → resets both, Enter applies
 - No legacy header/banner blip on `/client/search`
 - Route chain unchanged: `/client/search → BuyerSearch → <BrowsePropertiesNew forceBuyer />`
 - TypeScript clean (fix only port-induced errors at the boundary, minimally)
 
 ### Deliverable
-1. Files replaced: `src/pages/BrowsePropertiesNew.tsx` only
+1. File replaced: `src/pages/BrowsePropertiesNew.tsx` only
 2. Forced adaptations: exact lines + reason, or "none"
 3. Confirmation route-safety files untouched
 4. TypeScript validation summary
-
-### If anything specific is missing
-If during the overwrite a specific symbol referenced by the pasted local source is not resolvable from the prior chunks, I will stop and name the exact missing item (file name + symbol + reason) — not restart intake.
 
