@@ -217,6 +217,84 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     setCriteria((prev) => ({ ...prev, zipCode: searchInput.trim() || undefined }));
   };
 
+  // ---- Inline popover labels ----
+  const formatPriceShort = (v: string) => {
+    const n = parseFloat(v);
+    if (!n || Number.isNaN(n)) return "";
+    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+    if (n >= 1_000) return `$${Math.round(n / 1_000)}k`;
+    return `$${n}`;
+  };
+  const priceLabel = (() => {
+    const min = formatPriceShort(criteria.minPrice || "");
+    const max = formatPriceShort(criteria.maxPrice || "");
+    if (min && max) return `${min} – ${max}`;
+    if (min) return `${min}+`;
+    if (max) return `Up to ${max}`;
+    return "Price";
+  })();
+  const bedsBathsLabel = (() => {
+    const bd = criteria.bedrooms ? `${criteria.bedrooms}+ bd` : "";
+    const ba = criteria.bathrooms ? `${criteria.bathrooms}+ ba` : "";
+    if (bd && ba) return `${bd}, ${ba}`;
+    if (bd) return bd;
+    if (ba) return ba;
+    return "Beds & baths";
+  })();
+  const PROPERTY_TYPE_OPTIONS: { value: string; label: string }[] = [
+    { value: "single_family", label: "Single Family" },
+    { value: "condo", label: "Condo" },
+    { value: "multi_family", label: "Multi Family" },
+    { value: "townhouse", label: "Townhouse" },
+    { value: "land", label: "Land" },
+    { value: "other", label: "Other" },
+  ];
+  const propertyTypeLabel = (() => {
+    const arr = criteria.propertyTypes || [];
+    if (arr.length === 0) return "Property type";
+    if (arr.length === 1) {
+      const found = PROPERTY_TYPE_OPTIONS.find((o) => o.value === arr[0]);
+      return found?.label || "1 selected";
+    }
+    return `${arr.length} selected`;
+  })();
+
+  // Local drafts for popovers (commit on Apply)
+  const [priceDraft, setPriceDraft] = useState({ min: criteria.minPrice || "", max: criteria.maxPrice || "" });
+  const [bbDraft, setBbDraft] = useState({ bd: criteria.bedrooms || "", ba: criteria.bathrooms || "" });
+  const [typesDraft, setTypesDraft] = useState<string[]>(criteria.propertyTypes || []);
+  useEffect(() => {
+    setPriceDraft({ min: criteria.minPrice || "", max: criteria.maxPrice || "" });
+  }, [criteria.minPrice, criteria.maxPrice]);
+  useEffect(() => {
+    setBbDraft({ bd: criteria.bedrooms || "", ba: criteria.bathrooms || "" });
+  }, [criteria.bedrooms, criteria.bathrooms]);
+  useEffect(() => {
+    setTypesDraft(criteria.propertyTypes || []);
+  }, [criteria.propertyTypes]);
+
+  const STEPS = ["", "1", "2", "3", "4", "5"];
+  const SegRow = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <div className="inline-flex h-9 w-full items-center rounded-full border border-zinc-200 bg-white p-0.5">
+      {STEPS.map((s) => {
+        const active = value === s;
+        const label = s === "" ? "Any" : `${s}+`;
+        return (
+          <button
+            key={s || "any"}
+            type="button"
+            onClick={() => onChange(s)}
+            className={`flex-1 h-8 rounded-full text-[12px] font-medium transition-all ${
+              active ? "bg-[#0E56F5] text-white" : "text-zinc-600 hover:text-zinc-900"
+            }`}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className={`min-h-screen flex flex-col bg-white ${dcmls || forceBuyer ? "" : "pt-14"}`}>
       {forceBuyer ? null : dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
