@@ -169,7 +169,12 @@ function MessagesEntry() {
 
 /** Layout route: wraps children in AppShell (sidebar + header) */
 function AgentLayout() {
-  return <AppShell><Outlet /></AppShell>;
+  return (
+    <AppShell>
+      <ActiveAgentBanner />
+      <Outlet />
+    </AppShell>
+  );
 }
 
 /** Layout route: buyer-role authenticated routes (white top toolbar) */
@@ -212,7 +217,6 @@ const App = () => (
             <ScrollToTop />
             <ScrollRestoration />
             <>
-              <ActiveAgentBanner />
               <NewMessageToastListener />
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
