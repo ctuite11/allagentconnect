@@ -133,7 +133,10 @@ const ClientInvitationSetup = () => {
           .maybeSingle();
 
         if (error || !data) {
-          toast.error("This invitation link is invalid or has expired");
+          toast.error("This link is no longer available. Please contact your agent.");
+          setTokenValid(false);
+        } else if ((data as any).revoked_at) {
+          toast.error("This link is no longer available. Please contact your agent.");
           setTokenValid(false);
         } else if (data.accepted_at) {
           toast.info("This invitation has already been used");

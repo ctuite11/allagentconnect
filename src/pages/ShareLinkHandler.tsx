@@ -23,7 +23,13 @@ const ShareLinkHandler = () => {
           .maybeSingle();
 
         if (queryError || !data) {
-          setError("This link is invalid or has expired.");
+          setError("This link is no longer available. Please contact your agent.");
+          return;
+        }
+
+        // Revoked tokens (e.g. buyer was removed before accepting the invite)
+        if ((data as any).revoked_at) {
+          setError("This link is no longer available. Please contact your agent.");
           return;
         }
 
@@ -31,7 +37,7 @@ const ShareLinkHandler = () => {
         const isExpired = data.expires_at && new Date(data.expires_at) < new Date();
         
         if (isExpired) {
-          setError("This link is invalid or has expired.");
+          setError("This link is no longer available. Please contact your agent.");
           return;
         }
 
