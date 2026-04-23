@@ -53,7 +53,7 @@ interface BrowsePropertiesNewProps {
   forceBuyer?: boolean;
 }
 
-const BrowsePropertiesNew = ({ forceBuyer: _forceBuyer }: BrowsePropertiesNewProps = {}) => {
+const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = {}) => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -161,8 +161,8 @@ const BrowsePropertiesNew = ({ forceBuyer: _forceBuyer }: BrowsePropertiesNewPro
       if (criteria.minLivingArea) queryParams.minSqft = parseFloat(criteria.minLivingArea);
       if (criteria.maxLivingArea) queryParams.maxSqft = parseFloat(criteria.maxLivingArea);
 
-      // Force DCMLS-only filter on directconnectmls.com
-      if (isDcmlsHost()) queryParams.dcmlsOnly = true;
+      // Force DCMLS-only filter on directconnectmls.com (skipped in buyer mode)
+      if (!forceBuyer && isDcmlsHost()) queryParams.dcmlsOnly = true;
 
       const query = buildListingsQuery(supabase, queryParams).limit(200);
       const { data, error } = await query;
@@ -295,7 +295,7 @@ const BrowsePropertiesNew = ({ forceBuyer: _forceBuyer }: BrowsePropertiesNewPro
     setPropertyTypeOpen(false);
   };
 
-  const dcmls = isDcmlsHost();
+  const dcmls = !forceBuyer && isDcmlsHost();
 
   return (
     <div className={`min-h-screen flex flex-col ${dcmls ? "" : "pt-20"}`}>
