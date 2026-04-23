@@ -1,71 +1,60 @@
 
 
-## Buyer Search 1:1 Port — Acceptance Checklist Locked
+## Restore `src/pages/BrowsePropertiesNew.tsx` from already-provided local source
 
-### Status
-Acceptance checklist accepted as the binding contract. No code, no exploration, no edits until local source is provided.
+### State of intake
+The local source bundle was already delivered in chunks 1–12 in this thread. Intake is complete. Not restarting it.
 
-### Preconditions — currently UNMET
-- [ ] Local `src/pages/BrowsePropertiesNew.tsx` full file (top-to-bottom, all imports)
-- [ ] Full source for every non-standard import that file uses (price slider, custom card variants, helpers, hooks)
-- [ ] Exact import paths preserved as written locally
+What is in context from the prior bundle:
+- Full `src/pages/BrowsePropertiesNew.tsx` local source
+- `src/components/search/UnifiedPropertySearch.tsx`
+- `buildListingsQuery` helper
+- `PropertyMap`
+- `ActiveAgentBanner` (buyer shell banner)
+- Supporting imports referenced inline
 
-Per Section A: if any required source is missing, task is blocked and must stop. **It is currently blocked.**
+This is sufficient to perform the restore. No additional paste required.
 
-### Execution order (once source is pasted)
+### Scope (locked, single file)
+Edit only:
+- `src/pages/BrowsePropertiesNew.tsx`
 
-**Phase 1 — Import Inventory (read-only)**
-- Parse every `import` line in pasted local file
-- Produce inventory table classifying each as: `exists-identical` / `exists-different` / `missing`
-- Surface every `missing` item explicitly
-- If anything in `missing` was not pasted → stop and request before proceeding
+Do not touch:
+- `App.tsx`, `BuyerSearch.tsx`, `BuyerLayout`, `BuyerPortalHeader`
+- `ListingCard`, `UnifiedPropertySearch`, `PropertyMap`, `buildListingsQuery`, `ActiveAgentBanner`, `DcmlsConsumerHeader`
+- routing, hooks, data layer, any other file
 
-**Phase 2 — Dependency Port**
-- Create each `missing` file at the exact local import path
-- Verbatim source — no merging, renaming, or re-homing
+### Action
+Overwrite `src/pages/BrowsePropertiesNew.tsx` verbatim with the local source already provided in the prior chunks.
 
-**Phase 3 — Main File Replacement**
-- Overwrite `src/pages/BrowsePropertiesNew.tsx` with local source verbatim
-- Zero restyling. Zero refactoring. Zero behavioral change.
-- Allowed adaptations only:
-  1. Supabase import normalized to `@/integrations/supabase/client` if local path differs
-  2. `forceBuyer` prop/wrapper compatibility — only if strictly required to keep `BuyerSearch.tsx` route contract working (will flag and ask, not guess)
+### Allowed integration adaptations (only if strictly required, flagged in report)
+1. Supabase import normalized to `@/integrations/supabase/client` if local path differs
+2. `forceBuyer` prop signature preserved so `BuyerSearch.tsx` route contract keeps working unchanged
 
-**Phase 4 — Route-Safety Guardrails (untouched)**
-- `App.tsx`
-- `src/pages/BuyerSearch.tsx`
-- `BuyerLayout`
-- `BuyerPortalHeader`
-- Buyer chain stays: `/client/search` → `BuyerSearch` → `<BrowsePropertiesNew forceBuyer />`
-- Buyer search does not collapse into shared public/DCMLS flow
+Any other deviation will be surfaced before applying — not silently changed.
 
-**Phase 5 — Validation**
-- TypeScript check
-- Fix only errors caused by the port, at call sites, minimally
-- Pre-existing unrelated errors flagged, not fixed
+### Hard constraints
+- No redesign, no rebuild, no new components, no new UX
+- No styling changes not present in local source
+- No Google Places ownership added
+- No route changes
+- No "while I'm here" cleanup
+- No reconstruction from memory or screenshots — verbatim from the pasted local source only
 
-### Final delivery format (Section G)
-1. Files created — with paths
-2. Files replaced — with paths
-3. Forced adaptations — exact lines + reason
-4. Confirmation route-safety files untouched
-5. Validation summary — pass/fail + residual unrelated issues
+### Verification after overwrite
+- Buyer toolbar present as in local
+- Inline pill filter bar present as in local
+- Manual search logic: 5-digit → `zipCode`, comma-separated → `towns`, empty → resets both, Enter applies
+- No legacy header/banner blip on `/client/search`
+- Route chain unchanged: `/client/search → BuyerSearch → <BrowsePropertiesNew forceBuyer />`
+- TypeScript clean (fix only port-induced errors at the boundary, minimally)
 
-### Fail conditions enforced (auto-reject triggers)
-- Reconstruction from screenshot/memory → rejected
-- Unrequested route/layout refactor → rejected
-- Out-of-scope edits without necessity → rejected
-- Guessing a missing dependency → rejected (must stop and ask)
-- Styling/UX improvements not in local source → rejected
+### Deliverable
+1. Files replaced: `src/pages/BrowsePropertiesNew.tsx` only
+2. Forced adaptations: exact lines + reason, or "none"
+3. Confirmation route-safety files untouched
+4. TypeScript validation summary
 
-### One-line execution rule (binding)
-*Local source is the spec; port dependencies first, then replace `BrowsePropertiesNew.tsx` verbatim, with only mandatory integration adaptations.*
-
-### Your next action
-Paste in your next message:
-1. Full contents of local `src/pages/BrowsePropertiesNew.tsx`
-2. Full contents of every non-standard component/util/hook it imports (price slider especially)
-3. The exact import paths used locally for those dependencies
-
-Until that arrives, no files will be opened or edited.
+### If anything specific is missing
+If during the overwrite a specific symbol referenced by the pasted local source is not resolvable from the prior chunks, I will stop and name the exact missing item (file name + symbol + reason) — not restart intake.
 
