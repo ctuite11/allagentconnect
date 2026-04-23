@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import ListingCard from "@/components/ListingCard";
@@ -230,176 +230,6 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     setCriteria((prev) => ({ ...prev, zipCode: undefined, towns }));
   };
 
-  // --- Google Places autocomplete (ZIP / city / neighborhood) ---
-  type PlaceSuggestion = {
-    placeId: string;
-    description: string;
-    mainText: string;
-    types: string[];
-  };
-  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const autocompleteServiceRef = useRef<any>(null);
-  const placesServiceRef = useRef<any>(null);
-  const sessionTokenRef = useRef<any>(null);
-  const suggestDebounceRef = useRef<number | undefined>(undefined);
-  const [placesReady, setPlacesReady] = useState<boolean>(
-    typeof window !== "undefined" && !!(window as any).google?.maps?.places,
-  );
-
-  // Load Google Maps + Places script on mount (mirrors PropertyMap key resolution).
-  useEffect(() => {
-    if ((window as any).google?.maps?.places) {
-      setPlacesReady(true);
-      return;
-    }
-
-    const resolveKey = (): string => {
-      const envKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim();
-      if (envKey) return envKey;
-      try {
-        const urlKey = new URLSearchParams(window.location.search).get("gmaps_key")?.trim();
-        if (urlKey) {
-          try {
-            localStorage.setItem("aac_gmaps_key", urlKey);
-          } catch {}
-          return urlKey;
-        }
-        const stored = localStorage.getItem("aac_gmaps_key")?.trim();
-        if (stored) return stored;
-      } catch {}
-      return "";
-    };
-
-    const apiKey = resolveKey();
-    if (!apiKey) return; // graceful fallback: plain-text input still works
-
-    const existing = document.getElementById("google-maps-js") as HTMLScriptElement | null;
-    const handleReady = () => {
-      if ((window as any).google?.maps?.places) setPlacesReady(true);
-    };
-
-    if (existing) {
-      if ((window as any).google?.maps?.places) {
-        setPlacesReady(true);
-      } else {
-        existing.addEventListener("load", handleReady, { once: true });
-      }
-      return () => {
-        existing.removeEventListener("load", handleReady);
-      };
-    }
-
-    const script = document.createElement("script");
-    script.id = "google-maps-js";
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    script.addEventListener("load", handleReady, { once: true });
-    document.head.appendChild(script);
-    return () => {
-      script.removeEventListener("load", handleReady);
-    };
-  }, []);
-
-  const ensurePlacesLib = (): boolean => {
-    const g = (window as any).google;
-    if (!g?.maps?.places) return false;
-    if (!autocompleteServiceRef.current) {
-      autocompleteServiceRef.current = new g.maps.places.AutocompleteService();
-    }
-    if (!placesServiceRef.current) {
-      placesServiceRef.current = new g.maps.places.PlacesService(document.createElement("div"));
-    }
-    if (!sessionTokenRef.current) {
-      sessionTokenRef.current = new g.maps.places.AutocompleteSessionToken();
-    }
-    return true;
-  };
-
-  useEffect(() => {
-    const q = searchInput.trim();
-    if (suggestDebounceRef.current) window.clearTimeout(suggestDebounceRef.current);
-    if (q.length < 2) {
-      setPlaceSuggestions([]);
-      return;
-    }
-    suggestDebounceRef.current = window.setTimeout(() => {
-      if (!ensurePlacesLib()) return;
-      autocompleteServiceRef.current.getPlacePredictions(
-        {
-          input: q,
-          types: ["(regions)"],
-          componentRestrictions: { country: "us" },
-          sessionToken: sessionTokenRef.current,
-        },
-        (predictions: any[], status: string) => {
-          if (status !== "OK" || !predictions) {
-            setPlaceSuggestions([]);
-            return;
-          }
-          setPlaceSuggestions(
-            predictions.slice(0, 6).map((p) => ({
-              placeId: p.place_id,
-              description: p.description,
-              mainText: p.structured_formatting?.main_text || p.description,
-              types: p.types || [],
-            })),
-          );
-        },
-      );
-    }, 180);
-    return () => {
-      if (suggestDebounceRef.current) window.clearTimeout(suggestDebounceRef.current);
-    };
-  }, [searchInput, placesReady]);
-
-  const commitPlace = (s: PlaceSuggestion) => {
-    if (!ensurePlacesLib()) {
-      setSearchInput(s.mainText);
-      setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [s.mainText] }));
-      setShowSuggestions(false);
-      return;
-    }
-    placesServiceRef.current.getDetails(
-      {
-        placeId: s.placeId,
-        fields: ["address_components", "formatted_address", "types", "name"],
-        sessionToken: sessionTokenRef.current,
-      },
-      (place: any, status: string) => {
-        const g = (window as any).google;
-        sessionTokenRef.current = new g.maps.places.AutocompleteSessionToken();
-        if (status !== "OK" || !place) {
-          setSearchInput(s.mainText);
-          setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [s.mainText] }));
-          setShowSuggestions(false);
-          return;
-        }
-        const comps: any[] = place.address_components || [];
-        const get = (type: string) =>
-          comps.find((c) => (c.types || []).includes(type))?.long_name as string | undefined;
-        const types: string[] = place.types || s.types || [];
-        const isZip = types.includes("postal_code");
-        const zip = get("postal_code");
-        const city =
-          get("locality") || get("postal_town") || get("sublocality_level_1") || get("sublocality");
-        const neighborhood = get("neighborhood");
-
-        if (isZip && zip) {
-          setSearchInput(zip);
-          setCriteria((prev) => ({ ...prev, zipCode: zip, towns: [] }));
-        } else {
-          const town = neighborhood || city || s.mainText;
-          setSearchInput(town);
-          setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [town] }));
-        }
-        setShowSuggestions(false);
-        setPlaceSuggestions([]);
-      },
-    );
-  };
-
   // ---- Inline popover labels ----
   const formatPriceShort = (v: string) => {
     const n = parseFloat(v);
@@ -501,53 +331,15 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
               <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
                 value={searchInput}
-                onChange={(e) => {
-                  setSearchInput(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => {
-                  window.setTimeout(() => setShowSuggestions(false), 150);
-                }}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    if (showSuggestions && placeSuggestions.length > 0) {
-                      commitPlace(placeSuggestions[0]);
-                    } else {
-                      applySearchInput();
-                    }
-                  } else if (e.key === "Escape") {
-                    setShowSuggestions(false);
+                    applySearchInput();
                   }
                 }}
                 placeholder="City, neighborhood, or ZIP"
                 className="pl-9 h-9 text-[13px] border-zinc-200/80 rounded-full"
               />
-              {showSuggestions && placeSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 rounded-xl border border-zinc-200 bg-white shadow-lg overflow-hidden">
-                  {placeSuggestions.map((s) => {
-                    const isZip = s.types.includes("postal_code");
-                    const isNeighborhood = s.types.includes("neighborhood");
-                    return (
-                      <button
-                        key={s.placeId}
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          commitPlace(s);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-zinc-50 flex items-center gap-2 text-[13px]"
-                      >
-                        <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                        <span className="truncate text-zinc-800">{s.description}</span>
-                        <span className="ml-auto text-[11px] text-zinc-400 shrink-0">
-                          {isZip ? "ZIP" : isNeighborhood ? "Neighborhood" : "City"}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
             </div>
 
             {/* For Sale / For Rent toggle */}
