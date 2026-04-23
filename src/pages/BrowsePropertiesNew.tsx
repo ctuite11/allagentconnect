@@ -214,7 +214,20 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     (criteria.neighborhoods?.length || 0);
 
   const applySearchInput = () => {
-    setCriteria((prev) => ({ ...prev, zipCode: searchInput.trim() || undefined }));
+    const raw = searchInput.trim();
+    if (!raw) {
+      setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [] }));
+      return;
+    }
+    if (/^\d{5}$/.test(raw)) {
+      setCriteria((prev) => ({ ...prev, zipCode: raw, towns: [] }));
+      return;
+    }
+    const towns = raw
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    setCriteria((prev) => ({ ...prev, zipCode: undefined, towns }));
   };
 
   // ---- Inline popover labels ----
