@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import ListingCard from "@/components/ListingCard";
@@ -228,6 +228,118 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
       .map((t) => t.trim())
       .filter(Boolean);
     setCriteria((prev) => ({ ...prev, zipCode: undefined, towns }));
+  };
+
+  // --- Google Places autocomplete (ZIP / city / neighborhood) ---
+  type PlaceSuggestion = {
+    placeId: string;
+    description: string;
+    mainText: string;
+    types: string[];
+  };
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const autocompleteServiceRef = useRef<any>(null);
+  const placesServiceRef = useRef<any>(null);
+  const sessionTokenRef = useRef<any>(null);
+  const suggestDebounceRef = useRef<number | undefined>(undefined);
+
+  const ensurePlacesLib = (): boolean => {
+    const g = (window as any).google;
+    if (!g?.maps?.places) return false;
+    if (!autocompleteServiceRef.current) {
+      autocompleteServiceRef.current = new g.maps.places.AutocompleteService();
+    }
+    if (!placesServiceRef.current) {
+      placesServiceRef.current = new g.maps.places.PlacesService(document.createElement("div"));
+    }
+    if (!sessionTokenRef.current) {
+      sessionTokenRef.current = new g.maps.places.AutocompleteSessionToken();
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    const q = searchInput.trim();
+    if (suggestDebounceRef.current) window.clearTimeout(suggestDebounceRef.current);
+    if (q.length < 2) {
+      setPlaceSuggestions([]);
+      return;
+    }
+    suggestDebounceRef.current = window.setTimeout(() => {
+      if (!ensurePlacesLib()) return;
+      autocompleteServiceRef.current.getPlacePredictions(
+        {
+          input: q,
+          types: ["(regions)"],
+          componentRestrictions: { country: "us" },
+          sessionToken: sessionTokenRef.current,
+        },
+        (predictions: any[], status: string) => {
+          if (status !== "OK" || !predictions) {
+            setPlaceSuggestions([]);
+            return;
+          }
+          setPlaceSuggestions(
+            predictions.slice(0, 6).map((p) => ({
+              placeId: p.place_id,
+              description: p.description,
+              mainText: p.structured_formatting?.main_text || p.description,
+              types: p.types || [],
+            })),
+          );
+        },
+      );
+    }, 180);
+    return () => {
+      if (suggestDebounceRef.current) window.clearTimeout(suggestDebounceRef.current);
+    };
+  }, [searchInput]);
+
+  const commitPlace = (s: PlaceSuggestion) => {
+    if (!ensurePlacesLib()) {
+      setSearchInput(s.mainText);
+      setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [s.mainText] }));
+      setShowSuggestions(false);
+      return;
+    }
+    placesServiceRef.current.getDetails(
+      {
+        placeId: s.placeId,
+        fields: ["address_components", "formatted_address", "types", "name"],
+        sessionToken: sessionTokenRef.current,
+      },
+      (place: any, status: string) => {
+        const g = (window as any).google;
+        sessionTokenRef.current = new g.maps.places.AutocompleteSessionToken();
+        if (status !== "OK" || !place) {
+          setSearchInput(s.mainText);
+          setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [s.mainText] }));
+          setShowSuggestions(false);
+          return;
+        }
+        const comps: any[] = place.address_components || [];
+        const get = (type: string) =>
+          comps.find((c) => (c.types || []).includes(type))?.long_name as string | undefined;
+        const types: string[] = place.types || s.types || [];
+        const isZip = types.includes("postal_code");
+        const zip = get("postal_code");
+        const city =
+          get("locality") || get("postal_town") || get("sublocality_level_1") || get("sublocality");
+        const neighborhood = get("neighborhood");
+
+        if (isZip && zip) {
+          setSearchInput(zip);
+          setCriteria((prev) => ({ ...prev, zipCode: zip, towns: [] }));
+        } else {
+          const town = neighborhood || city || s.mainText;
+          setSearchInput(town);
+          setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [town] }));
+        }
+        setShowSuggestions(false);
+        setPlaceSuggestions([]);
+      },
+    );
   };
 
   // ---- Inline popover labels ----
