@@ -333,9 +333,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    applySearchInput();
-                  }
+                  if (e.key === "Enter") applySearchInput();
                 }}
                 placeholder="City, neighborhood, or ZIP"
                 className="pl-9 h-9 text-[13px] border-zinc-200/80 rounded-full"
