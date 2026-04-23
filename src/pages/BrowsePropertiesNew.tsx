@@ -367,7 +367,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
                     {priceButtonLabel}
                     <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${priceOpen ? "rotate-180" : ""}`} />
                   </Button>
