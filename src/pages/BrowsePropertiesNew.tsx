@@ -49,7 +49,11 @@ const INLINE_PROPERTY_TYPES: Array<{ label: string; value: string }> = [
   { label: "Other", value: "other" },
 ];
 
-const BrowsePropertiesNew = () => {
+interface BrowsePropertiesNewProps {
+  forceBuyer?: boolean;
+}
+
+const BrowsePropertiesNew = ({ forceBuyer: _forceBuyer }: BrowsePropertiesNewProps = {}) => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
