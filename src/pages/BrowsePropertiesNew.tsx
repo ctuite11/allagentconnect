@@ -302,20 +302,26 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
       {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
       <main className="flex-1 bg-background">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-6">
-            <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
-            <p className="text-muted-foreground">
-              {dcmls
-                ? "Off-market and coming-soon listings shared by network agents"
-                : "Advanced search with comprehensive filters"}
-            </p>
-          </div>
+        <div className={forceBuyer ? "px-4 lg:px-6 py-4" : "container mx-auto px-4 py-8"}>
+          {/* Header — hidden in buyer mode */}
+          {!forceBuyer && (
+            <div className="mb-6">
+              <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
+              <p className="text-muted-foreground">
+                {dcmls
+                  ? "Off-market and coming-soon listings shared by network agents"
+                  : "Advanced search with comprehensive filters"}
+              </p>
+            </div>
+          )}
 
           <div className="mb-6 rounded-2xl border border-zinc-200/80 bg-white p-3">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <div className="relative min-w-[220px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_32%] lg:max-w-[560px]">
+            <div className={`flex flex-wrap items-center ${forceBuyer ? "lg:flex-nowrap gap-2" : "gap-2.5"}`}>
+              <div className={
+                forceBuyer
+                  ? "relative w-full sm:flex-1 sm:min-w-[200px] lg:max-w-[420px]"
+                  : "relative min-w-[220px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_32%] lg:max-w-[560px]"
+              }>
                 <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   value={locationInput}
