@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 /**
  * Canonical buyer portal header.
@@ -49,7 +49,7 @@ export function BuyerPortalHeader() {
   const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">
+    <header className="sticky top-0 z-50 w-full bg-white/85 backdrop-blur border-b border-zinc-200 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
       <div className="mx-auto max-w-7xl px-5 h-14 flex items-center justify-between gap-6">
         {/* Brand lockup */}
         <Link
@@ -57,9 +57,12 @@ export function BuyerPortalHeader() {
           className="flex items-center gap-3 shrink-0"
           aria-label="All Agent Connect — Buyer Portal"
         >
-          <Logo variant="primary" size="md" />
-          <span className="hidden sm:inline-block text-xs font-medium text-zinc-500 tracking-wide uppercase border-l border-zinc-200 pl-3">
-            Buyer Portal
+          <span style={{ color: "#16A34A" }} className="inline-flex">
+            <AACMonogram size={36} />
+          </span>
+          <span className="hidden sm:flex flex-col leading-tight">
+            <span className="text-sm font-semibold text-zinc-900 tracking-tight">All Agent Connect</span>
+            <span className="text-[11px] font-medium text-zinc-500 tracking-wide uppercase">Buyer Portal</span>
           </span>
         </Link>
 
@@ -84,7 +87,7 @@ export function BuyerPortalHeader() {
                 {isMessages && unreadCount > 0 && (
                   <span
                     aria-label={`${unreadCount} unread messages`}
-                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#0E56F5] text-white text-[10px] font-semibold flex items-center justify-center pointer-events-none"
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold flex items-center justify-center pointer-events-none"
                   >
                     {badgeText}
                   </span>
@@ -115,7 +118,7 @@ export function BuyerPortalHeader() {
           {!open && unreadCount > 0 && (
             <span
               aria-hidden="true"
-              className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#0E56F5]"
+              className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-600"
             />
           )}
         </button>
