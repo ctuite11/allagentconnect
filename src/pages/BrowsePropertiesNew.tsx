@@ -169,53 +169,224 @@ const BrowsePropertiesNew = () => {
   };
 
   const dcmls = isDcmlsHost();
+  const [sortBy, setSortBy] = useState<"recommended" | "newest" | "price_asc" | "price_desc">("recommended");
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(criteria.zipCode || "");
+
+  useEffect(() => {
+    setSearchInput(criteria.zipCode || "");
+  }, [criteria.zipCode]);
+
+  const sortedListings = useMemo(() => {
+    const arr = [...listings];
+    switch (sortBy) {
+      case "newest":
+        return arr.sort(
+          (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
+        );
+      case "price_asc":
+        return arr.sort((a, b) => (a.price || 0) - (b.price || 0));
+      case "price_desc":
+        return arr.sort((a, b) => (b.price || 0) - (a.price || 0));
+      default:
+        return arr;
+    }
+  }, [listings, sortBy]);
+
+  const activeFilterCount =
+    (criteria.propertyTypes?.length || 0) +
+    (criteria.minPrice ? 1 : 0) +
+    (criteria.maxPrice ? 1 : 0) +
+    (criteria.bedrooms ? 1 : 0) +
+    (criteria.bathrooms ? 1 : 0) +
+    (criteria.minLivingArea ? 1 : 0) +
+    (criteria.maxLivingArea ? 1 : 0) +
+    (criteria.towns?.length || 0) +
+    (criteria.neighborhoods?.length || 0);
+
+  const applySearchInput = () => {
+    setCriteria((prev) => ({ ...prev, zipCode: searchInput.trim() || undefined }));
+  };
 
   return (
-    <div className={`min-h-screen flex flex-col ${dcmls ? "" : "pt-20"}`}>
+    <div className={`min-h-screen flex flex-col bg-white ${dcmls ? "" : "pt-14"}`}>
       {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
-      <main className="flex-1 bg-background">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-6">
-            <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
-            <p className="text-muted-foreground">
-              {dcmls
-                ? "Off-market and coming-soon listings shared by network agents"
-                : "Advanced search with comprehensive filters"}
+      {dcmls && (
+        <div className="border-b border-zinc-200/60 bg-white">
+          <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-2">
+            <p className="text-[12px] text-zinc-500">
+              Off-market and coming-soon listings shared by network agents
             </p>
           </div>
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Search Filters Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24">
+      {/* Sticky filter bar */}
+      <div className="sticky top-14 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/85 border-b border-zinc-200/60">
+        <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search */}
+            <div className="relative min-w-[220px] flex-1 sm:flex-initial sm:w-[300px]">
+              <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") applySearchInput();
+                }}
+                placeholder="City, neighborhood, or ZIP"
+                className="pl-9 h-9 text-[13px] border-zinc-200/80 rounded-md"
+              />
+            </div>
+
+            {/* For Sale / For Rent toggle */}
+            <div className="inline-flex h-9 items-center rounded-md border border-zinc-200/80 bg-zinc-50 p-0.5 ring-1 ring-zinc-100/90 shrink-0">
+              <button
+                type="button"
+                className={`h-8 min-w-[80px] px-3 rounded-[5px] inline-flex items-center justify-center text-[13px] font-semibold leading-none transition-all ${
+                  criteria.listingType === "for_sale"
+                    ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
+                    : "text-zinc-600 hover:text-zinc-900"
+                }`}
+                onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_sale" }))}
+              >
+                For Sale
+              </button>
+              <button
+                type="button"
+                className={`h-8 min-w-[80px] px-3 rounded-[5px] inline-flex items-center justify-center text-[13px] font-semibold leading-none transition-all ${
+                  criteria.listingType === "for_rent"
+                    ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
+                    : "text-zinc-600 hover:text-zinc-900"
+                }`}
+                onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_rent" }))}
+              >
+                For Rent
+              </button>
+            </div>
+
+            {/* More Filters (opens Sheet with full UnifiedPropertySearch) */}
+            <Sheet open={moreFiltersOpen} onOpenChange={setMoreFiltersOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-9 rounded-md border-zinc-200/80 px-3 text-[13px] text-zinc-700 inline-flex items-center gap-1.5"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <Badge className="ml-1 h-5 px-1.5 bg-zinc-900 text-white hover:bg-zinc-900">
+                      {activeFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader className="mb-4">
+                  <SheetTitle>All Filters</SheetTitle>
+                </SheetHeader>
                 <UnifiedPropertySearch
                   criteria={criteria}
                   onCriteriaChange={setCriteria}
                   resultsCount={listings.length}
                   showResultsCount={true}
-                  onSearch={fetchListings}
+                  onSearch={() => {
+                    fetchListings();
+                    setMoreFiltersOpen(false);
+                  }}
                   mode={searchMode}
                 />
+              </SheetContent>
+            </Sheet>
+
+            <div className="flex-1" />
+
+            <Button
+              variant="outline"
+              className="h-9 rounded-md border-zinc-200/80 px-3 text-[13px] text-zinc-700"
+              onClick={() => toast.info("Save search is coming soon")}
+            >
+              Save Search
+            </Button>
+
+            <Button
+              className="h-9 rounded-md bg-[#0E56F5] hover:bg-[#0B46CC] px-4 text-[13px] text-white"
+              onClick={() => {
+                applySearchInput();
+                fetchListings();
+              }}
+            >
+              Update
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content: map + results split */}
+      <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-[52%_48%] gap-4 lg:h-[calc(100dvh-9rem)]">
+          {/* Map panel */}
+          <section className="hidden lg:block rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden lg:sticky lg:top-[7rem] lg:h-full">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
+              </div>
+            ) : listings.length > 0 ? (
+              <div className="h-full">
+                <PropertyMap
+                  listings={listings}
+                  onListingClick={(id) => navigate(`/property/${id}`)}
+                />
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
+                <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
+                <p className="text-sm text-zinc-600 max-w-md">
+                  No homes match your current filters. Try widening price or area.
+                </p>
+              </div>
+            )}
+          </section>
+
+          {/* Results panel */}
+          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden lg:h-full flex flex-col">
+            <div className="px-4 py-3 border-b border-zinc-200/60 bg-white flex items-center justify-between gap-3 shrink-0">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-zinc-600 tracking-[0.08em]">RESULTS</p>
+                <p className="text-sm font-medium text-zinc-900 mt-0.5">
+                  {sortedListings.length.toLocaleString()} Homes
+                </p>
+              </div>
+              <div className="w-[180px] shrink-0">
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                  <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
+                    <SelectValue placeholder="Sort" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recommended">Recommended</SelectItem>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Results */}
-            <div className="lg:col-span-2">
+            <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0E56F5]" />
                 </div>
-              ) : listings.length === 0 ? (
+              ) : sortedListings.length === 0 ? (
                 <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-                  <Search className="h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No properties found</h3>
-                  <p className="text-muted-foreground">Try adjusting your search filters</p>
+                  <Search className="h-12 w-12 text-zinc-400 mb-3" />
+                  <h3 className="text-base font-semibold text-zinc-900 mb-1">No properties found</h3>
+                  <p className="text-sm text-zinc-500">Try adjusting your search filters</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {listings.map((listing) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {sortedListings.map((listing) => (
                     <ListingCard
                       key={listing.id}
                       listing={listing}
@@ -234,11 +405,9 @@ const BrowsePropertiesNew = () => {
                 </div>
               )}
             </div>
-          </div>
+          </section>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
