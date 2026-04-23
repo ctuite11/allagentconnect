@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Check, Loader2, UserPlus } from "lucide-react";
+import { ChevronDown, ChevronUp, Check, Loader2, UserPlus, FileDown, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
@@ -21,6 +21,14 @@ import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import {
+  DEFAULT_HOT_SHEET_CRITERIA,
+  fromCriteriaPayload,
+  normalizeStatusSelection,
+  parkingToOption,
+  toCriteriaPayload,
+} from "@/lib/hotSheetCriteriaCore";
+import { formatTownSelectionLabel, normalizeTownSelections, toggleTownSelection } from "@/lib/townSelection";
 import { HOT_SHEET_FILTER_STATUSES, PROPERTY_TYPES as STATUS_PROPERTY_TYPES } from "@/constants/status";
 
 interface CreateHotSheetDialogProps {
@@ -40,7 +48,24 @@ interface CreateHotSheetDialogProps {
     phone?: string | null;
   }>;
   lockedToClient?: boolean;
+  hideNotificationSettings?: boolean;
 }
+
+interface HotSheetDraft {
+  hotSheetName: string;
+  criteria: Record<string, unknown>;
+  createdAt: string;
+}
+
+const SQL_TO_FORM_MAP: Array<{ formLabel: string; sqlField: string }> = [
+  { formLabel: "Hot Sheet Name", sqlField: "hot_sheets.name" },
+  { formLabel: "Statuses", sqlField: "hot_sheets.criteria.statuses" },
+  { formLabel: "Property Types", sqlField: "hot_sheets.criteria.propertyTypes" },
+  { formLabel: "Min/Max Price", sqlField: "notification_preferences.min_price/max_price" },
+  { formLabel: "Towns & Areas", sqlField: "agent_buyer_coverage_areas.city/neighborhood" },
+  { formLabel: "Beds/Baths/SqFt", sqlField: "hot_sheets.criteria.bedrooms/bathrooms/minSqft/maxSqft" },
+  { formLabel: "Contacts", sqlField: "hot_sheet_clients.client_id" },
+];
 
 export function CreateHotSheetDialog({
   open,
@@ -53,6 +78,7 @@ export function CreateHotSheetDialog({
   editMode = false,
   preSelectedClients,
   lockedToClient = false,
+  hideNotificationSettings = false,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -79,6 +105,7 @@ export function CreateHotSheetDialog({
   const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
+  const [showDraftResumeDialog, setShowDraftResumeDialog] = useState(false);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -98,7 +125,7 @@ export function CreateHotSheetDialog({
   const [radiusMiles, setRadiusMiles] = useState("");
 
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
-  const [statuses, setStatuses] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<string[]>(DEFAULT_HOT_SHEET_CRITERIA.statuses);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [hasNoMin, setHasNoMin] = useState(false);
@@ -116,7 +143,7 @@ export function CreateHotSheetDialog({
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [citySearch, setCitySearch] = useState("");
   const [multiTownInput, setMultiTownInput] = useState("");
-  const [state, setState] = useState("MA");
+  const [state, setState] = useState(DEFAULT_HOT_SHEET_CRITERIA.state);
   const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
   const [showAreas, setShowAreas] = useState<boolean>(true);
 
@@ -167,6 +194,11 @@ export function CreateHotSheetDialog({
   const [townsOpen, setTownsOpen] = useState(false);
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
+
+  const draftStorageKey = useMemo(
+    () => `aac:hotsheet:draft:${userId}:${hotSheetId || "new"}`,
+    [userId, hotSheetId]
+  );
   
   const resetDialogState = () => {
     setShowCreateClientDialog(false);
@@ -323,14 +355,17 @@ export function CreateHotSheetDialog({
       // Populate form fields
       setHotSheetName(data.name);
       const criteria = data.criteria as any;
+      const coreCriteria = fromCriteriaPayload(criteria);
       
       // Load all the criteria fields
       setListingNumbers(criteria.listingNumbers || "");
       setAddress(criteria.address || "");
-      setPropertyTypes(criteria.propertyTypes || []);
-      setStatuses(criteria.statuses || []);
-      setMinPrice(criteria.minPrice?.toString() || "");
-      setMaxPrice(criteria.maxPrice?.toString() || "");
+      setPropertyTypes(coreCriteria.propertyTypes || []);
+      setStatuses(normalizeStatusSelection(coreCriteria.statuses || []));
+      setMinPrice(coreCriteria.minPrice);
+      setMaxPrice(coreCriteria.maxPrice);
+      setHasNoMin(coreCriteria.hasNoMin);
+      setHasNoMax(coreCriteria.hasNoMax);
       setBedrooms(criteria.bedrooms?.toString() || "");
       setBathrooms(criteria.bathrooms?.toString() || "");
       setRooms(criteria.rooms?.toString() || "");
@@ -339,11 +374,11 @@ export function CreateHotSheetDialog({
       setMaxSqft(criteria.maxSqft?.toString() || "");
       setPricePerSqft(criteria.pricePerSqft?.toString() || "");
       setZipCode(criteria.zipCode || "");
-      setSelectedCities(criteria.cities || []);
+      setSelectedCities(normalizeTownSelections(coreCriteria.cities || []));
       // Load county
-      setSelectedCountyId(criteria.selectedCountyId || criteria.county || "all");
+      setSelectedCountyId(coreCriteria.selectedCountyId || "all");
       // Normalize loaded state to 2-letter code, default to MA
-      const loadedState = criteria.state as string | undefined;
+      const loadedState = coreCriteria.state as string | undefined;
       const normalizedState = loadedState && loadedState.length > 2
         ? (US_STATES.find(s => s.name === loadedState)?.code ?? loadedState)
         : (loadedState || "MA");
@@ -437,14 +472,12 @@ export function CreateHotSheetDialog({
 
   const toggleStatus = (value: string) => {
     setStatuses(prev =>
-      prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
+      normalizeStatusSelection(prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value])
     );
   };
 
   const toggleCity = (city: string) => {
-    setSelectedCities(prev =>
-      prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
-    );
+    setSelectedCities((prev) => toggleTownSelection(prev, city));
   };
   const selectAllTowns = () => {
     const allSelections = [...townsList];
@@ -478,11 +511,13 @@ export function CreateHotSheetDialog({
         });
       });
       
-      setSelectedCities(allSelections);
-      toast.success(`Selected all ${allSelections.length} towns and neighborhoods`);
+      const normalizedSelections = normalizeTownSelections(allSelections);
+      setSelectedCities(normalizedSelections);
+      toast.success(`Selected all ${normalizedSelections.length} towns and neighborhoods`);
     } else {
-      setSelectedCities(allSelections);
-      toast.success(`Selected all ${allSelections.length} towns`);
+      const normalizedSelections = normalizeTownSelections(allSelections);
+      setSelectedCities(normalizedSelections);
+      toast.success(`Selected all ${normalizedSelections.length} towns`);
     }
   };
 
@@ -518,7 +553,7 @@ export function CreateHotSheetDialog({
 
     // Add the matched towns to selection
     if (addedTowns.length > 0) {
-      setSelectedCities(prev => [...prev, ...addedTowns]);
+      setSelectedCities((prev) => normalizeTownSelections([...prev, ...addedTowns]));
     }
 
     // Provide feedback
@@ -537,6 +572,20 @@ export function CreateHotSheetDialog({
   const countiesForState = state && COUNTIES_BY_STATE[state]
     ? COUNTIES_BY_STATE[state].map(name => ({ id: name, name, state }))
     : [];
+
+  const locationSummary = useMemo(() => {
+    const stateLabel = US_STATES.find((stateItem) => stateItem.code === state)?.name ?? state;
+    const countyName = countiesForState.find((county) => county.id === selectedCountyId)?.name;
+    const countyLabel = selectedCountyId === "all" ? "All Counties" : `${countyName ?? "Selected"} County`;
+
+    if (selectedCities.length === 0) {
+      return `${stateLabel} • ${countyLabel} • 0 towns selected`;
+    }
+
+    const preview = selectedCities.slice(0, 2).map((city) => formatTownSelectionLabel(city)).join(", ");
+    const townsLabel = selectedCities.length > 2 ? `${preview} +${selectedCities.length - 2}` : preview;
+    return `${stateLabel} • ${countyLabel} • ${townsLabel}`;
+  }, [countiesForState, selectedCities, selectedCountyId, state]);
 
   // Use the shared towns picker hook
   const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
@@ -559,8 +608,8 @@ export function CreateHotSheetDialog({
           cities: selectedCities,
           state,
           zipCode,
-          minPrice: minPrice ? parseFloat(minPrice) : undefined,
-          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          minPrice: hasNoMin ? undefined : (minPrice ? parseFloat(minPrice) : undefined),
+          maxPrice: hasNoMax ? undefined : (maxPrice ? parseFloat(maxPrice) : undefined),
           bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
           bathrooms: bathrooms ? parseFloat(bathrooms) : undefined,
           minSqft: minSqft ? parseInt(minSqft) : undefined,
@@ -594,6 +643,8 @@ export function CreateHotSheetDialog({
     zipCode,
     minPrice,
     maxPrice,
+    hasNoMin,
+    hasNoMax,
     bedrooms,
     bathrooms,
     minSqft,
@@ -682,8 +733,156 @@ export function CreateHotSheetDialog({
       return;
     }
 
+    // Validate search criteria quality
+    const criteriaValidation = validateCriteriaInputs();
+    if (!criteriaValidation.valid) {
+      toast.error(criteriaValidation.message);
+      return;
+    }
+
     // Show confirmation dialog
     setShowConfirmDialog(true);
+  };
+
+  const buildCriteriaPayload = () => ({
+    ...toCriteriaPayload({
+      ...DEFAULT_HOT_SHEET_CRITERIA,
+      state,
+      selectedCountyId,
+      cities: selectedCities,
+      showAreas,
+      propertyTypes,
+      statuses,
+      minPrice,
+      maxPrice,
+      hasNoMin,
+      hasNoMax,
+      bedrooms,
+      bathrooms,
+      rooms,
+      acres,
+      minSqft,
+      maxSqft,
+      pricePerSqft,
+      hasParking: parkingToOption(hasParking),
+    }),
+    listingNumbers: listingNumbers || null,
+    address: address || null,
+    zipCode: zipCode || null,
+    clientFirstName: clientFirstName || null,
+    clientLastName: clientLastName || null,
+    clientEmail: clientEmail || null,
+    clientPhone: clientPhone ? formatPhoneNumber(clientPhone) : null,
+    listingAgreementTypes: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
+    entryOnly,
+    lenderOwned,
+    shortSale,
+    propertyStyles: propertyStyles.length > 0 ? propertyStyles : null,
+    minYearBuilt: minYearBuilt ? parseInt(minYearBuilt) : null,
+    maxYearBuilt: maxYearBuilt ? parseInt(maxYearBuilt) : null,
+    minLotSize: minLotSize ? parseFloat(minLotSize) : null,
+    maxLotSize: maxLotSize ? parseFloat(maxLotSize) : null,
+    waterfront,
+    waterView,
+    beachNearby,
+    facingDirection: facingDirection.length > 0 ? facingDirection : null,
+    minFireplaces: minFireplaces ? parseInt(minFireplaces) : null,
+    basement,
+    minGarageSpaces: minGarageSpaces ? parseInt(minGarageSpaces) : null,
+    minParkingSpaces: minParkingSpaces ? parseInt(minParkingSpaces) : null,
+    constructionFeatures: constructionFeatures.length > 0 ? constructionFeatures : null,
+    roofMaterials: roofMaterials.length > 0 ? roofMaterials : null,
+    exteriorFeatures: exteriorFeatures.length > 0 ? exteriorFeatures : null,
+    heatingTypes: heatingTypes.length > 0 ? heatingTypes : null,
+    coolingTypes: coolingTypes.length > 0 ? coolingTypes : null,
+    greenFeatures: greenFeatures.length > 0 ? greenFeatures : null,
+  });
+
+  const validateCriteriaInputs = () => {
+    if (selectedCities.length === 0 && !zipCode && !state) {
+      return { valid: false, message: "Please select at least one location filter." };
+    }
+
+    const min = minPrice ? parseFloat(minPrice) : null;
+    const max = maxPrice ? parseFloat(maxPrice) : null;
+    if (min !== null && max !== null && min > max) {
+      return { valid: false, message: "Min Price cannot be greater than Max Price." };
+    }
+
+    const minArea = minSqft ? parseFloat(minSqft) : null;
+    const maxArea = maxSqft ? parseFloat(maxSqft) : null;
+    if (minArea !== null && maxArea !== null && minArea > maxArea) {
+      return { valid: false, message: "Min SqFt cannot be greater than Max SqFt." };
+    }
+
+    if ((statuses?.length || 0) === 0) {
+      return { valid: false, message: "Select at least one listing status." };
+    }
+
+    return { valid: true, message: "ok" };
+  };
+
+  const handleSaveDraft = () => {
+    const draft: HotSheetDraft = {
+      hotSheetName,
+      criteria: buildCriteriaPayload(),
+      createdAt: new Date().toISOString(),
+    };
+    window.localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+    toast.success("Draft saved");
+  };
+
+  const handleResumeDraft = () => {
+    const raw = window.localStorage.getItem(draftStorageKey);
+    if (!raw) {
+      toast.info("No draft found");
+      return;
+    }
+
+    try {
+      const draft = JSON.parse(raw) as HotSheetDraft;
+      const criteria = (draft.criteria || {}) as Record<string, unknown>;
+      setHotSheetName(draft.hotSheetName || "");
+      setListingNumbers(typeof criteria.listingNumbers === "string" ? criteria.listingNumbers : "");
+      setAddress(typeof criteria.address === "string" ? criteria.address : "");
+      setPropertyTypes(Array.isArray(criteria.propertyTypes) ? (criteria.propertyTypes as string[]) : []);
+      setStatuses(normalizeStatusSelection(Array.isArray(criteria.statuses) ? (criteria.statuses as string[]) : []));
+      setMinPrice(criteria.minPrice != null ? String(criteria.minPrice) : "");
+      setMaxPrice(criteria.maxPrice != null ? String(criteria.maxPrice) : "");
+      setHasNoMin(criteria.hasNoMin === true);
+      setHasNoMax(criteria.hasNoMax === true);
+      setBedrooms(criteria.bedrooms != null ? String(criteria.bedrooms) : "");
+      setBathrooms(criteria.bathrooms != null ? String(criteria.bathrooms) : "");
+      setRooms(criteria.rooms != null ? String(criteria.rooms) : "");
+      setAcres(criteria.acres != null ? String(criteria.acres) : "");
+      setMinSqft(criteria.minSqft != null ? String(criteria.minSqft) : "");
+      setMaxSqft(criteria.maxSqft != null ? String(criteria.maxSqft) : "");
+      setPricePerSqft(criteria.pricePerSqft != null ? String(criteria.pricePerSqft) : "");
+      setZipCode(typeof criteria.zipCode === "string" ? criteria.zipCode : "");
+      setSelectedCities(
+        normalizeTownSelections(Array.isArray(criteria.cities) ? (criteria.cities as string[]) : [])
+      );
+      setState(typeof criteria.state === "string" ? criteria.state : "MA");
+      setSelectedCountyId(typeof criteria.selectedCountyId === "string" ? criteria.selectedCountyId : "all");
+      toast.success("Draft resumed");
+    } catch {
+      toast.error("Draft could not be loaded");
+    }
+  };
+
+  const handleExportSummary = async () => {
+    const payload = {
+      hotSheetName,
+      contacts: selectedClients.map((c) => ({ name: `${c.first_name} ${c.last_name}`, email: c.email })),
+      criteria: buildCriteriaPayload(),
+      sqlToFormMap: SQL_TO_FORM_MAP,
+      matchingListingsCount,
+      generatedAt: new Date().toISOString(),
+    };
+
+    const pretty = JSON.stringify(payload, null, 2);
+    await navigator.clipboard.writeText(pretty);
+    toast.success("Hot Sheet summary copied to clipboard");
   };
 
   const handleAddClientWithoutSaving = () => {
@@ -765,61 +964,26 @@ export function CreateHotSheetDialog({
     }
   };
 
+  const enqueuePostCreateNotifications = (createdHotSheetId: string) => {
+    void supabase.functions
+      .invoke("process-hot-sheet", {
+        body: {
+          hotSheetId: createdHotSheetId,
+          sendInitialBatch: true,
+        },
+      })
+      .catch((notificationError) => {
+        console.warn("Failed to enqueue post-create hot sheet notifications", notificationError);
+      });
+  };
+
   const handleCreate = async () => {
     setShowConfirmDialog(false);
 
     try {
       setSaving(true);
 
-      const criteria = {
-        listingNumbers: listingNumbers || null,
-        address: address || null,
-        propertyTypes: propertyTypes.length > 0 ? propertyTypes : null,
-        statuses: statuses.length > 0 ? statuses : null,
-        minPrice: minPrice ? parseFloat(minPrice) : null,
-        maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-        bedrooms: bedrooms ? parseInt(bedrooms) : null,
-        bathrooms: bathrooms ? parseFloat(bathrooms) : null,
-        rooms: rooms ? parseInt(rooms) : null,
-        acres: acres ? parseFloat(acres) : null,
-        minSqft: minSqft ? parseInt(minSqft) : null,
-        maxSqft: maxSqft ? parseInt(maxSqft) : null,
-        pricePerSqft: pricePerSqft ? parseFloat(pricePerSqft) : null,
-        zipCode: zipCode || null,
-        cities: selectedCities.length > 0 ? selectedCities : null,
-        state: state || null,
-        selectedCountyId: selectedCountyId && selectedCountyId !== "all" ? selectedCountyId : null,
-        // Client information
-        clientFirstName: clientFirstName || null,
-        clientLastName: clientLastName || null,
-        clientEmail: clientEmail || null,
-        clientPhone: clientPhone ? formatPhoneNumber(clientPhone) : null,
-        // Sale listing criteria
-        listingAgreementTypes: listingAgreementTypes.length > 0 ? listingAgreementTypes : null,
-        entryOnly,
-        lenderOwned,
-        shortSale,
-        propertyStyles: propertyStyles.length > 0 ? propertyStyles : null,
-        minYearBuilt: minYearBuilt ? parseInt(minYearBuilt) : null,
-        maxYearBuilt: maxYearBuilt ? parseInt(maxYearBuilt) : null,
-        minLotSize: minLotSize ? parseFloat(minLotSize) : null,
-        maxLotSize: maxLotSize ? parseFloat(maxLotSize) : null,
-        waterfront,
-        waterView,
-        beachNearby,
-        facingDirection: facingDirection.length > 0 ? facingDirection : null,
-        minFireplaces: minFireplaces ? parseInt(minFireplaces) : null,
-        basement,
-        hasParking,
-        minGarageSpaces: minGarageSpaces ? parseInt(minGarageSpaces) : null,
-        minParkingSpaces: minParkingSpaces ? parseInt(minParkingSpaces) : null,
-        constructionFeatures: constructionFeatures.length > 0 ? constructionFeatures : null,
-        roofMaterials: roofMaterials.length > 0 ? roofMaterials : null,
-        exteriorFeatures: exteriorFeatures.length > 0 ? exteriorFeatures : null,
-        heatingTypes: heatingTypes.length > 0 ? heatingTypes : null,
-        coolingTypes: coolingTypes.length > 0 ? coolingTypes : null,
-        greenFeatures: greenFeatures.length > 0 ? greenFeatures : null,
-      };
+      const criteria = buildCriteriaPayload();
 
       if (editMode && hotSheetId) {
         // Update existing hot sheet
@@ -945,15 +1109,16 @@ export function CreateHotSheetDialog({
           }
         }
 
-        toast.success("Hot sheet created successfully!");
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          resetDialogState();
-          onOpenChange(false);
-          onSuccess(createdHotSheet.id);
-          resetForm();
-        }, 1000);
+        toast.success("Hot sheet created");
+        window.localStorage.removeItem(draftStorageKey);
+
+        // Queue initial notifications in the background; do not block user navigation.
+        enqueuePostCreateNotifications(createdHotSheet.id);
+
+        resetDialogState();
+        onOpenChange(false);
+        onSuccess(createdHotSheet.id);
+        resetForm();
       }
     } catch (error: any) {
       console.error("Error creating hot sheet:", error);
@@ -984,9 +1149,11 @@ export function CreateHotSheetDialog({
     setListingNumbers("");
     setAddress("");
     setPropertyTypes([]);
-    setStatuses([]);
+    setStatuses([...DEFAULT_HOT_SHEET_CRITERIA.statuses]);
     setMinPrice("");
     setMaxPrice("");
+    setHasNoMin(false);
+    setHasNoMax(false);
     setBedrooms("");
     setBathrooms("");
     setRooms("");
@@ -997,7 +1164,9 @@ export function CreateHotSheetDialog({
     setZipCode("");
     setSelectedCities([]);
     setCitySearch("");
-    setState("");
+    setState(DEFAULT_HOT_SHEET_CRITERIA.state);
+    setSelectedCountyId(DEFAULT_HOT_SHEET_CRITERIA.selectedCountyId);
+    setShowAreas(DEFAULT_HOT_SHEET_CRITERIA.showAreas);
     setListingAgreementTypes([]);
     setEntryOnly(null);
     setLenderOwned(null);
@@ -1027,6 +1196,14 @@ export function CreateHotSheetDialog({
     setNotificationSchedule("immediately");
   };
 
+  useEffect(() => {
+    if (!open || editMode) return;
+    const existing = window.localStorage.getItem(draftStorageKey);
+    if (existing) {
+      setShowDraftResumeDialog(true);
+    }
+  }, [open, editMode, draftStorageKey]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -1055,6 +1232,38 @@ export function CreateHotSheetDialog({
         </DialogHeader>
 
         <div className="space-y-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={handleSaveDraft}>
+              <Save className="mr-1.5 h-4 w-4" />
+              Save Draft
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleResumeDraft}>
+              Resume Draft
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleExportSummary}>
+              <FileDown className="mr-1.5 h-4 w-4" />
+              Export Hot Sheet Summary
+            </Button>
+          </div>
+
+          <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs font-semibold uppercase text-zinc-700">Form Section Preview</p>
+            <p className="mt-1 text-xs text-zinc-600">
+              Name: {hotSheetName || "Untitled"} | Contacts: {selectedClients.length} | Towns/Areas: {selectedCities.length} | Statuses: {statuses.length} | Matching Listings: {matchingListingsCount}
+            </p>
+          </div>
+
+          <div className="rounded-md border border-zinc-200 bg-white p-3">
+            <p className="text-xs font-semibold uppercase text-zinc-700">Map SQL to Form</p>
+            <div className="mt-2 grid grid-cols-1 gap-1 text-xs text-zinc-600 sm:grid-cols-2">
+              {SQL_TO_FORM_MAP.map((row) => (
+                <p key={row.formLabel}>
+                  <span className="font-medium text-zinc-800">{row.formLabel}:</span> {row.sqlField}
+                </p>
+              ))}
+            </div>
+          </div>
+
           {/* Hot Sheet Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Hot Sheet Name <span className="text-[#0E56F5]">*</span></Label>
@@ -1320,7 +1529,7 @@ export function CreateHotSheetDialog({
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card className={`border ${criteriaOpen ? 'border-neutral-300' : 'border-border'}`}>
+            <Card className={`border ${criteriaOpen ? 'border-zinc-200/80' : 'border-zinc-200/80'}`}>
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
                   <CardTitle className="text-base">Search Criteria</CardTitle>
@@ -1329,61 +1538,54 @@ export function CreateHotSheetDialog({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-6">
-                  {/* State and County - Always Visible */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="state" className="text-sm font-semibold">State</Label>
-                      <Select value={state} onValueChange={setState}>
-                        <SelectTrigger id="state" className="bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50 max-h-[300px]">
-                          {US_STATES.map((stateItem) => (
-                            <SelectItem key={stateItem.code} value={stateItem.code}>
-                              {stateItem.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="county" className="text-sm font-semibold">County</Label>
-                      <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                        <SelectTrigger id="county" className="bg-white">
-                          <SelectValue placeholder="All Counties" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50 max-h-[300px]">
-                          <SelectItem value="all">
-                            All Counties
-                          </SelectItem>
-                          {countiesForState.map((county) => (
-                            <SelectItem key={county.id} value={county.id}>
-                              {county.name} County
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Towns & Neighborhoods Section - Collapsed by default */}
+                  {/* Unified Location section */}
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${townsOpen ? 'border-neutral-300' : 'border-border'}`}>
-                        <Label className="text-sm font-semibold uppercase cursor-pointer">
-                          Towns & Neighborhoods
-                          {selectedCities.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-emerald-600">
-                              ({selectedCities.length} selected)
-                            </span>
-                          )}
-                        </Label>
+                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${townsOpen ? 'border-zinc-200/80' : 'border-zinc-200/80'}`}>
+                        <div className="space-y-1 text-left">
+                          <Label className="text-sm font-semibold uppercase cursor-pointer">Location</Label>
+                          <p className="text-xs text-zinc-500">{locationSummary}</p>
+                        </div>
                         {townsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <div className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="state" className="text-sm font-semibold">State</Label>
+                            <Select value={state} onValueChange={setState}>
+                              <SelectTrigger id="state" className="bg-white">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50 max-h-[300px]">
+                                {US_STATES.map((stateItem) => (
+                                  <SelectItem key={stateItem.code} value={stateItem.code}>
+                                    {stateItem.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="county" className="text-sm font-semibold">County</Label>
+                            <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
+                              <SelectTrigger id="county" className="bg-white">
+                                <SelectValue placeholder="All Counties" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50 max-h-[300px]">
+                                <SelectItem value="all">All Counties</SelectItem>
+                                {countiesForState.map((county) => (
+                                  <SelectItem key={county.id} value={county.id}>
+                                    {county.name} County
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
                         <div className="flex items-center gap-4">
                           <Label className="text-sm">Show Areas</Label>
                           <div className="flex gap-4">
@@ -1448,14 +1650,19 @@ export function CreateHotSheetDialog({
 
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium">Selected Towns</Label>
+                              <Label className="text-sm font-medium">
+                                Selected Towns
+                                {selectedCities.length > 0 && (
+                                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">({selectedCities.length})</span>
+                                )}
+                              </Label>
                               {selectedCities.length > 0 && (
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setSelectedCities([])}
-                                  className="h-7 px-2 text-xs"
+                                  className="h-7 px-2 text-xs font-normal text-muted-foreground hover:text-foreground"
                                 >
                                   Remove All
                                 </Button>
@@ -1466,14 +1673,20 @@ export function CreateHotSheetDialog({
                                 <p className="text-sm text-muted-foreground">No towns selected</p>
                               ) : (
                                 selectedCities.map((city) => (
-                                  <button
+                                  <div
                                     key={city}
-                                    type="button"
-                                    onClick={() => toggleCity(city)}
-                                    className="w-full text-left py-1 px-2 text-sm border-b last:border-b-0 hover:bg-muted rounded cursor-pointer"
+                                    className="group flex items-center justify-between gap-2 rounded-xl border border-zinc-200/80 bg-zinc-50/70 px-3 py-2 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-colors hover:bg-zinc-100/70"
                                   >
-                                    {city}
-                                  </button>
+                                    <span className="truncate font-medium text-zinc-700">{formatTownSelectionLabel(city)}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleCity(city)}
+                                      aria-label={`Remove ${formatTownSelectionLabel(city)}`}
+                                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-zinc-400 transition-colors hover:text-zinc-700"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
                                 ))
                               )}
                             </div>
@@ -1512,7 +1725,7 @@ export function CreateHotSheetDialog({
                   {/* Property Type - Collapsed by default */}
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200">
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200/80">
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Property Type
                           {propertyTypes.length > 0 && (
@@ -1561,7 +1774,7 @@ export function CreateHotSheetDialog({
                   {/* Status - Collapsed by default */}
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200">
+                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200/80">
                         <Label className="text-sm font-semibold uppercase cursor-pointer">
                           Status
                           {statuses.length > 0 && (
@@ -1581,7 +1794,7 @@ export function CreateHotSheetDialog({
                             checked={statuses.length === statusOptions.length}
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setStatuses(statusOptions.map(opt => opt.value));
+                                setStatuses(normalizeStatusSelection(statusOptions.map((opt) => opt.value)));
                               } else {
                                 setStatuses([]);
                               }
@@ -1797,76 +2010,78 @@ export function CreateHotSheetDialog({
             </Card>
           </Collapsible>
 
-          {/* Notification Settings */}
-          <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <Card className="border border-zinc-200">
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
-                  <CardTitle className="text-base">Notification Settings</CardTitle>
-                  {notificationsOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="notify-agent"
-                        checked={notifyAgent}
-                        onCheckedChange={(checked) => setNotifyAgent(checked as boolean)}
-                      />
-                      <Label htmlFor="notify-agent" className="cursor-pointer">
-                        Send notifications to me (agent)
-                      </Label>
-                    </div>
-
-                    {clientId && (
+          {!hideNotificationSettings && (
+            <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <Card className="border border-zinc-200">
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
+                    <CardTitle className="text-base">Notification Settings</CardTitle>
+                    {notificationsOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <Checkbox
-                          id="notify-client"
-                          checked={notifyClient}
-                          onCheckedChange={(checked) => setNotifyClient(checked as boolean)}
+                          id="notify-agent"
+                          checked={notifyAgent}
+                          onCheckedChange={(checked) => setNotifyAgent(checked as boolean)}
                         />
-                        <Label htmlFor="notify-client" className="cursor-pointer">
-                          Send notifications to client
+                        <Label htmlFor="notify-agent" className="cursor-pointer">
+                          Send notifications to me (agent)
                         </Label>
                       </div>
-                    )}
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label>Notification Schedule</Label>
-                    <RadioGroup value={notificationSchedule} onValueChange={setNotificationSchedule}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="immediately" id="immediately" />
-                        <Label htmlFor="immediately" className="cursor-pointer">
-                          Immediately - Get alerts as soon as matching listings appear
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="daily" id="daily" />
-                        <Label htmlFor="daily" className="cursor-pointer">
-                          Daily - Receive a daily digest of new matching listings
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="weekly" id="weekly" />
-                        <Label htmlFor="weekly" className="cursor-pointer">
-                          Weekly - Receive a weekly summary of new matching listings
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+                      {clientId && (
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="notify-client"
+                            checked={notifyClient}
+                            onCheckedChange={(checked) => setNotifyClient(checked as boolean)}
+                          />
+                          <Label htmlFor="notify-client" className="cursor-pointer">
+                            Send notifications to client
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Notification Schedule</Label>
+                      <RadioGroup value={notificationSchedule} onValueChange={setNotificationSchedule}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="immediately" id="immediately" />
+                          <Label htmlFor="immediately" className="cursor-pointer">
+                            Immediately - Get alerts as soon as matching listings appear
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="daily" id="daily" />
+                          <Label htmlFor="daily" className="cursor-pointer">
+                            Daily - Receive a daily digest of new matching listings
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="weekly" id="weekly" />
+                          <Label htmlFor="weekly" className="cursor-pointer">
+                            Weekly - Receive a weekly summary of new matching listings
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3">
+          <div className="flex gap-3 rounded-xl border border-zinc-200/80 bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
             <Button
               type="button"
               variant="outline"
+              className="flex-1"
               onClick={() => {
                 onOpenChange(false);
                 resetForm();
@@ -1878,7 +2093,7 @@ export function CreateHotSheetDialog({
             <Button 
               onClick={handleValidateAndShowConfirmation} 
               disabled={saving}
-              className="min-w-[180px]"
+              className="flex-1"
             >
               {saving ? (
                 <>
@@ -1934,15 +2149,16 @@ export function CreateHotSheetDialog({
             </div>
 
 
-            {/* Notification Settings */}
-            <div className="pb-3">
-              <p className="text-sm font-semibold text-foreground mb-2">Notifications</p>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p><span className="font-medium">Agent:</span> {notifyAgent ? "Enabled" : "Disabled"}</p>
-                {clientId && <p><span className="font-medium">Client:</span> {notifyClient ? "Enabled" : "Disabled"}</p>}
-                <p><span className="font-medium">Schedule:</span> {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}</p>
+            {!hideNotificationSettings && (
+              <div className="pb-3">
+                <p className="text-sm font-semibold text-foreground mb-2">Notifications</p>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p><span className="font-medium">Agent:</span> {notifyAgent ? "Enabled" : "Disabled"}</p>
+                  {clientId && <p><span className="font-medium">Client:</span> {notifyClient ? "Enabled" : "Disabled"}</p>}
+                  <p><span className="font-medium">Schedule:</span> {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {matchingListingsCount > 0 && (
               <div className="bg-secondary p-3 rounded-md">
@@ -1991,6 +2207,35 @@ export function CreateHotSheetDialog({
               ) : (
                 "Yes"
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDraftResumeDialog} onOpenChange={setShowDraftResumeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resume Draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A saved Hot Sheet draft was found. You can resume it or start fresh.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                window.localStorage.removeItem(draftStorageKey);
+                setShowDraftResumeDialog(false);
+              }}
+            >
+              Start Fresh
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                handleResumeDraft();
+                setShowDraftResumeDialog(false);
+              }}
+            >
+              Resume Draft
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,20 +1,31 @@
 import { useEffect, useState } from "react";
-import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-// Navigation removed - rendered globally in App.tsx
-import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, FileText, User, Mail, Phone, Eye, UserX, Plus, MessageSquare, UserPlus } from "lucide-react";
+import {
+  Heart,
+  FileText,
+  Phone,
+  Eye,
+  UserX,
+  Plus,
+  MessageSquare,
+  UserPlus,
+  Search,
+  Sparkles,
+  Circle,
+  CheckCircle2,
+} from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
+import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +52,7 @@ interface HotSheet {
   name: string;
   criteria: any;
   created_at: string;
+  last_sent_at?: string | null;
   is_active: boolean;
   agent?: {
     first_name: string;
@@ -65,22 +77,81 @@ interface Favorite {
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
+  const { unreadCount } = useUnreadConversations();
   const [loading, setLoading] = useState(true);
   const [relationshipHydrating, setRelationshipHydrating] = useState(false);
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [relationshipId, setRelationshipId] = useState<string | null>(null);
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
   const [shareTokenByHotSheetId, setShareTokenByHotSheetId] = useState<Record<string, string>>({});
+  const [hotSheetMatchCountById, setHotSheetMatchCountById] = useState<Record<string, number>>({});
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [crmClientId, setCrmClientId] = useState<string | null>(null);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
+  const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
+  const [tasks, setTasks] = useState([
+    { id: "preapproval", label: "Complete financing pre-approval", done: false },
+    { id: "saved-homes", label: "Review saved homes", done: true },
+    { id: "tours", label: "Schedule tours", done: false },
+    { id: "messages", label: "Respond to agent message", done: false },
+  ]);
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  const sanitizeFirstName = (value: string | null | undefined): string | null => {
+    const trimmed = value?.trim();
+    if (!trimmed) return null;
+    if (trimmed.includes("@")) return null;
+
+    // Reject common email-username style values such as "chris.tuite".
+    if (/^[a-z0-9._%+-]+\.[a-z0-9._%+-]+$/i.test(trimmed) && !trimmed.includes(" ")) {
+      return null;
+    }
+
+    const firstToken = trimmed.split(/\s+/)[0] || trimmed;
+    const cleaned = firstToken.replace(/[^a-zA-Z'\-]/g, "").trim();
+    if (!cleaned) return null;
+
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+  };
+
+  const resolveBuyerGreetingName = async (userId: string, userEmail?: string | null, displayName?: string | null) => {
+    // Priority 1: buyer profile first_name
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const profileFirst = sanitizeFirstName(profile?.first_name);
+    if (profileFirst) return profileFirst;
+
+    // Priority 2: buyer display_name (auth metadata)
+    const display = sanitizeFirstName(displayName);
+    if (display) return display;
+
+    // Priority 3: latest client record first_name for this email
+    const normalizedEmail = userEmail?.trim().toLowerCase();
+    if (normalizedEmail) {
+      const { data: clientRow } = await supabase
+        .from("clients")
+        .select("first_name, created_at")
+        .ilike("email", normalizedEmail)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const clientFirst = sanitizeFirstName(clientRow?.first_name);
+      if (clientFirst) return clientFirst;
+    }
+
+    return null;
+  };
 
   const consumeInviteHandoffMarker = () => {
     if (typeof window === "undefined") return false;
@@ -102,6 +173,13 @@ export default function ClientDashboard() {
       navigate("/consumer/auth");
       return;
     }
+
+    const resolvedName = await resolveBuyerGreetingName(
+      user.id,
+      user.email,
+      (user.user_metadata?.display_name as string | undefined) ?? null
+    );
+    setBuyerFirstName(resolvedName);
 
     const cameFromInviteAcceptance = consumeInviteHandoffMarker();
     if (cameFromInviteAcceptance) {
@@ -234,6 +312,7 @@ export default function ClientDashboard() {
     if (!acceptedHotSheetIds.size) {
       setHotSheets([]);
       setShareTokenByHotSheetId({});
+      setHotSheetMatchCountById({});
       return;
     }
 
@@ -241,12 +320,13 @@ export default function ClientDashboard() {
     const hsIds = [...acceptedHotSheetIds];
     const { data: sheetRows, error: sheetErr } = await supabase
       .from("hot_sheets")
-      .select("id, name, criteria, created_at, is_active, user_id")
+      .select("id, name, criteria, created_at, last_sent_at, is_active, user_id")
       .in("id", hsIds);
 
     if (sheetErr) {
       console.error("Failed to load hot sheets by ID", sheetErr);
       setHotSheets([]);
+      setHotSheetMatchCountById({});
       return;
     }
 
@@ -267,6 +347,19 @@ export default function ClientDashboard() {
       ...s,
       agent: agentMap[s.user_id] ?? null,
     }));
+
+    const matchCountEntries = await Promise.all(
+      sheetsWithAgent.map(async (sheet: any) => {
+        try {
+          const { data: matched } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(120);
+          return [sheet.id, (matched || []).length] as const;
+        } catch {
+          return [sheet.id, 0] as const;
+        }
+      })
+    );
+
+    setHotSheetMatchCountById(Object.fromEntries(matchCountEntries));
 
     setHotSheets(sheetsWithAgent);
     setShareTokenByHotSheetId(tokenMap);
@@ -325,6 +418,50 @@ export default function ClientDashboard() {
     return parts.join(" • ");
   };
 
+  const activeSearches = hotSheets.filter((sheet) => sheet.is_active).length;
+  const recommendedHomes = favorites.slice(0, 3);
+  const currentJourneyStage = hotSheets.length > 0 ? 2 : 1;
+  const stageLabels = ["Search", "Touring", "Offer", "Under Agreement", "Closing"];
+  const marketSnapshot = {
+    area: "Greater Boston",
+    medianPrice: "$1.08M",
+    newThisWeek: "126",
+    avgDaysOnMarket: "19",
+  };
+
+  const toggleTask = (id: string) => {
+    setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
+  };
+
+  const stats = [
+    {
+      label: "Saved Homes",
+      value: String(favorites.length),
+      icon: Heart,
+      subtle: null as string | null,
+    },
+    {
+      label: "New Matches",
+      value: recommendedHomes.length > 0 ? String(recommendedHomes.length) : "--",
+      icon: Sparkles,
+      subtle: recommendedHomes.length > 0 ? "Updated today" : "Awaiting activity",
+    },
+    {
+      label: "Unread Messages",
+      value: String(unreadCount),
+      icon: MessageSquare,
+      subtle: unreadCount > 0 ? "Needs review" : "No new messages from your agent.",
+    },
+    {
+      label: "Active Searches",
+      value: String(activeSearches),
+      icon: Search,
+      subtle: activeSearches > 0 ? "Running alerts" : "No active alerts",
+    },
+  ];
+
+  const primaryCtaClass = "rounded-xl bg-[#0E56F5] text-white hover:bg-[#0B46CC]";
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
@@ -337,257 +474,425 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-24">
-      <main className="container mx-auto px-4 pb-12">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <PageTitle className="mb-2">My Dashboard</PageTitle>
-              <p className="text-muted-foreground">
-                Manage your hot sheets, favorites, and agent relationship
-              </p>
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" onClick={() => setAddFriendOpen(true)}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add a Friend
-              </Button>
-              <Button onClick={() => navigate("/messages")}>
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Messages
-              </Button>
-            </div>
-          </div>
-
-          {/* Agent Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Your Agent
-              </CardTitle>
-              <CardDescription>
-                  {agent ? "Your current agent relationship" : "Keep your account active while you continue your home search"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {agent ? (
-                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={agent.headshot_url || ""} />
-                      <AvatarFallback>
-                        {agent.first_name[0]}{agent.last_name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-xl font-semibold">
-                        {agent.first_name} {agent.last_name}
-                      </h3>
-                      {agent.company && (
-                        <p className="text-sm text-muted-foreground">{agent.company}</p>
-                      )}
-                      <div className="flex flex-col gap-1 mt-2">
-                        <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="w-4 h-4" />
-                          {agent.email}
-                        </span>
-                        {agent.phone && (
-                          <a href={`tel:${(agent.phone ?? "").replace(/\D/g, "")}`} className="flex items-center gap-2 text-sm hover:text-primary">
-                            <Phone className="w-4 h-4" />
-                            {formatPhoneNumber(agent.phone ?? "")}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button onClick={() => {
-                      if (!crmClientId) {
-                        toast.error("Unable to connect to your agent record.");
-                        return;
-                      }
-                      setContactOpen(true);
-                    }}>
-                      <Mail className="w-4 h-4 mr-2" />
-                      Contact {agent.first_name}
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowEndDialog(true)}>
-                      <UserX className="w-4 h-4 mr-2" />
-                      End Relationship
-                    </Button>
-                  </div>
+    <div className="bg-background">
+      <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
+        <div className="space-y-8">
+          <section className="rounded-2xl bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-black/[0.04] p-6 md:p-8 transition-shadow duration-150 hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
+              <div className="space-y-3">
+                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-zinc-900" style={{ fontFamily: "Manrope, sans-serif" }}>
+                  {buyerFirstName ? `Welcome back, ${buyerFirstName}` : "Welcome back"}
+                </h1>
+                <p className="text-sm md:text-base text-zinc-600 max-w-2xl">
+                  Track saved homes, new opportunities, messages, and progress toward your next move.
+                </p>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700">
+                    Active Buyer
+                  </span>
+                  {agent && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                      Working with {agent.first_name} {agent.last_name}
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    Continue your home search, keep your account active, and connect with a new agent when you're ready.
-                  </p>
-                  <Button onClick={() => navigate("/browse")}>
-                    Continue Your Home Search
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Hot Sheets */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    My Hot Sheets
-                    {hotSheets.length > 0 && (
-                      <Badge variant="secondary" className="ml-1">{hotSheets.length}</Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>
-                    Property search alerts shared by your agent
-                  </CardDescription>
-                </div>
-                <Button size="sm" onClick={() => navigate("/client/hotsheets/new")}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Hot Sheet
+              </div>
+              <div className="flex gap-2 w-full md:w-auto md:justify-end">
+                <Button variant="outline" className="rounded-xl" onClick={() => setAddFriendOpen(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add a Friend
+                </Button>
+                <Button className={primaryCtaClass} onClick={() => navigate("/messages")}>
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Messages
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              {hotSheets.length > 0 ? (
-                <div className="space-y-4">
-                  {hotSheets.map((sheet) => (
-                    <div
-                      key={sheet.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-semibold">{sheet.name}</h4>
-                          <Badge variant="secondary" className="text-xs">
-                            {sheet.is_active ? "Active" : "Paused"}
-                          </Badge>
-                        </div>
-                        {sheet.agent && (
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            From {sheet.agent.first_name} {sheet.agent.last_name}
-                            {sheet.agent.company ? ` · ${sheet.agent.company}` : ""}
-                          </p>
-                        )}
-                        {formatCriteriaSummary(sheet.criteria) && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {formatCriteriaSummary(sheet.criteria)}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Shared {new Date(sheet.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 ml-4 shrink-0">
-                        {shareTokenByHotSheetId[sheet.id] && (
-                          <Button
-                            size="sm"
-                            onClick={() => navigate(`/client/hotsheet/${shareTokenByHotSheetId[sheet.id]}`)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Open
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <FileText className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
-                  <p className="text-muted-foreground mb-4">
-                    No hot sheets yet. Create one to get property alerts, or ask your agent to share one.
-                  </p>
-                  <Button onClick={() => navigate("/client/hotsheets/new")}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Hot Sheet
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          {/* Favorites Preview */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Heart className="w-5 h-5" />
-                    Your Favorites
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map(({ label, value, icon: Icon, subtle }) => (
+              <div
+                key={label}
+                className="rounded-xl bg-white ring-1 ring-black/[0.05] shadow-[0_4px_18px_rgba(15,23,42,0.05)] p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <Icon className="h-5 w-5 text-zinc-500" />
+                </div>
+                <div className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">{value}</div>
+                <div className="mt-1 text-xs font-medium text-zinc-500">{label}</div>
+                {subtle && <div className="mt-2 text-[11px] text-zinc-400">{subtle}</div>}
+              </div>
+            ))}
+          </section>
+
+          <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2 space-y-6">
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
+                    Recommended for You
                   </CardTitle>
                   <CardDescription>
-                    Properties you've saved
+                    Based on your saved searches and activity.
                   </CardDescription>
-                </div>
-                {favorites.length > 0 && (
-                  <Button variant="outline" onClick={() => navigate("/client/favorites")}>
-                    View All
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {favorites.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {favorites.map((fav) => (
-                    <div
-                      key={fav.id}
-                      className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                      onClick={() => navigate(`/property/${fav.listing.id}`)}
-                    >
-                      <div className="aspect-video bg-muted relative">
-                        {fav.listing.photos && fav.listing.photos[0] ? (
-                          <img
-                            src={fav.listing.photos[0]}
-                            alt={fav.listing.address}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            No image
+                </CardHeader>
+                <CardContent>
+                  {recommendedHomes.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {recommendedHomes.map((fav, index) => (
+                        <article
+                          key={fav.id}
+                          className="group cursor-pointer rounded-xl bg-white ring-1 ring-black/[0.05] shadow-[0_4px_16px_rgba(15,23,42,0.05)] overflow-hidden transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(15,23,42,0.10)]"
+                          onClick={() => navigate(`/property/${fav.listing.id}`)}
+                        >
+                          <div className="relative aspect-[4/3] bg-zinc-100">
+                            {fav.listing.photos && fav.listing.photos[0] ? (
+                              <img
+                                src={fav.listing.photos[0]}
+                                alt={fav.listing.address}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-xs text-zinc-500">
+                                No image available
+                              </div>
+                            )}
+                            {index < 2 && (
+                              <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold tracking-[0.06em] text-zinc-700 shadow-sm">
+                                NEW
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              className="absolute top-3 right-3 rounded-full bg-white/95 p-2 text-[#0E56F5] shadow-sm transition-colors hover:text-[#0B46CC]"
+                              aria-label="Saved home"
+                            >
+                              <Heart className="h-4 w-4 fill-current" />
+                            </button>
                           </div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <p className="font-semibold text-lg">
-                          ${fav.listing.price.toLocaleString()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {fav.listing.address}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {fav.listing.city}, {fav.listing.state}
-                        </p>
-                        {(fav.listing.bedrooms || fav.listing.bathrooms) && (
-                          <p className="text-sm mt-1">
-                            {fav.listing.bedrooms} bed • {fav.listing.bathrooms} bath
-                          </p>
-                        )}
-                      </div>
+                          <div className="p-4 space-y-1.5">
+                            <p className="text-lg font-semibold tracking-tight text-zinc-900">
+                              ${fav.listing.price.toLocaleString()}
+                            </p>
+                            <p className="text-sm font-medium text-zinc-800 truncate">{fav.listing.address}</p>
+                            <p className="text-xs text-zinc-500">{fav.listing.city}, {fav.listing.state}</p>
+                            <p className="text-xs text-zinc-500 pt-1">
+                              {fav.listing.bedrooms ?? "--"} bd • {fav.listing.bathrooms ?? "--"} ba • -- sqft
+                            </p>
+                          </div>
+                        </article>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    You haven't favorited any properties yet
-                  </p>
-                  <Button onClick={() => navigate("/browse")}>
-                    Start Browsing
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  ) : (
+                    <div className="text-center py-8 rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100">
+                      <p className="text-sm text-zinc-600 mb-4">
+                        Start exploring homes tailored to your goals.
+                      </p>
+                      <Button className={primaryCtaClass} onClick={() => navigate("/client/search")}>
+                        Browse Homes
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Pending Invites */}
-          <PendingInvitesCard />
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
+                    Recently Viewed
+                  </CardTitle>
+                  <CardDescription>
+                    Jump back into homes you explored most recently.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100 p-5 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-zinc-700">No recently viewed homes yet.</p>
+                      <p className="text-xs text-zinc-500 mt-1">As you browse, your history will appear here.</p>
+                    </div>
+                    <Button variant="outline" className="rounded-xl" onClick={() => navigate("/client/search")}>
+                      Browse
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-zinc-500" />
+                        Hot Sheets
+                        {hotSheets.length > 0 && (
+                          <Badge variant="secondary" className="ml-1">{hotSheets.length}</Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        Track listings with instant alerts.
+                      </CardDescription>
+                    </div>
+                    {hotSheets.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => navigate("/hot-sheets")}>Manage Hot Sheets</Button>
+                        <Button size="sm" className={primaryCtaClass} onClick={() => navigate("/hot-sheets")}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Hot Sheet
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {hotSheets.length > 0 ? (
+                    <div className="space-y-3">
+                      {hotSheets.slice(0, 3).map((sheet) => {
+                        const hasNewListings = Date.now() - new Date(sheet.created_at).getTime() < 1000 * 60 * 60 * 48;
+                        const matchCount = hotSheetMatchCountById[sheet.id] ?? 0;
+                        const token = shareTokenByHotSheetId[sheet.id];
+                        return (
+                        <div
+                          key={sheet.id}
+                          role={token ? "button" : undefined}
+                          tabIndex={token ? 0 : -1}
+                          onClick={() => token && navigate(`/client/hotsheet/${token}`)}
+                          onKeyDown={(e) => {
+                            if (!token) return;
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              navigate(`/client/hotsheet/${token}`);
+                            }
+                          }}
+                          className="rounded-xl ring-1 ring-zinc-200/70 bg-white p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-semibold text-zinc-900">{sheet.name}</h4>
+                                {hasNewListings && (
+                                  <Badge className="text-xs bg-[#0E56F5]/10 text-[#0E56F5] hover:bg-[#0E56F5]/10">New listings</Badge>
+                                )}
+                                <Badge variant="secondary" className="text-xs">
+                                  {sheet.is_active ? "Active" : "Paused"}
+                                </Badge>
+                              </div>
+                              {sheet.agent && (
+                                <p className="text-sm text-zinc-500 mt-0.5">
+                                  From {sheet.agent.first_name} {sheet.agent.last_name}
+                                  {sheet.agent.company ? ` · ${sheet.agent.company}` : ""}
+                                </p>
+                              )}
+                              {formatCriteriaSummary(sheet.criteria) && (
+                                <p className="text-sm text-zinc-600 mt-1">
+                                  {formatCriteriaSummary(sheet.criteria)}
+                                </p>
+                              )}
+                              <p className="text-sm font-medium text-zinc-800 mt-1.5">
+                                {matchCount} {matchCount === 1 ? "match" : "matches"}
+                              </p>
+                              <p className="text-xs text-zinc-400 mt-1.5">
+                                Updated {new Date(sheet.last_sent_at || sheet.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                            {token && (
+                              <Button
+                                size="sm"
+                                className={`${primaryCtaClass} shrink-0`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/client/hotsheet/${token}`);
+                                }}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Matches
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )})}
+
+                      {hotSheets.length > 3 && (
+                        <div className="pt-1">
+                          <Button variant="link" className="h-auto p-0 text-sm font-semibold text-[#0E56F5]" onClick={() => navigate("/hot-sheets")}>View All</Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-9 rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100">
+                      <FileText className="w-10 h-10 mx-auto mb-3 text-zinc-400" />
+                      <h4 className="text-sm font-semibold text-zinc-900 mb-1">No Hot Sheets yet</h4>
+                      <p className="text-sm text-zinc-600 mb-4">
+                        Create one to get property alerts, or ask your agent to share one.
+                      </p>
+                      <Button className={primaryCtaClass} onClick={() => navigate("/hot-sheets")}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Hot Sheet
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
+                    Your Buying Journey
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="w-full h-2 rounded-full bg-zinc-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-emerald-500 transition-all duration-200"
+                      style={{ width: `${(currentJourneyStage / stageLabels.length) * 100}%` }}
+                    />
+                  </div>
+                  <ol className="space-y-2">
+                    {stageLabels.map((stage, index) => {
+                      const stageNumber = index + 1;
+                      const isCurrent = stageNumber === currentJourneyStage;
+                      const isComplete = stageNumber < currentJourneyStage;
+                      return (
+                        <li key={stage} className="flex items-center gap-2.5 text-sm">
+                          <span
+                            className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
+                              isCurrent
+                                ? "bg-emerald-500 text-white"
+                                : isComplete
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-zinc-100 text-zinc-500"
+                            }`}
+                          >
+                            {stageNumber}
+                          </span>
+                          <span className={isCurrent ? "font-semibold text-zinc-900" : "text-zinc-600"}>{stage}</span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">Your Agent</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {agent ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-14 w-14 ring-1 ring-zinc-200">
+                          <AvatarImage src={agent.headshot_url || ""} />
+                          <AvatarFallback>
+                            {agent.first_name[0]}{agent.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-semibold text-zinc-900">{agent.first_name} {agent.last_name}</h3>
+                          <p className="text-sm text-zinc-500">{agent.company || "Independent Brokerage"}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          className={primaryCtaClass}
+                          onClick={() => {
+                            if (!crmClientId) {
+                              toast.error("Unable to connect to your agent record.");
+                              return;
+                            }
+                            setContactOpen(true);
+                          }}
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Message
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="rounded-xl"
+                          onClick={() => {
+                            if (agent.phone) {
+                              window.location.href = `tel:${(agent.phone ?? "").replace(/\D/g, "")}`;
+                            } else {
+                              toast.message("Phone number unavailable");
+                            }
+                          }}
+                        >
+                          <Phone className="w-4 h-4 mr-2" />
+                          Schedule Call
+                        </Button>
+                      </div>
+                      <Button variant="ghost" className="w-full rounded-xl text-zinc-600" onClick={() => setShowEndDialog(true)}>
+                        <UserX className="w-4 h-4 mr-2" />
+                        End Relationship
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-zinc-600">
+                        Continue your home search, keep your account active, and connect with a new agent when you're ready.
+                      </p>
+                      <Button className={primaryCtaClass} onClick={() => navigate("/client/search")}>
+                        Continue Your Home Search
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">Market Snapshot</CardTitle>
+                  <CardDescription>{marketSnapshot.area}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-500">Median Price</span>
+                    <span className="font-semibold text-zinc-900">{marketSnapshot.medianPrice}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-500">New This Week</span>
+                    <span className="font-semibold text-zinc-900">{marketSnapshot.newThisWeek}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-500">Avg Days on Market</span>
+                    <span className="font-semibold text-zinc-900">{marketSnapshot.avgDaysOnMarket}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">Tasks / Next Steps</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {tasks.map((task) => (
+                    <button
+                      key={task.id}
+                      onClick={() => toggleTask(task.id)}
+                      className="w-full flex items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-zinc-50"
+                    >
+                      {task.done ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Circle className="h-4 w-4 text-zinc-400 shrink-0" />
+                      )}
+                      <span className={`text-sm ${task.done ? "text-zinc-500 line-through" : "text-zinc-700"}`}>
+                        {task.label}
+                      </span>
+                    </button>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
+          <section>
+            <PendingInvitesCard />
+          </section>
         </div>
       </main>
 
@@ -623,8 +928,6 @@ export default function ClientDashboard() {
       </AlertDialog>
 
       <AddFriendDialog open={addFriendOpen} onOpenChange={setAddFriendOpen} />
-
-      <Footer />
     </div>
   );
 }

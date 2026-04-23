@@ -279,10 +279,11 @@ const MyClients = () => {
     setHotSheetClientName(`${client.first_name} ${client.last_name}`);
   };
 
-  const handleHotSheetSuccess = () => {
+  const handleHotSheetSuccess = (hotSheetId: string) => {
     setHotSheetClientId(null);
     setHotSheetClientName("");
     fetchClients(user.id);
+    navigate(`/hot-sheets/${hotSheetId}/review`);
   };
 
   // Toggle favorite handler with optimistic update
@@ -1329,10 +1330,11 @@ const MyClients = () => {
           }
         }}
         userId={user?.id}
-        onSuccess={() => {
+        onSuccess={(hotSheetId) => {
           setBulkHotSheetDialogOpen(false);
           setSelectedClients(new Set());
           fetchClients(user.id);
+          navigate(`/hot-sheets/${hotSheetId}/review`);
         }}
         preSelectedClients={getSelectedClientsForHotSheet()}
       />
