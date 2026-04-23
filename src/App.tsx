@@ -222,12 +222,14 @@ const App = () => (
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 {/* Auth routes */}
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
-                <Route path="/pending-verification" element={<PendingVerification />} />
-                <Route path="/password-reset" element={<PasswordReset />} />
-                <Route path="/access-error" element={<AccessError />} />
+                <Route element={<PublicLayout />}>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
+                  <Route path="/pending-verification" element={<PendingVerification />} />
+                  <Route path="/password-reset" element={<PasswordReset />} />
+                  <Route path="/access-error" element={<AccessError />} />
+                </Route>
                 
                 {/* Legacy redirects - all go to /auth */}
                 <Route path="/choose" element={<Navigate to="/auth?mode=register" replace />} />
