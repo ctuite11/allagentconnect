@@ -319,6 +319,8 @@ const App = () => (
                   <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                   <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                   <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
+                  <Route path="/client/search" element={<RouteGuard requireAuth><BrowsePropertiesNew /></RouteGuard>} />
+                  <Route path="/client/account" element={<RouteGuard requireAuth><ClientAgentSettings /></RouteGuard>} />
                 </Route>
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
