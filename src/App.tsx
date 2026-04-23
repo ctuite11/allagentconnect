@@ -97,8 +97,9 @@ import SellerDashboard from "./pages/SellerDashboard";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
-import Navigation from "./components/Navigation";
 import VersionStamp from "./components/VersionStamp";
+import { BuyerPortalHeader } from "./components/layout/BuyerPortalHeader";
+import { AACPublicHeader } from "./components/layout/AACPublicHeader";
 import { NewMessageToastListener } from "./components/NewMessageToastListener";
 import CookieConsent from "./components/CookieConsent";
 
@@ -169,6 +170,26 @@ function AgentLayout() {
   return <AppShell><Outlet /></AppShell>;
 }
 
+/** Layout route: buyer-role authenticated routes (white top toolbar) */
+function BuyerLayout() {
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <BuyerPortalHeader />
+      <main className="flex-1"><Outlet /></main>
+    </div>
+  );
+}
+
+/** Layout route: AAC public/auth pages (minimal white header) */
+function PublicLayout() {
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <AACPublicHeader />
+      <main className="flex-1"><Outlet /></main>
+    </div>
+  );
+}
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -190,7 +211,6 @@ const App = () => (
             <ScrollRestoration />
             <>
               <ActiveAgentBanner />
-              <Navigation />
               <NewMessageToastListener />
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
@@ -202,12 +222,14 @@ const App = () => (
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 {/* Auth routes */}
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
-                <Route path="/pending-verification" element={<PendingVerification />} />
-                <Route path="/password-reset" element={<PasswordReset />} />
-                <Route path="/access-error" element={<AccessError />} />
+                <Route element={<PublicLayout />}>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
+                  <Route path="/pending-verification" element={<PendingVerification />} />
+                  <Route path="/password-reset" element={<PasswordReset />} />
+                  <Route path="/access-error" element={<AccessError />} />
+                </Route>
                 
                 {/* Legacy redirects - all go to /auth */}
                 <Route path="/choose" element={<Navigate to="/auth?mode=register" replace />} />
@@ -289,11 +311,15 @@ const App = () => (
                 <Route path="/agents" element={<PublicOurAgents />} />
                 <Route path="/find-agent" element={<PublicOurAgents />} />
                 <Route path="/agent/:id" element={<PublicAgentProfile />} />
-                <Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
-                <Route path="/hot-sheets" element={<RouteGuard requireAuth><HotSheetsEntry /></RouteGuard>} />
-                <Route path="/hot-sheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
-                <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
-                <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                {/* Buyer-role authenticated routes — wrapped in BuyerPortalHeader */}
+                <Route element={<BuyerLayout />}>
+                  <Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
+                  <Route path="/hot-sheets" element={<RouteGuard requireAuth><HotSheetsEntry /></RouteGuard>} />
+                  <Route path="/hot-sheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
+                  <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                  <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                  <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
+                </Route>
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
@@ -302,7 +328,6 @@ const App = () => (
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
-                <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
                 <Route path="/client/hotsheets/new" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/create-hotsheet" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />

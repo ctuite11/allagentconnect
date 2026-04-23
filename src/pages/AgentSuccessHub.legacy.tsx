@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import Navigation from "@/components/Navigation";
 import { TechCard } from "@/components/success-hub/TechCard";
 import { useUserRole } from "@/hooks/useUserRole";
 import { User } from "@supabase/supabase-js";
