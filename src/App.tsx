@@ -97,8 +97,9 @@ import SellerDashboard from "./pages/SellerDashboard";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
-import Navigation from "./components/Navigation";
 import VersionStamp from "./components/VersionStamp";
+import { BuyerPortalHeader } from "./components/layout/BuyerPortalHeader";
+import { AACPublicHeader } from "./components/layout/AACPublicHeader";
 import { NewMessageToastListener } from "./components/NewMessageToastListener";
 import CookieConsent from "./components/CookieConsent";
 
@@ -169,6 +170,26 @@ function AgentLayout() {
   return <AppShell><Outlet /></AppShell>;
 }
 
+/** Layout route: buyer-role authenticated routes (white top toolbar) */
+function BuyerLayout() {
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <BuyerPortalHeader />
+      <main className="flex-1"><Outlet /></main>
+    </div>
+  );
+}
+
+/** Layout route: AAC public/auth pages (minimal white header) */
+function PublicLayout() {
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <AACPublicHeader />
+      <main className="flex-1"><Outlet /></main>
+    </div>
+  );
+}
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -190,7 +211,6 @@ const App = () => (
             <ScrollRestoration />
             <>
               <ActiveAgentBanner />
-              <Navigation />
               <NewMessageToastListener />
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
