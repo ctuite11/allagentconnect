@@ -69,7 +69,71 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
 
       const normalizedEmail = email.trim().toLowerCase();
 
-      // 1. Insert into clients
+      // 1. Look up an existing CRM contact for this agent + email so we can
+      //    reactivate instead of hitting the unique-constraint error.
+      const { data: existing, error: existingErr } = await supabase
+        .from("clients")
+        .select("id, first_name, last_name, email, phone, client_type")
+        .eq("agent_id", user.id)
+        .ilike("email", normalizedEmail)
+        .maybeSingle();
+
+      if (existingErr && existingErr.code !== "PGRST116") {
+        failWithStep("lookup existing contact", existingErr);
+      }
+
+      if (existing) {
+        // Look up the latest relationship for this contact so we can branch.
+        const { data: rel } = await supabase
+          .from("client_agent_relationships")
+          .select("id, status, ended_at, client_id")
+          .eq("agent_id", user.id)
+          .eq("crm_client_id", existing.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const isActive = rel && !rel.ended_at && rel.status === "active";
+        const isPending = rel && !rel.ended_at && rel.status === "pending";
+
+        if (isActive) {
+          toast.error("This buyer is already in My Buyers.");
+          return;
+        }
+        if (isPending) {
+          toast.error("This buyer already has a pending invite.");
+          return;
+        }
+
+        // Ended / inactive / declined / no relationship → reactivate.
+        const { error: reactErr } = await supabase.rpc(
+          "agent_reactivate_buyer" as any,
+          { p_crm_client_id: existing.id }
+        );
+        if (reactErr) failWithStep("reactivate existing buyer", reactErr);
+
+        // Backfill phone if the existing record was missing one and the agent typed a new value.
+        if (!existing.phone && phone.trim()) {
+          await supabase
+            .from("clients")
+            .update({ phone: phone.trim() })
+            .eq("id", existing.id);
+        }
+
+        toast.success("Buyer reactivated.");
+        const reactivatedPayload: CreatedBuyerPayload = {
+          id: existing.id,
+          firstName: existing.first_name || firstName.trim(),
+          lastName: existing.last_name || lastName.trim(),
+          email: (existing.email || normalizedEmail).toLowerCase(),
+        };
+        resetForm();
+        onOpenChange(false);
+        onSuccess(reactivatedPayload);
+        return;
+      }
+
+      // 2. No existing contact → original insert path
       const { data: client, error: clientErr } = await supabase
         .from("clients")
         .insert({
@@ -86,28 +150,10 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
         .single();
 
       if (clientErr) {
-        // Friendly handling for duplicate email under same agent
-        if (
-          clientErr.code === "23505" ||
-          /clients_agent_email_unique/i.test(clientErr.message || "")
-        ) {
-          const { data: existing } = await supabase
-            .from("clients")
-            .select("id, first_name, last_name, email, client_type")
-            .eq("agent_id", user.id)
-            .ilike("email", normalizedEmail)
-            .maybeSingle();
-
-          const name = existing
-            ? `${existing.first_name ?? ""} ${existing.last_name ?? ""}`.trim() || normalizedEmail
-            : normalizedEmail;
-          toast.error(`A contact with this email already exists (${name}). Open Contacts to edit it.`);
-          return;
-        }
         failWithStep("insert clients", clientErr);
       }
 
-      // 2. Insert client_agent_relationships
+      // 3. Insert client_agent_relationships
       const { error: relErr } = await supabase
         .from("client_agent_relationships")
         .insert({
