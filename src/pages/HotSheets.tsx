@@ -650,12 +650,16 @@ const HotSheets = ({
         if (clients.length === 0) {
           // Hot sheet with no client — use criteria name or sheet name
           const key = `__no_client_${sheet.id}`;
+          const criteriaFirstName =
+            typeof sheet.criteria?.clientFirstName === "string" ? sheet.criteria.clientFirstName : undefined;
+          const criteriaLastName =
+            typeof sheet.criteria?.clientLastName === "string" ? sheet.criteria.clientLastName : undefined;
           clientMap.set(key, {
             clientId: sheet.id,
-            clientName: sheet.criteria?.clientFirstName
-              ? [sheet.criteria.clientFirstName, sheet.criteria.clientLastName].filter(Boolean).join(" ")
+            clientName: criteriaFirstName
+              ? [criteriaFirstName, criteriaLastName].filter(Boolean).join(" ")
               : sheet.name,
-            clientInitials: getInitials(sheet.criteria?.clientFirstName, sheet.criteria?.clientLastName),
+            clientInitials: getInitials(criteriaFirstName, criteriaLastName),
             hotSheets: [{ id: sheet.id, name: sheet.name }],
             photos: sheetPhotos,
             collaborators: collabInitials,

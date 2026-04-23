@@ -22,7 +22,7 @@ export interface HotSheetCriteriaCore {
 }
 
 export const DEFAULT_HOT_SHEET_STATUSES = ["coming_soon", "active", "off_market", "back_on_market"];
-export const HOT_SHEET_STATUS_ORDER = HOT_SHEET_FILTER_STATUSES.map((option) => option.value);
+export const HOT_SHEET_STATUS_ORDER: readonly string[] = HOT_SHEET_FILTER_STATUSES.map((option) => option.value);
 
 export const DEFAULT_HOT_SHEET_CRITERIA: HotSheetCriteriaCore = {
   state: "MA",
