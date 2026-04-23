@@ -469,7 +469,11 @@ const MyClients = () => {
 
   // Bulk hot sheet handler
   const handleBulkCreateHotSheet = () => {
-    // ...
+    if (selectedClients.size === 0) {
+      toast.error("Please select at least one contact");
+      return;
+    }
+    setBulkHotSheetDialogOpen(true);
   };
 
   // Reactivate buyer (Contacts → "Add to Buyers")
@@ -486,14 +490,6 @@ const MyClients = () => {
       console.error("[MyClients] Add to Buyers failed", err);
       toast.error(err?.message || "Couldn't add this contact to buyers");
     }
-  };
-
-  const _handleBulkCreateHotSheetOriginal = () => {
-    if (selectedClients.size === 0) {
-      toast.error("Please select at least one contact");
-      return;
-    }
-    setBulkHotSheetDialogOpen(true);
   };
 
   // Get selected clients for bulk hot sheet
