@@ -3996,6 +3996,14 @@ export type Database = {
         Args: { p_client_id: string }
         Returns: number
       }
+      agent_end_client_relationship_by_id: {
+        Args: { p_relationship_id: string }
+        Returns: number
+      }
+      agent_reactivate_buyer: {
+        Args: { p_crm_client_id: string }
+        Returns: Json
+      }
       auto_activate_listings: { Args: never; Returns: undefined }
       check_client_has_other_agent: {
         Args: { p_client_email: string }

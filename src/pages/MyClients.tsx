@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check, UserX } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check, UserX, UserPlus } from "lucide-react";
 import ContactQuickActions from "@/components/ContactQuickActions";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -474,6 +474,22 @@ const MyClients = () => {
       return;
     }
     setBulkHotSheetDialogOpen(true);
+  };
+
+  // Reactivate buyer (Contacts → "Add to Buyers")
+  const handleAddToBuyers = async (client: Client) => {
+    try {
+      const { error } = await (supabase as any).rpc("agent_reactivate_buyer", {
+        p_crm_client_id: client.id,
+      });
+      if (error) throw error;
+      toast.success(`${toTitleCase(client.first_name)} added to My Buyers`);
+      await fetchClients(user.id);
+      navigate(`/success-hub/buyers/${client.id}`);
+    } catch (err: any) {
+      console.error("[MyClients] Add to Buyers failed", err);
+      toast.error(err?.message || "Couldn't add this contact to buyers");
+    }
   };
 
   // Get selected clients for bulk hot sheet
@@ -1109,6 +1125,29 @@ const MyClients = () => {
                               </TooltipTrigger>
                               <TooltipContent sideOffset={8}>
                                 <p>End Relationship</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+
+                          {(client.relationship_status === "ended" ||
+                            !client.relationship_status ||
+                            client.relationship_status === "none") && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="px-2 group"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddToBuyers(client);
+                                  }}
+                                >
+                                  <UserPlus className="h-4 w-4 text-zinc-400 group-hover:text-emerald-600 transition-colors" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent sideOffset={8}>
+                                <p>Add to Buyers</p>
                               </TooltipContent>
                             </Tooltip>
                           )}
