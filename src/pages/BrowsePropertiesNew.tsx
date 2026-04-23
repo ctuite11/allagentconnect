@@ -1,13 +1,22 @@
-import { useState, useEffect } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
-import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
+import PropertyMap from "@/components/PropertyMap";
 import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
