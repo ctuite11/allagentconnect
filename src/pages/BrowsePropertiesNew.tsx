@@ -302,20 +302,26 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
       {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
       <main className="flex-1 bg-background">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-6">
-            <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
-            <p className="text-muted-foreground">
-              {dcmls
-                ? "Off-market and coming-soon listings shared by network agents"
-                : "Advanced search with comprehensive filters"}
-            </p>
-          </div>
+        <div className={forceBuyer ? "px-4 lg:px-6 py-4" : "container mx-auto px-4 py-8"}>
+          {/* Header — hidden in buyer mode */}
+          {!forceBuyer && (
+            <div className="mb-6">
+              <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
+              <p className="text-muted-foreground">
+                {dcmls
+                  ? "Off-market and coming-soon listings shared by network agents"
+                  : "Advanced search with comprehensive filters"}
+              </p>
+            </div>
+          )}
 
           <div className="mb-6 rounded-2xl border border-zinc-200/80 bg-white p-3">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <div className="relative min-w-[220px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_32%] lg:max-w-[560px]">
+            <div className={`flex flex-wrap items-center ${forceBuyer ? "lg:flex-nowrap gap-2" : "gap-2.5"}`}>
+              <div className={
+                forceBuyer
+                  ? "relative w-full sm:flex-1 sm:min-w-[200px] lg:max-w-[420px]"
+                  : "relative min-w-[220px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_32%] lg:max-w-[560px]"
+              }>
                 <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   value={locationInput}
@@ -361,7 +367,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
                     {priceButtonLabel}
                     <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${priceOpen ? "rotate-180" : ""}`} />
                   </Button>
@@ -419,7 +425,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
                     {bedsBathsButtonLabel}
                     <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${bedsBathsOpen ? "rotate-180" : ""}`} />
                   </Button>
@@ -489,7 +495,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
                     {propertyTypeButtonLabel}
                     <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
                   </Button>
@@ -535,7 +541,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700">
+                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] text-zinc-700`}>
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
                     More Filters
                     {activeFilterCount > 0 && (
@@ -562,14 +568,14 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
               <Button
                 variant="outline"
-                className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700"
+                className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] text-zinc-700`}
                 onClick={() => toast.info("Save search is coming soon")}
               >
                 Save Search
               </Button>
 
               <Button
-                className="h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] px-5 text-[13px] text-white"
+                className={`h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-white`}
                 onClick={applyLocationInput}
               >
                 Update
@@ -587,6 +593,50 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 <Search className="h-16 w-16 text-muted-foreground mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No properties found</h3>
                 <p className="text-muted-foreground">Try adjusting your search filters</p>
+              </div>
+            ) : forceBuyer ? (
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="lg:w-1/2 lg:sticky lg:top-24 self-start w-full">
+                  <div className="bg-card rounded-xl border border-zinc-200 overflow-hidden h-[calc(100vh-220px)]">
+                    <PropertyMap
+                      listings={listings}
+                      onListingClick={(listingId) => navigate(`/property/${listingId}`)}
+                    />
+                  </div>
+                </div>
+                <div className="lg:w-1/2 w-full">
+                  <div className="flex items-end justify-between mb-3">
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">Results</span>
+                      <span className="text-base font-semibold text-zinc-900">{listings.length} Homes</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-700 hover:text-zinc-900"
+                    >
+                      Recommended
+                      <ChevronDown className="h-3.5 w-3.5 text-zinc-500" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {listings.map((listing) => (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        viewMode="compact"
+                        showActions={false}
+                        agentInfo={
+                          agentMap[listing.agent_id]
+                            ? {
+                                name: agentMap[listing.agent_id].fullName,
+                                company: agentMap[listing.agent_id].company || undefined,
+                              }
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -647,7 +697,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
         </div>
       </main>
 
-      <Footer />
+      {!forceBuyer && <Footer />}
     </div>
   );
 };
