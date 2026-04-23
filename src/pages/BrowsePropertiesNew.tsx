@@ -1,44 +1,61 @@
 import { useState, useEffect, useMemo } from "react";
+import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
+import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
-import PropertyMap from "@/components/PropertyMap";
 import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, SlidersHorizontal, MapPin, ChevronDown } from "lucide-react";
+import { Search, Grid3x3, List, Map as MapIcon, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { useUserRole } from "@/hooks/useUserRole";
 import { isDcmlsHost } from "@/lib/host";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
+import PropertyMap from "@/components/PropertyMap";
 
-interface BrowsePropertiesNewProps {
-  /** Buyer-only chain: forces consumer search mode and skips host/agent banners.
-   *  Used by /client/search inside BuyerLayout (BuyerPortalHeader handles the toolbar). */
-  forceBuyer?: boolean;
-}
+const BED_PRESETS: Array<{ label: string; value: string }> = [
+  { label: "Any", value: "" },
+  { label: "1+", value: "1" },
+  { label: "2+", value: "2" },
+  { label: "3+", value: "3" },
+  { label: "4+", value: "4" },
+  { label: "5+", value: "5" },
+];
 
-const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = {}) => {
+const BATH_PRESETS: Array<{ label: string; value: string }> = [
+  { label: "Any", value: "" },
+  { label: "1+", value: "1" },
+  { label: "2+", value: "2" },
+  { label: "3+", value: "3" },
+  { label: "4+", value: "4" },
+  { label: "5+", value: "5" },
+];
+
+const INLINE_PROPERTY_TYPES: Array<{ label: string; value: string }> = [
+  { label: "Single family", value: "single_family" },
+  { label: "Condo", value: "condo" },
+  { label: "Multi family", value: "multi_family" },
+  { label: "Townhouse", value: "townhouse" },
+  { label: "Land", value: "land" },
+  { label: "Other", value: "other" },
+];
+
+const BrowsePropertiesNew = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
   const [user, setUser] = useState<any>(null);
+  const [viewType, setViewType] = useState<"grid" | "list" | "map">("grid");
 
   // Fetch current user
   useEffect(() => {
@@ -46,7 +63,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   }, []);
 
   const { role } = useUserRole(user);
-  const searchMode = forceBuyer ? "consumer" : role === "agent" ? "agent" : "consumer";
+  const searchMode = role === "agent" ? "agent" : "consumer";
 
   const [criteria, setCriteria] = useState<SearchCriteria>({
     listingType: "for_sale",
@@ -55,12 +72,31 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     towns: [],
     showAreas: true,
     propertyTypes: [],
-    statuses: ["new", "coming_soon", "active", "back_on_market"],
+    statuses: ["coming_soon", "active", "off_market", "back_on_market"],
     minPrice: "",
     maxPrice: "",
     bedrooms: "",
     bathrooms: "",
   });
+  const [locationInput, setLocationInput] = useState("");
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [bedsBathsOpen, setBedsBathsOpen] = useState(false);
+  const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
+  const [priceDraft, setPriceDraft] = useState({ min: "", max: "" });
+  const [bedsBathsDraft, setBedsBathsDraft] = useState({ bedrooms: "", bathrooms: "" });
+  const [propertyTypesDraft, setPropertyTypesDraft] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (criteria.zipCode) {
+      setLocationInput(criteria.zipCode);
+      return;
+    }
+    if (criteria.towns && criteria.towns.length > 0) {
+      setLocationInput(criteria.towns.join(", "));
+      return;
+    }
+    setLocationInput("");
+  }, [criteria.zipCode, criteria.towns]);
 
   // Initialize filters from URL params on mount
   useEffect(() => {
@@ -172,508 +208,442 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     return params;
   };
 
-  const handleViewResults = () => {
-    const params = buildQueryParams();
-    navigate(`/search?${params.toString()}`);
-  };
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (criteria.zipCode || (criteria.towns && criteria.towns.length > 0)) count += 1;
+    if (criteria.minPrice || criteria.maxPrice) count += 1;
+    if (criteria.bedrooms || criteria.bathrooms) count += 1;
+    if (criteria.propertyTypes && criteria.propertyTypes.length > 0) count += 1;
+    if (criteria.statuses && criteria.statuses.length > 0 && criteria.statuses.length < 4) count += 1;
+    return count;
+  }, [criteria]);
 
-  const dcmls = forceBuyer ? false : isDcmlsHost();
-  const [sortBy, setSortBy] = useState<"recommended" | "newest" | "price_asc" | "price_desc">("recommended");
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState(criteria.zipCode || "");
+  const priceButtonLabel = useMemo(() => {
+    if (!criteria.minPrice && !criteria.maxPrice) return "Price";
+    const minLabel = criteria.minPrice ? `$${Number(criteria.minPrice).toLocaleString()}` : "";
+    const maxLabel = criteria.maxPrice ? `$${Number(criteria.maxPrice).toLocaleString()}` : "";
 
-  useEffect(() => {
-    setSearchInput(criteria.zipCode || "");
-  }, [criteria.zipCode]);
+    if (minLabel && maxLabel) return `${minLabel} - ${maxLabel}`;
+    if (minLabel) return `${minLabel}+`;
+    return `Up to ${maxLabel}`;
+  }, [criteria.minPrice, criteria.maxPrice]);
 
-  const sortedListings = useMemo(() => {
-    const arr = [...listings];
-    switch (sortBy) {
-      case "newest":
-        return arr.sort(
-          (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
-        );
-      case "price_asc":
-        return arr.sort((a, b) => (a.price || 0) - (b.price || 0));
-      case "price_desc":
-        return arr.sort((a, b) => (b.price || 0) - (a.price || 0));
-      default:
-        return arr;
+  const bedsBathsButtonLabel = useMemo(() => {
+    const beds = criteria.bedrooms ? `${criteria.bedrooms}+ bd` : "";
+    const baths = criteria.bathrooms ? `${criteria.bathrooms}+ ba` : "";
+
+    if (beds && baths) return `${beds}, ${baths}`;
+    if (beds) return beds;
+    if (baths) return baths;
+    return "Beds & baths";
+  }, [criteria.bedrooms, criteria.bathrooms]);
+
+  const propertyTypeButtonLabel = useMemo(() => {
+    const selected = criteria.propertyTypes || [];
+    if (selected.length === 0) return "Property type";
+    if (selected.length === 1) {
+      const type = INLINE_PROPERTY_TYPES.find((entry) => entry.value === selected[0]);
+      return type?.label || selected[0];
     }
-  }, [listings, sortBy]);
+    return `${selected.length} selected`;
+  }, [criteria.propertyTypes]);
 
-  const activeFilterCount =
-    (criteria.propertyTypes?.length || 0) +
-    (criteria.minPrice ? 1 : 0) +
-    (criteria.maxPrice ? 1 : 0) +
-    (criteria.bedrooms ? 1 : 0) +
-    (criteria.bathrooms ? 1 : 0) +
-    (criteria.minLivingArea ? 1 : 0) +
-    (criteria.maxLivingArea ? 1 : 0) +
-    (criteria.towns?.length || 0) +
-    (criteria.neighborhoods?.length || 0);
-
-  const applySearchInput = () => {
-    const raw = searchInput.trim();
+  const applyLocationInput = () => {
+    const raw = locationInput.trim();
     if (!raw) {
-      setCriteria((prev) => ({ ...prev, zipCode: undefined, towns: [] }));
+      setCriteria((prev) => ({ ...prev, zipCode: "", towns: [] }));
       return;
     }
+
     if (/^\d{5}$/.test(raw)) {
       setCriteria((prev) => ({ ...prev, zipCode: raw, towns: [] }));
       return;
     }
+
     const towns = raw
       .split(",")
-      .map((t) => t.trim())
+      .map((item) => item.trim())
       .filter(Boolean);
-    setCriteria((prev) => ({ ...prev, zipCode: undefined, towns }));
+
+    setCriteria((prev) => ({ ...prev, zipCode: "", towns }));
   };
 
-  // ---- Inline popover labels ----
-  const formatPriceShort = (v: string) => {
-    const n = parseFloat(v);
-    if (!n || Number.isNaN(n)) return "";
-    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
-    if (n >= 1_000) return `$${Math.round(n / 1_000)}k`;
-    return `$${n}`;
+  const applyPriceDraft = () => {
+    setCriteria((prev) => ({
+      ...prev,
+      minPrice: priceDraft.min,
+      maxPrice: priceDraft.max,
+    }));
+    setPriceOpen(false);
   };
-  const priceLabel = (() => {
-    const min = formatPriceShort(criteria.minPrice || "");
-    const max = formatPriceShort(criteria.maxPrice || "");
-    if (min && max) return `${min} – ${max}`;
-    if (min) return `${min}+`;
-    if (max) return `Up to ${max}`;
-    return "Price";
-  })();
-  const bedsBathsLabel = (() => {
-    const bd = criteria.bedrooms ? `${criteria.bedrooms}+ bd` : "";
-    const ba = criteria.bathrooms ? `${criteria.bathrooms}+ ba` : "";
-    if (bd && ba) return `${bd}, ${ba}`;
-    if (bd) return bd;
-    if (ba) return ba;
-    return "Beds & baths";
-  })();
-  const PROPERTY_TYPE_OPTIONS: { value: string; label: string }[] = [
-    { value: "single_family", label: "Single Family" },
-    { value: "condo", label: "Condo" },
-    { value: "multi_family", label: "Multi Family" },
-    { value: "townhouse", label: "Townhouse" },
-    { value: "land", label: "Land" },
-    { value: "other", label: "Other" },
-  ];
-  const propertyTypeLabel = (() => {
-    const arr = criteria.propertyTypes || [];
-    if (arr.length === 0) return "Property type";
-    if (arr.length === 1) {
-      const found = PROPERTY_TYPE_OPTIONS.find((o) => o.value === arr[0]);
-      return found?.label || "1 selected";
-    }
-    return `${arr.length} selected`;
-  })();
 
-  // Local drafts for popovers (commit on Apply)
-  const [priceDraft, setPriceDraft] = useState({ min: criteria.minPrice || "", max: criteria.maxPrice || "" });
-  const [bbDraft, setBbDraft] = useState({ bd: criteria.bedrooms || "", ba: criteria.bathrooms || "" });
-  const [typesDraft, setTypesDraft] = useState<string[]>(criteria.propertyTypes || []);
-  useEffect(() => {
-    setPriceDraft({ min: criteria.minPrice || "", max: criteria.maxPrice || "" });
-  }, [criteria.minPrice, criteria.maxPrice]);
-  useEffect(() => {
-    setBbDraft({ bd: criteria.bedrooms || "", ba: criteria.bathrooms || "" });
-  }, [criteria.bedrooms, criteria.bathrooms]);
-  useEffect(() => {
-    setTypesDraft(criteria.propertyTypes || []);
-  }, [criteria.propertyTypes]);
+  const applyBedsBathsDraft = () => {
+    setCriteria((prev) => ({
+      ...prev,
+      bedrooms: bedsBathsDraft.bedrooms,
+      bathrooms: bedsBathsDraft.bathrooms,
+    }));
+    setBedsBathsOpen(false);
+  };
 
-  const STEPS = ["", "1", "2", "3", "4", "5"];
-  const SegRow = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <div className="inline-flex h-9 w-full items-center rounded-full border border-zinc-200 bg-white p-0.5">
-      {STEPS.map((s) => {
-        const active = value === s;
-        const label = s === "" ? "Any" : `${s}+`;
-        return (
-          <button
-            key={s || "any"}
-            type="button"
-            onClick={() => onChange(s)}
-            className={`flex-1 h-8 rounded-full text-[12px] font-medium transition-all ${
-              active ? "bg-[#0E56F5] text-white" : "text-zinc-600 hover:text-zinc-900"
-            }`}
-          >
-            {label}
-          </button>
-        );
-      })}
-    </div>
-  );
+  const applyPropertyTypesDraft = () => {
+    setCriteria((prev) => ({ ...prev, propertyTypes: propertyTypesDraft }));
+    setPropertyTypeOpen(false);
+  };
+
+  const dcmls = isDcmlsHost();
 
   return (
-    <div className={`min-h-screen flex flex-col bg-white ${dcmls || forceBuyer ? "" : "pt-14"}`}>
-      {forceBuyer ? null : dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
+    <div className={`min-h-screen flex flex-col ${dcmls ? "" : "pt-20"}`}>
+      {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
-      {dcmls && (
-        <div className="border-b border-zinc-200/60 bg-white">
-          <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-2">
-            <p className="text-[12px] text-zinc-500">
-              Off-market and coming-soon listings shared by network agents
+      <main className="flex-1 bg-background">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-6">
+            <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
+            <p className="text-muted-foreground">
+              {dcmls
+                ? "Off-market and coming-soon listings shared by network agents"
+                : "Advanced search with comprehensive filters"}
             </p>
           </div>
-        </div>
-      )}
 
-      {/* Sticky filter bar */}
-      <div className="sticky top-14 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/85 border-b border-zinc-200/60">
-        <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Search */}
-            <div className="relative min-w-[220px] flex-1 sm:flex-initial sm:w-[300px]">
-              <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <Input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") applySearchInput();
-                }}
-                placeholder="City, neighborhood, or ZIP"
-                className="pl-9 h-9 text-[13px] border-zinc-200/80 rounded-full"
-              />
-            </div>
-
-            {/* For Sale / For Rent toggle */}
-            <div className="inline-flex h-9 items-center rounded-full border border-zinc-200/80 bg-zinc-50 p-0.5 ring-1 ring-zinc-100/90 shrink-0">
-              <button
-                type="button"
-                className={`h-8 min-w-[80px] px-3 rounded-full inline-flex items-center justify-center text-[13px] font-semibold leading-none transition-all ${
-                  criteria.listingType === "for_sale"
-                    ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
-                    : "text-zinc-600 hover:text-zinc-900"
-                }`}
-                onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_sale" }))}
-              >
-                For Sale
-              </button>
-              <button
-                type="button"
-                className={`h-8 min-w-[80px] px-3 rounded-full inline-flex items-center justify-center text-[13px] font-semibold leading-none transition-all ${
-                  criteria.listingType === "for_rent"
-                    ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
-                    : "text-zinc-600 hover:text-zinc-900"
-                }`}
-                onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_rent" }))}
-              >
-                For Rent
-              </button>
-            </div>
-
-            {/* Price */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700 inline-flex items-center gap-1.5"
-                >
-                  {priceLabel}
-                  <ChevronDown className="h-4 w-4 text-zinc-500" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-[300px] p-4">
-                <p className="text-[12px] font-semibold text-zinc-700 mb-2">Price range</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-[11px] text-zinc-500">Min</Label>
-                    <Input
-                      type="number"
-                      placeholder="No min"
-                      value={priceDraft.min}
-                      onChange={(e) => setPriceDraft((p) => ({ ...p, min: e.target.value }))}
-                      className="h-9 text-[13px] mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-[11px] text-zinc-500">Max</Label>
-                    <Input
-                      type="number"
-                      placeholder="No max"
-                      value={priceDraft.max}
-                      onChange={(e) => setPriceDraft((p) => ({ ...p, max: e.target.value }))}
-                      className="h-9 text-[13px] mt-1"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-2 mt-4">
-                  <Button
-                    variant="ghost"
-                    className="h-8 text-[12px]"
-                    onClick={() => {
-                      setPriceDraft({ min: "", max: "" });
-                      setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
-                    }}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    className="h-8 text-[12px] bg-[#0E56F5] hover:bg-[#0B46CC] text-white rounded-full px-4"
-                    onClick={() =>
-                      setCriteria((prev) => ({
-                        ...prev,
-                        minPrice: priceDraft.min,
-                        maxPrice: priceDraft.max,
-                      }))
-                    }
-                  >
-                    Apply
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Beds & baths */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700 inline-flex items-center gap-1.5"
-                >
-                  {bedsBathsLabel}
-                  <ChevronDown className="h-4 w-4 text-zinc-500" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-[360px] p-4">
-                <div>
-                  <p className="text-[12px] font-semibold text-zinc-700 mb-2">Bedrooms</p>
-                  <SegRow value={bbDraft.bd} onChange={(v) => setBbDraft((p) => ({ ...p, bd: v }))} />
-                </div>
-                <div className="mt-4">
-                  <p className="text-[12px] font-semibold text-zinc-700 mb-2">Bathrooms</p>
-                  <SegRow value={bbDraft.ba} onChange={(v) => setBbDraft((p) => ({ ...p, ba: v }))} />
-                </div>
-                <div className="flex items-center justify-end gap-2 mt-4">
-                  <Button
-                    variant="ghost"
-                    className="h-8 text-[12px]"
-                    onClick={() => {
-                      setBbDraft({ bd: "", ba: "" });
-                      setCriteria((prev) => ({ ...prev, bedrooms: "", bathrooms: "" }));
-                    }}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    className="h-8 text-[12px] bg-[#0E56F5] hover:bg-[#0B46CC] text-white rounded-full px-4"
-                    onClick={() =>
-                      setCriteria((prev) => ({
-                        ...prev,
-                        bedrooms: bbDraft.bd,
-                        bathrooms: bbDraft.ba,
-                      }))
-                    }
-                  >
-                    Apply
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Property type */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700 inline-flex items-center gap-1.5"
-                >
-                  {propertyTypeLabel}
-                  <ChevronDown className="h-4 w-4 text-zinc-500" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-[260px] p-4">
-                <p className="text-[12px] font-semibold text-zinc-700 mb-2">Property type</p>
-                <div className="space-y-2">
-                  {PROPERTY_TYPE_OPTIONS.map((opt) => {
-                    const checked = typesDraft.includes(opt.value);
-                    return (
-                      <label
-                        key={opt.value}
-                        className="flex items-center gap-2 text-[13px] text-zinc-700 cursor-pointer"
-                      >
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(c) =>
-                            setTypesDraft((prev) =>
-                              c ? [...prev, opt.value] : prev.filter((v) => v !== opt.value),
-                            )
-                          }
-                        />
-                        {opt.label}
-                      </label>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-end gap-2 mt-4">
-                  <Button
-                    variant="ghost"
-                    className="h-8 text-[12px]"
-                    onClick={() => {
-                      setTypesDraft([]);
-                      setCriteria((prev) => ({ ...prev, propertyTypes: [] }));
-                    }}
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    className="h-8 text-[12px] bg-[#0E56F5] hover:bg-[#0B46CC] text-white rounded-full px-4"
-                    onClick={() =>
-                      setCriteria((prev) => ({ ...prev, propertyTypes: typesDraft }))
-                    }
-                  >
-                    Apply
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* More Filters (opens Sheet with full UnifiedPropertySearch) */}
-            <Sheet open={moreFiltersOpen} onOpenChange={setMoreFiltersOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700 inline-flex items-center gap-1.5"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  More Filters
-                  {activeFilterCount > 0 && (
-                    <Badge className="ml-1 h-5 px-1.5 bg-zinc-900 text-white hover:bg-zinc-900">
-                      {activeFilterCount}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
-                <SheetHeader className="mb-4">
-                  <SheetTitle>All Filters</SheetTitle>
-                </SheetHeader>
-                <UnifiedPropertySearch
-                  criteria={criteria}
-                  onCriteriaChange={setCriteria}
-                  resultsCount={listings.length}
-                  showResultsCount={true}
-                  onSearch={() => {
-                    fetchListings();
-                    setMoreFiltersOpen(false);
+          <div className="mb-6 rounded-2xl border border-zinc-200/80 bg-white p-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="relative min-w-[220px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_32%] lg:max-w-[560px]">
+                <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") applyLocationInput();
                   }}
-                  mode={searchMode}
+                  placeholder="City, neighborhood, or ZIP"
+                  className="pl-9 h-9 text-[13px] border-zinc-200 rounded-full"
                 />
-              </SheetContent>
-            </Sheet>
-
-            <div className="flex-1" />
-
-            <Button
-              variant="outline"
-              className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700"
-              onClick={() => toast.info("Save search is coming soon")}
-            >
-              Save Search
-            </Button>
-
-            <Button
-              className="h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] px-5 text-[13px] text-white"
-              onClick={() => {
-                applySearchInput();
-                fetchListings();
-              }}
-            >
-              Update
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content: map + results split */}
-      <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3 flex-1">
-        <div className="grid grid-cols-1 lg:grid-cols-[52%_48%] gap-4 lg:h-[calc(100dvh-9rem)]">
-          {/* Map panel */}
-          <section className="hidden lg:block rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden lg:sticky lg:top-[7rem] lg:h-full">
-            {loading ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
               </div>
-            ) : listings.length > 0 ? (
-              <div className="h-full">
-                <PropertyMap
-                  listings={listings}
-                  onListingClick={(id) => navigate(`/property/${id}`)}
-                />
+
+              <div className="inline-flex h-9 items-center rounded-full border border-zinc-200 bg-zinc-50 p-0.5 shrink-0">
+                <button
+                  className={`h-8 min-w-[86px] px-3 rounded-full inline-flex items-center justify-center text-[13px] font-semibold transition-all ${
+                    criteria.listingType === "for_sale"
+                      ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
+                      : "text-zinc-600 hover:text-zinc-900"
+                  }`}
+                  onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_sale" }))}
+                >
+                  For Sale
+                </button>
+                <button
+                  className={`h-8 min-w-[86px] px-3 rounded-full inline-flex items-center justify-center text-[13px] font-semibold transition-all ${
+                    criteria.listingType === "for_rent"
+                      ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
+                      : "text-zinc-600 hover:text-zinc-900"
+                  }`}
+                  onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_rent" }))}
+                >
+                  For Rent
+                </button>
+              </div>
+
+              <Popover
+                open={priceOpen}
+                onOpenChange={(open) => {
+                  setPriceOpen(open);
+                  if (open) {
+                    setPriceDraft({ min: criteria.minPrice || "", max: criteria.maxPrice || "" });
+                  }
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                    {priceButtonLabel}
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${priceOpen ? "rotate-180" : ""}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-[320px] rounded-xl border-zinc-200 p-4">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-zinc-600">Min</Label>
+                        <Input
+                          value={priceDraft.min}
+                          onChange={(e) => setPriceDraft((prev) => ({ ...prev, min: e.target.value.replace(/[^\d]/g, "") }))}
+                          placeholder="No min"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-zinc-600">Max</Label>
+                        <Input
+                          value={priceDraft.max}
+                          onChange={(e) => setPriceDraft((prev) => ({ ...prev, max: e.target.value.replace(/[^\d]/g, "") }))}
+                          placeholder="No max"
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 flex-1"
+                        onClick={() => {
+                          setPriceDraft({ min: "", max: "" });
+                          setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
+                          setPriceOpen(false);
+                        }}
+                      >
+                        Reset
+                      </Button>
+                      <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPriceDraft}>
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover
+                open={bedsBathsOpen}
+                onOpenChange={(open) => {
+                  setBedsBathsOpen(open);
+                  if (open) {
+                    setBedsBathsDraft({ bedrooms: criteria.bedrooms || "", bathrooms: criteria.bathrooms || "" });
+                  }
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                    {bedsBathsButtonLabel}
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${bedsBathsOpen ? "rotate-180" : ""}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-[360px] rounded-xl border-zinc-200 p-4">
+                  <p className="text-sm font-semibold text-zinc-900">Bedrooms</p>
+                  <div className="mt-2 grid grid-cols-6 gap-1">
+                    {BED_PRESETS.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        className={`h-8 rounded-full border text-xs font-medium ${
+                          bedsBathsDraft.bedrooms === preset.value
+                            ? "border-[#0E56F5] text-[#0E56F5]"
+                            : "border-zinc-200 text-zinc-700"
+                        }`}
+                        onClick={() => setBedsBathsDraft((prev) => ({ ...prev, bedrooms: preset.value }))}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-sm font-semibold text-zinc-900">Bathrooms</p>
+                  <div className="mt-2 grid grid-cols-6 gap-1">
+                    {BATH_PRESETS.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        className={`h-8 rounded-full border text-xs font-medium ${
+                          bedsBathsDraft.bathrooms === preset.value
+                            ? "border-[#0E56F5] text-[#0E56F5]"
+                            : "border-zinc-200 text-zinc-700"
+                        }`}
+                        onClick={() => setBedsBathsDraft((prev) => ({ ...prev, bathrooms: preset.value }))}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 flex-1"
+                      onClick={() => {
+                        setBedsBathsDraft({ bedrooms: "", bathrooms: "" });
+                        setCriteria((prev) => ({ ...prev, bedrooms: "", bathrooms: "" }));
+                        setBedsBathsOpen(false);
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyBedsBathsDraft}>
+                      Apply
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover
+                open={propertyTypeOpen}
+                onOpenChange={(open) => {
+                  setPropertyTypeOpen(open);
+                  if (open) {
+                    setPropertyTypesDraft([...(criteria.propertyTypes || [])]);
+                  }
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                    {propertyTypeButtonLabel}
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-[320px] rounded-xl border-zinc-200 p-4">
+                  <div className="space-y-2">
+                    {INLINE_PROPERTY_TYPES.map((type) => {
+                      const checked = propertyTypesDraft.includes(type.value);
+                      return (
+                        <label key={type.value} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-zinc-700 hover:bg-zinc-50">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => {
+                              setPropertyTypesDraft((prev) =>
+                                checked ? prev.filter((item) => item !== type.value) : [...prev, type.value]
+                              );
+                            }}
+                          />
+                          <span>{type.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 flex-1"
+                      onClick={() => {
+                        setPropertyTypesDraft([]);
+                        setCriteria((prev) => ({ ...prev, propertyTypes: [] }));
+                        setPropertyTypeOpen(false);
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPropertyTypesDraft}>
+                      Apply
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    More Filters
+                    {activeFilterCount > 0 && (
+                      <Badge className="ml-2 bg-zinc-900 text-white hover:bg-zinc-900">{activeFilterCount}</Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-[560px] overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>More Filters</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4">
+                    <UnifiedPropertySearch
+                      criteria={criteria}
+                      onCriteriaChange={setCriteria}
+                      resultsCount={listings.length}
+                      showResultsCount={true}
+                      onSearch={fetchListings}
+                      mode={searchMode}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              <Button
+                variant="outline"
+                className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700"
+                onClick={() => toast.info("Save search is coming soon")}
+              >
+                Save Search
+              </Button>
+
+              <Button
+                className="h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] px-5 text-[13px] text-white"
+                onClick={applyLocationInput}
+              >
+                Update
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            {loading ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+                <Search className="h-16 w-16 text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No properties found</h3>
+                <p className="text-muted-foreground">Try adjusting your search filters</p>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
-                <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
-                <p className="text-sm text-zinc-600 max-w-md">
-                  No homes match your current filters. Try widening price or area.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* Results panel */}
-          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden lg:h-full flex flex-col">
-            <div className="px-4 py-3 border-b border-zinc-200/60 bg-white flex items-center justify-between gap-3 shrink-0">
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-zinc-600 tracking-[0.08em]">RESULTS</p>
-                <p className="text-sm font-medium text-zinc-900 mt-0.5">
-                  {sortedListings.length.toLocaleString()} Homes
-                </p>
-              </div>
-              <div className="w-[180px] shrink-0">
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                  <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
-                    <SelectValue placeholder="Sort" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recommended">Recommended</SelectItem>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                    <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0E56F5]" />
+              <>
+                <div className="flex items-center justify-end mb-4 gap-2">
+                  <Button
+                    variant={viewType === "grid" ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => setViewType("grid")}
+                  >
+                    <Grid3x3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewType === "list" ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => setViewType("list")}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewType === "map" ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => setViewType("map")}
+                  >
+                    <MapIcon className="h-4 w-4" />
+                  </Button>
                 </div>
-              ) : sortedListings.length === 0 ? (
-                <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-                  <Search className="h-12 w-12 text-zinc-400 mb-3" />
-                  <h3 className="text-base font-semibold text-zinc-900 mb-1">No properties found</h3>
-                  <p className="text-sm text-zinc-500">Try adjusting your search filters</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {sortedListings.map((listing) => (
-                    <ListingCard
-                      key={listing.id}
-                      listing={listing}
-                      viewMode="compact"
-                      showActions={false}
-                      agentInfo={
-                        agentMap[listing.agent_id]
-                          ? {
-                              name: agentMap[listing.agent_id].fullName,
-                              company: agentMap[listing.agent_id].company || undefined,
-                            }
-                          : undefined
-                      }
+
+                {viewType === "map" ? (
+                  <div className="bg-card rounded-lg border p-4">
+                    <PropertyMap
+                      listings={listings}
+                      onListingClick={(listingId) => navigate(`/property/${listingId}`)}
                     />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
+                  </div>
+                ) : (
+                  <div className={viewType === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-4"}>
+                    {listings.map((listing) => (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        viewMode="compact"
+                        showActions={false}
+                        agentInfo={
+                          agentMap[listing.agent_id]
+                            ? {
+                                name: agentMap[listing.agent_id].fullName,
+                                company: agentMap[listing.agent_id].company || undefined,
+                              }
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };
