@@ -311,11 +311,15 @@ const App = () => (
                 <Route path="/agents" element={<PublicOurAgents />} />
                 <Route path="/find-agent" element={<PublicOurAgents />} />
                 <Route path="/agent/:id" element={<PublicAgentProfile />} />
-                <Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
-                <Route path="/hot-sheets" element={<RouteGuard requireAuth><HotSheetsEntry /></RouteGuard>} />
-                <Route path="/hot-sheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
-                <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
-                <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                {/* Buyer-role authenticated routes — wrapped in BuyerPortalHeader */}
+                <Route element={<BuyerLayout />}>
+                  <Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
+                  <Route path="/hot-sheets" element={<RouteGuard requireAuth><HotSheetsEntry /></RouteGuard>} />
+                  <Route path="/hot-sheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
+                  <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                  <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                  <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
+                </Route>
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
@@ -324,7 +328,6 @@ const App = () => (
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
-                <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
                 <Route path="/client/hotsheets/new" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/create-hotsheet" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
