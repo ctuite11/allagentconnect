@@ -35,6 +35,7 @@ import ManageTeam from "./pages/ManageTeam";
 import TeamProfile from "./pages/TeamProfile";
 import ManageCoverageAreas from "./pages/ManageCoverageAreas";
 import BrowsePropertiesNew from "./pages/BrowsePropertiesNew";
+import BuyerSearch from "./pages/BuyerSearch";
 import SearchResults from "./pages/SearchResults";
 import PublicSearchResults from "./pages/PublicSearchResults";
 import OurAgents from "./pages/OurAgents";
@@ -320,7 +321,7 @@ const App = () => (
                   <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                   <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                   <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
-                  <Route path="/client/search" element={<RouteGuard requireAuth><BrowsePropertiesNew /></RouteGuard>} />
+                  <Route path="/client/search" element={<RouteGuard requireAuth><BuyerSearch /></RouteGuard>} />
                   <Route path="/client/account" element={<RouteGuard requireAuth><ClientAgentSettings /></RouteGuard>} />
                 </Route>
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
