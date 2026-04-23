@@ -495,7 +495,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] font-medium text-zinc-700">
+                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
                     {propertyTypeButtonLabel}
                     <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
                   </Button>
@@ -541,7 +541,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700">
+                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] text-zinc-700`}>
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
                     More Filters
                     {activeFilterCount > 0 && (
@@ -568,14 +568,14 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
               <Button
                 variant="outline"
-                className="h-9 rounded-full border-zinc-200 px-4 text-[13px] text-zinc-700"
+                className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] text-zinc-700`}
                 onClick={() => toast.info("Save search is coming soon")}
               >
                 Save Search
               </Button>
 
               <Button
-                className="h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] px-5 text-[13px] text-white"
+                className={`h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-white`}
                 onClick={applyLocationInput}
               >
                 Update
