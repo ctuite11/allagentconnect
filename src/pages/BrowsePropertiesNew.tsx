@@ -243,6 +243,64 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const placesServiceRef = useRef<any>(null);
   const sessionTokenRef = useRef<any>(null);
   const suggestDebounceRef = useRef<number | undefined>(undefined);
+  const [placesReady, setPlacesReady] = useState<boolean>(
+    typeof window !== "undefined" && !!(window as any).google?.maps?.places,
+  );
+
+  // Load Google Maps + Places script on mount (mirrors PropertyMap key resolution).
+  useEffect(() => {
+    if ((window as any).google?.maps?.places) {
+      setPlacesReady(true);
+      return;
+    }
+
+    const resolveKey = (): string => {
+      const envKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim();
+      if (envKey) return envKey;
+      try {
+        const urlKey = new URLSearchParams(window.location.search).get("gmaps_key")?.trim();
+        if (urlKey) {
+          try {
+            localStorage.setItem("aac_gmaps_key", urlKey);
+          } catch {}
+          return urlKey;
+        }
+        const stored = localStorage.getItem("aac_gmaps_key")?.trim();
+        if (stored) return stored;
+      } catch {}
+      return "";
+    };
+
+    const apiKey = resolveKey();
+    if (!apiKey) return; // graceful fallback: plain-text input still works
+
+    const existing = document.getElementById("google-maps-js") as HTMLScriptElement | null;
+    const handleReady = () => {
+      if ((window as any).google?.maps?.places) setPlacesReady(true);
+    };
+
+    if (existing) {
+      if ((window as any).google?.maps?.places) {
+        setPlacesReady(true);
+      } else {
+        existing.addEventListener("load", handleReady, { once: true });
+      }
+      return () => {
+        existing.removeEventListener("load", handleReady);
+      };
+    }
+
+    const script = document.createElement("script");
+    script.id = "google-maps-js";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.addEventListener("load", handleReady, { once: true });
+    document.head.appendChild(script);
+    return () => {
+      script.removeEventListener("load", handleReady);
+    };
+  }, []);
 
   const ensurePlacesLib = (): boolean => {
     const g = (window as any).google;
@@ -294,7 +352,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     return () => {
       if (suggestDebounceRef.current) window.clearTimeout(suggestDebounceRef.current);
     };
-  }, [searchInput]);
+  }, [searchInput, placesReady]);
 
   const commitPlace = (s: PlaceSuggestion) => {
     if (!ensurePlacesLib()) {
