@@ -1129,6 +1129,29 @@ const MyClients = () => {
                             </Tooltip>
                           )}
 
+                          {(client.relationship_status === "ended" ||
+                            !client.relationship_status ||
+                            client.relationship_status === "none") && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="px-2 group"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddToBuyers(client);
+                                  }}
+                                >
+                                  <UserPlus className="h-4 w-4 text-zinc-400 group-hover:text-emerald-600 transition-colors" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent sideOffset={8}>
+                                <p>Add to Buyers</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
