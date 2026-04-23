@@ -71,6 +71,7 @@ import AdminInviteAudit from "./pages/AdminInviteAudit";
 import NetworkIntelligence from "./pages/NetworkIntelligence";
 
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientAgentSettings from "./pages/ClientAgentSettings";
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
