@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import ListingCard from "@/components/ListingCard";
