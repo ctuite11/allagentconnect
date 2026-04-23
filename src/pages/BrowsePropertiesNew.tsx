@@ -594,6 +594,50 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 <h3 className="text-xl font-semibold mb-2">No properties found</h3>
                 <p className="text-muted-foreground">Try adjusting your search filters</p>
               </div>
+            ) : forceBuyer ? (
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="lg:w-1/2 lg:sticky lg:top-24 self-start w-full">
+                  <div className="bg-card rounded-xl border border-zinc-200 overflow-hidden h-[calc(100vh-220px)]">
+                    <PropertyMap
+                      listings={listings}
+                      onListingClick={(listingId) => navigate(`/property/${listingId}`)}
+                    />
+                  </div>
+                </div>
+                <div className="lg:w-1/2 w-full">
+                  <div className="flex items-end justify-between mb-3">
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">Results</span>
+                      <span className="text-base font-semibold text-zinc-900">{listings.length} Homes</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-700 hover:text-zinc-900"
+                    >
+                      Recommended
+                      <ChevronDown className="h-3.5 w-3.5 text-zinc-500" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {listings.map((listing) => (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        viewMode="compact"
+                        showActions={false}
+                        agentInfo={
+                          agentMap[listing.agent_id]
+                            ? {
+                                name: agentMap[listing.agent_id].fullName,
+                                company: agentMap[listing.agent_id].company || undefined,
+                              }
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
                 <div className="flex items-center justify-end mb-4 gap-2">
@@ -653,7 +697,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
         </div>
       </main>
 
-      <Footer />
+      {!forceBuyer && <Footer />}
     </div>
   );
 };
