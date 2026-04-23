@@ -1,32 +1,42 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
+import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 
 /**
  * Canonical buyer portal header.
  * White top toolbar — used for ALL buyer-role authenticated routes.
- * This is the only buyer header path. The legacy global Navigation is removed.
+ *
+ * Guarantees (do not regress):
+ *  - sticky top-0, z-50, 56px (h-14) row
+ *  - Messages nav item is position: relative so its absolute unread badge
+ *    anchors correctly on desktop AND mobile
+ *  - Mobile menu state resets on every route change
+ *  - No CSS transform/overflow on parent containers (would break absolute badge)
  */
 
-const BUYER_NAV = [
-  { to: "/browse", label: "Search" },
-  { to: "/client/dashboard", label: "Dashboard" },
-  { to: "/favorites", label: "Favorites" },
-  { to: "/hot-sheets", label: "Hot Sheets" },
-  { to: "/messages", label: "Messages" },
-  { to: "/client/account", label: "Account" },
+const BUYER_NAV: { to: string; label: string; key: string }[] = [
+  { to: "/client/search", label: "Search", key: "search" },
+  { to: "/client/dashboard", label: "Dashboard", key: "dashboard" },
+  { to: "/favorites", label: "Favorites", key: "favorites" },
+  { to: "/hot-sheets", label: "Hot Sheets", key: "hot-sheets" },
+  { to: "/messages", label: "Messages", key: "messages" },
+  { to: "/client/account", label: "Account", key: "account" },
 ];
 
 export function BuyerPortalHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
+  const { unreadCount } = useUnreadConversations();
 
+  // Reset mobile menu on every route change
   useEffect(() => {
     setOpen(false);
-  }, []);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -36,9 +46,11 @@ export function BuyerPortalHeader() {
     }
   };
 
+  const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
+
   return (
-    <header className="w-full bg-white border-b border-zinc-200">
-      <div className="mx-auto max-w-7xl px-5 h-16 flex items-center justify-between gap-6">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">
+      <div className="mx-auto max-w-7xl px-5 h-14 flex items-center justify-between gap-6">
         {/* Brand lockup */}
         <Link
           to="/client/dashboard"
@@ -53,21 +65,33 @@ export function BuyerPortalHeader() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {BUYER_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive
-                    ? "text-[#0E56F5] font-medium"
-                    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {BUYER_NAV.map((item) => {
+            const isMessages = item.key === "messages";
+            return (
+              <div key={item.to} className="relative">
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-md text-sm transition-colors ${
+                      isActive
+                        ? "text-[#0E56F5] font-medium"
+                        : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
+                    }`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+                {isMessages && unreadCount > 0 && (
+                  <span
+                    aria-label={`${unreadCount} unread messages`}
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#0E56F5] text-white text-[10px] font-semibold flex items-center justify-center pointer-events-none"
+                  >
+                    {badgeText}
+                  </span>
+                )}
+              </div>
+            );
+          })}
           <Button
             onClick={handleLogout}
             variant="ghost"
@@ -82,11 +106,18 @@ export function BuyerPortalHeader() {
         {/* Mobile toggle */}
         <button
           type="button"
-          className="md:hidden p-2 -mr-2 text-zinc-700"
+          className="md:hidden p-2 -mr-2 text-zinc-700 relative"
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
         >
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {!open && unreadCount > 0 && (
+            <span
+              aria-hidden="true"
+              className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#0E56F5]"
+            />
+          )}
         </button>
       </div>
 
@@ -94,22 +125,34 @@ export function BuyerPortalHeader() {
       {open && (
         <div className="md:hidden border-t border-zinc-200 bg-white">
           <div className="mx-auto max-w-7xl px-5 py-3 flex flex-col gap-1">
-            {BUYER_NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `px-3 py-2.5 rounded-md text-sm ${
-                    isActive
-                      ? "text-[#0E56F5] font-medium bg-zinc-50"
-                      : "text-zinc-700 hover:bg-zinc-50"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            {BUYER_NAV.map((item) => {
+              const isMessages = item.key === "messages";
+              return (
+                <div key={item.to} className="relative">
+                  <NavLink
+                    to={item.to}
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      `block px-3 py-2.5 rounded-md text-sm ${
+                        isActive
+                          ? "text-[#0E56F5] font-medium bg-zinc-50"
+                          : "text-zinc-700 hover:bg-zinc-50"
+                      }`
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                  {isMessages && unreadCount > 0 && (
+                    <span
+                      aria-label={`${unreadCount} unread messages`}
+                      className="absolute top-1/2 -translate-y-1/2 right-3 min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#0E56F5] text-white text-[11px] font-semibold flex items-center justify-center pointer-events-none"
+                    >
+                      {badgeText}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-zinc-700 hover:bg-zinc-50 text-left"
