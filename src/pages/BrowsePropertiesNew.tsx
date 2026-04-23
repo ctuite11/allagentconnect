@@ -24,7 +24,13 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { isDcmlsHost } from "@/lib/host";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 
-const BrowsePropertiesNew = () => {
+interface BrowsePropertiesNewProps {
+  /** Buyer-only chain: forces consumer search mode and skips host/agent banners.
+   *  Used by /client/search inside BuyerLayout (BuyerPortalHeader handles the toolbar). */
+  forceBuyer?: boolean;
+}
+
+const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = {}) => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,7 +43,7 @@ const BrowsePropertiesNew = () => {
   }, []);
 
   const { role } = useUserRole(user);
-  const searchMode = role === "agent" ? "agent" : "consumer";
+  const searchMode = forceBuyer ? "consumer" : role === "agent" ? "agent" : "consumer";
 
   const [criteria, setCriteria] = useState<SearchCriteria>({
     listingType: "for_sale",
@@ -168,7 +174,7 @@ const BrowsePropertiesNew = () => {
     navigate(`/search?${params.toString()}`);
   };
 
-  const dcmls = isDcmlsHost();
+  const dcmls = forceBuyer ? false : isDcmlsHost();
   const [sortBy, setSortBy] = useState<"recommended" | "newest" | "price_asc" | "price_desc">("recommended");
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(criteria.zipCode || "");
@@ -209,8 +215,8 @@ const BrowsePropertiesNew = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col bg-white ${dcmls ? "" : "pt-14"}`}>
-      {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
+    <div className={`min-h-screen flex flex-col bg-white ${dcmls || forceBuyer ? "" : "pt-14"}`}>
+      {forceBuyer ? null : dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
       {dcmls && (
         <div className="border-b border-zinc-200/60 bg-white">
