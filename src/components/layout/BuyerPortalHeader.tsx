@@ -1,41 +1,27 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, LogOut } from "lucide-react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, LogOut, Search, LayoutDashboard, Heart, FileText, MessageSquare, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import AACMonogram from "@/components/ui/AACMonogram";
 
-/**
- * Canonical buyer portal header.
- * White top toolbar — used for ALL buyer-role authenticated routes.
- *
- * Guarantees (do not regress):
- *  - sticky top-0, z-50, 56px (h-14) row
- *  - Messages nav item is position: relative so its absolute unread badge
- *    anchors correctly on desktop AND mobile
- *  - Mobile menu state resets on every route change
- *  - No CSS transform/overflow on parent containers (would break absolute badge)
- */
-
-const BUYER_NAV: { to: string; label: string; key: string }[] = [
-  { to: "/client/search", label: "Search", key: "search" },
-  { to: "/client/dashboard", label: "Dashboard", key: "dashboard" },
-  { to: "/favorites", label: "Favorites", key: "favorites" },
-  { to: "/hot-sheets", label: "Hot Sheets", key: "hot-sheets" },
-  { to: "/messages", label: "Messages", key: "messages" },
-  { to: "/client/account", label: "Account", key: "account" },
+const NAV_ITEMS = [
+  { to: "/client/search", label: "Search", icon: Search },
+  { to: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/favorites", label: "Favorites", icon: Heart },
+  { to: "/hot-sheets", label: "Hot Sheets", icon: FileText },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
+  { to: "/client/account", label: "Account", icon: User },
 ];
 
 export function BuyerPortalHeader() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { unreadCount } = useUnreadConversations();
 
-  // Reset mobile menu on every route change
   useEffect(() => {
-    setOpen(false);
+    setMobileOpen(false);
   }, [location.pathname]);
 
   const handleLogout = async () => {
@@ -46,124 +32,128 @@ export function BuyerPortalHeader() {
     }
   };
 
-  const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
-
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/85 backdrop-blur border-b border-zinc-200 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
-      <div className="mx-auto max-w-7xl px-5 h-14 flex items-center justify-between gap-6">
-        {/* Brand lockup */}
-        <Link
-          to="/client/dashboard"
-          className="flex items-center gap-3 shrink-0"
-          aria-label="All Agent Connect — Buyer Portal"
+    <header className="sticky top-0 z-50 w-full bg-white/96 shadow-[0_1px_0_rgba(15,23,42,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/90">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center">
+        <button
+          onClick={() => navigate("/client/dashboard")}
+          className="flex min-w-0 flex-shrink-0 items-center gap-2.5 text-left"
+          aria-label="Dashboard"
         >
-          <span style={{ color: "#16A34A" }} className="inline-flex">
-            <AACMonogram size={36} />
-          </span>
-          <span className="hidden sm:flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-zinc-900 tracking-tight">All Agent Connect</span>
-            <span className="text-[11px] font-medium text-zinc-500 tracking-wide uppercase">Buyer Portal</span>
-          </span>
-        </Link>
+          <AACMonogram className="h-9 w-9 flex-shrink-0 text-[#16A34A]" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5">
+              <span className="truncate text-[15px] font-bold tracking-tight text-zinc-900">
+                All Agent Connect
+              </span>
+            </div>
+            <div className="mt-1 hidden items-center sm:flex text-[11px] leading-none">
+              <span className="font-medium tracking-[0.02em] text-zinc-500">
+                Buyer Portal
+              </span>
+            </div>
+          </div>
+        </button>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {BUYER_NAV.map((item) => {
-            const isMessages = item.key === "messages";
-            return (
-              <div key={item.to} className="relative">
-                <NavLink
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `px-3 py-2 rounded-md text-sm transition-colors ${
-                      isActive
-                        ? "text-[#0E56F5] font-medium"
-                        : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
-                    }`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-                {isMessages && unreadCount > 0 && (
-                  <span
-                    aria-label={`${unreadCount} unread messages`}
-                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold flex items-center justify-center pointer-events-none"
-                  >
-                    {badgeText}
+        <nav className="ml-auto hidden sm:flex items-center gap-1">
+          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm transition-colors duration-150 ${
+                  isActive
+                    ? "text-zinc-900 font-semibold"
+                    : "text-zinc-600 font-medium hover:text-zinc-900 hover:bg-zinc-50"
+                }`
+              }
+            >
+              {({ isActive }) =>
+                to === "/messages" ? (
+                  <span className="relative inline-flex items-center gap-1.5">
+                    <Icon
+                      className={`h-4 w-4 flex-shrink-0 ${
+                        isActive ? "text-[#0E56F5]" : "text-zinc-500"
+                      }`}
+                    />
+                    {label}
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold flex items-center justify-center leading-none pointer-events-none">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
                   </span>
-                )}
-              </div>
-            );
-          })}
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="sm"
-            className="ml-2 text-zinc-600 hover:text-zinc-900"
-          >
-            <LogOut className="w-4 h-4 mr-1.5" />
-            Logout
-          </Button>
+                ) : (
+                  <>
+                    <Icon
+                      className={`h-4 w-4 flex-shrink-0 ${
+                        isActive ? "text-[#0E56F5]" : "text-zinc-500"
+                      }`}
+                    />
+                    {label}
+                  </>
+                )
+              }
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Mobile toggle */}
         <button
-          type="button"
-          className="md:hidden p-2 -mr-2 text-zinc-700 relative"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
+          onClick={handleLogout}
+          className="hidden sm:inline-flex ml-3 items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
         >
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          {!open && unreadCount > 0 && (
-            <span
-              aria-hidden="true"
-              className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-600"
-            />
-          )}
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+
+        <button
+          onClick={() => setMobileOpen((v) => !v)}
+          className="sm:hidden ml-auto p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Mobile drawer */}
-      {open && (
-        <div className="md:hidden border-t border-zinc-200 bg-white">
-          <div className="mx-auto max-w-7xl px-5 py-3 flex flex-col gap-1">
-            {BUYER_NAV.map((item) => {
-              const isMessages = item.key === "messages";
-              return (
-                <div key={item.to} className="relative">
-                  <NavLink
-                    to={item.to}
-                    onClick={() => setOpen(false)}
-                    className={({ isActive }) =>
-                      `block px-3 py-2.5 rounded-md text-sm ${
-                        isActive
-                          ? "text-[#0E56F5] font-medium bg-zinc-50"
-                          : "text-zinc-700 hover:bg-zinc-50"
-                      }`
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                  {isMessages && unreadCount > 0 && (
-                    <span
-                      aria-label={`${unreadCount} unread messages`}
-                      className="absolute top-1/2 -translate-y-1/2 right-3 min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#0E56F5] text-white text-[11px] font-semibold flex items-center justify-center pointer-events-none"
-                    >
-                      {badgeText}
+      {mobileOpen && (
+        <div className="sm:hidden border-t border-zinc-200 bg-white px-4 py-3 space-y-1">
+          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                  isActive
+                    ? "text-zinc-900 font-semibold bg-zinc-50"
+                    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon
+                    className={`h-4 w-4 ${
+                      isActive ? "text-[#0E56F5]" : "text-zinc-500"
+                    }`}
+                  />
+                  {label}
+                  {to === "/messages" && unreadCount > 0 && (
+                    <span className="ml-auto min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold flex items-center justify-center leading-none">
+                      {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
-                </div>
-              );
-            })}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-zinc-700 hover:bg-zinc-50 text-left"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
+                </>
+              )}
+            </NavLink>
+          ))}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
         </div>
       )}
     </header>
