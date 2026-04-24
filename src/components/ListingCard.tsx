@@ -627,33 +627,46 @@ const ListingCard = ({
         <div className="relative group flex-shrink-0">
           <DcmlsBadge listing={listing as any} />
           {onSelect && <div className="absolute top-2 left-2 z-10">
-              <div onClick={e => {
+              <div
+                onClick={e => {
             e.stopPropagation();
             onSelect(listing.id);
-          }} className={`w-5 h-5 rounded-full border cursor-pointer transition-all flex items-center justify-center ${isSelected ? 'bg-emerald-500 border-emerald-500 ring-1 ring-emerald-500/20' : 'bg-white border-zinc-300'}`}>
-                {isSelected && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+          }}
+                role="checkbox"
+                aria-checked={isSelected}
+                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 cursor-pointer transition-all flex items-center justify-center shadow-md ring-1 ${
+                  isSelected
+                    ? "bg-emerald-500 border-white ring-emerald-600/30 shadow-md"
+                    : "bg-white/95 border-zinc-300 ring-zinc-400/50 hover:border-zinc-500 hover:ring-zinc-500/60"
+                }`}
+              >
+                {isSelected && <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>}
               </div>
             </div>}
           <div
-            className="absolute top-2 right-2 z-10 flex items-center gap-1"
+            className="absolute top-2 right-2 z-10 flex max-w-[calc(100%-3rem)] items-center justify-end gap-1.5"
             onClick={(e) => e.stopPropagation()}
           >
             {isHotSheetFavorite && (
               <div
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border bg-background/95 shadow-sm"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white bg-white/95 shadow-md ring-1 ring-zinc-300/80"
                 title="Favorited on hot sheet"
               >
                 <Heart className="h-2.5 w-2.5 text-primary" fill="currentColor" />
               </div>
             )}
+            <div
+              className="shrink-0 rounded-full border-2 border-white bg-white p-0.5 shadow-md ring-1 ring-zinc-300/80 transition-shadow hover:shadow-lg hover:ring-zinc-400/90 focus-within:ring-2 focus-within:ring-primary/55 focus-within:ring-offset-0"
+            >
             <FavoriteButton
               listingId={listing.id}
               size="icon"
               variant="secondary"
-              className="h-8 w-8 shrink-0 p-0"
+              className="h-8 w-8 p-0 border-0 bg-zinc-50 text-foreground shadow-inner hover:bg-white hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/50"
             />
+            </div>
           </div>
           {/* Property type badge overlay */}
           {listing.property_type && (

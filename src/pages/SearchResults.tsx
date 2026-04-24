@@ -31,9 +31,10 @@ const SearchResults = ({
   const navigate = useNavigate();
   const search = useLocation().search;
   const [listings, setListings] = useState<any[]>([]);
-  const [allListings, setAllListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+  /** Session-only: mark listings to "keep" for this search (not persisted) */
+  const [sessionKeptIds, setSessionKeptIds] = useState<Set<string>>(new Set());
+  const [showKeptOnly, setShowKeptOnly] = useState(false);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [viewType, setViewType] = useState<"grid" | "list" | "map">("grid");
   const publicMode = isPublicMode;
@@ -162,7 +163,8 @@ const SearchResults = ({
         }
 
         setListings(finalListings);
-        setAllListings(finalListings);
+        setSessionKeptIds(new Set());
+        setShowKeptOnly(false);
       } catch (e) {
         console.error(e);
       } finally {
@@ -190,24 +192,19 @@ const SearchResults = ({
     }
   }, [listings, sortBy]);
 
-  const handleSelectAll = () => {
-    if (selectedListings.size === listings.length) {
-      setSelectedListings(new Set());
-      // Restore all listings when deselecting all
-      setListings(allListings);
-    } else {
-      setSelectedListings(new Set(listings.map(l => l.id)));
-    }
-  };
+  const displayListings = useMemo(() => {
+    if (!showKeptOnly) return sortedListings;
+    return sortedListings.filter((l) => sessionKeptIds.has(l.id));
+  }, [sortedListings, showKeptOnly, sessionKeptIds]);
 
-  const handleKeepSelected = () => {
-    if (selectedListings.size === 0) {
-      toast.error("No properties selected");
-      return;
+  const handleSelectAll = () => {
+    const allIds = listings.map((l) => l.id);
+    if (allIds.length === 0) return;
+    if (sessionKeptIds.size === allIds.length) {
+      setSessionKeptIds(new Set());
+    } else {
+      setSessionKeptIds(new Set(allIds));
     }
-    const filtered = listings.filter(l => selectedListings.has(l.id));
-    setListings(filtered);
-    toast.success(`Showing ${filtered.length} selected properties`);
   };
 
   const handleSaveSearch = () => {
@@ -221,7 +218,7 @@ const SearchResults = ({
   };
 
   const handleSaveToWishList = async () => {
-    if (selectedListings.size === 0) {
+    if (sessionKeptIds.size === 0) {
       toast.error("No properties selected");
       return;
     }
@@ -233,26 +230,24 @@ const SearchResults = ({
         return;
       }
 
-      const promises = Array.from(selectedListings).map(listingId =>
+      const promises = Array.from(sessionKeptIds).map((listingId) =>
         supabase.from("favorites").insert({ user_id: user.id, listing_id: listingId })
       );
       
       await Promise.all(promises);
-      toast.success(`Added ${selectedListings.size} properties to favorites`);
-      setSelectedListings(new Set());
+      toast.success(`Added ${sessionKeptIds.size} properties to favorites`);
     } catch (error: any) {
       toast.error("Error saving properties: " + error.message);
     }
   };
 
-  const toggleListingSelection = (listingId: string) => {
-    const newSelected = new Set(selectedListings);
-    if (newSelected.has(listingId)) {
-      newSelected.delete(listingId);
-    } else {
-      newSelected.add(listingId);
-    }
-    setSelectedListings(newSelected);
+  const toggleSessionKeep = (listingId: string) => {
+    setSessionKeptIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(listingId)) next.delete(listingId);
+      else next.add(listingId);
+      return next;
+    });
   };
 
   return (
@@ -281,11 +276,39 @@ const SearchResults = ({
           </div>
 
           {/* Results Count */}
-          <div className="mb-4">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <Button variant="outline" disabled>
               {loading ? "Loading..." : `${listings.length} ${publicMode || buyerMode ? "Homes" : "Properties"} Found`}
             </Button>
+            {!loading && listings.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground tabular-nums">{sessionKeptIds.size}</span> kept
+              </span>
+            )}
           </div>
+
+          {!loading && listings.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">View:</span>
+              <Button
+                type="button"
+                variant={!showKeptOnly ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowKeptOnly(false)}
+              >
+                Show all
+              </Button>
+              <Button
+                type="button"
+                variant={showKeptOnly ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowKeptOnly(true)}
+                disabled={sessionKeptIds.size === 0}
+              >
+                Show kept only
+              </Button>
+            </div>
+          )}
 
           {/* Controls Bar: Sort | Action Buttons | View Toggle */}
           {!loading && listings.length > 0 && (
@@ -309,23 +332,13 @@ const SearchResults = ({
               {/* Action Toolbar */}
               <div className="flex items-center gap-2 flex-wrap">
                 {showInternalSelectionTools && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleSelectAll}
-                    >
-                      {selectedListings.size === listings.length ? "Deselect All" : "Select All"}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleKeepSelected}
-                      disabled={selectedListings.size === 0}
-                    >
-                      Keep Selected
-                    </Button>
-                  </>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleSelectAll}
+                  >
+                    {sessionKeptIds.size === listings.length ? "Deselect All" : "Select All"}
+                  </Button>
                 )}
                 <Button 
                   variant="outline" 
@@ -346,7 +359,7 @@ const SearchResults = ({
                     variant="outline" 
                     size="sm"
                     onClick={handleSaveToWishList}
-                    disabled={selectedListings.size === 0}
+                    disabled={sessionKeptIds.size === 0}
                   >
                     Add to Favorites
                   </Button>
@@ -389,25 +402,33 @@ const SearchResults = ({
               <p className="text-muted-foreground mb-4">No homes matched your search</p>
               <Button variant="outline" onClick={() => navigate("/browse")}>Adjust Filters</Button>
             </div>
+          ) : showKeptOnly && displayListings.length === 0 ? (
+            <div className="text-center py-12 bg-card rounded-lg border">
+              <p className="text-muted-foreground mb-2">No kept listings match this view.</p>
+              <p className="text-sm text-muted-foreground mb-4">Check homes to keep them, or show all results.</p>
+              <Button variant="outline" onClick={() => setShowKeptOnly(false)}>
+                Show all
+              </Button>
+            </div>
           ) : (
             viewType === "map" ? (
               <div className="bg-card rounded-lg border p-4">
                 <PropertyMap
-                  listings={sortedListings}
+                  listings={displayListings}
                   onListingClick={(listingId) => navigate(`/property/${listingId}`)}
                 />
               </div>
             ) : (
               <div className={viewType === "grid" ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-                {sortedListings.map((listing) => (
+                {displayListings.map((listing) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
                     viewMode="compact"
                     showActions={false}
                     hideMlsMeta={publicMode || buyerMode}
-                    onSelect={showInternalSelectionTools ? toggleListingSelection : undefined}
-                    isSelected={showInternalSelectionTools ? selectedListings.has(listing.id) : false}
+                    onSelect={toggleSessionKeep}
+                    isSelected={sessionKeptIds.has(listing.id)}
                     agentInfo={
                       publicMode || buyerMode
                         ? null
