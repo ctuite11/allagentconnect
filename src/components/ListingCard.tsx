@@ -628,20 +628,20 @@ const ListingCard = ({
           <DcmlsBadge listing={listing as any} />
           {onSelect && (
             <div
-              className="absolute top-2 left-2 z-10 pointer-events-auto"
+              className="absolute top-2 left-2 z-20 pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={() => onSelect(listing.id)}
-                className="h-4 w-4 rounded-sm border border-zinc-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 [&_svg]:h-2.5 [&_svg]:w-2.5"
+                className="h-5 w-5 min-h-5 min-w-5 rounded-sm border border-gray-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-white data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 [&_svg]:h-3.5 [&_svg]:w-3.5"
                 title="Keep in shortlist for this visit"
                 aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
               />
             </div>
           )}
           <div
-            className="absolute top-2 right-2 z-20 flex max-w-[calc(100%-2.75rem)] items-center justify-end gap-0.5"
+            className="absolute top-2 right-2 z-20 flex max-w-[calc(100%-3.25rem)] items-center justify-end gap-0.5"
             onClick={(e) => e.stopPropagation()}
           >
             {isHotSheetFavorite && (
@@ -656,7 +656,6 @@ const ListingCard = ({
               listingId={listing.id}
               size="icon"
               photoIcon
-              className="!h-7 !w-7 !min-w-0"
             />
           </div>
           {/* Property type badge overlay */}
@@ -1113,13 +1112,13 @@ const ListingCard = ({
         
         {onSelect && (
           <div
-            className="absolute top-2 left-2 z-10 pointer-events-auto"
+            className="absolute top-2 left-2 z-20 pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <Checkbox
               checked={isSelected}
               onCheckedChange={() => onSelect(listing.id)}
-              className="h-4 w-4 rounded-sm border border-zinc-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 [&_svg]:h-2.5 [&_svg]:w-2.5"
+              className="h-5 w-5 min-h-5 min-w-5 rounded-sm border border-gray-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-white data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 [&_svg]:h-3.5 [&_svg]:w-3.5"
             />
           </div>
         )}
