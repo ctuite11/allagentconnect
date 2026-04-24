@@ -36,11 +36,11 @@ import ManageTeam from "./pages/ManageTeam";
 import TeamProfile from "./pages/TeamProfile";
 import ManageCoverageAreas from "./pages/ManageCoverageAreas";
 import BrowsePropertiesNew from "./pages/BrowsePropertiesNew";
-<<<<<<< HEAD
+
 import BuyerSearch from "./pages/BuyerSearch";
 import SearchResults from "./pages/SearchResults";
-=======
->>>>>>> 6ad91db1 (Publish buyer search (BuyerMapSearch) with clean routing + map fix)
+
+
 import PublicSearchResults from "./pages/PublicSearchResults";
 import OurAgents from "./pages/OurAgents";
 import PublicOurAgents from "./pages/PublicOurAgents";
