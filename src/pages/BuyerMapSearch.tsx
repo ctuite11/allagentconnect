@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BedDouble, Bath, Heart, MapPin, Search as SearchIcon, SlidersHorizontal, Ruler, ChevronDown } from "lucide-react";
+import { BedDouble, Bath, MapPin, Search as SearchIcon, SlidersHorizontal, Ruler, ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
@@ -8,6 +8,7 @@ import PropertyMap from "@/components/PropertyMap";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { isDcmlsHost } from "@/lib/host";
 import { toast } from "sonner";
+import FavoriteButton from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -189,6 +190,8 @@ export default function BuyerMapSearch() {
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"recommended" | "newest" | "price_asc" | "price_desc">("recommended");
+  const [sessionKeptIds, setSessionKeptIds] = useState<Set<string>>(new Set());
+  const [showKeptOnly, setShowKeptOnly] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [bedsBathsOpen, setBedsBathsOpen] = useState(false);
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
@@ -267,6 +270,20 @@ export default function BuyerMapSearch() {
     }
     return next;
   }, [listings, sortBy]);
+
+  const displayListings = useMemo(() => {
+    if (!showKeptOnly) return sortedListings;
+    return sortedListings.filter((l) => sessionKeptIds.has(l.id));
+  }, [sortedListings, showKeptOnly, sessionKeptIds]);
+
+  const toggleSessionKeep = (listingId: string) => {
+    setSessionKeptIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(listingId)) next.delete(listingId);
+      else next.add(listingId);
+      return next;
+    });
+  };
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -484,6 +501,8 @@ export default function BuyerMapSearch() {
 
         if (agentIds.length === 0) {
           setListings(baseListings);
+          setSessionKeptIds(new Set());
+          setShowKeptOnly(false);
           return;
         }
 
@@ -494,6 +513,8 @@ export default function BuyerMapSearch() {
 
         if (agentOfficeError) {
           setListings(baseListings);
+          setSessionKeptIds(new Set());
+          setShowKeptOnly(false);
           return;
         }
 
@@ -513,6 +534,8 @@ export default function BuyerMapSearch() {
         });
 
         setListings(hydratedListings);
+        setSessionKeptIds(new Set());
+        setShowKeptOnly(false);
       } catch (error) {
         console.error(error);
         toast.error("Unable to load homes right now");
@@ -1025,7 +1048,7 @@ export default function BuyerMapSearch() {
             ) : listings.length > 0 ? (
               <div className="h-full">
                 <PropertyMap
-                  listings={listings}
+                  listings={displayListings}
                   highlightedListingId={hoveredListingId}
                   selectedListingId={selectedListingId}
                   onListingHover={setHoveredListingId}
@@ -1065,15 +1088,49 @@ export default function BuyerMapSearch() {
               </div>
             </div>
 
+            <div className="px-4 py-2.5 border-b border-zinc-200/60 bg-zinc-50/60 flex flex-wrap items-center gap-2 shrink-0">
+              <span className="text-xs text-zinc-600">
+                <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span>{" "}
+                kept
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant={!showKeptOnly ? "default" : "outline"}
+                className="h-7 rounded-md text-xs px-2.5"
+                onClick={() => setShowKeptOnly(false)}
+              >
+                Show all
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={showKeptOnly ? "default" : "outline"}
+                className="h-7 rounded-md text-xs px-2.5"
+                onClick={() => setShowKeptOnly(true)}
+                disabled={sessionKeptIds.size === 0}
+              >
+                Show kept only
+              </Button>
+            </div>
+
             <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
               {loading ? (
                 <div className="py-10 text-center text-sm text-zinc-500">Loading listings...</div>
               ) : sortedListings.length === 0 ? (
                 <div className="py-10 text-center text-sm text-zinc-500">No listings found for current filters.</div>
+              ) : showKeptOnly && displayListings.length === 0 ? (
+                <div className="py-10 text-center text-sm text-zinc-500 px-3">
+                  <p>No kept homes in this view.</p>
+                  <Button type="button" variant="outline" className="mt-3" size="sm" onClick={() => setShowKeptOnly(false)}>
+                    Show all
+                  </Button>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  {sortedListings.map((listing) => {
+                  {displayListings.map((listing) => {
                     const brokerageLine = formatBrokerageLine(resolveListingBrokerage(listing));
+                    const isKept = sessionKeptIds.has(listing.id);
 
                     return (
                     <div
@@ -1103,13 +1160,50 @@ export default function BuyerMapSearch() {
                       <div className="relative w-full overflow-hidden bg-zinc-100" style={{ aspectRatio: "16/10" }}>
                         <ListingImage photos={listing.photos} alt={listing.address} />
                         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white/55 via-white/15 to-transparent pointer-events-none" />
-                        <button
-                          onClick={(e) => { e.stopPropagation(); }}
-                          aria-label="Save listing"
-                          className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/92 shadow-[0_4px_14px_rgba(15,23,42,0.12)] ring-1 ring-black/5 backdrop-blur-sm transition-colors hover:bg-white"
+                        <div
+                          className="absolute top-2.5 left-2.5 z-10"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Heart className="h-3.5 w-3.5 text-zinc-400 group-hover:text-zinc-600 transition-colors" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSessionKeep(listing.id);
+                            }}
+                            aria-label={isKept ? "Remove from this session" : "Keep in this search"}
+                            aria-pressed={isKept}
+                            className={`flex w-5 h-5 sm:w-6 sm:h-6 items-center justify-center rounded-full border-2 shadow-md transition-all ${
+                              isKept
+                                ? "bg-emerald-500 border-white ring-1 ring-emerald-600/30"
+                                : "bg-white/95 border-zinc-300 ring-1 ring-zinc-400/50 hover:border-zinc-500"
+                            }`}
+                          >
+                            {isKept && (
+                              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                        <div
+                          className="absolute top-2.5 right-2.5 z-10 max-w-[calc(100%-3.25rem)]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div
+                            className="rounded-full border-2 border-white bg-white p-0.5 shadow-md ring-1 ring-zinc-300/80 transition-shadow hover:shadow-lg hover:ring-zinc-400/90 focus-within:ring-2 focus-within:ring-[#0E56F5]/50"
+                          >
+                            <FavoriteButton
+                              listingId={listing.id}
+                              size="icon"
+                              variant="secondary"
+                              className="h-8 w-8 border-0 bg-zinc-50 text-[#0E56F5] shadow-inner hover:bg-white hover:shadow-md hover:text-[#0B46CC] focus-visible:ring-2 focus-visible:ring-[#0E56F5]/50 [&_svg]:h-4 [&_svg]:w-4"
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       <div className="relative border-t border-zinc-200/45 bg-gradient-to-b from-white via-white to-[#fbfcff] px-3.5 pb-3.5 pt-3">
