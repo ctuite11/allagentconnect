@@ -1161,48 +1161,27 @@ export default function BuyerMapSearch() {
                         <ListingImage photos={listing.photos} alt={listing.address} />
                         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white/55 via-white/15 to-transparent pointer-events-none" />
                         <div
-                          className="absolute top-2.5 left-2.5 z-10"
+                          className="absolute top-2 left-2 z-10 pointer-events-auto"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSessionKeep(listing.id);
-                            }}
+                          <Checkbox
+                            checked={isKept}
+                            onCheckedChange={() => toggleSessionKeep(listing.id)}
+                            className="h-4 w-4 rounded-sm border border-zinc-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 [&_svg]:h-2.5 [&_svg]:w-2.5"
+                            title="Keep in this search"
                             aria-label={isKept ? "Remove from this session" : "Keep in this search"}
-                            aria-pressed={isKept}
-                            className={`flex w-5 h-5 sm:w-6 sm:h-6 items-center justify-center rounded-full border-2 shadow-md transition-all ${
-                              isKept
-                                ? "bg-emerald-500 border-white ring-1 ring-emerald-600/30"
-                                : "bg-white/95 border-zinc-300 ring-1 ring-zinc-400/50 hover:border-zinc-500"
-                            }`}
-                          >
-                            {isKept && (
-                              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </button>
+                          />
                         </div>
                         <div
-                          className="absolute top-2.5 right-2.5 z-10 max-w-[calc(100%-3.25rem)]"
+                          className="absolute top-2 right-2 z-20 max-w-[calc(100%-2.75rem)] flex items-center justify-end"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div
-                            className="rounded-full border-2 border-white bg-white p-0.5 shadow-md ring-1 ring-zinc-300/80 transition-shadow hover:shadow-lg hover:ring-zinc-400/90 focus-within:ring-2 focus-within:ring-[#0E56F5]/50"
-                          >
-                            <FavoriteButton
-                              listingId={listing.id}
-                              size="icon"
-                              variant="secondary"
-                              className="h-8 w-8 border-0 bg-zinc-50 text-[#0E56F5] shadow-inner hover:bg-white hover:shadow-md hover:text-[#0B46CC] focus-visible:ring-2 focus-visible:ring-[#0E56F5]/50 [&_svg]:h-4 [&_svg]:w-4"
-                            />
-                          </div>
+                          <FavoriteButton
+                            listingId={listing.id}
+                            size="icon"
+                            photoIcon
+                            className="!h-7 !w-7 !min-w-0"
+                          />
                         </div>
                       </div>
 
