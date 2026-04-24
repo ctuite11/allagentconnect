@@ -197,7 +197,10 @@ const Favorites = ({
 
   const getMainPhoto = (photos: any[]) => {
     if (!photos || photos.length === 0) return "/placeholder.svg";
-    return photos[0];
+    const p = photos[0];
+    if (typeof p === "string") return p;
+    if (p && typeof p === "object") return (p as { url?: string }).url ?? "/placeholder.svg";
+    return "/placeholder.svg";
   };
 
   if (loading) {

@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
 import ContactAgentDialog from "./ContactAgentDialog";
+import FavoriteButton from "./FavoriteButton";
 import { ListingAttribution } from "./ListingAttribution";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -635,14 +636,25 @@ const ListingCard = ({
                   </svg>}
               </div>
             </div>}
-          {isHotSheetFavorite && (
-            <div
-              className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/95 shadow-sm"
-              title="Favorited by client"
-            >
-              <Heart className="h-3.5 w-3.5 text-primary" fill="currentColor" />
-            </div>
-          )}
+          <div
+            className="absolute top-2 right-2 z-10 flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isHotSheetFavorite && (
+              <div
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border bg-background/95 shadow-sm"
+                title="Favorited on hot sheet"
+              >
+                <Heart className="h-2.5 w-2.5 text-primary" fill="currentColor" />
+              </div>
+            )}
+            <FavoriteButton
+              listingId={listing.id}
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 shrink-0 p-0"
+            />
+          </div>
           {/* Property type badge overlay */}
           {listing.property_type && (
             <div className="absolute bottom-2 left-2 z-10">
