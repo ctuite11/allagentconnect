@@ -16,7 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Heart, MessageSquare, ChevronDown, ChevronUp, Settings, Send, Bed, Bath, Maximize, Home, MapPin, Image as ImageIcon, Mail, Phone, Building2, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { getPrimaryAgentId } from "@/utils/agentTracking";
-import FavoriteButton from "@/components/FavoriteButton";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { TownsPicker } from "@/components/TownsPicker";
@@ -1037,7 +1036,18 @@ const ClientHotSheet = () => {
                       />
                     </div>
                     <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
-                      <FavoriteButton listingId={listing.id} size="icon" variant="secondary" />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => toggleFavorite(listing.id)}
+                        aria-label={favorites.has(listing.id) ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <Heart
+                          className="h-4 w-4"
+                          fill={favorites.has(listing.id) ? "currentColor" : "none"}
+                        />
+                      </Button>
                     </div>
                     {listing.photos && listing.photos[0] ? (
                       <img

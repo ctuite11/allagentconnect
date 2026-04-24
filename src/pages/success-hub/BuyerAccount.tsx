@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BuyerStatusBadge, getBuyerStatus, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  ArrowLeft, Home, Clock, Eye, UserMinus
+  ArrowLeft, Home, Clock, Eye, UserMinus, Mail, Heart, Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
@@ -52,6 +52,7 @@ function criteriaPills(criteria: any): string[] {
 
 const SECTIONS = [
   { id: "hotsheets", label: "Hot Sheets" },
+  { id: "saved", label: "Saved" },
   { id: "activity", label: "Activity" },
 ] as const;
 
@@ -62,7 +63,7 @@ export default function BuyerAccount() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthRole();
-  const { client, hotSheets, activity, conversations, stats, loading, refresh } =
+  const { client, hotSheets, favorites, activity, conversations, stats, loading, refresh } =
     useBuyerDashboard(buyerId);
   // Lazy init: if URL signals create-hot-sheet intent, dialog is "open" from first render.
   // It still only renders once `client` is loaded, so it appears in the same paint as the page —
@@ -204,7 +205,7 @@ export default function BuyerAccount() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-5">
+        <div className="flex items-center gap-2 mt-5 flex-wrap">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Buyer
           </Button>
@@ -239,6 +240,16 @@ export default function BuyerAccount() {
               )}
             </Tooltip>
           </TooltipProvider>
+          {!buyerOnPlatform && client.email && (
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={`mailto:${encodeURIComponent(client.email)}?subject=${encodeURIComponent("A note from your agent")}`}
+              >
+                <Mail className="h-3.5 w-3.5 mr-1.5" />
+                Email Buyer
+              </a>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -377,6 +388,74 @@ export default function BuyerAccount() {
         )}
       </section>
 
+      {/* ── Saved listings (hot sheet favorites) ───────────────────────── */}
+      <section
+        ref={(el: HTMLDivElement | null) => {
+          sectionRefs.current.saved = el;
+        }}
+        className="mb-12"
+      >
+        <SectionHeading title="Saved Listings" count={favorites.length} />
+
+        {favorites.length === 0 ? (
+          <EmptyState
+            icon={<Heart className="h-5 w-5 text-muted-foreground" />}
+            title="No Saved Listings"
+            description="Favorites from your buyer’s hot sheets will show here."
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {favorites.map((listing: any) => {
+              const photo =
+                listing.photos?.[0] &&
+                (typeof listing.photos[0] === "string"
+                  ? listing.photos[0]
+                  : listing.photos[0]?.url);
+              return (
+                <div
+                  key={listing.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/property/${listing.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") navigate(`/property/${listing.id}`);
+                  }}
+                  className="relative bg-card rounded-2xl border border-border shadow-sm cursor-pointer overflow-hidden flex flex-col h-full"
+                >
+                  <div className="aspect-[4/3] relative bg-muted shrink-0">
+                    {photo ? (
+                      <img
+                        src={photo}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 z-10 rounded-full bg-white/90 p-1.5 border border-border">
+                      <Heart className="h-3.5 w-3.5 text-primary fill-primary" />
+                    </div>
+                  </div>
+                  <div className="px-4 pt-3 pb-4 flex flex-col flex-1">
+                    <p className="text-base font-semibold text-foreground">
+                      {listing.price != null
+                        ? formatPrice(Number(listing.price))
+                        : "—"}
+                    </p>
+                    <p className="text-sm text-foreground mt-0.5 line-clamp-2">{listing.address}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {[listing.city, listing.state].filter(Boolean).join(", ")}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* ── Activity ──────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
@@ -394,6 +473,35 @@ export default function BuyerAccount() {
               <Card key={item.id} className="shadow-sm">
                 <CardContent className="p-4">
                   <p className="text-sm text-foreground">{item.comment}</p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-muted-foreground">
+                    {item.listing_id && (
+                      <button
+                        type="button"
+                        className="text-primary hover:underline font-medium"
+                        onClick={() => navigate(`/property/${item.listing_id}`)}
+                      >
+                        {item.listing_label ? `Listing: ${item.listing_label}` : `Listing: ${item.listing_id}`}
+                      </button>
+                    )}
+                    {item.listing_id && item.hot_sheet_id && (
+                      <span className="text-muted-foreground">·</span>
+                    )}
+                    {item.hot_sheet_id && (
+                      <button
+                        type="button"
+                        className="text-primary hover:underline font-medium"
+                        onClick={() =>
+                          navigate(`/hot-sheets/${item.hot_sheet_id}/review`, {
+                            state: { from: `/success-hub/buyers/${buyerId}` },
+                          })
+                        }
+                      >
+                        {item.hot_sheet_name
+                          ? `Hot sheet: ${item.hot_sheet_name}`
+                          : `Hot sheet: ${item.hot_sheet_id}`}
+                      </button>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                       {item.sender_role}

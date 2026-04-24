@@ -86,6 +86,8 @@ interface ListingCardProps {
   onNewMessage?: (msg: any) => void;
   onOpenChat?: () => void;
   interestSignals?: ListingSignals | null;
+  /** Favorited on the current hot sheet (e.g. by client) */
+  isHotSheetFavorite?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -103,6 +105,7 @@ const ListingCard = ({
   onNewMessage,
   onOpenChat,
   interestSignals,
+  isHotSheetFavorite,
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const [agentCount, setAgentCount] = useState<number>(0);
@@ -632,6 +635,14 @@ const ListingCard = ({
                   </svg>}
               </div>
             </div>}
+          {isHotSheetFavorite && (
+            <div
+              className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/95 shadow-sm"
+              title="Favorited by client"
+            >
+              <Heart className="h-3.5 w-3.5 text-primary" fill="currentColor" />
+            </div>
+          )}
           {/* Property type badge overlay */}
           {listing.property_type && (
             <div className="absolute bottom-2 left-2 z-10">

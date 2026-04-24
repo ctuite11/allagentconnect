@@ -274,6 +274,7 @@ const HotSheetReview = () => {
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
+  const [favoritedListingIds, setFavoritedListingIds] = useState<Set<string>>(new Set());
 
   // Buyer interest signals for listing cards
   const { signals: interestSignals } = useListingInterestSignals(
@@ -500,6 +501,14 @@ const HotSheetReview = () => {
       if (listingsError) throw listingsError;
       setListings(listingsData || []);
       setAllListings(listingsData || []);
+
+      const { data: favRows } = await supabase
+        .from("hot_sheet_favorites")
+        .select("listing_id")
+        .eq("hot_sheet_id", id as string);
+      setFavoritedListingIds(
+        new Set((favRows ?? []).map((r: { listing_id: string }) => r.listing_id).filter(Boolean)),
+      );
 
 // Load listing agents for display
 const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
@@ -1130,6 +1139,7 @@ if (comments && comments.length > 0) {
                     setChatDrawerOpen(true);
                   }}
                   interestSignals={interestSignals[listing.id] || null}
+                  isHotSheetFavorite={favoritedListingIds.has(listing.id)}
                 />
               ))}
             </div>

@@ -35,9 +35,12 @@ interface ActivityItem {
   id: string;
   comment: string;
   sender_role: string;
-  listing_id: string;
+  listing_id: string | null;
   created_at: string;
   hot_sheet_id: string;
+  hot_sheet_name?: string;
+  /** Short address line when listing_id is set */
+  listing_label?: string;
 }
 
 export interface BuyerDashboardData {
@@ -157,7 +160,41 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
             .order("created_at", { ascending: false })
             .limit(50);
 
-          setActivity(commentsData ?? []);
+          const raw = commentsData ?? [];
+          const actHsIds = [...new Set(raw.map((r) => r.hot_sheet_id).filter(Boolean))] as string[];
+          const actListingIds = [
+            ...new Set(raw.map((r) => r.listing_id).filter(Boolean)),
+          ] as string[];
+
+          let hsNameById: Record<string, string> = {};
+          if (actHsIds.length > 0) {
+            const { data: hsRows } = await supabase
+              .from("hot_sheets")
+              .select("id,name")
+              .in("id", actHsIds);
+            (hsRows ?? []).forEach((h: { id: string; name: string }) => {
+              hsNameById[h.id] = h.name;
+            });
+          }
+
+          let listingLabelById: Record<string, string> = {};
+          if (actListingIds.length > 0) {
+            const { data: listRows } = await supabase
+              .from("listings")
+              .select("id,address,city")
+              .in("id", actListingIds);
+            (listRows ?? []).forEach((l: { id: string; address: string; city: string }) => {
+              listingLabelById[l.id] = [l.address, l.city].filter(Boolean).join(", ");
+            });
+          }
+
+          setActivity(
+            raw.map((c) => ({
+              ...c,
+              hot_sheet_name: hsNameById[c.hot_sheet_id],
+              listing_label: c.listing_id ? listingLabelById[c.listing_id] : undefined,
+            }))
+          );
         } else {
           setFavorites([]);
           setActivity([]);
