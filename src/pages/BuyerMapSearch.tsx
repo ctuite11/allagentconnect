@@ -1164,22 +1164,31 @@ export default function BuyerMapSearch() {
                           className="absolute top-2 left-2 z-20 pointer-events-auto"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Checkbox
-                            checked={isKept}
-                            onCheckedChange={() => toggleSessionKeep(listing.id)}
-                            className="h-5 w-5 min-h-5 min-w-5 rounded-sm border border-gray-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-white data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 [&_svg]:h-3.5 [&_svg]:w-3.5"
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => toggleSessionKeep(listing.id)}
+                            aria-pressed={isKept}
+                            className={
+                              isKept
+                                ? "h-11 min-h-11 min-w-[4.5rem] px-3.5 text-sm font-semibold rounded-md shadow-md border-0 bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "h-11 min-h-11 min-w-[4.5rem] px-3.5 text-sm font-semibold rounded-md shadow-md border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50"
+                            }
                             title="Keep in this search"
                             aria-label={isKept ? "Remove from this session" : "Keep in this search"}
-                          />
+                          >
+                            {isKept ? "Kept ✓" : "Keep"}
+                          </Button>
                         </div>
                         <div
-                          className="absolute top-2 right-2 z-20 max-w-[calc(100%-3.25rem)] flex items-center justify-end"
+                          className="absolute top-2 right-2 z-20 max-w-[calc(100%-6.5rem)] flex min-h-0 items-center justify-end"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <FavoriteButton
                             listingId={listing.id}
                             size="icon"
                             photoIcon
+                            className="!h-8 !w-8 !min-w-0 p-0 [&>svg]:!h-8 [&>svg]:!w-8"
                           />
                         </div>
                       </div>
