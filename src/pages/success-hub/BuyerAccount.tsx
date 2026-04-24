@@ -4,7 +4,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { BuyerStatusBadge, getBuyerStatus, type BuyerStatus } from "@/lib/buyerStatus";
+import { BuyerStatusBadge, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
   ArrowLeft, Home, Clock, Eye, UserMinus, Mail, Heart, Image as ImageIcon
@@ -94,11 +94,28 @@ export default function BuyerAccount() {
 
   const buyerOnPlatform = !!client?.agent_user_id;
 
-  // System-derived only: pending_invite | active
+  // Same source as BuyersList: client_agent_relationships.status
   const [buyerStatus, setBuyerStatus] = useState<BuyerStatus>("pending_invite");
   useEffect(() => {
-    setBuyerStatus(getBuyerStatus({ agent_user_id: client?.agent_user_id }));
-  }, [client?.agent_user_id]);
+    if (!user?.id || !buyerId) return;
+    let cancelled = false;
+    (async () => {
+      const { data: rel } = await supabase
+        .from("client_agent_relationships")
+        .select("status")
+        .eq("agent_id", user.id)
+        .or(`crm_client_id.eq.${buyerId},client_id.eq.${buyerId}`)
+        .maybeSingle();
+      if (cancelled) return;
+      const s = (rel?.status ?? "").toLowerCase();
+      if (s === "active") setBuyerStatus("active");
+      else if (s === "pending") setBuyerStatus("pending_invite");
+      else setBuyerStatus("pending_invite");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, buyerId]);
   const handleGeneralMessage = async () => {
     if (!user?.id || !client?.agent_user_id) return;
     setMessagingBusy(true);
