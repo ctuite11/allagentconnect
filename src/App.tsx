@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation, Outlet 
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
+import { BuyerShell } from "@/components/layout/BuyerShell";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -35,8 +36,11 @@ import ManageTeam from "./pages/ManageTeam";
 import TeamProfile from "./pages/TeamProfile";
 import ManageCoverageAreas from "./pages/ManageCoverageAreas";
 import BrowsePropertiesNew from "./pages/BrowsePropertiesNew";
+<<<<<<< HEAD
 import BuyerSearch from "./pages/BuyerSearch";
 import SearchResults from "./pages/SearchResults";
+=======
+>>>>>>> 6ad91db1 (Publish buyer search (BuyerMapSearch) with clean routing + map fix)
 import PublicSearchResults from "./pages/PublicSearchResults";
 import OurAgents from "./pages/OurAgents";
 import PublicOurAgents from "./pages/PublicOurAgents";
@@ -73,6 +77,10 @@ import NetworkIntelligence from "./pages/NetworkIntelligence";
 
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientAgentSettings from "./pages/ClientAgentSettings";
+<<<<<<< HEAD
+=======
+import BuyerMapSearch from "./pages/BuyerMapSearch";
+>>>>>>> 6ad91db1 (Publish buyer search (BuyerMapSearch) with clean routing + map fix)
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ComingSoon from "./pages/ComingSoon";
 import SeedTestData from "./pages/SeedTestData";
@@ -167,11 +175,19 @@ function MessagesEntry() {
   return <Navigate to="/auth" replace />;
 }
 
+function BrowseEntry() {
+  const { role, loading } = useAuthRole();
+  if (loading) return null;
+  if (role === "buyer") return <Navigate to="/client/search" replace />;
+  return <BrowsePropertiesNew />;
+}
+
 /** Layout route: wraps children in AppShell (sidebar + header) */
 function AgentLayout() {
   return <AppShell><Outlet /></AppShell>;
 }
 
+<<<<<<< HEAD
 /** Layout route: buyer-role authenticated routes (white top toolbar) */
 function BuyerLayout() {
   return (
@@ -190,6 +206,11 @@ function PublicLayout() {
       <main className="flex-1"><Outlet /></main>
     </div>
   );
+=======
+/** Layout route: wraps buyer-authenticated pages in BuyerShell */
+function BuyerLayout() {
+  return <BuyerShell />;
+>>>>>>> 6ad91db1 (Publish buyer search (BuyerMapSearch) with clean routing + map fix)
 }
 
 
@@ -300,6 +321,21 @@ const App = () => (
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
+                {/* Buyer authenticated routes — wrapped in BuyerShell */}
+                <Route element={<BuyerLayout />}>
+                  <Route
+                    path="/client/search"
+                    element={import.meta.env.DEV ? <BuyerMapSearch /> : <RouteGuard requireAuth><BuyerMapSearch /></RouteGuard>}
+                  />
+                  <Route path="/client/dashboard" element={<RouteGuard requireAuth><ClientDashboard /></RouteGuard>} />
+                  <Route path="/client/account" element={<RouteGuard requireAuth><ClientAgentSettings /></RouteGuard>} />
+                  <Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
+                  <Route path="/hot-sheets" element={<RouteGuard requireAuth><HotSheetsEntry /></RouteGuard>} />
+                  <Route path="/hot-sheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
+                  <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                  <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                </Route>
+
                 {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
@@ -307,12 +343,13 @@ const App = () => (
                 <Route path="/property/:id" element={<><PropertyDetail /><Footer /></>} />
                 <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 <Route path="/team/:id" element={<TeamProfile />} />
-                <Route path="/browse" element={<BrowsePropertiesNew />} />
+                <Route path="/browse" element={<BrowseEntry />} />
                 <Route path="/search" element={<PublicSearchResults />} />
                 <Route path="/our-agents" element={<PublicOurAgents />} />
                 <Route path="/agents" element={<PublicOurAgents />} />
                 <Route path="/find-agent" element={<PublicOurAgents />} />
                 <Route path="/agent/:id" element={<PublicAgentProfile />} />
+<<<<<<< HEAD
                 {/* Buyer-role authenticated routes — wrapped in BuyerPortalHeader */}
                 <Route element={<BuyerLayout />}>
                   <Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
@@ -324,6 +361,9 @@ const App = () => (
                   <Route path="/client/search" element={<RouteGuard requireAuth><BuyerSearch /></RouteGuard>} />
                   <Route path="/client/account" element={<RouteGuard requireAuth><ClientAgentSettings /></RouteGuard>} />
                 </Route>
+=======
+
+>>>>>>> 6ad91db1 (Publish buyer search (BuyerMapSearch) with clean routing + map fix)
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
@@ -331,7 +371,11 @@ const App = () => (
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
+<<<<<<< HEAD
                 <Route path="/client-agent-settings" element={<Navigate to="/auth" replace />} />
+=======
+                <Route path="/client-agent-settings" element={<Navigate to="/client/account" replace />} />
+>>>>>>> 6ad91db1 (Publish buyer search (BuyerMapSearch) with clean routing + map fix)
                 <Route path="/client/hotsheets/new" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/create-hotsheet" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
