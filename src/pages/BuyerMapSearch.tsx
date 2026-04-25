@@ -361,11 +361,62 @@ export default function BuyerMapSearch() {
         const recipientEmail = shareToEmail.trim();
         const recipientName = recipientEmail.split("@")[0] || "Recipient";
 
+        const escapeHtml = (value: string) =>
+          value
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        const listingCardsHtml = selectedVisibleListings
+          .map((listing) => {
+            const listingUrl = `${window.location.origin}/property/${listing.id}`;
+            const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
+            const address = escapeHtml(listing.address || "Address unavailable");
+            const cityStateZip = escapeHtml(
+              `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
+            );
+            const photoUrl = getPrimaryPhotoUrl(listing.photos);
+            const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
+            return [
+              `<a href="${listingUrl}" style="display:block;text-decoration:none;color:#111827;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin:14px 0;background:#ffffff;">`,
+              safePhoto
+                ? `<img src="${safePhoto}" alt="${address}" style="display:block;width:100%;height:190px;object-fit:cover;background:#f3f4f6;" />`
+                : `<div style="display:flex;align-items:center;justify-content:center;height:140px;background:#f3f4f6;color:#6b7280;font-size:12px;">Photo unavailable</div>`,
+              `<div style="padding:12px 14px;">`,
+              `<div style="font-size:18px;font-weight:700;color:#111827;">${escapeHtml(price)}</div>`,
+              `<div style="margin-top:4px;font-size:14px;font-weight:600;color:#111827;">${address}</div>`,
+              `<div style="margin-top:2px;font-size:12px;color:#6b7280;">${cityStateZip}</div>`,
+              `<div style="margin-top:10px;"><span style="display:inline-block;background:#0E56F5;color:#ffffff;font-size:12px;font-weight:600;padding:7px 11px;border-radius:7px;">View listing</span></div>`,
+              `</div>`,
+              `</a>`,
+            ].join("");
+          })
+          .join("");
+
+        const plainTextFallback = selectedVisibleListings
+          .map((listing) => {
+            const listingUrl = `${window.location.origin}/property/${listing.id}`;
+            const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
+            const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
+            return `- ${address} - ${price} - ${listingUrl}`;
+          })
+          .join("\n");
+
+        const composedMessageHtml = [
+          `${escapeHtml(shareMessage.trim()).replace(/\n/g, "<br>")}`,
+          "<br><br>",
+          listingCardsHtml,
+          "<br>",
+          `<strong>Plain-text links:</strong><br>${escapeHtml(plainTextFallback).replace(/\n/g, "<br>")}`,
+        ].join("");
+
         const { error } = await supabase.functions.invoke("send-bulk-email", {
           body: {
             recipients: [{ email: recipientEmail, name: recipientName }],
             subject: shareSubject.trim(),
-            message: shareMessage.trim(),
+            message: composedMessageHtml,
             agentId: user.id,
             sendAsGroup: false,
           },
@@ -384,7 +435,7 @@ export default function BuyerMapSearch() {
     };
 
     void run();
-  }, [shareToEmail, shareSubject, shareMessage]);
+  }, [shareToEmail, shareSubject, shareMessage, selectedVisibleListings]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
