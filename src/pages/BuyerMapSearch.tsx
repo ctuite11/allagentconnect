@@ -282,19 +282,6 @@ export default function BuyerMapSearch() {
     }
   }, [showKeptOnly, sessionKeptIds.size]);
 
-  const selectAllVisibleListings = () => {
-    setSessionKeptIds((prev) => {
-      const next = new Set(prev);
-      displayListings.forEach((listing) => next.add(listing.id));
-      return next;
-    });
-  };
-
-  const clearSelectedListings = () => {
-    setSessionKeptIds(new Set());
-    setShowKeptOnly(false);
-  };
-
   const toggleSessionKeep = (listingId: string) => {
     setSessionKeptIds((prev) => {
       const next = new Set(prev);
@@ -303,6 +290,44 @@ export default function BuyerMapSearch() {
       return next;
     });
   };
+
+  const selectAllKept = useCallback(() => {
+    setSessionKeptIds(new Set(sortedListings.map((l) => l.id)));
+  }, [sortedListings]);
+
+  const unselectAllKept = useCallback(() => {
+    setSessionKeptIds(new Set());
+  }, []);
+
+  const shareKept = useCallback(async () => {
+    if (sessionKeptIds.size === 0) return;
+    const origin = window.location.origin;
+    const lines = [...sessionKeptIds]
+      .map((id) => {
+        const listing = listings.find((l) => l.id === id);
+        const line = listing?.address
+          ? `${listing.address} — ${origin}/property/${id}`
+          : `${origin}/property/${id}`;
+        return line;
+      })
+      .filter(Boolean);
+    const text = lines.join("\n");
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: "Listings to review", text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast.success("Copied to clipboard");
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success("Copied to clipboard");
+      } catch {
+        toast.error("Could not share");
+      }
+    }
+  }, [sessionKeptIds, listings]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -1039,8 +1064,8 @@ export default function BuyerMapSearch() {
       </div>
 
       <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-        <div className="grid grid-cols-1 lg:grid-cols-[52%_48%] gap-4 h-auto lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[62dvh] sm:h-[66dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+        <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,39%)_minmax(0,61%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
             {loading ? (
               <div className="h-full flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
@@ -1086,64 +1111,86 @@ export default function BuyerMapSearch() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto lg:h-full lg:min-h-0 flex flex-col">
-            <div className="px-4 py-3 border-b border-zinc-200/60 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 min-w-0">
-                <p className="text-[11px] font-semibold text-zinc-600 tracking-[0.08em]">RESULTS</p>
-                <p className="text-sm font-medium text-zinc-900">{sortedListings.length.toLocaleString()} Homes</p>
-                {sessionKeptIds.size > 0 ? (
-                  <p className="text-xs text-zinc-600">
-                    <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span> selected
-                  </p>
-                ) : null}
+          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+            <div className="shrink-0 border-b border-zinc-200/60 bg-white px-4 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="min-w-0 text-sm font-medium text-zinc-900">
+                  {loading
+                    ? "Results: —"
+                    : `Results: ${displayListings.length.toLocaleString()}`}
+                </p>
+                <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                    <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
+                      <SelectValue placeholder="Sort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest</SelectItem>
+                      <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                      <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="h-7 rounded-md text-xs px-2.5"
-                  onClick={selectAllVisibleListings}
-                  disabled={displayListings.length === 0}
+                  className="h-7 rounded-md px-2.5 text-xs"
+                  onClick={selectAllKept}
+                  disabled={sortedListings.length === 0}
                 >
                   Select all
                 </Button>
-                {sessionKeptIds.size > 0 ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="default"
-                      className="h-7 rounded-md text-xs px-2.5"
-                      onClick={() => setShowKeptOnly(true)}
-                    >
-                      Keep selected
-                    </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-md px-2.5 text-xs"
+                  onClick={unselectAllKept}
+                  disabled={sessionKeptIds.size === 0}
+                >
+                  Unselect all
+                </Button>
+                {sessionKeptIds.size > 0 && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={showKeptOnly ? "default" : "outline"}
+                    className="h-7 rounded-md px-2.5 text-xs"
+                    onClick={() => setShowKeptOnly(true)}
+                    aria-pressed={showKeptOnly}
+                  >
+                    Keep selected only
+                  </Button>
+                )}
+                {sessionKeptIds.size > 0 && (
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="h-7 rounded-md text-xs px-2.5"
-                    onClick={clearSelectedListings}
+                    className="h-7 rounded-md px-2.5 text-xs"
+                    onClick={shareKept}
                   >
-                    Clear selected
+                    Share selected
                   </Button>
-                  </div>
-                ) : null}
-              </div>
-              <div className="w-[180px] shrink-0">
-                <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                  <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
-                    <SelectValue placeholder="Sort" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="price_asc">Price low to high</SelectItem>
-                    <SelectItem value="price_desc">Price high to low</SelectItem>
-                    <SelectItem value="newest">Newest</SelectItem>
-                  </SelectContent>
-                </Select>
+                )}
+                {showKeptOnly && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="default"
+                    className="h-7 rounded-md px-2.5 text-xs"
+                    onClick={() => setShowKeptOnly(false)}
+                  >
+                    Show all
+                  </Button>
+                )}
               </div>
             </div>
 
-            <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+            <div className="p-4 min-h-0 flex-1 lg:overflow-y-auto">
               {loading ? (
                 <div className="py-10 text-center text-sm text-zinc-500">Loading listings...</div>
               ) : sortedListings.length === 0 ? (
