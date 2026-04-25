@@ -276,6 +276,14 @@ export default function BuyerMapSearch() {
     return sortedListings.filter((l) => sessionKeptIds.has(l.id));
   }, [sortedListings, showKeptOnly, sessionKeptIds]);
 
+  const selectAllVisibleListings = () => {
+    setSessionKeptIds((prev) => {
+      const next = new Set(prev);
+      displayListings.forEach((listing) => next.add(listing.id));
+      return next;
+    });
+  };
+
   const toggleSessionKeep = (listingId: string) => {
     setSessionKeptIds((prev) => {
       const next = new Set(prev);
@@ -1091,8 +1099,29 @@ export default function BuyerMapSearch() {
             <div className="px-4 py-2.5 border-b border-zinc-200/60 bg-zinc-50/60 flex flex-wrap items-center gap-2 shrink-0">
               <span className="text-xs text-zinc-600">
                 <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span>{" "}
-                kept
+                selected
               </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 rounded-md text-xs px-2.5"
+                onClick={selectAllVisibleListings}
+                disabled={displayListings.length === 0}
+              >
+                Select all
+              </Button>
+              {sessionKeptIds.size > 0 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-md text-xs px-2.5"
+                  onClick={() => setSessionKeptIds(new Set())}
+                >
+                  Clear selected
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 size="sm"
@@ -1110,7 +1139,7 @@ export default function BuyerMapSearch() {
                 onClick={() => setShowKeptOnly(true)}
                 disabled={sessionKeptIds.size === 0}
               >
-                Show kept only
+                Keep selected
               </Button>
             </div>
 
