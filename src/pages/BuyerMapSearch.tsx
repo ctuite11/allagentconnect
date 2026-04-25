@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BedDouble, Bath, MapPin, Search as SearchIcon, SlidersHorizontal, Ruler, ChevronDown } from "lucide-react";
+import { BedDouble, Bath, MapPin, Search as SearchIcon, SlidersHorizontal, Ruler, ChevronDown, Check } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
@@ -1171,13 +1171,13 @@ export default function BuyerMapSearch() {
                             aria-pressed={isKept}
                             className={
                               isKept
-                                ? "h-8 min-h-8 min-w-0 px-2.5 text-xs font-semibold rounded-md shadow-sm border border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
-                                : "h-8 min-h-8 min-w-0 px-2.5 text-xs font-semibold rounded-md shadow-sm border border-zinc-200/90 bg-white text-zinc-900 hover:bg-zinc-50"
+                                ? "h-8 w-8 min-h-8 min-w-8 rounded-sm p-0 shadow-sm border border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
+                                : "h-8 w-8 min-h-8 min-w-8 rounded-sm p-0 shadow-sm border border-zinc-300/90 bg-white text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600"
                             }
                             title="Keep in this search"
                             aria-label={isKept ? "Remove from this session" : "Keep in this search"}
                           >
-                            {isKept ? "Kept ✓" : "Keep"}
+                            {isKept && <Check className="h-4 w-4" strokeWidth={2.5} />}
                           </Button>
                         </div>
                         <div
@@ -1188,7 +1188,7 @@ export default function BuyerMapSearch() {
                             listingId={listing.id}
                             size="icon"
                             photoIcon
-                            className="!h-8 !w-8 !min-w-0 p-0 [&>svg]:!h-8 [&>svg]:!w-8"
+                            className="!h-7 !w-7 !min-w-0 p-0 [&>svg]:!h-6 [&>svg]:!w-6"
                           />
                         </div>
                       </div>
