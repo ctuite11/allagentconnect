@@ -75,6 +75,19 @@ interface Favorite {
   };
 }
 
+interface MarketListing {
+  id: string;
+  address: string;
+  city: string;
+  state: string;
+  price: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_feet: number | null;
+  photos: any;
+  created_at: string;
+}
+
 export default function ClientDashboard() {
   const navigate = useNavigate();
   const { unreadCount } = useUnreadConversations();
@@ -86,6 +99,7 @@ export default function ClientDashboard() {
   const [shareTokenByHotSheetId, setShareTokenByHotSheetId] = useState<Record<string, string>>({});
   const [hotSheetMatchCountById, setHotSheetMatchCountById] = useState<Record<string, number>>({});
   const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
@@ -190,7 +204,11 @@ export default function ClientDashboard() {
 
     try {
       const activeAgentId = await loadAgentRelationship(user.id);
-      await Promise.all([loadHotSheets(user.id, activeAgentId), loadFavorites(user.id)]);
+      await Promise.all([
+        loadHotSheets(user.id, activeAgentId),
+        loadFavorites(user.id),
+        loadMarketListings(),
+      ]);
 
       if (cameFromInviteAcceptance && !activeAgentId) {
         await new Promise((resolve) => window.setTimeout(resolve, 1200));
@@ -382,6 +400,23 @@ export default function ClientDashboard() {
     }
   };
 
+  const loadMarketListings = async () => {
+    const { data, error } = await supabase
+      .from("listings")
+      .select("id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at")
+      .in("status", ["coming_soon", "active", "back_on_market"])
+      .order("created_at", { ascending: false })
+      .limit(6);
+
+    if (error) {
+      console.error("Failed to load market listings", error);
+      setMarketListings([]);
+      return;
+    }
+
+    setMarketListings((data || []) as MarketListing[]);
+  };
+
   const handleEndRelationship = async () => {
     if (!currentUserId) {
       console.error("End relationship: currentUserId is null");
@@ -419,7 +454,7 @@ export default function ClientDashboard() {
   };
 
   const activeSearches = hotSheets.filter((sheet) => sheet.is_active).length;
-  const recommendedHomes = favorites.slice(0, 3);
+  const latestListingsPreview = marketListings.slice(0, 3);
   const currentJourneyStage = hotSheets.length > 0 ? 2 : 1;
   const stageLabels = ["Search", "Touring", "Offer", "Under Agreement", "Closing"];
   const marketSnapshot = {
@@ -442,9 +477,9 @@ export default function ClientDashboard() {
     },
     {
       label: "New Matches",
-      value: recommendedHomes.length > 0 ? String(recommendedHomes.length) : "--",
+      value: latestListingsPreview.length > 0 ? String(latestListingsPreview.length) : "--",
       icon: Sparkles,
-      subtle: recommendedHomes.length > 0 ? "Updated today" : "Awaiting activity",
+      subtle: latestListingsPreview.length > 0 ? "Updated today" : "Awaiting activity",
     },
     {
       label: "Unread Messages",
@@ -518,7 +553,7 @@ export default function ClientDashboard() {
                 className="rounded-xl bg-white ring-1 ring-black/[0.05] shadow-[0_4px_18px_rgba(15,23,42,0.05)] p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Icon className="h-5 w-5 text-zinc-500" />
+                  <Icon className="h-5 w-5 text-[#0E56F5]" />
                 </div>
                 <div className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">{value}</div>
                 <div className="mt-1 text-xs font-medium text-zinc-500">{label}</div>
@@ -531,27 +566,35 @@ export default function ClientDashboard() {
             <div className="xl:col-span-2 space-y-6">
               <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
-                    Recommended for You
-                  </CardTitle>
-                  <CardDescription>
-                    Based on your saved searches and activity.
-                  </CardDescription>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
+                        Market Activity
+                      </CardTitle>
+                      <CardDescription>
+                        Fresh listings in the market, updated regardless of saved searches.
+                      </CardDescription>
+                    </div>
+                    <Button className={primaryCtaClass} onClick={() => navigate("/client/search")}>
+                      <Search className="w-4 h-4 mr-2" />
+                      Search homes
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {recommendedHomes.length > 0 ? (
+                  {latestListingsPreview.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {recommendedHomes.map((fav, index) => (
+                      {latestListingsPreview.map((listing, index) => (
                         <article
-                          key={fav.id}
+                          key={listing.id}
                           className="group cursor-pointer rounded-xl bg-white ring-1 ring-black/[0.05] shadow-[0_4px_16px_rgba(15,23,42,0.05)] overflow-hidden transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(15,23,42,0.10)]"
-                          onClick={() => navigate(`/property/${fav.listing.id}`)}
+                          onClick={() => navigate(`/property/${listing.id}`)}
                         >
                           <div className="relative aspect-[4/3] bg-zinc-100">
-                            {fav.listing.photos && fav.listing.photos[0] ? (
+                            {listing.photos && listing.photos[0] ? (
                               <img
-                                src={fav.listing.photos[0]}
-                                alt={fav.listing.address}
+                                src={listing.photos[0]}
+                                alt={listing.address}
                                 className="h-full w-full object-cover"
                               />
                             ) : (
@@ -564,22 +607,15 @@ export default function ClientDashboard() {
                                 NEW
                               </span>
                             )}
-                            <button
-                              type="button"
-                              className="absolute top-3 right-3 rounded-full bg-white/95 p-2 text-[#0E56F5] shadow-sm transition-colors hover:text-[#0B46CC]"
-                              aria-label="Saved home"
-                            >
-                              <Heart className="h-4 w-4 fill-current" />
-                            </button>
                           </div>
                           <div className="p-4 space-y-1.5">
                             <p className="text-lg font-semibold tracking-tight text-zinc-900">
-                              ${fav.listing.price.toLocaleString()}
+                              {listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable"}
                             </p>
-                            <p className="text-sm font-medium text-zinc-800 truncate">{fav.listing.address}</p>
-                            <p className="text-xs text-zinc-500">{fav.listing.city}, {fav.listing.state}</p>
+                            <p className="text-sm font-medium text-zinc-800 truncate">{listing.address}</p>
+                            <p className="text-xs text-zinc-500">{listing.city}, {listing.state}</p>
                             <p className="text-xs text-zinc-500 pt-1">
-                              {fav.listing.bedrooms ?? "--"} bd • {fav.listing.bathrooms ?? "--"} ba • -- sqft
+                              {listing.bedrooms ?? "--"} bd • {listing.bathrooms ?? "--"} ba • {listing.square_feet ? `${listing.square_feet.toLocaleString()} sqft` : "-- sqft"}
                             </p>
                           </div>
                         </article>
@@ -588,10 +624,11 @@ export default function ClientDashboard() {
                   ) : (
                     <div className="text-center py-8 rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100">
                       <p className="text-sm text-zinc-600 mb-4">
-                        Start exploring homes tailored to your goals.
+                        No listings yet. Start exploring homes to see live market activity.
                       </p>
                       <Button className={primaryCtaClass} onClick={() => navigate("/client/search")}>
-                        Browse Homes
+                        <Search className="w-4 h-4 mr-2" />
+                        Search homes
                       </Button>
                     </div>
                   )}
