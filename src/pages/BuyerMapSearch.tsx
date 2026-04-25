@@ -276,14 +276,6 @@ export default function BuyerMapSearch() {
     return sortedListings.filter((l) => sessionKeptIds.has(l.id));
   }, [sortedListings, showKeptOnly, sessionKeptIds]);
 
-  const selectAllVisibleListings = () => {
-    setSessionKeptIds((prev) => {
-      const next = new Set(prev);
-      displayListings.forEach((listing) => next.add(listing.id));
-      return next;
-    });
-  };
-
   const toggleSessionKeep = (listingId: string) => {
     setSessionKeptIds((prev) => {
       const next = new Set(prev);
@@ -1076,40 +1068,26 @@ export default function BuyerMapSearch() {
           </section>
 
           <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto lg:h-full lg:min-h-0 flex flex-col">
-            <div className="px-4 py-3 border-b border-zinc-200/60 bg-white flex items-center justify-between gap-3 shrink-0">
-              <div className="min-w-0">
+            <div className="px-4 py-3 border-b border-zinc-200/60 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 min-w-0">
                 <p className="text-[11px] font-semibold text-zinc-600 tracking-[0.08em]">RESULTS</p>
-                <p className="text-sm font-medium text-zinc-900 mt-0.5">{sortedListings.length.toLocaleString()} Homes</p>
-              </div>
-            </div>
-
-            <div className="px-4 py-2.5 border-b border-zinc-200/60 bg-zinc-50/60 flex flex-wrap items-center justify-between gap-2 shrink-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-zinc-600">
-                  <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span>{" "}
-                  selected
-                </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-md text-xs px-2.5"
-                  onClick={selectAllVisibleListings}
-                  disabled={displayListings.length === 0}
-                >
-                  Select all
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="default"
-                  className="h-7 rounded-md text-xs px-2.5"
-                  onClick={() => setShowKeptOnly(true)}
-                  disabled={sessionKeptIds.size === 0}
-                >
-                  Keep selected
-                </Button>
+                <p className="text-sm font-medium text-zinc-900">{sortedListings.length.toLocaleString()} Homes</p>
                 {sessionKeptIds.size > 0 ? (
+                  <p className="text-xs text-zinc-600">
+                    <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span> selected
+                  </p>
+                ) : null}
+                {sessionKeptIds.size > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="default"
+                      className="h-7 rounded-md text-xs px-2.5"
+                      onClick={() => setShowKeptOnly(true)}
+                    >
+                      Keep selected
+                    </Button>
                   <Button
                     type="button"
                     size="sm"
@@ -1119,6 +1097,7 @@ export default function BuyerMapSearch() {
                   >
                     Clear selected
                   </Button>
+                  </div>
                 ) : null}
               </div>
               <div className="w-[180px] shrink-0">
