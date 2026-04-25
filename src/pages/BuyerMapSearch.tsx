@@ -7,6 +7,7 @@ import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import PropertyMap from "@/components/PropertyMap";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { isDcmlsHost } from "@/lib/host";
+import { getListingPublicUrl } from "@/lib/getPublicUrl";
 import { toast } from "sonner";
 import FavoriteButton from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
@@ -363,9 +364,14 @@ export default function BuyerMapSearch() {
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#39;");
 
+        // CTA: matches :root --primary / --aac (hsl(221,92% 51%)); links: getListingPublicUrl → /property/:id + VITE_PUBLIC_URL | origin
+        const aacPrimaryCta = "#0E56F5";
+        const sharePhotoH = 150;
+        const shareImgColW = 240;
+
         const listingCardsHtml = selectedVisibleListings
           .map((listing) => {
-            const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
+            const listingUrl = getListingPublicUrl(listing.id);
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = escapeHtml(listing.address || "Address unavailable");
             const cityStateZip = escapeHtml(
@@ -376,16 +382,16 @@ export default function BuyerMapSearch() {
             return [
               `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
               `<tr>`,
-              `<td style="width:240px;vertical-align:top;background:#f3f4f6;">`,
+              `<td width="${shareImgColW}" style="width:${shareImgColW}px;vertical-align:top;background:#f3f4f6;padding:0;">`,
               safePhoto
-                ? `<a href="${listingUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" style="display:block;width:240px;height:170px;object-fit:cover;background:#f3f4f6;" /></a>`
-                : `<div style="display:flex;align-items:center;justify-content:center;width:240px;height:170px;background:#f3f4f6;color:#6b7280;font-size:12px;">Photo unavailable</div>`,
+                ? `<a href="${listingUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" width="${shareImgColW}" height="${sharePhotoH}" style="display:block;width:${shareImgColW}px;max-width:100%;height:${sharePhotoH}px;object-fit:cover;object-position:center;border:0;line-height:0;font-size:0;" /></a>`
+                : `<div style="box-sizing:border-box;width:${shareImgColW}px;height:${sharePhotoH}px;line-height:${sharePhotoH}px;text-align:center;background:#f3f4f6;color:#6b7280;font-size:12px;overflow:hidden;">Photo unavailable</div>`,
               `</td>`,
               `<td style="padding:16px 18px;vertical-align:top;">`,
               `<div style="font-size:22px;font-weight:700;color:#111827;line-height:1.2;">${escapeHtml(price)}</div>`,
               `<div style="margin-top:8px;font-size:15px;font-weight:600;color:#111827;line-height:1.35;">${address}</div>`,
               `<div style="margin-top:4px;font-size:13px;color:#6b7280;line-height:1.35;">${cityStateZip}</div>`,
-              `<div style="margin-top:16px;"><a href="${listingUrl}" style="display:inline-block;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;">View listing</a></div>`,
+              `<div style="margin-top:16px;"><a href="${listingUrl}" style="display:inline-block;background-color:${aacPrimaryCta};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;">View listing</a></div>`,
               `</td>`,
               `</tr>`,
               `</table>`,
@@ -395,7 +401,7 @@ export default function BuyerMapSearch() {
 
         const plainTextFallback = selectedVisibleListings
           .map((listing) => {
-            const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
+            const listingUrl = getListingPublicUrl(listing.id);
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
             return `- ${address} - ${price} - ${listingUrl}`;
