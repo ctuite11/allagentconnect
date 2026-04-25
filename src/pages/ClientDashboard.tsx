@@ -664,12 +664,13 @@ export default function ClientDashboard() {
                   <CardDescription className="text-xs">Alerts for saved searches.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className={`${primaryCtaClass} h-9 w-full text-sm sm:w-auto`} onClick={() => navigate("/hot-sheets")}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create hot sheet
-                  </Button>
                   {hotSheets.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <>
+                      <Button className={`${primaryCtaClass} h-9 w-full text-sm sm:w-auto`} onClick={() => navigate("/hot-sheets")}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create hot sheet
+                      </Button>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {hotSheets.slice(0, 6).map((sheet) => {
                         const hasNewListings =
                           Date.now() - new Date(sheet.created_at).getTime() < 1000 * 60 * 60 * 48;
@@ -709,9 +710,18 @@ export default function ClientDashboard() {
                           </div>
                         );
                       })}
-                    </div>
+                      </div>
+                    </>
                   ) : (
-                    <p className="text-xs text-zinc-500">No hot sheets yet — create one for alerts, or ask your agent to share.</p>
+                    <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                      <p className="max-w-sm text-xs text-zinc-600">
+                        No hot sheets yet — create one for alerts, or ask your agent to share.
+                      </p>
+                      <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/hot-sheets")}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create hot sheet
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -760,14 +770,10 @@ export default function ClientDashboard() {
                       })}
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-6 text-center">
-                      <p className="text-sm text-zinc-600">No favorites yet.</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 h-8 rounded-md text-xs"
-                        onClick={() => navigate("/client/search")}
-                      >
+                    <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                      <p className="max-w-sm text-sm text-zinc-600">No favorites yet.</p>
+                      <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/client/search")}>
+                        <Search className="mr-2 h-4 w-4" />
                         Search homes
                       </Button>
                     </div>
