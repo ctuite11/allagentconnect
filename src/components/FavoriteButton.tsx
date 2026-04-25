@@ -130,7 +130,7 @@ const FavoriteButton = ({
           className={cn(
             "h-7 w-7 shrink-0 drop-shadow-md",
             isFavorite
-              ? "fill-red-500 text-red-500"
+              ? "fill-[#FF2D55] text-[#FF2D55]"
               : "fill-white text-white",
           )}
         />
