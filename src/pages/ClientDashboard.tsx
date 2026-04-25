@@ -14,6 +14,7 @@ import {
   Sparkles,
   Mail,
 } from "lucide-react";
+import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
@@ -105,7 +106,7 @@ function DashboardListingImage({ photoUrl, alt }: { photoUrl: string; alt: strin
   const useMonogram = !photoUrl || photoUrl === "/placeholder.svg" || loadFailed;
   if (useMonogram) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-[#0E56F5]" aria-hidden>
+      <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[#0E56F5]" aria-hidden>
         <AACMonogram className="h-7 w-7" size={28} />
       </div>
     );
@@ -514,7 +515,14 @@ export default function ClientDashboard() {
     },
   ];
 
-  const primaryCtaClass = "rounded-lg bg-[#0E56F5] text-white hover:bg-[#0B46CC]";
+  const primaryCtaClass =
+    "rounded-lg bg-[#0E56F5] text-white shadow-sm transition-shadow duration-200 hover:bg-[#0B46CC] hover:shadow-md";
+  const dashboardShellClass =
+    "rounded-2xl border border-gray-200/60 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md";
+  const dashboardInsetCardClass =
+    "overflow-hidden rounded-xl border border-gray-200/60 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-px";
+  const outlineSecondaryClass =
+    "border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-gray-50 hover:shadow-sm";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
 
   if (loading) {
@@ -532,17 +540,22 @@ export default function ClientDashboard() {
     <div className="bg-background">
       <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
         <div className="space-y-8">
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 md:p-6">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <section className={`${dashboardShellClass} p-5 md:p-6`}>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="space-y-1">
-                  <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
                     {buyerFirstName ? `Hi, ${buyerFirstName}` : "Welcome"}
                   </h1>
-                  <p className="text-sm text-zinc-600">Your dashboard — favorites, hot sheets, and new listings.</p>
+                  <p className="text-sm text-gray-500">Your dashboard — favorites, hot sheets, and new listings.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="rounded-md" onClick={() => setAddFriendOpen(true)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`rounded-md ${outlineSecondaryClass}`}
+                    onClick={() => setAddFriendOpen(true)}
+                  >
                     <UserPlus className="mr-2 h-4 w-4" />
                     Add a Friend
                   </Button>
@@ -552,18 +565,18 @@ export default function ClientDashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="relative w-full shrink-0 border-t border-zinc-100 pt-4 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:border-t-0 lg:pt-0">
+              <div className="relative w-full shrink-0 pt-2 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:pt-0">
                 {agent ? (
                   <>
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="absolute right-0 top-4 z-10 h-9 w-9 shrink-0 rounded-full border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 lg:top-0"
+                      className={`absolute right-0 top-2 z-10 h-9 w-9 shrink-0 rounded-full bg-white lg:top-0 ${outlineSecondaryClass}`}
                       aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
                       onClick={() => navigate("/messages")}
                     >
-                      <MessageSquare className="h-4 w-4 text-zinc-700" />
+                      <MessageSquare className="h-4 w-4 text-gray-700" />
                       {unreadCount > 0 ? (
                         <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
                           {unreadCount > 9 ? "9+" : unreadCount}
@@ -572,31 +585,31 @@ export default function ClientDashboard() {
                     </Button>
                     <div className="flex flex-col items-center gap-2 pr-11 lg:pr-12">
                       <div className="flex max-w-full items-start gap-3">
-                        <Avatar className="h-16 w-16 shrink-0 ring-1 ring-zinc-200">
+                        <Avatar className="h-16 w-16 shrink-0 ring-1 ring-gray-200">
                           <AvatarImage src={agent.headshot_url || ""} />
-                          <AvatarFallback className="text-sm font-medium text-zinc-600">
+                          <AvatarFallback className="text-sm font-medium text-gray-600">
                             {agent.first_name[0]}
                             {agent.last_name[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
-                          <p className="text-sm font-bold text-zinc-900">
+                          <p className="text-sm font-bold text-gray-900">
                             {agent.first_name} {agent.last_name}
                           </p>
                           {agent.company ? (
-                            <p className="text-xs text-zinc-500">{agent.company}</p>
+                            <p className="text-xs text-gray-500">{agent.company}</p>
                           ) : null}
                           {agentPhoneFmt ? (
                             <a
                               href={agentPhoneFmt.telHref}
-                              className="block text-sm text-zinc-800 hover:underline"
+                              className="block text-sm text-gray-800 hover:underline"
                             >
                               {agentPhoneFmt.display}
                             </a>
                           ) : null}
                           <a
                             href={`mailto:${agent.email}`}
-                            className="block break-all text-xs leading-snug text-zinc-600 hover:underline"
+                            className="block break-all text-xs leading-snug text-gray-600 hover:underline"
                           >
                             {agent.email}
                           </a>
@@ -607,7 +620,7 @@ export default function ClientDashboard() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-9 shrink-0 whitespace-nowrap rounded-md px-3 text-xs sm:text-sm"
+                          className={`h-9 shrink-0 whitespace-nowrap rounded-md px-3 text-xs sm:text-sm ${outlineSecondaryClass}`}
                           onClick={() => {
                             window.location.href = `mailto:${agent.email}`;
                           }}
@@ -619,7 +632,7 @@ export default function ClientDashboard() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-9 shrink-0 whitespace-nowrap rounded-md border-red-200 bg-white px-2.5 text-xs text-red-700 hover:bg-red-50 sm:px-3 sm:text-sm"
+                          className="h-9 shrink-0 whitespace-nowrap rounded-md border border-red-200/80 bg-white px-2.5 text-xs text-red-700 shadow-sm transition-shadow duration-200 hover:bg-red-50 hover:shadow-sm sm:px-3 sm:text-sm"
                           onClick={() => setShowEndDialog(true)}
                         >
                           <UserX className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
@@ -629,7 +642,7 @@ export default function ClientDashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-xs text-zinc-500 lg:text-right">No agent linked yet.</p>
+                  <p className="text-xs text-gray-500 lg:text-right">No agent linked yet.</p>
                 )}
               </div>
             </div>
@@ -637,33 +650,36 @@ export default function ClientDashboard() {
 
           <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
             {stats.map(({ label, value, icon: Icon, subtle }) => (
-              <div
-                key={label}
-                className="rounded-lg border border-zinc-200 bg-white p-3 lg:p-4"
-              >
+              <div key={label} className={`${dashboardShellClass} p-5 md:p-6`}>
                 <div className="flex items-start justify-between gap-3">
                   <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
                 </div>
-                <div className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">{value}</div>
-                <div className="mt-1 text-xs font-medium text-zinc-500">{label}</div>
-                {subtle && <div className="mt-2 text-[11px] text-zinc-400">{subtle}</div>}
+                <div className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">{value}</div>
+                <div className="mt-1 text-sm font-medium text-gray-500">{label}</div>
+                {subtle && <div className="mt-2 text-xs text-gray-400">{subtle}</div>}
               </div>
             ))}
           </section>
 
           <section className="space-y-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <Card className="rounded-xl border border-zinc-200 bg-white">
-                <CardHeader className="pb-2">
+              <div className={`${dashboardShellClass} overflow-hidden`}>
+                <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
+                <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="text-base font-semibold text-zinc-900">Hot Sheets</CardTitle>
-                    <Button size="sm" variant="outline" className="h-8 rounded-md text-xs" onClick={() => navigate("/hot-sheets")}>
+                    <CardTitle className="text-base font-semibold text-gray-900">Hot Sheets</CardTitle>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`h-8 rounded-md text-xs ${outlineSecondaryClass}`}
+                      onClick={() => navigate("/hot-sheets")}
+                    >
                       Manage
                     </Button>
                   </div>
-                  <CardDescription className="text-xs">Alerts for saved searches.</CardDescription>
+                  <CardDescription className="text-sm text-gray-500">Alerts for saved searches.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 p-5 pt-0 md:p-6 md:pt-0">
                   {hotSheets.length > 0 ? (
                     <>
                       <Button className={`${primaryCtaClass} h-9 w-full text-sm sm:w-auto`} onClick={() => navigate("/hot-sheets")}>
@@ -689,11 +705,11 @@ export default function ClientDashboard() {
                                 navigate(`/client/hotsheet/${token}`);
                               }
                             }}
-                            className={`overflow-hidden rounded-lg border border-zinc-200 bg-white ${
-                              token ? "cursor-pointer hover:border-zinc-300" : "opacity-80"
+                            className={`${dashboardInsetCardClass} ${
+                              token ? "cursor-pointer" : "cursor-default opacity-80"
                             }`}
                           >
-                            <div className="relative flex h-[4.5rem] items-center justify-center bg-zinc-100 text-[#0E56F5]">
+                            <div className="relative flex h-[4.5rem] items-center justify-center bg-gray-50 text-[#0E56F5]">
                               <AACMonogram className="h-8 w-8" size={32} />
                               {hasNewListings && (
                                 <span className="absolute left-1.5 top-1.5 rounded bg-[#0E56F5]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[#0E56F5]">
@@ -702,8 +718,8 @@ export default function ClientDashboard() {
                               )}
                             </div>
                             <div className="space-y-0.5 p-2">
-                              <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-zinc-900">{sheet.name}</p>
-                              <p className="text-[10px] text-zinc-500">
+                              <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-gray-900">{sheet.name}</p>
+                              <p className="text-[10px] text-gray-500">
                                 {matchCount} {matchCount === 1 ? "match" : "matches"} · {sheet.is_active ? "Active" : "Paused"}
                               </p>
                             </div>
@@ -714,7 +730,7 @@ export default function ClientDashboard() {
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                      <p className="max-w-sm text-xs text-zinc-600">
+                      <p className="max-w-sm text-xs text-gray-600">
                         No hot sheets yet — create one for alerts, or ask your agent to share.
                       </p>
                       <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/hot-sheets")}>
@@ -724,24 +740,26 @@ export default function ClientDashboard() {
                     </div>
                   )}
                 </CardContent>
-              </Card>
+                </Card>
+              </div>
 
-              <Card className="rounded-xl border border-zinc-200 bg-white">
-                <CardHeader className="pb-2">
+              <div className={`${dashboardShellClass} overflow-hidden`}>
+                <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
+                <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="text-base font-semibold text-zinc-900">Favorites</CardTitle>
+                    <CardTitle className="text-base font-semibold text-gray-900">Favorites</CardTitle>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-8 rounded-md text-xs"
+                      className={`h-8 rounded-md text-xs ${outlineSecondaryClass}`}
                       onClick={() => navigate("/favorites")}
                     >
                       View all
                     </Button>
                   </div>
-                  <CardDescription className="text-xs">Homes you saved.</CardDescription>
+                  <CardDescription className="text-sm text-gray-500">Homes you saved.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-5 pt-0 md:p-6 md:pt-0">
                   {favorites.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {favorites.slice(0, 6).map((fav) => {
@@ -750,18 +768,18 @@ export default function ClientDashboard() {
                           <button
                             key={fav.id}
                             type="button"
-                            className="overflow-hidden rounded-lg border border-zinc-200 bg-white text-left hover:border-zinc-300"
+                            className={`${dashboardInsetCardClass} text-left`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
-                            <div className="relative h-[4.5rem] bg-zinc-100">
+                            <div className="relative h-[4.5rem] bg-gray-50">
                               <DashboardListingImage photoUrl={favPhotoUrl} alt="" />
                             </div>
                             <div className="space-y-0.5 p-2">
-                              <p className="text-[11px] font-semibold text-zinc-900">
+                              <p className="text-[11px] font-semibold text-gray-900">
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
-                              <p className="line-clamp-2 text-[10px] font-medium leading-tight text-zinc-800">{fav.listing.address}</p>
-                              <p className="truncate text-[10px] text-zinc-500">
+                              <p className="line-clamp-2 text-[10px] font-medium leading-tight text-gray-800">{fav.listing.address}</p>
+                              <p className="truncate text-[10px] text-gray-500">
                                 {fav.listing.city}, {fav.listing.state}
                               </p>
                             </div>
@@ -771,7 +789,7 @@ export default function ClientDashboard() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                      <p className="max-w-sm text-sm text-zinc-600">No favorites yet.</p>
+                      <p className="max-w-sm text-sm text-gray-600">No favorites yet.</p>
                       <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/client/search")}>
                         <Search className="mr-2 h-4 w-4" />
                         Search homes
@@ -779,15 +797,17 @@ export default function ClientDashboard() {
                     </div>
                   )}
                 </CardContent>
-              </Card>
+                </Card>
+              </div>
             </div>
 
-            <Card className="rounded-xl border border-zinc-200 bg-white">
-              <CardHeader className="pb-2">
+            <div className={`${dashboardShellClass} overflow-hidden`}>
+              <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
+              <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base font-semibold text-zinc-900">Market activity</CardTitle>
-                    <CardDescription className="text-xs">New listings on the market.</CardDescription>
+                  <div className="space-y-1">
+                    <CardTitle className="text-base font-semibold text-gray-900">Market activity</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">New listings on the market.</CardDescription>
                   </div>
                   <Button className={`${primaryCtaClass} h-8 shrink-0 text-xs`} onClick={() => navigate("/client/search")}>
                     <Search className="mr-1.5 h-3.5 w-3.5" />
@@ -795,27 +815,27 @@ export default function ClientDashboard() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-5 pt-0 md:p-6 md:pt-0">
                 {latestListingsPreview.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                     {latestListingsPreview.map((listing) => (
                       <article
                         key={listing.id}
-                        className="cursor-pointer overflow-hidden rounded-lg border border-zinc-200 bg-white hover:border-zinc-300"
+                        className={`${dashboardInsetCardClass} cursor-pointer`}
                         onClick={() => navigate(`/property/${listing.id}`)}
                       >
-                        <div className="relative h-[4.5rem] bg-zinc-100">
+                        <div className="relative h-[4.5rem] bg-gray-50">
                           <DashboardListingImage
                             photoUrl={getPrimaryPhotoUrl(listing.photos)}
                             alt={listing.address}
                           />
                         </div>
                         <div className="space-y-0.5 p-2">
-                          <p className="text-[11px] font-semibold text-zinc-900">
+                          <p className="text-[11px] font-semibold text-gray-900">
                             {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                           </p>
-                          <p className="line-clamp-2 text-[10px] font-medium leading-tight text-zinc-800">{listing.address}</p>
-                          <p className="truncate text-[10px] text-zinc-500">
+                          <p className="line-clamp-2 text-[10px] font-medium leading-tight text-gray-800">{listing.address}</p>
+                          <p className="truncate text-[10px] text-gray-500">
                             {listing.city}, {listing.state}
                           </p>
                         </div>
@@ -823,16 +843,31 @@ export default function ClientDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 py-6 text-center">
-                    <p className="text-sm text-zinc-600">No listings to show yet.</p>
-                    <Button className={`${primaryCtaClass} mt-3 h-8 text-xs`} onClick={() => navigate("/client/search")}>
+                  <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                    <p className="text-sm text-gray-600">No listings to show yet.</p>
+                    <Button className={`${primaryCtaClass} h-8 shrink-0 text-xs`} onClick={() => navigate("/client/search")}>
                       <Search className="mr-1.5 h-3.5 w-3.5" />
                       Search homes
                     </Button>
                   </div>
                 )}
+                {isDcmlsHost() ? (
+                  <p className="mt-4 text-center text-xs leading-snug text-gray-400">
+                    Listings shown may include homes published on{" "}
+                    <a
+                      href="https://directconnectmls.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-gray-500 underline-offset-2 hover:underline"
+                    >
+                      directconnectmls.com
+                    </a>
+                    .
+                  </p>
+                ) : null}
               </CardContent>
-            </Card>
+              </Card>
+            </div>
           </section>
 
           <section>
