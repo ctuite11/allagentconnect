@@ -276,6 +276,17 @@ export default function BuyerMapSearch() {
     return sortedListings.filter((l) => sessionKeptIds.has(l.id));
   }, [sortedListings, showKeptOnly, sessionKeptIds]);
 
+  const visibleSelectionState = useMemo(() => {
+    const n = displayListings.length;
+    if (n === 0) {
+      return { allVisible: false, someVisible: false, noneVisible: true };
+    }
+    const selected = displayListings.filter((l) => sessionKeptIds.has(l.id)).length;
+    if (selected === 0) return { allVisible: false, someVisible: false, noneVisible: true };
+    if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
+    return { allVisible: false, someVisible: true, noneVisible: false };
+  }, [displayListings, sessionKeptIds]);
+
   useEffect(() => {
     if (showKeptOnly && sessionKeptIds.size === 0) {
       setShowKeptOnly(false);
@@ -291,18 +302,29 @@ export default function BuyerMapSearch() {
     });
   };
 
-  const selectAllKept = useCallback(() => {
-    setSessionKeptIds(new Set(sortedListings.map((l) => l.id)));
-  }, [sortedListings]);
+  const addAllVisible = useCallback(() => {
+    setSessionKeptIds((prev) => {
+      const next = new Set(prev);
+      displayListings.forEach((l) => next.add(l.id));
+      return next;
+    });
+  }, [displayListings]);
 
-  const unselectAllKept = useCallback(() => {
-    setSessionKeptIds(new Set());
-  }, []);
+  const unselectAllVisible = useCallback(() => {
+    setSessionKeptIds((prev) => {
+      const next = new Set(prev);
+      displayListings.forEach((l) => next.delete(l.id));
+      return next;
+    });
+  }, [displayListings]);
 
-  const shareKept = useCallback(async () => {
-    if (sessionKeptIds.size === 0) return;
+  const shareVisibleSelected = useCallback(async () => {
+    const ids = displayListings
+      .filter((l) => sessionKeptIds.has(l.id))
+      .map((l) => l.id);
+    if (ids.length === 0) return;
     const origin = window.location.origin;
-    const lines = [...sessionKeptIds]
+    const lines = ids
       .map((id) => {
         const listing = listings.find((l) => l.id === id);
         const line = listing?.address
@@ -327,7 +349,7 @@ export default function BuyerMapSearch() {
         toast.error("Could not share");
       }
     }
-  }, [sessionKeptIds, listings]);
+  }, [displayListings, sessionKeptIds, listings]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -1113,8 +1135,8 @@ export default function BuyerMapSearch() {
 
           <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
             <div className="shrink-0 border-b border-zinc-200/60 bg-white px-4 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="min-w-0 text-sm font-medium text-zinc-900">
+              <div className="flex flex-nowrap items-center justify-between gap-2 min-w-0">
+                <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">
                   {loading
                     ? "Results: —"
                     : `Results: ${displayListings.length.toLocaleString()}`}
@@ -1133,47 +1155,70 @@ export default function BuyerMapSearch() {
                 </div>
               </div>
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-md px-2.5 text-xs"
-                  onClick={selectAllKept}
-                  disabled={sortedListings.length === 0}
-                >
-                  Select all
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-md px-2.5 text-xs"
-                  onClick={unselectAllKept}
-                  disabled={sessionKeptIds.size === 0}
-                >
-                  Unselect all
-                </Button>
-                {sessionKeptIds.size > 0 && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={showKeptOnly ? "default" : "outline"}
-                    className="h-7 rounded-md px-2.5 text-xs"
-                    onClick={() => setShowKeptOnly(true)}
-                    aria-pressed={showKeptOnly}
-                  >
-                    Keep selected only
-                  </Button>
+                {visibleSelectionState.allVisible && (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-md px-2.5 text-xs"
+                      onClick={unselectAllVisible}
+                    >
+                      Unselect all
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-md px-2.5 text-xs"
+                      onClick={shareVisibleSelected}
+                    >
+                      Share selected
+                    </Button>
+                  </>
                 )}
-                {sessionKeptIds.size > 0 && (
+                {visibleSelectionState.someVisible && (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-md px-2.5 text-xs"
+                      onClick={addAllVisible}
+                    >
+                      Select all
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={showKeptOnly ? "default" : "outline"}
+                      className="h-7 rounded-md px-2.5 text-xs"
+                      onClick={() => setShowKeptOnly(true)}
+                      aria-pressed={showKeptOnly}
+                    >
+                      Keep selected only
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-md px-2.5 text-xs"
+                      onClick={shareVisibleSelected}
+                    >
+                      Share selected
+                    </Button>
+                  </>
+                )}
+                {visibleSelectionState.noneVisible && (
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     className="h-7 rounded-md px-2.5 text-xs"
-                    onClick={shareKept}
+                    onClick={addAllVisible}
+                    disabled={displayListings.length === 0}
                   >
-                    Share selected
+                    Select all
                   </Button>
                 )}
                 {showKeptOnly && (
