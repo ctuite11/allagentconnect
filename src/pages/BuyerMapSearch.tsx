@@ -365,7 +365,7 @@ export default function BuyerMapSearch() {
 
         const listingCardsHtml = selectedVisibleListings
           .map((listing) => {
-            const listingUrl = `${window.location.origin}/property/${listing.id}`;
+            const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = escapeHtml(listing.address || "Address unavailable");
             const cityStateZip = escapeHtml(
@@ -374,18 +374,18 @@ export default function BuyerMapSearch() {
             const photoUrl = getPrimaryPhotoUrl(listing.photos);
             const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
             return [
-              `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin:12px 0;background:#ffffff;">`,
+              `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
               `<tr>`,
-              `<td style="width:140px;vertical-align:top;background:#f3f4f6;">`,
+              `<td style="width:240px;vertical-align:top;background:#f3f4f6;">`,
               safePhoto
-                ? `<a href="${listingUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" style="display:block;width:140px;height:105px;object-fit:cover;background:#f3f4f6;" /></a>`
-                : `<div style="display:flex;align-items:center;justify-content:center;width:140px;height:105px;background:#f3f4f6;color:#6b7280;font-size:11px;">Photo unavailable</div>`,
+                ? `<a href="${listingUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" style="display:block;width:240px;height:170px;object-fit:cover;background:#f3f4f6;" /></a>`
+                : `<div style="display:flex;align-items:center;justify-content:center;width:240px;height:170px;background:#f3f4f6;color:#6b7280;font-size:12px;">Photo unavailable</div>`,
               `</td>`,
-              `<td style="padding:10px 12px;vertical-align:top;">`,
-              `<div style="font-size:16px;font-weight:700;color:#111827;line-height:1.2;">${escapeHtml(price)}</div>`,
-              `<div style="margin-top:4px;font-size:13px;font-weight:600;color:#111827;line-height:1.3;">${address}</div>`,
-              `<div style="margin-top:2px;font-size:12px;color:#6b7280;line-height:1.3;">${cityStateZip}</div>`,
-              `<div style="margin-top:10px;"><a href="${listingUrl}" style="display:inline-block;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:12px;font-weight:600;padding:6px 10px;border-radius:7px;">View listing</a></div>`,
+              `<td style="padding:16px 18px;vertical-align:top;">`,
+              `<div style="font-size:22px;font-weight:700;color:#111827;line-height:1.2;">${escapeHtml(price)}</div>`,
+              `<div style="margin-top:8px;font-size:15px;font-weight:600;color:#111827;line-height:1.35;">${address}</div>`,
+              `<div style="margin-top:4px;font-size:13px;color:#6b7280;line-height:1.35;">${cityStateZip}</div>`,
+              `<div style="margin-top:16px;"><a href="${listingUrl}" style="display:inline-block;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;">View listing</a></div>`,
               `</td>`,
               `</tr>`,
               `</table>`,
@@ -395,7 +395,7 @@ export default function BuyerMapSearch() {
 
         const plainTextFallback = selectedVisibleListings
           .map((listing) => {
-            const listingUrl = `${window.location.origin}/property/${listing.id}`;
+            const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
             return `- ${address} - ${price} - ${listingUrl}`;
@@ -404,10 +404,21 @@ export default function BuyerMapSearch() {
 
         const messageHtml = escapeHtml(shareMessage.trim()).replace(/\n/g, "<br>");
         const composedMessageHtml = [
-          `<div style="max-width:620px;margin:0 auto;font-family:Arial,sans-serif;">`,
-          `<div style="font-size:14px;line-height:1.5;color:#111827;">${messageHtml}</div>`,
-          `<div style="margin-top:12px;">${listingCardsHtml}</div>`,
+          `<div style="margin:0;padding:0;background:#f5f7fb;">`,
+          `<div style="max-width:680px;margin:0 auto;font-family:Arial,sans-serif;padding:20px 14px;">`,
+          `<div style="background:#0E56F5;color:#ffffff;border-radius:12px 12px 0 0;padding:16px 20px;">`,
+          `<div style="font-size:20px;font-weight:700;letter-spacing:0.2px;">All Agent Connect</div>`,
+          `<div style="font-size:13px;opacity:0.95;margin-top:2px;">Shared listings</div>`,
+          `</div>`,
+          `<div style="background:#ffffff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:18px 20px 16px 20px;">`,
+          `<div style="font-size:14px;line-height:1.6;color:#111827;">${messageHtml}</div>`,
+          `<div style="margin-top:14px;">${listingCardsHtml}</div>`,
+          `<div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;line-height:1.5;">`,
+          `Sent from All Agent Connect. If a listing is no longer available, your agent can share updated options.`,
+          `</div>`,
+          `</div>`,
           `<!-- plain-text-fallback: ${escapeHtml(plainTextFallback)} -->`,
+          `</div>`,
           `</div>`,
         ].join("");
 
