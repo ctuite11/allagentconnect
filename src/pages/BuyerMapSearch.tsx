@@ -1139,90 +1139,90 @@ export default function BuyerMapSearch() {
                     : `Results: ${displayListings.length.toLocaleString()}`}
                 </p>
               </div>
-              <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                {visibleSelectionState.allVisible && (
-                  <>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-7 rounded-md px-2.5 text-xs"
-                      onClick={unselectAllVisible}
-                    >
-                      Unselect all
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-7 rounded-md px-2.5 text-xs"
-                      onClick={shareVisibleSelected}
-                    >
-                      Share selected
-                    </Button>
-                  </>
-                )}
-                {visibleSelectionState.someVisible && (
-                  <>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-7 rounded-md px-2.5 text-xs"
-                      onClick={addAllVisible}
-                    >
-                      Select all
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={showKeptOnly ? "default" : "outline"}
-                      className="h-7 rounded-md px-2.5 text-xs"
-                      onClick={() => setShowKeptOnly(true)}
-                      aria-pressed={showKeptOnly}
-                    >
-                      Keep selected only
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-7 rounded-md px-2.5 text-xs"
-                      onClick={shareVisibleSelected}
-                    >
-                      Share selected
-                    </Button>
-                  </>
-                )}
-                {visibleSelectionState.noneVisible && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 rounded-md px-2.5 text-xs"
-                    onClick={addAllVisible}
-                    disabled={displayListings.length === 0}
-                  >
-                    Select all
-                  </Button>
-                )}
-                {showKeptOnly && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="default"
-                    className="h-7 rounded-md px-2.5 text-xs"
-                    onClick={() => setShowKeptOnly(false)}
-                  >
-                    Show all
-                  </Button>
-                )}
-              </div>
             </div>
 
             <div className="p-4 min-h-0 flex-1 lg:overflow-y-auto">
               {!loading && sortedListings.length > 0 && (
-                <div className="mb-3 flex justify-end">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {visibleSelectionState.allVisible && (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 rounded-md px-2.5 text-xs"
+                          onClick={unselectAllVisible}
+                        >
+                          Unselect all
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 rounded-md px-2.5 text-xs"
+                          onClick={shareVisibleSelected}
+                        >
+                          Share selected
+                        </Button>
+                      </>
+                    )}
+                    {visibleSelectionState.someVisible && (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 rounded-md px-2.5 text-xs"
+                          onClick={addAllVisible}
+                        >
+                          Select all
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={showKeptOnly ? "default" : "outline"}
+                          className="h-7 rounded-md px-2.5 text-xs"
+                          onClick={() => setShowKeptOnly(true)}
+                          aria-pressed={showKeptOnly}
+                        >
+                          Keep selected only
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 rounded-md px-2.5 text-xs"
+                          onClick={shareVisibleSelected}
+                        >
+                          Share selected
+                        </Button>
+                      </>
+                    )}
+                    {visibleSelectionState.noneVisible && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 rounded-md px-2.5 text-xs"
+                        onClick={addAllVisible}
+                        disabled={displayListings.length === 0}
+                      >
+                        Select all
+                      </Button>
+                    )}
+                    {showKeptOnly && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        className="h-7 rounded-md px-2.5 text-xs"
+                        onClick={() => setShowKeptOnly(false)}
+                      >
+                        Show all
+                      </Button>
+                    )}
+                  </div>
                   <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
                     <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
                       <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
