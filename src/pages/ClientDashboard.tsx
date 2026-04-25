@@ -519,7 +519,7 @@ export default function ClientDashboard() {
   const primaryCtaClass =
     "rounded-lg bg-[#0E56F5] text-white shadow-sm transition-shadow duration-200 hover:bg-[#0B46CC] hover:shadow-md";
   const dashboardShellClass =
-    "rounded-2xl border border-gray-200/60 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md";
+    "rounded-2xl border border-gray-200/60 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5";
   const dashboardInsetCardClass =
     "overflow-hidden rounded-xl border border-gray-200/60 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-px";
   const outlineSecondaryClass =
