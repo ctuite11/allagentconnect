@@ -575,10 +575,10 @@ export default function ClientDashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="w-full shrink-0 border-t border-zinc-100 pt-4 lg:w-auto lg:max-w-[22rem] lg:border-t-0 lg:pt-0">
+              <div className="w-full shrink-0 border-t border-zinc-100 pt-4 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:border-t-0 lg:pt-0">
                 {agent ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex max-w-full items-start gap-3">
                       <Avatar className="h-16 w-16 shrink-0 ring-1 ring-zinc-200">
                         <AvatarImage src={agent.headshot_url || ""} />
                         <AvatarFallback className="text-sm font-medium text-zinc-600">
@@ -586,7 +586,7 @@ export default function ClientDashboard() {
                           {agent.last_name[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="min-w-0 max-w-[min(16rem,calc(100vw-6rem))] space-y-0.5 sm:max-w-[17rem]">
                         <p className="text-sm font-bold text-zinc-900">
                           {agent.first_name} {agent.last_name}
                         </p>
@@ -609,7 +609,7 @@ export default function ClientDashboard() {
                         </a>
                       </div>
                     </div>
-                    <div className="flex justify-center gap-3">
+                    <div className="flex shrink-0 flex-wrap justify-center gap-3">
                       <Button
                         type="button"
                         variant="outline"
@@ -663,7 +663,7 @@ export default function ClientDashboard() {
                 className="rounded-lg border border-zinc-200 bg-white p-3 lg:p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Icon className="h-5 w-5 text-[#0E56F5]" />
+                  <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
                 </div>
                 <div className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">{value}</div>
                 <div className="mt-1 text-xs font-medium text-zinc-500">{label}</div>
