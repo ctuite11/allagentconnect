@@ -276,6 +276,25 @@ export default function BuyerMapSearch() {
     return sortedListings.filter((l) => sessionKeptIds.has(l.id));
   }, [sortedListings, showKeptOnly, sessionKeptIds]);
 
+  useEffect(() => {
+    if (showKeptOnly && sessionKeptIds.size === 0) {
+      setShowKeptOnly(false);
+    }
+  }, [showKeptOnly, sessionKeptIds.size]);
+
+  const selectAllVisibleListings = () => {
+    setSessionKeptIds((prev) => {
+      const next = new Set(prev);
+      displayListings.forEach((listing) => next.add(listing.id));
+      return next;
+    });
+  };
+
+  const clearSelectedListings = () => {
+    setSessionKeptIds(new Set());
+    setShowKeptOnly(false);
+  };
+
   const toggleSessionKeep = (listingId: string) => {
     setSessionKeptIds((prev) => {
       const next = new Set(prev);
@@ -1077,6 +1096,16 @@ export default function BuyerMapSearch() {
                     <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span> selected
                   </p>
                 ) : null}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-md text-xs px-2.5"
+                  onClick={selectAllVisibleListings}
+                  disabled={displayListings.length === 0}
+                >
+                  Select all
+                </Button>
                 {sessionKeptIds.size > 0 ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
@@ -1093,7 +1122,7 @@ export default function BuyerMapSearch() {
                     size="sm"
                     variant="outline"
                     className="h-7 rounded-md text-xs px-2.5"
-                    onClick={() => setSessionKeptIds(new Set())}
+                    onClick={clearSelectedListings}
                   >
                     Clear selected
                   </Button>

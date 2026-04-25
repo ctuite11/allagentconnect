@@ -1,55 +1,42 @@
-Plan: fix BuyerMapSearch card controls only
+Plan: Fix BuyerMapSearch selected-filter behavior
 
 Scope
 - Modify `src/pages/BuyerMapSearch.tsx` only.
-- Do not change routes.
-- Do not touch the database.
-- Do not change filtering, favorites, navigation, map behavior, or listing data logic.
+- Do not change favorites, routes, database, map behavior, or card layout.
 
 Changes
 
-1. Replace the text Keep button with a fixed square control
-- Location remains top-left of the listing image.
-- Replace the current variable-width `Keep / Kept ✓` button with a fixed `28–32px` square button.
-- No text inside the control.
-- Use a rounded-sm / small-radius shape, not a circle.
-- Default state:
-  - white background
-  - gray border
-  - subtle shadow
-  - neutral/gray check or empty state visual
-- Selected state:
-  - AAC primary blue background `#0E56F5`
-  - white check icon
-  - blue border
-- Preserve existing behavior:
-  - `toggleSessionKeep(listing.id)` still runs
-  - `aria-pressed` remains tied to `isKept`
-  - “Show kept only” continues to filter `sessionKeptIds`
+1. Restore Select all in the results header
+- Add a small `Select all` button back into the single results header row.
+- It will select all listings currently visible in the current results view.
+- It will not alter sorting, filters, map behavior, or card checkbox behavior.
 
-2. Update the favorite heart color and sizing
-- Keep favorite heart top-right.
-- Keep `FavoriteButton` usage and favorite logic unchanged.
-- Keep no circle/background wrapper.
-- Ensure icon stays around 24px.
-- Change saved/favorited color from Tailwind red to true favorite red:
-  - `fill-[#FF2D55] text-[#FF2D55]`
-- Default unsaved state remains:
-  - `fill-white text-white`
-- Keep only subtle drop shadow.
+2. Preserve selected-state controls
+- When `sessionKeptIds.size > 0`, show:
+  - `X selected`
+  - `Keep selected`
+  - `Clear selected`
+- When no listings are selected, hide:
+  - `X selected`
+  - `Keep selected`
+  - `Clear selected`
+- Keep the sort dropdown aligned on the far right.
+
+3. Fix Clear selected behavior
+- Update `Clear selected` so it:
+  - clears `sessionKeptIds`
+  - sets `showKeptOnly` to `false`
+- This ensures all listings immediately repopulate and avoids the empty selected-only state after clearing.
+
+4. Auto-exit selected-only mode when selection becomes empty
+- Add a small effect watching `showKeptOnly` and `sessionKeptIds.size`.
+- If selected-only mode is active and there are no selected ids, reset `showKeptOnly` to `false`.
+- This also covers cases where individual card checkboxes are unchecked until none remain.
 
 Technical details
-- Add/use the existing Lucide `Check` icon import in `BuyerMapSearch.tsx` for the square keep control.
-- Target the existing JSX block around the image overlay controls only:
-  - current Keep button block around lines 1163–1181
-  - current FavoriteButton block around lines 1183–1192
-- If the saved heart color is controlled inside `src/components/FavoriteButton.tsx`, make the smallest necessary class update there only for `photoIcon` saved state. No behavior changes.
-
-Validation
-- Confirm JSX remains structurally valid.
-- Run TypeScript/check command after applying.
-- Report back with:
-  - files modified
-  - exact sections changed
-  - confirmation no routes/database/unrelated files were touched
-  - TypeScript result
+- Reintroduce a `selectAllVisibleListings` helper near the existing `displayListings` / `toggleSessionKeep` logic.
+- Add a `clearSelectedListings` helper for the two-step clear behavior.
+- Keep `displayListings` filtering logic intact:
+  - all mode: `sortedListings`
+  - selected-only mode: `sortedListings.filter(id is selected)`
+- Run TypeScript after implementation.
