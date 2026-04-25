@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
-import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -135,8 +134,6 @@ export default function ClientDashboard() {
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [crmClientId, setCrmClientId] = useState<string | null>(null);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
 
@@ -266,25 +263,6 @@ export default function ClientDashboard() {
 
       if (agentData) {
         setAgent(agentData);
-
-        // Resolve CRM client ID via email bridge for Contact My Agent
-        const { data: buyerProfile } = await supabase
-          .from("profiles")
-          .select("email")
-          .eq("id", userId)
-          .maybeSingle();
-
-        const buyerEmail = buyerProfile?.email?.trim();
-        if (buyerEmail) {
-          const { data: crmRow } = await supabase
-            .from("clients")
-            .select("id")
-            .eq("agent_id", agentData.id)
-            .ilike("email", buyerEmail)
-            .maybeSingle();
-
-          setCrmClientId(crmRow?.id ?? null);
-        }
       }
 
       return relationship.agent_id as string;
@@ -292,7 +270,6 @@ export default function ClientDashboard() {
 
     setRelationshipId(null);
     setAgent(null);
-    setCrmClientId(null);
     return null;
   };
 
@@ -575,80 +552,82 @@ export default function ClientDashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="w-full shrink-0 border-t border-zinc-100 pt-4 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:border-t-0 lg:pt-0">
+              <div className="relative w-full shrink-0 border-t border-zinc-100 pt-4 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:border-t-0 lg:pt-0">
                 {agent ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex max-w-full items-start gap-3">
-                      <Avatar className="h-16 w-16 shrink-0 ring-1 ring-zinc-200">
-                        <AvatarImage src={agent.headshot_url || ""} />
-                        <AvatarFallback className="text-sm font-medium text-zinc-600">
-                          {agent.first_name[0]}
-                          {agent.last_name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 max-w-[min(16rem,calc(100vw-6rem))] space-y-0.5 sm:max-w-[17rem]">
-                        <p className="text-sm font-bold text-zinc-900">
-                          {agent.first_name} {agent.last_name}
-                        </p>
-                        {agent.company ? (
-                          <p className="text-xs text-zinc-500">{agent.company}</p>
-                        ) : null}
-                        {agentPhoneFmt ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="absolute right-0 top-4 z-10 h-9 w-9 shrink-0 rounded-full border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 lg:top-0"
+                      aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
+                      onClick={() => navigate("/messages")}
+                    >
+                      <MessageSquare className="h-4 w-4 text-zinc-700" />
+                      {unreadCount > 0 ? (
+                        <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      ) : null}
+                    </Button>
+                    <div className="flex flex-col items-center gap-2 pr-11 lg:pr-12">
+                      <div className="flex max-w-full items-start gap-3">
+                        <Avatar className="h-16 w-16 shrink-0 ring-1 ring-zinc-200">
+                          <AvatarImage src={agent.headshot_url || ""} />
+                          <AvatarFallback className="text-sm font-medium text-zinc-600">
+                            {agent.first_name[0]}
+                            {agent.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
+                          <p className="text-sm font-bold text-zinc-900">
+                            {agent.first_name} {agent.last_name}
+                          </p>
+                          {agent.company ? (
+                            <p className="text-xs text-zinc-500">{agent.company}</p>
+                          ) : null}
+                          {agentPhoneFmt ? (
+                            <a
+                              href={agentPhoneFmt.telHref}
+                              className="block text-sm text-zinc-800 hover:underline"
+                            >
+                              {agentPhoneFmt.display}
+                            </a>
+                          ) : null}
                           <a
-                            href={agentPhoneFmt.telHref}
-                            className="block text-sm text-zinc-800 hover:underline"
+                            href={`mailto:${agent.email}`}
+                            className="block break-all text-xs leading-snug text-zinc-600 hover:underline"
                           >
-                            {agentPhoneFmt.display}
+                            {agent.email}
                           </a>
-                        ) : null}
-                        <a
-                          href={`mailto:${agent.email}`}
-                          className="block break-all text-xs leading-snug text-zinc-600 hover:underline"
+                        </div>
+                      </div>
+                      <div className="flex w-full max-w-[19rem] shrink-0 flex-row flex-nowrap items-center justify-center gap-2 sm:gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 shrink-0 whitespace-nowrap rounded-md px-3 text-xs sm:text-sm"
+                          onClick={() => {
+                            window.location.href = `mailto:${agent.email}`;
+                          }}
                         >
-                          {agent.email}
-                        </a>
+                          <Mail className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
+                          Email
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 shrink-0 whitespace-nowrap rounded-md border-red-200 bg-white px-2.5 text-xs text-red-700 hover:bg-red-50 sm:px-3 sm:text-sm"
+                          onClick={() => setShowEndDialog(true)}
+                        >
+                          <UserX className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
+                          End relationship
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap justify-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 shrink-0 rounded-md px-3"
-                        onClick={() => {
-                          window.location.href = `mailto:${agent.email}`;
-                        }}
-                      >
-                        <Mail className="mr-2 h-4 w-4 shrink-0" />
-                        Email
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        className={`${primaryCtaClass} h-9 shrink-0 px-3`}
-                        onClick={() => {
-                          if (!crmClientId) {
-                            toast.error("Unable to connect to your agent record.");
-                            return;
-                          }
-                          setContactOpen(true);
-                        }}
-                      >
-                        <MessageSquare className="mr-2 h-4 w-4 shrink-0" />
-                        Message
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 shrink-0 rounded-md border-red-200 bg-white px-3 text-red-700 hover:bg-red-50"
-                        onClick={() => setShowEndDialog(true)}
-                      >
-                        <UserX className="mr-2 h-4 w-4 shrink-0" />
-                        End relationship
-                      </Button>
-                    </div>
-                  </div>
+                  </>
                 ) : (
                   <p className="text-xs text-zinc-500 lg:text-right">No agent linked yet.</p>
                 )}
@@ -855,16 +834,6 @@ export default function ClientDashboard() {
           </section>
         </div>
       </main>
-
-      {/* Contact My Agent Dialog */}
-      {crmClientId && (
-        <ContactMyAgentDialog
-          open={contactOpen}
-          onOpenChange={setContactOpen}
-          crmClientId={crmClientId}
-          agentDisplayName={agent?.first_name || "your agent"}
-        />
-      )}
 
       {/* End Relationship Dialog */}
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
