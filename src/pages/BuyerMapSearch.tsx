@@ -204,6 +204,7 @@ export default function BuyerMapSearch() {
   const [shareToEmail, setShareToEmail] = useState("");
   const [shareSubject, setShareSubject] = useState("Share selected listings");
   const [shareMessage, setShareMessage] = useState("");
+  const [shareSending, setShareSending] = useState(false);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [mapsKeyAvailable, setMapsKeyAvailable] = useState(true);
   const isLocalDevHost = useMemo(() => {
@@ -342,9 +343,48 @@ export default function BuyerMapSearch() {
   }, [selectedVisibleListings]);
 
   const handleSendShareEmail = useCallback(() => {
-    toast.info("TODO: connect Send Email to internal email API");
-    setShareModalOpen(false);
-  }, []);
+    const run = async () => {
+      if (!shareToEmail.trim() || !shareSubject.trim() || !shareMessage.trim()) {
+        toast.error("Please fill in To email, Subject, and Message");
+        return;
+      }
+
+      setShareSending(true);
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData?.user;
+        if (!user) {
+          toast.error("You must be logged in to send email");
+          return;
+        }
+
+        const recipientEmail = shareToEmail.trim();
+        const recipientName = recipientEmail.split("@")[0] || "Recipient";
+
+        const { error } = await supabase.functions.invoke("send-bulk-email", {
+          body: {
+            recipients: [{ email: recipientEmail, name: recipientName }],
+            subject: shareSubject.trim(),
+            message: shareMessage.trim(),
+            agentId: user.id,
+            sendAsGroup: false,
+          },
+        });
+
+        if (error) throw error;
+
+        toast.success("Email sent");
+        setShareModalOpen(false);
+      } catch (error: any) {
+        console.error("Error sending share email:", error);
+        toast.error(error?.message || "Failed to send email");
+      } finally {
+        setShareSending(false);
+      }
+    };
+
+    void run();
+  }, [shareToEmail, shareSubject, shareMessage]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -1385,7 +1425,7 @@ export default function BuyerMapSearch() {
               <Button type="button" variant="outline" onClick={() => setShareModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="button" onClick={handleSendShareEmail}>
+              <Button type="button" onClick={handleSendShareEmail} disabled={shareSending}>
                 Send Email
               </Button>
             </div>
