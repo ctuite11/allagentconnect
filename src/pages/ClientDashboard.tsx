@@ -575,9 +575,9 @@ export default function ClientDashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="w-full shrink-0 border-t border-zinc-100 pt-4 lg:w-auto lg:max-w-[22rem] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+              <div className="w-full shrink-0 border-t border-zinc-100 pt-4 lg:w-auto lg:max-w-[22rem] lg:border-t-0 lg:pt-0">
                 {agent ? (
-                  <div className="space-y-3">
+                  <div className="flex flex-col gap-2">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-16 w-16 shrink-0 ring-1 ring-zinc-200">
                         <AvatarImage src={agent.headshot_url || ""} />
@@ -586,7 +586,7 @@ export default function ClientDashboard() {
                           {agent.last_name[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="min-w-0 flex-1 space-y-1">
+                      <div className="min-w-0 flex-1 space-y-0.5">
                         <p className="text-sm font-bold text-zinc-900">
                           {agent.first_name} {agent.last_name}
                         </p>
@@ -609,12 +609,12 @@ export default function ClientDashboard() {
                         </a>
                       </div>
                     </div>
-                    <div className="flex w-full flex-col gap-2 sm:flex-row">
+                    <div className="flex justify-center gap-3">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-9 w-full shrink-0 rounded-md sm:flex-1"
+                        className="h-9 shrink-0 rounded-md px-3"
                         onClick={() => {
                           window.location.href = `mailto:${agent.email}`;
                         }}
@@ -625,7 +625,7 @@ export default function ClientDashboard() {
                       <Button
                         type="button"
                         size="sm"
-                        className={`${primaryCtaClass} h-9 w-full shrink-0 sm:flex-1`}
+                        className={`${primaryCtaClass} h-9 shrink-0 px-3`}
                         onClick={() => {
                           if (!crmClientId) {
                             toast.error("Unable to connect to your agent record.");
@@ -641,7 +641,7 @@ export default function ClientDashboard() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-9 w-full shrink-0 rounded-md border-red-200 bg-white text-red-700 hover:bg-red-50 sm:flex-1"
+                        className="h-9 shrink-0 rounded-md border-red-200 bg-white px-3 text-red-700 hover:bg-red-50"
                         onClick={() => setShowEndDialog(true)}
                       >
                         <UserX className="mr-2 h-4 w-4 shrink-0" />
