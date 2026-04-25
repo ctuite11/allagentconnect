@@ -7,7 +7,6 @@ import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import PropertyMap from "@/components/PropertyMap";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { isDcmlsHost } from "@/lib/host";
-import { getListingPublicUrl } from "@/lib/getPublicUrl";
 import { toast } from "sonner";
 import FavoriteButton from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
@@ -364,14 +363,14 @@ export default function BuyerMapSearch() {
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#39;");
 
-        // CTA: matches :root --primary / --aac (hsl(221,92% 51%)); links: getListingPublicUrl → /property/:id + VITE_PUBLIC_URL | origin
+        // CTA: matches :root --primary / --aac (hsl(221,92% 51%))
         const aacPrimaryCta = "#0E56F5";
         const sharePhotoH = 150;
         const shareImgColW = 240;
 
         const listingCardsHtml = selectedVisibleListings
           .map((listing) => {
-            const listingUrl = getListingPublicUrl(listing.id);
+            const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = escapeHtml(listing.address || "Address unavailable");
             const cityStateZip = escapeHtml(
@@ -401,7 +400,7 @@ export default function BuyerMapSearch() {
 
         const plainTextFallback = selectedVisibleListings
           .map((listing) => {
-            const listingUrl = getListingPublicUrl(listing.id);
+            const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
             return `- ${address} - ${price} - ${listingUrl}`;
