@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BedDouble, Bath, MapPin, Search as SearchIcon, SlidersHorizontal, Ruler, ChevronDown, Check } from "lucide-react";
+import { BedDouble, Bath, MapPin, Search as SearchIcon, SlidersHorizontal, Ruler, ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
@@ -1164,21 +1164,14 @@ export default function BuyerMapSearch() {
                           className="absolute top-2 left-2 z-20 pointer-events-auto"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => toggleSessionKeep(listing.id)}
-                            aria-pressed={isKept}
-                            className={
-                              isKept
-                                ? "h-7 w-7 min-h-7 min-w-7 rounded-sm p-0 shadow-sm border border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
-                                : "h-7 w-7 min-h-7 min-w-7 rounded-sm p-0 shadow-sm border border-zinc-300/90 bg-white text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600"
-                            }
+                          <input
+                            type="checkbox"
+                            checked={isKept}
+                            onChange={() => toggleSessionKeep(listing.id)}
+                            className="h-5 w-5"
                             title="Keep in this search"
                             aria-label={isKept ? "Remove from this session" : "Keep in this search"}
-                          >
-                            {isKept && <Check className="h-3.5 w-3.5" strokeWidth={2.5} />}
-                          </Button>
+                          />
                         </div>
                         <div
                           className="absolute top-2 right-2 z-20 max-w-[calc(100%-6.5rem)] flex min-h-0 items-center justify-end"
