@@ -4,6 +4,11 @@ import { Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FavoriteButtonProps {
   listingId: string;
@@ -105,52 +110,62 @@ const FavoriteButton = ({
     return isFavorite ? labels?.saved || "Saved" : labels?.default || "Save";
   };
 
+  const favoriteTooltipText = isFavorite ? "Added to favorites" : "Add to favorites";
+
   if (photoIcon && size === "icon") {
     return (
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={handleToggleFavorite}
-        disabled={loading}
-        className={cn(
-          "h-9 w-9 min-h-0 min-w-0 rounded-sm p-0 gap-0 bg-transparent border-0 shadow-none",
-          "hover:bg-transparent",
-          isFavorite
-            ? "hover:scale-[1.12] active:scale-105"
-            : "hover:scale-110 active:scale-95",
-          "transition-transform duration-200",
-          "focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0",
-          className,
-        )}
-        title={!userId ? "Sign in to save" : isFavorite ? "Remove from favorites" : "Save to favorites"}
-        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-      >
-        <Heart
-          className={cn(
-            "h-7 w-7 shrink-0 drop-shadow-md",
-            isFavorite
-              ? "fill-[#FF2D55] text-[#FF2D55]"
-              : "fill-white text-white",
-          )}
-        />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handleToggleFavorite}
+            disabled={loading}
+            className={cn(
+              "h-9 w-9 min-h-0 min-w-0 rounded-sm p-0 gap-0 bg-transparent border-0 shadow-none",
+              "hover:bg-transparent",
+              isFavorite
+                ? "hover:scale-[1.12] active:scale-105"
+                : "hover:scale-110 active:scale-95",
+              "transition-transform duration-200",
+              "focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0",
+              className,
+            )}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Heart
+              className={cn(
+                "h-7 w-7 shrink-0 drop-shadow-md",
+                isFavorite
+                  ? "fill-[#FF2D55] text-[#FF2D55]"
+                  : "fill-white text-white",
+              )}
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">{favoriteTooltipText}</TooltipContent>
+      </Tooltip>
     );
   }
 
   return (
-    <Button
-      variant={variant}
-      size={size}
-      onClick={handleToggleFavorite}
-      disabled={loading}
-      className={cn("gap-2", className)}
-      title={!userId ? "Sign in to save this property to your favorites" : undefined}
-      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-    >
-      <Heart className={cn("w-4 h-4", isFavorite && "fill-current text-destructive")} />
-      {size !== "icon" && getButtonText()}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant={variant}
+          size={size}
+          onClick={handleToggleFavorite}
+          disabled={loading}
+          className={cn("gap-2", className)}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Heart className={cn("w-4 h-4", isFavorite && "fill-current text-destructive")} />
+          {size !== "icon" && getButtonText()}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{favoriteTooltipText}</TooltipContent>
+    </Tooltip>
   );
 };
 
