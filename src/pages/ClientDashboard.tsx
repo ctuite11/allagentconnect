@@ -12,6 +12,7 @@ import {
   UserPlus,
   Search,
   Sparkles,
+  Mail,
 } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
@@ -81,6 +82,23 @@ interface MarketListing {
   square_feet: number | null;
   photos: any;
   created_at: string;
+}
+
+/** US-style display (e.g. (617) 770-5191); returns null if digits cannot be formatted cleanly. */
+function formatUsPhoneForDisplay(raw: string | null | undefined): { display: string; telHref: string } | null {
+  if (!raw?.trim()) return null;
+  const digits = raw.replace(/\D/g, "");
+  const core =
+    digits.length === 11 && digits.startsWith("1")
+      ? digits.slice(1)
+      : digits.length === 10
+        ? digits
+        : null;
+  if (!core || core.length !== 10) return null;
+  return {
+    display: `(${core.slice(0, 3)}) ${core.slice(3, 6)}-${core.slice(6)}`,
+    telHref: `tel:+1${core}`,
+  };
 }
 
 function DashboardListingImage({ photoUrl, alt }: { photoUrl: string; alt: string }) {
@@ -520,6 +538,7 @@ export default function ClientDashboard() {
   ];
 
   const primaryCtaClass = "rounded-lg bg-[#0E56F5] text-white hover:bg-[#0B46CC]";
+  const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
 
   if (loading) {
     return (
@@ -556,59 +575,82 @@ export default function ClientDashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="w-full shrink-0 border-t border-zinc-100 pt-4 lg:w-auto lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+              <div className="w-full shrink-0 border-t border-zinc-100 pt-4 lg:w-auto lg:max-w-[22rem] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
                 {agent ? (
-                  <div className="flex items-start gap-2.5 lg:max-w-[260px]">
-                    <Avatar className="h-8 w-8 shrink-0 opacity-90 ring-1 ring-zinc-200/80">
-                      <AvatarImage src={agent.headshot_url || ""} />
-                      <AvatarFallback className="text-[10px] text-zinc-500">
-                        {agent.first_name[0]}
-                        {agent.last_name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1 text-xs text-zinc-500">
-                      <p className="font-medium text-zinc-600">
-                        {agent.first_name} {agent.last_name}
-                      </p>
-                      <p className="mt-0.5 truncate">{agent.company || agent.email}</p>
-                      {agent.phone && (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-16 w-16 shrink-0 ring-1 ring-zinc-200">
+                        <AvatarImage src={agent.headshot_url || ""} />
+                        <AvatarFallback className="text-sm font-medium text-zinc-600">
+                          {agent.first_name[0]}
+                          {agent.last_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <p className="text-sm font-bold text-zinc-900">
+                          {agent.first_name} {agent.last_name}
+                        </p>
+                        {agent.company ? (
+                          <p className="text-xs text-zinc-500">{agent.company}</p>
+                        ) : null}
+                        {agentPhoneFmt ? (
+                          <a
+                            href={agentPhoneFmt.telHref}
+                            className="block text-sm text-zinc-800 hover:underline"
+                          >
+                            {agentPhoneFmt.display}
+                          </a>
+                        ) : null}
                         <a
-                          href={`tel:${agent.phone.replace(/\D/g, "")}`}
-                          className="mt-0.5 block truncate text-[#0E56F5]/90 hover:underline"
+                          href={`mailto:${agent.email}`}
+                          className="block break-all text-xs leading-snug text-zinc-600 hover:underline"
                         >
-                          {agent.phone}
+                          {agent.email}
                         </a>
-                      )}
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 rounded-md px-2 text-[11px] text-zinc-600 hover:bg-zinc-100"
-                          onClick={() => {
-                            if (!crmClientId) {
-                              toast.error("Unable to connect to your agent record.");
-                              return;
-                            }
-                            setContactOpen(true);
-                          }}
-                        >
-                          <MessageSquare className="mr-1 h-3 w-3" />
-                          Contact
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 rounded-md px-2 text-[11px] text-zinc-500 hover:bg-zinc-100"
-                          onClick={() => setShowEndDialog(true)}
-                        >
-                          <UserX className="mr-1 h-3 w-3" />
-                          End
-                        </Button>
                       </div>
+                    </div>
+                    <div className="flex w-full flex-col gap-2 sm:flex-row">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-9 w-full shrink-0 rounded-md sm:flex-1"
+                        onClick={() => {
+                          window.location.href = `mailto:${agent.email}`;
+                        }}
+                      >
+                        <Mail className="mr-2 h-4 w-4 shrink-0" />
+                        Email
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className={`${primaryCtaClass} h-9 w-full shrink-0 sm:flex-1`}
+                        onClick={() => {
+                          if (!crmClientId) {
+                            toast.error("Unable to connect to your agent record.");
+                            return;
+                          }
+                          setContactOpen(true);
+                        }}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4 shrink-0" />
+                        Message
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-9 w-full shrink-0 rounded-md border-red-200 bg-white text-red-700 hover:bg-red-50 sm:flex-1"
+                        onClick={() => setShowEndDialog(true)}
+                      >
+                        <UserX className="mr-2 h-4 w-4 shrink-0" />
+                        End relationship
+                      </Button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-zinc-500 lg:max-w-[220px] lg:text-right">No agent linked yet.</p>
+                  <p className="text-xs text-zinc-500 lg:text-right">No agent linked yet.</p>
                 )}
               </div>
             </div>
