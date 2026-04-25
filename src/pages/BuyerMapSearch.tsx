@@ -1171,8 +1171,8 @@ export default function BuyerMapSearch() {
                             aria-pressed={isKept}
                             className={
                               isKept
-                                ? "h-11 min-h-11 min-w-[4.5rem] px-3.5 text-sm font-semibold rounded-md shadow-md border-0 bg-primary text-primary-foreground hover:bg-primary/90"
-                                : "h-11 min-h-11 min-w-[4.5rem] px-3.5 text-sm font-semibold rounded-md shadow-md border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50"
+                                ? "h-8 min-h-8 min-w-0 px-2.5 text-xs font-semibold rounded-md shadow-sm border border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
+                                : "h-8 min-h-8 min-w-0 px-2.5 text-xs font-semibold rounded-md shadow-sm border border-zinc-200/90 bg-white text-zinc-900 hover:bg-zinc-50"
                             }
                             title="Keep in this search"
                             aria-label={isKept ? "Remove from this session" : "Keep in this search"}
