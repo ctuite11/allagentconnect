@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Heart,
   FileText,
-  Phone,
   Eye,
   UserX,
   Plus,
@@ -22,6 +21,7 @@ import { toast } from "sonner";
 import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
+import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
@@ -84,6 +84,26 @@ interface MarketListing {
   square_feet: number | null;
   photos: any;
   created_at: string;
+}
+
+function DashboardListingImage({ photoUrl, alt }: { photoUrl: string; alt: string }) {
+  const [loadFailed, setLoadFailed] = useState(false);
+  const useMonogram = !photoUrl || photoUrl === "/placeholder.svg" || loadFailed;
+  if (useMonogram) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-[#0E56F5]" aria-hidden>
+        <AACMonogram className="h-7 w-7" size={28} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={photoUrl}
+      alt={alt}
+      className="h-full w-full object-cover"
+      onError={() => setLoadFailed(true)}
+    />
+  );
 }
 
 export default function ClientDashboard() {
@@ -488,7 +508,7 @@ export default function ClientDashboard() {
 
   const stats = [
     {
-      label: "Saved Homes",
+      label: "Favorites",
       value: String(favorites.length),
       icon: Heart,
       subtle: null as string | null,
@@ -513,7 +533,7 @@ export default function ClientDashboard() {
     },
   ];
 
-  const primaryCtaClass = "rounded-xl bg-[#0E56F5] text-white hover:bg-[#0B46CC]";
+  const primaryCtaClass = "rounded-lg bg-[#0E56F5] text-white hover:bg-[#0B46CC]";
 
   if (loading) {
     return (
@@ -530,45 +550,90 @@ export default function ClientDashboard() {
     <div className="bg-background">
       <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
         <div className="space-y-8">
-          <section className="rounded-2xl bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-black/[0.04] p-6 md:p-8 transition-shadow duration-150 hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
-              <div className="space-y-3">
-                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-zinc-900" style={{ fontFamily: "Manrope, sans-serif" }}>
-                  {buyerFirstName ? `Welcome back, ${buyerFirstName}` : "Welcome back"}
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 md:p-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                  {buyerFirstName ? `Hi, ${buyerFirstName}` : "Welcome"}
                 </h1>
-                <p className="text-sm md:text-base text-zinc-600 max-w-2xl">
-                  Track saved homes, new opportunities, messages, and progress toward your next move.
-                </p>
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700">
-                    Active Buyer
-                  </span>
-                  {agent && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-                      Working with {agent.first_name} {agent.last_name}
-                    </span>
-                  )}
-                </div>
+                <p className="text-sm text-zinc-600">Your dashboard — favorites, hot sheets, and new listings.</p>
               </div>
-              <div className="flex gap-2 w-full md:w-auto md:justify-end">
-                <Button variant="outline" className="rounded-xl" onClick={() => setAddFriendOpen(true)}>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add a Friend
-                </Button>
-                <Button className={primaryCtaClass} onClick={() => navigate("/messages")}>
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Messages
-                </Button>
+              <div className="flex w-full flex-col gap-3 lg:max-w-sm lg:items-end">
+                {agent && (
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 lg:text-right">Your agent</p>
+                )}
+                {agent ? (
+                  <div className="flex w-full items-start gap-3 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 lg:max-w-xs">
+                    <Avatar className="h-10 w-10 shrink-0 ring-1 ring-zinc-200">
+                      <AvatarImage src={agent.headshot_url || ""} />
+                      <AvatarFallback className="text-xs">
+                        {agent.first_name[0]}
+                        {agent.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1 text-sm">
+                      <p className="font-medium text-zinc-900">
+                        {agent.first_name} {agent.last_name}
+                      </p>
+                      <p className="truncate text-xs text-zinc-500">{agent.company || agent.email}</p>
+                      {agent.phone && (
+                        <a
+                          href={`tel:${agent.phone.replace(/\D/g, "")}`}
+                          className="mt-0.5 block text-xs text-[#0E56F5] hover:underline"
+                        >
+                          {agent.phone}
+                        </a>
+                      )}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 rounded-md text-xs"
+                          onClick={() => {
+                            if (!crmClientId) {
+                              toast.error("Unable to connect to your agent record.");
+                              return;
+                            }
+                            setContactOpen(true);
+                          }}
+                        >
+                          <MessageSquare className="mr-1 h-3.5 w-3.5" />
+                          Contact
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 rounded-md px-2 text-xs text-zinc-600"
+                          onClick={() => setShowEndDialog(true)}
+                        >
+                          <UserX className="mr-1 h-3.5 w-3.5" />
+                          End
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-left text-sm text-zinc-600 lg:text-right">No agent linked yet.</p>
+                )}
+                <div className="flex flex-wrap gap-2 lg:justify-end">
+                  <Button variant="outline" size="sm" className="rounded-md" onClick={() => setAddFriendOpen(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add a Friend
+                  </Button>
+                  <Button size="sm" className={primaryCtaClass} onClick={() => navigate("/messages")}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Messages
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
             {stats.map(({ label, value, icon: Icon, subtle }) => (
               <div
                 key={label}
-                className="rounded-xl bg-white ring-1 ring-black/[0.05] shadow-[0_4px_18px_rgba(15,23,42,0.05)] p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
+                className="rounded-lg border border-zinc-200 bg-white p-3 lg:p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <Icon className="h-5 w-5 text-[#0E56F5]" />
@@ -581,90 +646,16 @@ export default function ClientDashboard() {
           </section>
 
           <section className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">Your Agent</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {agent ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-14 w-14 ring-1 ring-zinc-200">
-                          <AvatarImage src={agent.headshot_url || ""} />
-                          <AvatarFallback>
-                            {agent.first_name[0]}{agent.last_name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-zinc-900">{agent.first_name} {agent.last_name}</h3>
-                          <p className="text-sm text-zinc-500">{agent.company || "Independent Brokerage"}</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          className={primaryCtaClass}
-                          onClick={() => {
-                            if (!crmClientId) {
-                              toast.error("Unable to connect to your agent record.");
-                              return;
-                            }
-                            setContactOpen(true);
-                          }}
-                        >
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          Message
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="rounded-xl"
-                          onClick={() => {
-                            if (agent.phone) {
-                              window.location.href = `tel:${(agent.phone ?? "").replace(/\D/g, "")}`;
-                            } else {
-                              toast.message("Phone number unavailable");
-                            }
-                          }}
-                        >
-                          <Phone className="w-4 h-4 mr-2" />
-                          Schedule Call
-                        </Button>
-                      </div>
-                      <Button variant="ghost" className="w-full rounded-xl text-zinc-600" onClick={() => setShowEndDialog(true)}>
-                        <UserX className="w-4 h-4 mr-2" />
-                        End Relationship
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <p className="text-sm text-zinc-600">
-                        Continue your home search, keep your account active, and connect with a new agent when you're ready.
-                      </p>
-                      <Button className={primaryCtaClass} onClick={() => navigate("/client/search")}>
-                        Continue Your Home Search
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div>
-                      <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-[#0E56F5]" />
-                        Hot Sheets
-                        {hotSheets.length > 0 && (
-                          <Badge variant="secondary" className="ml-1">{hotSheets.length}</Badge>
-                        )}
-                      </CardTitle>
-                      <CardDescription>
-                        Track listings with instant alerts.
-                      </CardDescription>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => navigate("/hot-sheets")}>Manage Hot Sheets</Button>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <Card className="rounded-xl border border-zinc-200 bg-white">
+                <CardHeader className="pb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <CardTitle className="text-base font-semibold text-zinc-900">Hot Sheets</CardTitle>
+                    <Button size="sm" variant="outline" className="h-8 rounded-md text-xs" onClick={() => navigate("/hot-sheets")}>
+                      Manage
+                    </Button>
                   </div>
+                  <CardDescription className="text-xs">Alerts for saved searches.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {hotSheets.length > 0 ? (
@@ -686,44 +677,44 @@ export default function ClientDashboard() {
                               navigate(`/client/hotsheet/${token}`);
                             }
                           }}
-                          className="rounded-xl ring-1 ring-zinc-200/70 bg-white p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] cursor-pointer"
+                          className="cursor-pointer rounded-lg border border-zinc-200 bg-white p-3 hover:bg-zinc-50/80"
                         >
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-semibold text-zinc-900">{sheet.name}</h4>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="text-sm font-semibold text-zinc-900">{sheet.name}</h4>
                                 {hasNewListings && (
-                                  <Badge className="text-xs bg-[#0E56F5]/10 text-[#0E56F5] hover:bg-[#0E56F5]/10">New listings</Badge>
+                                  <Badge className="text-[10px] bg-[#0E56F5]/10 text-[#0E56F5] hover:bg-[#0E56F5]/10">
+                                    New
+                                  </Badge>
                                 )}
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-[10px]">
                                   {sheet.is_active ? "Active" : "Paused"}
                                 </Badge>
                               </div>
                               {sheet.agent && (
-                                <p className="text-sm text-zinc-500 mt-0.5">
+                                <p className="mt-0.5 text-xs text-zinc-500">
                                   From {sheet.agent.first_name} {sheet.agent.last_name}
                                   {sheet.agent.company ? ` · ${sheet.agent.company}` : ""}
                                 </p>
                               )}
                               {formatCriteriaSummary(sheet.criteria) && (
-                                <p className="text-sm text-zinc-600 mt-1">
-                                  {formatCriteriaSummary(sheet.criteria)}
-                                </p>
+                                <p className="mt-1 text-xs text-zinc-600">{formatCriteriaSummary(sheet.criteria)}</p>
                               )}
-                              <p className="text-sm font-medium text-zinc-800 mt-1.5">
+                              <p className="mt-1 text-xs font-medium text-zinc-800">
                                 {matchCount} {matchCount === 1 ? "match" : "matches"}
                               </p>
                             </div>
                             {token && (
                               <Button
                                 size="sm"
-                                className={`${primaryCtaClass} shrink-0`}
+                                className={`${primaryCtaClass} h-8 shrink-0 px-2 text-xs`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigate(`/client/hotsheet/${token}`);
                                 }}
                               >
-                                <Eye className="w-4 h-4 mr-2" />
+                                <Eye className="mr-1 h-3.5 w-3.5" />
                                 View
                               </Button>
                             )}
@@ -732,15 +723,71 @@ export default function ClientDashboard() {
                       )})}
                     </div>
                   ) : (
-                    <div className="text-center py-9 rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100">
-                      <FileText className="w-10 h-10 mx-auto mb-3 text-zinc-400" />
-                      <h4 className="text-sm font-semibold text-zinc-900 mb-1">No Hot Sheets yet</h4>
-                      <p className="text-sm text-zinc-600 mb-4">
-                        Create one to get property alerts, or ask your agent to share one.
+                    <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 py-8 text-center">
+                      <FileText className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
+                      <h4 className="text-sm font-medium text-zinc-900">No hot sheets yet</h4>
+                      <p className="mx-auto mt-1 max-w-sm px-2 text-xs text-zinc-600">
+                        Create one for alerts, or ask your agent to share one.
                       </p>
-                      <Button className={primaryCtaClass} onClick={() => navigate("/hot-sheets")}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Hot Sheet
+                      <Button className={`${primaryCtaClass} mt-4 h-9 text-sm`} onClick={() => navigate("/hot-sheets")}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create hot sheet
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-xl border border-zinc-200 bg-white">
+                <CardHeader className="pb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <CardTitle className="text-base font-semibold text-zinc-900">Favorites</CardTitle>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 rounded-md text-xs"
+                      onClick={() => navigate("/favorites")}
+                    >
+                      View all
+                    </Button>
+                  </div>
+                  <CardDescription className="text-xs">Homes you saved.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {favorites.length > 0 ? (
+                    <div className="space-y-2">
+                      {favorites.slice(0, 4).map((fav) => {
+                        const favPhotoUrl = getPrimaryPhotoUrl(fav.listing.photos);
+                        return (
+                          <button
+                            key={fav.id}
+                            type="button"
+                            className="flex w-full items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50/40 p-2 text-left hover:bg-zinc-50"
+                            onClick={() => navigate(`/property/${fav.listing.id}`)}
+                          >
+                            <div className="relative h-11 w-14 shrink-0 overflow-hidden rounded-md bg-zinc-100">
+                              <DashboardListingImage photoUrl={favPhotoUrl} alt="" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-zinc-900">{fav.listing.address}</p>
+                              <p className="text-xs text-zinc-500">
+                                {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-6 text-center">
+                      <p className="text-sm text-zinc-600">No favorites yet.</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 h-8 rounded-md text-xs"
+                        onClick={() => navigate("/client/search")}
+                      >
+                        Search homes
                       </Button>
                     </div>
                   )}
@@ -748,90 +795,59 @@ export default function ClientDashboard() {
               </Card>
             </div>
 
-            <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
+            <Card className="rounded-xl border border-zinc-200 bg-white">
+              <CardHeader className="pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
-                      Market Activity
-                    </CardTitle>
-                    <CardDescription>
-                      Fresh listings in the market, updated regardless of saved searches.
-                    </CardDescription>
+                    <CardTitle className="text-base font-semibold text-zinc-900">Market activity</CardTitle>
+                    <CardDescription className="text-xs">New listings on the market.</CardDescription>
                   </div>
-                  <Button className={primaryCtaClass} onClick={() => navigate("/client/search")}>
-                    <Search className="w-4 h-4 mr-2" />
+                  <Button className={`${primaryCtaClass} h-8 shrink-0 text-xs`} onClick={() => navigate("/client/search")}>
+                    <Search className="mr-1.5 h-3.5 w-3.5" />
                     Search homes
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 {latestListingsPreview.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {latestListingsPreview.map((listing, index) => (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {latestListingsPreview.map((listing) => (
                       <article
                         key={listing.id}
-                        className="group cursor-pointer rounded-xl bg-white ring-1 ring-black/[0.05] shadow-[0_4px_16px_rgba(15,23,42,0.05)] overflow-hidden transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(15,23,42,0.10)]"
+                        className="cursor-pointer overflow-hidden rounded-lg border border-zinc-200 bg-white hover:border-zinc-300"
                         onClick={() => navigate(`/property/${listing.id}`)}
                       >
-                        <div className="relative aspect-[4/3] bg-zinc-100">
-                          <img
-                            src={getPrimaryPhotoUrl(listing.photos)}
+                        <div className="relative h-28 bg-zinc-100">
+                          <DashboardListingImage
+                            photoUrl={getPrimaryPhotoUrl(listing.photos)}
                             alt={listing.address}
-                            className="h-full w-full object-cover"
                           />
-                          {index < 2 && (
-                            <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold tracking-[0.06em] text-zinc-700 shadow-sm">
-                              NEW
-                            </span>
-                          )}
                         </div>
-                        <div className="p-4 space-y-1.5">
-                          <p className="text-lg font-semibold tracking-tight text-zinc-900">
-                            {listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable"}
+                        <div className="space-y-0.5 p-2.5">
+                          <p className="text-sm font-semibold text-zinc-900">
+                            {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                           </p>
-                          <p className="text-sm font-medium text-zinc-800 truncate">{listing.address}</p>
-                          <p className="text-xs text-zinc-500">{listing.city}, {listing.state}</p>
-                          <p className="text-xs text-zinc-500 pt-1">
-                            {listing.bedrooms ?? "--"} bd • {listing.bathrooms ?? "--"} ba • {listing.square_feet ? `${listing.square_feet.toLocaleString()} sqft` : "-- sqft"}
+                          <p className="truncate text-xs font-medium text-zinc-800">{listing.address}</p>
+                          <p className="text-[11px] text-zinc-500">
+                            {listing.city}, {listing.state}
+                          </p>
+                          <p className="text-[11px] text-zinc-500">
+                            {listing.bedrooms ?? "—"} bd · {listing.bathrooms ?? "—"} ba
+                            {listing.square_feet ? ` · ${listing.square_feet.toLocaleString()} sqft` : ""}
                           </p>
                         </div>
                       </article>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100">
-                    <p className="text-sm text-zinc-600 mb-4">
-                      No listings yet. Start exploring homes to see live market activity.
-                    </p>
-                    <Button className={primaryCtaClass} onClick={() => navigate("/client/search")}>
-                      <Search className="w-4 h-4 mr-2" />
+                  <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50/60 py-6 text-center">
+                    <p className="text-sm text-zinc-600">No listings to show yet.</p>
+                    <Button className={`${primaryCtaClass} mt-3 h-8 text-xs`} onClick={() => navigate("/client/search")}>
+                      <Search className="mr-1.5 h-3.5 w-3.5" />
                       Search homes
                     </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
-                  Recently Viewed
-                </CardTitle>
-                <CardDescription>
-                  Jump back into homes you explored most recently.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100 p-5 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-zinc-700">No recently viewed homes yet.</p>
-                    <p className="text-xs text-zinc-500 mt-1">As you browse, your history will appear here.</p>
-                  </div>
-                  <Button variant="outline" className="rounded-xl" onClick={() => navigate("/client/search")}>
-                    Browse
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </section>
