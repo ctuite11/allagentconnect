@@ -403,23 +403,42 @@ export default function BuyerMapSearch() {
           .join("\n");
 
         const messageHtml = escapeHtml(shareMessage.trim()).replace(/\n/g, "<br>");
+        // Align with supabase/functions/_shared/aacEmailTemplate.ts (hot-sheet–style brand shell)
+        const aacLogoUrl =
+          "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg";
+        const aacNavy = "#111317";
+        const aacGreen = "#50c878";
         const composedMessageHtml = [
-          `<div style="margin:0;padding:0;background:#f5f7fb;">`,
-          `<div style="max-width:680px;margin:0 auto;font-family:Arial,sans-serif;padding:20px 14px;">`,
-          `<div style="background:#0E56F5;color:#ffffff;border-radius:12px 12px 0 0;padding:16px 20px;">`,
-          `<div style="font-size:20px;font-weight:700;letter-spacing:0.2px;">All Agent Connect</div>`,
-          `<div style="font-size:13px;opacity:0.95;margin-top:2px;">Shared listings</div>`,
+          `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0;padding:0;background-color:#ffffff;">`,
+          `<tr><td align="center" style="padding:24px 12px 32px;">`,
+          `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">`,
+          `<tr><td align="center" style="background-color:${aacNavy};border-radius:12px 12px 0 0;padding:32px 28px 0;">`,
+          `<img src="${aacLogoUrl}" width="40" height="40" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />`,
+          `<p style="margin:12px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">All Agent Connect</p>`,
+          `<p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.75);">Shared listings</p>`,
+          `<div style="width:48px;height:2px;background-color:${aacGreen};margin:16px auto 0;border-radius:1px;"></div>`,
+          `<div style="height:24px;line-height:24px;font-size:0;">&nbsp;</div>`,
+          `</td></tr>`,
+          `<tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;">`,
+          `<div style="padding:28px 32px 24px;">`,
+          `<div style="font-size:15px;line-height:1.6;color:#334155;">${messageHtml}</div>`,
+          `<div style="margin-top:16px;">${listingCardsHtml}</div>`,
+          `<p style="margin:20px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.5;color:#64748b;">`,
+          `If a listing is no longer available, your agent can share updated options.`,
+          `</p>`,
           `</div>`,
-          `<div style="background:#ffffff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:18px 20px 16px 20px;">`,
-          `<div style="font-size:14px;line-height:1.6;color:#111827;">${messageHtml}</div>`,
-          `<div style="margin-top:14px;">${listingCardsHtml}</div>`,
-          `<div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;line-height:1.5;">`,
-          `Sent from All Agent Connect. If a listing is no longer available, your agent can share updated options.`,
-          `</div>`,
-          `</div>`,
+          `</td></tr>`,
+          `<tr><td align="center" style="background-color:${aacNavy};border-top:2px solid ${aacGreen};border-radius:0 0 12px 12px;padding:22px 28px 20px;">`,
+          `<img src="${aacLogoUrl}" width="24" height="24" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />`,
+          `<p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);">All Agent Connect</p>`,
+          `<p style="margin:0 0 6px;font-size:12px;">`,
+          `<a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>`,
+          `</p>`,
+          `</td></tr>`,
+          `</table>`,
           `<!-- plain-text-fallback: ${escapeHtml(plainTextFallback)} -->`,
-          `</div>`,
-          `</div>`,
+          `</td></tr>`,
+          `</table>`,
         ].join("");
 
         const { error } = await supabase.functions.invoke("send-bulk-email", {
