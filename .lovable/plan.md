@@ -1,53 +1,55 @@
+Plan: fix BuyerMapSearch card controls only
 
+Scope
+- Modify `src/pages/BuyerMapSearch.tsx` only.
+- Do not change routes.
+- Do not touch the database.
+- Do not change filtering, favorites, navigation, map behavior, or listing data logic.
 
-## Restore `BrowsePropertiesNew.tsx` from the previously sent local source
+Changes
 
-### Read of your message
-You're confirming the local source bundle you already pasted is the correct, approved version. The job is to restore `src/pages/BrowsePropertiesNew.tsx` to that version exactly. No rebuild, no reinterpretation.
+1. Replace the text Keep button with a fixed square control
+- Location remains top-left of the listing image.
+- Replace the current variable-width `Keep / Kept ✓` button with a fixed `28–32px` square button.
+- No text inside the control.
+- Use a rounded-sm / small-radius shape, not a circle.
+- Default state:
+  - white background
+  - gray border
+  - subtle shadow
+  - neutral/gray check or empty state visual
+- Selected state:
+  - AAC primary blue background `#0E56F5`
+  - white check icon
+  - blue border
+- Preserve existing behavior:
+  - `toggleSessionKeep(listing.id)` still runs
+  - `aria-pressed` remains tied to `isKept`
+  - “Show kept only” continues to filter `sessionKeptIds`
 
-### Scope (locked, single file)
-Edit only:
-- `src/pages/BrowsePropertiesNew.tsx`
+2. Update the favorite heart color and sizing
+- Keep favorite heart top-right.
+- Keep `FavoriteButton` usage and favorite logic unchanged.
+- Keep no circle/background wrapper.
+- Ensure icon stays around 24px.
+- Change saved/favorited color from Tailwind red to true favorite red:
+  - `fill-[#FF2D55] text-[#FF2D55]`
+- Default unsaved state remains:
+  - `fill-white text-white`
+- Keep only subtle drop shadow.
 
-Untouched:
-- `App.tsx`, `BuyerSearch.tsx`, `BuyerLayout`, `BuyerPortalHeader`
-- `ListingCard`, `UnifiedPropertySearch`, `PropertyMap`, `buildListingsQuery`
-- `ActiveAgentBanner`, `DcmlsConsumerHeader`
-- routing, hooks, data layer, every other file
+Technical details
+- Add/use the existing Lucide `Check` icon import in `BuyerMapSearch.tsx` for the square keep control.
+- Target the existing JSX block around the image overlay controls only:
+  - current Keep button block around lines 1163–1181
+  - current FavoriteButton block around lines 1183–1192
+- If the saved heart color is controlled inside `src/components/FavoriteButton.tsx`, make the smallest necessary class update there only for `photoIcon` saved state. No behavior changes.
 
-### Action
-1. Pull the full local `BrowsePropertiesNew.tsx` source out of the earlier chunked paste in this thread (chat_search if needed to reassemble in order)
-2. Overwrite `src/pages/BrowsePropertiesNew.tsx` verbatim with that content
-3. No edits, no reformatting, no "improvements"
-
-### Allowed integration adaptations (only if strictly required, flagged in report — not silent)
-1. Supabase import normalized to `@/integrations/supabase/client` if the local path differs
-2. `forceBuyer` prop signature preserved so `BuyerSearch.tsx` keeps rendering `<BrowsePropertiesNew forceBuyer />` unchanged
-
-Anything beyond these two: stop and report before applying.
-
-### Hard constraints
-- No redesign, no rebuild, no new components, no new UX
-- No styling not present in local source
-- No Google Places ownership added inside this page
-- No route changes
-- No "while I'm here" cleanup
-- No reconstruction from memory or screenshots — verbatim from the pasted chunks only
-
-### If a referenced symbol in the pasted source can't be resolved
-Stop and name the exact missing item (file + symbol + reason). Do not restart intake. Do not guess.
-
-### Verification after overwrite
-- Buyer toolbar matches local
-- Inline pill filter bar matches local
-- Manual search: 5-digit → `zipCode`, comma-separated → `towns`, empty → resets both, Enter applies
-- No legacy header/banner blip on `/client/search`
-- Route chain unchanged: `/client/search → BuyerSearch → <BrowsePropertiesNew forceBuyer />`
-- TypeScript clean (fix only port-induced errors at the boundary, minimally)
-
-### Deliverable
-1. File replaced: `src/pages/BrowsePropertiesNew.tsx` only
-2. Forced adaptations: exact lines + reason, or "none"
-3. Confirmation route-safety files untouched
-4. TypeScript validation summary
-
+Validation
+- Confirm JSX remains structurally valid.
+- Run TypeScript/check command after applying.
+- Report back with:
+  - files modified
+  - exact sections changed
+  - confirmation no routes/database/unrelated files were touched
+  - TypeScript result
