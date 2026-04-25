@@ -189,7 +189,7 @@ export default function BuyerMapSearch() {
   const [listings, setListings] = useState<ListingRecord[]>([]);
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"recommended" | "newest" | "price_asc" | "price_desc">("recommended");
+  const [sortBy, setSortBy] = useState<"newest" | "price_asc" | "price_desc">("newest");
   const [sessionKeptIds, setSessionKeptIds] = useState<Set<string>>(new Set());
   const [showKeptOnly, setShowKeptOnly] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
@@ -1081,66 +1081,58 @@ export default function BuyerMapSearch() {
                 <p className="text-[11px] font-semibold text-zinc-600 tracking-[0.08em]">RESULTS</p>
                 <p className="text-sm font-medium text-zinc-900 mt-0.5">{sortedListings.length.toLocaleString()} Homes</p>
               </div>
+            </div>
+
+            <div className="px-4 py-2.5 border-b border-zinc-200/60 bg-zinc-50/60 flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-zinc-600">
+                  <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span>{" "}
+                  selected
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 rounded-md text-xs px-2.5"
+                  onClick={selectAllVisibleListings}
+                  disabled={displayListings.length === 0}
+                >
+                  Select all
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="default"
+                  className="h-7 rounded-md text-xs px-2.5"
+                  onClick={() => setShowKeptOnly(true)}
+                  disabled={sessionKeptIds.size === 0}
+                >
+                  Keep selected
+                </Button>
+                {sessionKeptIds.size > 0 ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 rounded-md text-xs px-2.5"
+                    onClick={() => setSessionKeptIds(new Set())}
+                  >
+                    Clear selected
+                  </Button>
+                ) : null}
+              </div>
               <div className="w-[180px] shrink-0">
                 <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
                   <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
                     <SelectValue placeholder="Sort" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="recommended">Recommended</SelectItem>
+                    <SelectItem value="price_asc">Price low to high</SelectItem>
+                    <SelectItem value="price_desc">Price high to low</SelectItem>
                     <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                    <SelectItem value="price_desc">Price: High to Low</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="px-4 py-2.5 border-b border-zinc-200/60 bg-zinc-50/60 flex flex-wrap items-center gap-2 shrink-0">
-              <span className="text-xs text-zinc-600">
-                <span className="font-semibold text-zinc-900 tabular-nums">{sessionKeptIds.size}</span>{" "}
-                selected
-              </span>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 rounded-md text-xs px-2.5"
-                onClick={selectAllVisibleListings}
-                disabled={displayListings.length === 0}
-              >
-                Select all
-              </Button>
-              {sessionKeptIds.size > 0 ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 rounded-md text-xs px-2.5"
-                  onClick={() => setSessionKeptIds(new Set())}
-                >
-                  Clear selected
-                </Button>
-              ) : null}
-              <Button
-                type="button"
-                size="sm"
-                variant={!showKeptOnly ? "default" : "outline"}
-                className="h-7 rounded-md text-xs px-2.5"
-                onClick={() => setShowKeptOnly(false)}
-              >
-                Show all
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={showKeptOnly ? "default" : "outline"}
-                className="h-7 rounded-md text-xs px-2.5"
-                onClick={() => setShowKeptOnly(true)}
-                disabled={sessionKeptIds.size === 0}
-              >
-                Keep selected
-              </Button>
             </div>
 
             <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
