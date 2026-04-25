@@ -24,7 +24,6 @@ import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -438,13 +437,15 @@ export default function ClientDashboard() {
     }
 
     console.log("End relationship success via RPC");
-    toast.success("Relationship ended");
+    toast.success("Relationship ended successfully.");
     clearPrimaryAgentId();
     setAgent(null);
     setRelationshipId(null);
     setShowEndDialog(false);
 
-    await loadAgentRelationship(currentUserId);
+    window.setTimeout(() => {
+      window.location.href = "https://directconnectmls.com";
+    }, 450);
   };
 
   const getPrimaryPhotoUrl = (photos: unknown): string => {
@@ -880,19 +881,16 @@ export default function ClientDashboard() {
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              End relationship with {agent?.first_name} {agent?.last_name}?
-            </AlertDialogTitle>
+            <AlertDialogTitle>End relationship?</AlertDialogTitle>
             <AlertDialogDescription>
-              You can keep your account active after ending this relationship. Your saved homes,
-              searches, and profile stay with you, and you can find a new agent any time.
+              You will still have access to your dashboard using Direct Connect MLS.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEndRelationship}>
+            <AlertDialogCancel>No, cancel</AlertDialogCancel>
+            <Button type="button" className={primaryCtaClass} onClick={() => void handleEndRelationship()}>
               Yes, end relationship
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
