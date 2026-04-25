@@ -1171,13 +1171,13 @@ export default function BuyerMapSearch() {
                             aria-pressed={isKept}
                             className={
                               isKept
-                                ? "h-8 w-8 min-h-8 min-w-8 rounded-sm p-0 shadow-sm border border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
-                                : "h-8 w-8 min-h-8 min-w-8 rounded-sm p-0 shadow-sm border border-zinc-300/90 bg-white text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600"
+                                ? "h-7 w-7 min-h-7 min-w-7 rounded-sm p-0 shadow-sm border border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
+                                : "h-7 w-7 min-h-7 min-w-7 rounded-sm p-0 shadow-sm border border-zinc-300/90 bg-white text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600"
                             }
                             title="Keep in this search"
                             aria-label={isKept ? "Remove from this session" : "Keep in this search"}
                           >
-                            {isKept && <Check className="h-4 w-4" strokeWidth={2.5} />}
+                            {isKept && <Check className="h-3.5 w-3.5" strokeWidth={2.5} />}
                           </Button>
                         </div>
                         <div
