@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import FavoriteButton from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -199,6 +200,10 @@ export default function BuyerMapSearch() {
   const [priceFieldFocus, setPriceFieldFocus] = useState({ min: false, max: false });
   const [bedsBathsDraft, setBedsBathsDraft] = useState({ bedrooms: "", bathrooms: "" });
   const [propertyTypesDraft, setPropertyTypesDraft] = useState<string[]>([]);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareToEmail, setShareToEmail] = useState("");
+  const [shareSubject, setShareSubject] = useState("Share selected listings");
+  const [shareMessage, setShareMessage] = useState("");
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [mapsKeyAvailable, setMapsKeyAvailable] = useState(true);
   const isLocalDevHost = useMemo(() => {
@@ -331,9 +336,15 @@ export default function BuyerMapSearch() {
       const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
       return `- ${address} - ${price} - ${origin}/property/${listing.id}`;
     });
-    const prefillMessage = `Here are some listings I wanted to share:\n${lines.join("\n")}`;
-    navigate(`/messages/compose?prefill=${encodeURIComponent(prefillMessage)}`);
+    setShareSubject(`Share selected listings (${selectedVisibleListings.length})`);
+    setShareMessage(`Here are some listings I wanted to share:\n${lines.join("\n")}`);
+    setShareModalOpen(true);
   }, [selectedVisibleListings]);
+
+  const handleSendShareEmail = useCallback(() => {
+    toast.info("TODO: connect Send Email to internal email API");
+    setShareModalOpen(false);
+  }, []);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -1337,6 +1348,50 @@ export default function BuyerMapSearch() {
         </div>
       </main>
 
+      {shareModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl rounded-xl border border-zinc-200 bg-white p-4 shadow-xl">
+            <h3 className="text-base font-semibold text-zinc-900">Share selected listings</h3>
+            <div className="mt-3 space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="share-to-email">To email</Label>
+                <Input
+                  id="share-to-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={shareToEmail}
+                  onChange={(e) => setShareToEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="share-subject">Subject</Label>
+                <Input
+                  id="share-subject"
+                  value={shareSubject}
+                  onChange={(e) => setShareSubject(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="share-message">Message</Label>
+                <Textarea
+                  id="share-message"
+                  className="min-h-[180px]"
+                  value={shareMessage}
+                  onChange={(e) => setShareMessage(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setShareModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleSendShareEmail}>
+                Send Email
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
