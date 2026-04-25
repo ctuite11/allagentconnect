@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import FavoriteButton from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -199,6 +200,10 @@ export default function BuyerMapSearch() {
   const [priceFieldFocus, setPriceFieldFocus] = useState({ min: false, max: false });
   const [bedsBathsDraft, setBedsBathsDraft] = useState({ bedrooms: "", bathrooms: "" });
   const [propertyTypesDraft, setPropertyTypesDraft] = useState<string[]>([]);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareToEmail, setShareToEmail] = useState("");
+  const [shareSubject, setShareSubject] = useState("Listings to review");
+  const [shareMessage, setShareMessage] = useState("");
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [mapsKeyAvailable, setMapsKeyAvailable] = useState(true);
   const isLocalDevHost = useMemo(() => {
@@ -287,6 +292,11 @@ export default function BuyerMapSearch() {
     return { allVisible: false, someVisible: true, noneVisible: false };
   }, [displayListings, sessionKeptIds]);
 
+  const selectedVisibleListings = useMemo(
+    () => displayListings.filter((l) => sessionKeptIds.has(l.id)),
+    [displayListings, sessionKeptIds],
+  );
+
   useEffect(() => {
     if (showKeptOnly && sessionKeptIds.size === 0) {
       setShowKeptOnly(false);
@@ -318,38 +328,25 @@ export default function BuyerMapSearch() {
     });
   }, [displayListings]);
 
-  const shareVisibleSelected = useCallback(async () => {
-    const ids = displayListings
-      .filter((l) => sessionKeptIds.has(l.id))
-      .map((l) => l.id);
-    if (ids.length === 0) return;
+  const shareVisibleSelected = useCallback(() => {
+    if (selectedVisibleListings.length === 0) return;
     const origin = window.location.origin;
-    const lines = ids
-      .map((id) => {
-        const listing = listings.find((l) => l.id === id);
-        const line = listing?.address
-          ? `${listing.address} — ${origin}/property/${id}`
-          : `${origin}/property/${id}`;
-        return line;
-      })
-      .filter(Boolean);
-    const text = lines.join("\n");
-    try {
-      if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: "Listings to review", text });
-      } else {
-        await navigator.clipboard.writeText(text);
-        toast.success("Copied to clipboard");
-      }
-    } catch {
-      try {
-        await navigator.clipboard.writeText(text);
-        toast.success("Copied to clipboard");
-      } catch {
-        toast.error("Could not share");
-      }
-    }
-  }, [displayListings, sessionKeptIds, listings]);
+    const lines = selectedVisibleListings.map((listing) => {
+      const address = `${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`.trim();
+      return `${address} - ${origin}/property/${listing.id}`;
+    });
+    setShareSubject(`Listings to review (${selectedVisibleListings.length})`);
+    setShareMessage(lines.join("\n"));
+    setShareModalOpen(true);
+  }, [selectedVisibleListings]);
+
+  const openEmailWithShare = useCallback(() => {
+    const mailto = `mailto:${encodeURIComponent(shareToEmail)}?subject=${encodeURIComponent(
+      shareSubject,
+    )}&body=${encodeURIComponent(shareMessage)}`;
+    window.location.href = mailto;
+    setShareModalOpen(false);
+  }, [shareToEmail, shareSubject, shareMessage]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -1141,18 +1138,6 @@ export default function BuyerMapSearch() {
                     ? "Results: —"
                     : `Results: ${displayListings.length.toLocaleString()}`}
                 </p>
-                <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
-                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                    <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
-                      <SelectValue placeholder="Sort" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="newest">Newest</SelectItem>
-                      <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                      <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 {visibleSelectionState.allVisible && (
@@ -1236,6 +1221,22 @@ export default function BuyerMapSearch() {
             </div>
 
             <div className="p-4 min-h-0 flex-1 lg:overflow-y-auto">
+              {!loading && sortedListings.length > 0 && (
+                <div className="mb-3 flex justify-end">
+                  <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
+                    <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                      <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
+                        <SelectValue placeholder="Sort" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest</SelectItem>
+                        <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                        <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
               {loading ? (
                 <div className="py-10 text-center text-sm text-zinc-500">Loading listings...</div>
               ) : sortedListings.length === 0 ? (
@@ -1348,6 +1349,51 @@ export default function BuyerMapSearch() {
           </section>
         </div>
       </main>
+
+      {shareModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-xl rounded-xl border border-zinc-200 bg-white p-4 shadow-xl">
+            <h3 className="text-base font-semibold text-zinc-900">Share Selected Listings</h3>
+            <div className="mt-3 space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="share-to-email">To email</Label>
+                <Input
+                  id="share-to-email"
+                  type="email"
+                  value={shareToEmail}
+                  onChange={(e) => setShareToEmail(e.target.value)}
+                  placeholder="client@example.com"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="share-subject">Subject</Label>
+                <Input
+                  id="share-subject"
+                  value={shareSubject}
+                  onChange={(e) => setShareSubject(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="share-message">Message</Label>
+                <Textarea
+                  id="share-message"
+                  value={shareMessage}
+                  onChange={(e) => setShareMessage(e.target.value)}
+                  className="min-h-[180px]"
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setShareModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={openEmailWithShare}>
+                Open Email
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
