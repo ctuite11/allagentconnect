@@ -331,14 +331,8 @@ export default function BuyerMapSearch() {
 
   const shareVisibleSelected = useCallback(() => {
     if (selectedVisibleListings.length === 0) return;
-    const origin = window.location.origin;
-    const lines = selectedVisibleListings.map((listing) => {
-      const address = `${listing.address}, ${listing.city}`.trim();
-      const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
-      return `- ${address} - ${price} - ${origin}/property/${listing.id}`;
-    });
     setShareSubject(`Share selected listings (${selectedVisibleListings.length})`);
-    setShareMessage(`Here are some listings I wanted to share:\n${lines.join("\n")}`);
+    setShareMessage("Here are some listings I wanted to share:");
     setShareModalOpen(true);
   }, [selectedVisibleListings]);
 
@@ -380,17 +374,21 @@ export default function BuyerMapSearch() {
             const photoUrl = getPrimaryPhotoUrl(listing.photos);
             const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
             return [
-              `<a href="${listingUrl}" style="display:block;text-decoration:none;color:#111827;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin:14px 0;background:#ffffff;">`,
+              `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin:12px 0;background:#ffffff;">`,
+              `<tr>`,
+              `<td style="width:140px;vertical-align:top;background:#f3f4f6;">`,
               safePhoto
-                ? `<img src="${safePhoto}" alt="${address}" style="display:block;width:100%;height:190px;object-fit:cover;background:#f3f4f6;" />`
-                : `<div style="display:flex;align-items:center;justify-content:center;height:140px;background:#f3f4f6;color:#6b7280;font-size:12px;">Photo unavailable</div>`,
-              `<div style="padding:12px 14px;">`,
-              `<div style="font-size:18px;font-weight:700;color:#111827;">${escapeHtml(price)}</div>`,
-              `<div style="margin-top:4px;font-size:14px;font-weight:600;color:#111827;">${address}</div>`,
-              `<div style="margin-top:2px;font-size:12px;color:#6b7280;">${cityStateZip}</div>`,
-              `<div style="margin-top:10px;"><span style="display:inline-block;background:#0E56F5;color:#ffffff;font-size:12px;font-weight:600;padding:7px 11px;border-radius:7px;">View listing</span></div>`,
-              `</div>`,
-              `</a>`,
+                ? `<a href="${listingUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" style="display:block;width:140px;height:105px;object-fit:cover;background:#f3f4f6;" /></a>`
+                : `<div style="display:flex;align-items:center;justify-content:center;width:140px;height:105px;background:#f3f4f6;color:#6b7280;font-size:11px;">Photo unavailable</div>`,
+              `</td>`,
+              `<td style="padding:10px 12px;vertical-align:top;">`,
+              `<div style="font-size:16px;font-weight:700;color:#111827;line-height:1.2;">${escapeHtml(price)}</div>`,
+              `<div style="margin-top:4px;font-size:13px;font-weight:600;color:#111827;line-height:1.3;">${address}</div>`,
+              `<div style="margin-top:2px;font-size:12px;color:#6b7280;line-height:1.3;">${cityStateZip}</div>`,
+              `<div style="margin-top:10px;"><a href="${listingUrl}" style="display:inline-block;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:12px;font-weight:600;padding:6px 10px;border-radius:7px;">View listing</a></div>`,
+              `</td>`,
+              `</tr>`,
+              `</table>`,
             ].join("");
           })
           .join("");
@@ -404,12 +402,13 @@ export default function BuyerMapSearch() {
           })
           .join("\n");
 
+        const messageHtml = escapeHtml(shareMessage.trim()).replace(/\n/g, "<br>");
         const composedMessageHtml = [
-          `${escapeHtml(shareMessage.trim()).replace(/\n/g, "<br>")}`,
-          "<br><br>",
-          listingCardsHtml,
-          "<br>",
-          `<strong>Plain-text links:</strong><br>${escapeHtml(plainTextFallback).replace(/\n/g, "<br>")}`,
+          `<div style="max-width:620px;margin:0 auto;font-family:Arial,sans-serif;">`,
+          `<div style="font-size:14px;line-height:1.5;color:#111827;">${messageHtml}</div>`,
+          `<div style="margin-top:12px;">${listingCardsHtml}</div>`,
+          `<!-- plain-text-fallback: ${escapeHtml(plainTextFallback)} -->`,
+          `</div>`,
         ].join("");
 
         const { error } = await supabase.functions.invoke("send-bulk-email", {
