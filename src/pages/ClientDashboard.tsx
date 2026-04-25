@@ -453,6 +453,44 @@ export default function ClientDashboard() {
     return parts.join(" • ");
   };
 
+  const getPrimaryPhotoUrl = (photos: unknown): string => {
+    if (!photos) return "/placeholder.svg";
+
+    const normalize = (value: unknown): unknown[] => {
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+        if (trimmed.startsWith("[")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }
+        return [trimmed];
+      }
+      return [];
+    };
+
+    const normalizedPhotos = normalize(photos);
+    const firstPhoto = normalizedPhotos[0];
+
+    if (typeof firstPhoto === "string" && firstPhoto.trim()) return firstPhoto;
+    if (
+      firstPhoto &&
+      typeof firstPhoto === "object" &&
+      "url" in firstPhoto &&
+      typeof (firstPhoto as { url?: unknown }).url === "string" &&
+      (firstPhoto as { url: string }).url.trim()
+    ) {
+      return (firstPhoto as { url: string }).url;
+    }
+
+    return "/placeholder.svg";
+  };
+
   const activeSearches = hotSheets.filter((sheet) => sheet.is_active).length;
   const latestListingsPreview = marketListings.slice(0, 3);
   const currentJourneyStage = hotSheets.length > 0 ? 2 : 1;
@@ -591,17 +629,11 @@ export default function ClientDashboard() {
                           onClick={() => navigate(`/property/${listing.id}`)}
                         >
                           <div className="relative aspect-[4/3] bg-zinc-100">
-                            {listing.photos && listing.photos[0] ? (
-                              <img
-                                src={listing.photos[0]}
-                                alt={listing.address}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center text-xs text-zinc-500">
-                                No image available
-                              </div>
-                            )}
+                            <img
+                              src={getPrimaryPhotoUrl(listing.photos)}
+                              alt={listing.address}
+                              className="h-full w-full object-cover"
+                            />
                             {index < 2 && (
                               <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold tracking-[0.06em] text-zinc-700 shadow-sm">
                                 NEW
@@ -632,28 +664,6 @@ export default function ClientDashboard() {
                       </Button>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
-                    Recently Viewed
-                  </CardTitle>
-                  <CardDescription>
-                    Jump back into homes you explored most recently.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100 p-5 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm text-zinc-700">No recently viewed homes yet.</p>
-                      <p className="text-xs text-zinc-500 mt-1">As you browse, your history will appear here.</p>
-                    </div>
-                    <Button variant="outline" className="rounded-xl" onClick={() => navigate("/client/search")}>
-                      Browse
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -770,6 +780,28 @@ export default function ClientDashboard() {
                       </Button>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border-zinc-200/70 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold tracking-tight text-zinc-900">
+                    Recently Viewed
+                  </CardTitle>
+                  <CardDescription>
+                    Jump back into homes you explored most recently.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-xl bg-zinc-50/80 ring-1 ring-zinc-100 p-5 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-zinc-700">No recently viewed homes yet.</p>
+                      <p className="text-xs text-zinc-500 mt-1">As you browse, your history will appear here.</p>
+                    </div>
+                    <Button variant="outline" className="rounded-xl" onClick={() => navigate("/client/search")}>
+                      Browse
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
