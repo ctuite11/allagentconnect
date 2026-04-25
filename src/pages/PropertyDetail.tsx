@@ -30,7 +30,7 @@ import {
   Share2,
   Eye,
   EyeOff,
-  Home,
+  Images,
   FileText,
   ChevronLeft,
   ChevronRight,
@@ -49,7 +49,8 @@ import {
   Info,
   Users,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  Home,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -850,7 +851,7 @@ const PropertyDetail = () => {
                   onClick={() => handleMediaTabChange('photos')}
                   className="rounded-full"
                 >
-                  <Home className="w-4 h-4 mr-2" />
+                  <Images className="w-4 h-4 mr-2" />
                   Photos
                 </Button>
                 {listing.video_url && (

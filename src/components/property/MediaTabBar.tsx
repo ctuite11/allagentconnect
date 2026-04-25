@@ -1,4 +1,4 @@
-import { Home, Video, Maximize2, Globe } from "lucide-react";
+import { Images, Video, Maximize2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { propertyMediaTabsRow } from "./propertyTokens";
@@ -41,7 +41,7 @@ export function MediaTabBar({
         onClick={() => onChange("photos")}
         className="rounded-full"
       >
-        <Home className="w-4 h-4 mr-2" />
+        <Images className="w-4 h-4 mr-2" />
         Photos
       </Button>
       {hasVideo && (

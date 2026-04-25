@@ -29,7 +29,6 @@ import {
   Phone,
   Mail,
   Share2,
-  Home,
   FileText,
   ChevronLeft,
   ChevronRight,
@@ -314,7 +313,7 @@ const ConsumerPropertyDetail = () => {
       />
 
       {/* Back Button Row */}
-      <div className="mx-auto max-w-6xl px-4 pt-5 pb-3 flex items-center gap-2">
+      <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
         <button
           onClick={() => {
             const lastSearch = sessionStorage.getItem("buyer_last_search_url");
@@ -324,13 +323,6 @@ const ConsumerPropertyDetail = () => {
           aria-label="Go back"
         >
           <ArrowLeft className="h-5 w-5" />
-        </button>
-        <button
-          onClick={() => navigate("/client/dashboard")}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          aria-label="Back to dashboard"
-        >
-          <Home className="h-5 w-5" />
         </button>
       </div>
 
