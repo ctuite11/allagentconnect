@@ -394,7 +394,6 @@ const Favorites = ({
                   <Button
                     type="button"
                     size="sm"
-                    variant="outline"
                     className="h-8 rounded-md px-2.5 text-xs"
                     onClick={shareSelected}
                     disabled={selectedFavorites.length === 0}
@@ -451,7 +450,6 @@ const Favorites = ({
                         alt={listing.address}
                         className="w-full h-full object-cover object-center"
                       />
-                      <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white/55 via-white/15 to-transparent pointer-events-none" />
                       <div
                         className="absolute top-2 left-2 z-20 pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
@@ -464,7 +462,7 @@ const Favorites = ({
                         />
                       </div>
                     </div>
-                    <div className="relative border-t border-zinc-200/45 bg-gradient-to-b from-white via-white to-[#fbfcff] px-3.5 pb-3.5 pt-3">
+                    <div className="relative bg-white px-3.5 pb-3.5 pt-3">
                       <p className="text-[1.05rem] font-semibold tracking-[-0.02em] leading-none text-zinc-950">
                         {formatPrice(listing.price)}
                       </p>
