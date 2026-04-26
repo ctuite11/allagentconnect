@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate, useLocation } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
@@ -216,15 +215,15 @@ const Favorites = ({
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-20">
-      <main className="flex-1 bg-background">
+    <div className="min-h-screen bg-[#F7F8FA] flex flex-col pt-20">
+      <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <PageTitle icon={<Heart className="h-8 w-8 fill-current text-red-500" />} className="mb-2">
+            <h1 className="text-2xl font-semibold text-[#111827]">
               {buyerMode ? "Your Saved Homes" : "My Favorites"}
-            </PageTitle>
-            <p className="text-muted-foreground">
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
               {buyerMode
                 ? "Review the listings you have saved to revisit later."
                 : "Manage your favorite properties so you don't lose track of them."}
@@ -232,15 +231,15 @@ const Favorites = ({
           </div>
 
           {/* Favorites Count */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold">
+          <div>
+            <h2 className="text-sm font-medium text-gray-600 mt-6">
               {buyerMode ? `Saved Homes (${favorites.length})` : `Favorites (${favorites.length})`}
             </h2>
           </div>
 
           {/* Favorites Grid */}
           {favorites.length === 0 ? (
-            <Card className="p-12 border border-neutral-200">
+            <Card className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">{buyerMode ? "No saved homes yet" : "No favorites yet"}</h3>
@@ -249,7 +248,9 @@ const Favorites = ({
                     ? "Start browsing homes and save the ones you want to revisit."
                     : "Start browsing properties and save your favorites to keep track of them."}
                 </p>
-                <Button onClick={() => navigate("/browse")}>{buyerMode ? "Browse Homes" : "Browse Properties"}</Button>
+                <Button className="px-5 py-2 text-sm" onClick={() => navigate("/browse")}>
+                  {buyerMode ? "Browse Homes" : "Browse Properties"}
+                </Button>
               </div>
             </Card>
           ) : (
