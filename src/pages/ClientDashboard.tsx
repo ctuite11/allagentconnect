@@ -546,7 +546,7 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="bg-background">
+    <div className="min-h-screen bg-[#F7F8FA]">
       <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
         <div className="space-y-8">
           <section className={`${premiumCard} p-5 md:p-6`}>
