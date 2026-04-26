@@ -14,10 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, BedDouble, Bath, Ruler, Heart } from "lucide-react";
 import { toast } from "sonner";
-import FavoriteButton from "@/components/FavoriteButton";
 
 interface Listing {
   id: string;
@@ -65,6 +74,7 @@ const Favorites = ({
   const [shareSubject, setShareSubject] = useState("Share selected listings");
   const [shareMessage, setShareMessage] = useState("");
   const [shareSending, setShareSending] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const buyerMode = isBuyerMode || (!isAgentMode && !isPublicMode);
 
   useEffect(() => {
@@ -244,37 +254,72 @@ const Favorites = ({
           })
           .join("\n");
 
-        const htmlBody = `
-          <div style="font-family:Inter,Arial,sans-serif;color:#111827;line-height:1.6;">
-            <p style="margin:0 0 12px 0;white-space:pre-wrap;">${escapeHtml(shareMessage)}</p>
-            ${listingCardsHtml}
-          </div>
-        `;
+        const aacNavy = "#0A1A2F";
+        const aacGreen = "#059669";
+        const aacLogoUrl = `${window.location.origin}/favicons/aac/favicon-32x32.png`;
 
-        const { error } = await supabase.functions.invoke("send-email", {
+        const composedMessageHtml = [
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f7fb;padding:18px 0;">`,
+          `<tr><td align="center">`,
+          `<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:640px;max-width:100%;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">`,
+          `<tr><td style="padding:24px 28px 10px;">`,
+          `<p style="margin:0;font-size:14px;line-height:1.7;color:#0f172a;white-space:pre-wrap;">${escapeHtml(shareMessage)}</p>`,
+          `<div style="margin-top:16px;">${listingCardsHtml}</div>`,
+          `<p style="margin:20px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.5;color:#64748b;">`,
+          `If a listing is no longer available, your agent can share updated options.`,
+          `</p>`,
+          `</td></tr>`,
+          `<tr><td align="center" style="background-color:${aacNavy};border-top:2px solid ${aacGreen};border-radius:0 0 12px 12px;padding:22px 28px 20px;">`,
+          `<img src="${aacLogoUrl}" width="24" height="24" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />`,
+          `<p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);">All Agent Connect</p>`,
+          `<p style="margin:0 0 6px;font-size:12px;">`,
+          `<a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>`,
+          `</p>`,
+          `</td></tr>`,
+          `</table>`,
+          `<!-- plain-text-fallback: ${escapeHtml(plainTextFallback)} -->`,
+          `</td></tr>`,
+          `</table>`,
+        ].join("");
+
+        const { error } = await supabase.functions.invoke("send-bulk-email", {
           body: {
-            to: recipientEmail,
-            recipientName,
+            recipients: [{ email: recipientEmail, name: recipientName }],
             subject: shareSubject.trim(),
-            htmlBody,
-            textBody: `${shareMessage}\n\n${plainTextFallback}`,
-            fromName: user?.email || "All Agent Connect",
+            message: composedMessageHtml,
+            agentId: user.id,
+            sendAsGroup: false,
           },
         });
         if (error) throw error;
 
-        toast.success("Listings shared successfully");
+        toast.success("Email sent");
         setShareModalOpen(false);
-        setShareToEmail("");
-      } catch (err: any) {
-        console.error("Share email failed", err);
-        toast.error(err?.message || "Failed to send email");
+      } catch (error: any) {
+        console.error("Error sending share email:", error);
+        toast.error(error?.message || "Failed to send email");
       } finally {
         setShareSending(false);
       }
     };
     void run();
-  }, [selectedFavorites, shareToEmail, shareSubject, shareMessage, user, shareSending]);
+  }, [shareToEmail, shareSubject, shareMessage, selectedFavorites, user]);
+
+  const handleDeleteSelected = async () => {
+    if (selectedFavoriteIds.size === 0) return;
+    try {
+      const ids = Array.from(selectedFavoriteIds);
+      const { error } = await supabase.from("favorites").delete().in("id", ids);
+      if (error) throw error;
+      setFavorites((prev) => prev.filter((fav) => !selectedFavoriteIds.has(fav.id)));
+      setSelectedFavoriteIds(new Set());
+      setDeleteDialogOpen(false);
+      toast.success("Selected favorites removed");
+    } catch (error: any) {
+      console.error("Error deleting selected favorites:", error);
+      toast.error("Failed to remove selected favorites");
+    }
+  };
 
   if (loading) {
     return (
@@ -295,11 +340,11 @@ const Favorites = ({
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-[#111827]">
-              {buyerMode ? "Your Saved Homes" : "My Favorites"}
+              {buyerMode ? "Your Favorite Homes" : "My Favorites"}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               {buyerMode
-                ? "Review the listings you have saved to revisit later."
+                ? "Homes you saved for quick access."
                 : "Manage your favorite properties so you don't lose track of them."}
             </p>
           </div>
@@ -316,14 +361,14 @@ const Favorites = ({
             <Card className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] p-8 md:p-10 text-center">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">{buyerMode ? "No saved homes yet" : "No favorites yet"}</h3>
+                <h3 className="text-xl font-semibold mb-2">{buyerMode ? "No favorite homes yet" : "No favorites yet"}</h3>
                 <p className="text-muted-foreground mb-6">
                   {buyerMode
                     ? "Start browsing homes and save the ones you want to revisit."
                     : "Start browsing properties and save your favorites to keep track of them."}
                 </p>
                 <Button className="px-5 py-2 text-sm" onClick={() => navigate("/browse")}>
-                  {buyerMode ? "Browse Homes" : "Browse Properties"}
+                  {buyerMode ? "Search homes" : "Browse Properties"}
                 </Button>
               </div>
             </Card>
@@ -356,6 +401,17 @@ const Favorites = ({
                   >
                     Share selected
                   </Button>
+                  {selectedFavorites.length > 0 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 rounded-md px-2.5 text-xs text-red-700 border-red-200 hover:bg-red-50"
+                      onClick={() => setDeleteDialogOpen(true)}
+                    >
+                      Delete selected
+                    </Button>
+                  )}
                 </div>
                 <div className="w-44 min-w-0 shrink-0 sm:w-52">
                   <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
@@ -387,11 +443,7 @@ const Favorites = ({
                         navigate(`/property/${listing.id}`);
                       }
                     }}
-                    className={`group w-full rounded-[24px] bg-white overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 transition-all duration-200 ease-out transform-gpu ${
-                      isSelected
-                        ? "ring-2 ring-[#0E56F5]/50 shadow-[0_8px_28px_rgba(14,86,245,0.18)]"
-                        : "shadow-[0_2px_8px_rgba(15,23,42,0.07)] ring-1 ring-zinc-200/80 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(15,23,42,0.12)] hover:ring-zinc-300/80"
-                    }`}
+                    className="group w-full rounded-[24px] bg-white overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 transition-all duration-200 ease-out transform-gpu shadow-[0_2px_8px_rgba(15,23,42,0.07)] ring-1 ring-zinc-200/80 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(15,23,42,0.12)] hover:ring-zinc-300/80"
                   >
                     <div className="relative w-full overflow-hidden bg-zinc-100" style={{ aspectRatio: "16/10" }}>
                       <img
@@ -409,17 +461,6 @@ const Favorites = ({
                           onCheckedChange={() => toggleSelectFavorite(favorite.id)}
                           className="h-5 w-5 border-zinc-300 bg-white/90 data-[state=checked]:border-[#0E56F5] data-[state=checked]:bg-[#0E56F5]"
                           aria-label={isSelected ? "Unselect listing" : "Select listing"}
-                        />
-                      </div>
-                      <div
-                        className="absolute top-2 right-2 z-20 max-w-[calc(100%-6.5rem)] flex min-h-0 items-center justify-end"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <FavoriteButton
-                          listingId={listing.id}
-                          size="icon"
-                          photoIcon
-                          className="!h-7 !w-7 !min-w-0 p-0 [&>svg]:!h-6 [&>svg]:!w-6"
                         />
                       </div>
                     </div>
@@ -504,6 +545,23 @@ const Favorites = ({
           </div>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove selected favorites?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the selected homes from your favorites.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void handleDeleteSelected()}>
+              Remove favorites
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
