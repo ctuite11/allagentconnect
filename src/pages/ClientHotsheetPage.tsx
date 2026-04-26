@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useMatch } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,8 +38,11 @@ interface Listing {
 }
 
 const ClientHotsheetPage = () => {
-  const { token } = useParams();
+  const { token, id: hotSheetIdParam } = useParams<{ token?: string; id?: string }>();
   const navigate = useNavigate();
+  const buyerByIdMatch = useMatch({ path: "/client/hot-sheets/:id", end: true });
+  const isBuyerHotSheetByIdRoute = Boolean(buyerByIdMatch && hotSheetIdParam);
+  const contentTopClass = isBuyerHotSheetByIdRoute ? "pt-4" : "pt-20";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hotSheet, setHotSheet] = useState<any>(null);
@@ -54,10 +57,15 @@ const ClientHotsheetPage = () => {
   const [showAddFriend, setShowAddFriend] = useState(false);
 
   useEffect(() => {
-    if (token) {
+    if (hotSheetIdParam) {
+      loadBuyerHotSheetById(hotSheetIdParam);
+    } else if (token) {
       validateAndLoadHotsheet();
+    } else {
+      setError("No hot sheet specified");
+      setLoading(false);
     }
-  }, [token]);
+  }, [token, hotSheetIdParam]);
 
   // Check authentication status
   useEffect(() => {
@@ -87,7 +95,7 @@ const ClientHotsheetPage = () => {
   // restore shared hot sheets from accepted tokens.
   useEffect(() => {
     const markTokenAccepted = async () => {
-      if (!token || !tokenData || !currentUser) return;
+      if (hotSheetIdParam || !token || !tokenData || !currentUser) return;
 
       const payload = (tokenData.payload as any) || {};
       const tokenEmail = String(payload?.client_email || payload?.email || "").toLowerCase().trim();
@@ -123,7 +131,121 @@ const ClientHotsheetPage = () => {
     };
 
     void markTokenAccepted();
-  }, [token, tokenData, currentUser]);
+  }, [hotSheetIdParam, token, tokenData, currentUser]);
+
+  const loadBuyerHotSheetById = async (hotSheetId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        toast.error("Please sign in to view this hot sheet.");
+        navigate("/auth", { replace: true });
+        return;
+      }
+
+      const { data: linkRow, error: linkError } = await supabase
+        .from("hot_sheet_clients")
+        .select("hot_sheet_id")
+        .eq("hot_sheet_id", hotSheetId)
+        .maybeSingle();
+
+      if (linkError) {
+        throw linkError;
+      }
+      if (!linkRow) {
+        throw new Error("You do not have access to this hot sheet.");
+      }
+
+      const { data: hotSheetData, error: hotSheetError } = await supabase
+        .from("hot_sheets")
+        .select("*")
+        .eq("id", hotSheetId)
+        .single();
+
+      if (hotSheetError || !hotSheetData) {
+        throw hotSheetError || new Error("Saved search not found");
+      }
+
+      if (hotSheetData.user_id) {
+        document.cookie = `primary_agent_id=${hotSheetData.user_id}; path=/; max-age=${
+          60 * 60 * 24 * 365
+        }`;
+        localStorage.setItem("primary_agent_id", hotSheetData.user_id);
+      }
+      if (hotSheetData.client_id) {
+        localStorage.setItem("client_id", hotSheetData.client_id);
+      }
+
+      setHotSheet(hotSheetData);
+
+      const { data: agentData, error: agentError } = await supabase
+        .from("agent_profiles")
+        .select("*")
+        .eq("id", hotSheetData.user_id)
+        .single();
+
+      if (agentError) {
+        throw agentError;
+      }
+
+      setAgentProfile(agentData);
+      setAgent(agentData);
+
+      const loadedCriteria = (hotSheetData.criteria as any) || {};
+      const query = buildListingsQuery(supabase, loadedCriteria).limit(200);
+      const { data: listingsData, error: listingsError } = await query;
+
+      if (listingsError) {
+        throw listingsError;
+      }
+
+      setListings(listingsData || []);
+
+      const agentIds = Array.from(
+        new Set(
+          (listingsData || [])
+            .map((l: any) => l.agent_id)
+            .filter((id: string | null | undefined) => Boolean(id))
+        )
+      );
+
+      if (agentIds.length > 0) {
+        const { data: agentsData, error: agentsError } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, company")
+          .in("id", agentIds);
+
+        if (agentsError) {
+          console.error("Failed to load listing agents for client hotsheet", agentsError);
+        } else if (agentsData) {
+          const agentMapping = agentsData.reduce(
+            (
+              acc: Record<string, { fullName: string; company?: string | null }>,
+              row: any
+            ) => {
+              acc[row.id] = {
+                fullName: `${row.first_name} ${row.last_name}`,
+                company: row.company,
+              };
+              return acc;
+            },
+            {} as Record<string, { fullName: string; company?: string | null }>
+          );
+          setAgentMap(agentMapping);
+        }
+      }
+
+      setLoading(false);
+    } catch (err: any) {
+      console.error("Client hotsheet by id load error", err);
+      setLoading(false);
+      toast.error("We couldn't open this hot sheet.");
+      navigate("/hot-sheets", { replace: true });
+    }
+  };
 
   const validateAndLoadHotsheet = async () => {
     try {
@@ -293,8 +415,11 @@ const ClientHotsheetPage = () => {
   };
 
   const handleUpdateCriteria = () => {
-    // Reload the hotsheet data after criteria is updated
-    validateAndLoadHotsheet();
+    if (hotSheetIdParam) {
+      void loadBuyerHotSheetById(hotSheetIdParam);
+    } else {
+      validateAndLoadHotsheet();
+    }
   };
 
   const handleSetupLogin = () => {
@@ -319,7 +444,7 @@ const ClientHotsheetPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
+      <div className={`min-h-screen flex flex-col ${contentTopClass}`}>
         <main className="flex-1 flex items-center justify-center px-4">
           <p className="text-muted-foreground text-lg">Loading your saved search...</p>
         </main>
@@ -330,7 +455,7 @@ const ClientHotsheetPage = () => {
 
   if (!loading && error) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
+      <div className={`min-h-screen flex flex-col ${contentTopClass}`}>
         <main className="flex-1 flex items-center justify-center px-4">
           <Card className="max-w-md w-full p-6 text-center">
             <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
@@ -422,7 +547,7 @@ const ClientHotsheetPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex flex-col pt-20">
+    <div className={`min-h-screen bg-[#F7F8FA] flex flex-col ${contentTopClass}`}>
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Back to Account */}
@@ -430,10 +555,10 @@ const ClientHotsheetPage = () => {
             variant="ghost"
             size="sm"
             className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate("/client/dashboard")}
+            onClick={() => navigate(isBuyerHotSheetByIdRoute ? "/hot-sheets" : "/client/dashboard")}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Your Account
+            {isBuyerHotSheetByIdRoute ? "Back to Hot Sheets" : "Back to Your Account"}
           </Button>
 
           <div className="flex items-center justify-between mb-6">
