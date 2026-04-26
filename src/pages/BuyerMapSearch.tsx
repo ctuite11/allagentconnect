@@ -9,6 +9,14 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { isDcmlsHost } from "@/lib/host";
 import { toast } from "sonner";
 import FavoriteButton from "@/components/FavoriteButton";
+import {
+  type ListingRecord,
+  type AgentOfficeRecord,
+  getPrimaryPhotoUrl,
+  ListingImage,
+  formatBrokerageLine,
+  resolveListingBrokerage,
+} from "@/components/buyer/buyerListingDisplay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,31 +25,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-interface ListingRecord {
-  id: string;
-  agent_id?: string | null;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  price: number;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  square_feet?: number | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  photos?: string[] | null;
-  property_type?: string | null;
-  list_office?: string | null;
-  office_name?: string | null;
-}
-
-interface AgentOfficeRecord {
-  id: string;
-  company?: string | null;
-  office_name?: string | null;
-}
 
 const DEFAULT_CRITERIA: SearchCriteria = {
   listingType: "for_sale",
@@ -80,55 +63,6 @@ const BATH_PRESETS = ["Any", "1+", "1.5+", "2+", "3+", "4+"];
 const PRICE_ABS_MIN = 50_000;
 const PRICE_ABS_MAX = 10_000_000;
 
-function getPrimaryPhotoUrl(photos: unknown): string | null {
-  if (!Array.isArray(photos) || photos.length === 0) return null;
-
-  const first = photos[0] as unknown;
-  if (typeof first === "string") {
-    const trimmed = first.trim();
-    return trimmed ? trimmed : null;
-  }
-
-  if (first && typeof first === "object") {
-    const candidate = first as { url?: unknown; src?: unknown; image_url?: unknown };
-    const raw = candidate.url ?? candidate.src ?? candidate.image_url;
-    if (typeof raw === "string") {
-      const trimmed = raw.trim();
-      return trimmed ? trimmed : null;
-    }
-  }
-
-  return null;
-}
-
-function ListingImage({ photos, alt }: { photos?: unknown; alt: string }) {
-  const src = useMemo(() => getPrimaryPhotoUrl(photos), [photos]);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
-
-  if (!src || failed) {
-    return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-zinc-100 via-zinc-100 to-zinc-200/80">
-        <div className="text-[11px] font-medium text-zinc-500">Photo unavailable</div>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className="h-full w-full object-cover"
-      onError={() => setFailed(true)}
-      loading="lazy"
-      referrerPolicy="no-referrer"
-    />
-  );
-}
-
 function parseCriteriaFromUrl(search: string): Partial<SearchCriteria> {
   const params = new URLSearchParams(search);
   const urlCriteria: Partial<SearchCriteria> = {};
@@ -148,17 +82,6 @@ function parseCriteriaFromUrl(search: string): Partial<SearchCriteria> {
   if (params.has("showAreas")) urlCriteria.showAreas = params.get("showAreas") === "yes";
 
   return urlCriteria;
-}
-
-function formatBrokerageLine(listOffice?: string | null): string | null {
-  const normalized = listOffice?.trim();
-  if (!normalized) return null;
-  if (/^(listed by|listing courtesy of)\b/i.test(normalized)) return normalized;
-  return `Listed by ${normalized}`;
-}
-
-function resolveListingBrokerage(listing: ListingRecord): string | null {
-  return listing.list_office?.trim() || listing.office_name?.trim() || null;
 }
 
 function buildQueryParams(criteria: SearchCriteria): URLSearchParams {

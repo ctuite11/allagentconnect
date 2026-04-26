@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import { Card } from "@/components/ui/card";
@@ -6,6 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import PropertyMap from "@/components/PropertyMap";
+import FavoriteButton from "@/components/FavoriteButton";
+import {
+  type ListingRecord,
+  type AgentOfficeRecord,
+  getPrimaryPhotoUrl,
+  ListingImage,
+  formatBrokerageLine,
+  resolveListingBrokerage,
+} from "@/components/buyer/buyerListingDisplay";
 import {
   Select,
   SelectContent,
@@ -42,6 +52,8 @@ interface Listing {
   status: string;
   photos: any[];
   agent_id: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface Favorite {
@@ -74,11 +86,57 @@ const Favorites = ({
   const [shareMessage, setShareMessage] = useState("");
   const [shareSending, setShareSending] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [showKeptOnly, setShowKeptOnly] = useState(false);
+  const [mapsKeyAvailable, setMapsKeyAvailable] = useState(true);
+  const [officeByAgentId, setOfficeByAgentId] = useState<Map<string, string | null>>(new Map());
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const isLocalDevHost = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const host = window.location.hostname;
+    return host === "localhost" || host === "127.0.0.1";
+  }, []);
   const buyerMode = isBuyerMode || (!isAgentMode && !isPublicMode);
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    const envKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim();
+    const urlKey = new URLSearchParams(window.location.search).get("gmaps_key")?.trim();
+    setMapsKeyAvailable(Boolean(envKey || urlKey));
+  }, []);
+
+  useEffect(() => {
+    if (!buyerMode || favorites.length === 0) {
+      setOfficeByAgentId(new Map());
+      return;
+    }
+    const agentIds = Array.from(
+      new Set(favorites.map((f) => f.listings?.agent_id).filter((id): id is string => Boolean(id))),
+    );
+    if (agentIds.length === 0) {
+      setOfficeByAgentId(new Map());
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("agent_profiles")
+        .select("id, company, office_name")
+        .in("id", agentIds);
+      if (error || cancelled) return;
+      const m = new Map(
+        ((data || []) as AgentOfficeRecord[]).map((r) => [r.id, r.office_name?.trim() || r.company?.trim() || null]),
+      );
+      if (!cancelled) setOfficeByAgentId(m);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [buyerMode, favorites]);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -114,7 +172,9 @@ const Favorites = ({
             listing_type,
             status,
             photos,
-            agent_id
+            agent_id,
+            latitude,
+            longitude
           )
         `)
         .eq("user_id", userId)
@@ -160,10 +220,91 @@ const Favorites = ({
     return next;
   }, [favorites, sortBy]);
 
-  const selectedFavorites = useMemo(
-    () => sortedFavorites.filter((fav) => selectedFavoriteIds.has(fav.id)),
-    [sortedFavorites, selectedFavoriteIds],
-  );
+  const displayFavorites = useMemo(() => {
+    if (!buyerMode || !showKeptOnly) return sortedFavorites;
+    return sortedFavorites.filter((f) => selectedFavoriteIds.has(f.id));
+  }, [buyerMode, showKeptOnly, sortedFavorites, selectedFavoriteIds]);
+
+  const favoritesForShare = useMemo(() => {
+    if (buyerMode) {
+      return displayFavorites.filter((f) => selectedFavoriteIds.has(f.id));
+    }
+    return sortedFavorites.filter((fav) => selectedFavoriteIds.has(fav.id));
+  }, [buyerMode, displayFavorites, sortedFavorites, selectedFavoriteIds]);
+
+  const displayListingRecords: ListingRecord[] = useMemo(() => {
+    return displayFavorites.map((fav) => {
+      const l = fav.listings;
+      const fallback = l.agent_id ? officeByAgentId.get(l.agent_id) ?? null : null;
+      return {
+        id: l.id,
+        agent_id: l.agent_id,
+        address: l.address,
+        city: l.city,
+        state: l.state,
+        zip_code: l.zip_code,
+        price: l.price,
+        bedrooms: l.bedrooms,
+        bathrooms: l.bathrooms,
+        square_feet: l.square_feet,
+        latitude: l.latitude,
+        longitude: l.longitude,
+        photos: l.photos,
+        property_type: l.property_type,
+        list_office: fallback,
+      };
+    });
+  }, [displayFavorites, officeByAgentId]);
+
+  const visibleSelectionState = useMemo(() => {
+    if (!buyerMode) {
+      return { allVisible: false, someVisible: false, noneVisible: true };
+    }
+    const n = displayFavorites.length;
+    if (n === 0) return { allVisible: false, someVisible: false, noneVisible: true };
+    const selected = displayFavorites.filter((f) => selectedFavoriteIds.has(f.id)).length;
+    if (selected === 0) return { allVisible: false, someVisible: false, noneVisible: true };
+    if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
+    return { allVisible: false, someVisible: true, noneVisible: false };
+  }, [buyerMode, displayFavorites, selectedFavoriteIds]);
+
+  const shouldUseLiveMap = mapsKeyAvailable;
+
+  const addAllVisible = useCallback(() => {
+    setSelectedFavoriteIds((prev) => {
+      const next = new Set(prev);
+      displayFavorites.forEach((f) => next.add(f.id));
+      return next;
+    });
+  }, [displayFavorites]);
+
+  const unselectAllVisible = useCallback(() => {
+    setSelectedFavoriteIds((prev) => {
+      const next = new Set(prev);
+      displayFavorites.forEach((f) => next.delete(f.id));
+      return next;
+    });
+  }, [displayFavorites]);
+
+  const handleMarkerSelect = (listingId: string) => {
+    setSelectedListingId(listingId);
+    const el = cardRefs.current[listingId];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }
+  };
+
+  useEffect(() => {
+    if (!buyerMode || !selectedListingId) return;
+    const still = displayListingRecords.some((l) => l.id === selectedListingId);
+    if (!still) setSelectedListingId(null);
+  }, [buyerMode, displayListingRecords, selectedListingId]);
+
+  useEffect(() => {
+    if (buyerMode && showKeptOnly && selectedFavoriteIds.size === 0) {
+      setShowKeptOnly(false);
+    }
+  }, [buyerMode, showKeptOnly, selectedFavoriteIds.size]);
 
   const toggleSelectFavorite = (favoriteId: string) => {
     setSelectedFavoriteIds((prev) => {
@@ -175,11 +316,11 @@ const Favorites = ({
   };
 
   const shareSelected = useCallback(() => {
-    if (selectedFavorites.length === 0) return;
-    setShareSubject(`Share selected listings (${selectedFavorites.length})`);
+    if (favoritesForShare.length === 0) return;
+    setShareSubject(`Share selected listings (${favoritesForShare.length})`);
     setShareMessage("Here are some listings I wanted to share:");
     setShareModalOpen(true);
-  }, [selectedFavorites]);
+  }, [favoritesForShare]);
 
   const handleSendShareEmail = useCallback(() => {
     const run = async () => {
@@ -211,8 +352,104 @@ const Favorites = ({
         const aacPrimaryCta = "#0E56F5";
         const sharePhotoH = 150;
         const shareImgColW = 240;
+        const shareRows = favoritesForShare;
 
-        const listingCardsHtml = selectedFavorites
+        if (buyerMode) {
+          const listingCardsHtml = shareRows
+            .map((fav) => {
+              const listing = fav.listings;
+              const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
+              const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
+              const address = escapeHtml(listing.address || "Address unavailable");
+              const cityStateZip = escapeHtml(
+                `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
+              );
+              const photoUrl = getPrimaryPhotoUrl(listing.photos);
+              const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
+              return [
+                `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
+                `<tr>`,
+                `<td width="${shareImgColW}" style="width:${shareImgColW}px;vertical-align:top;background:#f3f4f6;padding:0;">`,
+                safePhoto
+                  ? `<a href="${listingUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" width="${shareImgColW}" height="${sharePhotoH}" style="display:block;width:${shareImgColW}px;max-width:100%;height:${sharePhotoH}px;object-fit:cover;object-position:center;border:0;line-height:0;font-size:0;" /></a>`
+                  : `<div style="box-sizing:border-box;width:${shareImgColW}px;height:${sharePhotoH}px;line-height:${sharePhotoH}px;text-align:center;background:#f3f4f6;color:#6b7280;font-size:12px;overflow:hidden;">Photo unavailable</div>`,
+                `</td>`,
+                `<td style="padding:16px 18px;vertical-align:top;">`,
+                `<div style="font-size:22px;font-weight:700;color:#111827;line-height:1.2;">${escapeHtml(price)}</div>`,
+                `<div style="margin-top:8px;font-size:15px;font-weight:600;color:#111827;line-height:1.35;">${address}</div>`,
+                `<div style="margin-top:4px;font-size:13px;color:#6b7280;line-height:1.35;">${cityStateZip}</div>`,
+                `<div style="margin-top:16px;"><a href="${listingUrl}" style="display:inline-block;background-color:${aacPrimaryCta};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;">View listing</a></div>`,
+                `</td>`,
+                `</tr>`,
+                `</table>`,
+              ].join("");
+            })
+            .join("");
+
+          const plainTextFallback = shareRows
+            .map((fav) => {
+              const listing = fav.listings;
+              const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
+              const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
+              const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
+              return `- ${address} - ${price} - ${listingUrl}`;
+            })
+            .join("\n");
+
+          const messageHtml = escapeHtml(shareMessage.trim()).replace(/\n/g, "<br>");
+          const aacLogoUrl =
+            "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg";
+          const aacNavy = "#111317";
+          const aacGreen = "#50c878";
+          const composedMessageHtml = [
+            `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0;padding:0;background-color:#ffffff;">`,
+            `<tr><td align="center" style="padding:24px 12px 32px;">`,
+            `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">`,
+            `<tr><td align="center" style="background-color:${aacNavy};border-radius:12px 12px 0 0;padding:32px 28px 0;">`,
+            `<img src="${aacLogoUrl}" width="40" height="40" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />`,
+            `<p style="margin:12px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">All Agent Connect</p>`,
+            `<p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.75);">Shared listings</p>`,
+            `<div style="width:48px;height:2px;background-color:${aacGreen};margin:16px auto 0;border-radius:1px;"></div>`,
+            `<div style="height:24px;line-height:24px;font-size:0;">&nbsp;</div>`,
+            `</td></tr>`,
+            `<tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;">`,
+            `<div style="padding:28px 32px 24px;">`,
+            `<div style="font-size:15px;line-height:1.6;color:#334155;">${messageHtml}</div>`,
+            `<div style="margin-top:16px;">${listingCardsHtml}</div>`,
+            `<p style="margin:20px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.5;color:#64748b;">`,
+            `If a listing is no longer available, your agent can share updated options.`,
+            `</p>`,
+            `</div>`,
+            `</td></tr>`,
+            `<tr><td align="center" style="background-color:${aacNavy};border-top:2px solid ${aacGreen};border-radius:0 0 12px 12px;padding:22px 28px 20px;">`,
+            `<img src="${aacLogoUrl}" width="24" height="24" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />`,
+            `<p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);">All Agent Connect</p>`,
+            `<p style="margin:0 0 6px;font-size:12px;">`,
+            `<a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>`,
+            `</p>`,
+            `</td></tr>`,
+            `</table>`,
+            `<!-- plain-text-fallback: ${escapeHtml(plainTextFallback)} -->`,
+            `</td></tr>`,
+            `</table>`,
+          ].join("");
+
+          const { error } = await supabase.functions.invoke("send-bulk-email", {
+            body: {
+              recipients: [{ email: recipientEmail, name: recipientName }],
+              subject: shareSubject.trim(),
+              message: composedMessageHtml,
+              agentId: authUser.id,
+              sendAsGroup: false,
+            },
+          });
+          if (error) throw error;
+          toast.success("Email sent");
+          setShareModalOpen(false);
+          return;
+        }
+
+        const listingCardsHtml = shareRows
           .map((fav) => {
             const listing = fav.listings;
             const listingUrl = `${window.location.origin}/property/${listing.id}`;
@@ -243,7 +480,7 @@ const Favorites = ({
           })
           .join("");
 
-        const plainTextFallback = selectedFavorites
+        const plainTextFallback = shareRows
           .map((fav) => {
             const listing = fav.listings;
             const listingUrl = `${window.location.origin}/property/${listing.id}`;
@@ -286,7 +523,7 @@ const Favorites = ({
             recipients: [{ email: recipientEmail, name: recipientName }],
             subject: shareSubject.trim(),
             message: composedMessageHtml,
-            agentId: user.id,
+            agentId: authUser.id,
             sendAsGroup: false,
           },
         });
@@ -302,7 +539,7 @@ const Favorites = ({
       }
     };
     void run();
-  }, [shareToEmail, shareSubject, shareMessage, selectedFavorites, user]);
+  }, [shareToEmail, shareSubject, shareMessage, favoritesForShare, buyerMode]);
 
   const handleDeleteSelected = async () => {
     if (selectedFavoriteIds.size === 0) return;
@@ -320,14 +557,398 @@ const Favorites = ({
     }
   };
 
+  if (loading && buyerMode) {
+    return (
+      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+        <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-[#F7F8FA]/92 backdrop-blur supports-[backdrop-filter]:bg-[#F7F8FA]/84">
+          <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+            <h1 className="text-lg font-semibold text-zinc-900">Your Favorite Homes</h1>
+            <p className="text-sm text-zinc-500">Homes you saved for quick access.</p>
+          </div>
+        </div>
+        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
+          <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,39%)_minmax(0,61%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+            <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full">
+              <div className="h-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
+              </div>
+            </section>
+            <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+              <div className="p-4 flex-1 flex items-center justify-center text-sm text-zinc-500">Loading your saved homes…</div>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col pt-20">
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-muted-foreground">{buyerMode ? "Loading your saved homes..." : "Loading favorites..."}</p>
+            <p className="text-muted-foreground">Loading favorites...</p>
           </div>
         </main>
+      </div>
+    );
+  }
+
+  if (buyerMode) {
+    return (
+      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+        <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-[#F7F8FA]/92 backdrop-blur supports-[backdrop-filter]:bg-[#F7F8FA]/84">
+          <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+            <h1 className="text-lg font-semibold text-zinc-900">Your Favorite Homes</h1>
+            <p className="text-sm text-zinc-500">Homes you saved for quick access.</p>
+          </div>
+        </div>
+
+        {favorites.length === 0 ? (
+          <main className="mx-auto w-full max-w-7xl flex-1 flex flex-col items-center justify-center px-5 py-10">
+            <Card className="w-full max-w-lg bg-white rounded-2xl border border-zinc-200/80 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] p-8 md:p-10 text-center">
+              <div className="text-center">
+                <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mb-2">No favorite homes yet</h3>
+                <p className="text-muted-foreground mb-6">Start browsing homes and save the ones you want to revisit.</p>
+                <Button className="px-5 py-2 text-sm" onClick={() => navigate("/browse")}>
+                  Search homes
+                </Button>
+              </div>
+            </Card>
+          </main>
+        ) : (
+          <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+            <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,39%)_minmax(0,61%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+              <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+                {!shouldUseLiveMap ? (
+                  <div className="h-full flex items-center justify-center px-8 bg-gradient-to-b from-zinc-50 to-white">
+                    <div className="w-full max-w-md rounded-2xl border border-zinc-200/80 bg-white/80 shadow-[0_14px_32px_rgba(15,23,42,0.05)] px-6 py-7 text-center">
+                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200">
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                      <p className="text-sm font-medium text-zinc-700">Map Preview Unavailable</p>
+                      <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-5">
+                        {mapsKeyAvailable && import.meta.env.DEV && isLocalDevHost
+                          ? "Your map key may not allow localhost. Listings are still shown in the list."
+                          : "Add a Google Maps key to enable the live map for saved homes."}
+                      </p>
+                    </div>
+                  </div>
+                ) : displayListingRecords.length > 0 ? (
+                  <div className="h-full">
+                    <PropertyMap
+                      listings={displayListingRecords}
+                      highlightedListingId={hoveredListingId}
+                      selectedListingId={selectedListingId}
+                      onListingHover={setHoveredListingId}
+                      onListingSelect={handleMarkerSelect}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
+                    <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
+                    <p className="text-sm text-zinc-600 max-w-md">No saved homes in this view.</p>
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+                <div className="shrink-0 border-b border-zinc-200/60 bg-white px-4 py-2.5">
+                  <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">
+                    Results: {displayListingRecords.length.toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="p-4 min-h-0 flex-1 lg:overflow-y-auto">
+                  {displayFavorites.length > 0 && (
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {visibleSelectionState.allVisible && (
+                          <>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-md px-2.5 text-xs"
+                              onClick={unselectAllVisible}
+                            >
+                              Unselect all
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-md px-2.5 text-xs"
+                              onClick={shareSelected}
+                            >
+                              Share selected
+                            </Button>
+                          </>
+                        )}
+                        {visibleSelectionState.someVisible && (
+                          <>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-md px-2.5 text-xs"
+                              onClick={addAllVisible}
+                            >
+                              Select all
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={showKeptOnly ? "default" : "outline"}
+                              className="h-7 rounded-md px-2.5 text-xs"
+                              onClick={() => setShowKeptOnly(true)}
+                              aria-pressed={showKeptOnly}
+                            >
+                              Keep selected only
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-md px-2.5 text-xs"
+                              onClick={shareSelected}
+                            >
+                              Share selected
+                            </Button>
+                          </>
+                        )}
+                        {visibleSelectionState.noneVisible && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 rounded-md px-2.5 text-xs"
+                            onClick={addAllVisible}
+                            disabled={displayListingRecords.length === 0}
+                          >
+                            Select all
+                          </Button>
+                        )}
+                        {showKeptOnly && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="default"
+                            className="h-7 rounded-md px-2.5 text-xs"
+                            onClick={() => setShowKeptOnly(false)}
+                          >
+                            Show all
+                          </Button>
+                        )}
+                        {selectedFavoriteIds.size > 0 && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 rounded-md px-2.5 text-xs text-red-700 border-red-200 hover:bg-red-50"
+                            onClick={() => setDeleteDialogOpen(true)}
+                          >
+                            Delete selected
+                          </Button>
+                        )}
+                      </div>
+                      <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
+                        <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                          <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
+                            <SelectValue placeholder="Sort" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="newest">Newest</SelectItem>
+                            <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                            <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {showKeptOnly && displayListingRecords.length === 0 ? (
+                    <div className="py-10 text-center text-sm text-zinc-500 px-3">
+                      <p>No kept homes in this view.</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-3"
+                        size="sm"
+                        onClick={() => setShowKeptOnly(false)}
+                      >
+                        Show all
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {displayFavorites.map((favorite, idx) => {
+                        const listing = favorite.listings;
+                        const rec = displayListingRecords[idx];
+                        const brokerageLine = rec
+                          ? formatBrokerageLine(resolveListingBrokerage(rec))
+                          : null;
+                        const isKept = selectedFavoriteIds.has(favorite.id);
+                        return (
+                          <div
+                            key={favorite.id}
+                            ref={(el) => {
+                              cardRefs.current[listing.id] = el;
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() =>
+                              navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } })
+                            }
+                            onMouseEnter={() => setHoveredListingId(listing.id)}
+                            onMouseLeave={() => setHoveredListingId(null)}
+                            onFocus={() => setHoveredListingId(listing.id)}
+                            onBlur={() => setHoveredListingId(null)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } });
+                              }
+                            }}
+                            className={`group w-full rounded-[24px] bg-white overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 transition-all duration-200 ease-out transform-gpu ${
+                              listing.id === selectedListingId
+                                ? "ring-2 ring-[#0E56F5]/50 shadow-[0_8px_28px_rgba(14,86,245,0.18)]"
+                                : listing.id === hoveredListingId
+                                  ? "-translate-y-px shadow-[0_8px_24px_rgba(15,23,42,0.13)] ring-1 ring-zinc-200"
+                                  : "shadow-[0_2px_8px_rgba(15,23,42,0.07)] ring-1 ring-zinc-200/80 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(15,23,42,0.12)] hover:ring-zinc-300/80"
+                            }`}
+                          >
+                            <div
+                              className="relative w-full overflow-hidden bg-zinc-100"
+                              style={{ aspectRatio: "16/10" }}
+                            >
+                              <ListingImage photos={listing.photos} alt={listing.address} />
+                              <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white/55 via-white/15 to-transparent pointer-events-none" />
+                              <div
+                                className="absolute top-2 left-2 z-20 pointer-events-auto"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isKept}
+                                  onChange={() => toggleSelectFavorite(favorite.id)}
+                                  className="h-5 w-5"
+                                  title="Keep in this list"
+                                  aria-label={isKept ? "Remove from selection" : "Select for share or delete"}
+                                />
+                              </div>
+                              <div
+                                className="absolute top-2 right-2 z-20 max-w-[calc(100%-6.5rem)] flex min-h-0 items-center justify-end"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                              </div>
+                            </div>
+                            <div className="relative border-t border-zinc-200/45 bg-gradient-to-b from-white via-white to-[#fbfcff] px-3.5 pb-3.5 pt-3">
+                              <p className="text-[1.05rem] font-semibold tracking-[-0.02em] leading-none text-zinc-950">
+                                ${listing.price?.toLocaleString()}
+                              </p>
+                              <p className="mt-1.5 text-[13px] font-medium leading-[1.3] text-zinc-900 break-words">
+                                {listing.address}
+                              </p>
+                              <p className="mt-1 text-[11.5px] font-medium leading-[1.35] text-zinc-500">
+                                {listing.city}, {listing.state} {listing.zip_code}
+                              </p>
+                              <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] font-medium leading-none text-zinc-600">
+                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
+                                  <BedDouble className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
+                                  {listing.bedrooms ?? "--"} bd
+                                </span>
+                                <span className="text-zinc-300">•</span>
+                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
+                                  <Bath className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
+                                  {listing.bathrooms ?? "--"} ba
+                                </span>
+                                <span className="text-zinc-300">•</span>
+                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
+                                  <Ruler className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
+                                  {listing.square_feet
+                                    ? `${listing.square_feet.toLocaleString()} sqft`
+                                    : "--"}
+                                </span>
+                              </div>
+                              {brokerageLine && (
+                                <p className="mt-2 text-[12px] leading-none text-zinc-400">{brokerageLine}</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+          </main>
+        )}
+
+        {shareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-2xl rounded-xl border border-zinc-200 bg-white p-4 shadow-xl">
+              <h3 className="text-base font-semibold text-zinc-900">Share selected listings</h3>
+              <div className="mt-3 space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="share-to-email">To email</Label>
+                  <Input
+                    id="share-to-email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={shareToEmail}
+                    onChange={(e) => setShareToEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="share-subject">Subject</Label>
+                  <Input
+                    id="share-subject"
+                    value={shareSubject}
+                    onChange={(e) => setShareSubject(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="share-message">Message</Label>
+                  <Textarea
+                    id="share-message"
+                    className="min-h-[180px]"
+                    value={shareMessage}
+                    onChange={(e) => setShareMessage(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShareModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" onClick={handleSendShareEmail} disabled={shareSending}>
+                  Send Email
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove selected favorites?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove the selected homes from your favorites.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => void handleDeleteSelected()}>
+                Remove favorites
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
@@ -336,38 +957,25 @@ const Favorites = ({
     <div className="min-h-screen bg-white flex flex-col pt-14 md:pt-16">
       <main className="flex-1">
         <div className="mx-auto w-full max-w-7xl px-6 md:px-8 py-6 md:py-8">
-          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-[#111827]">
-              {buyerMode ? "Your Favorite Homes" : "My Favorites"}
-            </h1>
+            <h1 className="text-2xl font-semibold text-[#111827]">My Favorites</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {buyerMode
-                ? "Homes you saved for quick access."
-                : "Manage your favorite properties so you don't lose track of them."}
+              Manage your favorite properties so you don&apos;t lose track of them.
             </p>
           </div>
 
-          {/* Favorites Count */}
           <div>
-            <h2 className="text-sm font-medium text-gray-600 mt-6">
-              {buyerMode ? `Saved Homes (${favorites.length})` : `Favorites (${favorites.length})`}
-            </h2>
+            <h2 className="text-sm font-medium text-gray-600 mt-6">Favorites ({favorites.length})</h2>
           </div>
 
-          {/* Favorites Grid */}
           {favorites.length === 0 ? (
             <Card className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] p-8 md:p-10 text-center">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">{buyerMode ? "No favorite homes yet" : "No favorites yet"}</h3>
-                <p className="text-muted-foreground mb-6">
-                  {buyerMode
-                    ? "Start browsing homes and save the ones you want to revisit."
-                    : "Start browsing properties and save your favorites to keep track of them."}
-                </p>
+                <h3 className="text-xl font-semibold mb-2">No favorites yet</h3>
+                <p className="text-muted-foreground mb-6">Start browsing properties and save your favorites to keep track of them.</p>
                 <Button className="px-5 py-2 text-sm" onClick={() => navigate("/browse")}>
-                  {buyerMode ? "Search homes" : "Browse Properties"}
+                  Browse Properties
                 </Button>
               </div>
             </Card>
@@ -395,11 +1003,11 @@ const Favorites = ({
                     size="sm"
                     className="h-8 rounded-md px-2.5 text-xs"
                     onClick={shareSelected}
-                    disabled={selectedFavorites.length === 0}
+                    disabled={favoritesForShare.length === 0}
                   >
                     Share selected
                   </Button>
-                  {selectedFavorites.length > 0 && (
+                  {favoritesForShare.length > 0 && (
                     <Button
                       type="button"
                       size="sm"
