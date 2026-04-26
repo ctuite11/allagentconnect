@@ -48,9 +48,8 @@ Deno.serve(async (req) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const token = authHeader.replace("Bearer ", "");
-  const { data: claimsData, error: claimsErr } = await anonClient.auth.getClaims(token);
-  if (claimsErr || !claimsData?.claims?.sub) return json({ error: "Unauthorized" }, { status: 401 });
+  const { data: userData, error: userErr } = await anonClient.auth.getUser();
+  if (userErr || !userData?.user?.id) return json({ error: "Unauthorized" }, { status: 401 });
 
   /* ---- Env ---- */
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
