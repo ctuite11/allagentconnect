@@ -518,10 +518,9 @@ export default function ClientDashboard() {
 
   const primaryCtaClass =
     "rounded-lg bg-[#0E56F5] text-white shadow-sm transition-shadow duration-200 hover:bg-[#0B46CC] hover:shadow-md";
-  const dashboardShellClass =
-    "shadow-sm border border-gray-200/60 rounded-2xl bg-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5";
-  const dashboardInsetCardClass =
-    "overflow-hidden rounded-xl border border-gray-200/60 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-px";
+  const baseCard = "bg-white border border-gray-200 rounded-2xl shadow-sm";
+  const interactiveCard =
+    "cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0";
   const outlineSecondaryClass =
     "border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-gray-50 hover:shadow-sm";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
@@ -541,7 +540,7 @@ export default function ClientDashboard() {
     <div className="bg-background">
       <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
         <div className="space-y-8">
-          <section className={`${dashboardShellClass} p-5 md:p-6`}>
+          <section className={`${baseCard} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="space-y-1">
@@ -651,7 +650,26 @@ export default function ClientDashboard() {
 
           <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
             {stats.map(({ label, value, icon: Icon, subtle }) => (
-              <div key={label} className={`${dashboardShellClass} p-5 md:p-6`}>
+              <div
+                key={label}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (label === "Favorites") navigate("/client/favorites");
+                  if (label === "New Matches") navigate("/client/search");
+                  if (label === "Unread Messages") navigate("/messages");
+                  if (label === "Hot Sheets") navigate("/client/hot-sheets");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  if (label === "Favorites") navigate("/client/favorites");
+                  if (label === "New Matches") navigate("/client/search");
+                  if (label === "Unread Messages") navigate("/messages");
+                  if (label === "Hot Sheets") navigate("/client/hot-sheets");
+                }}
+                className={`${baseCard} ${interactiveCard} p-5 md:p-6`}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
                 </div>
@@ -664,7 +682,7 @@ export default function ClientDashboard() {
 
           <section className="space-y-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className={`${dashboardShellClass} overflow-hidden`}>
+              <div className={`${baseCard} overflow-hidden`}>
                 <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -696,19 +714,16 @@ export default function ClientDashboard() {
                         return (
                           <div
                             key={sheet.id}
-                            role={token ? "button" : undefined}
-                            tabIndex={token ? 0 : -1}
-                            onClick={() => token && navigate(`/client/hotsheet/${token}`)}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => navigate(token ? `/client/hotsheet/${token}` : "/client/hot-sheets")}
                             onKeyDown={(e) => {
-                              if (!token) return;
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                navigate(`/client/hotsheet/${token}`);
+                                navigate(token ? `/client/hotsheet/${token}` : "/client/hot-sheets");
                               }
                             }}
-                            className={`${dashboardInsetCardClass} ${
-                              token ? "cursor-pointer" : "cursor-default opacity-80"
-                            }`}
+                            className={`${baseCard} ${interactiveCard} overflow-hidden rounded-xl ${token ? "" : "opacity-80"}`}
                           >
                             <div className="relative flex h-[4.5rem] items-center justify-center bg-gray-50 text-[#0E56F5]">
                               <AACMonogram className="h-8 w-8" size={32} />
@@ -744,7 +759,7 @@ export default function ClientDashboard() {
                 </Card>
               </div>
 
-              <div className={`${dashboardShellClass} overflow-hidden`}>
+              <div className={`${baseCard} overflow-hidden`}>
                 <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -769,7 +784,7 @@ export default function ClientDashboard() {
                           <button
                             key={fav.id}
                             type="button"
-                            className={`${dashboardInsetCardClass} text-left`}
+                            className={`${baseCard} ${interactiveCard} overflow-hidden rounded-xl text-left`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
                             <div className="relative h-[4.5rem] bg-gray-50">
@@ -802,7 +817,7 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            <div className={`${dashboardShellClass} overflow-hidden`}>
+            <div className={`${baseCard} overflow-hidden`}>
               <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
               <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -822,8 +837,16 @@ export default function ClientDashboard() {
                     {latestListingsPreview.map((listing) => (
                       <article
                         key={listing.id}
-                        className={`${dashboardInsetCardClass} cursor-pointer`}
+                        role="button"
+                        tabIndex={0}
+                        className={`${baseCard} ${interactiveCard} overflow-hidden rounded-xl`}
                         onClick={() => navigate(`/property/${listing.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigate(`/property/${listing.id}`);
+                          }
+                        }}
                       >
                         <div className="relative h-[4.5rem] bg-gray-50">
                           <DashboardListingImage
