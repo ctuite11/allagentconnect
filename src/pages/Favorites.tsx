@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
-import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -215,9 +214,9 @@ const Favorites = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex flex-col pt-20">
+    <div className="min-h-screen bg-[#F7F8FA] flex flex-col pt-14 md:pt-16">
       <main className="flex-1">
-        <div className="container mx-auto px-4 py-8">
+        <div className="mx-auto w-full max-w-7xl px-6 md:px-8 py-6 md:py-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-[#111827]">
@@ -239,7 +238,7 @@ const Favorites = ({
 
           {/* Favorites Grid */}
           {favorites.length === 0 ? (
-            <Card className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+            <Card className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] p-8 md:p-10 text-center">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">{buyerMode ? "No saved homes yet" : "No favorites yet"}</h3>
@@ -380,8 +379,6 @@ const Favorites = ({
         </div>
       </main>
 
-      {/* Footer only on public client route, not inside agent app shell */}
-      {(buyerMode || location.pathname.startsWith("/client")) && <Footer />}
     </div>
   );
 };
