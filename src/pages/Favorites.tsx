@@ -457,7 +457,7 @@ const Favorites = ({
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => toggleSelectFavorite(favorite.id)}
-                          className="h-5 w-5 rounded-sm border border-gray-300 bg-white data-[state=checked]:border-[#0E56F5] data-[state=checked]:bg-[#0E56F5] data-[state=checked]:text-white"
+                          className="!h-5 !w-5 !rounded-sm border-gray-300 bg-white data-[state=checked]:border-[#0E56F5] data-[state=checked]:bg-[#0E56F5] data-[state=checked]:text-white"
                           aria-label={isSelected ? "Unselect listing" : "Select listing"}
                         />
                       </div>
