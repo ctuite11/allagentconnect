@@ -668,7 +668,7 @@ export default function ClientDashboard() {
                   if (label === "Unread Messages") navigate("/messages");
                   if (label === "Hot Sheets") navigate("/client/hot-sheets");
                 }}
-                className={`${baseCard} ${interactiveCard} p-5 md:p-6`}
+                className="bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer p-5 md:p-6"
               >
                 <div className="flex items-start justify-between gap-3">
                   <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
@@ -839,7 +839,7 @@ export default function ClientDashboard() {
                         key={listing.id}
                         role="button"
                         tabIndex={0}
-                        className={`${baseCard} ${interactiveCard} overflow-hidden rounded-xl`}
+                        className="bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
                         onClick={() => navigate(`/property/${listing.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
