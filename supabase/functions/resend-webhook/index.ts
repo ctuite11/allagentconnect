@@ -48,9 +48,11 @@ async function verifySvixSignature(
     keyBytes = new TextEncoder().encode(secretBody);
   }
 
+  const rawKey = new Uint8Array(keyBytes).buffer;
+
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
-    keyBytes,
+    rawKey,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
