@@ -455,7 +455,8 @@ const Favorites = ({
                           aria-label={isSelected ? "Unselect listing" : "Select listing"}
                           aria-pressed={isSelected}
                           onClick={() => toggleSelectFavorite(favorite.id)}
-                          className={`!h-5 !w-5 !min-h-[20px] !min-w-[20px] !rounded-sm !border-2 !border-gray-400 !bg-white inline-flex items-center justify-center ${
+                          style={{ width: 20, height: 20, borderRadius: 2 }}
+                          className={`!h-[20px] !w-[20px] !min-h-[20px] !min-w-[20px] !rounded-[2px] !border-2 !border-gray-500 !bg-white inline-flex items-center justify-center leading-none ${
                             isSelected ? "!border-[#0E56F5] !bg-[#0E56F5] text-white" : "text-transparent"
                           }`}
                         >
