@@ -34,7 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, BedDouble, Bath, Ruler, Heart, Check } from "lucide-react";
+import { ArrowLeft, MapPin, BedDouble, Bath, Ruler, Heart, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface Listing {
@@ -80,6 +80,8 @@ const Favorites = ({
   const [user, setUser] = useState<any>(null);
   const [sortBy, setSortBy] = useState<"newest" | "price_asc" | "price_desc">("newest");
   const [selectedFavoriteIds, setSelectedFavoriteIds] = useState<Set<string>>(new Set());
+  /** Same semantics as `sessionKeptIds` in BuyerMapSearch: listing id → checked in the current list */
+  const [sessionKeptListingIds, setSessionKeptListingIds] = useState<Set<string>>(() => new Set());
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareToEmail, setShareToEmail] = useState("");
   const [shareSubject, setShareSubject] = useState("Share selected listings");
@@ -220,17 +222,26 @@ const Favorites = ({
     return next;
   }, [favorites, sortBy]);
 
+  const hasValidMapCoords = (l: ListingRecord) => {
+    const { latitude: lat, longitude: lng } = l;
+    if (lat == null || lng == null) return false;
+    const a = Number(lat);
+    const b = Number(lng);
+    return Number.isFinite(a) && Number.isFinite(b);
+  };
+
   const displayFavorites = useMemo(() => {
     if (!buyerMode || !showKeptOnly) return sortedFavorites;
-    return sortedFavorites.filter((f) => selectedFavoriteIds.has(f.id));
-  }, [buyerMode, showKeptOnly, sortedFavorites, selectedFavoriteIds]);
+    return sortedFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id));
+  }, [buyerMode, showKeptOnly, sortedFavorites, sessionKeptListingIds]);
 
+  /** Matches BuyerMapSearch: listings kept in the current “display” list, used for share */
   const favoritesForShare = useMemo(() => {
     if (buyerMode) {
-      return displayFavorites.filter((f) => selectedFavoriteIds.has(f.id));
+      return displayFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id));
     }
     return sortedFavorites.filter((fav) => selectedFavoriteIds.has(fav.id));
-  }, [buyerMode, displayFavorites, sortedFavorites, selectedFavoriteIds]);
+  }, [buyerMode, displayFavorites, sortedFavorites, sessionKeptListingIds, selectedFavoriteIds]);
 
   const displayListingRecords: ListingRecord[] = useMemo(() => {
     return displayFavorites.map((fav) => {
@@ -256,35 +267,48 @@ const Favorites = ({
     });
   }, [displayFavorites, officeByAgentId]);
 
+  /** PropertyMap only places markers for listings with coordinates (see PropertyMap) */
+  const mapMappableCount = useMemo(
+    () => displayListingRecords.filter((l) => hasValidMapCoords(l)).length,
+    [displayListingRecords],
+  );
+
+  const buyerHasKeptForActions = useMemo(
+    () => sortedFavorites.some((f) => sessionKeptListingIds.has(f.listings.id)),
+    [sortedFavorites, sessionKeptListingIds],
+  );
+
   const visibleSelectionState = useMemo(() => {
     if (!buyerMode) {
       return { allVisible: false, someVisible: false, noneVisible: true };
     }
     const n = displayFavorites.length;
     if (n === 0) return { allVisible: false, someVisible: false, noneVisible: true };
-    const selected = displayFavorites.filter((f) => selectedFavoriteIds.has(f.id)).length;
+    const selected = displayFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id)).length;
     if (selected === 0) return { allVisible: false, someVisible: false, noneVisible: true };
     if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
     return { allVisible: false, someVisible: true, noneVisible: false };
-  }, [buyerMode, displayFavorites, selectedFavoriteIds]);
+  }, [buyerMode, displayFavorites, sessionKeptListingIds]);
 
   const shouldUseLiveMap = mapsKeyAvailable;
 
   const addAllVisible = useCallback(() => {
-    setSelectedFavoriteIds((prev) => {
+    if (!buyerMode) return;
+    setSessionKeptListingIds((prev) => {
       const next = new Set(prev);
-      displayFavorites.forEach((f) => next.add(f.id));
+      displayFavorites.forEach((f) => next.add(f.listings.id));
       return next;
     });
-  }, [displayFavorites]);
+  }, [buyerMode, displayFavorites]);
 
   const unselectAllVisible = useCallback(() => {
-    setSelectedFavoriteIds((prev) => {
+    if (!buyerMode) return;
+    setSessionKeptListingIds((prev) => {
       const next = new Set(prev);
-      displayFavorites.forEach((f) => next.delete(f.id));
+      displayFavorites.forEach((f) => next.delete(f.listings.id));
       return next;
     });
-  }, [displayFavorites]);
+  }, [buyerMode, displayFavorites]);
 
   const handleMarkerSelect = (listingId: string) => {
     setSelectedListingId(listingId);
@@ -301,10 +325,26 @@ const Favorites = ({
   }, [buyerMode, displayListingRecords, selectedListingId]);
 
   useEffect(() => {
-    if (buyerMode && showKeptOnly && selectedFavoriteIds.size === 0) {
+    if (!buyerMode) return;
+    if (showKeptOnly && sessionKeptListingIds.size === 0) {
       setShowKeptOnly(false);
     }
-  }, [buyerMode, showKeptOnly, selectedFavoriteIds.size]);
+  }, [buyerMode, showKeptOnly, sessionKeptListingIds.size]);
+
+  useEffect(() => {
+    if (!buyerMode) return;
+    const keep = new Set(favorites.map((f) => f.listings.id));
+    setSessionKeptListingIds((prev) => {
+      let next: Set<string> | null = null;
+      for (const lid of prev) {
+        if (!keep.has(lid)) {
+          if (!next) next = new Set(prev);
+          next.delete(lid);
+        }
+      }
+      return next ?? prev;
+    });
+  }, [buyerMode, favorites]);
 
   const toggleSelectFavorite = (favoriteId: string) => {
     setSelectedFavoriteIds((prev) => {
@@ -315,7 +355,16 @@ const Favorites = ({
     });
   };
 
-  const shareSelected = useCallback(() => {
+  const toggleSessionKeepListing = (listingId: string) => {
+    setSessionKeptListingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(listingId)) next.delete(listingId);
+      else next.add(listingId);
+      return next;
+    });
+  };
+
+  const shareVisibleSelected = useCallback(() => {
     if (favoritesForShare.length === 0) return;
     setShareSubject(`Share selected listings (${favoritesForShare.length})`);
     setShareMessage("Here are some listings I wanted to share:");
@@ -542,6 +591,28 @@ const Favorites = ({
   }, [shareToEmail, shareSubject, shareMessage, favoritesForShare, buyerMode]);
 
   const handleDeleteSelected = async () => {
+    if (buyerMode) {
+      const toRemove = sortedFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id));
+      if (toRemove.length === 0) return;
+      const ids = toRemove.map((f) => f.id);
+      const removedListingIds = toRemove.map((f) => f.listings.id);
+      try {
+        const { error } = await supabase.from("favorites").delete().in("id", ids);
+        if (error) throw error;
+        setFavorites((prev) => prev.filter((fav) => !ids.includes(fav.id)));
+        setSessionKeptListingIds((prev) => {
+          const next = new Set(prev);
+          removedListingIds.forEach((lid) => next.delete(lid));
+          return next;
+        });
+        setDeleteDialogOpen(false);
+        toast.success("Selected favorites removed");
+      } catch (error: any) {
+        console.error("Error deleting selected favorites:", error);
+        toast.error("Failed to remove selected favorites");
+      }
+      return;
+    }
     if (selectedFavoriteIds.size === 0) return;
     try {
       const ids = Array.from(selectedFavoriteIds);
@@ -557,15 +628,33 @@ const Favorites = ({
     }
   };
 
-  if (loading && buyerMode) {
-    return (
-      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
-        <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-[#F7F8FA]/92 backdrop-blur supports-[backdrop-filter]:bg-[#F7F8FA]/84">
-          <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+  const buyerStickyHeader = (
+    <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-[#F7F8FA]/92 backdrop-blur supports-[backdrop-filter]:bg-[#F7F8FA]/84">
+      <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+        <div className="flex items-start gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 -ml-1 text-zinc-600 hover:text-zinc-900"
+            onClick={() => navigate("/client/dashboard")}
+            aria-label="Back to dashboard"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="min-w-0">
             <h1 className="text-lg font-semibold text-zinc-900">Your Favorite Homes</h1>
             <p className="text-sm text-zinc-500">Homes you saved for quick access.</p>
           </div>
         </div>
+      </div>
+    </div>
+  );
+
+  if (loading && buyerMode) {
+    return (
+      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+        {buyerStickyHeader}
         <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
           <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,39%)_minmax(0,61%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
             <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full">
@@ -597,12 +686,7 @@ const Favorites = ({
   if (buyerMode) {
     return (
       <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
-        <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-[#F7F8FA]/92 backdrop-blur supports-[backdrop-filter]:bg-[#F7F8FA]/84">
-          <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-            <h1 className="text-lg font-semibold text-zinc-900">Your Favorite Homes</h1>
-            <p className="text-sm text-zinc-500">Homes you saved for quick access.</p>
-          </div>
-        </div>
+        {buyerStickyHeader}
 
         {favorites.length === 0 ? (
           <main className="mx-auto w-full max-w-7xl flex-1 flex flex-col items-center justify-center px-5 py-10">
@@ -636,14 +720,19 @@ const Favorites = ({
                     </div>
                   </div>
                 ) : displayListingRecords.length > 0 ? (
-                  <div className="h-full">
-                    <PropertyMap
-                      listings={displayListingRecords}
-                      highlightedListingId={hoveredListingId}
-                      selectedListingId={selectedListingId}
-                      onListingHover={setHoveredListingId}
-                      onListingSelect={handleMarkerSelect}
-                    />
+                  <div className="h-full flex min-h-0 flex-col">
+                    <div className="min-h-0 flex-1">
+                      <PropertyMap
+                        listings={displayListingRecords}
+                        highlightedListingId={hoveredListingId}
+                        selectedListingId={selectedListingId}
+                        onListingHover={setHoveredListingId}
+                        onListingSelect={handleMarkerSelect}
+                      />
+                    </div>
+                    <p className="shrink-0 text-[11px] leading-relaxed text-zinc-500 px-3 py-2 border-t border-zinc-200/60 bg-zinc-50/90">
+                      Showing {mapMappableCount} of {displayListingRecords.length} favorites on map
+                    </p>
                   </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
@@ -680,7 +769,7 @@ const Favorites = ({
                               size="sm"
                               variant="outline"
                               className="h-7 rounded-md px-2.5 text-xs"
-                              onClick={shareSelected}
+                              onClick={shareVisibleSelected}
                             >
                               Share selected
                             </Button>
@@ -712,7 +801,7 @@ const Favorites = ({
                               size="sm"
                               variant="outline"
                               className="h-7 rounded-md px-2.5 text-xs"
-                              onClick={shareSelected}
+                              onClick={shareVisibleSelected}
                             >
                               Share selected
                             </Button>
@@ -741,7 +830,7 @@ const Favorites = ({
                             Show all
                           </Button>
                         )}
-                        {selectedFavoriteIds.size > 0 && (
+                        {buyerHasKeptForActions && (
                           <Button
                             type="button"
                             size="sm"
@@ -789,7 +878,7 @@ const Favorites = ({
                         const brokerageLine = rec
                           ? formatBrokerageLine(resolveListingBrokerage(rec))
                           : null;
-                        const isKept = selectedFavoriteIds.has(favorite.id);
+                        const isKept = sessionKeptListingIds.has(listing.id);
                         return (
                           <div
                             key={favorite.id}
@@ -832,10 +921,10 @@ const Favorites = ({
                                 <input
                                   type="checkbox"
                                   checked={isKept}
-                                  onChange={() => toggleSelectFavorite(favorite.id)}
+                                  onChange={() => toggleSessionKeepListing(listing.id)}
                                   className="h-5 w-5"
-                                  title="Keep in this list"
-                                  aria-label={isKept ? "Remove from selection" : "Select for share or delete"}
+                                  title="Keep in this search"
+                                  aria-label={isKept ? "Remove from this session" : "Keep in this search"}
                                 />
                               </div>
                               <div
@@ -1002,7 +1091,7 @@ const Favorites = ({
                     type="button"
                     size="sm"
                     className="h-8 rounded-md px-2.5 text-xs"
-                    onClick={shareSelected}
+                    onClick={shareVisibleSelected}
                     disabled={favoritesForShare.length === 0}
                   >
                     Share selected
