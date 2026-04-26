@@ -518,13 +518,10 @@ export default function ClientDashboard() {
 
   const primaryCtaClass =
     "rounded-lg bg-[#0E56F5] text-white shadow-sm transition-shadow duration-200 hover:bg-[#0B46CC] hover:shadow-md";
-  const topLevelCard =
-    "bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] transition-all duration-200";
-  const topLevelInteractiveCard =
-    "hover:shadow-[0_10px_30px_rgba(15,23,42,0.12)] hover:-translate-y-[2px] cursor-pointer";
-  const baseCard = "bg-white border border-gray-200 rounded-2xl shadow-sm";
-  const interactiveCard =
-    "cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0";
+  const premiumCard =
+    "bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_18px_rgba(15,23,42,0.10)] transition-all duration-200";
+  const premiumClickableCard =
+    `${premiumCard} cursor-pointer hover:shadow-[0_8px_26px_rgba(15,23,42,0.14)] hover:-translate-y-[2px] active:translate-y-0`;
   const outlineSecondaryClass =
     "border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-gray-50 hover:shadow-sm";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
@@ -544,7 +541,7 @@ export default function ClientDashboard() {
     <div className="bg-background">
       <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
         <div className="space-y-8">
-          <section className={`${topLevelCard} p-5 md:p-6`}>
+          <section className={`${premiumCard} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="space-y-1">
@@ -672,7 +669,7 @@ export default function ClientDashboard() {
                   if (label === "Unread Messages") navigate("/messages");
                   if (label === "Hot Sheets") navigate("/client/hot-sheets");
                 }}
-                className={`${topLevelCard} ${topLevelInteractiveCard} p-5 md:p-6`}
+                className={`${premiumClickableCard} p-5 md:p-6`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
@@ -686,7 +683,7 @@ export default function ClientDashboard() {
 
           <section className="space-y-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className={`${topLevelCard} overflow-hidden`}>
+              <div className={`${premiumCard} overflow-hidden`}>
                 <div className="rounded-none bg-transparent">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -727,7 +724,7 @@ export default function ClientDashboard() {
                                 navigate(token ? `/client/hotsheet/${token}` : "/client/hot-sheets");
                               }
                             }}
-                            className={`${baseCard} ${interactiveCard} overflow-hidden rounded-xl ${token ? "" : "opacity-80"}`}
+                            className={`${premiumClickableCard} overflow-hidden rounded-xl ${token ? "" : "opacity-80"}`}
                           >
                             <div className="relative flex h-[4.5rem] items-center justify-center bg-gray-50 text-[#0E56F5]">
                               <AACMonogram className="h-8 w-8" size={32} />
@@ -763,7 +760,7 @@ export default function ClientDashboard() {
                 </div>
               </div>
 
-              <div className={`${topLevelCard} overflow-hidden`}>
+              <div className={`${premiumCard} overflow-hidden`}>
                 <div className="rounded-none bg-transparent">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -788,7 +785,7 @@ export default function ClientDashboard() {
                           <button
                             key={fav.id}
                             type="button"
-                            className={`${baseCard} ${interactiveCard} overflow-hidden rounded-xl text-left`}
+                            className={`${premiumClickableCard} overflow-hidden rounded-xl text-left`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
                             <div className="relative h-[4.5rem] bg-gray-50">
@@ -821,7 +818,7 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            <div className={`${topLevelCard} overflow-hidden`}>
+            <div className={`${premiumCard} overflow-hidden`}>
               <div className="rounded-none bg-transparent">
               <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -843,7 +840,7 @@ export default function ClientDashboard() {
                         key={listing.id}
                         role="button"
                         tabIndex={0}
-                        className="bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                        className={`${premiumClickableCard}`}
                         onClick={() => navigate(`/property/${listing.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
