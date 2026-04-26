@@ -303,17 +303,16 @@ const ConsumerPropertyDetail = () => {
   const buyerCompensationCard =
     compensationDisplay && (
       <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
-        <CardContent className="py-3 px-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-            <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+        <CardContent className="py-2.5 px-3.5">
+          <div className="flex items-start gap-2">
+            <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-emerald-800 dark:text-emerald-200">
               Buyer Agent Compensation: {compensationDisplay} (paid by seller)
             </span>
             <Dialog>
               <DialogTrigger asChild>
                 <button
                   type="button"
-                  className="text-emerald-600 hover:text-emerald-800 ml-auto"
+                  className="shrink-0 text-emerald-600 hover:text-emerald-800"
                 >
                   <HelpCircle className="w-4 h-4" />
                 </button>
@@ -578,6 +577,7 @@ const ConsumerPropertyDetail = () => {
                 price={listing.price}
                 daysOnMarket={daysOnMarket}
                 containerClassName="!mt-9"
+                className="!mt-0 border-b-0 pb-0"
               />
             </div>
 
@@ -747,8 +747,6 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {buyerCompensationCard}
-
               {/* Brokerage Strip — shared primitive */}
               {(() => {
                 const displayAgent = stickyAgentProfile || agentProfile;
@@ -766,6 +764,8 @@ const ConsumerPropertyDetail = () => {
                 listingId={listing.id}
                 listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
               />
+
+              {buyerCompensationCard}
             </div>
           </div>
         </div>
