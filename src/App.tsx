@@ -343,7 +343,8 @@ const App = () => (
                 <Route path="/client-agent-settings" element={<Navigate to="/client/account" replace />} />
                 <Route path="/client/hotsheets/new" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/create-hotsheet" element={<Navigate to="/hot-sheets/new" replace />} />
-                <Route path="/client/hot-sheets/:id" element={<Navigate to="/client/dashboard" replace />} />
+                <Route path="/client/hot-sheets" element={<Navigate to="/hot-sheets" replace />} />
+                <Route path="/client/hot-sheets/:id" element={<ClientHotsheetPage />} />
                 <Route path="/client/favorites" element={<Navigate to="/favorites" replace />} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />

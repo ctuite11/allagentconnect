@@ -32,12 +32,11 @@ serve(async (req) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const token = authHeader.slice(7);
-  const { data: claimsData, error: claimsErr } = await supabaseUser.auth.getClaims(token);
-  if (claimsErr || !claimsData?.claims) return json({ success: false, error: "Unauthorized" }, 401);
+  const { data: userData, error: userErr } = await supabaseUser.auth.getUser();
+  if (userErr || !userData?.user) return json({ success: false, error: "Unauthorized" }, 401);
 
-  const userId = claimsData.claims.sub as string;
-  const buyerEmail = ((claimsData.claims.email as string) ?? "").trim();
+  const userId = userData.user.id;
+  const buyerEmail = (userData.user.email ?? "").trim();
   if (!buyerEmail) return json({ success: false, error: "Buyer email not found" }, 400);
 
   // 2) Parse body

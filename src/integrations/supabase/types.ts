@@ -4005,6 +4005,10 @@ export type Database = {
         Returns: Json
       }
       auto_activate_listings: { Args: never; Returns: undefined }
+      can_authenticated_buyer_view_hot_sheet_client: {
+        Args: { p_crm_client_id: string; p_hot_sheet_id: string }
+        Returns: boolean
+      }
       check_client_has_other_agent: {
         Args: { p_client_email: string }
         Returns: boolean

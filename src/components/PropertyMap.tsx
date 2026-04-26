@@ -5,6 +5,12 @@ type SearchMarker = (google.maps.Marker | google.maps.marker.AdvancedMarkerEleme
   __priceLabel?: string;
   __listingId?: string;
   __contentElement?: HTMLElement;
+  setIcon?: (icon: google.maps.Icon) => void;
+  setZIndex?: (zIndex: number) => void;
+  setMap?: (map: google.maps.Map | null) => void;
+  zIndex?: number;
+  map?: google.maps.Map | null;
+  addEventListener?: (type: string, listener: EventListenerOrEventListenerObject) => void;
 };
 type GoogleMapsWindow = Window & typeof globalThis & { google?: typeof google };
 

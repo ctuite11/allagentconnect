@@ -32,11 +32,9 @@ Deno.serve(async (req) => {
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(
-        authHeader.replace("Bearer ", "")
-      );
-      if (!claimsErr && claimsData?.claims?.sub) {
-        callerId = claimsData.claims.sub as string;
+      const { data: userData, error: userErr } = await userClient.auth.getUser();
+      if (!userErr && userData?.user?.id) {
+        callerId = userData.user.id;
         // Check admin role
         const { data: adminCheck } = await adminClient.rpc("has_role", {
           _user_id: callerId,
