@@ -113,18 +113,20 @@ const FavoriteButton = ({
   const favoriteTooltipText = isFavorite ? "Added to favorites" : "Add to favorites";
 
   if (photoIcon && size === "icon") {
+    // Do not use shadcn <Button> here: its base styles include [&_svg]:size-4 and reliably pin the
+    // heart to 16px. A plain <button> keeps full control of icon size on listing photos.
+    const heartPx = 52;
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
             onClick={handleToggleFavorite}
             disabled={loading}
             className={cn(
-              "h-12 w-12 min-h-12 min-w-12 rounded-sm p-0 gap-0 bg-transparent border-0 shadow-none",
-              "hover:bg-transparent",
+              "inline-flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-sm",
+              "border-0 bg-transparent p-0 shadow-none outline-none",
+              "hover:bg-transparent disabled:opacity-50",
               isFavorite
                 ? "hover:scale-[1.06] active:scale-105"
                 : "hover:scale-105 active:scale-95",
@@ -132,17 +134,21 @@ const FavoriteButton = ({
               "focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0",
               className,
             )}
+            style={{ minWidth: "4.5rem", minHeight: "4.5rem" }}
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart
               className={cn(
-                "h-9 w-9 shrink-0 stroke-[2.5]",
+                "shrink-0 stroke-[2.5]",
                 isFavorite
                   ? "fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55] [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.25))]"
                   : "fill-white text-white stroke-[#FF2D55] [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.45))]",
               )}
+              width={heartPx}
+              height={heartPx}
+              strokeWidth={2.5}
             />
-          </Button>
+          </button>
         </TooltipTrigger>
         <TooltipContent side="top">{favoriteTooltipText}</TooltipContent>
       </Tooltip>
