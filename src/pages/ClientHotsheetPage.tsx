@@ -711,13 +711,21 @@ const ClientHotsheetPage = () => {
             <p className="text-lg font-semibold">
               {listings.length} {listings.length === 1 ? "Home" : "Homes"} Found
             </p>
+            {isBuyerHotSheetByIdRoute && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Results update as new listings match your saved criteria.
+              </p>
+            )}
           </div>
 
           {/* Listings Grid */}
           {listings.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No homes match your search yet.</p>
+              <CardContent className="py-12 text-center space-y-2 max-w-md mx-auto">
+                <p className="text-foreground font-medium">No matching homes on the network right now</p>
+                <p className="text-sm text-muted-foreground">
+                  Your hot sheet and criteria are saved. Check back soon — new listings that fit your search will show up here.
+                </p>
               </CardContent>
             </Card>
           ) : (

@@ -230,6 +230,14 @@ const HotSheets = ({
     checkAuth();
   }, [buyerMode]);
 
+  const openBuyerHotSheet = (hotSheetId: string, shareToken: string | undefined) => {
+    if (shareToken) {
+      navigate(`/client/hotsheet/${shareToken}`);
+    } else {
+      navigate(`/client/hot-sheets/${hotSheetId}`);
+    }
+  };
+
   const loadBuyerHotSheets = async () => {
     try {
       setBuyerLoading(true);
@@ -248,6 +256,23 @@ const HotSheets = ({
 
       const buyerEmailNorm = (profile?.email || user.email || "").toLowerCase().trim();
 
+      const allHotSheetIds = new Set<string>();
+      const tokenMap: Record<string, string> = {};
+
+      // Buyer-created and agent-linked rows (CRM ↔ hot sheet), including sheets with no share token
+      const { data: hscRows, error: hscErr } = await supabase
+        .from("hot_sheet_clients")
+        .select("hot_sheet_id");
+
+      if (hscErr) {
+        console.error("Failed to load hot_sheet_clients", hscErr);
+      } else {
+        for (const row of hscRows || []) {
+          const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
+          if (hid) allHotSheetIds.add(hid);
+        }
+      }
+
       const { data: acceptedTokenRows, error: tokenErr } = await supabase
         .from("share_tokens")
         .select("token, payload, accepted_at, accepted_by_user_id")
@@ -255,34 +280,28 @@ const HotSheets = ({
 
       if (tokenErr) {
         console.error("Failed to load accepted tokens", tokenErr);
-        setBuyerHotSheets([]);
-        setBuyerTokenByHotSheetId({});
-        return;
-      }
+      } else {
+        for (const tokenRow of (acceptedTokenRows || []) as ShareTokenRow[]) {
+          const payload = (tokenRow.payload && typeof tokenRow.payload === "object"
+            ? tokenRow.payload
+            : {}) as Record<string, unknown>;
+          if (payload.type !== "client_hotsheet_invite") continue;
 
-      const acceptedHotSheetIds = new Set<string>();
-      const tokenMap: Record<string, string> = {};
+          const hotSheetId = String(payload.hot_sheet_id || "");
+          if (!hotSheetId) continue;
 
-      for (const tokenRow of (acceptedTokenRows || []) as ShareTokenRow[]) {
-        const payload = (tokenRow.payload && typeof tokenRow.payload === "object"
-          ? tokenRow.payload
-          : {}) as Record<string, unknown>;
-        if (payload.type !== "client_hotsheet_invite") continue;
+          const matchByUserId = tokenRow.accepted_by_user_id === user.id;
+          const tokenEmail = String(payload.client_email || "").toLowerCase().trim();
+          const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
 
-        const hotSheetId = String(payload.hot_sheet_id || "");
-        if (!hotSheetId) continue;
-
-        const matchByUserId = tokenRow.accepted_by_user_id === user.id;
-        const tokenEmail = String(payload.client_email || "").toLowerCase().trim();
-        const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
-
-        if (matchByUserId || matchByEmail) {
-          acceptedHotSheetIds.add(hotSheetId);
-          if (tokenRow.token) tokenMap[hotSheetId] = tokenRow.token;
+          if (matchByUserId || matchByEmail) {
+            allHotSheetIds.add(hotSheetId);
+            if (tokenRow.token) tokenMap[hotSheetId] = tokenRow.token;
+          }
         }
       }
 
-      if (!acceptedHotSheetIds.size) {
+      if (!allHotSheetIds.size) {
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
         return;
@@ -291,7 +310,7 @@ const HotSheets = ({
       const { data: hotSheetRows, error: sheetErr } = await supabase
         .from("hot_sheets")
         .select("id, name, criteria, created_at, is_active, last_sent_at")
-        .in("id", [...acceptedHotSheetIds])
+        .in("id", [...allHotSheetIds])
         .order("created_at", { ascending: false });
 
       if (sheetErr) {
@@ -440,14 +459,13 @@ const HotSheets = ({
                     return (
                       <article
                         key={sheet.id}
-                        role={token ? "button" : undefined}
-                        tabIndex={token ? 0 : -1}
-                        onClick={() => token && navigate(`/client/hotsheet/${token}`)}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openBuyerHotSheet(sheet.id, token)}
                         onKeyDown={(e) => {
-                          if (!token) return;
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            navigate(`/client/hotsheet/${token}`);
+                            openBuyerHotSheet(sheet.id, token);
                           }
                         }}
                         className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_6px_20px_rgba(15,23,42,0.05)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.09)]"
@@ -490,11 +508,7 @@ const HotSheets = ({
                             className="h-9 rounded-lg border-zinc-200 text-sm"
                             onClick={(event) => {
                               event.stopPropagation();
-                              if (!token) {
-                                toast.info("This Hot Sheet does not have an open link yet");
-                                return;
-                              }
-                              navigate(`/client/hotsheet/${token}`);
+                              openBuyerHotSheet(sheet.id, token);
                             }}
                           >
                             <Eye className="mr-2 h-4 w-4" />
