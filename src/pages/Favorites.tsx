@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, BedDouble, Bath, Ruler, Heart } from "lucide-react";
+import { MapPin, BedDouble, Bath, Ruler, Heart, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface Listing {
@@ -450,13 +450,17 @@ const Favorites = ({
                         className="w-full h-full object-cover object-center"
                       />
                       <div className="absolute top-3 left-3 z-20 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleSelectFavorite(favorite.id)}
-                          className="h-5 w-5 appearance-none rounded-sm border border-gray-300 bg-white shadow-sm checked:border-[#0E56F5] checked:bg-[#0E56F5]"
+                        <button
+                          type="button"
                           aria-label={isSelected ? "Unselect listing" : "Select listing"}
-                        />
+                          aria-pressed={isSelected}
+                          onClick={() => toggleSelectFavorite(favorite.id)}
+                          className={`h-5 w-5 rounded-sm border border-gray-300 bg-white shadow-sm inline-flex items-center justify-center ${
+                            isSelected ? "border-[#0E56F5] bg-[#0E56F5] text-white" : "text-transparent"
+                          }`}
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </div>
                     <div className="relative bg-white px-3.5 pb-3.5 pt-1">
