@@ -435,11 +435,11 @@ const Favorites = ({
                     key={favorite.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => navigate(`/property/${listing.id}`)}
+                    onClick={() => navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } })}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        navigate(`/property/${listing.id}`);
+                        navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } });
                       }
                     }}
                     className="group w-full bg-white rounded-2xl border border-gray-200 shadow-[0_4px_14px_rgba(15,23,42,0.10)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.16)] hover:-translate-y-1 transition-all duration-200 ease-out cursor-pointer overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
