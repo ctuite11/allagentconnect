@@ -265,7 +265,7 @@ const ConsumerPropertyDetail = () => {
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background pt-20">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="py-8">
@@ -350,7 +350,7 @@ const ConsumerPropertyDetail = () => {
     );
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen bg-background">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -378,7 +378,7 @@ const ConsumerPropertyDetail = () => {
         </button>
       </div>
 
-      <main className="flex-1">
+      <div className="flex-1">
         {/* ========== LISTING HEADER — shared primitive ========== */}
         <PropertyHeader
           address={buildDisplayAddress(listing as any)}
@@ -938,7 +938,7 @@ const ConsumerPropertyDetail = () => {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Photo Gallery Dialog */}
       {listing && listing.photos && (

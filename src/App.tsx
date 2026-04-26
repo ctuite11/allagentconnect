@@ -318,6 +318,7 @@ const App = () => (
                   <Route path="/hot-sheets/new" element={<RouteGuard requireRole="buyer"><ClientCreateHotsheetNew /></RouteGuard>} />
                   <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                   <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
+                  <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 </Route>
 
                 {/* Public routes outside AppShell */}
@@ -325,7 +326,6 @@ const App = () => (
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
                 <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
                 <Route path="/property/:id" element={<><PropertyDetail /><Footer /></>} />
-                <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowseEntry />} />
                 <Route path="/search" element={<PublicSearchResults />} />

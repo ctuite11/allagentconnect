@@ -123,11 +123,11 @@ const FavoriteButton = ({
             onClick={handleToggleFavorite}
             disabled={loading}
             className={cn(
-              "h-9 w-9 min-h-0 min-w-0 rounded-sm p-0 gap-0 bg-transparent border-0 shadow-none",
+              "h-12 w-12 min-h-12 min-w-12 rounded-sm p-0 gap-0 bg-transparent border-0 shadow-none",
               "hover:bg-transparent",
               isFavorite
-                ? "hover:scale-[1.12] active:scale-105"
-                : "hover:scale-110 active:scale-95",
+                ? "hover:scale-[1.06] active:scale-105"
+                : "hover:scale-105 active:scale-95",
               "transition-transform duration-200",
               "focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0",
               className,
@@ -136,10 +136,10 @@ const FavoriteButton = ({
           >
             <Heart
               className={cn(
-                "h-7 w-7 shrink-0",
+                "h-9 w-9 shrink-0 stroke-[2.5]",
                 isFavorite
-                  ? "fill-[#FF2D55] text-[#FF2D55]"
-                  : "fill-transparent text-white stroke-white stroke-2 [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.85))]",
+                  ? "fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55] [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.25))]"
+                  : "fill-white text-white stroke-[#FF2D55] [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.45))]",
               )}
             />
           </Button>
