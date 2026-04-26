@@ -683,7 +683,7 @@ export default function ClientDashboard() {
 
           <section className="space-y-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className={`${premiumCard} overflow-hidden`}>
+              <div className={`${premiumCard} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -747,8 +747,8 @@ export default function ClientDashboard() {
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                      <p className="max-w-sm text-xs text-gray-600">
-                        No hot sheets yet — create one for alerts, or ask your agent to share.
+                      <p className="max-w-md text-xs leading-relaxed text-gray-600">
+                        No hot sheets yet. Create one for alerts, or ask your agent to share one.
                       </p>
                       <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/hot-sheets")}>
                         <Plus className="mr-2 h-4 w-4" />
@@ -818,7 +818,7 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            <div className={`${premiumCard} overflow-hidden`}>
+            <div className={`${premiumCard} overflow-visible`}>
               <div className="rounded-none bg-transparent">
               <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -832,9 +832,10 @@ export default function ClientDashboard() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-5 pt-0 md:p-6 md:pt-0">
+              <CardContent className="overflow-visible p-5 pt-0 md:p-6 md:pt-0">
                 {latestListingsPreview.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                  <div className="overflow-visible pt-2">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                     {latestListingsPreview.map((listing) => (
                       <article
                         key={listing.id}
@@ -866,6 +867,7 @@ export default function ClientDashboard() {
                         </div>
                       </article>
                     ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
