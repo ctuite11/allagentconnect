@@ -124,6 +124,8 @@ const HotSheets = ({
   const [buyerHotSheets, setBuyerHotSheets] = useState<BuyerHotSheetItem[]>([]);
   const [buyerTokenByHotSheetId, setBuyerTokenByHotSheetId] = useState<Record<string, string>>({});
   const [buyerLoading, setBuyerLoading] = useState(true);
+  const [deleteBuyerSheetId, setDeleteBuyerSheetId] = useState<string | null>(null);
+  const [deleteBuyerSheetLoading, setDeleteBuyerSheetLoading] = useState(false);
   const [alertFrequency, setAlertFrequency] = useState<"instant" | "daily" | "weekly">("instant");
   const buyerMode = isBuyerMode;
 
@@ -377,21 +379,30 @@ const HotSheets = ({
     return new Date(isoDate).toLocaleDateString();
   };
 
-  const handleDeleteBuyerHotSheet = async (hotSheetId: string) => {
-    if (!confirm("Delete this Hot Sheet?")) return;
+  const handleDeleteBuyerHotSheet = async () => {
+    if (!deleteBuyerSheetId || deleteBuyerSheetLoading) return;
+    setDeleteBuyerSheetLoading(true);
 
     const { error } = await supabase
       .from("hot_sheets")
       .delete()
-      .eq("id", hotSheetId);
+      .eq("id", deleteBuyerSheetId);
 
     if (error) {
+      setDeleteBuyerSheetLoading(false);
       toast.error("Unable to delete this Hot Sheet");
       return;
     }
 
     toast.success("Hot Sheet deleted");
-    setBuyerHotSheets((prev) => prev.filter((sheet) => sheet.id !== hotSheetId));
+    setBuyerHotSheets((prev) => prev.filter((sheet) => sheet.id !== deleteBuyerSheetId));
+    setBuyerTokenByHotSheetId((prev) => {
+      const next = { ...prev };
+      delete next[deleteBuyerSheetId];
+      return next;
+    });
+    setDeleteBuyerSheetLoading(false);
+    setDeleteBuyerSheetId(null);
   };
 
   if (buyerMode) {
@@ -478,12 +489,23 @@ const HotSheets = ({
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-zinc-500 hover:bg-zinc-100">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-lg text-zinc-500 hover:bg-zinc-100"
+                                onClick={(event) => event.stopPropagation()}
+                              >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem onClick={() => handleDeleteBuyerHotSheet(sheet.id)} className="cursor-pointer text-red-600 focus:text-red-600">
+                              <DropdownMenuItem
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setDeleteBuyerSheetId(sheet.id);
+                                }}
+                                className="cursor-pointer text-red-600 focus:text-red-600"
+                              >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>
@@ -522,6 +544,7 @@ const HotSheets = ({
                               event.stopPropagation();
                               toast.info("Edit flow is coming soon");
                             }}
+                            title="Edit flow coming soon."
                           >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
@@ -535,6 +558,37 @@ const HotSheets = ({
             </div>
           </PageShell>
         </div>
+        <Dialog
+          open={Boolean(deleteBuyerSheetId)}
+          onOpenChange={(open) => {
+            if (!open && !deleteBuyerSheetLoading) setDeleteBuyerSheetId(null);
+          }}
+        >
+          <DialogContent onClick={(event) => event.stopPropagation()}>
+            <DialogHeader>
+              <DialogTitle>Delete hot sheet?</DialogTitle>
+              <DialogDescription>
+                This will remove this hot sheet and its alerts.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteBuyerSheetId(null)}
+                disabled={deleteBuyerSheetLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteBuyerHotSheet}
+                disabled={deleteBuyerSheetLoading}
+              >
+                {deleteBuyerSheetLoading ? "Deleting..." : "Delete hot sheet"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </>
     );
   }

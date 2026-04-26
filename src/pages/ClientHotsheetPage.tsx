@@ -448,7 +448,7 @@ const ClientHotsheetPage = () => {
         <main className="flex-1 flex items-center justify-center px-4">
           <p className="text-muted-foreground text-lg">Loading your saved search...</p>
         </main>
-        <Footer />
+        {!isBuyerHotSheetByIdRoute && <Footer />}
       </div>
     );
   }
@@ -465,7 +465,7 @@ const ClientHotsheetPage = () => {
             <Button onClick={() => navigate("/")}>Back to home</Button>
           </Card>
         </main>
-        <Footer />
+        {!isBuyerHotSheetByIdRoute && <Footer />}
       </div>
     );
   }
@@ -805,7 +805,7 @@ const ClientHotsheetPage = () => {
           )}
         </div>
       </main>
-      <Footer />
+      {!isBuyerHotSheetByIdRoute && <Footer />}
     </div>
   );
 };
