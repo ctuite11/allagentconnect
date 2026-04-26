@@ -422,7 +422,7 @@ const ClientHotsheetPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-20">
+    <div className="min-h-screen bg-[#F7F8FA] flex flex-col pt-20">
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Back to Account */}

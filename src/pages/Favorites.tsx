@@ -373,8 +373,8 @@ const Favorites = ({
               </div>
             </Card>
           ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-4 mt-5">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
                     type="button"
