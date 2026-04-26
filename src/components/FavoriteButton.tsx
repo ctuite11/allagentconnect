@@ -122,9 +122,8 @@ const FavoriteButton = ({
             onClick={handleToggleFavorite}
             disabled={loading}
             className={cn(
-              "relative z-20 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-              "border-0 p-0 shadow-none outline-none",
-              "bg-[rgba(0,0,0,0.35)] backdrop-blur-sm",
+              "relative z-20 inline-flex h-9 w-9 shrink-0 items-center justify-center bg-transparent",
+              "border-0 p-0 shadow-none outline-none rounded-full",
               "transition-transform duration-200 ease-out",
               "hover:scale-105 active:scale-100",
               "focus-visible:ring-2 focus-visible:ring-white/35 focus-visible:ring-offset-0",
