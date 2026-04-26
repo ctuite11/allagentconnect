@@ -451,13 +451,13 @@ const Favorites = ({
                         className="w-full h-full object-cover object-center"
                       />
                       <div
-                        className="absolute top-3 left-3 z-20 rounded-md bg-white p-1 shadow-sm pointer-events-auto"
+                        className="absolute top-3 left-3 z-20 pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => toggleSelectFavorite(favorite.id)}
-                          className="h-5 w-5 border-zinc-300 bg-white data-[state=checked]:border-[#0E56F5] data-[state=checked]:bg-[#0E56F5]"
+                          className="h-5 w-5 rounded-sm border border-gray-300 bg-white data-[state=checked]:border-[#0E56F5] data-[state=checked]:bg-[#0E56F5] data-[state=checked]:text-white"
                           aria-label={isSelected ? "Unselect listing" : "Select listing"}
                         />
                       </div>
