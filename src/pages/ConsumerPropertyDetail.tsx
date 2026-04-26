@@ -295,7 +295,60 @@ const ConsumerPropertyDetail = () => {
     : null;
 
   const compensationDisplay = getCompensationDisplay();
-  
+  const neighborhoodLabel =
+    typeof listing.neighborhood === "string" && listing.neighborhood.trim()
+      ? listing.neighborhood.trim()
+      : null;
+
+  const buyerCompensationCard =
+    compensationDisplay && (
+      <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+            <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+              Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+            </span>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="text-emerald-600 hover:text-emerald-800 ml-auto"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                    Buyer Agent Compensation
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                  <p>
+                    This compensation is{" "}
+                    <strong className="text-foreground">paid by the seller</strong> and offered
+                    to buyer agents who bring qualified buyers.
+                  </p>
+                  <p>
+                    <strong className="text-foreground">Is this negotiable?</strong>
+                    <br />
+                    Yes, compensation terms may be negotiable. Discuss with the listing agent for
+                    details.
+                  </p>
+                  <p>
+                    <strong className="text-foreground">Note:</strong> Actual compensation may
+                    vary based on your buyer representation agreement. Ask your agent about their
+                    fee structure.
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+    );
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -340,11 +393,10 @@ const ConsumerPropertyDetail = () => {
 
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
             <div className={propertyMediaCol}>
-              <div className="relative pb-6">
-                <div className={propertyHeroMedia}>
-                  <div className="absolute inset-0 bg-neutral-950">
+              <div className={propertyHeroMedia}>
+                <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
-                  {activeMediaTab === 'photos' && (
+                  {activeMediaTab === "photos" && (
                     <img
                       src={mainPhoto}
                       alt={listing.address}
@@ -352,13 +404,23 @@ const ConsumerPropertyDetail = () => {
                       onClick={handleExpandGallery}
                     />
                   )}
-                  {activeMediaTab === 'video' && listing.video_url && (
-                    <iframe src={listing.video_url} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  {activeMediaTab === "video" && listing.video_url && (
+                    <iframe
+                      src={listing.video_url}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
                   )}
-                  {activeMediaTab === 'tour' && listing.virtual_tour_url && (
-                    <iframe src={listing.virtual_tour_url} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  {activeMediaTab === "tour" && listing.virtual_tour_url && (
+                    <iframe
+                      src={listing.virtual_tour_url}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
                   )}
-                  {activeMediaTab === 'website' && listing.property_website_url && (
+                  {activeMediaTab === "website" && listing.property_website_url && (
                     <iframe src={listing.property_website_url} className="w-full h-full" />
                   )}
 
@@ -370,72 +432,152 @@ const ConsumerPropertyDetail = () => {
                   </div>
 
                   {/* Favorite - Top Right */}
-                  <div className="absolute top-4 right-4">
-                    <FavoriteButton listingId={listing.id} size="icon" variant="secondary" className="rounded-full bg-black/60 hover:bg-black/80 text-white border-0 h-11 w-11" />
+                  <div
+                    className="absolute top-4 right-4 z-20"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FavoriteButton listingId={listing.id} size="icon" photoIcon />
                   </div>
 
                   {/* Carousel Arrows */}
-                  {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
+                  {activeMediaTab === "photos" && listing.photos && listing.photos.length > 1 && (
                     <>
-                      <button onClick={handlePrevPhoto} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Previous photo">
+                      <button
+                        type="button"
+                        onClick={handlePrevPhoto}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                        aria-label="Previous photo"
+                      >
                         <ChevronLeft className="w-6 h-6" />
                       </button>
-                      <button onClick={handleNextPhoto} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Next photo">
+                      <button
+                        type="button"
+                        onClick={handleNextPhoto}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                        aria-label="Next photo"
+                      >
                         <ChevronRight className="w-6 h-6" />
                       </button>
                     </>
                   )}
 
-                  {/* Photo Counter */}
-                  {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 0 && (
-                    <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
-                      {currentPhotoIndex + 1} / {listing.photos.length}
+                  {/* Neighborhood + photo counter — bottom left */}
+                  {activeMediaTab === "photos" && (
+                    <div className="absolute bottom-4 left-4 z-10 flex max-w-[min(100%,18rem)] flex-col items-start gap-2">
+                      {neighborhoodLabel && (
+                        <span className="inline-flex max-w-full rounded-full border border-white/25 bg-black/45 px-2.5 py-1 text-[11px] font-medium text-white/95 shadow-sm backdrop-blur-sm">
+                          <span className="text-white/70">Neighborhood</span>
+                          <span className="mx-1.5 text-white/40">·</span>
+                          <span className="min-w-0 truncate">{neighborhoodLabel}</span>
+                        </span>
+                      )}
+                      {listing.photos && listing.photos.length > 0 && (
+                        <div className="shrink-0 bg-black/70 px-3 py-1 text-sm text-white rounded-full backdrop-blur-sm">
+                          {currentPhotoIndex + 1} / {listing.photos.length}
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {/* Expand Button */}
-                  {activeMediaTab === 'photos' && (
-                    <button onClick={handleExpandGallery} className="absolute bottom-20 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm" aria-label="Expand gallery">
+                  {activeMediaTab === "photos" && (
+                    <button
+                      type="button"
+                      onClick={handleExpandGallery}
+                      className="absolute bottom-4 right-4 z-20 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+                      aria-label="Expand gallery"
+                    >
                       <Expand className="w-5 h-5" />
                     </button>
                   )}
-                  </div>
-                </div>
-                <div className="absolute -bottom-1 right-4 z-30">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Share property">
-                        <Share2 className="w-6 h-6" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Facebook</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Twitter</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">LinkedIn</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">WhatsApp</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Email</DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">Copy Link</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
               </div>
 
-              {/* Media Type Tabs — shared primitive */}
               <MediaTabBar
                 active={activeMediaTab as MediaTab}
                 onChange={(tab) => handleMediaTabChange(tab)}
                 hasVideo={!!listing.video_url}
                 hasTour={!!listing.virtual_tour_url}
                 hasWebsite={!!listing.property_website_url}
+                trailing={
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="rounded-full" aria-label="Share property">
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`,
+                            "_blank"
+                          )
+                        }
+                        className="gap-2 cursor-pointer"
+                      >
+                        Facebook
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            `https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`,
+                            "_blank"
+                          )
+                        }
+                        className="gap-2 cursor-pointer"
+                      >
+                        Twitter
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`,
+                            "_blank"
+                          )
+                        }
+                        className="gap-2 cursor-pointer"
+                      >
+                        LinkedIn
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            `https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`,
+                            "_blank"
+                          )
+                        }
+                        className="gap-2 cursor-pointer"
+                      >
+                        WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            `mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`,
+                            "_blank"
+                          )
+                        }
+                        className="gap-2 cursor-pointer"
+                      >
+                        Email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">
+                        Copy Link
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                }
               />
 
-              {/* ========== STATS ROW — shared primitive ========== */}
               <PropertyFactsRow
                 bedrooms={listing.bedrooms}
                 bathrooms={listing.bathrooms}
                 squareFeet={listing.square_feet}
                 price={listing.price}
                 daysOnMarket={daysOnMarket}
+                containerClassName="!mt-9"
               />
             </div>
 
@@ -605,6 +747,8 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
+              {buyerCompensationCard}
+
               {/* Brokerage Strip — shared primitive */}
               {(() => {
                 const displayAgent = stickyAgentProfile || agentProfile;
@@ -692,40 +836,6 @@ const ConsumerPropertyDetail = () => {
 
             {/* RIGHT COLUMN - Consumer content */}
             <div className="space-y-6">
-              {/* Buyer Agent Compensation */}
-              {compensationDisplay && (
-                <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
-                  <CardContent className="py-3 px-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                      <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
-                        Buyer Agent Compensation: {compensationDisplay} (paid by seller)
-                      </span>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button className="text-emerald-600 hover:text-emerald-800 ml-auto">
-                            <HelpCircle className="w-4 h-4" />
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <DollarSign className="w-5 h-5 text-emerald-600" />
-                              Buyer Agent Compensation
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-3 py-4 text-sm text-muted-foreground">
-                            <p>This compensation is <strong className="text-foreground">paid by the seller</strong> and offered to buyer agents who bring qualified buyers.</p>
-                            <p><strong className="text-foreground">Is this negotiable?</strong><br />Yes, compensation terms may be negotiable. Discuss with the listing agent for details.</p>
-                            <p><strong className="text-foreground">Note:</strong> Actual compensation may vary based on your buyer representation agreement. Ask your agent about their fee structure.</p>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* Buyer Agent Showcase — only when buyer is unrepresented.
                   Represented buyers already have a sticky agent. */}
               {!stickyAgentProfile && (

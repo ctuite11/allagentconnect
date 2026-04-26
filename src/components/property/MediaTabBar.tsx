@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Images, Video, Maximize2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,8 @@ export interface MediaTabBarProps {
    * (parent decides). If false, they only become tabs when active.
    */
   className?: string;
+  /** Renders after Photos / Video / 3D Tour / Website (e.g. share control) */
+  trailing?: ReactNode;
 }
 
 /**
@@ -29,6 +32,7 @@ export function MediaTabBar({
   hasTour,
   hasWebsite,
   className,
+  trailing,
 }: MediaTabBarProps) {
   const variantFor = (tab: MediaTab) =>
     active === tab ? "default" : "outline";
@@ -77,6 +81,7 @@ export function MediaTabBar({
           Website
         </Button>
       )}
+      {trailing}
     </div>
   );
 }

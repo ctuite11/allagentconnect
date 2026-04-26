@@ -14,7 +14,10 @@ interface PropertyFactsRowProps {
   squareFeet?: number | null;
   price?: number | null;
   daysOnMarket?: number | null;
+  /** Merges into the row container (border-b, flex, etc.) */
   className?: string;
+  /** Spacing / wrapper above the stats row (default mt-4) */
+  containerClassName?: string;
 }
 
 /**
@@ -28,6 +31,7 @@ export function PropertyFactsRow({
   price,
   daysOnMarket,
   className,
+  containerClassName,
 }: PropertyFactsRowProps) {
   const pricePerSqft =
     price && squareFeet && squareFeet > 0
@@ -35,7 +39,7 @@ export function PropertyFactsRow({
       : null;
 
   return (
-    <div className="mt-4">
+    <div className={cn("mt-4", containerClassName)}>
       <div className={cn(propertyFactsRow, className)}>
         {bedrooms != null && bedrooms > 0 && (
           <div className={propertyFactItem}>

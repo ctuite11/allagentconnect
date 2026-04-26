@@ -136,10 +136,10 @@ const FavoriteButton = ({
           >
             <Heart
               className={cn(
-                "h-7 w-7 shrink-0 drop-shadow-md",
+                "h-7 w-7 shrink-0",
                 isFavorite
                   ? "fill-[#FF2D55] text-[#FF2D55]"
-                  : "fill-white text-white",
+                  : "fill-transparent text-white stroke-white stroke-2 [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.85))]",
               )}
             />
           </Button>

@@ -44,7 +44,7 @@ export const propertyFactLabel = "text-xs text-muted-foreground";
 export const propertyFactIcon = "h-4 w-4 text-primary";
 
 // Media tab bar
-export const propertyMediaTabsRow = "flex items-center gap-2 mt-6 flex-wrap";
+export const propertyMediaTabsRow = "flex items-center gap-2 mt-2 flex-wrap";
 
 // Header row (address + price above hero, constrained to media column)
 export const propertyHeaderRow =
