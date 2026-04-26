@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -450,14 +449,12 @@ const Favorites = ({
                         alt={listing.address}
                         className="w-full h-full object-cover object-center"
                       />
-                      <div
-                        className="pointer-events-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Checkbox
+                      <div className="absolute top-3 left-3 z-20 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
                           checked={isSelected}
-                          onCheckedChange={() => toggleSelectFavorite(favorite.id)}
-                          className="absolute top-3 left-3 z-20 h-5 w-5 rounded-sm border border-gray-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-white data-[state=checked]:border-primary"
+                          onChange={() => toggleSelectFavorite(favorite.id)}
+                          className="h-5 w-5 appearance-none rounded-sm border border-gray-300 bg-white shadow-sm checked:border-[#0E56F5] checked:bg-[#0E56F5]"
                           aria-label={isSelected ? "Unselect listing" : "Select listing"}
                         />
                       </div>
