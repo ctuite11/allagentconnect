@@ -761,7 +761,7 @@ const PropertyDetail = () => {
                     </div>
 
                     {/* Heart + Share Controls - Top Right Overlay */}
-                    <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
+                    <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
                       <div onClick={(e) => e.stopPropagation()}>
                         <FavoriteButton listingId={listing.id} size="icon" photoIcon />
                       </div>
