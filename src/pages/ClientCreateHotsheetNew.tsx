@@ -17,6 +17,20 @@ import { aacStyles } from "@/ui/aacStyles";
 
 const defaultCriteria: HotSheetCriteriaFormValue = { ...DEFAULT_HOT_SHEET_CRITERIA };
 
+/** `create_buyer_hot_sheet` returns a uuid string; normalizes other shapes */
+function parseCreateBuyerHotSheetId(data: unknown): string | null {
+  if (data == null) return null;
+  if (typeof data === "string") {
+    const t = data.trim();
+    return t.length > 0 ? t : null;
+  }
+  if (typeof data === "object" && data !== null && "id" in data) {
+    const id = (data as { id: unknown }).id;
+    if (typeof id === "string" && id.trim().length > 0) return id.trim();
+  }
+  return null;
+}
+
 export default function ClientCreateHotsheetNew() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -78,9 +92,8 @@ export default function ClientCreateHotsheetNew() {
       p_criteria: hotsheetCriteria,
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       console.error("create_buyer_hot_sheet error:", error);
       if (error.message?.includes("No active agent relationship")) {
         toast.error("No active agent relationship found");
@@ -92,8 +105,17 @@ export default function ClientCreateHotsheetNew() {
       return;
     }
 
+    const newId = parseCreateBuyerHotSheetId(data);
+    if (!newId) {
+      setLoading(false);
+      toast.error("Could not confirm your hot sheet. Please try again or open Hot Sheets.");
+      navigate("/hot-sheets");
+      return;
+    }
+
     toast.success("Hot Sheet created!");
-    navigate("/hot-sheets");
+    setLoading(false);
+    navigate(`/client/hot-sheets/${newId}`);
   };
 
   return (

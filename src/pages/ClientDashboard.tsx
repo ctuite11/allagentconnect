@@ -288,16 +288,44 @@ export default function ClientDashboard() {
       return;
     }
 
-    // Get buyer profile email for fallback matching
     const { data: profile } = await supabase
       .from("profiles")
       .select("email")
       .eq("id", userId)
       .maybeSingle();
     const buyerEmail = profile?.email?.toLowerCase().trim() ?? "";
+    const buyerEmailNorm = (buyerEmail ?? "").toLowerCase().trim();
 
-    // Primary source of truth: accepted share_tokens for this buyer
-    // This avoids RLS issues with hot_sheet_clients (CRM ID != auth ID)
+    const acceptedHotSheetIds = new Set<string>();
+    const tokenMap: Record<string, string> = {};
+
+    // 1) Primary: hot_sheet_clients → hot_sheets for this agent (includes buyer-created; no share token required)
+    const { data: hscRows, error: hscErr } = await supabase
+      .from("hot_sheet_clients")
+      .select("hot_sheet_id");
+    if (hscErr) {
+      console.error("Failed to load hot_sheet_clients for dashboard", hscErr);
+    } else {
+      const hscIds = (hscRows || [])
+        .map((r: { hot_sheet_id?: string }) => r.hot_sheet_id)
+        .filter((id): id is string => Boolean(id));
+      if (hscIds.length) {
+        const { data: forAgent, error: hsFilterErr } = await supabase
+          .from("hot_sheets")
+          .select("id")
+          .in("id", hscIds)
+          .eq("user_id", activeAgentId);
+        if (hsFilterErr) {
+          console.error("Failed to filter hot_sheets for agent", hsFilterErr);
+        } else {
+          for (const r of forAgent || []) {
+            if (r.id) acceptedHotSheetIds.add(r.id);
+          }
+        }
+      }
+    }
+
+    // 2) Union: accepted share_token invites for this buyer + active agent
     const { data: acceptedTokenRows, error: tokenErr } = await supabase
       .from("share_tokens")
       .select("token, payload, accepted_at, accepted_by_user_id")
@@ -305,37 +333,30 @@ export default function ClientDashboard() {
 
     if (tokenErr) {
       console.error("Failed to load accepted tokens", tokenErr);
-      setHotSheets([]);
-      return;
-    }
+    } else {
+      for (const t of acceptedTokenRows || []) {
+        const p = (t.payload as any) ?? {};
+        if (p.type !== "client_hotsheet_invite") continue;
+        if (activeAgentId && p.agent_id && p.agent_id !== activeAgentId) continue;
 
-    // Filter tokens for this buyer and extract hot_sheet_ids
-    const acceptedHotSheetIds = new Set<string>();
-    const tokenMap: Record<string, string> = {};
-    const buyerEmailNorm = (buyerEmail ?? "").toLowerCase().trim();
+        const hsId = String(p.hot_sheet_id ?? "");
+        if (!hsId) continue;
 
-    for (const t of acceptedTokenRows || []) {
-      const p = (t.payload as any) ?? {};
-      if (p.type !== "client_hotsheet_invite") continue;
-      if (activeAgentId && p.agent_id && p.agent_id !== activeAgentId) continue;
+        const matchByUserId = t.accepted_by_user_id === userId;
+        const tokenEmail = String(p.client_email ?? "").toLowerCase().trim();
+        const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
 
-      const hsId = String(p.hot_sheet_id ?? "");
-      if (!hsId) continue;
-
-      const matchByUserId = t.accepted_by_user_id === userId;
-      const tokenEmail = String(p.client_email ?? "").toLowerCase().trim();
-      const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
-
-      if (matchByUserId || matchByEmail) {
-        acceptedHotSheetIds.add(hsId);
-        if (t.token) tokenMap[hsId] = t.token;
+        if (matchByUserId || matchByEmail) {
+          acceptedHotSheetIds.add(hsId);
+          if (t.token) tokenMap[hsId] = t.token;
+        }
       }
     }
 
     if (import.meta.env.DEV) {
-      console.log("[ClientDashboard] token scan:", {
-        total: (acceptedTokenRows || []).length,
-        matched: acceptedHotSheetIds.size,
+      console.log("[ClientDashboard] hot sheet ids:", {
+        shareTokenRows: (acceptedTokenRows || []).length,
+        linkedHotSheetCount: acceptedHotSheetIds.size,
       });
     }
 

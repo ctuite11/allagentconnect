@@ -259,7 +259,7 @@ const HotSheets = ({
       const allHotSheetIds = new Set<string>();
       const tokenMap: Record<string, string> = {};
 
-      // Buyer-created and agent-linked rows (CRM ↔ hot sheet), including sheets with no share token
+      // 1) Primary: hot_sheet_clients (RLS: buyer’s CRM links). Includes buyer-created sheets; no share token required.
       const { data: hscRows, error: hscErr } = await supabase
         .from("hot_sheet_clients")
         .select("hot_sheet_id");
@@ -273,6 +273,7 @@ const HotSheets = ({
         }
       }
 
+      // 2) Union: accepted share_token invites (optional /client/hotsheet/:token link)
       const { data: acceptedTokenRows, error: tokenErr } = await supabase
         .from("share_tokens")
         .select("token, payload, accepted_at, accepted_by_user_id")
