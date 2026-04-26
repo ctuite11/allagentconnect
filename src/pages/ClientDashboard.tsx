@@ -100,7 +100,15 @@ function formatUsPhoneForDisplay(raw: string | null | undefined): { display: str
   };
 }
 
-function DashboardListingImage({ photoUrl, alt }: { photoUrl: string; alt: string }) {
+function DashboardListingImage({
+  photoUrl,
+  alt,
+  imageClassName = "h-full w-full object-cover",
+}: {
+  photoUrl: string;
+  alt: string;
+  imageClassName?: string;
+}) {
   const [loadFailed, setLoadFailed] = useState(false);
   const useMonogram = !photoUrl || photoUrl === "/placeholder.svg" || loadFailed;
   if (useMonogram) {
@@ -114,7 +122,7 @@ function DashboardListingImage({ photoUrl, alt }: { photoUrl: string; alt: strin
     <img
       src={photoUrl}
       alt={alt}
-      className="h-full w-full object-cover"
+      className={imageClassName}
       onError={() => setLoadFailed(true)}
     />
   );
@@ -850,13 +858,14 @@ export default function ClientDashboard() {
                           }
                         }}
                       >
-                        <div className="relative h-[4.5rem] bg-gray-50">
+                        <div className="overflow-hidden rounded-t-2xl">
                           <DashboardListingImage
                             photoUrl={getPrimaryPhotoUrl(listing.photos)}
                             alt={listing.address}
+                            imageClassName="w-full h-[120px] object-cover object-center"
                           />
                         </div>
-                        <div className="space-y-0.5 p-2">
+                        <div className="space-y-0.5 p-3">
                           <p className="text-[11px] font-semibold text-gray-900">
                             {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                           </p>
