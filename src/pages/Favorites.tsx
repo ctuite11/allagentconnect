@@ -334,7 +334,7 @@ const Favorites = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex flex-col pt-14 md:pt-16">
+    <div className="min-h-screen bg-white flex flex-col pt-14 md:pt-16">
       <main className="flex-1">
         <div className="mx-auto w-full max-w-7xl px-6 md:px-8 py-6 md:py-8">
           {/* Header */}
