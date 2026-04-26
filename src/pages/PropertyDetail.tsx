@@ -260,12 +260,12 @@ const PropertyDetail = () => {
   const isAdmin = role === "admin";
   const isBuyer = role === "buyer";
 
-  // Redirect buyers to the buyer-safe detail page
+  // Redirect buyers to the buyer-safe detail page (keep route state, e.g. Favorites back link)
   useEffect(() => {
     if (!roleLoading && isBuyer && id) {
-      navigate(`/consumer-property/${id}`, { replace: true });
+      navigate(`/consumer-property/${id}`, { replace: true, state: location.state });
     }
-  }, [roleLoading, isBuyer, id, navigate]);
+  }, [roleLoading, isBuyer, id, navigate, location]);
   
   // Check for client mode via URL query param or path suffix
   const searchParams = new URLSearchParams(location.search);

@@ -368,6 +368,11 @@ const ConsumerPropertyDetail = () => {
       <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
         <button
           onClick={() => {
+            const from = (location.state as { from?: string } | null)?.from;
+            if (from) {
+              navigate(from);
+              return;
+            }
             const lastSearch = sessionStorage.getItem("buyer_last_search_url");
             navigate(lastSearch || "/browse");
           }}
