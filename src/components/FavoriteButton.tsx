@@ -15,7 +15,7 @@ interface FavoriteButtonProps {
   size?: "default" | "sm" | "lg" | "icon";
   variant?: "default" | "secondary" | "outline";
   className?: string;
-  /** Icon-only for listing photo overlays: outline / red filled, no button chrome */
+  /** Icon-only for listing photo overlays: minimal red heart, no chrome */
   photoIcon?: boolean;
   labels?: {
     signIn?: string;
@@ -113,9 +113,7 @@ const FavoriteButton = ({
   const favoriteTooltipText = isFavorite ? "Added to favorites" : "Add to favorites";
 
   if (photoIcon && size === "icon") {
-    // Do not use shadcn <Button> here: its base styles include [&_svg]:size-4 and reliably pin the
-    // heart to 16px. A plain <button> keeps full control of icon size on listing photos.
-    const heartPx = 52;
+    // Plain <button> only — shadcn Button applies [&_svg]:size-4 and pins icons to 16px.
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -124,29 +122,26 @@ const FavoriteButton = ({
             onClick={handleToggleFavorite}
             disabled={loading}
             className={cn(
-              "inline-flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-sm",
-              "border-0 bg-transparent p-0 shadow-none outline-none",
-              "hover:bg-transparent disabled:opacity-50",
-              isFavorite
-                ? "hover:scale-[1.06] active:scale-105"
-                : "hover:scale-105 active:scale-95",
-              "transition-transform duration-200",
-              "focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0",
+              "inline-flex h-8 w-8 max-h-8 max-w-8 items-center justify-center",
+              "border-0 bg-transparent p-0 m-0 shadow-none",
+              "outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
+              "text-[#FF2D55] transition-transform duration-150 ease-out",
+              "hover:scale-105 active:scale-100",
+              "disabled:opacity-40",
               className,
             )}
-            style={{ minWidth: "4.5rem", minHeight: "4.5rem" }}
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart
               className={cn(
-                "shrink-0 stroke-[2.5]",
+                "h-5 w-5 shrink-0",
                 isFavorite
-                  ? "fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55] [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.25))]"
-                  : "fill-white text-white stroke-[#FF2D55] [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.45))]",
+                  ? "fill-[#FF2D55] stroke-[#FF2D55]"
+                  : "fill-transparent stroke-[#FF2D55]",
               )}
-              width={heartPx}
-              height={heartPx}
-              strokeWidth={2.5}
+              size={20}
+              strokeWidth={1.5}
+              aria-hidden
             />
           </button>
         </TooltipTrigger>

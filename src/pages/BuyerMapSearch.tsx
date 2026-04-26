@@ -1426,7 +1426,6 @@ export default function BuyerMapSearch() {
                             listingId={listing.id}
                             size="icon"
                             photoIcon
-                            className="!h-7 !w-7 !min-w-0 p-0 [&>svg]:!h-6 [&>svg]:!w-6"
                           />
                         </div>
                       </div>

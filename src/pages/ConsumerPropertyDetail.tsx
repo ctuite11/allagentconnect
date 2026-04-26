@@ -432,7 +432,7 @@ const ConsumerPropertyDetail = () => {
 
                   {/* Favorite - Top Right */}
                   <div
-                    className="absolute top-4 right-4 z-20"
+                    className="absolute top-3 right-3 z-20"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <FavoriteButton listingId={listing.id} size="icon" photoIcon />

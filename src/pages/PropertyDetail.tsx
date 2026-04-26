@@ -758,10 +758,11 @@ const PropertyDetail = () => {
                     </div>
 
                     {/* Heart Control - Top Right Overlay */}
-                    <div className="absolute top-6 right-6 z-20">
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <FavoriteButton listingId={listing.id} size="icon" photoIcon />
-                      </div>
+                    <div
+                      className="absolute top-3 right-3 z-20"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
                     </div>
                     
                     {/* Carousel Arrow Controls - Only for Photos */}
