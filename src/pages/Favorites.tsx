@@ -426,7 +426,7 @@ const Favorites = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedFavorites.map((favorite) => {
                 const listing = favorite.listings;
                 const isSelected = selectedFavoriteIds.has(favorite.id);
@@ -442,50 +442,50 @@ const Favorites = ({
                         navigate(`/property/${listing.id}`);
                       }
                     }}
-                    className="group w-full rounded-[24px] bg-white overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 transition-all duration-200 ease-out transform-gpu shadow-[0_2px_8px_rgba(15,23,42,0.07)] ring-1 ring-zinc-200/80 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(15,23,42,0.12)] hover:ring-zinc-300/80"
+                    className="group w-full rounded-2xl bg-white overflow-hidden border border-gray-200 text-left cursor-pointer shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
                   >
-                    <div className="relative w-full overflow-hidden bg-zinc-100" style={{ aspectRatio: "16/10" }}>
+                    <div className="relative mb-2 w-full overflow-hidden rounded-t-2xl bg-zinc-100" style={{ aspectRatio: "16/10" }}>
                       <img
                         src={getMainPhoto(listing.photos)}
                         alt={listing.address}
                         className="w-full h-full object-cover object-center"
                       />
                       <div
-                        className="absolute top-2 left-2 z-20 pointer-events-auto"
+                        className="absolute top-3 left-3 z-20 rounded-md bg-white p-1 shadow-sm pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => toggleSelectFavorite(favorite.id)}
-                          className="h-5 w-5 border-zinc-300 bg-white/90 data-[state=checked]:border-[#0E56F5] data-[state=checked]:bg-[#0E56F5]"
+                          className="h-5 w-5 border-zinc-300 bg-white data-[state=checked]:border-[#0E56F5] data-[state=checked]:bg-[#0E56F5]"
                           aria-label={isSelected ? "Unselect listing" : "Select listing"}
                         />
                       </div>
                     </div>
-                    <div className="relative bg-white px-3.5 pb-3.5 pt-3">
-                      <p className="text-[1.05rem] font-semibold tracking-[-0.02em] leading-none text-zinc-950">
+                    <div className="relative bg-white px-3.5 pb-3.5 pt-1">
+                      <p className="text-lg font-semibold leading-none text-gray-900">
                         {formatPrice(listing.price)}
                       </p>
-                      <p className="mt-1.5 text-[13px] font-medium leading-[1.3] text-zinc-900 break-words">
+                      <p className="mt-1.5 text-sm font-medium leading-[1.3] text-gray-700 break-words">
                         {listing.address}
                       </p>
-                      <p className="mt-1 text-[11.5px] font-medium leading-[1.35] text-zinc-500">
+                      <p className="mt-1 text-xs font-medium leading-[1.35] text-gray-500">
                         <MapPin className="mr-1 inline h-3.5 w-3.5 align-[-1px]" />
                         {listing.city}, {listing.state} {listing.zip_code}
                       </p>
-                      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] font-medium leading-none text-zinc-600">
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium leading-none text-gray-500">
                         <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                          <BedDouble className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
+                          <BedDouble className="h-[13px] w-[13px] text-gray-500" strokeWidth={2.1} />
                           {listing.bedrooms ?? "--"} bd
                         </span>
-                        <span className="text-zinc-300">•</span>
+                        <span className="text-gray-300">•</span>
                         <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                          <Bath className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
+                          <Bath className="h-[13px] w-[13px] text-gray-500" strokeWidth={2.1} />
                           {listing.bathrooms ?? "--"} ba
                         </span>
-                        <span className="text-zinc-300">•</span>
+                        <span className="text-gray-300">•</span>
                         <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                          <Ruler className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
+                          <Ruler className="h-[13px] w-[13px] text-gray-500" strokeWidth={2.1} />
                           {listing.square_feet ? `${listing.square_feet.toLocaleString()} sqft` : "--"}
                         </span>
                       </div>
