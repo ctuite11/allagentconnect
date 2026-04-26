@@ -540,7 +540,7 @@ export default function ClientDashboard() {
     <div className="bg-background">
       <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
         <div className="space-y-8">
-          <section className={`${baseCard} p-5 md:p-6`}>
+          <section className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:-translate-y-[2px] p-5 md:p-6">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="space-y-1">
@@ -668,7 +668,7 @@ export default function ClientDashboard() {
                   if (label === "Unread Messages") navigate("/messages");
                   if (label === "Hot Sheets") navigate("/client/hot-sheets");
                 }}
-                className="bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer p-5 md:p-6"
+                className="bg-white rounded-2xl border border-gray-200 shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-[2px] cursor-pointer p-5 md:p-6"
               >
                 <div className="flex items-start justify-between gap-3">
                   <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
@@ -682,7 +682,7 @@ export default function ClientDashboard() {
 
           <section className="space-y-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className={`${baseCard} overflow-hidden`}>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:-translate-y-[2px] overflow-hidden">
                 <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -759,7 +759,7 @@ export default function ClientDashboard() {
                 </Card>
               </div>
 
-              <div className={`${baseCard} overflow-hidden`}>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:-translate-y-[2px] overflow-hidden">
                 <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -804,7 +804,7 @@ export default function ClientDashboard() {
                       })}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                    <div className="flex flex-col items-center justify-center text-center py-12">
                       <p className="max-w-sm text-sm text-gray-600">No favorites yet.</p>
                       <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/client/search")}>
                         <Search className="mr-2 h-4 w-4" />
@@ -817,7 +817,7 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            <div className={`${baseCard} overflow-hidden`}>
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] hover:-translate-y-[2px] overflow-hidden">
               <Card className="rounded-none border-0 bg-transparent shadow-none hover:border-transparent hover:shadow-none">
               <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
