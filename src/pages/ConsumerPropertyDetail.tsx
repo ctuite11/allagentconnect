@@ -340,8 +340,9 @@ const ConsumerPropertyDetail = () => {
 
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
             <div className={propertyMediaCol}>
-              <div className={propertyHeroMedia}>
-                <div className="absolute inset-0 bg-neutral-950">
+              <div className="relative pb-6">
+                <div className={propertyHeroMedia}>
+                  <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                   {activeMediaTab === 'photos' && (
                     <img
@@ -368,31 +369,9 @@ const ConsumerPropertyDetail = () => {
                     </Badge>
                   </div>
 
-                  {/* DOM Badge - Top Right Overlay */}
-                  {daysOnMarket !== null && (
-                    <Badge variant="outline" className="absolute top-14 right-4 font-mono text-xs bg-white/90 backdrop-blur-sm">
-                      {daysOnMarket} DOM
-                    </Badge>
-                  )}
-
-                  {/* Share + Favorite - Top Right */}
-                  <div className="absolute top-4 right-4 flex items-center gap-2">
+                  {/* Favorite - Top Right */}
+                  <div className="absolute top-4 right-4">
                     <FavoriteButton listingId={listing.id} size="icon" variant="secondary" className="rounded-full bg-black/60 hover:bg-black/80 text-white border-0 h-11 w-11" />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Share property">
-                          <Share2 className="w-6 h-6" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Facebook</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Twitter</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">LinkedIn</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">WhatsApp</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.open(`mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Email</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">Copy Link</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
 
                   {/* Carousel Arrows */}
@@ -420,6 +399,24 @@ const ConsumerPropertyDetail = () => {
                       <Expand className="w-5 h-5" />
                     </button>
                   )}
+                  </div>
+                </div>
+                <div className="absolute -bottom-1 right-4 z-30">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm" aria-label="Share property">
+                        <Share2 className="w-6 h-6" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Facebook</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Twitter</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">LinkedIn</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">WhatsApp</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => window.open(`mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">Email</DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">Copy Link</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
 
