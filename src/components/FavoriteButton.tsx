@@ -113,7 +113,7 @@ const FavoriteButton = ({
   const favoriteTooltipText = isFavorite ? "Added to favorites" : "Add to favorites";
 
   if (photoIcon && size === "icon") {
-    // Plain <button> only — shadcn Button applies [&_svg]:size-4 and pins icons to 16px.
+    // Plain <button> only — shadcn Button applies [&_svg]:size-4. Listing-photo overlay: premium pill control.
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -122,24 +122,25 @@ const FavoriteButton = ({
             onClick={handleToggleFavorite}
             disabled={loading}
             className={cn(
-              "inline-flex h-8 w-8 max-h-8 max-w-8 items-center justify-center",
-              "border-0 bg-transparent p-0 m-0 shadow-none",
-              "outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
-              "text-[#FF2D55] transition-transform duration-150 ease-out",
+              "relative z-20 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+              "border-0 p-0 shadow-none outline-none",
+              "bg-[rgba(0,0,0,0.35)] backdrop-blur-sm",
+              "transition-transform duration-200 ease-out",
               "hover:scale-105 active:scale-100",
-              "disabled:opacity-40",
+              "focus-visible:ring-2 focus-visible:ring-white/35 focus-visible:ring-offset-0",
+              "disabled:opacity-50",
               className,
             )}
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart
               className={cn(
-                "h-5 w-5 shrink-0",
+                "h-6 w-6 shrink-0",
                 isFavorite
-                  ? "fill-[#FF2D55] stroke-[#FF2D55]"
-                  : "fill-transparent stroke-[#FF2D55]",
+                  ? "fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                  : "fill-white text-white stroke-white",
               )}
-              size={20}
+              size={24}
               strokeWidth={1.5}
               aria-hidden
             />
