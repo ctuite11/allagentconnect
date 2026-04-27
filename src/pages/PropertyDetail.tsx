@@ -674,31 +674,45 @@ const PropertyDetail = () => {
 
         {/* Back Button Row */}
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
-          {(() => {
-            const fromPage = (location.state as { from?: string } | null)?.from;
-            const isFromFavorites = fromPage === "/client/favorites" || fromPage === "/favorites";
-            const isFromSearch = fromPage === "/client/search";
-            const backLabel = isFromFavorites
-              ? "Back to Favorites"
-              : isFromSearch
-                ? "Back to Results"
-                : "Back to Dashboard";
-            const backTarget = isFromFavorites
-              ? "/client/favorites"
-              : isFromSearch
-                ? "/client/search"
-                : "/client/dashboard";
-            return (
           <button
-            onClick={() => navigate(backTarget)}
+            onClick={() => {
+              const fromPage = (location.state as { from?: string } | null)?.from;
+              const referrer = typeof document !== "undefined" ? document.referrer : "";
+              const referrerFromFavorites = /\/favorites(?:$|[/?#])/.test(referrer);
+              const fromFavorites =
+                fromPage === "/client/favorites" ||
+                fromPage === "/favorites" ||
+                (!fromPage && referrerFromFavorites);
+
+              if (fromFavorites) {
+                navigate("/client/favorites");
+                return;
+              }
+              if (fromPage === "/client/search") {
+                navigate("/client/search");
+                return;
+              }
+              navigate("/client/dashboard");
+            }}
             className="text-sm font-medium text-gray-600 hover:text-black flex items-center gap-2 transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>{backLabel}</span>
+            <span>
+              {(() => {
+                const fromPage = (location.state as { from?: string } | null)?.from;
+                const referrer = typeof document !== "undefined" ? document.referrer : "";
+                const referrerFromFavorites = /\/favorites(?:$|[/?#])/.test(referrer);
+                const fromFavorites =
+                  fromPage === "/client/favorites" ||
+                  fromPage === "/favorites" ||
+                  (!fromPage && referrerFromFavorites);
+                if (fromFavorites) return "Back to Favorites";
+                if (fromPage === "/client/search") return "Back to Results";
+                return "Back to Dashboard";
+              })()}
+            </span>
           </button>
-            );
-          })()}
         </div>
 
         {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
