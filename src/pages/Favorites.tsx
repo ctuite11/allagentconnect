@@ -922,16 +922,21 @@ const Favorites = ({
                                   type="checkbox"
                                   checked={isKept}
                                   onChange={() => toggleSessionKeepListing(listing.id)}
-                                  className="h-5 w-5 rounded-sm border border-zinc-500 bg-white accent-[#0E56F5] shadow-sm"
+                                  className="h-6 w-6 rounded-sm border border-gray-300 bg-white accent-[#0E56F5] shadow-sm"
                                   title="Keep in this search"
                                   aria-label={isKept ? "Remove from this session" : "Keep in this search"}
                                 />
                               </div>
                               <div
-                                className="absolute top-3 right-3 z-20 max-w-[calc(100%-6.5rem)] flex min-h-0 items-center justify-end"
+                                className="absolute top-3 right-3 z-20 pointer-events-auto"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                                <FavoriteButton
+                                  listingId={listing.id}
+                                  size="icon"
+                                  photoIcon
+                                  className="!h-7 !w-7 [&_svg]:h-7 [&_svg]:w-7"
+                                />
                               </div>
                             </div>
                             <div className="relative border-t border-zinc-200/45 bg-gradient-to-b from-white via-white to-[#fbfcff] px-3.5 pb-3.5 pt-3">
