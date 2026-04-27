@@ -705,21 +705,7 @@ const Favorites = ({
           <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
             <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
               <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
-                {!shouldUseLiveMap ? (
-                  <div className="h-full flex items-center justify-center px-8 bg-gradient-to-b from-zinc-50 to-white">
-                    <div className="w-full max-w-md rounded-2xl border border-zinc-200/80 bg-white/80 shadow-[0_14px_32px_rgba(15,23,42,0.05)] px-6 py-7 text-center">
-                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200">
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                      <p className="text-sm font-medium text-zinc-700">Map Preview Unavailable</p>
-                      <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-5">
-                        {mapsKeyAvailable && import.meta.env.DEV && isLocalDevHost
-                          ? "Your map key may not allow localhost. Listings are still shown in the list."
-                          : "Add a Google Maps key to enable the live map for saved homes."}
-                      </p>
-                    </div>
-                  </div>
-                ) : displayListingRecords.length > 0 ? (
+                {displayListingRecords.length > 0 ? (
                   <div className="h-full flex min-h-0 flex-col">
                     <div className="min-h-0 flex-1">
                       <PropertyMap

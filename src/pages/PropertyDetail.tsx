@@ -674,31 +674,31 @@ const PropertyDetail = () => {
 
         {/* Back Button Row */}
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
+          {(() => {
+            const fromPage = (location.state as { from?: string } | null)?.from;
+            const isFromFavorites = fromPage === "/client/favorites" || fromPage === "/favorites";
+            const isFromSearch = fromPage === "/client/search";
+            const backLabel = isFromFavorites
+              ? "Back to Favorites"
+              : isFromSearch
+                ? "Back to Results"
+                : "Back to Dashboard";
+            const backTarget = isFromFavorites
+              ? "/client/favorites"
+              : isFromSearch
+                ? "/client/search"
+                : "/client/dashboard";
+            return (
           <button
-            onClick={() => {
-              const fromPage = (location.state as { from?: string } | null)?.from;
-              if (fromPage === "/client/favorites") {
-                navigate("/client/favorites");
-                return;
-              }
-              if (fromPage === "/client/search") {
-                navigate("/client/search");
-                return;
-              }
-              navigate("/client/dashboard");
-            }}
-            className="text-sm text-gray-600 hover:text-black flex items-center gap-2 transition-colors"
+            onClick={() => navigate(backTarget)}
+            className="text-sm font-medium text-gray-600 hover:text-black flex items-center gap-2 transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>
-              {(location.state as { from?: string } | null)?.from === "/client/favorites"
-                ? "Back to Favorites"
-                : (location.state as { from?: string } | null)?.from === "/client/search"
-                  ? "Back to Results"
-                  : "Back to Dashboard"}
-            </span>
+            <span>{backLabel}</span>
           </button>
+            );
+          })()}
         </div>
 
         {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
