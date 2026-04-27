@@ -676,12 +676,7 @@ const PropertyDetail = () => {
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
           {(() => {
             const fromPage = (location.state as { from?: string } | null)?.from;
-            const referrer = typeof document !== "undefined" ? document.referrer : "";
-            const referrerFromFavorites = /\/favorites(?:$|[/?#])/.test(referrer);
-            const fromFavorites =
-              fromPage === "/client/favorites" ||
-              fromPage === "/favorites" ||
-              (!fromPage && referrerFromFavorites);
+            const fromFavorites = fromPage === "/client/favorites";
             const label = fromFavorites
               ? "Back to Favorites"
               : fromPage === "/client/search"
@@ -691,14 +686,8 @@ const PropertyDetail = () => {
           <button
             onClick={() => {
               const fromPage = (location.state as { from?: string } | null)?.from;
-              const referrer = typeof document !== "undefined" ? document.referrer : "";
-              const referrerFromFavorites = /\/favorites(?:$|[/?#])/.test(referrer);
-              const fromFavorites =
-                fromPage === "/client/favorites" ||
-                fromPage === "/favorites" ||
-                (!fromPage && referrerFromFavorites);
 
-              if (fromFavorites) {
+              if (fromPage === "/client/favorites") {
                 navigate("/client/favorites");
                 return;
               }
