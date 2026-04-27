@@ -19,7 +19,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { 
-  ArrowLeft, 
   MapPin, 
   Bed, 
   Bath, 
@@ -260,10 +259,11 @@ const PropertyDetail = () => {
   const isAdmin = role === "admin";
   const isBuyer = role === "buyer";
 
-  // Redirect buyers to the buyer-safe detail page (keep route state, e.g. Favorites back link)
+  // Redirect buyers to the buyer-safe detail page (keep query + route state, e.g. Favorites back link)
   useEffect(() => {
     if (!roleLoading && isBuyer && id) {
-      navigate(`/consumer-property/${id}`, { replace: true, state: location.state });
+      const q = location.search;
+      navigate(`/consumer-property/${id}${q}`, { replace: true, state: location.state });
     }
   }, [roleLoading, isBuyer, id, navigate, location]);
   
@@ -675,32 +675,34 @@ const PropertyDetail = () => {
         {/* Back Button Row */}
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
           {(() => {
-            const fromPage = (location.state as { from?: string } | null)?.from;
-            const fromFavorites = fromPage === "/client/favorites";
+            const params = new URLSearchParams(location.search);
+            const stateFrom = (location.state as { from?: string } | null)?.from;
+            const fromFavorites =
+              params.get("from") === "favorites" || stateFrom === "/client/favorites";
             const label = fromFavorites
-              ? "Back to Favorites"
-              : fromPage === "/client/search"
-                ? "Back to Results"
-                : "Back to Dashboard";
+              ? "← Back to Favorites"
+              : stateFrom === "/client/search"
+                ? "← Back to Results"
+                : "← Back to Dashboard";
             return (
           <button
+            type="button"
             onClick={() => {
-              const fromPage = (location.state as { from?: string } | null)?.from;
-
-              if (fromPage === "/client/favorites") {
+              const p = new URLSearchParams(location.search);
+              const st = (location.state as { from?: string } | null)?.from;
+              if (p.get("from") === "favorites" || st === "/client/favorites") {
                 navigate("/client/favorites");
                 return;
               }
-              if (fromPage === "/client/search") {
+              if (st === "/client/search") {
                 navigate("/client/search");
                 return;
               }
               navigate("/client/dashboard");
             }}
             className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
-            aria-label="Go back"
+            aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
           >
-            <ArrowLeft className="h-4 w-4" />
             <span>{label}</span>
           </button>
             );

@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ArrowLeft,
   MapPin,
   Bed,
   Bath,
@@ -366,21 +365,42 @@ const ConsumerPropertyDetail = () => {
 
       {/* Back Button Row */}
       <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
-        <button
-          onClick={() => {
-            const from = (location.state as { from?: string } | null)?.from;
-            if (from) {
-              navigate(from);
-              return;
-            }
-            const lastSearch = sessionStorage.getItem("buyer_last_search_url");
-            navigate(lastSearch || "/browse");
-          }}
-          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        {(() => {
+          const searchParams = new URLSearchParams(location.search);
+          const stateFrom = (location.state as { from?: string } | null)?.from;
+          const fromFavorites =
+            searchParams.get("from") === "favorites" || stateFrom === "/client/favorites";
+          const backLabel = fromFavorites
+            ? "← Back to Favorites"
+            : stateFrom === "/client/search"
+              ? "← Back to Results"
+              : stateFrom
+                ? "← Back"
+                : "← Back to Search";
+          return (
+            <button
+              type="button"
+              onClick={() => {
+                const p = new URLSearchParams(location.search);
+                const st = (location.state as { from?: string } | null)?.from;
+                if (p.get("from") === "favorites" || st === "/client/favorites") {
+                  navigate("/client/favorites");
+                  return;
+                }
+                if (st) {
+                  navigate(st);
+                  return;
+                }
+                const lastSearch = sessionStorage.getItem("buyer_last_search_url");
+                navigate(lastSearch || "/browse");
+              }}
+              className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground px-1.5 py-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
+              aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
+            >
+              {backLabel}
+            </button>
+          );
+        })()}
       </div>
 
       <div className="flex-1">

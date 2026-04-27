@@ -72,6 +72,8 @@ interface FavoritesProps {
 /** Default map view when no favorites have coordinates (UI only; not written to listings). */
 const BOSTON_DEFAULT_MAP_CENTER = { lat: 42.3601, lng: -71.0589 } as const;
 
+const propertyUrlWithFavoritesContext = (listingId: string) => `/property/${listingId}?from=favorites`;
+
 const Favorites = ({
   isPublicMode = false,
   isAgentMode = false,
@@ -94,24 +96,12 @@ const Favorites = ({
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [showKeptOnly, setShowKeptOnly] = useState(false);
-  const [mapsKeyAvailable, setMapsKeyAvailable] = useState(true);
   const [officeByAgentId, setOfficeByAgentId] = useState<Map<string, string | null>>(new Map());
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const isLocalDevHost = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const host = window.location.hostname;
-    return host === "localhost" || host === "127.0.0.1";
-  }, []);
   const buyerMode = isBuyerMode || (!isAgentMode && !isPublicMode);
 
   useEffect(() => {
     checkAuth();
-  }, []);
-
-  useEffect(() => {
-    const envKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim();
-    const urlKey = new URLSearchParams(window.location.search).get("gmaps_key")?.trim();
-    setMapsKeyAvailable(Boolean(envKey || urlKey));
   }, []);
 
   useEffect(() => {
@@ -225,14 +215,6 @@ const Favorites = ({
     return next;
   }, [favorites, sortBy]);
 
-  const hasValidMapCoords = (l: ListingRecord) => {
-    const { latitude: lat, longitude: lng } = l;
-    if (lat == null || lng == null) return false;
-    const a = Number(lat);
-    const b = Number(lng);
-    return Number.isFinite(a) && Number.isFinite(b);
-  };
-
   const displayFavorites = useMemo(() => {
     if (!buyerMode || !showKeptOnly) return sortedFavorites;
     return sortedFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id));
@@ -270,12 +252,6 @@ const Favorites = ({
     });
   }, [displayFavorites, officeByAgentId]);
 
-  /** PropertyMap only places markers for listings with coordinates (see PropertyMap) */
-  const mapMappableCount = useMemo(
-    () => displayListingRecords.filter((l) => hasValidMapCoords(l)).length,
-    [displayListingRecords],
-  );
-
   const buyerHasKeptForActions = useMemo(
     () => sortedFavorites.some((f) => sessionKeptListingIds.has(f.listings.id)),
     [sortedFavorites, sessionKeptListingIds],
@@ -292,8 +268,6 @@ const Favorites = ({
     if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
     return { allVisible: false, someVisible: true, noneVisible: false };
   }, [buyerMode, displayFavorites, sessionKeptListingIds]);
-
-  const shouldUseLiveMap = mapsKeyAvailable;
 
   const addAllVisible = useCallback(() => {
     if (!buyerMode) return;
@@ -710,46 +684,28 @@ const Favorites = ({
           <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
             <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
               <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
-                {!shouldUseLiveMap ? (
-                  <div className="h-full flex items-center justify-center px-8 bg-gradient-to-b from-zinc-50 to-white">
-                    <div className="w-full max-w-md rounded-2xl border border-zinc-200/80 bg-white/80 shadow-[0_14px_32px_rgba(15,23,42,0.05)] px-6 py-7 text-center">
-                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200">
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                      <p className="text-sm font-medium text-zinc-700">Map Preview Unavailable</p>
-                      <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-5">
-                        {mapsKeyAvailable && import.meta.env.DEV && isLocalDevHost
-                          ? "Listings are available now. Your current Google Maps key does not allow localhost, so the map is shown as a preview placeholder in local development."
-                          : "Listings are available now. Add a Google Maps key to enable the live map experience."}
-                      </p>
-                      <div className="mt-4 flex items-center justify-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
-                      </div>
-                    </div>
+                {loading ? (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
                   </div>
                 ) : displayListingRecords.length > 0 ? (
-                  <div className="h-full flex min-h-0 flex-col">
-                    <div className="min-h-0 flex-1 h-full">
-                      <PropertyMap
-                        listings={displayListingRecords}
-                        highlightedListingId={hoveredListingId}
-                        selectedListingId={selectedListingId}
-                        onListingHover={setHoveredListingId}
-                        onListingSelect={handleMarkerSelect}
-                        fallbackCenter={BOSTON_DEFAULT_MAP_CENTER}
-                        fallbackZoom={11}
-                      />
-                    </div>
-                    <p className="shrink-0 text-[11px] leading-relaxed text-zinc-500 px-3 py-2 border-t border-zinc-200/60 bg-zinc-50/90">
-                      Showing {mapMappableCount} of {displayListingRecords.length} favorites on map
-                    </p>
+                  <div className="h-full">
+                    <PropertyMap
+                      listings={displayListingRecords}
+                      highlightedListingId={hoveredListingId}
+                      selectedListingId={selectedListingId}
+                      onListingHover={setHoveredListingId}
+                      onListingSelect={handleMarkerSelect}
+                      fallbackCenter={BOSTON_DEFAULT_MAP_CENTER}
+                      fallbackZoom={11}
+                    />
                   </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
                     <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
-                    <p className="text-sm text-zinc-600 max-w-md">No homes in the current list to show on the map.</p>
+                    <p className="text-sm text-zinc-600 max-w-md">
+                      No homes in the current list to show on the map.
+                    </p>
                   </div>
                 )}
               </section>
@@ -900,7 +856,9 @@ const Favorites = ({
                             role="button"
                             tabIndex={0}
                             onClick={() =>
-                              navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } })
+                              navigate(propertyUrlWithFavoritesContext(listing.id), {
+                                state: { from: "/client/favorites" },
+                              })
                             }
                             onMouseEnter={() => setHoveredListingId(listing.id)}
                             onMouseLeave={() => setHoveredListingId(null)}
@@ -909,7 +867,9 @@ const Favorites = ({
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } });
+                                navigate(propertyUrlWithFavoritesContext(listing.id), {
+                                  state: { from: "/client/favorites" },
+                                });
                               }
                             }}
                             className={`group w-full rounded-[24px] bg-white overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 transition-all duration-200 ease-out transform-gpu ${
@@ -1148,11 +1108,17 @@ const Favorites = ({
                     key={favorite.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } })}
+                    onClick={() =>
+                      navigate(propertyUrlWithFavoritesContext(listing.id), {
+                        state: { from: "/client/favorites" },
+                      })
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        navigate(`/property/${listing.id}`, { state: { from: "/client/favorites" } });
+                        navigate(propertyUrlWithFavoritesContext(listing.id), {
+                          state: { from: "/client/favorites" },
+                        });
                       }
                     }}
                     className="group w-full bg-white rounded-2xl border border-gray-200 shadow-[0_4px_14px_rgba(15,23,42,0.10)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.16)] hover:-translate-y-1 transition-all duration-200 ease-out cursor-pointer overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
