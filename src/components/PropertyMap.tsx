@@ -37,6 +37,9 @@ interface PropertyMapProps {
   onListingSelect?: (listingId: string) => void;
   highlightedListingId?: string | null;
   selectedListingId?: string | null;
+  /** When `listings` is non-empty but none have valid coordinates, center the map here (no listing data is modified). */
+  fallbackCenter?: google.maps.LatLngLiteral;
+  fallbackZoom?: number;
 }
 
 const PropertyMap = ({
@@ -49,6 +52,8 @@ const PropertyMap = ({
   onListingSelect,
   highlightedListingId,
   selectedListingId,
+  fallbackCenter,
+  fallbackZoom,
 }: PropertyMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
@@ -441,6 +446,14 @@ const PropertyMap = ({
               }
             });
             lastListingsKeyRef.current = listingsKey;
+          } else if (
+            markerCount === 0 &&
+            fallbackCenter &&
+            lastListingsKeyRef.current !== listingsKey
+          ) {
+            map.setCenter(fallbackCenter);
+            map.setZoom(fallbackZoom ?? 10);
+            lastListingsKeyRef.current = listingsKey;
           }
 
           applyMarkerStyles(googleMaps);
@@ -500,6 +513,8 @@ const PropertyMap = ({
     longitude,
     listings,
     listingsKey,
+    fallbackCenter,
+    fallbackZoom,
   ]);
 
   useEffect(() => {
