@@ -707,14 +707,16 @@ const Favorites = ({
           </main>
         ) : (
           <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-            <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+            <div
+              className={`flex flex-col-reverse gap-4 h-auto min-h-0 ${
+                mapListings.length > 0
+                  ? "lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0"
+                  : ""
+              }`}
+            >
+              {mapListings.length > 0 && (
               <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-[600px] lg:sticky lg:top-[6.05rem]">
-                {!shouldUseLiveMap ? (
-                  <div className="h-full min-h-[600px] lg:min-h-0 flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
-                    <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
-                    <p className="text-sm text-zinc-600 max-w-md">No map location available for these favorites.</p>
-                  </div>
-                ) : displayListingRecords.length > 0 && mapListings.length > 0 ? (
+                {shouldUseLiveMap ? (
                   <div className="h-full flex min-h-0 flex-col">
                     <div className="min-h-0 flex-1 h-full min-h-[600px] lg:min-h-0">
                       <PropertyMap
@@ -736,8 +738,9 @@ const Favorites = ({
                   </div>
                 )}
               </section>
+              )}
 
-              <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+              <section className={`rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col ${mapListings.length === 0 ? "w-full" : ""}`}>
                 <div className="shrink-0 border-b border-zinc-200/60 bg-white px-6 py-2.5">
                   <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">
                     Results: {displayListingRecords.length.toLocaleString()}

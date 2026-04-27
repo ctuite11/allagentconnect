@@ -674,6 +674,20 @@ const PropertyDetail = () => {
 
         {/* Back Button Row */}
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
+          {(() => {
+            const fromPage = (location.state as { from?: string } | null)?.from;
+            const referrer = typeof document !== "undefined" ? document.referrer : "";
+            const referrerFromFavorites = /\/favorites(?:$|[/?#])/.test(referrer);
+            const fromFavorites =
+              fromPage === "/client/favorites" ||
+              fromPage === "/favorites" ||
+              (!fromPage && referrerFromFavorites);
+            const label = fromFavorites
+              ? "Back to Favorites"
+              : fromPage === "/client/search"
+                ? "Back to Results"
+                : "Back to Dashboard";
+            return (
           <button
             onClick={() => {
               const fromPage = (location.state as { from?: string } | null)?.from;
@@ -694,25 +708,14 @@ const PropertyDetail = () => {
               }
               navigate("/client/dashboard");
             }}
-            className="text-sm font-medium text-gray-600 hover:text-black flex items-center gap-2 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
             aria-label="Go back"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>
-              {(() => {
-                const fromPage = (location.state as { from?: string } | null)?.from;
-                const referrer = typeof document !== "undefined" ? document.referrer : "";
-                const referrerFromFavorites = /\/favorites(?:$|[/?#])/.test(referrer);
-                const fromFavorites =
-                  fromPage === "/client/favorites" ||
-                  fromPage === "/favorites" ||
-                  (!fromPage && referrerFromFavorites);
-                if (fromFavorites) return "Back to Favorites";
-                if (fromPage === "/client/search") return "Back to Results";
-                return "Back to Dashboard";
-              })()}
-            </span>
+            <span>{label}</span>
           </button>
+            );
+          })()}
         </div>
 
         {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
