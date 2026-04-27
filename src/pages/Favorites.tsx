@@ -74,6 +74,56 @@ const BOSTON_DEFAULT_MAP_CENTER = { lat: 42.3601, lng: -71.0589 } as const;
 
 const propertyUrlWithFavoritesContext = (listingId: string) => `/property/${listingId}?from=favorites`;
 
+/** PostgREST may return `listings` as a one-row array; map expects a single row with lat/lng. */
+function normalizeEmbeddedListing(
+  row: { listings: Listing | Listing[] | null } | { listings?: unknown },
+): Listing | null {
+  const raw = row.listings as unknown;
+  if (raw == null) return null;
+  if (Array.isArray(raw)) return (raw[0] as Listing | undefined) ?? null;
+  return raw as Listing;
+}
+
+function parseOptionalCoord(v: unknown): number | null {
+  if (v == null) return null;
+  if (typeof v === "string" && v.trim() === "") return null;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return n;
+}
+
+/** Shapes to PropertyMap `listings` (same field names as BuyerMapSearch / ListingRecord). */
+function toPropertyMapListings(
+  records: ListingRecord[],
+): {
+  id: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  price: number;
+  latitude: number | null;
+  longitude: number | null;
+}[] {
+    return records.map((rec) => {
+    const priceNum =
+      typeof rec.price === "number" && Number.isFinite(rec.price) ? rec.price : Number(rec.price);
+    const ex = rec as Record<string, unknown>;
+    const lat = parseOptionalCoord(rec.latitude) ?? parseOptionalCoord(ex.lat);
+    const lng = parseOptionalCoord(rec.longitude) ?? parseOptionalCoord(ex.lng);
+    return {
+      id: String(rec.id),
+      address: rec.address ?? "",
+      city: rec.city ?? "",
+      state: rec.state ?? "",
+      zip_code: rec.zip_code ?? "",
+      price: Number.isFinite(priceNum) ? priceNum : 0,
+      latitude: lat,
+      longitude: lng,
+    };
+  });
+}
+
 const Favorites = ({
   isPublicMode = false,
   isAgentMode = false,
@@ -176,7 +226,51 @@ const Favorites = ({
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setFavorites((data || []) as any);
+      let normalized = (data || [])
+        .map((row: { listings?: unknown } & Record<string, unknown>) => {
+          const raw = row.listings;
+          const single = Array.isArray(raw) ? (raw[0] as unknown) : raw;
+          if (single == null) return null;
+          return { ...row, listings: single } as Favorite;
+        })
+        .filter((r): r is Favorite => r != null);
+
+      const idsMissingCoords = normalized
+        .map((f) => f.listings)
+        .filter((l): l is Listing => Boolean(l))
+        .filter((l) => parseOptionalCoord(l.latitude) == null || parseOptionalCoord(l.longitude) == null)
+        .map((l) => l.id);
+
+      if (idsMissingCoords.length > 0) {
+        const { data: coordRows, error: coordErr } = await supabase
+          .from("listings")
+          .select("id, latitude, longitude")
+          .in("id", idsMissingCoords);
+        if (!coordErr && coordRows?.length) {
+          const byId = new Map(coordRows.map((r) => [r.id, r]));
+          normalized = normalized.map((f) => {
+            const l = f.listings;
+            if (
+              !l ||
+              (parseOptionalCoord(l.latitude) != null && parseOptionalCoord(l.longitude) != null)
+            ) {
+              return f;
+            }
+            const patch = byId.get(l.id);
+            if (!patch) return f;
+            return {
+              ...f,
+              listings: {
+                ...l,
+                latitude: patch.latitude ?? l.latitude,
+                longitude: patch.longitude ?? l.longitude,
+              },
+            };
+          });
+        }
+      }
+
+      setFavorites(normalized);
     } catch (error: any) {
       console.error("Error fetching favorites:", error);
       toast.error(buyerMode ? "Failed to load your saved homes" : "Failed to load favorites");
@@ -229,28 +323,37 @@ const Favorites = ({
   }, [buyerMode, displayFavorites, sortedFavorites, sessionKeptListingIds, selectedFavoriteIds]);
 
   const displayListingRecords: ListingRecord[] = useMemo(() => {
-    return displayFavorites.map((fav) => {
-      const l = fav.listings;
-      const fallback = l.agent_id ? officeByAgentId.get(l.agent_id) ?? null : null;
-      return {
-        id: l.id,
-        agent_id: l.agent_id,
-        address: l.address,
-        city: l.city,
-        state: l.state,
-        zip_code: l.zip_code,
-        price: l.price,
-        bedrooms: l.bedrooms,
-        bathrooms: l.bathrooms,
-        square_feet: l.square_feet,
-        latitude: l.latitude,
-        longitude: l.longitude,
-        photos: l.photos,
-        property_type: l.property_type,
-        list_office: fallback,
-      };
-    });
+    return displayFavorites
+      .map((fav) => {
+        const l = normalizeEmbeddedListing(fav);
+        if (!l) return null;
+        const fallback = l.agent_id ? officeByAgentId.get(l.agent_id) ?? null : null;
+        const raw = l as Record<string, unknown>;
+        return {
+          id: l.id,
+          agent_id: l.agent_id,
+          address: l.address,
+          city: l.city,
+          state: l.state,
+          zip_code: l.zip_code,
+          price: l.price,
+          bedrooms: l.bedrooms,
+          bathrooms: l.bathrooms,
+          square_feet: l.square_feet,
+          latitude: (l.latitude ?? raw.lat) as ListingRecord["latitude"],
+          longitude: (l.longitude ?? raw.lng) as ListingRecord["longitude"],
+          photos: l.photos,
+          property_type: l.property_type,
+          list_office: fallback,
+        };
+      })
+      .filter((r): r is ListingRecord => r != null);
   }, [displayFavorites, officeByAgentId]);
+
+  const propertyMapListings = useMemo(
+    () => toPropertyMapListings(displayListingRecords),
+    [displayListingRecords],
+  );
 
   const buyerHasKeptForActions = useMemo(
     () => sortedFavorites.some((f) => sessionKeptListingIds.has(f.listings.id)),
@@ -300,6 +403,24 @@ const Favorites = ({
     const still = displayListingRecords.some((l) => l.id === selectedListingId);
     if (!still) setSelectedListingId(null);
   }, [buyerMode, displayListingRecords, selectedListingId]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !buyerMode) return;
+    const missing: string[] = [];
+    for (const fav of displayFavorites) {
+      const l = normalizeEmbeddedListing(fav);
+      if (!l) continue;
+      if (parseOptionalCoord(l.latitude) == null || parseOptionalCoord(l.longitude) == null) {
+        missing.push(l.id);
+      }
+    }
+    if (missing.length) {
+      console.warn(
+        "[Favorites] Listings with missing map coordinates (pins omitted; coordinates not invented):",
+        missing,
+      );
+    }
+  }, [buyerMode, displayFavorites]);
 
   useEffect(() => {
     if (!buyerMode) return;
@@ -690,8 +811,8 @@ const Favorites = ({
                   </div>
                 ) : displayListingRecords.length > 0 ? (
                   <div className="h-full">
-                    <PropertyMap
-                      listings={displayListingRecords}
+                      <PropertyMap
+                      listings={propertyMapListings}
                       highlightedListingId={hoveredListingId}
                       selectedListingId={selectedListingId}
                       onListingHover={setHoveredListingId}

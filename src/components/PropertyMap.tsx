@@ -177,9 +177,21 @@ const PropertyMap = ({
     onListingClickRef.current = onListingClick;
   }, [onListingHover, onListingSelect, onListingClick]);
 
+  /** Must change when coordinates appear/update so we refit bounds (ids alone miss 0→N marker transitions with same set). */
   const listingsKey = useMemo(() => {
     if (!listings?.length) return "";
-    return listings.map((listing) => listing.id).join("|");
+    return listings
+      .map((listing) => {
+        const id = String(listing.id);
+        const rawLat = listing.latitude;
+        const rawLng = listing.longitude;
+        if (rawLat == null || rawLng == null) return `${id}:`;
+        const la = Number(rawLat);
+        const ln = Number(rawLng);
+        if (!Number.isFinite(la) || !Number.isFinite(ln)) return `${id}:`;
+        return `${id}:${la.toFixed(5)},${ln.toFixed(5)}`;
+      })
+      .join("|");
   }, [listings]);
 
   const resolveGoogleMapsKey = () => {
@@ -358,9 +370,14 @@ const PropertyMap = ({
           let markerCount = 0;
 
           for (const listing of listings) {
-            if (!listing.latitude || !listing.longitude) continue;
+            const rawLat = listing.latitude;
+            const rawLng = listing.longitude;
+            if (rawLat == null || rawLng == null) continue;
+            const latN = Number(rawLat);
+            const lngN = Number(rawLng);
+            if (!Number.isFinite(latN) || !Number.isFinite(lngN)) continue;
 
-            const position = { lat: Number(listing.latitude), lng: Number(listing.longitude) };
+            const position = { lat: latN, lng: lngN };
             const priceLabel = formatCompactPrice(listing.price);
             const highlighted = listing.id === highlightedListingId;
             const selected = listing.id === selectedListingId;
