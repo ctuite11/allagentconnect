@@ -14,7 +14,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { ListingAttribution } from "@/components/ListingAttribution";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
@@ -593,7 +593,18 @@ const ClientHotsheetPage = () => {
                     <UserPlus className="w-4 h-4" />
                     Add a Friend
                   </Button>
-                  <Button onClick={() => setShowEditCriteria(true)} variant="outline" size="sm">
+                  <Button
+                    onClick={() => {
+                      if (!hotSheet?.user_id) {
+                        toast.error("This saved search cannot be edited right now");
+                        return;
+                      }
+                      setShowEditCriteria(true);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    disabled={!hotSheet?.user_id}
+                  >
                     Edit Search
                   </Button>
                 </div>
@@ -696,14 +707,17 @@ const ClientHotsheetPage = () => {
           {/* Add Friend Dialog */}
           <AddFriendDialog open={showAddFriend} onOpenChange={setShowAddFriend} />
 
-          {/* Edit Criteria Dialog */}
-          {hotSheet && (
-            <EditHotsheetCriteriaDialog
+          {hotSheet?.user_id && (
+            <CreateHotSheetDialog
+              key={hotSheet.id}
               open={showEditCriteria}
               onOpenChange={setShowEditCriteria}
+              userId={hotSheet.user_id}
               hotSheetId={hotSheet.id}
-              initialCriteria={criteria}
-              onUpdate={handleUpdateCriteria}
+              editMode
+              onSuccess={() => {
+                handleUpdateCriteria();
+              }}
             />
           )}
 

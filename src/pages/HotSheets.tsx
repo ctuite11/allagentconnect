@@ -50,6 +50,7 @@ interface HotSheetsProps {
 interface BuyerHotSheetItem {
   id: string;
   name: string;
+  user_id: string | null;
   criteria: Record<string, unknown> | null;
   created_at: string;
   last_sent_at: string | null;
@@ -126,6 +127,8 @@ const HotSheets = ({
   const [buyerLoading, setBuyerLoading] = useState(true);
   const [deleteBuyerSheetId, setDeleteBuyerSheetId] = useState<string | null>(null);
   const [deleteBuyerSheetLoading, setDeleteBuyerSheetLoading] = useState(false);
+  /** `hot_sheets.user_id` (agent owner) — required for CreateHotSheetDialog `userId` in buyer edit mode. */
+  const [editingSheetOwnerUserId, setEditingSheetOwnerUserId] = useState<string | null>(null);
   const [alertFrequency, setAlertFrequency] = useState<"instant" | "daily" | "weekly">("instant");
   const buyerMode = isBuyerMode;
 
@@ -312,7 +315,7 @@ const HotSheets = ({
 
       const { data: hotSheetRows, error: sheetErr } = await supabase
         .from("hot_sheets")
-        .select("id, name, criteria, created_at, is_active, last_sent_at")
+        .select("id, name, user_id, criteria, created_at, is_active, last_sent_at")
         .in("id", [...allHotSheetIds])
         .order("created_at", { ascending: false });
 
@@ -416,6 +419,10 @@ const HotSheets = ({
     });
     setDeleteBuyerSheetLoading(false);
     setDeleteBuyerSheetId(null);
+  };
+
+  const handleBuyerEditSuccess = () => {
+    void loadBuyerHotSheets();
   };
 
   if (buyerMode) {
@@ -555,9 +562,14 @@ const HotSheets = ({
                             className="h-9 rounded-lg border-zinc-200 text-sm"
                             onClick={(event) => {
                               event.stopPropagation();
-                              toast.info("Edit flow is coming soon");
+                              if (!sheet.user_id) {
+                                toast.error("This hot sheet cannot be edited right now");
+                                return;
+                              }
+                              setEditingHotSheetId(sheet.id);
+                              setEditingSheetOwnerUserId(sheet.user_id);
+                              setEditDialogOpen(true);
                             }}
-                            title="Edit flow coming soon."
                           >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
@@ -571,6 +583,23 @@ const HotSheets = ({
             </div>
           </PageShell>
         </div>
+        {editingHotSheetId && editingSheetOwnerUserId && (
+          <CreateHotSheetDialog
+            key={editingHotSheetId}
+            open={editDialogOpen}
+            onOpenChange={(open) => {
+              setEditDialogOpen(open);
+              if (!open) {
+                setEditingHotSheetId(null);
+                setEditingSheetOwnerUserId(null);
+              }
+            }}
+            userId={editingSheetOwnerUserId}
+            hotSheetId={editingHotSheetId}
+            editMode
+            onSuccess={handleBuyerEditSuccess}
+          />
+        )}
         <Dialog
           open={Boolean(deleteBuyerSheetId)}
           onOpenChange={(open) => {
