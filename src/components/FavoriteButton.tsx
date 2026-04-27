@@ -22,6 +22,10 @@ interface FavoriteButtonProps {
     default?: string;
     saved?: string;
   };
+  /** When incremented (e.g. after bulk add), re-check favorite status for this listing. */
+  rerunCheckKey?: number;
+  /** Override tooltip text (e.g. buyer map search). */
+  tooltip?: { notSaved?: string; saved?: string };
 }
 
 const FavoriteButton = ({
@@ -31,6 +35,8 @@ const FavoriteButton = ({
   className = "",
   photoIcon = false,
   labels,
+  rerunCheckKey = 0,
+  tooltip: tooltipOver,
 }: FavoriteButtonProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,7 +60,7 @@ const FavoriteButton = ({
     };
 
     checkFavoriteStatus();
-  }, [listingId]);
+  }, [listingId, rerunCheckKey]);
 
   const handleToggleFavorite = async () => {
     if (!userId) {
@@ -110,7 +116,9 @@ const FavoriteButton = ({
     return isFavorite ? labels?.saved || "Saved" : labels?.default || "Save";
   };
 
-  const favoriteTooltipText = isFavorite ? "Added to favorites" : "Add to favorites";
+  const favoriteTooltipText = isFavorite
+    ? (tooltipOver?.saved ?? "Added to favorites")
+    : (tooltipOver?.notSaved ?? "Add to favorites");
 
   if (photoIcon && size === "icon") {
     // Plain <button> only — shadcn Button applies [&_svg]:size-4. Listing-photo overlay: premium pill control.
