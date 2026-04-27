@@ -676,14 +676,28 @@ const PropertyDetail = () => {
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
           <button
             onClick={() => {
-              const fromPage = (location.state as any)?.from;
-              if (fromPage) navigate(fromPage);
-              else navigate(-1);
+              const fromPage = (location.state as { from?: string } | null)?.from;
+              if (fromPage === "/client/favorites") {
+                navigate("/client/favorites");
+                return;
+              }
+              if (fromPage === "/client/search") {
+                navigate("/client/search");
+                return;
+              }
+              navigate("/client/dashboard");
             }}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            className="text-sm text-gray-600 hover:text-black flex items-center gap-2 transition-colors"
             aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
+            <span>
+              {(location.state as { from?: string } | null)?.from === "/client/favorites"
+                ? "Back to Favorites"
+                : (location.state as { from?: string } | null)?.from === "/client/search"
+                  ? "Back to Results"
+                  : "Back to Dashboard"}
+            </span>
           </button>
         </div>
 
