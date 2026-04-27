@@ -1386,26 +1386,27 @@ export default function BuyerMapSearch() {
                         <ListingImage photos={listing.photos} alt={listing.address} />
                         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white/55 via-white/15 to-transparent pointer-events-none" />
                         <div
-                          className="absolute top-2 left-2 z-20 pointer-events-auto"
+                          className="absolute top-3 left-3 z-20 h-8 w-8 flex items-center justify-center pointer-events-auto"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <input
                             type="checkbox"
                             checked={isKept}
                             onChange={() => toggleSessionKeep(listing.id)}
-                            className="h-5 w-5"
+                            className="h-5 w-5 rounded-sm border border-gray-300 bg-white accent-[#0E56F5] shadow-sm"
                             title="Keep in this search"
                             aria-label={isKept ? "Remove from this session" : "Keep in this search"}
                           />
                         </div>
                         <div
-                          className="absolute top-2 right-2 z-20 max-w-[calc(100%-6.5rem)] flex min-h-0 items-center justify-end"
+                          className="absolute top-3 right-3 z-20 h-8 w-8 flex items-center justify-center pointer-events-auto"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <FavoriteButton
                             listingId={listing.id}
                             size="icon"
                             photoIcon
+                            className="!h-6 !w-6 [&_svg]:h-6 [&_svg]:w-6"
                             rerunCheckKey={favoritesSyncKey}
                             tooltip={{
                               notSaved: "Adds this listing to your favorites",
