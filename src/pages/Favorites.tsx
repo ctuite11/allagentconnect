@@ -656,7 +656,7 @@ const Favorites = ({
       <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
         {buyerStickyHeader}
         <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
-          <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,39%)_minmax(0,61%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+          <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
             <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full">
               <div className="h-full flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
@@ -703,7 +703,7 @@ const Favorites = ({
           </main>
         ) : (
           <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-            <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,39%)_minmax(0,61%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+            <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
               <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
                 {!shouldUseLiveMap ? (
                   <div className="h-full flex items-center justify-center px-8 bg-gradient-to-b from-zinc-50 to-white">
@@ -743,13 +743,13 @@ const Favorites = ({
               </section>
 
               <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
-                <div className="shrink-0 border-b border-zinc-200/60 bg-white px-4 py-2.5">
+                <div className="shrink-0 border-b border-zinc-200/60 bg-white px-6 py-2.5">
                   <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">
                     Results: {displayListingRecords.length.toLocaleString()}
                   </p>
                 </div>
 
-                <div className="p-4 min-h-0 flex-1 lg:overflow-y-auto">
+                <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
                   {displayFavorites.length > 0 && (
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">

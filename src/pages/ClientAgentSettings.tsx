@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, Mail, Phone, UserX } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
@@ -233,8 +232,6 @@ const ClientAgentSettings = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };
