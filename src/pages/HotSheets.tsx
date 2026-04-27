@@ -381,24 +381,37 @@ const HotSheets = ({
 
   const handleDeleteBuyerHotSheet = async () => {
     if (!deleteBuyerSheetId || deleteBuyerSheetLoading) return;
+    const id = deleteBuyerSheetId;
     setDeleteBuyerSheetLoading(true);
 
-    const { error } = await supabase
-      .from("hot_sheets")
-      .delete()
-      .eq("id", deleteBuyerSheetId);
+    console.log("Deleting hot sheet:", id);
 
-    if (error) {
-      setDeleteBuyerSheetLoading(false);
+    const { error: clientsError } = await supabase
+      .from("hot_sheet_clients")
+      .delete()
+      .eq("hot_sheet_id", id);
+
+    if (clientsError) {
+      console.error("Delete hot_sheet_clients failed:", clientsError);
       toast.error("Unable to delete this Hot Sheet");
+      setDeleteBuyerSheetLoading(false);
+      return;
+    }
+
+    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
+
+    if (sheetError) {
+      console.error("Delete hot_sheets failed:", sheetError);
+      toast.error("Unable to delete this Hot Sheet");
+      setDeleteBuyerSheetLoading(false);
       return;
     }
 
     toast.success("Hot Sheet deleted");
-    setBuyerHotSheets((prev) => prev.filter((sheet) => sheet.id !== deleteBuyerSheetId));
+    setBuyerHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
     setBuyerTokenByHotSheetId((prev) => {
       const next = { ...prev };
-      delete next[deleteBuyerSheetId];
+      delete next[id];
       return next;
     });
     setDeleteBuyerSheetLoading(false);
@@ -498,15 +511,15 @@ const HotSheets = ({
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuContent align="end" className="min-w-[10rem] p-1">
                               <DropdownMenuItem
                                 onClick={(event) => {
                                   event.stopPropagation();
                                   setDeleteBuyerSheetId(sheet.id);
                                 }}
-                                className="cursor-pointer text-red-600 focus:text-red-600"
+                                className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 focus:bg-gray-50 focus:text-red-600 data-[highlighted]:bg-gray-50 data-[highlighted]:text-red-600"
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
+                                <Trash2 className="h-4 w-4 shrink-0 text-red-600" />
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -836,16 +849,32 @@ const HotSheets = ({
   };
 
   const handleDeleteHotSheet = async (hotSheetId: string) => {
+    if (!user?.id) return;
     if (!confirm("Are you sure you want to delete this hot sheet?")) return;
-    try {
-      const { error } = await supabase.from("hot_sheets").delete().eq("id", hotSheetId);
-      if (error) throw error;
-      toast.success("Hot sheet deleted");
-      fetchData(user.id);
-    } catch (error) {
-      console.error("Error deleting hot sheet:", error);
+
+    console.log("Deleting hot sheet:", hotSheetId);
+
+    const { error: clientsError } = await supabase
+      .from("hot_sheet_clients")
+      .delete()
+      .eq("hot_sheet_id", hotSheetId);
+
+    if (clientsError) {
+      console.error("Delete hot_sheet_clients failed:", clientsError);
       toast.error("Failed to delete hot sheet");
+      return;
     }
+
+    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", hotSheetId);
+
+    if (sheetError) {
+      console.error("Delete hot_sheets failed:", sheetError);
+      toast.error("Failed to delete hot sheet");
+      return;
+    }
+
+    toast.success("Hot sheet deleted");
+    await fetchData(user.id);
   };
 
   if (loading) {
