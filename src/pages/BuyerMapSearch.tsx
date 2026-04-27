@@ -128,6 +128,8 @@ export default function BuyerMapSearch() {
   const [shareSubject, setShareSubject] = useState("Share selected listings");
   const [shareMessage, setShareMessage] = useState("");
   const [shareSending, setShareSending] = useState(false);
+  /** Bumps so FavoriteButton re-fetches after bulk add to favorites. */
+  const [favoritesSyncKey, setFavoritesSyncKey] = useState(0);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [mapsKeyAvailable, setMapsKeyAvailable] = useState(true);
   const isLocalDevHost = useMemo(() => {
@@ -258,6 +260,50 @@ export default function BuyerMapSearch() {
     setShareMessage("Here are some listings I wanted to share:");
     setShareModalOpen(true);
   }, [selectedVisibleListings]);
+
+  const addSelectedListingsToFavorites = useCallback(async () => {
+    const selectedIds = displayListings.filter((l) => sessionKeptIds.has(l.id)).map((l) => l.id);
+    if (selectedIds.length === 0) return;
+
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
+    if (!user) {
+      if (isDcmlsHost()) {
+        const from = window.location.pathname + window.location.search;
+        window.location.href = `/consumer/auth?mode=signup&from=${encodeURIComponent(from)}`;
+      } else {
+        toast.error("Please sign in to save favorites");
+      }
+      return;
+    }
+
+    const { data: existing } = await supabase
+      .from("favorites")
+      .select("listing_id")
+      .eq("user_id", user.id)
+      .in("listing_id", selectedIds);
+
+    const existingSet = new Set((existing || []).map((r) => r.listing_id));
+    const toInsert = selectedIds.filter((id) => !existingSet.has(id));
+
+    if (toInsert.length === 0) {
+      toast.info("All selected listings are already in your favorites");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("favorites")
+      .insert(toInsert.map((listing_id) => ({ user_id: user.id, listing_id })));
+
+    if (error) {
+      console.error(error);
+      toast.error("Failed to add favorites");
+      return;
+    }
+
+    toast.success("Selected listings added to favorites");
+    setFavoritesSyncKey((k) => k + 1);
+  }, [displayListings, sessionKeptIds]);
 
   const handleSendShareEmail = useCallback(() => {
     const run = async () => {
@@ -1268,6 +1314,17 @@ export default function BuyerMapSearch() {
                         Show all
                       </Button>
                     )}
+                    {!visibleSelectionState.noneVisible && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 rounded-md px-2.5 text-xs"
+                        onClick={addSelectedListingsToFavorites}
+                      >
+                        Add selected to favorites
+                      </Button>
+                    )}
                   </div>
                   <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
                     <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
@@ -1349,6 +1406,11 @@ export default function BuyerMapSearch() {
                             listingId={listing.id}
                             size="icon"
                             photoIcon
+                            rerunCheckKey={favoritesSyncKey}
+                            tooltip={{
+                              notSaved: "Adds this listing to your favorites",
+                              saved: "Added to your favorites",
+                            }}
                           />
                         </div>
                       </div>
