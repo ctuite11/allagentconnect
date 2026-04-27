@@ -4009,6 +4009,10 @@ export type Database = {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: boolean
       }
+      can_authenticated_user_delete_hot_sheet: {
+        Args: { p_hot_sheet_id: string }
+        Returns: boolean
+      }
       check_client_has_other_agent: {
         Args: { p_client_email: string }
         Returns: boolean

@@ -108,7 +108,7 @@ function toPropertyMapListings(
     return records.map((rec) => {
     const priceNum =
       typeof rec.price === "number" && Number.isFinite(rec.price) ? rec.price : Number(rec.price);
-    const ex = rec as Record<string, unknown>;
+    const ex = rec as unknown as Record<string, unknown>;
     const lat = parseOptionalCoord(rec.latitude) ?? parseOptionalCoord(ex.lat);
     const lng = parseOptionalCoord(rec.longitude) ?? parseOptionalCoord(ex.lng);
     return {
@@ -324,11 +324,11 @@ const Favorites = ({
 
   const displayListingRecords: ListingRecord[] = useMemo(() => {
     return displayFavorites
-      .map((fav) => {
+      .map((fav): ListingRecord | null => {
         const l = normalizeEmbeddedListing(fav);
         if (!l) return null;
         const fallback = l.agent_id ? officeByAgentId.get(l.agent_id) ?? null : null;
-        const raw = l as Record<string, unknown>;
+        const raw = l as unknown as Record<string, unknown>;
         return {
           id: l.id,
           agent_id: l.agent_id,
@@ -342,7 +342,7 @@ const Favorites = ({
           square_feet: l.square_feet,
           latitude: (l.latitude ?? raw.lat) as ListingRecord["latitude"],
           longitude: (l.longitude ?? raw.lng) as ListingRecord["longitude"],
-          photos: l.photos,
+          photos: Array.isArray(l.photos) ? l.photos.filter((photo): photo is string => typeof photo === "string") : null,
           property_type: l.property_type,
           list_office: fallback,
         };
