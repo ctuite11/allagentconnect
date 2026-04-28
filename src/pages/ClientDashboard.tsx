@@ -32,6 +32,7 @@ import {
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { humanizeSnakeCase } from "@/lib/format";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -103,20 +104,45 @@ function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | u
   return parts.join(" • ") || "Custom search criteria";
 }
 
-/** Compact collage strip used on dashboard hot sheet previews (no extra listing fetches). */
-function HotSheetPreviewCollage() {
+/** Compact collage strip for dashboard hot sheet previews. */
+function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
+  if (!photoUrls.length) {
+    return (
+      <div className="relative h-[3.75rem] w-full overflow-hidden rounded-t-xl bg-zinc-100">
+        <div className="absolute inset-0 grid grid-cols-2 gap-px bg-white">
+          <div className="bg-gradient-to-br from-zinc-200/90 to-zinc-100/80" />
+          <div className="bg-gradient-to-bl from-[#0E56F5]/18 to-[#0E56F5]/8" />
+          <div className="bg-gradient-to-tr from-[#0E56F5]/12 to-white" />
+          <div className="bg-gradient-to-tl from-zinc-200/70 to-white" />
+        </div>
+        <div className="relative flex h-full items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
+            <AACMonogram className="h-[18px] w-[18px] text-[#0E56F5]" size={18} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (photoUrls.length === 1) {
+    return (
+      <div className="relative h-[3.75rem] w-full overflow-hidden rounded-t-xl bg-zinc-100">
+        <img src={photoUrls[0]} alt="" className="h-full w-full object-cover" />
+      </div>
+    );
+  }
+
+  const collagePhotos = photoUrls.slice(0, 4);
   return (
     <div className="relative h-[3.75rem] w-full overflow-hidden rounded-t-xl bg-zinc-100">
-      <div className="absolute inset-0 grid grid-cols-2 gap-px bg-white">
-        <div className="bg-gradient-to-br from-zinc-200/90 to-zinc-100/80" />
-        <div className="bg-gradient-to-bl from-[#0E56F5]/18 to-[#0E56F5]/8" />
-        <div className="bg-gradient-to-tr from-[#0E56F5]/12 to-white" />
-        <div className="bg-gradient-to-tl from-zinc-200/70 to-white" />
-      </div>
-      <div className="relative flex h-full items-center justify-center">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
-          <AACMonogram className="h-[18px] w-[18px] text-[#0E56F5]" size={18} />
-        </div>
+      <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-white">
+        {collagePhotos.map((photoUrl, idx) => (
+          <img key={`${photoUrl}-${idx}`} src={photoUrl} alt="" className="h-full w-full object-cover" />
+        ))}
+        {collagePhotos.length < 4 &&
+          Array.from({ length: 4 - collagePhotos.length }).map((_, idx) => (
+            <div key={`empty-${idx}`} className="bg-zinc-100" />
+          ))}
       </div>
     </div>
   );
@@ -227,6 +253,7 @@ export default function ClientDashboard() {
   const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
   const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
   const [hotSheetDeleteLoading, setHotSheetDeleteLoading] = useState(false);
+  const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     checkAuth();
@@ -422,6 +449,7 @@ export default function ClientDashboard() {
 
       if (!allHotSheetIds.size) {
         setHotSheets([]);
+        setHotSheetPreviewPhotosById({});
         return;
       }
 
@@ -434,14 +462,49 @@ export default function ClientDashboard() {
       if (sheetErr) {
         console.error("Failed to load hot sheets on dashboard", sheetErr);
         setHotSheets([]);
+        setHotSheetPreviewPhotosById({});
         return;
       }
 
-      setHotSheets((hotSheetRows || []) as HotSheet[]);
+      const loadedSheets = (hotSheetRows || []) as HotSheet[];
+      setHotSheets(loadedSheets);
+      await loadHotSheetPreviewPhotos(loadedSheets.slice(0, 3));
     } catch (e) {
       console.error("loadBuyerHotSheetsForDashboard", e);
       setHotSheets([]);
+      setHotSheetPreviewPhotosById({});
     }
+  };
+
+  const loadHotSheetPreviewPhotos = async (sheets: HotSheet[]) => {
+    if (!sheets.length) {
+      setHotSheetPreviewPhotosById({});
+      return;
+    }
+
+    const photoEntries = await Promise.all(
+      sheets.map(async (sheet) => {
+        try {
+          const { data: listings, error } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(4);
+          if (error) {
+            console.error("Failed to load preview listings for hot sheet", sheet.id, error);
+            return [sheet.id, []] as const;
+          }
+
+          const photoUrls = (listings || [])
+            .map((listing: any) => getPrimaryPhotoUrl(listing?.photos))
+            .filter((url): url is string => Boolean(url && url !== "/placeholder.svg"))
+            .slice(0, 4);
+
+          return [sheet.id, photoUrls] as const;
+        } catch (err) {
+          console.error("Unexpected preview listing load error", sheet.id, err);
+          return [sheet.id, []] as const;
+        }
+      })
+    );
+
+    setHotSheetPreviewPhotosById(Object.fromEntries(photoEntries));
   };
 
   const handleDashboardHotSheetEditSuccess = () => {
@@ -476,6 +539,11 @@ export default function ClientDashboard() {
 
     toast.success("Hot sheet deleted");
     setHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
+    setHotSheetPreviewPhotosById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     setHotSheetDeleteLoading(false);
     setHotSheetDeleteId(null);
   };
@@ -823,7 +891,7 @@ export default function ClientDashboard() {
                                 }}
                                 className="block w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2 rounded-t-xl"
                               >
-                                <HotSheetPreviewCollage />
+                                <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
                                 <div className="space-y-0.5 p-2.5">
                                   <p className="line-clamp-2 min-h-[2.25rem] text-[11px] font-semibold leading-snug tracking-tight text-gray-900">
                                     {sheet.name}
