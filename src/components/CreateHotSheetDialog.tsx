@@ -14,7 +14,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, Check, Loader2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -653,11 +652,12 @@ export function CreateHotSheetDialog({
       return;
     }
 
-    if (selectedClients.length === 0) {
-      toast.message("Add friends or family to receive matches");
+    if (editMode) {
+      await handleCreate();
+      return;
     }
 
-    // Show confirmation dialog
+    // Show confirmation dialog for new hot sheets only
     setShowConfirmDialog(true);
   };
 
@@ -853,7 +853,7 @@ export function CreateHotSheetDialog({
           notification_schedule: notificationSchedule,
         };
 
-        // Update existing hot sheet
+        // Update existing hot sheet directly. Edit saves should not send/share or call Edge Functions.
         const { data: updatedHotSheet, error } = await supabase
           .from("hot_sheets")
           .update(updatePayload)
@@ -861,13 +861,14 @@ export function CreateHotSheetDialog({
           .select("id, name")
           .maybeSingle();
 
-        if (error || !updatedHotSheet) {
-          if (error) console.error("Hot sheet update error", { hotSheetId, submittedName, error });
+        if (error) {
+          console.error("Hot sheet update error", { hotSheetId, submittedName, error });
+          throw error;
+        }
 
-          await invokeEdgeFunction("update-hot-sheet", {
-            hotSheetId,
-            ...updatePayload,
-          });
+        if (!updatedHotSheet) {
+          console.error("Hot sheet update returned no row", { hotSheetId, submittedName });
+          throw new Error("Hot sheet was not updated");
         }
 
         // Update clients in hot_sheet_clients junction table
