@@ -456,6 +456,7 @@ export default function ClientDashboard() {
             : sheet
         )
       );
+      return;
     }
     if (currentUserId) await loadBuyerHotSheetsForDashboard(currentUserId);
   };
