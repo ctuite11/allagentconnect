@@ -837,21 +837,31 @@ export function CreateHotSheetDialog({
       return;
     }
 
+    const trimmedName = hotSheetName.trim();
+    if (!trimmedName) {
+      toast.error("Please enter a hot sheet name");
+      return;
+    }
+
     try {
       setSaving(true);
 
       const updatePayload = {
-        name: hotSheetName.trim(),
+        name: trimmedName,
         criteria: buildCriteriaPayload(),
         notify_client_email: notifyClient,
         notify_agent_email: notifyAgent,
         notification_schedule: notificationSchedule,
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("hot_sheets")
         .update(updatePayload)
-        .eq("id", hotSheetId);
+        .eq("id", hotSheetId)
+        .select("id, name, criteria")
+        .single();
+
+      console.log("UPDATE RESULT:", data);
 
       if (error) {
         console.error("Failed to update hot sheet", { hotSheetId, updatePayload, error });
@@ -859,20 +869,10 @@ export function CreateHotSheetDialog({
         return;
       }
 
-      const { data: updatedHotSheet, error: updatedFetchError } = await supabase
-        .from("hot_sheets")
-        .select("id, name, criteria")
-        .eq("id", hotSheetId)
-        .single();
-
-      if (updatedFetchError || !updatedHotSheet) {
-        throw updatedFetchError || new Error("Failed to load updated hot sheet");
-      }
-
-      await onSuccess(hotSheetId, {
-        id: updatedHotSheet.id,
-        name: updatedHotSheet.name,
-        criteria: (updatedHotSheet.criteria as Record<string, unknown> | null) ?? null,
+      await onSuccess?.(hotSheetId, {
+        id: data.id,
+        name: data.name,
+        criteria: (data.criteria as Record<string, unknown> | null) ?? null,
       });
 
       toast.success("Hot sheet updated");
@@ -1071,6 +1071,18 @@ export function CreateHotSheetDialog({
         <div className="space-y-6">
           {/* Hot Sheet Name */}
           <div className="space-y-2">
+            {editMode && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleUpdateHotSheet}
+                  disabled={saving}
+                  className="text-xs font-medium text-[#0E56F5] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Save
+                </button>
+              </div>
+            )}
             <Label htmlFor="name">Hot Sheet Name <span className="text-[#0E56F5]">*</span></Label>
             <Input
               id="name"
