@@ -70,25 +70,25 @@ export const HotSheetCard = ({
   return (
     <div
       onClick={handleCardClick}
-      className="cursor-pointer rounded-[22px] border border-zinc-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.045)] transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+      className="cursor-pointer rounded-[22px] border border-aac-card-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-aac-card-borderHover hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-zinc-950">{name}</h3>
-          <p className="mt-1 truncate text-sm text-zinc-500">{location}</p>
+          <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{name}</h3>
+          <p className="mt-1 truncate text-sm text-muted-foreground">{location}</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 rounded-full text-zinc-500 hover:bg-zinc-100" onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:bg-muted" onClick={(e) => e.stopPropagation()}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[10rem] p-1">
             <DropdownMenuItem
               onClick={(e) => { e.stopPropagation(); onDelete(id); }}
-              className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 focus:bg-gray-50 focus:text-red-600 data-[highlighted]:bg-gray-50 data-[highlighted]:text-red-600"
+              className="flex cursor-pointer items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-destructive hover:bg-muted focus:bg-muted focus:text-destructive data-[highlighted]:bg-muted data-[highlighted]:text-destructive"
             >
-              <Trash2 className="h-4 w-4 shrink-0 text-red-600" />
+              <Trash2 className="h-4 w-4 shrink-0 text-destructive" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -98,15 +98,15 @@ export const HotSheetCard = ({
       {chips.length > 0 && (
         <div className="mt-5 flex flex-wrap gap-2">
           {chips.map((chip) => (
-            <span key={chip} className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+            <span key={chip} className="inline-flex items-center rounded-full border border-aac-card-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm">
               {chip}
             </span>
           ))}
         </div>
       )}
 
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-zinc-100 pt-4">
-        <p className="min-w-0 truncate text-xs text-zinc-500">
+      <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
+        <p className="min-w-0 truncate text-xs text-muted-foreground">
           {lastSentAt ? `Last updated ${formatDistanceToNow(new Date(lastSentAt), { addSuffix: true })}` : "Last updated just now"}
         </p>
         <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -114,7 +114,7 @@ export const HotSheetCard = ({
             <Eye className="mr-2 h-4 w-4" />
             View
           </Button>
-          <Button variant="outline" size="sm" className="h-9 rounded-full border-zinc-200 px-4 text-sm font-semibold text-zinc-800 hover:bg-zinc-50" onClick={() => onEdit(id)}>
+          <Button variant="outline" size="sm" className="h-9 rounded-full border-aac-card-border px-4 text-sm font-semibold text-foreground hover:bg-muted" onClick={() => onEdit(id)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit
           </Button>
