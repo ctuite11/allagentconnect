@@ -53,6 +53,7 @@ interface BuyerHotSheetItem {
   user_id: string | null;
   criteria: Record<string, unknown> | null;
   created_at: string;
+  updated_at?: string | null;
   last_sent_at: string | null;
   is_active: boolean;
 }
@@ -315,7 +316,7 @@ const HotSheets = ({
 
       const { data: hotSheetRows, error: sheetErr } = await supabase
         .from("hot_sheets")
-        .select("id, name, user_id, criteria, created_at, is_active, last_sent_at")
+        .select("id, name, user_id, criteria, created_at, updated_at, is_active, last_sent_at")
         .in("id", [...allHotSheetIds])
         .order("created_at", { ascending: false });
 
