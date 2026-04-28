@@ -817,7 +817,7 @@ export default function ClientDashboard() {
                                 />
                               </div>
                               <div className={`${unifiedHotFavBody} flex-1`}>
-                                <p className="line-clamp-1 text-[16px] font-semibold leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
+                                <p className="line-clamp-1 text-[16px] font-medium leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
                                 <p className="text-[12px] font-normal leading-tight text-gray-500">
                                   {hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches
                                 </p>
