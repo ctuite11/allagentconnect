@@ -592,7 +592,12 @@ export default function ClientDashboard() {
   const listingPreviewBody = "flex flex-col gap-2 p-4 text-left";
   const compactPreviewMediaWrap =
     "relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-neutral-50";
-  const compactPreviewBody = "flex h-16 min-h-0 flex-col justify-center gap-0.5 p-3 text-left";
+  const compactPreviewBody = "flex h-20 min-h-0 flex-col justify-center gap-1 p-3 text-left";
+  const previewSectionHeaderClass = "p-5 pb-3";
+  const previewSectionContentClass = "p-5 pt-3";
+  const previewSectionHeaderRowClass = "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between";
+  const previewSectionTitleWrapClass = "min-w-0 space-y-1";
+  const previewGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-3";
   const outlineSecondaryClass =
     "border border-neutral-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-neutral-50 hover:shadow-sm";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
