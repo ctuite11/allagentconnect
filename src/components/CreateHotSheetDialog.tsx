@@ -849,6 +849,19 @@ export function CreateHotSheetDialog({
       const criteria = buildCriteriaPayload();
 
       console.log("Updating hot sheet:", hotSheetId);
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("Current user id:", user?.id);
+
+      const { data: existingHotSheet, error: existingHotSheetError } = await supabase
+        .from("hot_sheets")
+        .select("id, user_id")
+        .eq("id", hotSheetId)
+        .maybeSingle();
+
+      if (existingHotSheetError) {
+        console.error("Error fetching hot sheet owner:", existingHotSheetError);
+      }
+      console.log("Hot sheet owner:", existingHotSheet?.user_id);
 
       const { data, error } = await supabase
         .from("hot_sheets")
