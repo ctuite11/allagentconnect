@@ -421,8 +421,24 @@ const HotSheets = ({
     setDeleteBuyerSheetId(null);
   };
 
-  const handleBuyerEditSuccess = () => {
-    void loadBuyerHotSheets();
+  const handleBuyerEditSuccess = async (
+    hotSheetId: string,
+    updatedHotSheet?: { id: string; name: string; criteria: Record<string, unknown> | null }
+  ) => {
+    if (updatedHotSheet) {
+      setBuyerHotSheets((prev) =>
+        prev.map((sheet) =>
+          sheet.id === hotSheetId
+            ? {
+                ...sheet,
+                name: updatedHotSheet.name,
+                criteria: updatedHotSheet.criteria,
+              }
+            : sheet
+        )
+      );
+    }
+    await loadBuyerHotSheets();
   };
 
   if (buyerMode) {
@@ -813,9 +829,29 @@ const HotSheets = ({
     }
   };
 
-  const handleHotSheetSuccess = (hotSheetId: string) => {
+  const handleHotSheetSuccess = async (
+    hotSheetId: string,
+    updatedHotSheet?: { id: string; name: string; criteria: Record<string, unknown> | null }
+  ) => {
     if (editingHotSheetId && user) {
-      fetchData(user.id);
+      if (updatedHotSheet) {
+        setRawHotSheets((prev) =>
+          prev.map((sheet) =>
+            sheet.id === hotSheetId
+              ? { ...sheet, name: updatedHotSheet.name, criteria: updatedHotSheet.criteria }
+              : sheet
+          )
+        );
+        setCollections((prev) =>
+          prev.map((collection) => ({
+            ...collection,
+            hotSheets: collection.hotSheets.map((sheet) =>
+              sheet.id === hotSheetId ? { ...sheet, name: updatedHotSheet.name } : sheet
+            ),
+          }))
+        );
+      }
+      await fetchData(user.id);
       setEditingHotSheetId(null);
     } else {
       navigate(`/hot-sheets/${hotSheetId}/review`);

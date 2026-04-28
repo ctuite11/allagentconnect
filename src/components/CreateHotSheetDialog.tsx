@@ -36,7 +36,7 @@ interface CreateHotSheetDialogProps {
   clientId?: string;
   clientName?: string;
   userId: string;
-  onSuccess: (hotSheetId: string) => void;
+  onSuccess: (hotSheetId: string, updatedHotSheet?: { id: string; name: string; criteria: Record<string, unknown> | null }) => void | Promise<void>;
   hotSheetId?: string;
   editMode?: boolean;
   preSelectedClients?: Array<{
@@ -859,11 +859,26 @@ export function CreateHotSheetDialog({
         return;
       }
 
+      const { data: updatedHotSheet, error: updatedFetchError } = await supabase
+        .from("hot_sheets")
+        .select("id, name, criteria")
+        .eq("id", hotSheetId)
+        .single();
+
+      if (updatedFetchError || !updatedHotSheet) {
+        throw updatedFetchError || new Error("Failed to load updated hot sheet");
+      }
+
+      await onSuccess(hotSheetId, {
+        id: updatedHotSheet.id,
+        name: updatedHotSheet.name,
+        criteria: (updatedHotSheet.criteria as Record<string, unknown> | null) ?? null,
+      });
+
       toast.success("Hot sheet updated");
       setShowSuccess(false);
       resetDialogState();
       onOpenChange(false);
-      onSuccess(hotSheetId);
       resetForm();
     } catch (error) {
       console.error("Failed to update hot sheet", { hotSheetId, error });

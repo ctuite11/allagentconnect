@@ -434,6 +434,68 @@ export default function ClientDashboard() {
     setHotSheetPreviewMatchCountsById(Object.fromEntries(previewEntries.map(([id, , count]) => [id, count])));
   };
 
+  const handleDashboardHotSheetEditSuccess = async (
+    hotSheetId: string,
+    updatedHotSheet?: { id: string; name: string; criteria: Record<string, unknown> | null }
+  ) => {
+    if (updatedHotSheet) {
+      setHotSheets((prev) =>
+        prev.map((sheet) =>
+          sheet.id === hotSheetId
+            ? {
+                ...sheet,
+                name: updatedHotSheet.name,
+                criteria: updatedHotSheet.criteria,
+              }
+            : sheet
+        )
+      );
+    }
+    if (currentUserId) await loadBuyerHotSheetsForDashboard(currentUserId);
+  };
+
+  const handleConfirmDeleteDashboardHotSheet = async () => {
+    if (!hotSheetDeleteId || hotSheetDeleteLoading) return;
+    const id = hotSheetDeleteId;
+    setHotSheetDeleteLoading(true);
+
+    const { error: clientsError } = await supabase
+      .from("hot_sheet_clients")
+      .delete()
+      .eq("hot_sheet_id", id);
+
+    if (clientsError) {
+      console.error("Delete hot_sheet_clients failed:", clientsError);
+      toast.error("Unable to delete this hot sheet.");
+      setHotSheetDeleteLoading(false);
+      return;
+    }
+
+    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
+
+    if (sheetError) {
+      console.error("Delete hot_sheets failed:", sheetError);
+      toast.error("Unable to delete this hot sheet.");
+      setHotSheetDeleteLoading(false);
+      return;
+    }
+
+    toast.success("Hot sheet deleted");
+    setHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
+    setHotSheetPreviewPhotosById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setHotSheetPreviewMatchCountsById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setHotSheetDeleteLoading(false);
+    setHotSheetDeleteId(null);
+  };
+
   const loadFavorites = async (userId: string) => {
     const { data } = await supabase
       .from("favorites")
@@ -1009,6 +1071,48 @@ export default function ClientDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog
+        open={Boolean(hotSheetDeleteId)}
+        onOpenChange={(open) => {
+          if (!open && !hotSheetDeleteLoading) setHotSheetDeleteId(null);
+        }}
+      >
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
+            <AlertDialogDescription>This will remove this hot sheet and its alerts.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={hotSheetDeleteLoading}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={hotSheetDeleteLoading}
+              onClick={() => void handleConfirmDeleteDashboardHotSheet()}
+            >
+              {hotSheetDeleteLoading ? "Deleting…" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {editingHotSheetId && editingHotSheetOwnerUserId ? (
+        <CreateHotSheetDialog
+          key={editingHotSheetId}
+          open={editHotSheetDialogOpen}
+          onOpenChange={(open) => {
+            setEditHotSheetDialogOpen(open);
+            if (!open) {
+              setEditingHotSheetId(null);
+              setEditingHotSheetOwnerUserId(null);
+            }
+          }}
+          userId={editingHotSheetOwnerUserId}
+          hotSheetId={editingHotSheetId}
+          editMode
+          onSuccess={handleDashboardHotSheetEditSuccess}
+        />
+      ) : null}
       <AddFriendDialog open={addFriendOpen} onOpenChange={setAddFriendOpen} />
     </div>
   );

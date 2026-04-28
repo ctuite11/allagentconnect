@@ -415,11 +415,26 @@ const ClientHotsheetPage = () => {
     }
   };
 
-  const handleUpdateCriteria = () => {
+  const handleUpdateCriteria = async (
+    _hotSheetId?: string,
+    updatedHotSheet?: { id: string; name: string; criteria: Record<string, unknown> | null }
+  ) => {
+    if (updatedHotSheet) {
+      setHotSheet((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              name: updatedHotSheet.name,
+              criteria: updatedHotSheet.criteria,
+            }
+          : prev
+      );
+    }
+
     if (hotSheetIdParam) {
-      void loadBuyerHotSheetById(hotSheetIdParam);
+      await loadBuyerHotSheetById(hotSheetIdParam);
     } else {
-      validateAndLoadHotsheet();
+      await validateAndLoadHotsheet();
     }
   };
 
@@ -715,9 +730,7 @@ const ClientHotsheetPage = () => {
               userId={hotSheet.user_id}
               hotSheetId={hotSheet.id}
               editMode
-              onSuccess={() => {
-                handleUpdateCriteria();
-              }}
+              onSuccess={handleUpdateCriteria}
             />
           )}
 
