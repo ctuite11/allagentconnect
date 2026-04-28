@@ -32,7 +32,6 @@ import {
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 // HotSheetSubscribersSection removed — sharing belongs in create/edit flow
-import { useListingInterestSignals } from "@/hooks/useListingInterestSignals";
 // ─── Pending Invites section ────────────────────────────────────────────────
 
 interface PendingInvite {
@@ -274,13 +273,6 @@ const HotSheetReview = () => {
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
-  const [favoritedListingIds, setFavoritedListingIds] = useState<Set<string>>(new Set());
-
-  // Buyer interest signals for listing cards
-  const { signals: interestSignals } = useListingInterestSignals(
-    agentUserId,
-    listings.map((l) => l.id),
-  );
 
   useEffect(() => {
     if (id) {
@@ -501,14 +493,6 @@ const HotSheetReview = () => {
       if (listingsError) throw listingsError;
       setListings(listingsData || []);
       setAllListings(listingsData || []);
-
-      const { data: favRows } = await supabase
-        .from("hot_sheet_favorites")
-        .select("listing_id")
-        .eq("hot_sheet_id", id as string);
-      setFavoritedListingIds(
-        new Set((favRows ?? []).map((r: { listing_id: string }) => r.listing_id).filter(Boolean)),
-      );
 
 // Load listing agents for display
 const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
@@ -938,7 +922,7 @@ if (comments && comments.length > 0) {
 
   return (
       <div className="pt-6 px-6 pb-6">
-        <div className="mx-auto w-full max-w-7xl min-w-0">
+        <div className="mx-auto w-full max-w-[88rem] min-w-0">
             {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
@@ -1114,7 +1098,7 @@ if (comments && comments.length > 0) {
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
               {sortedListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
@@ -1123,23 +1107,6 @@ if (comments && comments.length > 0) {
                   showActions={false}
                   onSelect={toggleListing}
                   isSelected={selectedListings.has(listing.id)}
-                  agentInfo={
-                    agentMap[listing.agent_id]
-                      ? {
-                          name: agentMap[listing.agent_id].fullName,
-                          company: agentMap[listing.agent_id].company
-                        }
-                      : null
-                  }
-                  chatMessages={messagesMap[listing.id]}
-                  hotSheetId={id}
-                  onNewMessage={handleNewMessage}
-                  onOpenChat={() => {
-                    setChatListingId(listing.id);
-                    setChatDrawerOpen(true);
-                  }}
-                  interestSignals={interestSignals[listing.id] || null}
-                  isHotSheetFavorite={favoritedListingIds.has(listing.id)}
                 />
               ))}
             </div>
