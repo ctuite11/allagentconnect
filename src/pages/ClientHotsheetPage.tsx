@@ -429,6 +429,7 @@ const ClientHotsheetPage = () => {
             }
           : prev
       );
+      return;
     }
 
     if (hotSheetIdParam) {

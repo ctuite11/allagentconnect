@@ -19,6 +19,7 @@ import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
@@ -176,6 +177,11 @@ export default function ClientDashboard() {
   const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [hotSheetPreviewMatchCountsById, setHotSheetPreviewMatchCountsById] = useState<Record<string, number>>({});
+  const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
+  const [hotSheetDeleteLoading, setHotSheetDeleteLoading] = useState(false);
+  const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
+  const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
+  const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -450,6 +456,7 @@ export default function ClientDashboard() {
             : sheet
         )
       );
+      return;
     }
     if (currentUserId) await loadBuyerHotSheetsForDashboard(currentUserId);
   };
