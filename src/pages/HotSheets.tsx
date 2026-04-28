@@ -368,6 +368,49 @@ const HotSheets = ({
     return parts.join(" • ") || "Custom search criteria";
   };
 
+  const formatCurrencyShort = (value: unknown) => {
+    const amount = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(amount % 1_000_000 === 0 ? 0 : 1)}M`;
+    return `$${Math.round(amount / 1_000)}k`;
+  };
+
+  const getBuyerLocationSummary = (criteria: Record<string, unknown> | null) => {
+    if (!criteria) return "Saved search area";
+
+    const cities = asStringArray(criteria.cities);
+    const towns = asStringArray(criteria.towns);
+    const counties = asStringArray(criteria.counties);
+    const locationParts = cities.length ? cities : towns.length ? towns : counties;
+
+    if (locationParts.length) {
+      return locationParts.slice(0, 2).join(", ") + (locationParts.length > 2 ? ` +${locationParts.length - 2}` : "");
+    }
+
+    if (typeof criteria.state === "string" && criteria.state) return criteria.state;
+    return "Saved search area";
+  };
+
+  const buildBuyerCriteriaChips = (criteria: Record<string, unknown> | null) => {
+    if (!criteria) return [];
+
+    const chips: string[] = [];
+    const minPrice = formatCurrencyShort(criteria.minPrice);
+    const maxPrice = formatCurrencyShort(criteria.maxPrice);
+    if (minPrice || maxPrice) chips.push(minPrice && maxPrice ? `${minPrice}–${maxPrice}` : minPrice ? `${minPrice}+` : `Under ${maxPrice}`);
+
+    if (criteria.bedrooms) chips.push(`${String(criteria.bedrooms)}+ beds`);
+    if (criteria.bathrooms) chips.push(`${String(criteria.bathrooms)}+ baths`);
+
+    const propertyTypes = asStringArray(criteria.propertyTypes);
+    if (propertyTypes.length) chips.push(propertyTypes.slice(0, 2).map(humanizeSnakeCase).join(", "));
+
+    const statuses = asStringArray(criteria.statuses);
+    if (statuses.length) chips.push(statuses.slice(0, 2).map(humanizeSnakeCase).join(", "));
+
+    return chips;
+  };
+
   const formatRelativeDate = (isoDate: string | null | undefined) => {
     if (!isoDate) return "Not sent yet";
 
