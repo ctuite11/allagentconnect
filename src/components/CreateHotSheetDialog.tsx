@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { z } from "zod";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
@@ -635,75 +634,9 @@ export function CreateHotSheetDialog({
     setCitySearch("");
   }, [state, selectedCountyId]);
 
-  // Validation schema
-  const hotSheetSchema = z.object({
-    hotSheetName: z.string()
-      .trim()
-      .min(1, "Hot sheet name is required")
-      .max(100, "Hot sheet name must be less than 100 characters"),
-    clientFirstName: z.string()
-      .trim()
-      .min(1, "First name is required")
-      .max(100, "First name must be less than 100 characters"),
-    clientLastName: z.string()
-      .trim()
-      .min(1, "Last name is required")
-      .max(100, "Last name must be less than 100 characters"),
-    clientEmail: z.string()
-      .trim()
-      .min(1, "Email is required")
-      .email("Invalid email address")
-      .max(255, "Email must be less than 255 characters"),
-    clientPhone: z.string()
-      .trim()
-      .optional()
-      .refine((val) => {
-        if (!val || val.length === 0) return true;
-        // Remove formatting and check if it's a valid 10-digit US phone
-        const digitsOnly = val.replace(/\D/g, '');
-        return digitsOnly.length === 10 || digitsOnly.length === 11;
-      }, "Invalid phone number (must be 10 digits)")
-  });
-
   const handleValidateAndShowConfirmation = async () => {
     // Clear previous errors
     setErrors({});
-    
-    // Check if at least one client is selected
-    if (selectedClients.length === 0 && !clientFirstName && !clientEmail) {
-      toast.error("Please add friends or family to receive matching listings");
-      return;
-    }
-
-    // If there's client data in the form but not added to list, validate and offer to add
-    if (clientFirstName || clientEmail) {
-      // Validate the pending client
-      const validation = hotSheetSchema.safeParse({
-        hotSheetName,
-        clientFirstName,
-        clientLastName,
-        clientEmail,
-        clientPhone
-      });
-      
-      if (!validation.success) {
-        const fieldErrors: Record<string, string> = {};
-        validation.error.errors.forEach((err) => {
-          if (err.path[0]) {
-            fieldErrors[err.path[0] as string] = err.message;
-          }
-        });
-        setErrors(fieldErrors);
-        toast.error("Please fix the validation errors or clear the contact form");
-        return;
-      }
-
-      // Check if this client exists or needs to be created
-      if (!existingClient && clientFirstName && clientEmail) {
-        setShowCreateClientDialog(true);
-        return;
-      }
-    }
 
     // Validate hot sheet name
     if (!hotSheetName || hotSheetName.trim().length === 0) {
@@ -717,6 +650,10 @@ export function CreateHotSheetDialog({
     if (!criteriaValidation.valid) {
       toast.error(criteriaValidation.message);
       return;
+    }
+
+    if (selectedClients.length === 0) {
+      toast.message("Add friends or family to receive matches");
     }
 
     // Show confirmation dialog
