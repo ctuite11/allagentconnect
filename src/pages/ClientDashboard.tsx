@@ -63,7 +63,7 @@ interface ShareTokenRow {
 function HotSheetPreviewImage({ photoUrls }: { photoUrls: string[] }) {
   const visiblePhotos = photoUrls.filter(Boolean).slice(0, 3);
   const collagePhotos = visiblePhotos.length
-    ? Array.from({ length: Math.min(3, Math.max(visiblePhotos.length, 2)) }, (_, index) => visiblePhotos[index % visiblePhotos.length])
+    ? Array.from({ length: 3 }, (_, index) => visiblePhotos[index % visiblePhotos.length])
     : [];
 
   if (!collagePhotos.length) {
@@ -71,11 +71,11 @@ function HotSheetPreviewImage({ photoUrls }: { photoUrls: string[] }) {
   }
 
   return (
-    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0.5 bg-white [grid-template-rows:repeat(2,minmax(0,1fr))]">
+    <div className="grid h-full w-full grid-cols-[3fr_2fr] grid-rows-2 gap-0.5 bg-white [grid-template-rows:repeat(2,minmax(0,1fr))]">
       {collagePhotos.map((photoUrl, index) => (
         <div
           key={`${photoUrl}-${index}`}
-          className={`${collagePhotos.length === 3 && index === 0 ? "row-span-2" : ""} relative min-h-0 min-w-0 overflow-hidden bg-white`}
+          className={`${index === 0 ? "row-span-2" : ""} relative min-h-0 min-w-0 overflow-hidden bg-white`}
         >
           <DashboardListingImage
             photoUrl={photoUrl}
@@ -570,7 +570,7 @@ export default function ClientDashboard() {
     "rounded-full bg-[#0E56F5] text-white shadow-sm transition-all duration-150 hover:bg-[#0B46CC]";
   /** Section header CTAs (View all, Search homes): premium pill, AAC blue — not outline/ghost. */
   const aacPrimarySectionCta =
-    "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#0E56F5] px-4 text-[13px] font-medium text-white shadow-sm transition-all duration-150 hover:bg-[#0B46CC]";
+    "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-[13px] font-medium shadow-none";
   /** AAC shells (section chrome; no hover motion). */
   const aacCardShell =
     "bg-white rounded-2xl border border-neutral-200 shadow-sm transition-colors duration-150";
@@ -583,9 +583,9 @@ export default function ClientDashboard() {
     "relative h-48 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
   /** Shared dashboard card body rhythm (Hot Sheets + listings). */
   const listingPreviewBody = "flex flex-col gap-1.5 px-4 pb-4 pt-3 text-left";
-  const unifiedHotFavCardClass = `${dashboardPreviewTileInteractive} flex h-[248px] flex-col`;
+  const unifiedHotFavCardClass = `${dashboardPreviewTileInteractive} flex h-60 flex-col`;
   const unifiedHotFavMediaWrap = "relative h-40 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
-  const unifiedHotFavBody = "flex h-[88px] flex-col gap-1 px-3 pb-3 pt-4 text-left";
+  const unifiedHotFavBody = "flex h-20 flex-col gap-0.5 px-3 pb-2 pt-3 text-left";
   const dashSectionTitleClass = "text-[15px] font-semibold text-neutral-900";
   const dashSectionDescClass = "text-[13px] leading-snug text-neutral-500";
   const dashTileTitleClass = "text-[15px] font-semibold leading-snug tracking-tight text-neutral-900";
@@ -817,7 +817,7 @@ export default function ClientDashboard() {
                                 />
                               </div>
                               <div className={`${unifiedHotFavBody} flex-1`}>
-                                <p className="line-clamp-1 text-[16px] font-semibold leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
+                                <p className="line-clamp-1 text-[16px] font-medium leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
                                 <p className="text-[12px] font-normal leading-tight text-gray-500">
                                   {hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches
                                 </p>
