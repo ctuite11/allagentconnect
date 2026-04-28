@@ -798,57 +798,10 @@ export default function ClientDashboard() {
                             >
                               <div className={`${compactPreviewMediaWrap} shrink-0 rounded-t-xl`}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      className={`absolute right-2 top-2 z-10 h-8 w-8 rounded-full border ${outlineSecondaryClass}`}
-                                      aria-label="Hot sheet menu"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent
-                                    align="end"
-                                    className="min-w-[10rem]"
-                                    onCloseAutoFocus={(e) => e.preventDefault()}
-                                  >
-                                    <DropdownMenuItem
-                                      className="cursor-pointer"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!sheet.user_id) {
-                                          toast.error("This hot sheet cannot be edited right now.");
-                                          return;
-                                        }
-                                        setEditingHotSheetId(sheet.id);
-                                        setEditingHotSheetOwnerUserId(sheet.user_id);
-                                        setEditHotSheetDialogOpen(true);
-                                      }}
-                                    >
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setHotSheetDeleteId(sheet.id);
-                                      }}
-                                    >
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
                               </div>
-                               <div className={`${compactPreviewBody} flex-1`}>
+                              <div className={`${compactPreviewBody} flex-1 justify-center`}>
                                 <p className="line-clamp-1 text-sm font-semibold leading-snug tracking-tight text-gray-900">
                                   {sheet.name}
-                                </p>
-                                <p className="line-clamp-2 text-xs font-medium leading-snug text-gray-600">
-                                  {formatBuyerCriteriaSummary(sheet.criteria)}
                                 </p>
                               </div>
                             </article>
