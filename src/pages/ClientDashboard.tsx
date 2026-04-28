@@ -13,20 +13,12 @@ import {
   Search,
   Sparkles,
   Mail,
-  MoreHorizontal,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
-import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
@@ -68,13 +60,38 @@ interface ShareTokenRow {
   accepted_by_user_id: string | null;
 }
 
-function HotSheetPreviewImage({ photoUrl }: { photoUrl: string }) {
+function HotSheetPreviewImage({ photoUrls }: { photoUrls: string[] }) {
+  const visiblePhotos = photoUrls.filter(Boolean).slice(0, 4);
+
+  if (!visiblePhotos.length) {
+    return <DashboardListingImage photoUrl="/placeholder.svg" alt="" />;
+  }
+
+  if (visiblePhotos.length === 1) {
+    return (
+      <DashboardListingImage
+        photoUrl={visiblePhotos[0]}
+        alt=""
+        imageClassName="absolute inset-0 h-full w-full object-cover"
+      />
+    );
+  }
+
   return (
-    <DashboardListingImage
-      photoUrl={photoUrl}
-      alt=""
-      imageClassName="absolute inset-0 h-full w-full object-cover"
-    />
+    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-1 bg-white p-1">
+      {visiblePhotos.map((photoUrl, index) => (
+        <div
+          key={`${photoUrl}-${index}`}
+          className={`${visiblePhotos.length === 3 && index === 0 ? "row-span-2" : ""} relative overflow-hidden rounded-[10px] bg-white`}
+        >
+          <DashboardListingImage
+            photoUrl={photoUrl}
+            alt=""
+            imageClassName="absolute inset-0 h-full w-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
   );
 }
 
