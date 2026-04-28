@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { z } from "zod";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
@@ -634,36 +633,6 @@ export function CreateHotSheetDialog({
   useEffect(() => {
     setCitySearch("");
   }, [state, selectedCountyId]);
-
-  // Validation schema
-  const hotSheetSchema = z.object({
-    hotSheetName: z.string()
-      .trim()
-      .min(1, "Hot sheet name is required")
-      .max(100, "Hot sheet name must be less than 100 characters"),
-    clientFirstName: z.string()
-      .trim()
-      .min(1, "First name is required")
-      .max(100, "First name must be less than 100 characters"),
-    clientLastName: z.string()
-      .trim()
-      .min(1, "Last name is required")
-      .max(100, "Last name must be less than 100 characters"),
-    clientEmail: z.string()
-      .trim()
-      .min(1, "Email is required")
-      .email("Invalid email address")
-      .max(255, "Email must be less than 255 characters"),
-    clientPhone: z.string()
-      .trim()
-      .optional()
-      .refine((val) => {
-        if (!val || val.length === 0) return true;
-        // Remove formatting and check if it's a valid 10-digit US phone
-        const digitsOnly = val.replace(/\D/g, '');
-        return digitsOnly.length === 10 || digitsOnly.length === 11;
-      }, "Invalid phone number (must be 10 digits)")
-  });
 
   const handleValidateAndShowConfirmation = async () => {
     // Clear previous errors
