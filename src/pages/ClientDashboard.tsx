@@ -102,15 +102,15 @@ function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | u
   return parts.join(" • ") || "Custom search criteria";
 }
 
-/** Compact collage strip for dashboard hot sheet previews. */
+/** Collage strip for dashboard hot sheet previews (`h-24` matches favorites tile height). */
 function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
   if (!photoUrls.length) {
     return (
-      <div className="relative h-14 w-full overflow-hidden rounded-t-xl bg-zinc-100">
+      <div className="relative h-24 w-full overflow-hidden rounded-t-xl bg-zinc-100">
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 via-zinc-50 to-[#0E56F5]/10" />
         <div className="relative flex h-full items-center justify-center">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
-            <AACMonogram className="h-4 w-4 text-[#0E56F5]" size={16} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
+            <AACMonogram className="h-6 w-6 text-[#0E56F5]" size={24} />
           </div>
         </div>
       </div>
@@ -119,7 +119,7 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   if (photoUrls.length === 1) {
     return (
-      <div className="relative h-14 w-full overflow-hidden rounded-t-xl bg-zinc-100">
+      <div className="relative h-24 w-full overflow-hidden rounded-t-xl bg-zinc-100">
         <img src={photoUrls[0]} alt="" className="h-full w-full object-cover" />
       </div>
     );
@@ -127,7 +127,7 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   const collagePhotos = photoUrls.slice(0, 4);
   return (
-    <div className="relative h-14 w-full overflow-hidden rounded-t-xl bg-zinc-100">
+    <div className="relative h-24 w-full overflow-hidden rounded-t-xl bg-zinc-100">
       <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-white">
         {collagePhotos.map((photoUrl, idx) => (
           <img key={`${photoUrl}-${idx}`} src={photoUrl} alt="" className="h-full w-full object-cover" />
@@ -875,11 +875,14 @@ export default function ClientDashboard() {
                   </CardHeader>
                   <CardContent className="p-5 pt-0 md:p-6 md:pt-0">
                     {hotSheets.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         {hotSheets.slice(0, 3).map((sheet) => {
                           const viewPath = `/client/hot-sheets/${sheet.id}`;
                           return (
-                            <article key={sheet.id} className={dashboardPreviewTile}>
+                            <article
+                              key={sheet.id}
+                              className={`${dashboardPreviewTile} flex min-h-[11.5rem] flex-col`}
+                            >
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
@@ -933,17 +936,17 @@ export default function ClientDashboard() {
                                   e.preventDefault();
                                   navigate(viewPath);
                                 }}
-                                className="block w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                                className="flex min-h-0 flex-1 cursor-pointer flex-col text-left outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
                               >
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
-                                <div className="space-y-0.5 p-2 pb-2">
-                                  <p className="line-clamp-2 min-h-[1.85rem] text-[11px] font-semibold leading-snug tracking-tight text-gray-900">
+                                <div className="space-y-1.5 p-3">
+                                  <p className="line-clamp-2 text-sm font-semibold leading-snug tracking-tight text-gray-900">
                                     {sheet.name}
                                   </p>
-                                  <p className="line-clamp-2 min-h-[1.85rem] text-[10px] font-medium leading-tight text-gray-800">
+                                  <p className="line-clamp-2 text-xs leading-snug text-gray-700">
                                     {formatBuyerCriteriaSummary(sheet.criteria)}
                                   </p>
-                                  <p className="truncate text-[10px] text-gray-500">
+                                  <p className="truncate text-[11px] text-gray-500">
                                     {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
                                   </p>
                                 </div>
@@ -990,25 +993,25 @@ export default function ClientDashboard() {
                 </CardHeader>
                 <CardContent className="p-5 pt-0 md:p-6 md:pt-0">
                   {favorites.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       {favorites.slice(0, 3).map((fav) => {
                         const favPhotoUrl = getPrimaryPhotoUrl(fav.listing.photos);
                         return (
                           <button
                             key={fav.id}
                             type="button"
-                            className={`${dashboardPreviewTileInteractive} w-full`}
+                            className={`${dashboardPreviewTileInteractive} flex w-full min-h-[11.5rem] flex-col`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
-                            <div className="relative h-14 bg-gray-50">
+                            <div className="relative h-24 shrink-0 bg-gray-50">
                               <DashboardListingImage photoUrl={favPhotoUrl} alt="" imageClassName="h-full w-full object-cover" />
                             </div>
-                            <div className="space-y-0.5 p-2 pb-2">
-                              <p className="text-[11px] font-semibold tracking-tight text-gray-900">
+                            <div className="flex min-h-0 flex-1 flex-col space-y-1.5 p-3 text-left">
+                              <p className="text-sm font-semibold tracking-tight text-gray-900">
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
-                              <p className="line-clamp-2 min-h-[1.85rem] text-[10px] font-medium leading-tight text-gray-800">{fav.listing.address}</p>
-                              <p className="truncate text-[10px] text-gray-500">
+                              <p className="line-clamp-2 text-xs font-medium leading-snug text-gray-800">{fav.listing.address}</p>
+                              <p className="truncate text-[11px] text-gray-500">
                                 {fav.listing.city}, {fav.listing.state}
                               </p>
                             </div>
@@ -1052,13 +1055,13 @@ export default function ClientDashboard() {
               <CardContent className="overflow-visible p-5 pt-0 md:p-6 md:pt-0">
                 {latestListingsPreview.length > 0 ? (
                   <div className="overflow-visible">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {latestListingsPreview.map((listing) => (
                       <article
                         key={listing.id}
                         role="button"
                         tabIndex={0}
-                        className={dashboardPreviewTileInteractive}
+                        className={`${dashboardPreviewTileInteractive} flex min-h-[12.75rem] flex-col`}
                         onClick={() => navigate(`/property/${listing.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
@@ -1067,19 +1070,19 @@ export default function ClientDashboard() {
                           }
                         }}
                       >
-                        <div className="relative h-14 bg-gray-50">
+                        <div className="relative h-32 shrink-0 bg-gray-50">
                           <DashboardListingImage
                             photoUrl={getPrimaryPhotoUrl(listing.photos)}
                             alt={listing.address}
                             imageClassName="h-full w-full object-cover"
                           />
                         </div>
-                        <div className="space-y-0.5 p-2 pb-2">
-                          <p className="text-[11px] font-semibold tracking-tight text-gray-900">
+                        <div className="flex min-h-0 flex-1 flex-col space-y-1.5 p-4 text-left">
+                          <p className="text-sm font-semibold tracking-tight text-gray-900">
                             {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                           </p>
-                          <p className="line-clamp-2 min-h-[1.85rem] text-[10px] font-medium leading-tight text-gray-800">{listing.address}</p>
-                          <p className="truncate text-[10px] text-gray-500">
+                          <p className="line-clamp-2 text-xs font-medium leading-snug text-gray-800">{listing.address}</p>
+                          <p className="truncate text-[11px] text-gray-500">
                             {listing.city}, {listing.state}
                           </p>
                         </div>
