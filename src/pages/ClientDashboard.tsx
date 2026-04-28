@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
-import { humanizeSnakeCase } from "@/lib/format";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
   AlertDialog,
@@ -69,75 +68,13 @@ interface ShareTokenRow {
   accepted_by_user_id: string | null;
 }
 
-const asStringArray = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-
-/** Same location/criteria summary as buyer Hot Sheets (`HotSheets.tsx`). */
-function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | undefined): string {
-  const parts: string[] = [];
-  if (!criteria) return "Custom search criteria";
-
-  const cities = asStringArray(criteria.cities);
-  const towns = asStringArray(criteria.towns);
-  const propertyTypes = asStringArray(criteria.propertyTypes);
-
-  if (cities.length) {
-    parts.push(cities.slice(0, 2).join(", "));
-  } else if (towns.length) {
-    parts.push(towns.slice(0, 2).join(", "));
-  }
-
-  if (propertyTypes.length) {
-    parts.push(humanizeSnakeCase(propertyTypes[0]));
-  }
-
-  if (criteria.bedrooms) parts.push(`${String(criteria.bedrooms)}+ bd`);
-  if (criteria.bathrooms) parts.push(`${String(criteria.bathrooms)}+ ba`);
-
-  const maxPrice = criteria.maxPrice;
-  if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
-    parts.push(`under $${Math.round(maxPrice / 1000)}k`);
-  }
-
-  return parts.join(" • ") || "Custom search criteria";
-}
-
-/** Collage fills the fixed dashboard media strip (`listingPreviewMediaWrap` height matches Favorites / Market). */
-function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
-  if (!photoUrls.length) {
-    return (
-      <div className="relative h-full min-h-0 w-full overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-neutral-50 via-white to-[#0E56F5]/10" />
-        <div className="relative flex h-full items-center justify-center">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-[0_1px_6px_rgba(15,23,42,0.08)] ring-1 ring-neutral-200">
-            <AACMonogram className="h-7 w-7 text-[#0E56F5]" size={28} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (photoUrls.length === 1) {
-    return (
-      <div className="relative h-full min-h-0 w-full overflow-hidden bg-white">
-        <img src={photoUrls[0]} alt="" className="h-full w-full object-cover" />
-      </div>
-    );
-  }
-
-  const collagePhotos = photoUrls.slice(0, 4);
+function HotSheetPreviewImage({ photoUrl }: { photoUrl: string }) {
   return (
-    <div className="relative h-full min-h-0 w-full overflow-hidden bg-white">
-      <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-neutral-50">
-        {collagePhotos.map((photoUrl, idx) => (
-          <img key={`${photoUrl}-${idx}`} src={photoUrl} alt="" className="h-full w-full object-cover" />
-        ))}
-        {collagePhotos.length < 4 &&
-          Array.from({ length: 4 - collagePhotos.length }).map((_, idx) => (
-            <div key={`empty-${idx}`} className="bg-neutral-100" />
-          ))}
-      </div>
-    </div>
+    <DashboardListingImage
+      photoUrl={photoUrl}
+      alt=""
+      imageClassName="absolute inset-0 h-full w-full object-cover"
+    />
   );
 }
 
@@ -676,11 +613,14 @@ export default function ClientDashboard() {
     "relative h-48 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
   /** Shared dashboard card body rhythm (Hot Sheets + listings). */
   const listingPreviewBody = "flex flex-col gap-1.5 px-4 pb-4 pt-3 text-left";
+  const unifiedHotFavCardClass = `${dashboardPreviewTileInteractive} flex h-[248px] flex-col`;
+  const unifiedHotFavMediaWrap = "relative h-40 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
+  const unifiedHotFavBody = "flex flex-col gap-1 p-3 text-left";
   const dashSectionTitleClass = "text-[15px] font-semibold text-neutral-900";
   const dashSectionDescClass = "text-[13px] leading-snug text-neutral-500";
   const dashTileTitleClass = "text-[15px] font-semibold leading-snug tracking-tight text-neutral-900";
   const dashTileSecondaryClass = "text-[13px] leading-snug text-neutral-500";
-  const dashTileAddressClass = "line-clamp-2 text-[13px] leading-snug text-neutral-800";
+  const dashTileAddressClass = "truncate text-[13px] leading-snug text-neutral-800";
   const aacCardInteractive =
     `${aacCardShell} cursor-pointer transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
   const outlineSecondaryClass =
@@ -689,7 +629,7 @@ export default function ClientDashboard() {
   const previewSectionHeaderClass = "border-0 p-5 pb-4 md:p-6 md:pb-5";
   const previewSectionContentClass = "px-5 pb-6 pt-0 md:px-6";
   const previewSectionMarketContentClass = "overflow-visible px-5 pb-6 pt-0 md:px-6";
-  const previewGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-3";
+  const previewGridClass = "grid grid-cols-3 gap-4";
   const previewSectionHeaderRowClass =
     "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between";
   const previewSectionTitleWrapClass = "min-w-0 space-y-1";
@@ -893,7 +833,7 @@ export default function ClientDashboard() {
                               key={sheet.id}
                               role="button"
                               tabIndex={0}
-                              className={`${dashboardPreviewTileInteractive} flex flex-col`}
+                              className={unifiedHotFavCardClass}
                               onClick={() => navigate(viewPath)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter" && e.key !== " ") return;
@@ -901,8 +841,10 @@ export default function ClientDashboard() {
                                 navigate(viewPath);
                               }}
                             >
-                              <div className={listingPreviewMediaWrap}>
-                                <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
+                              <div className={unifiedHotFavMediaWrap}>
+                                <HotSheetPreviewImage
+                                  photoUrl={hotSheetPreviewPhotosById[sheet.id]?.[0] || "/placeholder.svg"}
+                                />
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
@@ -948,11 +890,8 @@ export default function ClientDashboard() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
-                              <div className={`${listingPreviewBody} flex-1`}>
-                                <p className={`${dashTileTitleClass} line-clamp-2`}>{sheet.name}</p>
-                                <p className={`${dashTileSecondaryClass} line-clamp-2`}>
-                                  {formatBuyerCriteriaSummary(sheet.criteria)}
-                                </p>
+                              <div className={`${unifiedHotFavBody} flex-1`}>
+                                <p className={`${dashTileTitleClass} line-clamp-1`}>{sheet.name}</p>
                               </div>
                             </article>
                           );
@@ -993,28 +932,28 @@ export default function ClientDashboard() {
                 </CardHeader>
                 <CardContent className={previewSectionContentClass}>
                   {favorites.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-3 gap-4">
                       {favorites.slice(0, 3).map((fav) => {
                         const favPhotoUrl = getPrimaryPhotoUrl(fav.listing.photos);
                         return (
                           <button
                             key={fav.id}
                             type="button"
-                            className={`${dashboardPreviewTileInteractive} flex w-full flex-col`}
+                            className={unifiedHotFavCardClass}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
-                            <div className={listingPreviewMediaWrap}>
+                            <div className={unifiedHotFavMediaWrap}>
                               <DashboardListingImage
                                 photoUrl={favPhotoUrl}
                                 alt=""
                                 imageClassName="absolute inset-0 h-full w-full object-cover"
                               />
                             </div>
-                            <div className={listingPreviewBody}>
+                            <div className={unifiedHotFavBody}>
                               <p className={dashTileTitleClass}>
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
-                              <p className={dashTileAddressClass}>{fav.listing.address}</p>
+                              <p className={`${dashTileAddressClass} truncate`}>{fav.listing.address}</p>
                               <p className={`${dashTileSecondaryClass} truncate`}>
                                 {fav.listing.city}, {fav.listing.state}
                               </p>
