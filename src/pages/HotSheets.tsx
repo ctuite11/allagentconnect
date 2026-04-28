@@ -574,101 +574,30 @@ const HotSheets = ({
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
-                    const criteriaChips = buildBuyerCriteriaChips(sheet.criteria);
 
                     return (
-                      <article
+                      <HotSheetCard
                         key={sheet.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openBuyerHotSheet(sheet.id, token)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            openBuyerHotSheet(sheet.id, token);
+                        id={sheet.id}
+                        name={sheet.name}
+                        criteria={sheet.criteria}
+                        clients={[]}
+                        lastSentAt={sheet.updated_at || sheet.last_sent_at || sheet.created_at}
+                        photos={buyerPhotosByHotSheetId[sheet.id] || []}
+                        onView={() => openBuyerHotSheet(sheet.id, token)}
+                        onEdit={() => {
+                          if (!sheet.user_id) {
+                            toast.error("This hot sheet cannot be edited right now");
+                            return;
                           }
+                          setEditingHotSheetId(sheet.id);
+                          setEditingSheetOwnerUserId(sheet.user_id);
+                          setEditDialogOpen(true);
                         }}
-                        className="rounded-[22px] border border-aac-card-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-aac-card-borderHover hover:shadow-md"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{sheet.name}</h3>
-                            <p className="mt-1 truncate text-sm text-muted-foreground">{getBuyerLocationSummary(sheet.criteria)}</p>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:bg-muted"
-                                onClick={(event) => event.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="min-w-[10rem] p-1">
-                              <DropdownMenuItem
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setDeleteBuyerSheetId(sheet.id);
-                                }}
-                                className="flex cursor-pointer items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-destructive hover:bg-muted focus:bg-muted focus:text-destructive data-[highlighted]:bg-muted data-[highlighted]:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 shrink-0 text-destructive" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        {criteriaChips.length > 0 && (
-                          <div className="mt-5 flex flex-wrap gap-2">
-                            {criteriaChips.map((chip) => (
-                              <span key={chip} className="inline-flex items-center rounded-full border border-aac-card-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm">
-                                {chip}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
-                          <p className="min-w-0 truncate text-xs text-muted-foreground">
-                            Last updated {formatRelativeDate(sheet.updated_at || sheet.last_sent_at || sheet.created_at)}
-                          </p>
-
-                          <div className="flex shrink-0 items-center gap-2">
-                            <Button
-                              size="sm"
-                              className="h-9 rounded-full px-4 text-sm font-semibold"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openBuyerHotSheet(sheet.id, token);
-                              }}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-9 rounded-full border-aac-card-border px-4 text-sm font-semibold text-foreground hover:bg-muted"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                if (!sheet.user_id) {
-                                  toast.error("This hot sheet cannot be edited right now");
-                                  return;
-                                }
-                                setEditingHotSheetId(sheet.id);
-                                setEditingSheetOwnerUserId(sheet.user_id);
-                                setEditDialogOpen(true);
-                              }}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
-                          </div>
-                        </div>
-                      </article>
+                        onShare={() => undefined}
+                        onComments={() => undefined}
+                        onDelete={() => setDeleteBuyerSheetId(sheet.id)}
+                      />
                     );
                   })}
                 </section>
