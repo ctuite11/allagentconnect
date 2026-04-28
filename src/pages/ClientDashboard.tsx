@@ -814,52 +814,8 @@ export default function ClientDashboard() {
                             >
                               <div className={unifiedHotFavMediaWrap}>
                                 <HotSheetPreviewImage
-                                  photoUrl={hotSheetPreviewPhotosById[sheet.id]?.[0] || "/placeholder.svg"}
+                                  photoUrls={hotSheetPreviewPhotosById[sheet.id] || []}
                                 />
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      className={`absolute right-2 top-2 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-neutral-200 bg-white shadow-sm hover:bg-neutral-50`}
-                                      aria-label="Hot sheet menu"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent
-                                    align="end"
-                                    className="min-w-[10rem]"
-                                    onCloseAutoFocus={(e) => e.preventDefault()}
-                                  >
-                                    <DropdownMenuItem
-                                      className="cursor-pointer"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!sheet.user_id) {
-                                          toast.error("This hot sheet cannot be edited right now.");
-                                          return;
-                                        }
-                                        setEditingHotSheetId(sheet.id);
-                                        setEditingHotSheetOwnerUserId(sheet.user_id);
-                                        setEditHotSheetDialogOpen(true);
-                                      }}
-                                    >
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setHotSheetDeleteId(sheet.id);
-                                      }}
-                                    >
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
                               </div>
                               <div className={`${unifiedHotFavBody} flex-1`}>
                                 <p className={`${dashTileTitleClass} line-clamp-1`}>{sheet.name}</p>
