@@ -437,6 +437,7 @@ const HotSheets = ({
             : sheet
         )
       );
+      return;
     }
     await loadBuyerHotSheets();
   };
@@ -850,6 +851,8 @@ const HotSheets = ({
             ),
           }))
         );
+        setEditingHotSheetId(null);
+        return;
       }
       await fetchData(user.id);
       setEditingHotSheetId(null);
