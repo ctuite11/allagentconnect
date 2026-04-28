@@ -277,7 +277,7 @@ export function CreateHotSheetDialog({
   const handleSelectClient = async (client: any) => {
     // Check if client is already selected
     if (selectedClients.some(c => c.id === client.id)) {
-      toast.error("This client is already added");
+      toast.error("This person is already added");
       return;
     }
 
@@ -288,7 +288,7 @@ export function CreateHotSheetDialog({
         p_client_email: email,
       });
       if (!error && data === true) {
-        toast.error("This client is already registered with another agent.");
+        toast.error("This person is already registered with another agent.");
         return;
       }
     }
@@ -312,12 +312,12 @@ export function CreateHotSheetDialog({
     setShowClientDropdown(false);
     setShowClientPicker(false);
     
-    toast.success(`Added client: ${client.first_name} ${client.last_name}`);
+    toast.success(`Added contact: ${client.first_name} ${client.last_name}`);
   };
 
   const handleRemoveClient = (clientId: string) => {
     setSelectedClients(prev => prev.filter(c => c.id !== clientId));
-    toast.success("Client removed");
+    toast.success("Contact removed");
   };
 
   const loadHotSheet = async () => {
@@ -643,15 +643,15 @@ export function CreateHotSheetDialog({
       .max(100, "Hot sheet name must be less than 100 characters"),
     clientFirstName: z.string()
       .trim()
-      .min(1, "Client first name is required")
+      .min(1, "First name is required")
       .max(100, "First name must be less than 100 characters"),
     clientLastName: z.string()
       .trim()
-      .min(1, "Client last name is required")
+      .min(1, "Last name is required")
       .max(100, "Last name must be less than 100 characters"),
     clientEmail: z.string()
       .trim()
-      .min(1, "Client email is required")
+      .min(1, "Email is required")
       .email("Invalid email address")
       .max(255, "Email must be less than 255 characters"),
     clientPhone: z.string()
@@ -671,7 +671,7 @@ export function CreateHotSheetDialog({
     
     // Check if at least one client is selected
     if (selectedClients.length === 0 && !clientFirstName && !clientEmail) {
-      toast.error("Please add at least one client");
+      toast.error("Please add friends or family to receive matching listings");
       return;
     }
 
@@ -694,7 +694,7 @@ export function CreateHotSheetDialog({
           }
         });
         setErrors(fieldErrors);
-        toast.error("Please fix the validation errors or clear the client form");
+        toast.error("Please fix the validation errors or clear the contact form");
         return;
       }
 
@@ -812,7 +812,7 @@ export function CreateHotSheetDialog({
     }]);
     
     setShowCreateClientDialog(false);
-    toast.success("Client added to hot sheet (not saved to your contacts)");
+    toast.success("Contact added to this hot sheet (not saved to your contacts list)");
     
     // Clear the form
     setClientFirstName("");
@@ -861,7 +861,7 @@ export function CreateHotSheetDialog({
         setClientSearchQuery("");
       }
       setShowCreateClientDialog(false);
-      toast.success("Client saved and added to hot sheet");
+      toast.success("Contact saved and added to this hot sheet");
       
       // Clear the form
       setClientFirstName("");
@@ -874,7 +874,7 @@ export function CreateHotSheetDialog({
       setShowClientPicker(false);
     } catch (error: any) {
       console.error("Error creating client:", error);
-      toast.error(error?.message || "Failed to create client");
+      toast.error(error?.message || "Could not save this person to your contacts");
     } finally {
       setCreatingClient(false);
     }
@@ -1228,7 +1228,7 @@ export function CreateHotSheetDialog({
                 </div>
               ) : (
                 <div className="rounded-md border border-dashed border-neutral-300 p-4 text-sm text-muted-foreground">
-                  <p>Add a client to receive Hot Sheet matches by email.</p>
+                  <p>Add friends or family to receive matching listings by email.</p>
                 </div>
               )}
 
@@ -1908,7 +1908,7 @@ export function CreateHotSheetDialog({
                             onCheckedChange={(checked) => setNotifyClient(checked as boolean)}
                           />
                           <Label htmlFor="notify-client" className="cursor-pointer">
-                            Send notifications to client
+                            Send notifications to friends or family
                           </Label>
                         </div>
                       )}
@@ -2021,7 +2021,7 @@ export function CreateHotSheetDialog({
                 <p className="text-sm font-semibold text-foreground mb-2">Notifications</p>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p><span className="font-medium">Agent:</span> {notifyAgent ? "Enabled" : "Disabled"}</p>
-                  {clientId && <p><span className="font-medium">Client:</span> {notifyClient ? "Enabled" : "Disabled"}</p>}
+                  {clientId && <p><span className="font-medium">Friends / family:</span> {notifyClient ? "Enabled" : "Disabled"}</p>}
                   <p><span className="font-medium">Schedule:</span> {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}</p>
                 </div>
               </div>
