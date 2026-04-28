@@ -72,8 +72,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ success: false, error: error?.message || "Unable to update hot sheet" }), {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unable to update hot sheet";
+    return new Response(JSON.stringify({ success: false, error: message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
