@@ -653,7 +653,7 @@ export function CreateHotSheetDialog({
     }
 
     if (editMode) {
-      await handleCreate();
+      await handleUpdateHotSheet();
       return;
     }
 
@@ -831,50 +831,62 @@ export function CreateHotSheetDialog({
       });
   };
 
+  const handleUpdateHotSheet = async () => {
+    if (!hotSheetId) {
+      toast.error("Failed to update hot sheet");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const updatePayload = {
+        name: hotSheetName.trim(),
+        criteria: buildCriteriaPayload(),
+        notify_client_email: notifyClient,
+        notify_agent_email: notifyAgent,
+        notification_schedule: notificationSchedule,
+      };
+
+      const { error } = await supabase
+        .from("hot_sheets")
+        .update(updatePayload)
+        .eq("id", hotSheetId);
+
+      if (error) {
+        console.error("Failed to update hot sheet", { hotSheetId, updatePayload, error });
+        toast.error("Failed to update hot sheet");
+        return;
+      }
+
+      toast.success("Hot sheet updated");
+      setShowSuccess(false);
+      resetDialogState();
+      onOpenChange(false);
+      onSuccess(hotSheetId);
+      resetForm();
+    } catch (error) {
+      console.error("Failed to update hot sheet", { hotSheetId, error });
+      toast.error("Failed to update hot sheet");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleCreate = async () => {
     setShowConfirmDialog(false);
+
+    if (editMode) {
+      await handleUpdateHotSheet();
+      return;
+    }
 
     try {
       setSaving(true);
 
       const criteria = buildCriteriaPayload();
 
-      if (editMode && hotSheetId) {
-        const submittedName = hotSheetName.trim();
-        const updatePayload = {
-          name: submittedName,
-          criteria,
-          notify_client_email: notifyClient,
-          notify_agent_email: notifyAgent,
-          notification_schedule: notificationSchedule,
-        };
-
-        // Update existing hot sheet directly. Edit saves should not send/share or call Edge Functions.
-        const { data: updatedHotSheet, error } = await supabase
-          .from("hot_sheets")
-          .update(updatePayload)
-          .eq("id", hotSheetId)
-          .select("id, name")
-          .maybeSingle();
-
-        if (error) {
-          console.error("Hot sheet update error", { hotSheetId, submittedName, error });
-          throw error;
-        }
-
-        if (!updatedHotSheet) {
-          console.error("Hot sheet update returned no row", { hotSheetId, submittedName });
-          throw new Error("Hot sheet was not updated");
-        }
-
-        toast.success("Hot sheet updated");
-        setShowSuccess(false);
-        resetDialogState();
-        onOpenChange(false);
-        onSuccess(hotSheetId);
-        resetForm();
-      } else {
-        // Create new hot sheet
+      // Create new hot sheet
         const { data: createdHotSheet, error } = await supabase
           .from("hot_sheets")
           .insert({
@@ -938,11 +950,9 @@ export function CreateHotSheetDialog({
         onOpenChange(false);
         onSuccess(createdHotSheet.id);
         resetForm();
-      }
     } catch (error: any) {
-      console.error(editMode ? "Error updating hot sheet:" : "Error creating hot sheet:", error);
-      const action = editMode ? "update" : "create";
-      toast.error(error?.message ? `Failed to ${action} hot sheet: ${error.message}` : `Failed to ${action} hot sheet`);
+      console.error("Error creating hot sheet:", error);
+      toast.error(error?.message ? `Failed to create hot sheet: ${error.message}` : "Failed to create hot sheet");
     } finally {
       setSaving(false);
     }
