@@ -668,42 +668,6 @@ export function CreateHotSheetDialog({
   const handleValidateAndShowConfirmation = async () => {
     // Clear previous errors
     setErrors({});
-    
-    // Check if at least one client is selected
-    if (selectedClients.length === 0 && !clientFirstName && !clientEmail) {
-      toast.error("Please add friends or family to receive matching listings");
-      return;
-    }
-
-    // If there's client data in the form but not added to list, validate and offer to add
-    if (clientFirstName || clientEmail) {
-      // Validate the pending client
-      const validation = hotSheetSchema.safeParse({
-        hotSheetName,
-        clientFirstName,
-        clientLastName,
-        clientEmail,
-        clientPhone
-      });
-      
-      if (!validation.success) {
-        const fieldErrors: Record<string, string> = {};
-        validation.error.errors.forEach((err) => {
-          if (err.path[0]) {
-            fieldErrors[err.path[0] as string] = err.message;
-          }
-        });
-        setErrors(fieldErrors);
-        toast.error("Please fix the validation errors or clear the contact form");
-        return;
-      }
-
-      // Check if this client exists or needs to be created
-      if (!existingClient && clientFirstName && clientEmail) {
-        setShowCreateClientDialog(true);
-        return;
-      }
-    }
 
     // Validate hot sheet name
     if (!hotSheetName || hotSheetName.trim().length === 0) {
@@ -717,6 +681,10 @@ export function CreateHotSheetDialog({
     if (!criteriaValidation.valid) {
       toast.error(criteriaValidation.message);
       return;
+    }
+
+    if (selectedClients.length === 0) {
+      toast.message("Add friends or family to receive matches");
     }
 
     // Show confirmation dialog
