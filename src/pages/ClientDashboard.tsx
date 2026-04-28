@@ -411,17 +411,10 @@ export default function ClientDashboard() {
     const previewEntries = await Promise.all(
       sheets.map(async (sheet) => {
         try {
-          const [previewResult, countResult] = await Promise.all([
-            buildListingsQuery(supabase, sheet.criteria || {}).limit(3),
-            buildListingsQuery(supabase, sheet.criteria || {}).select("id", { count: "exact", head: true }),
-          ]);
-          const { data: listings, error } = previewResult;
+          const { data: listings, error } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(1000);
           if (error) {
             console.error("Failed to load preview listings for hot sheet", sheet.id, error);
-            return [sheet.id, [], 0] as const;
-          }
-          if (countResult.error) {
-            console.error("Failed to load match count for hot sheet", sheet.id, countResult.error);
+            return [sheet.id, [] as string[], 0] as const;
           }
 
           const photoUrls = (listings || [])
@@ -429,10 +422,10 @@ export default function ClientDashboard() {
             .filter((url): url is string => Boolean(url && url !== "/placeholder.svg"))
             .slice(0, 3);
 
-          return [sheet.id, photoUrls, countResult.count ?? 0] as const;
+          return [sheet.id, photoUrls, listings?.length ?? 0] as const;
         } catch (err) {
           console.error("Unexpected preview listing load error", sheet.id, err);
-          return [sheet.id, [], 0] as const;
+          return [sheet.id, [] as string[], 0] as const;
         }
       })
     );
@@ -825,6 +818,9 @@ export default function ClientDashboard() {
                               </div>
                               <div className={`${unifiedHotFavBody} flex-1`}>
                                 <p className="line-clamp-1 text-[16px] font-semibold leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
+                                <p className="text-[12px] font-normal leading-tight text-gray-500">
+                                  {hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches
+                                </p>
                               </div>
                             </article>
                           );
