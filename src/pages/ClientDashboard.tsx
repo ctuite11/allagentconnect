@@ -62,27 +62,14 @@ interface ShareTokenRow {
 
 function HotSheetPreviewImage({ photoUrls }: { photoUrls: string[] }) {
   const visiblePhotos = photoUrls.filter(Boolean).slice(0, 4);
-
-  if (!visiblePhotos.length) {
-    return <DashboardListingImage photoUrl="/placeholder.svg" alt="" />;
-  }
-
-  if (visiblePhotos.length === 1) {
-    return (
-      <DashboardListingImage
-        photoUrl={visiblePhotos[0]}
-        alt=""
-        imageClassName="absolute inset-0 h-full w-full object-cover"
-      />
-    );
-  }
+  const collagePhotos = Array.from({ length: 4 }, (_, index) => visiblePhotos[index] || "/placeholder.svg");
 
   return (
-    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-1 bg-white p-1">
-      {visiblePhotos.map((photoUrl, index) => (
+    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-1 bg-white p-1 [grid-template-rows:repeat(2,minmax(0,1fr))]">
+      {collagePhotos.map((photoUrl, index) => (
         <div
           key={`${photoUrl}-${index}`}
-          className={`${visiblePhotos.length === 3 && index === 0 ? "row-span-2" : ""} relative overflow-hidden rounded-[10px] bg-white`}
+          className="relative min-h-0 min-w-0 overflow-hidden rounded-[10px] bg-white"
         >
           <DashboardListingImage
             photoUrl={photoUrl}
@@ -586,7 +573,7 @@ export default function ClientDashboard() {
   const listingPreviewBody = "flex flex-col gap-1.5 px-4 pb-4 pt-3 text-left";
   const unifiedHotFavCardClass = `${dashboardPreviewTileInteractive} flex h-[248px] flex-col`;
   const unifiedHotFavMediaWrap = "relative h-40 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
-  const unifiedHotFavBody = "flex flex-col gap-1 p-3 text-left";
+  const unifiedHotFavBody = "flex h-[88px] flex-col gap-1 px-3 pb-3 pt-4 text-left";
   const dashSectionTitleClass = "text-[15px] font-semibold text-neutral-900";
   const dashSectionDescClass = "text-[13px] leading-snug text-neutral-500";
   const dashTileTitleClass = "text-[15px] font-semibold leading-snug tracking-tight text-neutral-900";
