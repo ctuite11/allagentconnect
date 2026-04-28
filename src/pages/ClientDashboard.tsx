@@ -181,11 +181,6 @@ export default function ClientDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
-  const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
-  const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
-  const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
-  const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
-  const [hotSheetDeleteLoading, setHotSheetDeleteLoading] = useState(false);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -438,47 +433,6 @@ export default function ClientDashboard() {
     );
 
     setHotSheetPreviewPhotosById(Object.fromEntries(photoEntries));
-  };
-
-  const handleDashboardHotSheetEditSuccess = () => {
-    if (currentUserId) void loadBuyerHotSheetsForDashboard(currentUserId);
-  };
-
-  const handleConfirmDeleteDashboardHotSheet = async () => {
-    if (!hotSheetDeleteId || hotSheetDeleteLoading) return;
-    const id = hotSheetDeleteId;
-    setHotSheetDeleteLoading(true);
-
-    const { error: clientsError } = await supabase
-      .from("hot_sheet_clients")
-      .delete()
-      .eq("hot_sheet_id", id);
-
-    if (clientsError) {
-      console.error("Delete hot_sheet_clients failed:", clientsError);
-      toast.error("Unable to delete this hot sheet.");
-      setHotSheetDeleteLoading(false);
-      return;
-    }
-
-    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
-
-    if (sheetError) {
-      console.error("Delete hot_sheets failed:", sheetError);
-      toast.error("Unable to delete this hot sheet.");
-      setHotSheetDeleteLoading(false);
-      return;
-    }
-
-    toast.success("Hot sheet deleted");
-    setHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
-    setHotSheetPreviewPhotosById((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setHotSheetDeleteLoading(false);
-    setHotSheetDeleteId(null);
   };
 
   const loadFavorites = async (userId: string) => {
