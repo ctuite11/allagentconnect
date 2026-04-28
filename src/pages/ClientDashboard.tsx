@@ -838,25 +838,29 @@ export default function ClientDashboard() {
                 </div>
               </div>
 
-              <div className={`${aacCardShell} overflow-hidden`}>
+              <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
-                <CardHeader className="space-y-1 p-5 pb-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="text-base font-semibold text-gray-900">Favorites</CardTitle>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
-                      onClick={() => navigate("/client/favorites")}
-                    >
-                      View all
-                    </Button>
+                <CardHeader className={previewSectionHeaderClass}>
+                  <div className={previewSectionHeaderRowClass}>
+                    <div className={previewSectionTitleWrapClass}>
+                      <CardTitle className="text-base font-semibold text-gray-900">Favorites</CardTitle>
+                      <CardDescription className="text-sm text-gray-500">Homes you saved.</CardDescription>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
+                        onClick={() => navigate("/client/favorites")}
+                      >
+                        View all
+                      </Button>
+                    </div>
                   </div>
-                  <CardDescription className="text-sm text-gray-500">Homes you saved.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-5 pt-3">
+                <CardContent className={previewSectionContentClass}>
                   {favorites.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className={previewGridClass}>
                       {favorites.slice(0, 3).map((fav) => {
                         const favPhotoUrl = getPrimaryPhotoUrl(fav.listing.photos);
                         return (
@@ -874,13 +878,13 @@ export default function ClientDashboard() {
                               />
                             </div>
                             <div className={compactPreviewBody}>
-                              <p className="text-sm font-semibold tracking-tight text-gray-900">
+                              <p className="truncate text-sm font-semibold leading-5 tracking-tight text-gray-900">
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
-                              <p className="line-clamp-1 text-xs font-medium leading-snug text-gray-800">
+                              <p className="truncate text-xs font-medium leading-4 text-gray-800">
                                 {getShortAddressLine(fav.listing.address)}
                               </p>
-                              <p className="truncate text-xs text-gray-500">
+                              <p className="truncate text-xs leading-4 text-gray-500">
                                 Boston, MA
                               </p>
                             </div>
