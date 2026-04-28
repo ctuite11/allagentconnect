@@ -832,6 +832,8 @@ export function CreateHotSheetDialog({
   };
 
   const handleUpdateHotSheet = async () => {
+    console.log("🔥 HANDLE UPDATE FIRED");
+
     if (!hotSheetId) {
       toast.error("Failed to update hot sheet");
       return;
@@ -848,8 +850,8 @@ export function CreateHotSheetDialog({
 
       const criteria = buildCriteriaPayload();
 
-      console.log("Updating hot sheet:", hotSheetId);
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("Updating hot sheet:", hotSheetId);
       console.log("Current user id:", user?.id);
 
       const { data: existingHotSheet, error: existingHotSheetError } = await supabase
@@ -862,6 +864,11 @@ export function CreateHotSheetDialog({
         console.error("Error fetching hot sheet owner:", existingHotSheetError);
       }
       console.log("Hot sheet owner:", existingHotSheet?.user_id);
+      console.log("HotSheet Debug:", {
+        hotSheetId,
+        currentUserId: user?.id,
+        ownerId: existingHotSheet?.user_id,
+      });
 
       const { data, error } = await supabase
         .from("hot_sheets")
