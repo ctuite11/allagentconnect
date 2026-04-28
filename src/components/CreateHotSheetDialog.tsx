@@ -841,6 +841,10 @@ export function CreateHotSheetDialog({
 
       if (editMode && hotSheetId) {
         const submittedName = hotSheetName.trim();
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+        const canManageClientLinks = currentUser?.id === userId;
         const updatePayload = {
           name: submittedName,
           criteria,
@@ -867,7 +871,7 @@ export function CreateHotSheetDialog({
         }
 
         // Update clients in hot_sheet_clients junction table
-        if (selectedClients.length > 0) {
+        if (selectedClients.length > 0 && canManageClientLinks) {
           // Delete existing relationships
           const { error: deleteError } = await supabase
             .from('hot_sheet_clients' as any)
