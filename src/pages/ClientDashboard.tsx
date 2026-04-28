@@ -1007,51 +1007,6 @@ export default function ClientDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog
-        open={Boolean(hotSheetDeleteId)}
-        onOpenChange={(open) => {
-          if (!open && !hotSheetDeleteLoading) setHotSheetDeleteId(null);
-        }}
-      >
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
-            <AlertDialogDescription>This will remove this hot sheet and its alerts.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={hotSheetDeleteLoading}>Cancel</AlertDialogCancel>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={hotSheetDeleteLoading}
-              onClick={() => void handleConfirmDeleteDashboardHotSheet()}
-            >
-              {hotSheetDeleteLoading ? "Deleting…" : "Delete"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {editingHotSheetId && editingHotSheetOwnerUserId ? (
-        <CreateHotSheetDialog
-          key={editingHotSheetId}
-          open={editHotSheetDialogOpen}
-          onOpenChange={(open) => {
-            setEditHotSheetDialogOpen(open);
-            if (!open) {
-              setEditingHotSheetId(null);
-              setEditingHotSheetOwnerUserId(null);
-            }
-          }}
-          userId={editingHotSheetOwnerUserId}
-          hotSheetId={editingHotSheetId}
-          editMode
-          onSuccess={() => {
-            handleDashboardHotSheetEditSuccess();
-          }}
-        />
-      ) : null}
-
       <AddFriendDialog open={addFriendOpen} onOpenChange={setAddFriendOpen} />
     </div>
   );
