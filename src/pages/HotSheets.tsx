@@ -545,9 +545,7 @@ const HotSheets = ({
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
-                    const hasNewListings = Boolean(
-                      sheet.last_sent_at && (Date.now() - new Date(sheet.last_sent_at).getTime()) < 1000 * 60 * 60 * 48
-                    );
+                    const criteriaChips = buildBuyerCriteriaChips(sheet.criteria);
 
                     return (
                       <article
@@ -561,19 +559,19 @@ const HotSheets = ({
                             openBuyerHotSheet(sheet.id, token);
                           }
                         }}
-                        className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_6px_20px_rgba(15,23,42,0.05)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.09)]"
+                        className="rounded-[22px] border border-zinc-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.045)] transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h3 className="truncate text-[17px] font-semibold tracking-tight text-zinc-900">{sheet.name}</h3>
-                            <p className="mt-1 text-sm text-zinc-600 line-clamp-2">{formatBuyerCriteriaSummary(sheet.criteria)}</p>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-zinc-950">{sheet.name}</h3>
+                            <p className="mt-1 truncate text-sm text-zinc-500">{getBuyerLocationSummary(sheet.criteria)}</p>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-lg text-zinc-500 hover:bg-zinc-100"
+                                className="h-8 w-8 shrink-0 rounded-full text-zinc-500 hover:bg-zinc-100"
                                 onClick={(event) => event.stopPropagation()}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
@@ -594,47 +592,52 @@ const HotSheets = ({
                           </DropdownMenu>
                         </div>
 
-                        <div className="mt-3 flex items-center gap-2 flex-wrap">
-                          {hasNewListings && (
-                            <span className="inline-flex items-center rounded-full bg-[#0E56F5]/10 px-2.5 py-1 text-[11px] font-semibold text-[#0E56F5]">
-                              New listings
-                            </span>
-                          )}
-                        </div>
+                        {criteriaChips.length > 0 && (
+                          <div className="mt-5 flex flex-wrap gap-2">
+                            {criteriaChips.map((chip) => (
+                              <span key={chip} className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+                                {chip}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
-                        <p className="mt-3 text-xs text-zinc-500">
-                          Last updated {formatRelativeDate(sheet.last_sent_at || sheet.created_at)}
-                        </p>
+                        <div className="mt-5 flex items-center justify-between gap-3 border-t border-zinc-100 pt-4">
+                          <p className="min-w-0 truncate text-xs text-zinc-500">
+                            Last updated {formatRelativeDate(sheet.updated_at || sheet.last_sent_at || sheet.created_at)}
+                          </p>
 
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                          <Button
-                            variant="outline"
-                            className="h-9 rounded-lg border-zinc-200 text-sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openBuyerHotSheet(sheet.id, token);
-                            }}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="h-9 rounded-lg border-zinc-200 text-sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (!sheet.user_id) {
-                                toast.error("This hot sheet cannot be edited right now");
-                                return;
-                              }
-                              setEditingHotSheetId(sheet.id);
-                              setEditingSheetOwnerUserId(sheet.user_id);
-                              setEditDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </Button>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Button
+                              size="sm"
+                              className="h-9 rounded-full px-4 text-sm font-semibold"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openBuyerHotSheet(sheet.id, token);
+                              }}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9 rounded-full border-zinc-200 px-4 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                if (!sheet.user_id) {
+                                  toast.error("This hot sheet cannot be edited right now");
+                                  return;
+                                }
+                                setEditingHotSheetId(sheet.id);
+                                setEditingSheetOwnerUserId(sheet.user_id);
+                                setEditDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                          </div>
                         </div>
                       </article>
                     );
