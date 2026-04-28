@@ -14,6 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, Check, Loader2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -839,19 +840,31 @@ export function CreateHotSheetDialog({
       const criteria = buildCriteriaPayload();
 
       if (editMode && hotSheetId) {
-        // Update existing hot sheet
-        const { error } = await supabase
-          .from("hot_sheets")
-          .update({
-            name: hotSheetName,
-            criteria,
-            notify_client_email: notifyClient,
-            notify_agent_email: notifyAgent,
-            notification_schedule: notificationSchedule,
-          })
-          .eq("id", hotSheetId);
+        const submittedName = hotSheetName.trim();
+        const updatePayload = {
+          name: submittedName,
+          criteria,
+          notify_client_email: notifyClient,
+          notify_agent_email: notifyAgent,
+          notification_schedule: notificationSchedule,
+        };
 
-        if (error) throw error;
+        // Update existing hot sheet
+        const { data: updatedHotSheet, error } = await supabase
+          .from("hot_sheets")
+          .update(updatePayload)
+          .eq("id", hotSheetId)
+          .select("id, name")
+          .maybeSingle();
+
+        if (error || !updatedHotSheet) {
+          if (error) console.error("Hot sheet update error", { hotSheetId, submittedName, error });
+
+          await invokeEdgeFunction("update-hot-sheet", {
+            hotSheetId,
+            ...updatePayload,
+          });
+        }
 
         // Update clients in hot_sheet_clients junction table
         if (selectedClients.length > 0) {
@@ -899,14 +912,11 @@ export function CreateHotSheetDialog({
         }
 
         toast.success("Hot sheet updated");
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          resetDialogState();
-          onOpenChange(false);
-          onSuccess(hotSheetId);
-          resetForm();
-        }, 1500);
+        setShowSuccess(false);
+        resetDialogState();
+        onOpenChange(false);
+        onSuccess(hotSheetId);
+        resetForm();
       } else {
         // Create new hot sheet
         const { data: createdHotSheet, error } = await supabase
@@ -974,8 +984,9 @@ export function CreateHotSheetDialog({
         resetForm();
       }
     } catch (error: any) {
-      console.error("Error creating hot sheet:", error);
-      toast.error(error?.message ? `Failed to create hot sheet: ${error.message}` : "Failed to create hot sheet");
+      console.error(editMode ? "Error updating hot sheet:" : "Error creating hot sheet:", error);
+      const action = editMode ? "update" : "create";
+      toast.error(error?.message ? `Failed to ${action} hot sheet: ${error.message}` : `Failed to ${action} hot sheet`);
     } finally {
       setSaving(false);
     }
