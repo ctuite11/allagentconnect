@@ -13,23 +13,14 @@ import {
   Search,
   Sparkles,
   Mail,
-  MoreHorizontal,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
-import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
-import { humanizeSnakeCase } from "@/lib/format";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
   AlertDialog,
@@ -67,39 +58,6 @@ interface ShareTokenRow {
   payload: unknown;
   accepted_at: string | null;
   accepted_by_user_id: string | null;
-}
-
-const asStringArray = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-
-/** Same location/criteria summary as buyer Hot Sheets (`HotSheets.tsx`). */
-function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | undefined): string {
-  const parts: string[] = [];
-  if (!criteria) return "Custom search criteria";
-
-  const cities = asStringArray(criteria.cities);
-  const towns = asStringArray(criteria.towns);
-  const propertyTypes = asStringArray(criteria.propertyTypes);
-
-  if (cities.length) {
-    parts.push(cities.slice(0, 2).join(", "));
-  } else if (towns.length) {
-    parts.push(towns.slice(0, 2).join(", "));
-  }
-
-  if (propertyTypes.length) {
-    parts.push(humanizeSnakeCase(propertyTypes[0]));
-  }
-
-  if (criteria.bedrooms) parts.push(`${String(criteria.bedrooms)}+ bd`);
-  if (criteria.bathrooms) parts.push(`${String(criteria.bathrooms)}+ ba`);
-
-  const maxPrice = criteria.maxPrice;
-  if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
-    parts.push(`under $${Math.round(maxPrice / 1000)}k`);
-  }
-
-  return parts.join(" • ") || "Custom search criteria";
 }
 
 /** Collage fills the same `aspect-[4/3]` media frame as favorites listing cards. */
