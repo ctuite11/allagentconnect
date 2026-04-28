@@ -15,13 +15,6 @@ import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
 import { HotSheetCard } from "@/components/HotSheetCard";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { Seo } from "@/components/Seo";
-import { humanizeSnakeCase } from "@/lib/format";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -366,93 +359,6 @@ const HotSheets = ({
     } finally {
       setBuyerLoading(false);
     }
-  };
-
-  const formatBuyerCriteriaSummary = (criteria: Record<string, unknown> | null) => {
-    const parts: string[] = [];
-
-    if (!criteria) return "Custom search criteria";
-
-    const cities = asStringArray(criteria.cities);
-    const towns = asStringArray(criteria.towns);
-    const propertyTypes = asStringArray(criteria.propertyTypes);
-
-    if (cities.length) {
-      parts.push(cities.slice(0, 2).join(", "));
-    } else if (towns.length) {
-      parts.push(towns.slice(0, 2).join(", "));
-    }
-
-    if (propertyTypes.length) {
-      parts.push(humanizeSnakeCase(propertyTypes[0]));
-    }
-
-    if (criteria.bedrooms) parts.push(`${String(criteria.bedrooms)}+ bd`);
-    if (criteria.bathrooms) parts.push(`${String(criteria.bathrooms)}+ ba`);
-
-    const maxPrice = criteria.maxPrice;
-    if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
-      parts.push(`under $${Math.round(maxPrice / 1000)}k`);
-    }
-
-    return parts.join(" • ") || "Custom search criteria";
-  };
-
-  const formatCurrencyShort = (value: unknown) => {
-    const amount = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(amount) || amount <= 0) return null;
-    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(amount % 1_000_000 === 0 ? 0 : 1)}M`;
-    return `$${Math.round(amount / 1_000)}k`;
-  };
-
-  const getBuyerLocationSummary = (criteria: Record<string, unknown> | null) => {
-    if (!criteria) return "Saved search area";
-
-    const cities = asStringArray(criteria.cities);
-    const towns = asStringArray(criteria.towns);
-    const counties = asStringArray(criteria.counties);
-    const locationParts = cities.length ? cities : towns.length ? towns : counties;
-
-    if (locationParts.length) {
-      return locationParts.slice(0, 2).join(", ") + (locationParts.length > 2 ? ` +${locationParts.length - 2}` : "");
-    }
-
-    if (typeof criteria.state === "string" && criteria.state) return criteria.state;
-    return "Saved search area";
-  };
-
-  const buildBuyerCriteriaChips = (criteria: Record<string, unknown> | null) => {
-    if (!criteria) return [];
-
-    const chips: string[] = [];
-    const minPrice = formatCurrencyShort(criteria.minPrice);
-    const maxPrice = formatCurrencyShort(criteria.maxPrice);
-    if (minPrice || maxPrice) chips.push(minPrice && maxPrice ? `${minPrice}–${maxPrice}` : minPrice ? `${minPrice}+` : `Under ${maxPrice}`);
-
-    if (criteria.bedrooms) chips.push(`${String(criteria.bedrooms)}+ beds`);
-    if (criteria.bathrooms) chips.push(`${String(criteria.bathrooms)}+ baths`);
-
-    const propertyTypes = asStringArray(criteria.propertyTypes);
-    if (propertyTypes.length) chips.push(propertyTypes.slice(0, 2).map(humanizeSnakeCase).join(", "));
-
-    const statuses = asStringArray(criteria.statuses);
-    if (statuses.length) chips.push(statuses.slice(0, 2).map(humanizeSnakeCase).join(", "));
-
-    return chips;
-  };
-
-  const formatRelativeDate = (isoDate: string | null | undefined) => {
-    if (!isoDate) return "Not sent yet";
-
-    const then = new Date(isoDate).getTime();
-    const now = Date.now();
-    const diffDays = Math.floor((now - then) / (1000 * 60 * 60 * 24));
-
-    if (diffDays <= 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-
-    return new Date(isoDate).toLocaleDateString();
   };
 
   const handleDeleteBuyerHotSheet = async () => {
