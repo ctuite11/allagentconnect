@@ -846,39 +846,38 @@ export function CreateHotSheetDialog({
     try {
       setSaving(true);
 
-      const updatePayload = {
-        name: trimmedName,
-        criteria: buildCriteriaPayload(),
-        notify_client_email: notifyClient,
-        notify_agent_email: notifyAgent,
-        notification_schedule: notificationSchedule,
-      };
+      const criteria = buildCriteriaPayload();
+
+      console.log("Updating hot sheet:", hotSheetId);
 
       const { data, error } = await supabase
         .from("hot_sheets")
-        .update(updatePayload)
+        .update({
+          name: trimmedName,
+          criteria,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", hotSheetId)
-        .select("id, name, criteria")
-        .single();
+        .select("id, name, criteria");
 
       console.log("UPDATE RESULT:", data);
 
       if (error) {
-        console.error("Failed to update hot sheet", { hotSheetId, updatePayload, error });
-        toast.error("Failed to update hot sheet");
-        return;
+        console.error("Update error:", error);
+        throw error;
       }
 
-      if (!data) {
-        console.error("Failed to update hot sheet", { hotSheetId, updatePayload, error: "No updated hot sheet returned" });
-        toast.error("Failed to update hot sheet");
-        return;
+      if (!data || data.length === 0) {
+        console.error("Update failed — no rows returned", { hotSheetId });
+        throw new Error("Hot sheet update returned no rows. Check RLS update policy or ownership.");
       }
+
+      const updated = data[0];
 
       await onSuccess?.(hotSheetId, {
-        id: data.id,
-        name: data.name,
-        criteria: (data.criteria as Record<string, unknown> | null) ?? null,
+        id: updated.id,
+        name: updated.name,
+        criteria: (updated.criteria as Record<string, unknown> | null) ?? null,
       });
 
       toast.success("Hot sheet updated");
@@ -886,9 +885,9 @@ export function CreateHotSheetDialog({
       resetDialogState();
       onOpenChange(false);
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update hot sheet", { hotSheetId, error });
-      toast.error("Failed to update hot sheet");
+      toast.error(error?.message || "Failed to update hot sheet");
     } finally {
       setSaving(false);
     }
