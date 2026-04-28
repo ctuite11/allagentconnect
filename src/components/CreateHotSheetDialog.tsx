@@ -869,6 +869,12 @@ export function CreateHotSheetDialog({
         return;
       }
 
+      if (!data) {
+        console.error("Failed to update hot sheet", { hotSheetId, updatePayload, error: "No updated hot sheet returned" });
+        toast.error("Failed to update hot sheet");
+        return;
+      }
+
       await onSuccess?.(hotSheetId, {
         id: data.id,
         name: data.name,
