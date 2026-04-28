@@ -53,6 +53,7 @@ interface BuyerHotSheetItem {
   user_id: string | null;
   criteria: Record<string, unknown> | null;
   created_at: string;
+  updated_at?: string | null;
   last_sent_at: string | null;
   is_active: boolean;
 }
@@ -315,7 +316,7 @@ const HotSheets = ({
 
       const { data: hotSheetRows, error: sheetErr } = await supabase
         .from("hot_sheets")
-        .select("id, name, user_id, criteria, created_at, is_active, last_sent_at")
+        .select("id, name, user_id, criteria, created_at, updated_at, is_active, last_sent_at")
         .in("id", [...allHotSheetIds])
         .order("created_at", { ascending: false });
 
@@ -366,6 +367,49 @@ const HotSheets = ({
     }
 
     return parts.join(" • ") || "Custom search criteria";
+  };
+
+  const formatCurrencyShort = (value: unknown) => {
+    const amount = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(amount % 1_000_000 === 0 ? 0 : 1)}M`;
+    return `$${Math.round(amount / 1_000)}k`;
+  };
+
+  const getBuyerLocationSummary = (criteria: Record<string, unknown> | null) => {
+    if (!criteria) return "Saved search area";
+
+    const cities = asStringArray(criteria.cities);
+    const towns = asStringArray(criteria.towns);
+    const counties = asStringArray(criteria.counties);
+    const locationParts = cities.length ? cities : towns.length ? towns : counties;
+
+    if (locationParts.length) {
+      return locationParts.slice(0, 2).join(", ") + (locationParts.length > 2 ? ` +${locationParts.length - 2}` : "");
+    }
+
+    if (typeof criteria.state === "string" && criteria.state) return criteria.state;
+    return "Saved search area";
+  };
+
+  const buildBuyerCriteriaChips = (criteria: Record<string, unknown> | null) => {
+    if (!criteria) return [];
+
+    const chips: string[] = [];
+    const minPrice = formatCurrencyShort(criteria.minPrice);
+    const maxPrice = formatCurrencyShort(criteria.maxPrice);
+    if (minPrice || maxPrice) chips.push(minPrice && maxPrice ? `${minPrice}–${maxPrice}` : minPrice ? `${minPrice}+` : `Under ${maxPrice}`);
+
+    if (criteria.bedrooms) chips.push(`${String(criteria.bedrooms)}+ beds`);
+    if (criteria.bathrooms) chips.push(`${String(criteria.bathrooms)}+ baths`);
+
+    const propertyTypes = asStringArray(criteria.propertyTypes);
+    if (propertyTypes.length) chips.push(propertyTypes.slice(0, 2).map(humanizeSnakeCase).join(", "));
+
+    const statuses = asStringArray(criteria.statuses);
+    if (statuses.length) chips.push(statuses.slice(0, 2).map(humanizeSnakeCase).join(", "));
+
+    return chips;
   };
 
   const formatRelativeDate = (isoDate: string | null | undefined) => {
@@ -501,9 +545,7 @@ const HotSheets = ({
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
-                    const hasNewListings = Boolean(
-                      sheet.last_sent_at && (Date.now() - new Date(sheet.last_sent_at).getTime()) < 1000 * 60 * 60 * 48
-                    );
+                    const criteriaChips = buildBuyerCriteriaChips(sheet.criteria);
 
                     return (
                       <article
@@ -517,19 +559,19 @@ const HotSheets = ({
                             openBuyerHotSheet(sheet.id, token);
                           }
                         }}
-                        className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_6px_20px_rgba(15,23,42,0.05)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.09)]"
+                        className="rounded-[22px] border border-aac-card-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-aac-card-borderHover hover:shadow-md"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h3 className="truncate text-[17px] font-semibold tracking-tight text-zinc-900">{sheet.name}</h3>
-                            <p className="mt-1 text-sm text-zinc-600 line-clamp-2">{formatBuyerCriteriaSummary(sheet.criteria)}</p>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{sheet.name}</h3>
+                            <p className="mt-1 truncate text-sm text-muted-foreground">{getBuyerLocationSummary(sheet.criteria)}</p>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-lg text-zinc-500 hover:bg-zinc-100"
+                                className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:bg-muted"
                                 onClick={(event) => event.stopPropagation()}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
@@ -541,56 +583,61 @@ const HotSheets = ({
                                   event.stopPropagation();
                                   setDeleteBuyerSheetId(sheet.id);
                                 }}
-                                className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 focus:bg-gray-50 focus:text-red-600 data-[highlighted]:bg-gray-50 data-[highlighted]:text-red-600"
+                                className="flex cursor-pointer items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-destructive hover:bg-muted focus:bg-muted focus:text-destructive data-[highlighted]:bg-muted data-[highlighted]:text-destructive"
                               >
-                                <Trash2 className="h-4 w-4 shrink-0 text-red-600" />
+                                <Trash2 className="h-4 w-4 shrink-0 text-destructive" />
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
 
-                        <div className="mt-3 flex items-center gap-2 flex-wrap">
-                          {hasNewListings && (
-                            <span className="inline-flex items-center rounded-full bg-[#0E56F5]/10 px-2.5 py-1 text-[11px] font-semibold text-[#0E56F5]">
-                              New listings
-                            </span>
-                          )}
-                        </div>
+                        {criteriaChips.length > 0 && (
+                          <div className="mt-5 flex flex-wrap gap-2">
+                            {criteriaChips.map((chip) => (
+                              <span key={chip} className="inline-flex items-center rounded-full border border-aac-card-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+                                {chip}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
-                        <p className="mt-3 text-xs text-zinc-500">
-                          Last updated {formatRelativeDate(sheet.last_sent_at || sheet.created_at)}
-                        </p>
+                        <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
+                          <p className="min-w-0 truncate text-xs text-muted-foreground">
+                            Last updated {formatRelativeDate(sheet.updated_at || sheet.last_sent_at || sheet.created_at)}
+                          </p>
 
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                          <Button
-                            variant="outline"
-                            className="h-9 rounded-lg border-zinc-200 text-sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openBuyerHotSheet(sheet.id, token);
-                            }}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="h-9 rounded-lg border-zinc-200 text-sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (!sheet.user_id) {
-                                toast.error("This hot sheet cannot be edited right now");
-                                return;
-                              }
-                              setEditingHotSheetId(sheet.id);
-                              setEditingSheetOwnerUserId(sheet.user_id);
-                              setEditDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </Button>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Button
+                              size="sm"
+                              className="h-9 rounded-full px-4 text-sm font-semibold"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openBuyerHotSheet(sheet.id, token);
+                              }}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9 rounded-full border-aac-card-border px-4 text-sm font-semibold text-foreground hover:bg-muted"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                if (!sheet.user_id) {
+                                  toast.error("This hot sheet cannot be edited right now");
+                                  return;
+                                }
+                                setEditingHotSheetId(sheet.id);
+                                setEditingSheetOwnerUserId(sheet.user_id);
+                                setEditDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                          </div>
                         </div>
                       </article>
                     );
