@@ -673,6 +673,9 @@ export default function ClientDashboard() {
   const listingPreviewMediaWrap =
     "relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-neutral-50";
   const listingPreviewBody = "flex flex-col gap-2 p-4 text-left";
+  const compactPreviewMediaWrap =
+    "relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-neutral-50";
+  const compactPreviewBody = "flex min-h-[5.25rem] flex-col gap-1.5 p-3 text-left";
   const outlineSecondaryClass =
     "border border-neutral-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-neutral-50 hover:shadow-sm";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
@@ -836,7 +839,7 @@ export default function ClientDashboard() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
-                  <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
+                  <CardHeader className="p-5 pb-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 space-y-1">
                         <CardTitle className="text-base font-semibold text-gray-900">Hot Sheets</CardTitle>
@@ -863,7 +866,7 @@ export default function ClientDashboard() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-6 pt-4 md:p-7 md:pt-5">
+                  <CardContent className="p-5 pt-3">
                     {hotSheets.length > 0 ? (
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         {hotSheets.slice(0, 3).map((sheet) => {
@@ -873,7 +876,7 @@ export default function ClientDashboard() {
                               key={sheet.id}
                               role="button"
                               tabIndex={0}
-                              className={`${dashboardPreviewTileInteractive} flex flex-col`}
+                              className={`${dashboardPreviewTileInteractive} flex flex-col rounded-xl`}
                               onClick={() => navigate(viewPath)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter" && e.key !== " ") return;
@@ -881,7 +884,7 @@ export default function ClientDashboard() {
                                 navigate(viewPath);
                               }}
                             >
-                              <div className={`${listingPreviewMediaWrap} shrink-0 rounded-t-2xl`}>
+                              <div className={`${compactPreviewMediaWrap} shrink-0 rounded-t-xl`}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
@@ -928,11 +931,11 @@ export default function ClientDashboard() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
-                              <div className={`${listingPreviewBody} flex-1`}>
-                                <p className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-gray-900">
+                               <div className={`${compactPreviewBody} flex-1`}>
+                                <p className="line-clamp-1 text-sm font-semibold leading-snug tracking-tight text-gray-900">
                                   {sheet.name}
                                 </p>
-                                <p className="line-clamp-2 text-sm font-medium leading-snug text-gray-800">
+                                <p className="line-clamp-2 text-xs font-medium leading-snug text-gray-600">
                                   {formatBuyerCriteriaSummary(sheet.criteria)}
                                 </p>
                               </div>
@@ -962,7 +965,7 @@ export default function ClientDashboard() {
 
               <div className={`${aacCardShell} overflow-hidden`}>
                 <div className="rounded-none bg-transparent">
-                <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
+                <CardHeader className="space-y-1 p-5 pb-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle className="text-base font-semibold text-gray-900">Favorites</CardTitle>
                     <Button
@@ -976,7 +979,7 @@ export default function ClientDashboard() {
                   </div>
                   <CardDescription className="text-sm text-gray-500">Homes you saved.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 pt-4 md:p-7 md:pt-5">
+                <CardContent className="p-5 pt-3">
                   {favorites.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {favorites.slice(0, 3).map((fav) => {
@@ -985,24 +988,24 @@ export default function ClientDashboard() {
                           <button
                             key={fav.id}
                             type="button"
-                            className={`${dashboardPreviewTileInteractive} flex w-full flex-col`}
+                            className={`${dashboardPreviewTileInteractive} flex w-full flex-col rounded-xl`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
-                            <div className={`${listingPreviewMediaWrap} rounded-t-2xl`}>
+                            <div className={`${compactPreviewMediaWrap} rounded-t-xl`}>
                               <DashboardListingImage
                                 photoUrl={favPhotoUrl}
                                 alt=""
                                 imageClassName="absolute inset-0 h-full w-full object-cover"
                               />
                             </div>
-                            <div className={listingPreviewBody}>
-                              <p className="text-lg font-semibold tracking-tight text-gray-900">
+                            <div className={compactPreviewBody}>
+                              <p className="text-sm font-semibold tracking-tight text-gray-900">
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
-                              <p className="line-clamp-2 text-sm font-medium leading-snug text-gray-800">
+                              <p className="line-clamp-1 text-xs font-medium leading-snug text-gray-800">
                                 {fav.listing.address}
                               </p>
-                              <p className="truncate text-sm text-gray-500">
+                              <p className="truncate text-xs text-gray-500">
                                 {fav.listing.city}, {fav.listing.state}
                               </p>
                             </div>
