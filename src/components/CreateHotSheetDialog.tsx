@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Check, Loader2, UserPlus, FileDown, Save, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Check, Loader2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
@@ -51,22 +51,6 @@ interface CreateHotSheetDialogProps {
   hideNotificationSettings?: boolean;
 }
 
-interface HotSheetDraft {
-  hotSheetName: string;
-  criteria: Record<string, unknown>;
-  createdAt: string;
-}
-
-const SQL_TO_FORM_MAP: Array<{ formLabel: string; sqlField: string }> = [
-  { formLabel: "Hot Sheet Name", sqlField: "hot_sheets.name" },
-  { formLabel: "Statuses", sqlField: "hot_sheets.criteria.statuses" },
-  { formLabel: "Property Types", sqlField: "hot_sheets.criteria.propertyTypes" },
-  { formLabel: "Min/Max Price", sqlField: "notification_preferences.min_price/max_price" },
-  { formLabel: "Towns & Areas", sqlField: "agent_buyer_coverage_areas.city/neighborhood" },
-  { formLabel: "Beds/Baths/SqFt", sqlField: "hot_sheets.criteria.bedrooms/bathrooms/minSqft/maxSqft" },
-  { formLabel: "Contacts", sqlField: "hot_sheet_clients.client_id" },
-];
-
 export function CreateHotSheetDialog({
   open,
   onOpenChange,
@@ -105,7 +89,6 @@ export function CreateHotSheetDialog({
   const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
-  const [showDraftResumeDialog, setShowDraftResumeDialog] = useState(false);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -195,10 +178,6 @@ export function CreateHotSheetDialog({
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
 
-  const draftStorageKey = useMemo(
-    () => `aac:hotsheet:draft:${userId}:${hotSheetId || "new"}`,
-    [userId, hotSheetId]
-  );
   
   const resetDialogState = () => {
     setShowCreateClientDialog(false);
@@ -822,69 +801,6 @@ export function CreateHotSheetDialog({
     return { valid: true, message: "ok" };
   };
 
-  const handleSaveDraft = () => {
-    const draft: HotSheetDraft = {
-      hotSheetName,
-      criteria: buildCriteriaPayload(),
-      createdAt: new Date().toISOString(),
-    };
-    window.localStorage.setItem(draftStorageKey, JSON.stringify(draft));
-    toast.success("Draft saved");
-  };
-
-  const handleResumeDraft = () => {
-    const raw = window.localStorage.getItem(draftStorageKey);
-    if (!raw) {
-      toast.info("No draft found");
-      return;
-    }
-
-    try {
-      const draft = JSON.parse(raw) as HotSheetDraft;
-      const criteria = (draft.criteria || {}) as Record<string, unknown>;
-      setHotSheetName(draft.hotSheetName || "");
-      setListingNumbers(typeof criteria.listingNumbers === "string" ? criteria.listingNumbers : "");
-      setAddress(typeof criteria.address === "string" ? criteria.address : "");
-      setPropertyTypes(Array.isArray(criteria.propertyTypes) ? (criteria.propertyTypes as string[]) : []);
-      setStatuses(normalizeStatusSelection(Array.isArray(criteria.statuses) ? (criteria.statuses as string[]) : []));
-      setMinPrice(criteria.minPrice != null ? String(criteria.minPrice) : "");
-      setMaxPrice(criteria.maxPrice != null ? String(criteria.maxPrice) : "");
-      setHasNoMin(criteria.hasNoMin === true);
-      setHasNoMax(criteria.hasNoMax === true);
-      setBedrooms(criteria.bedrooms != null ? String(criteria.bedrooms) : "");
-      setBathrooms(criteria.bathrooms != null ? String(criteria.bathrooms) : "");
-      setRooms(criteria.rooms != null ? String(criteria.rooms) : "");
-      setAcres(criteria.acres != null ? String(criteria.acres) : "");
-      setMinSqft(criteria.minSqft != null ? String(criteria.minSqft) : "");
-      setMaxSqft(criteria.maxSqft != null ? String(criteria.maxSqft) : "");
-      setPricePerSqft(criteria.pricePerSqft != null ? String(criteria.pricePerSqft) : "");
-      setZipCode(typeof criteria.zipCode === "string" ? criteria.zipCode : "");
-      setSelectedCities(
-        normalizeTownSelections(Array.isArray(criteria.cities) ? (criteria.cities as string[]) : [])
-      );
-      setState(typeof criteria.state === "string" ? criteria.state : "MA");
-      setSelectedCountyId(typeof criteria.selectedCountyId === "string" ? criteria.selectedCountyId : "all");
-      toast.success("Draft resumed");
-    } catch {
-      toast.error("Draft could not be loaded");
-    }
-  };
-
-  const handleExportSummary = async () => {
-    const payload = {
-      hotSheetName,
-      contacts: selectedClients.map((c) => ({ name: `${c.first_name} ${c.last_name}`, email: c.email })),
-      criteria: buildCriteriaPayload(),
-      sqlToFormMap: SQL_TO_FORM_MAP,
-      matchingListingsCount,
-      generatedAt: new Date().toISOString(),
-    };
-
-    const pretty = JSON.stringify(payload, null, 2);
-    await navigator.clipboard.writeText(pretty);
-    toast.success("Hot Sheet summary copied to clipboard");
-  };
-
   const handleAddClientWithoutSaving = () => {
     // Add client to hot sheet without saving to database
     setSelectedClients(prev => [...prev, {
@@ -1110,7 +1026,7 @@ export function CreateHotSheetDialog({
         }
 
         toast.success("Hot sheet created");
-        window.localStorage.removeItem(draftStorageKey);
+        window.localStorage.removeItem(`aac:hotsheet:draft:${userId}:new`);
 
         // Queue initial notifications in the background; do not block user navigation.
         enqueuePostCreateNotifications(createdHotSheet.id);
@@ -1196,14 +1112,6 @@ export function CreateHotSheetDialog({
     setNotificationSchedule("immediately");
   };
 
-  useEffect(() => {
-    if (!open || editMode) return;
-    const existing = window.localStorage.getItem(draftStorageKey);
-    if (existing) {
-      setShowDraftResumeDialog(true);
-    }
-  }, [open, editMode, draftStorageKey]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -1232,38 +1140,6 @@ export function CreateHotSheetDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={handleSaveDraft}>
-              <Save className="mr-1.5 h-4 w-4" />
-              Save Draft
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleResumeDraft}>
-              Resume Draft
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleExportSummary}>
-              <FileDown className="mr-1.5 h-4 w-4" />
-              Export Hot Sheet Summary
-            </Button>
-          </div>
-
-          <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs font-semibold uppercase text-zinc-700">Form Section Preview</p>
-            <p className="mt-1 text-xs text-zinc-600">
-              Name: {hotSheetName || "Untitled"} | Contacts: {selectedClients.length} | Towns/Areas: {selectedCities.length} | Statuses: {statuses.length} | Matching Listings: {matchingListingsCount}
-            </p>
-          </div>
-
-          <div className="rounded-md border border-zinc-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase text-zinc-700">Map SQL to Form</p>
-            <div className="mt-2 grid grid-cols-1 gap-1 text-xs text-zinc-600 sm:grid-cols-2">
-              {SQL_TO_FORM_MAP.map((row) => (
-                <p key={row.formLabel}>
-                  <span className="font-medium text-zinc-800">{row.formLabel}:</span> {row.sqlField}
-                </p>
-              ))}
-            </div>
-          </div>
-
           {/* Hot Sheet Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Hot Sheet Name <span className="text-[#0E56F5]">*</span></Label>
@@ -1353,15 +1229,6 @@ export function CreateHotSheetDialog({
               ) : (
                 <div className="rounded-md border border-dashed border-neutral-300 p-4 text-sm text-muted-foreground">
                   <p>Add a client to receive Hot Sheet matches by email.</p>
-                  <Button
-                    type="button"
-                    className="shadow-sm mt-2"
-                    size="sm"
-                    onClick={() => setShowClientPicker(true)}
-                  >
-                    <UserPlus className="mr-1.5 h-4 w-4" />
-                    Add Contact
-                  </Button>
                 </div>
               )}
 
@@ -2207,35 +2074,6 @@ export function CreateHotSheetDialog({
               ) : (
                 "Yes"
               )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showDraftResumeDialog} onOpenChange={setShowDraftResumeDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Resume Draft?</AlertDialogTitle>
-            <AlertDialogDescription>
-              A saved Hot Sheet draft was found. You can resume it or start fresh.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                window.localStorage.removeItem(draftStorageKey);
-                setShowDraftResumeDialog(false);
-              }}
-            >
-              Start Fresh
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                handleResumeDraft();
-                setShowDraftResumeDialog(false);
-              }}
-            >
-              Resume Draft
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
