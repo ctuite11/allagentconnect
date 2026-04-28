@@ -102,11 +102,11 @@ function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | u
   return parts.join(" • ") || "Custom search criteria";
 }
 
-/** Collage for dashboard hot sheet previews (`h-32`). */
+/** Collage fills the same `aspect-[4/3]` media frame as favorites listing cards. */
 function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
   if (!photoUrls.length) {
     return (
-      <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-t-xl bg-zinc-100">
+      <div className="relative h-full min-h-0 w-full overflow-hidden bg-zinc-100">
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 via-zinc-50 to-[#0E56F5]/10" />
         <div className="relative flex h-full items-center justify-center">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
@@ -119,7 +119,7 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   if (photoUrls.length === 1) {
     return (
-      <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-t-xl bg-zinc-100">
+      <div className="relative h-full min-h-0 w-full overflow-hidden bg-zinc-100">
         <img src={photoUrls[0]} alt="" className="h-full w-full object-cover" />
       </div>
     );
@@ -127,7 +127,7 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   const collagePhotos = photoUrls.slice(0, 4);
   return (
-    <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-t-xl bg-zinc-100">
+    <div className="relative h-full min-h-0 w-full overflow-hidden bg-zinc-100">
       <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-white">
         {collagePhotos.map((photoUrl, idx) => (
           <img key={`${photoUrl}-${idx}`} src={photoUrl} alt="" className="h-full w-full object-cover" />
@@ -680,7 +680,7 @@ export default function ClientDashboard() {
   const aacCardInteractive =
     `${aacCardShell} cursor-pointer hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
   const dashboardPreviewTile =
-    "relative w-full overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition-all hover:border-neutral-300 hover:shadow-md";
+    "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm transition-all hover:border-neutral-300 hover:shadow-md";
   const dashboardPreviewTileInteractive =
     `${dashboardPreviewTile} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
   /** Vertical listing-style previews (favorites & market sections). */
@@ -887,73 +887,76 @@ export default function ClientDashboard() {
                               key={sheet.id}
                               className={`${dashboardPreviewTile} flex flex-col`}
                             >
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    className={`absolute right-2 top-2 z-10 h-8 w-8 rounded-full border ${outlineSecondaryClass}`}
-                                    aria-label="Hot sheet actions"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                  className="min-w-[10rem]"
-                                  onCloseAutoFocus={(e) => e.preventDefault()}
-                                >
-                                  <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (!sheet.user_id) {
-                                        toast.error("This hot sheet cannot be edited right now.");
-                                        return;
-                                      }
-                                      setEditingHotSheetId(sheet.id);
-                                      setEditingHotSheetOwnerUserId(sheet.user_id);
-                                      setEditHotSheetDialogOpen(true);
-                                    }}
-                                  >
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setHotSheetDeleteId(sheet.id);
-                                    }}
-                                  >
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <div
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => navigate(viewPath)}
-                                onKeyDown={(e) => {
-                                  if (e.key !== "Enter" && e.key !== " ") return;
-                                  e.preventDefault();
-                                  navigate(viewPath);
-                                }}
-                                className="flex min-h-0 flex-1 cursor-pointer flex-col text-left outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                              >
+                              <div className={`${listingPreviewMediaWrap} rounded-t-2xl`}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
-                                <div className="flex flex-1 flex-col gap-2 p-4 pt-3">
-                                  <p className="line-clamp-2 text-base font-semibold leading-snug tracking-tight text-gray-900">
-                                    {sheet.name}
-                                  </p>
-                                  <p className="line-clamp-3 text-sm leading-relaxed text-gray-600">
-                                    {formatBuyerCriteriaSummary(sheet.criteria)}
-                                  </p>
-                                  <p className="mt-auto pt-1 text-xs text-gray-400">
-                                    {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
-                                  </p>
-                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className={`absolute right-2 top-2 z-10 h-8 w-8 rounded-full border ${outlineSecondaryClass}`}
+                                      aria-label="Hot sheet menu"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="min-w-[10rem]"
+                                    onCloseAutoFocus={(e) => e.preventDefault()}
+                                  >
+                                    <DropdownMenuItem
+                                      className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setHotSheetDeleteId(sheet.id);
+                                      }}
+                                    >
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                              <div className={`${listingPreviewBody} flex-1 pb-2`}>
+                                <p className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-gray-900">
+                                  {sheet.name}
+                                </p>
+                                <p className="line-clamp-2 text-sm font-medium leading-snug text-gray-800">
+                                  {formatBuyerCriteriaSummary(sheet.criteria)}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  Last updated —{" "}
+                                  {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 border-t border-neutral-100 px-4 pb-4 pt-3">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className={`h-8 min-w-0 flex-1 text-xs ${primaryCtaClass}`}
+                                  onClick={() => navigate(viewPath)}
+                                >
+                                  View
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className={`h-8 min-w-0 flex-1 text-xs ${outlineSecondaryClass}`}
+                                  onClick={() => {
+                                    if (!sheet.user_id) {
+                                      toast.error("This hot sheet cannot be edited right now.");
+                                      return;
+                                    }
+                                    setEditingHotSheetId(sheet.id);
+                                    setEditingHotSheetOwnerUserId(sheet.user_id);
+                                    setEditHotSheetDialogOpen(true);
+                                  }}
+                                >
+                                  Edit
+                                </Button>
                               </div>
                             </article>
                           );
@@ -1007,7 +1010,7 @@ export default function ClientDashboard() {
                             className={`${dashboardPreviewTileInteractive} flex w-full flex-col`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
-                            <div className={`${listingPreviewMediaWrap} rounded-t-xl`}>
+                            <div className={`${listingPreviewMediaWrap} rounded-t-2xl`}>
                               <DashboardListingImage
                                 photoUrl={favPhotoUrl}
                                 alt=""
@@ -1080,7 +1083,7 @@ export default function ClientDashboard() {
                           }
                         }}
                       >
-                        <div className={`${listingPreviewMediaWrap} rounded-t-xl`}>
+                        <div className={`${listingPreviewMediaWrap} rounded-t-2xl`}>
                           <DashboardListingImage
                             photoUrl={getPrimaryPhotoUrl(listing.photos)}
                             alt={listing.address}
