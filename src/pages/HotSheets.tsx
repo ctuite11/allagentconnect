@@ -338,12 +338,16 @@ const HotSheets = ({
       const photoEntries = await Promise.all(
         sheets.map(async (sheet) => {
           if (!sheet.criteria) return [sheet.id, []] as const;
-          const { data: matchedListings } = await buildListingsQuery(supabase, sheet.criteria).limit(12);
-          const photos = ((matchedListings || []) as Array<{ photos?: unknown }>)
-            .map((listing) => extractPhotoUrl(listing.photos))
-            .filter((url): url is string => Boolean(url))
-            .slice(0, 4);
-          return [sheet.id, photos] as const;
+          try {
+            const { data: matchedListings } = await buildListingsQuery(supabase, sheet.criteria).limit(12);
+            const photos = ((matchedListings || []) as Array<{ photos?: unknown }>)
+              .map((listing) => extractPhotoUrl(listing.photos))
+              .filter((url): url is string => Boolean(url))
+              .slice(0, 4);
+            return [sheet.id, photos] as const;
+          } catch {
+            return [sheet.id, []] as const;
+          }
         })
       );
 
