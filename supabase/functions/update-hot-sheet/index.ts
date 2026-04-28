@@ -41,18 +41,20 @@ const handler = async (req: Request): Promise<Response> => {
     if (!existing) throw new Error("Hot sheet not found");
 
     if (existing.user_id !== userData.user.id) {
-      const { data: link } = await adminClient
+      const { data: links } = await adminClient
         .from("hot_sheet_clients")
         .select("client_id")
-        .eq("hot_sheet_id", hotSheetId)
-        .maybeSingle();
+        .eq("hot_sheet_id", hotSheetId);
+
+      const linkedClientIds = (links || []).map((link) => link.client_id).filter(Boolean);
+      if (!linkedClientIds.length) throw new Error("Not allowed to update this hot sheet");
 
       const { data: relationship } = await adminClient
         .from("client_agent_relationships")
         .select("id")
         .eq("agent_id", existing.user_id)
         .eq("client_id", userData.user.id)
-        .eq("crm_client_id", link?.client_id ?? "00000000-0000-0000-0000-000000000000")
+        .in("crm_client_id", linkedClientIds)
         .in("status", ["active", "pending"])
         .maybeSingle();
 
