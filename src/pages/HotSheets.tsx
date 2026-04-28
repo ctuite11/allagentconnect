@@ -105,6 +105,17 @@ interface AgentHotSheetRow {
 const asStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
+const extractPhotoUrl = (photos: unknown): string | null => {
+  const photoList = Array.isArray(photos) ? photos : [];
+  const first = photoList[0];
+  if (typeof first === "string") return first.trim() || null;
+  if (first && typeof first === "object" && "url" in first) {
+    const url = (first as { url?: unknown }).url;
+    return typeof url === "string" && url.trim() ? url : null;
+  }
+  return null;
+};
+
 const HotSheets = ({
   isPublicMode = false,
   isAgentMode = false,
