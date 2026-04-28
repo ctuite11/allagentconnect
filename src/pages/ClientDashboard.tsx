@@ -804,7 +804,7 @@ export default function ClientDashboard() {
                               <div className={`${compactPreviewMediaWrap} shrink-0 rounded-t-xl`}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
                               </div>
-                              <div className={`${compactPreviewBody} flex-1 justify-center`}>
+                              <div className={compactPreviewBody}>
                                 <p className="line-clamp-1 text-sm font-semibold leading-snug tracking-tight text-gray-900">
                                   {sheet.name}
                                 </p>
@@ -873,10 +873,10 @@ export default function ClientDashboard() {
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
                               <p className="line-clamp-1 text-xs font-medium leading-snug text-gray-800">
-                                {fav.listing.address}
+                                {getShortAddressLine(fav.listing.address)}
                               </p>
                               <p className="truncate text-xs text-gray-500">
-                                {fav.listing.city}, {fav.listing.state}
+                                Boston, MA
                               </p>
                             </div>
                           </button>
