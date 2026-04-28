@@ -538,6 +538,11 @@ export default function ClientDashboard() {
     return "/placeholder.svg";
   };
 
+  const getShortAddressLine = (address: string | null | undefined): string => {
+    const firstLine = address?.split(",")[0]?.trim();
+    return firstLine || "Address unavailable";
+  };
+
   const latestListingsPreview = marketListings.slice(0, 4);
 
   const stats = [
@@ -586,8 +591,8 @@ export default function ClientDashboard() {
     "relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-neutral-50";
   const listingPreviewBody = "flex flex-col gap-2 p-4 text-left";
   const compactPreviewMediaWrap =
-    "relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-neutral-50";
-  const compactPreviewBody = "flex min-h-[5.25rem] flex-col gap-1.5 p-3 text-left";
+    "relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-neutral-50";
+  const compactPreviewBody = "flex h-16 min-h-0 flex-col justify-center gap-0.5 p-3 text-left";
   const outlineSecondaryClass =
     "border border-neutral-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-neutral-50 hover:shadow-sm";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
@@ -799,7 +804,7 @@ export default function ClientDashboard() {
                               <div className={`${compactPreviewMediaWrap} shrink-0 rounded-t-xl`}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
                               </div>
-                              <div className={`${compactPreviewBody} flex-1 justify-center`}>
+                              <div className={compactPreviewBody}>
                                 <p className="line-clamp-1 text-sm font-semibold leading-snug tracking-tight text-gray-900">
                                   {sheet.name}
                                 </p>
@@ -868,10 +873,10 @@ export default function ClientDashboard() {
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
                               <p className="line-clamp-1 text-xs font-medium leading-snug text-gray-800">
-                                {fav.listing.address}
+                                {getShortAddressLine(fav.listing.address)}
                               </p>
                               <p className="truncate text-xs text-gray-500">
-                                {fav.listing.city}, {fav.listing.state}
+                                Boston, MA
                               </p>
                             </div>
                           </button>
