@@ -32,7 +32,6 @@ import {
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 // HotSheetSubscribersSection removed — sharing belongs in create/edit flow
-import { useListingInterestSignals } from "@/hooks/useListingInterestSignals";
 // ─── Pending Invites section ────────────────────────────────────────────────
 
 interface PendingInvite {
@@ -274,13 +273,6 @@ const HotSheetReview = () => {
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
-  const [favoritedListingIds, setFavoritedListingIds] = useState<Set<string>>(new Set());
-
-  // Buyer interest signals for listing cards
-  const { signals: interestSignals } = useListingInterestSignals(
-    agentUserId,
-    listings.map((l) => l.id),
-  );
 
   useEffect(() => {
     if (id) {
