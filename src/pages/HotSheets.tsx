@@ -337,16 +337,32 @@ const HotSheets = ({
         console.error("Failed to load hot sheets", sheetErr);
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
+        setBuyerPhotosByHotSheetId({});
         return;
       }
 
-      setBuyerHotSheets((hotSheetRows || []) as BuyerHotSheetItem[]);
+      const sheets = (hotSheetRows || []) as BuyerHotSheetItem[];
+      const photoEntries = await Promise.all(
+        sheets.map(async (sheet) => {
+          if (!sheet.criteria) return [sheet.id, []] as const;
+          const { data: matchedListings } = await buildListingsQuery(supabase, sheet.criteria).limit(12);
+          const photos = ((matchedListings || []) as Array<{ photos?: unknown }>)
+            .map((listing) => extractPhotoUrl(listing.photos))
+            .filter((url): url is string => Boolean(url))
+            .slice(0, 4);
+          return [sheet.id, photos] as const;
+        })
+      );
+
+      setBuyerHotSheets(sheets);
       setBuyerTokenByHotSheetId(tokenMap);
+      setBuyerPhotosByHotSheetId(Object.fromEntries(photoEntries));
     } catch (error) {
       console.error("Error loading buyer hot sheets", error);
       toast.error("Unable to load Hot Sheets right now");
       setBuyerHotSheets([]);
       setBuyerTokenByHotSheetId({});
+      setBuyerPhotosByHotSheetId({});
     } finally {
       setBuyerLoading(false);
     }
