@@ -13,13 +13,20 @@ import {
   Search,
   Sparkles,
   Mail,
-  Eye,
+  MoreHorizontal,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { humanizeSnakeCase } from "@/lib/format";
@@ -194,6 +201,11 @@ export default function ClientDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
+  const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
+  const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
+  const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
+  const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
+  const [hotSheetDeleteLoading, setHotSheetDeleteLoading] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -411,6 +423,42 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleDashboardHotSheetEditSuccess = () => {
+    if (currentUserId) void loadBuyerHotSheetsForDashboard(currentUserId);
+  };
+
+  const handleConfirmDeleteDashboardHotSheet = async () => {
+    if (!hotSheetDeleteId || hotSheetDeleteLoading) return;
+    const id = hotSheetDeleteId;
+    setHotSheetDeleteLoading(true);
+
+    const { error: clientsError } = await supabase
+      .from("hot_sheet_clients")
+      .delete()
+      .eq("hot_sheet_id", id);
+
+    if (clientsError) {
+      console.error("Delete hot_sheet_clients failed:", clientsError);
+      toast.error("Unable to delete this hot sheet.");
+      setHotSheetDeleteLoading(false);
+      return;
+    }
+
+    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
+
+    if (sheetError) {
+      console.error("Delete hot_sheets failed:", sheetError);
+      toast.error("Unable to delete this hot sheet.");
+      setHotSheetDeleteLoading(false);
+      return;
+    }
+
+    toast.success("Hot sheet deleted");
+    setHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
+    setHotSheetDeleteLoading(false);
+    setHotSheetDeleteId(null);
+  };
+
   const loadFavorites = async (userId: string) => {
     const { data } = await supabase
       .from("favorites")
@@ -550,6 +598,10 @@ export default function ClientDashboard() {
     `${premiumCard} cursor-pointer hover:shadow-[0_8px_26px_rgba(15,23,42,0.14)] hover:-translate-y-[2px] active:translate-y-0`;
   const outlineSecondaryClass =
     "border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-gray-50 hover:shadow-sm";
+  const hotSheetCardPrimaryBtn =
+    "h-10 rounded-lg bg-[#0E56F5] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0B46CC]";
+  const hotSheetCardSecondaryBtn =
+    "h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-900 shadow-sm transition-colors hover:bg-gray-50";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
 
   if (loading) {
@@ -733,34 +785,88 @@ export default function ClientDashboard() {
                         Create hot sheet
                       </Button>
                       <div className="space-y-3">
-                        {hotSheets.slice(0, 3).map((sheet) => (
-                          <div
-                            key={sheet.id}
-                            className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_4px_12px_rgba(15,23,42,0.06)]"
-                          >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                              <div className="min-w-0 flex-1 space-y-1.5">
-                                <p className="truncate text-sm font-semibold text-gray-900">{sheet.name}</p>
-                                <p className="line-clamp-2 text-xs leading-relaxed text-gray-600">
-                                  {formatBuyerCriteriaSummary(sheet.criteria)}
-                                </p>
-                                <p className="text-[11px] text-gray-500">
-                                  Last updated {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
-                                </p>
+                        {hotSheets.slice(0, 3).map((sheet) => {
+                          const viewPath = `/client/hot-sheets/${sheet.id}`;
+                          return (
+                            <div
+                              key={sheet.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => navigate(viewPath)}
+                              onKeyDown={(e) => {
+                                if (e.key !== "Enter" && e.key !== " ") return;
+                                e.preventDefault();
+                                navigate(viewPath);
+                              }}
+                              className="cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-[box-shadow,border-color] hover:border-gray-300 hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="min-w-0 flex-1 space-y-1.5">
+                                  <p className="truncate text-sm font-semibold tracking-tight text-gray-900">{sheet.name}</p>
+                                  <p className="line-clamp-2 text-xs leading-relaxed text-gray-600">
+                                    {formatBuyerCriteriaSummary(sheet.criteria)}
+                                  </p>
+                                  <p className="text-[11px] text-gray-500">
+                                    Last updated {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
+                                  </p>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 shrink-0 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                                      aria-label="Hot sheet options"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="min-w-[10rem]">
+                                    <DropdownMenuItem
+                                      className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setHotSheetDeleteId(sheet.id);
+                                      }}
+                                    >
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className={`h-9 shrink-0 whitespace-nowrap sm:self-start ${outlineSecondaryClass}`}
-                                onClick={() => navigate(`/client/hot-sheets/${sheet.id}`)}
-                              >
-                                <Eye className="mr-1.5 h-4 w-4" />
-                                View
-                              </Button>
+                              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                <Button
+                                  type="button"
+                                  className={hotSheetCardPrimaryBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(viewPath);
+                                  }}
+                                >
+                                  View Hot Sheet
+                                </Button>
+                                <Button
+                                  type="button"
+                                  className={hotSheetCardSecondaryBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!sheet.user_id) {
+                                      toast.error("This hot sheet cannot be edited right now.");
+                                      return;
+                                    }
+                                    setEditingHotSheetId(sheet.id);
+                                    setEditingHotSheetOwnerUserId(sheet.user_id);
+                                    setEditHotSheetDialogOpen(true);
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </>
                   ) : (
@@ -939,6 +1045,51 @@ export default function ClientDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(hotSheetDeleteId)}
+        onOpenChange={(open) => {
+          if (!open && !hotSheetDeleteLoading) setHotSheetDeleteId(null);
+        }}
+      >
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
+            <AlertDialogDescription>This will remove this hot sheet and its alerts.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={hotSheetDeleteLoading}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={hotSheetDeleteLoading}
+              onClick={() => void handleConfirmDeleteDashboardHotSheet()}
+            >
+              {hotSheetDeleteLoading ? "Deleting…" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {editingHotSheetId && editingHotSheetOwnerUserId ? (
+        <CreateHotSheetDialog
+          key={editingHotSheetId}
+          open={editHotSheetDialogOpen}
+          onOpenChange={(open) => {
+            setEditHotSheetDialogOpen(open);
+            if (!open) {
+              setEditingHotSheetId(null);
+              setEditingHotSheetOwnerUserId(null);
+            }
+          }}
+          userId={editingHotSheetOwnerUserId}
+          hotSheetId={editingHotSheetId}
+          editMode
+          onSuccess={() => {
+            handleDashboardHotSheetEditSuccess();
+          }}
+        />
+      ) : null}
 
       <AddFriendDialog open={addFriendOpen} onOpenChange={setAddFriendOpen} />
     </div>
