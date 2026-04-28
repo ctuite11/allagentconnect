@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import ListingCard from "@/components/ListingCard";
+import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { format } from "date-fns";
@@ -493,14 +493,6 @@ const HotSheetReview = () => {
       if (listingsError) throw listingsError;
       setListings(listingsData || []);
       setAllListings(listingsData || []);
-
-      const { data: favRows } = await supabase
-        .from("hot_sheet_favorites")
-        .select("listing_id")
-        .eq("hot_sheet_id", id as string);
-      setFavoritedListingIds(
-        new Set((favRows ?? []).map((r: { listing_id: string }) => r.listing_id).filter(Boolean)),
-      );
 
 // Load listing agents for display
 const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
@@ -1106,34 +1098,18 @@ if (comments && comments.length > 0) {
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  viewMode="compact"
-                  showActions={false}
-                  onSelect={toggleListing}
-                  isSelected={selectedListings.has(listing.id)}
-                  agentInfo={
-                    agentMap[listing.agent_id]
-                      ? {
-                          name: agentMap[listing.agent_id].fullName,
-                          company: agentMap[listing.agent_id].company
-                        }
-                      : null
-                  }
-                  chatMessages={messagesMap[listing.id]}
-                  hotSheetId={id}
-                  onNewMessage={handleNewMessage}
-                  onOpenChat={() => {
-                    setChatListingId(listing.id);
-                    setChatDrawerOpen(true);
-                  }}
-                  interestSignals={interestSignals[listing.id] || null}
-                  isHotSheetFavorite={favoritedListingIds.has(listing.id)}
-                />
-              ))}
+            <div className="mx-auto max-w-[88rem]">
+              <ListingResultsTable
+                listings={sortedListings}
+                loading={false}
+                sortColumn={sortBy}
+                sortDirection="desc"
+                onSort={() => undefined}
+                selectedRows={selectedListings}
+                onToggleSelect={toggleListing}
+                onRowClick={(listing) => navigate(`/property/${listing.id}`, { state: { from: `/hot-sheets/${id}/review` } })}
+                fromPath={`/hot-sheets/${id}/review`}
+              />
             </div>
           )}
         </div>
