@@ -14,7 +14,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, Check, Loader2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -653,11 +652,12 @@ export function CreateHotSheetDialog({
       return;
     }
 
-    if (selectedClients.length === 0) {
-      toast.message("Add friends or family to receive matches");
+    if (editMode) {
+      await handleCreate();
+      return;
     }
 
-    // Show confirmation dialog
+    // Show confirmation dialog for new hot sheets only
     setShowConfirmDialog(true);
   };
 
@@ -841,10 +841,6 @@ export function CreateHotSheetDialog({
 
       if (editMode && hotSheetId) {
         const submittedName = hotSheetName.trim();
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        const canManageClientLinks = currentUser?.id === userId;
         const updatePayload = {
           name: submittedName,
           criteria,
@@ -853,7 +849,7 @@ export function CreateHotSheetDialog({
           notification_schedule: notificationSchedule,
         };
 
-        // Update existing hot sheet
+        // Update existing hot sheet directly. Edit saves should not send/share or call Edge Functions.
         const { data: updatedHotSheet, error } = await supabase
           .from("hot_sheets")
           .update(updatePayload)
@@ -861,58 +857,14 @@ export function CreateHotSheetDialog({
           .select("id, name")
           .maybeSingle();
 
-        if (error || !updatedHotSheet) {
-          if (error) console.error("Hot sheet update error", { hotSheetId, submittedName, error });
-
-          await invokeEdgeFunction("update-hot-sheet", {
-            hotSheetId,
-            ...updatePayload,
-          });
+        if (error) {
+          console.error("Hot sheet update error", { hotSheetId, submittedName, error });
+          throw error;
         }
 
-        // Update clients in hot_sheet_clients junction table
-        if (selectedClients.length > 0 && canManageClientLinks) {
-          // Delete existing relationships
-          const { error: deleteError } = await supabase
-            .from('hot_sheet_clients' as any)
-            .delete()
-            .eq('hot_sheet_id', hotSheetId);
-
-          if (deleteError) throw deleteError;
-
-          // Insert new relationships
-          const { error: insertError } = await supabase
-            .from('hot_sheet_clients' as any)
-            .insert(
-              selectedClients.map(client => ({
-                hot_sheet_id: hotSheetId,
-                client_id: client.id
-              }))
-            );
-
-          if (insertError) throw insertError;
-
-          // Ensure each client has a pending/active client_agent_relationships row
-          for (const client of selectedClients) {
-            const { data: existing } = await supabase
-              .from("client_agent_relationships")
-              .select("id")
-              .eq("agent_id", userId)
-              .eq("crm_client_id", client.id)
-              .in("status", ["active", "pending"])
-              .maybeSingle();
-
-            if (!existing) {
-              await supabase
-                .from("client_agent_relationships")
-                .insert({
-                  agent_id: userId,
-                  client_id: null,
-                  status: "pending",
-                  crm_client_id: client.id,
-                });
-            }
-          }
+        if (!updatedHotSheet) {
+          console.error("Hot sheet update returned no row", { hotSheetId, submittedName });
+          throw new Error("Hot sheet was not updated");
         }
 
         toast.success("Hot sheet updated");
