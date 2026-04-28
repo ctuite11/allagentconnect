@@ -61,15 +61,21 @@ interface ShareTokenRow {
 }
 
 function HotSheetPreviewImage({ photoUrls }: { photoUrls: string[] }) {
-  const visiblePhotos = photoUrls.filter(Boolean).slice(0, 4);
-  const collagePhotos = Array.from({ length: 4 }, (_, index) => visiblePhotos[index] || "/placeholder.svg");
+  const visiblePhotos = photoUrls.filter(Boolean).slice(0, 3);
+  const collagePhotos = visiblePhotos.length
+    ? Array.from({ length: Math.min(3, Math.max(visiblePhotos.length, 2)) }, (_, index) => visiblePhotos[index % visiblePhotos.length])
+    : [];
+
+  if (!collagePhotos.length) {
+    return <div className="h-full w-full bg-neutral-50" aria-hidden />;
+  }
 
   return (
-    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-1 bg-white p-1 [grid-template-rows:repeat(2,minmax(0,1fr))]">
+    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0.5 bg-white [grid-template-rows:repeat(2,minmax(0,1fr))]">
       {collagePhotos.map((photoUrl, index) => (
         <div
           key={`${photoUrl}-${index}`}
-          className="relative min-h-0 min-w-0 overflow-hidden rounded-[10px] bg-white"
+          className={`${collagePhotos.length === 3 && index === 0 ? "row-span-2" : ""} relative min-h-0 min-w-0 overflow-hidden bg-white`}
         >
           <DashboardListingImage
             photoUrl={photoUrl}
@@ -805,7 +811,7 @@ export default function ClientDashboard() {
                                 />
                               </div>
                               <div className={`${unifiedHotFavBody} flex-1`}>
-                                <p className={`${dashTileTitleClass} line-clamp-1`}>{sheet.name}</p>
+                                <p className="line-clamp-1 text-[16px] font-semibold leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
                               </div>
                             </article>
                           );
