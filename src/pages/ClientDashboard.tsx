@@ -13,6 +13,7 @@ import {
   Search,
   Sparkles,
   Mail,
+  Eye,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
@@ -21,7 +22,7 @@ import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
-import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { humanizeSnakeCase } from "@/lib/format";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -45,15 +46,66 @@ interface AgentInfo {
 interface HotSheet {
   id: string;
   name: string;
-  criteria: any;
+  criteria: Record<string, unknown> | null;
   created_at: string;
   last_sent_at?: string | null;
   is_active: boolean;
-  agent?: {
-    first_name: string;
-    last_name: string;
-    company: string | null;
-  } | null;
+  user_id?: string | null;
+}
+
+/** Matches `share_tokens` rows used by `HotSheets` buyer loader. */
+interface ShareTokenRow {
+  token: string;
+  payload: unknown;
+  accepted_at: string | null;
+  accepted_by_user_id: string | null;
+}
+
+const asStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+/** Same location/criteria summary as buyer Hot Sheets (`HotSheets.tsx`). */
+function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | undefined): string {
+  const parts: string[] = [];
+  if (!criteria) return "Custom search criteria";
+
+  const cities = asStringArray(criteria.cities);
+  const towns = asStringArray(criteria.towns);
+  const propertyTypes = asStringArray(criteria.propertyTypes);
+
+  if (cities.length) {
+    parts.push(cities.slice(0, 2).join(", "));
+  } else if (towns.length) {
+    parts.push(towns.slice(0, 2).join(", "));
+  }
+
+  if (propertyTypes.length) {
+    parts.push(humanizeSnakeCase(propertyTypes[0]));
+  }
+
+  if (criteria.bedrooms) parts.push(`${String(criteria.bedrooms)}+ bd`);
+  if (criteria.bathrooms) parts.push(`${String(criteria.bathrooms)}+ ba`);
+
+  const maxPrice = criteria.maxPrice;
+  if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
+    parts.push(`under $${Math.round(maxPrice / 1000)}k`);
+  }
+
+  return parts.join(" • ") || "Custom search criteria";
+}
+
+function formatHotSheetRelativeDate(isoDate: string | null | undefined): string {
+  if (!isoDate) return "Not sent yet";
+
+  const then = new Date(isoDate).getTime();
+  const now = Date.now();
+  const diffDays = Math.floor((now - then) / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+
+  return new Date(isoDate).toLocaleDateString();
 }
 
 interface Favorite {
@@ -136,8 +188,6 @@ export default function ClientDashboard() {
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [relationshipId, setRelationshipId] = useState<string | null>(null);
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
-  const [shareTokenByHotSheetId, setShareTokenByHotSheetId] = useState<Record<string, string>>({});
-  const [hotSheetMatchCountById, setHotSheetMatchCountById] = useState<Record<string, number>>({});
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
@@ -237,15 +287,15 @@ export default function ClientDashboard() {
     try {
       const activeAgentId = await loadAgentRelationship(user.id);
       await Promise.all([
-        loadHotSheets(user.id, activeAgentId),
+        loadBuyerHotSheetsForDashboard(user.id),
         loadFavorites(user.id),
         loadMarketListings(),
       ]);
 
       if (cameFromInviteAcceptance && !activeAgentId) {
         await new Promise((resolve) => window.setTimeout(resolve, 1200));
-        const retriedAgentId = await loadAgentRelationship(user.id);
-        await loadHotSheets(user.id, retriedAgentId);
+        await loadAgentRelationship(user.id);
+        await loadBuyerHotSheetsForDashboard(user.id);
       }
     } finally {
       setRelationshipHydrating(false);
@@ -281,139 +331,84 @@ export default function ClientDashboard() {
     return null;
   };
 
-  const loadHotSheets = async (userId: string, activeAgentId: string | null) => {
-    if (!activeAgentId) {
-      setHotSheets([]);
-      setShareTokenByHotSheetId({});
-      return;
-    }
+  /**
+   * Same logic as `loadBuyerHotSheets` in `src/pages/HotSheets.tsx`:
+   * union `hot_sheet_clients` + accepted `share_tokens`, then load `hot_sheets`.
+   */
+  const loadBuyerHotSheetsForDashboard = async (userId: string) => {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", userId)
+        .maybeSingle();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("email")
-      .eq("id", userId)
-      .maybeSingle();
-    const buyerEmail = profile?.email?.toLowerCase().trim() ?? "";
-    const buyerEmailNorm = (buyerEmail ?? "").toLowerCase().trim();
+      const buyerEmailNorm = (profile?.email || authUser?.email || "").toLowerCase().trim();
 
-    const acceptedHotSheetIds = new Set<string>();
-    const tokenMap: Record<string, string> = {};
+      const allHotSheetIds = new Set<string>();
 
-    // 1) Primary: hot_sheet_clients → hot_sheets for this agent (includes buyer-created; no share token required)
-    const { data: hscRows, error: hscErr } = await supabase
-      .from("hot_sheet_clients")
-      .select("hot_sheet_id");
-    if (hscErr) {
-      console.error("Failed to load hot_sheet_clients for dashboard", hscErr);
-    } else {
-      const hscIds = (hscRows || [])
-        .map((r: { hot_sheet_id?: string }) => r.hot_sheet_id)
-        .filter((id): id is string => Boolean(id));
-      if (hscIds.length) {
-        const { data: forAgent, error: hsFilterErr } = await supabase
-          .from("hot_sheets")
-          .select("id")
-          .in("id", hscIds)
-          .eq("user_id", activeAgentId);
-        if (hsFilterErr) {
-          console.error("Failed to filter hot_sheets for agent", hsFilterErr);
-        } else {
-          for (const r of forAgent || []) {
-            if (r.id) acceptedHotSheetIds.add(r.id);
+      const { data: hscRows, error: hscErr } = await supabase.from("hot_sheet_clients").select("hot_sheet_id");
+
+      if (hscErr) {
+        console.error("Failed to load hot_sheet_clients for dashboard", hscErr);
+      } else {
+        for (const row of hscRows || []) {
+          const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
+          if (hid) allHotSheetIds.add(hid);
+        }
+      }
+
+      const { data: acceptedTokenRows, error: tokenErr } = await supabase
+        .from("share_tokens")
+        .select("token, payload, accepted_at, accepted_by_user_id")
+        .not("accepted_at", "is", null);
+
+      if (tokenErr) {
+        console.error("Failed to load accepted tokens for dashboard", tokenErr);
+      } else {
+        for (const tokenRow of (acceptedTokenRows || []) as ShareTokenRow[]) {
+          const payload =
+            tokenRow.payload && typeof tokenRow.payload === "object"
+              ? (tokenRow.payload as Record<string, unknown>)
+              : {};
+          if (payload.type !== "client_hotsheet_invite") continue;
+
+          const hotSheetId = String(payload.hot_sheet_id || "");
+          if (!hotSheetId) continue;
+
+          const matchByUserId = tokenRow.accepted_by_user_id === userId;
+          const tokenEmail = String(payload.client_email || "").toLowerCase().trim();
+          const matchByEmail = Boolean(buyerEmailNorm && tokenEmail === buyerEmailNorm);
+
+          if (matchByUserId || matchByEmail) {
+            allHotSheetIds.add(hotSheetId);
           }
         }
       }
-    }
 
-    // 2) Union: accepted share_token invites for this buyer + active agent
-    const { data: acceptedTokenRows, error: tokenErr } = await supabase
-      .from("share_tokens")
-      .select("token, payload, accepted_at, accepted_by_user_id")
-      .not("accepted_at", "is", null);
-
-    if (tokenErr) {
-      console.error("Failed to load accepted tokens", tokenErr);
-    } else {
-      for (const t of acceptedTokenRows || []) {
-        const p = (t.payload as any) ?? {};
-        if (p.type !== "client_hotsheet_invite") continue;
-        if (activeAgentId && p.agent_id && p.agent_id !== activeAgentId) continue;
-
-        const hsId = String(p.hot_sheet_id ?? "");
-        if (!hsId) continue;
-
-        const matchByUserId = t.accepted_by_user_id === userId;
-        const tokenEmail = String(p.client_email ?? "").toLowerCase().trim();
-        const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
-
-        if (matchByUserId || matchByEmail) {
-          acceptedHotSheetIds.add(hsId);
-          if (t.token) tokenMap[hsId] = t.token;
-        }
+      if (!allHotSheetIds.size) {
+        setHotSheets([]);
+        return;
       }
-    }
 
-    if (import.meta.env.DEV) {
-      console.log("[ClientDashboard] hot sheet ids:", {
-        shareTokenRows: (acceptedTokenRows || []).length,
-        linkedHotSheetCount: acceptedHotSheetIds.size,
-      });
-    }
+      const { data: hotSheetRows, error: sheetErr } = await supabase
+        .from("hot_sheets")
+        .select("id, name, user_id, criteria, created_at, is_active, last_sent_at")
+        .in("id", [...allHotSheetIds])
+        .order("created_at", { ascending: false });
 
-    if (!acceptedHotSheetIds.size) {
+      if (sheetErr) {
+        console.error("Failed to load hot sheets on dashboard", sheetErr);
+        setHotSheets([]);
+        return;
+      }
+
+      setHotSheets((hotSheetRows || []) as HotSheet[]);
+    } catch (e) {
+      console.error("loadBuyerHotSheetsForDashboard", e);
       setHotSheets([]);
-      setShareTokenByHotSheetId({});
-      setHotSheetMatchCountById({});
-      return;
     }
-
-    // Fetch hot sheet details directly by IDs
-    const hsIds = [...acceptedHotSheetIds];
-    const { data: sheetRows, error: sheetErr } = await supabase
-      .from("hot_sheets")
-      .select("id, name, criteria, created_at, last_sent_at, is_active, user_id")
-      .in("id", hsIds);
-
-    if (sheetErr) {
-      console.error("Failed to load hot sheets by ID", sheetErr);
-      setHotSheets([]);
-      setHotSheetMatchCountById({});
-      return;
-    }
-
-    const rawSheets = (sheetRows || []).filter((s: any) => s.id);
-
-    // Fetch agent profiles for attribution
-    const agentIds = [...new Set(rawSheets.map((s: any) => s.user_id).filter(Boolean))];
-    let agentMap: Record<string, any> = {};
-    if (agentIds.length) {
-      const { data: agents } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name, company")
-        .in("id", agentIds);
-      for (const a of agents || []) agentMap[a.id] = a;
-    }
-
-    const sheetsWithAgent = rawSheets.map((s: any) => ({
-      ...s,
-      agent: agentMap[s.user_id] ?? null,
-    }));
-
-    const matchCountEntries = await Promise.all(
-      sheetsWithAgent.map(async (sheet: any) => {
-        try {
-          const { data: matched } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(120);
-          return [sheet.id, (matched || []).length] as const;
-        } catch {
-          return [sheet.id, 0] as const;
-        }
-      })
-    );
-
-    setHotSheetMatchCountById(Object.fromEntries(matchCountEntries));
-
-    setHotSheets(sheetsWithAgent);
-    setShareTokenByHotSheetId(tokenMap);
   };
 
   const loadFavorites = async (userId: string) => {
@@ -515,7 +510,6 @@ export default function ClientDashboard() {
     return "/placeholder.svg";
   };
 
-  const activeSearches = hotSheets.filter((sheet) => sheet.is_active).length;
   const latestListingsPreview = marketListings.slice(0, 6);
 
   const stats = [
@@ -539,9 +533,12 @@ export default function ClientDashboard() {
     },
     {
       label: "Hot Sheets",
-      value: String(activeSearches),
+      value: String(hotSheets.length),
       icon: Search,
-      subtle: activeSearches > 0 ? "Running alerts" : "No active alerts",
+      subtle:
+        hotSheets.length > 0
+          ? `${hotSheets.length} saved search${hotSheets.length === 1 ? "" : "es"}`
+          : "No hot sheets yet",
     },
   ];
 
@@ -735,43 +732,35 @@ export default function ClientDashboard() {
                         <Plus className="mr-2 h-4 w-4" />
                         Create hot sheet
                       </Button>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {hotSheets.slice(0, 6).map((sheet) => {
-                        const hasNewListings =
-                          Date.now() - new Date(sheet.created_at).getTime() < 1000 * 60 * 60 * 48;
-                        const matchCount = hotSheetMatchCountById[sheet.id] ?? 0;
-                        const token = shareTokenByHotSheetId[sheet.id];
-                        return (
+                      <div className="space-y-3">
+                        {hotSheets.slice(0, 3).map((sheet) => (
                           <div
                             key={sheet.id}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => navigate(token ? `/client/hotsheet/${token}` : "/client/hot-sheets")}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                navigate(token ? `/client/hotsheet/${token}` : "/client/hot-sheets");
-                              }
-                            }}
-                            className={`${premiumClickableCard} overflow-hidden rounded-xl ${token ? "" : "opacity-80"}`}
+                            className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_4px_12px_rgba(15,23,42,0.06)]"
                           >
-                            <div className="relative flex h-[4.5rem] items-center justify-center bg-gray-50 text-[#0E56F5]">
-                              <AACMonogram className="h-8 w-8" size={32} />
-                              {hasNewListings && (
-                                <span className="absolute left-1.5 top-1.5 rounded bg-[#0E56F5]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[#0E56F5]">
-                                  New
-                                </span>
-                              )}
-                            </div>
-                            <div className="space-y-0.5 p-2">
-                              <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-gray-900">{sheet.name}</p>
-                              <p className="text-[10px] text-gray-500">
-                                {matchCount} {matchCount === 1 ? "match" : "matches"} · {sheet.is_active ? "Active" : "Paused"}
-                              </p>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                              <div className="min-w-0 flex-1 space-y-1.5">
+                                <p className="truncate text-sm font-semibold text-gray-900">{sheet.name}</p>
+                                <p className="line-clamp-2 text-xs leading-relaxed text-gray-600">
+                                  {formatBuyerCriteriaSummary(sheet.criteria)}
+                                </p>
+                                <p className="text-[11px] text-gray-500">
+                                  Last updated {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className={`h-9 shrink-0 whitespace-nowrap sm:self-start ${outlineSecondaryClass}`}
+                                onClick={() => navigate(`/client/hot-sheets/${sheet.id}`)}
+                              >
+                                <Eye className="mr-1.5 h-4 w-4" />
+                                View
+                              </Button>
                             </div>
                           </div>
-                        );
-                      })}
+                        ))}
                       </div>
                     </>
                   ) : (
