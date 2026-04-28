@@ -14,8 +14,6 @@ import {
   Sparkles,
   Mail,
   MoreHorizontal,
-  Eye,
-  Pencil,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
@@ -676,17 +674,22 @@ export default function ClientDashboard() {
 
   const primaryCtaClass =
     "rounded-lg bg-[#0E56F5] text-white shadow-sm transition-shadow duration-200 hover:bg-[#0B46CC] hover:shadow-md";
-  const premiumCard =
-    "bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_18px_rgba(15,23,42,0.10)] transition-all duration-200";
-  const premiumClickableCard =
-    `${premiumCard} cursor-pointer hover:shadow-[0_8px_26px_rgba(15,23,42,0.14)] hover:-translate-y-[2px] active:translate-y-0`;
+  /** AAC section shells and preview tiles (buyer dashboard). */
+  const aacCardShell =
+    "bg-white rounded-2xl border border-neutral-200 shadow-sm transition-all duration-200";
+  const aacCardInteractive =
+    `${aacCardShell} cursor-pointer hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
+  const dashboardPreviewTile =
+    "relative w-full overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition-all hover:border-neutral-300 hover:shadow-md";
+  const dashboardPreviewTileInteractive =
+    `${dashboardPreviewTile} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
   const outlineSecondaryClass =
-    "border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-gray-50 hover:shadow-sm";
+    "border border-neutral-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-neutral-50 hover:shadow-sm";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-white">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <p className="text-sm text-muted-foreground">
           {relationshipHydrating ? "Connecting your inviting agent..." : "Loading your dashboard..."}
@@ -696,10 +699,10 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
-      <main className="mx-auto w-full max-w-7xl px-6 md:px-8 py-8 pb-12">
-        <div className="space-y-8">
-          <section className={`${premiumCard} p-5 md:p-6`}>
+    <div className="min-h-screen bg-white">
+      <main className="mx-auto w-full max-w-7xl px-6 py-8 pb-12 md:px-8">
+        <div className="space-y-7">
+          <section className={`${aacCardShell} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="space-y-1">
@@ -827,7 +830,7 @@ export default function ClientDashboard() {
                   if (label === "Unread Messages") navigate("/messages");
                   if (label === "Hot Sheets") navigate("/client/hot-sheets");
                 }}
-                className={`${premiumClickableCard} p-5 md:p-6`}
+                className={`${aacCardInteractive} p-5 md:p-6`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
@@ -839,42 +842,88 @@ export default function ClientDashboard() {
             ))}
           </section>
 
-          <section className="space-y-5">
+          <section className="space-y-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className={`${premiumCard} overflow-visible`}>
+              <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
-                <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="text-base font-semibold text-gray-900">Hot Sheets</CardTitle>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={`h-8 rounded-md border-gray-300 text-xs ${outlineSecondaryClass}`}
-                      onClick={() => navigate("/client/hot-sheets")}
-                    >
-                      View all
-                    </Button>
-                  </div>
-                  <CardDescription className="text-sm text-gray-500">Alerts for saved searches.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2.5 p-5 pt-0 md:p-6 md:pt-0">
-                  {hotSheets.length > 0 ? (
-                    <>
-                      <Button
-                        className={`${primaryCtaClass} h-7 w-full text-[11px] sm:w-auto sm:px-2.5`}
-                        onClick={() => navigate("/hot-sheets/new")}
-                      >
-                        <Plus className="mr-1 h-3 w-3" />
-                        Create hot sheet
-                      </Button>
+                  <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 space-y-1">
+                        <CardTitle className="text-base font-semibold text-gray-900">Hot Sheets</CardTitle>
+                        <CardDescription className="text-sm text-gray-500">Alerts for saved searches.</CardDescription>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
+                          onClick={() => navigate("/hot-sheets/new")}
+                        >
+                          <Plus className="mr-1.5 h-3.5 w-3.5 text-gray-600" />
+                          Create
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
+                          onClick={() => navigate("/client/hot-sheets")}
+                        >
+                          View all
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-5 pt-0 md:p-6 md:pt-0">
+                    {hotSheets.length > 0 ? (
                       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                         {hotSheets.slice(0, 3).map((sheet) => {
                           const viewPath = `/client/hot-sheets/${sheet.id}`;
                           return (
-                            <article
-                              key={sheet.id}
-                              className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-[box-shadow,border-color] hover:border-gray-300 hover:shadow-[0_6px_16px_rgba(15,23,42,0.08)]"
-                            >
+                            <article key={sheet.id} className={dashboardPreviewTile}>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className={`absolute right-1 top-1 z-10 h-7 w-7 rounded-full border ${outlineSecondaryClass}`}
+                                    aria-label="Hot sheet actions"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="min-w-[10rem]"
+                                  onCloseAutoFocus={(e) => e.preventDefault()}
+                                >
+                                  <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!sheet.user_id) {
+                                        toast.error("This hot sheet cannot be edited right now.");
+                                        return;
+                                      }
+                                      setEditingHotSheetId(sheet.id);
+                                      setEditingHotSheetOwnerUserId(sheet.user_id);
+                                      setEditHotSheetDialogOpen(true);
+                                    }}
+                                  >
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setHotSheetDeleteId(sheet.id);
+                                    }}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                               <div
                                 role="button"
                                 tabIndex={0}
@@ -884,101 +933,46 @@ export default function ClientDashboard() {
                                   e.preventDefault();
                                   navigate(viewPath);
                                 }}
-                                className="block w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2 rounded-t-xl"
+                                className="block w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
                               >
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
-                                <div className="space-y-0.5 p-2.5">
-                                  <p className="line-clamp-2 min-h-[2.25rem] text-[11px] font-semibold leading-snug tracking-tight text-gray-900">
+                                <div className="space-y-0.5 p-2 pb-2">
+                                  <p className="line-clamp-2 min-h-[1.85rem] text-[11px] font-semibold leading-snug tracking-tight text-gray-900">
                                     {sheet.name}
                                   </p>
-                                  <p className="line-clamp-1 text-[10px] leading-tight text-gray-600">
+                                  <p className="line-clamp-2 min-h-[1.85rem] text-[10px] font-medium leading-tight text-gray-800">
                                     {formatBuyerCriteriaSummary(sheet.criteria)}
                                   </p>
-                                  <p className="text-[9px] text-gray-400">
+                                  <p className="truncate text-[10px] text-gray-500">
                                     {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
                                   </p>
                                 </div>
-                              </div>
-                              <div className="flex items-center justify-end gap-0.5 border-t border-gray-100 bg-gray-50/80 px-1 py-1">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 rounded-md text-gray-600 hover:bg-white hover:text-[#0E56F5]"
-                                  aria-label="View hot sheet"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(viewPath);
-                                  }}
-                                >
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 rounded-md text-gray-600 hover:bg-white hover:text-gray-900"
-                                  aria-label="Edit hot sheet"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!sheet.user_id) {
-                                      toast.error("This hot sheet cannot be edited right now.");
-                                      return;
-                                    }
-                                    setEditingHotSheetId(sheet.id);
-                                    setEditingHotSheetOwnerUserId(sheet.user_id);
-                                    setEditHotSheetDialogOpen(true);
-                                  }}
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 rounded-md text-gray-600 hover:bg-white hover:text-gray-900"
-                                      aria-label="More actions"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <MoreHorizontal className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="min-w-[10rem]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                                    <DropdownMenuItem
-                                      className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setHotSheetDeleteId(sheet.id);
-                                      }}
-                                    >
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
                               </div>
                             </article>
                           );
                         })}
                       </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                      <p className="max-w-md text-xs leading-relaxed text-gray-600">
-                        No hot sheets yet. Create one for alerts, or ask your agent to share one.
-                      </p>
-                      <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/hot-sheets/new")}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create hot sheet
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                        <p className="max-w-md text-xs leading-relaxed text-gray-600">
+                          No hot sheets yet. Create one for alerts, or ask your agent to share one.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`h-9 shrink-0 px-4 text-sm font-medium text-gray-800 ${outlineSecondaryClass}`}
+                          onClick={() => navigate("/hot-sheets/new")}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Create hot sheet
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
                 </div>
               </div>
 
-              <div className={`${premiumCard} overflow-hidden`}>
+              <div className={`${aacCardShell} overflow-hidden`}>
                 <div className="rounded-none bg-transparent">
                 <CardHeader className="space-y-1 p-5 pb-3 md:p-6 md:pb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -986,7 +980,7 @@ export default function ClientDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className={`h-8 rounded-md border-gray-300 text-xs ${outlineSecondaryClass}`}
+                      className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
                       onClick={() => navigate("/client/favorites")}
                     >
                       View all
@@ -1003,7 +997,7 @@ export default function ClientDashboard() {
                           <button
                             key={fav.id}
                             type="button"
-                            className="overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-[box-shadow,border-color] hover:border-gray-300 hover:shadow-[0_6px_16px_rgba(15,23,42,0.08)]"
+                            className={`${dashboardPreviewTileInteractive} w-full`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
                             <div className="relative h-14 bg-gray-50">
@@ -1036,7 +1030,7 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            <div className={`${premiumCard} overflow-visible`}>
+            <div className={`${aacCardShell} overflow-visible`}>
               <div className="rounded-none bg-transparent">
               <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1044,7 +1038,12 @@ export default function ClientDashboard() {
                     <CardTitle className="text-base font-semibold text-gray-900">Market activity</CardTitle>
                     <CardDescription className="text-sm text-gray-500">New listings on the market.</CardDescription>
                   </div>
-                  <Button className={`${primaryCtaClass} h-8 shrink-0 text-xs`} onClick={() => navigate("/client/search")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-8 shrink-0 border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
+                    onClick={() => navigate("/client/search")}
+                  >
                     <Search className="mr-1.5 h-3.5 w-3.5" />
                     Search homes
                   </Button>
@@ -1059,7 +1058,7 @@ export default function ClientDashboard() {
                         key={listing.id}
                         role="button"
                         tabIndex={0}
-                        className="overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-[box-shadow,border-color] hover:border-gray-300 hover:shadow-[0_6px_16px_rgba(15,23,42,0.08)]"
+                        className={dashboardPreviewTileInteractive}
                         onClick={() => navigate(`/property/${listing.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
