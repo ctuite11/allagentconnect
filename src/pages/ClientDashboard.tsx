@@ -761,9 +761,9 @@ export default function ClientDashboard() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
-                  <CardHeader className="p-5 pb-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0 space-y-1">
+                  <CardHeader className={previewSectionHeaderClass}>
+                    <div className={previewSectionHeaderRowClass}>
+                      <div className={previewSectionTitleWrapClass}>
                         <CardTitle className="text-base font-semibold text-gray-900">Hot Sheets</CardTitle>
                         <CardDescription className="text-sm text-gray-500">Alerts for saved searches.</CardDescription>
                       </div>
@@ -788,9 +788,9 @@ export default function ClientDashboard() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-5 pt-3">
+                  <CardContent className={previewSectionContentClass}>
                     {hotSheets.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                      <div className={previewGridClass}>
                         {hotSheets.slice(0, 3).map((sheet) => {
                           const viewPath = `/client/hot-sheets/${sheet.id}`;
                           return (
@@ -810,7 +810,7 @@ export default function ClientDashboard() {
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
                               </div>
                               <div className={compactPreviewBody}>
-                                <p className="line-clamp-1 text-sm font-semibold leading-snug tracking-tight text-gray-900">
+                                <p className="line-clamp-2 text-sm font-semibold leading-5 tracking-tight text-gray-900">
                                   {sheet.name}
                                 </p>
                               </div>
