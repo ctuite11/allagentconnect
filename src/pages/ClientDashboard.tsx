@@ -141,20 +141,6 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
   );
 }
 
-function formatHotSheetRelativeDate(isoDate: string | null | undefined): string {
-  if (!isoDate) return "Not sent yet";
-
-  const then = new Date(isoDate).getTime();
-  const now = Date.now();
-  const diffDays = Math.floor((now - then) / (1000 * 60 * 60 * 24));
-
-  if (diffDays <= 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-
-  return new Date(isoDate).toLocaleDateString();
-}
-
 interface Favorite {
   id: string;
   listing: {
@@ -885,9 +871,17 @@ export default function ClientDashboard() {
                           return (
                             <article
                               key={sheet.id}
-                              className={`${dashboardPreviewTile} flex flex-col`}
+                              role="button"
+                              tabIndex={0}
+                              className={`${dashboardPreviewTileInteractive} flex flex-col`}
+                              onClick={() => navigate(viewPath)}
+                              onKeyDown={(e) => {
+                                if (e.key !== "Enter" && e.key !== " ") return;
+                                e.preventDefault();
+                                navigate(viewPath);
+                              }}
                             >
-                              <div className={`${listingPreviewMediaWrap} rounded-t-2xl`}>
+                              <div className={`${listingPreviewMediaWrap} shrink-0 rounded-t-2xl`}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
@@ -908,6 +902,21 @@ export default function ClientDashboard() {
                                     onCloseAutoFocus={(e) => e.preventDefault()}
                                   >
                                     <DropdownMenuItem
+                                      className="cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!sheet.user_id) {
+                                          toast.error("This hot sheet cannot be edited right now.");
+                                          return;
+                                        }
+                                        setEditingHotSheetId(sheet.id);
+                                        setEditingHotSheetOwnerUserId(sheet.user_id);
+                                        setEditHotSheetDialogOpen(true);
+                                      }}
+                                    >
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
                                       className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -919,44 +928,13 @@ export default function ClientDashboard() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
-                              <div className={`${listingPreviewBody} flex-1 pb-2`}>
+                              <div className={`${listingPreviewBody} flex-1`}>
                                 <p className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-gray-900">
                                   {sheet.name}
                                 </p>
                                 <p className="line-clamp-2 text-sm font-medium leading-snug text-gray-800">
                                   {formatBuyerCriteriaSummary(sheet.criteria)}
                                 </p>
-                                <p className="text-xs text-gray-400">
-                                  Last updated —{" "}
-                                  {formatHotSheetRelativeDate(sheet.last_sent_at || sheet.created_at)}
-                                </p>
-                              </div>
-                              <div className="flex gap-2 border-t border-neutral-100 px-4 pb-4 pt-3">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  className={`h-8 min-w-0 flex-1 text-xs ${primaryCtaClass}`}
-                                  onClick={() => navigate(viewPath)}
-                                >
-                                  View
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className={`h-8 min-w-0 flex-1 text-xs ${outlineSecondaryClass}`}
-                                  onClick={() => {
-                                    if (!sheet.user_id) {
-                                      toast.error("This hot sheet cannot be edited right now.");
-                                      return;
-                                    }
-                                    setEditingHotSheetId(sheet.id);
-                                    setEditingHotSheetOwnerUserId(sheet.user_id);
-                                    setEditHotSheetDialogOpen(true);
-                                  }}
-                                >
-                                  Edit
-                                </Button>
                               </div>
                             </article>
                           );
