@@ -922,7 +922,7 @@ if (comments && comments.length > 0) {
 
   return (
       <div className="pt-6 px-6 pb-6">
-        <div className="mx-auto w-full max-w-7xl min-w-0">
+        <div className="mx-auto w-full max-w-[88rem] min-w-0">
             {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
