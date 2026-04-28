@@ -7,20 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Users, Search, Eye, Pencil, MoreHorizontal, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Users, Search, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
+import { HotSheetCard } from "@/components/HotSheetCard";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { Seo } from "@/components/Seo";
-import { humanizeSnakeCase } from "@/lib/format";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -104,6 +98,17 @@ interface AgentHotSheetRow {
 const asStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
+const extractPhotoUrl = (photos: unknown): string | null => {
+  const photoList = Array.isArray(photos) ? photos : [];
+  const first = photoList[0];
+  if (typeof first === "string") return first.trim() || null;
+  if (first && typeof first === "object" && "url" in first) {
+    const url = (first as { url?: unknown }).url;
+    return typeof url === "string" && url.trim() ? url : null;
+  }
+  return null;
+};
+
 const HotSheets = ({
   isPublicMode = false,
   isAgentMode = false,
@@ -125,6 +130,7 @@ const HotSheets = ({
   const [rawHotSheets, setRawHotSheets] = useState<AgentHotSheetRow[]>([]);
   const [buyerHotSheets, setBuyerHotSheets] = useState<BuyerHotSheetItem[]>([]);
   const [buyerTokenByHotSheetId, setBuyerTokenByHotSheetId] = useState<Record<string, string>>({});
+  const [buyerPhotosByHotSheetId, setBuyerPhotosByHotSheetId] = useState<Record<string, string[]>>({});
   const [buyerLoading, setBuyerLoading] = useState(true);
   const [deleteBuyerSheetId, setDeleteBuyerSheetId] = useState<string | null>(null);
   const [deleteBuyerSheetLoading, setDeleteBuyerSheetLoading] = useState(false);
@@ -324,106 +330,39 @@ const HotSheets = ({
         console.error("Failed to load hot sheets", sheetErr);
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
+        setBuyerPhotosByHotSheetId({});
         return;
       }
 
-      setBuyerHotSheets((hotSheetRows || []) as BuyerHotSheetItem[]);
+      const sheets = (hotSheetRows || []) as BuyerHotSheetItem[];
+      const photoEntries = await Promise.all(
+        sheets.map(async (sheet) => {
+          if (!sheet.criteria) return [sheet.id, []] as const;
+          try {
+            const { data: matchedListings } = await buildListingsQuery(supabase, sheet.criteria).limit(12);
+            const photos = ((matchedListings || []) as Array<{ photos?: unknown }>)
+              .map((listing) => extractPhotoUrl(listing.photos))
+              .filter((url): url is string => Boolean(url))
+              .slice(0, 4);
+            return [sheet.id, photos] as const;
+          } catch {
+            return [sheet.id, []] as const;
+          }
+        })
+      );
+
+      setBuyerHotSheets(sheets);
       setBuyerTokenByHotSheetId(tokenMap);
+      setBuyerPhotosByHotSheetId(Object.fromEntries(photoEntries));
     } catch (error) {
       console.error("Error loading buyer hot sheets", error);
       toast.error("Unable to load Hot Sheets right now");
       setBuyerHotSheets([]);
       setBuyerTokenByHotSheetId({});
+      setBuyerPhotosByHotSheetId({});
     } finally {
       setBuyerLoading(false);
     }
-  };
-
-  const formatBuyerCriteriaSummary = (criteria: Record<string, unknown> | null) => {
-    const parts: string[] = [];
-
-    if (!criteria) return "Custom search criteria";
-
-    const cities = asStringArray(criteria.cities);
-    const towns = asStringArray(criteria.towns);
-    const propertyTypes = asStringArray(criteria.propertyTypes);
-
-    if (cities.length) {
-      parts.push(cities.slice(0, 2).join(", "));
-    } else if (towns.length) {
-      parts.push(towns.slice(0, 2).join(", "));
-    }
-
-    if (propertyTypes.length) {
-      parts.push(humanizeSnakeCase(propertyTypes[0]));
-    }
-
-    if (criteria.bedrooms) parts.push(`${String(criteria.bedrooms)}+ bd`);
-    if (criteria.bathrooms) parts.push(`${String(criteria.bathrooms)}+ ba`);
-
-    const maxPrice = criteria.maxPrice;
-    if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
-      parts.push(`under $${Math.round(maxPrice / 1000)}k`);
-    }
-
-    return parts.join(" • ") || "Custom search criteria";
-  };
-
-  const formatCurrencyShort = (value: unknown) => {
-    const amount = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(amount) || amount <= 0) return null;
-    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(amount % 1_000_000 === 0 ? 0 : 1)}M`;
-    return `$${Math.round(amount / 1_000)}k`;
-  };
-
-  const getBuyerLocationSummary = (criteria: Record<string, unknown> | null) => {
-    if (!criteria) return "Saved search area";
-
-    const cities = asStringArray(criteria.cities);
-    const towns = asStringArray(criteria.towns);
-    const counties = asStringArray(criteria.counties);
-    const locationParts = cities.length ? cities : towns.length ? towns : counties;
-
-    if (locationParts.length) {
-      return locationParts.slice(0, 2).join(", ") + (locationParts.length > 2 ? ` +${locationParts.length - 2}` : "");
-    }
-
-    if (typeof criteria.state === "string" && criteria.state) return criteria.state;
-    return "Saved search area";
-  };
-
-  const buildBuyerCriteriaChips = (criteria: Record<string, unknown> | null) => {
-    if (!criteria) return [];
-
-    const chips: string[] = [];
-    const minPrice = formatCurrencyShort(criteria.minPrice);
-    const maxPrice = formatCurrencyShort(criteria.maxPrice);
-    if (minPrice || maxPrice) chips.push(minPrice && maxPrice ? `${minPrice}–${maxPrice}` : minPrice ? `${minPrice}+` : `Under ${maxPrice}`);
-
-    if (criteria.bedrooms) chips.push(`${String(criteria.bedrooms)}+ beds`);
-    if (criteria.bathrooms) chips.push(`${String(criteria.bathrooms)}+ baths`);
-
-    const propertyTypes = asStringArray(criteria.propertyTypes);
-    if (propertyTypes.length) chips.push(propertyTypes.slice(0, 2).map(humanizeSnakeCase).join(", "));
-
-    const statuses = asStringArray(criteria.statuses);
-    if (statuses.length) chips.push(statuses.slice(0, 2).map(humanizeSnakeCase).join(", "));
-
-    return chips;
-  };
-
-  const formatRelativeDate = (isoDate: string | null | undefined) => {
-    if (!isoDate) return "Not sent yet";
-
-    const then = new Date(isoDate).getTime();
-    const now = Date.now();
-    const diffDays = Math.floor((now - then) / (1000 * 60 * 60 * 24));
-
-    if (diffDays <= 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-
-    return new Date(isoDate).toLocaleDateString();
   };
 
   const handleDeleteBuyerHotSheet = async () => {
@@ -545,101 +484,30 @@ const HotSheets = ({
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
-                    const criteriaChips = buildBuyerCriteriaChips(sheet.criteria);
 
                     return (
-                      <article
+                      <HotSheetCard
                         key={sheet.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openBuyerHotSheet(sheet.id, token)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            openBuyerHotSheet(sheet.id, token);
+                        id={sheet.id}
+                        name={sheet.name}
+                        criteria={sheet.criteria}
+                        clients={[]}
+                        lastSentAt={sheet.updated_at || sheet.last_sent_at || sheet.created_at}
+                        photos={buyerPhotosByHotSheetId[sheet.id] || []}
+                        onView={() => openBuyerHotSheet(sheet.id, token)}
+                        onEdit={() => {
+                          if (!sheet.user_id) {
+                            toast.error("This hot sheet cannot be edited right now");
+                            return;
                           }
+                          setEditingHotSheetId(sheet.id);
+                          setEditingSheetOwnerUserId(sheet.user_id);
+                          setEditDialogOpen(true);
                         }}
-                        className="rounded-[22px] border border-aac-card-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-aac-card-borderHover hover:shadow-md"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{sheet.name}</h3>
-                            <p className="mt-1 truncate text-sm text-muted-foreground">{getBuyerLocationSummary(sheet.criteria)}</p>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:bg-muted"
-                                onClick={(event) => event.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="min-w-[10rem] p-1">
-                              <DropdownMenuItem
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setDeleteBuyerSheetId(sheet.id);
-                                }}
-                                className="flex cursor-pointer items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-destructive hover:bg-muted focus:bg-muted focus:text-destructive data-[highlighted]:bg-muted data-[highlighted]:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 shrink-0 text-destructive" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        {criteriaChips.length > 0 && (
-                          <div className="mt-5 flex flex-wrap gap-2">
-                            {criteriaChips.map((chip) => (
-                              <span key={chip} className="inline-flex items-center rounded-full border border-aac-card-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm">
-                                {chip}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
-                          <p className="min-w-0 truncate text-xs text-muted-foreground">
-                            Last updated {formatRelativeDate(sheet.updated_at || sheet.last_sent_at || sheet.created_at)}
-                          </p>
-
-                          <div className="flex shrink-0 items-center gap-2">
-                            <Button
-                              size="sm"
-                              className="h-9 rounded-full px-4 text-sm font-semibold"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openBuyerHotSheet(sheet.id, token);
-                              }}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-9 rounded-full border-aac-card-border px-4 text-sm font-semibold text-foreground hover:bg-muted"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                if (!sheet.user_id) {
-                                  toast.error("This hot sheet cannot be edited right now");
-                                  return;
-                                }
-                                setEditingHotSheetId(sheet.id);
-                                setEditingSheetOwnerUserId(sheet.user_id);
-                                setEditDialogOpen(true);
-                              }}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
-                          </div>
-                        </div>
-                      </article>
+                        onShare={() => undefined}
+                        onComments={() => undefined}
+                        onDelete={() => setDeleteBuyerSheetId(sheet.id)}
+                      />
                     );
                   })}
                 </section>

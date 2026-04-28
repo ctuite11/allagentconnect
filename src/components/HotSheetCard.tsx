@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Eye, Home, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   DropdownMenu,
@@ -16,6 +16,8 @@ interface HotSheetCardProps {
   criteria: any;
   clients: any[];
   lastSentAt?: string | null;
+  photos?: string[];
+  onView?: (id: string) => void;
   onEdit: (id: string) => void;
   onShare: (id: string) => void;
   onComments: (id: string) => void;
@@ -28,6 +30,8 @@ export const HotSheetCard = ({
   name,
   criteria,
   lastSentAt,
+  photos = [],
+  onView,
   onEdit,
   onDelete,
 }: HotSheetCardProps) => {
@@ -64,14 +68,60 @@ export const HotSheetCard = ({
   ].filter(Boolean) as string[];
 
   const handleCardClick = () => {
-    navigate(`/hot-sheets/${id}/review`);
+    if (onView) onView(id);
+    else navigate(`/hot-sheets/${id}/review`);
+  };
+
+  const safePhotos = photos.filter((photo): photo is string => typeof photo === "string" && photo.trim().length > 0).slice(0, 4);
+
+  const renderImage = (src: string, index: number) => (
+    <img
+      key={`${src}-${index}`}
+      src={src}
+      alt={`${name} listing preview ${index + 1}`}
+      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+    />
+  );
+
+  const renderPhotoPreview = () => {
+    if (safePhotos.length === 0) {
+      return (
+        <div className="flex h-full w-full items-center justify-center bg-muted">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card shadow-sm">
+            <Home className="h-6 w-6 text-muted-foreground" />
+          </div>
+        </div>
+      );
+    }
+
+    if (safePhotos.length === 1) return renderImage(safePhotos[0], 0);
+
+    if (safePhotos.length === 2) {
+      return <div className="grid h-full w-full grid-cols-2 gap-1">{safePhotos.map(renderImage)}</div>;
+    }
+
+    return (
+      <div className="grid h-full w-full grid-cols-[1.45fr_1fr] gap-1">
+        <div className="min-h-0 overflow-hidden">{renderImage(safePhotos[0], 0)}</div>
+        <div className="grid min-h-0 grid-rows-3 gap-1 overflow-hidden">
+          {safePhotos.slice(1, 4).map(renderImage)}
+        </div>
+      </div>
+    );
   };
 
   return (
     <div
       onClick={handleCardClick}
-      className="cursor-pointer rounded-[22px] border border-aac-card-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-aac-card-borderHover hover:shadow-md"
+      className="group cursor-pointer overflow-hidden rounded-[22px] border border-aac-card-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-aac-card-borderHover hover:shadow-md"
     >
+      <div className="aspect-[4/3] overflow-hidden bg-muted">
+        {renderPhotoPreview()}
+      </div>
+
+      <div className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{name}</h3>
@@ -110,7 +160,7 @@ export const HotSheetCard = ({
           {lastSentAt ? `Last updated ${formatDistanceToNow(new Date(lastSentAt), { addSuffix: true })}` : "Last updated just now"}
         </p>
         <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" className="h-9 rounded-full px-4 text-sm font-semibold" onClick={() => navigate(`/hot-sheets/${id}/review`)}>
+          <Button size="sm" className="h-9 rounded-full px-4 text-sm font-semibold" onClick={() => handleCardClick()}>
             <Eye className="mr-2 h-4 w-4" />
             View
           </Button>
@@ -119,6 +169,7 @@ export const HotSheetCard = ({
             Edit
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );
