@@ -13,23 +13,14 @@ import {
   Search,
   Sparkles,
   Mail,
-  MoreHorizontal,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
-import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
-import { humanizeSnakeCase } from "@/lib/format";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
   AlertDialog,
@@ -67,39 +58,6 @@ interface ShareTokenRow {
   payload: unknown;
   accepted_at: string | null;
   accepted_by_user_id: string | null;
-}
-
-const asStringArray = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-
-/** Same location/criteria summary as buyer Hot Sheets (`HotSheets.tsx`). */
-function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | undefined): string {
-  const parts: string[] = [];
-  if (!criteria) return "Custom search criteria";
-
-  const cities = asStringArray(criteria.cities);
-  const towns = asStringArray(criteria.towns);
-  const propertyTypes = asStringArray(criteria.propertyTypes);
-
-  if (cities.length) {
-    parts.push(cities.slice(0, 2).join(", "));
-  } else if (towns.length) {
-    parts.push(towns.slice(0, 2).join(", "));
-  }
-
-  if (propertyTypes.length) {
-    parts.push(humanizeSnakeCase(propertyTypes[0]));
-  }
-
-  if (criteria.bedrooms) parts.push(`${String(criteria.bedrooms)}+ bd`);
-  if (criteria.bathrooms) parts.push(`${String(criteria.bathrooms)}+ ba`);
-
-  const maxPrice = criteria.maxPrice;
-  if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
-    parts.push(`under $${Math.round(maxPrice / 1000)}k`);
-  }
-
-  return parts.join(" • ") || "Custom search criteria";
 }
 
 /** Collage fills the same `aspect-[4/3]` media frame as favorites listing cards. */
@@ -227,11 +185,6 @@ export default function ClientDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
-  const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
-  const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
-  const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
-  const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
-  const [hotSheetDeleteLoading, setHotSheetDeleteLoading] = useState(false);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -484,47 +437,6 @@ export default function ClientDashboard() {
     );
 
     setHotSheetPreviewPhotosById(Object.fromEntries(photoEntries));
-  };
-
-  const handleDashboardHotSheetEditSuccess = () => {
-    if (currentUserId) void loadBuyerHotSheetsForDashboard(currentUserId);
-  };
-
-  const handleConfirmDeleteDashboardHotSheet = async () => {
-    if (!hotSheetDeleteId || hotSheetDeleteLoading) return;
-    const id = hotSheetDeleteId;
-    setHotSheetDeleteLoading(true);
-
-    const { error: clientsError } = await supabase
-      .from("hot_sheet_clients")
-      .delete()
-      .eq("hot_sheet_id", id);
-
-    if (clientsError) {
-      console.error("Delete hot_sheet_clients failed:", clientsError);
-      toast.error("Unable to delete this hot sheet.");
-      setHotSheetDeleteLoading(false);
-      return;
-    }
-
-    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
-
-    if (sheetError) {
-      console.error("Delete hot_sheets failed:", sheetError);
-      toast.error("Unable to delete this hot sheet.");
-      setHotSheetDeleteLoading(false);
-      return;
-    }
-
-    toast.success("Hot sheet deleted");
-    setHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
-    setHotSheetPreviewPhotosById((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setHotSheetDeleteLoading(false);
-    setHotSheetDeleteId(null);
   };
 
   const loadFavorites = async (userId: string) => {
@@ -886,57 +798,10 @@ export default function ClientDashboard() {
                             >
                               <div className={`${compactPreviewMediaWrap} shrink-0 rounded-t-xl`}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      className={`absolute right-2 top-2 z-10 h-8 w-8 rounded-full border ${outlineSecondaryClass}`}
-                                      aria-label="Hot sheet menu"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent
-                                    align="end"
-                                    className="min-w-[10rem]"
-                                    onCloseAutoFocus={(e) => e.preventDefault()}
-                                  >
-                                    <DropdownMenuItem
-                                      className="cursor-pointer"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!sheet.user_id) {
-                                          toast.error("This hot sheet cannot be edited right now.");
-                                          return;
-                                        }
-                                        setEditingHotSheetId(sheet.id);
-                                        setEditingHotSheetOwnerUserId(sheet.user_id);
-                                        setEditHotSheetDialogOpen(true);
-                                      }}
-                                    >
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setHotSheetDeleteId(sheet.id);
-                                      }}
-                                    >
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
                               </div>
-                               <div className={`${compactPreviewBody} flex-1`}>
+                              <div className={`${compactPreviewBody} flex-1 justify-center`}>
                                 <p className="line-clamp-1 text-sm font-semibold leading-snug tracking-tight text-gray-900">
                                   {sheet.name}
-                                </p>
-                                <p className="line-clamp-2 text-xs font-medium leading-snug text-gray-600">
-                                  {formatBuyerCriteriaSummary(sheet.criteria)}
                                 </p>
                               </div>
                             </article>
@@ -1135,51 +1000,6 @@ export default function ClientDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <AlertDialog
-        open={Boolean(hotSheetDeleteId)}
-        onOpenChange={(open) => {
-          if (!open && !hotSheetDeleteLoading) setHotSheetDeleteId(null);
-        }}
-      >
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
-            <AlertDialogDescription>This will remove this hot sheet and its alerts.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={hotSheetDeleteLoading}>Cancel</AlertDialogCancel>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={hotSheetDeleteLoading}
-              onClick={() => void handleConfirmDeleteDashboardHotSheet()}
-            >
-              {hotSheetDeleteLoading ? "Deleting…" : "Delete"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {editingHotSheetId && editingHotSheetOwnerUserId ? (
-        <CreateHotSheetDialog
-          key={editingHotSheetId}
-          open={editHotSheetDialogOpen}
-          onOpenChange={(open) => {
-            setEditHotSheetDialogOpen(open);
-            if (!open) {
-              setEditingHotSheetId(null);
-              setEditingHotSheetOwnerUserId(null);
-            }
-          }}
-          userId={editingHotSheetOwnerUserId}
-          hotSheetId={editingHotSheetId}
-          editMode
-          onSuccess={() => {
-            handleDashboardHotSheetEditSuccess();
-          }}
-        />
-      ) : null}
 
       <AddFriendDialog open={addFriendOpen} onOpenChange={setAddFriendOpen} />
     </div>
