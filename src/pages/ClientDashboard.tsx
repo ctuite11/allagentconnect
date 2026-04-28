@@ -175,6 +175,7 @@ export default function ClientDashboard() {
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
+  const [hotSheetPreviewMatchCountsById, setHotSheetPreviewMatchCountsById] = useState<Record<string, number>>({});
 
   useEffect(() => {
     checkAuth();
@@ -371,6 +372,7 @@ export default function ClientDashboard() {
       if (!allHotSheetIds.size) {
         setHotSheets([]);
         setHotSheetPreviewPhotosById({});
+        setHotSheetPreviewMatchCountsById({});
         return;
       }
 
@@ -384,6 +386,7 @@ export default function ClientDashboard() {
         console.error("Failed to load hot sheets on dashboard", sheetErr);
         setHotSheets([]);
         setHotSheetPreviewPhotosById({});
+        setHotSheetPreviewMatchCountsById({});
         return;
       }
 
@@ -394,38 +397,41 @@ export default function ClientDashboard() {
       console.error("loadBuyerHotSheetsForDashboard", e);
       setHotSheets([]);
       setHotSheetPreviewPhotosById({});
+      setHotSheetPreviewMatchCountsById({});
     }
   };
 
   const loadHotSheetPreviewPhotos = async (sheets: HotSheet[]) => {
     if (!sheets.length) {
       setHotSheetPreviewPhotosById({});
+      setHotSheetPreviewMatchCountsById({});
       return;
     }
 
-    const photoEntries = await Promise.all(
+    const previewEntries = await Promise.all(
       sheets.map(async (sheet) => {
         try {
-          const { data: listings, error } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(4);
+          const { data: listings, error } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(1000);
           if (error) {
             console.error("Failed to load preview listings for hot sheet", sheet.id, error);
-            return [sheet.id, []] as const;
+            return [sheet.id, [] as string[], 0] as const;
           }
 
           const photoUrls = (listings || [])
             .map((listing: any) => getPrimaryPhotoUrl(listing?.photos))
             .filter((url): url is string => Boolean(url && url !== "/placeholder.svg"))
-            .slice(0, 4);
+            .slice(0, 3);
 
-          return [sheet.id, photoUrls] as const;
+          return [sheet.id, photoUrls, listings?.length ?? 0] as const;
         } catch (err) {
           console.error("Unexpected preview listing load error", sheet.id, err);
-          return [sheet.id, []] as const;
+          return [sheet.id, [] as string[], 0] as const;
         }
       })
     );
 
-    setHotSheetPreviewPhotosById(Object.fromEntries(photoEntries));
+    setHotSheetPreviewPhotosById(Object.fromEntries(previewEntries.map(([id, photos]) => [id, photos])));
+    setHotSheetPreviewMatchCountsById(Object.fromEntries(previewEntries.map(([id, , count]) => [id, count])));
   };
 
   const loadFavorites = async (userId: string) => {
@@ -812,6 +818,9 @@ export default function ClientDashboard() {
                               </div>
                               <div className={`${unifiedHotFavBody} flex-1`}>
                                 <p className="line-clamp-1 text-[16px] font-semibold leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
+                                <p className="text-[12px] font-normal leading-tight text-gray-500">
+                                  {hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches
+                                </p>
                               </div>
                             </article>
                           );
