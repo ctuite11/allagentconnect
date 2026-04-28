@@ -108,16 +108,11 @@ function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | u
 function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
   if (!photoUrls.length) {
     return (
-      <div className="relative h-[3.75rem] w-full overflow-hidden rounded-t-xl bg-zinc-100">
-        <div className="absolute inset-0 grid grid-cols-2 gap-px bg-white">
-          <div className="bg-gradient-to-br from-zinc-200/90 to-zinc-100/80" />
-          <div className="bg-gradient-to-bl from-[#0E56F5]/18 to-[#0E56F5]/8" />
-          <div className="bg-gradient-to-tr from-[#0E56F5]/12 to-white" />
-          <div className="bg-gradient-to-tl from-zinc-200/70 to-white" />
-        </div>
+      <div className="relative h-14 w-full overflow-hidden rounded-t-xl bg-zinc-100">
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 via-zinc-50 to-[#0E56F5]/10" />
         <div className="relative flex h-full items-center justify-center">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
-            <AACMonogram className="h-[18px] w-[18px] text-[#0E56F5]" size={18} />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
+            <AACMonogram className="h-4 w-4 text-[#0E56F5]" size={16} />
           </div>
         </div>
       </div>
@@ -126,7 +121,7 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   if (photoUrls.length === 1) {
     return (
-      <div className="relative h-[3.75rem] w-full overflow-hidden rounded-t-xl bg-zinc-100">
+      <div className="relative h-14 w-full overflow-hidden rounded-t-xl bg-zinc-100">
         <img src={photoUrls[0]} alt="" className="h-full w-full object-cover" />
       </div>
     );
@@ -134,7 +129,7 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   const collagePhotos = photoUrls.slice(0, 4);
   return (
-    <div className="relative h-[3.75rem] w-full overflow-hidden rounded-t-xl bg-zinc-100">
+    <div className="relative h-14 w-full overflow-hidden rounded-t-xl bg-zinc-100">
       <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-white">
         {collagePhotos.map((photoUrl, idx) => (
           <img key={`${photoUrl}-${idx}`} src={photoUrl} alt="" className="h-full w-full object-cover" />
@@ -844,7 +839,7 @@ export default function ClientDashboard() {
             ))}
           </section>
 
-          <section className="space-y-6">
+          <section className="space-y-5">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className={`${premiumCard} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
@@ -857,19 +852,19 @@ export default function ClientDashboard() {
                       className={`h-8 rounded-md border-gray-300 text-xs ${outlineSecondaryClass}`}
                       onClick={() => navigate("/client/hot-sheets")}
                     >
-                      Manage
+                      View all
                     </Button>
                   </div>
                   <CardDescription className="text-sm text-gray-500">Alerts for saved searches.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 p-5 pt-0 md:p-6 md:pt-0">
+                <CardContent className="space-y-2.5 p-5 pt-0 md:p-6 md:pt-0">
                   {hotSheets.length > 0 ? (
                     <>
                       <Button
-                        className={`${primaryCtaClass} h-8 w-full text-xs sm:w-auto sm:px-3`}
+                        className={`${primaryCtaClass} h-7 w-full text-[11px] sm:w-auto sm:px-2.5`}
                         onClick={() => navigate("/hot-sheets/new")}
                       >
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        <Plus className="mr-1 h-3 w-3" />
                         Create hot sheet
                       </Button>
                       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -904,25 +899,25 @@ export default function ClientDashboard() {
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center justify-end gap-px border-t border-gray-100 bg-gray-50/80 px-1 py-1">
+                              <div className="flex items-center justify-end gap-0.5 border-t border-gray-100 bg-gray-50/80 px-1 py-1">
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 rounded-lg text-gray-600 hover:bg-white hover:text-[#0E56F5]"
+                                  className="h-6 w-6 rounded-md text-gray-600 hover:bg-white hover:text-[#0E56F5]"
                                   aria-label="View hot sheet"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(viewPath);
                                   }}
                                 >
-                                  <Eye className="h-3.5 w-3.5" />
+                                  <Eye className="h-3 w-3" />
                                 </Button>
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 rounded-lg text-gray-600 hover:bg-white hover:text-gray-900"
+                                  className="h-6 w-6 rounded-md text-gray-600 hover:bg-white hover:text-gray-900"
                                   aria-label="Edit hot sheet"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -935,7 +930,7 @@ export default function ClientDashboard() {
                                     setEditHotSheetDialogOpen(true);
                                   }}
                                 >
-                                  <Pencil className="h-3.5 w-3.5" />
+                                  <Pencil className="h-3 w-3" />
                                 </Button>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
@@ -943,11 +938,11 @@ export default function ClientDashboard() {
                                       type="button"
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 rounded-lg text-gray-600 hover:bg-white hover:text-gray-900"
+                                      className="h-6 w-6 rounded-md text-gray-600 hover:bg-white hover:text-gray-900"
                                       aria-label="More actions"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <MoreHorizontal className="h-3.5 w-3.5" />
+                                      <MoreHorizontal className="h-3 w-3" />
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="min-w-[10rem]" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -1014,7 +1009,7 @@ export default function ClientDashboard() {
                             <div className="relative h-14 bg-gray-50">
                               <DashboardListingImage photoUrl={favPhotoUrl} alt="" imageClassName="h-full w-full object-cover" />
                             </div>
-                            <div className="space-y-0.5 p-2 pb-2.5">
+                            <div className="space-y-0.5 p-2 pb-2">
                               <p className="text-[11px] font-semibold tracking-tight text-gray-900">
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
@@ -1057,14 +1052,14 @@ export default function ClientDashboard() {
               </CardHeader>
               <CardContent className="overflow-visible p-5 pt-0 md:p-6 md:pt-0">
                 {latestListingsPreview.length > 0 ? (
-                  <div className="overflow-visible pt-2">
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                  <div className="overflow-visible">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     {latestListingsPreview.map((listing) => (
                       <article
                         key={listing.id}
                         role="button"
                         tabIndex={0}
-                        className={`${premiumClickableCard}`}
+                        className="overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-[box-shadow,border-color] hover:border-gray-300 hover:shadow-[0_6px_16px_rgba(15,23,42,0.08)]"
                         onClick={() => navigate(`/property/${listing.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
@@ -1073,18 +1068,18 @@ export default function ClientDashboard() {
                           }
                         }}
                       >
-                        <div className="overflow-hidden rounded-t-2xl">
+                        <div className="relative h-14 bg-gray-50">
                           <DashboardListingImage
                             photoUrl={getPrimaryPhotoUrl(listing.photos)}
                             alt={listing.address}
-                            imageClassName="w-full h-[120px] object-cover object-center"
+                            imageClassName="h-full w-full object-cover"
                           />
                         </div>
-                        <div className="space-y-0.5 p-3">
-                          <p className="text-[11px] font-semibold text-gray-900">
+                        <div className="space-y-0.5 p-2 pb-2">
+                          <p className="text-[11px] font-semibold tracking-tight text-gray-900">
                             {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                           </p>
-                          <p className="line-clamp-2 text-[10px] font-medium leading-tight text-gray-800">{listing.address}</p>
+                          <p className="line-clamp-2 min-h-[1.85rem] text-[10px] font-medium leading-tight text-gray-800">{listing.address}</p>
                           <p className="truncate text-[10px] text-gray-500">
                             {listing.city}, {listing.state}
                           </p>
