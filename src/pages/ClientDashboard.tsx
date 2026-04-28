@@ -13,14 +13,23 @@ import {
   Search,
   Sparkles,
   Mail,
+  MoreHorizontal,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import { humanizeSnakeCase } from "@/lib/format";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
   AlertDialog,
@@ -60,14 +69,47 @@ interface ShareTokenRow {
   accepted_by_user_id: string | null;
 }
 
-/** Collage fills the same `aspect-[4/3]` media frame as favorites listing cards. */
+const asStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+/** Same location/criteria summary as buyer Hot Sheets (`HotSheets.tsx`). */
+function formatBuyerCriteriaSummary(criteria: Record<string, unknown> | null | undefined): string {
+  const parts: string[] = [];
+  if (!criteria) return "Custom search criteria";
+
+  const cities = asStringArray(criteria.cities);
+  const towns = asStringArray(criteria.towns);
+  const propertyTypes = asStringArray(criteria.propertyTypes);
+
+  if (cities.length) {
+    parts.push(cities.slice(0, 2).join(", "));
+  } else if (towns.length) {
+    parts.push(towns.slice(0, 2).join(", "));
+  }
+
+  if (propertyTypes.length) {
+    parts.push(humanizeSnakeCase(propertyTypes[0]));
+  }
+
+  if (criteria.bedrooms) parts.push(`${String(criteria.bedrooms)}+ bd`);
+  if (criteria.bathrooms) parts.push(`${String(criteria.bathrooms)}+ ba`);
+
+  const maxPrice = criteria.maxPrice;
+  if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
+    parts.push(`under $${Math.round(maxPrice / 1000)}k`);
+  }
+
+  return parts.join(" • ") || "Custom search criteria";
+}
+
+/** Collage fills the fixed dashboard media strip (`listingPreviewMediaWrap` height matches Favorites / Market). */
 function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
   if (!photoUrls.length) {
     return (
-      <div className="relative h-full min-h-0 w-full overflow-hidden bg-zinc-100">
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 via-zinc-50 to-[#0E56F5]/10" />
+      <div className="relative h-full min-h-0 w-full overflow-hidden bg-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-neutral-50 via-white to-[#0E56F5]/10" />
         <div className="relative flex h-full items-center justify-center">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 shadow-[0_1px_6px_rgba(15,23,42,0.12)] ring-1 ring-white/70">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-[0_1px_6px_rgba(15,23,42,0.08)] ring-1 ring-neutral-200">
             <AACMonogram className="h-7 w-7 text-[#0E56F5]" size={28} />
           </div>
         </div>
@@ -77,7 +119,7 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   if (photoUrls.length === 1) {
     return (
-      <div className="relative h-full min-h-0 w-full overflow-hidden bg-zinc-100">
+      <div className="relative h-full min-h-0 w-full overflow-hidden bg-white">
         <img src={photoUrls[0]} alt="" className="h-full w-full object-cover" />
       </div>
     );
@@ -85,14 +127,14 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 
   const collagePhotos = photoUrls.slice(0, 4);
   return (
-    <div className="relative h-full min-h-0 w-full overflow-hidden bg-zinc-100">
-      <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-white">
+    <div className="relative h-full min-h-0 w-full overflow-hidden bg-white">
+      <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-neutral-50">
         {collagePhotos.map((photoUrl, idx) => (
           <img key={`${photoUrl}-${idx}`} src={photoUrl} alt="" className="h-full w-full object-cover" />
         ))}
         {collagePhotos.length < 4 &&
           Array.from({ length: 4 - collagePhotos.length }).map((_, idx) => (
-            <div key={`empty-${idx}`} className="bg-zinc-100" />
+            <div key={`empty-${idx}`} className="bg-neutral-100" />
           ))}
       </div>
     </div>
@@ -156,7 +198,7 @@ function DashboardListingImage({
   const useMonogram = !photoUrl || photoUrl === "/placeholder.svg" || loadFailed;
   if (useMonogram) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[#0E56F5]" aria-hidden>
+      <div className="flex h-full w-full items-center justify-center bg-white text-[#0E56F5]" aria-hidden>
         <AACMonogram className="h-7 w-7" size={28} />
       </div>
     );
@@ -185,6 +227,11 @@ export default function ClientDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
+  const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
+  const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
+  const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
+  const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
+  const [hotSheetDeleteLoading, setHotSheetDeleteLoading] = useState(false);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -439,6 +486,47 @@ export default function ClientDashboard() {
     setHotSheetPreviewPhotosById(Object.fromEntries(photoEntries));
   };
 
+  const handleDashboardHotSheetEditSuccess = () => {
+    if (currentUserId) void loadBuyerHotSheetsForDashboard(currentUserId);
+  };
+
+  const handleConfirmDeleteDashboardHotSheet = async () => {
+    if (!hotSheetDeleteId || hotSheetDeleteLoading) return;
+    const id = hotSheetDeleteId;
+    setHotSheetDeleteLoading(true);
+
+    const { error: clientsError } = await supabase
+      .from("hot_sheet_clients")
+      .delete()
+      .eq("hot_sheet_id", id);
+
+    if (clientsError) {
+      console.error("Delete hot_sheet_clients failed:", clientsError);
+      toast.error("Unable to delete this hot sheet.");
+      setHotSheetDeleteLoading(false);
+      return;
+    }
+
+    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
+
+    if (sheetError) {
+      console.error("Delete hot_sheets failed:", sheetError);
+      toast.error("Unable to delete this hot sheet.");
+      setHotSheetDeleteLoading(false);
+      return;
+    }
+
+    toast.success("Hot sheet deleted");
+    setHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
+    setHotSheetPreviewPhotosById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setHotSheetDeleteLoading(false);
+    setHotSheetDeleteId(null);
+  };
+
   const loadFavorites = async (userId: string) => {
     const { data } = await supabase
       .from("favorites")
@@ -538,11 +626,6 @@ export default function ClientDashboard() {
     return "/placeholder.svg";
   };
 
-  const getShortAddressLine = (address: string | null | undefined): string => {
-    const firstLine = address?.split(",")[0]?.trim();
-    return firstLine || "Address unavailable";
-  };
-
   const latestListingsPreview = marketListings.slice(0, 4);
 
   const stats = [
@@ -575,31 +658,41 @@ export default function ClientDashboard() {
     },
   ];
 
+  /** Primary AAC blue surfaces (pill) — dialogs + key CTAs share this baseline. */
   const primaryCtaClass =
-    "rounded-lg bg-[#0E56F5] text-white shadow-sm transition-shadow duration-200 hover:bg-[#0B46CC] hover:shadow-md";
-  /** AAC section shells and preview tiles (buyer dashboard). */
+    "rounded-full bg-[#0E56F5] text-white shadow-sm transition-all duration-150 hover:bg-[#0B46CC]";
+  /** Section header CTAs (View all, Search homes): premium pill, AAC blue — not outline/ghost. */
+  const aacPrimarySectionCta =
+    "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#0E56F5] px-4 text-[13px] font-medium text-white shadow-sm transition-all duration-150 hover:bg-[#0B46CC]";
+  /** AAC shells (section chrome; no hover motion). */
   const aacCardShell =
-    "bg-white rounded-2xl border border-neutral-200 shadow-sm transition-all duration-200";
-  const aacCardInteractive =
-    `${aacCardShell} cursor-pointer hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
-  const dashboardPreviewTile =
-    "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm transition-all hover:border-neutral-300 hover:shadow-md";
+    "bg-white rounded-2xl border border-neutral-200 shadow-sm transition-colors duration-150";
+  const aacPreviewCardBase =
+    "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md";
+  const dashboardPreviewTile = aacPreviewCardBase;
   const dashboardPreviewTileInteractive =
-    `${dashboardPreviewTile} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
-  /** Vertical listing-style previews (favorites & market sections). */
+    `${aacPreviewCardBase} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
   const listingPreviewMediaWrap =
-    "relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-neutral-50";
-  const listingPreviewBody = "flex flex-col gap-2 p-4 text-left";
-  const compactPreviewMediaWrap =
-    "relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-neutral-50";
-  const compactPreviewBody = "flex h-20 min-h-0 flex-col justify-center gap-1 p-3 text-left";
-  const previewSectionHeaderClass = "p-5 pb-3";
-  const previewSectionContentClass = "p-5 pt-3";
-  const previewSectionHeaderRowClass = "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between";
-  const previewSectionTitleWrapClass = "min-w-0 space-y-1";
-  const previewGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-3";
+    "relative h-48 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
+  /** Shared dashboard card body rhythm (Hot Sheets + listings). */
+  const listingPreviewBody = "flex flex-col gap-1.5 px-4 pb-4 pt-3 text-left";
+  const dashSectionTitleClass = "text-[15px] font-semibold text-neutral-900";
+  const dashSectionDescClass = "text-[13px] leading-snug text-neutral-500";
+  const dashTileTitleClass = "text-[15px] font-semibold leading-snug tracking-tight text-neutral-900";
+  const dashTileSecondaryClass = "text-[13px] leading-snug text-neutral-500";
+  const dashTileAddressClass = "line-clamp-2 text-[13px] leading-snug text-neutral-800";
+  const aacCardInteractive =
+    `${aacCardShell} cursor-pointer transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
   const outlineSecondaryClass =
-    "border border-neutral-200 bg-white shadow-sm transition-shadow duration-200 hover:bg-neutral-50 hover:shadow-sm";
+    "rounded-full border border-neutral-200 bg-white text-[13px] font-medium text-neutral-800 shadow-sm transition-all duration-150 hover:bg-neutral-50";
+  /** Layout tokens from remote buyer dashboard structure (same spacing as AAC classes above). */
+  const previewSectionHeaderClass = "border-0 p-5 pb-4 md:p-6 md:pb-5";
+  const previewSectionContentClass = "px-5 pb-6 pt-0 md:px-6";
+  const previewSectionMarketContentClass = "overflow-visible px-5 pb-6 pt-0 md:px-6";
+  const previewGridClass = "grid grid-cols-1 gap-4 sm:grid-cols-3";
+  const previewSectionHeaderRowClass =
+    "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between";
+  const previewSectionTitleWrapClass = "min-w-0 space-y-1";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
 
   if (loading) {
@@ -630,13 +723,14 @@ export default function ClientDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`rounded-md ${outlineSecondaryClass}`}
+                    type="button"
+                    className={`h-9 rounded-full px-4 ${outlineSecondaryClass}`}
                     onClick={() => setAddFriendOpen(true)}
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
                     Add a Friend
                   </Button>
-                  <Button size="sm" className={primaryCtaClass} onClick={() => navigate("/messages")}>
+                  <Button size="sm" className={`h-9 ${primaryCtaClass}`} onClick={() => navigate("/messages")}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Messages
                   </Button>
@@ -725,7 +819,7 @@ export default function ClientDashboard() {
             </div>
           </section>
 
-          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+          <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {stats.map(({ label, value, icon: Icon, subtle }) => (
               <div
                 key={label}
@@ -764,23 +858,24 @@ export default function ClientDashboard() {
                   <CardHeader className={previewSectionHeaderClass}>
                     <div className={previewSectionHeaderRowClass}>
                       <div className={previewSectionTitleWrapClass}>
-                        <CardTitle className="text-base font-semibold text-gray-900">Hot Sheets</CardTitle>
-                        <CardDescription className="text-sm text-gray-500">Alerts for saved searches.</CardDescription>
+                        <CardTitle className={dashSectionTitleClass}>Hot Sheets</CardTitle>
+                        <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
+                          Alerts for saved searches.
+                        </CardDescription>
                       </div>
                       <div className="flex shrink-0 flex-wrap items-center gap-2">
                         <Button
-                          size="sm"
+                          type="button"
                           variant="outline"
-                          className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
+                          className={`h-9 px-4 ${outlineSecondaryClass}`}
                           onClick={() => navigate("/hot-sheets/new")}
                         >
-                          <Plus className="mr-1.5 h-3.5 w-3.5 text-gray-600" />
+                          <Plus className="mr-1.5 h-3.5 w-3.5" />
                           Create
                         </Button>
                         <Button
-                          size="sm"
-                          variant="outline"
-                          className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
+                          type="button"
+                          className={aacPrimarySectionCta}
                           onClick={() => navigate("/client/hot-sheets")}
                         >
                           View all
@@ -798,7 +893,7 @@ export default function ClientDashboard() {
                               key={sheet.id}
                               role="button"
                               tabIndex={0}
-                              className={`${dashboardPreviewTileInteractive} flex flex-col rounded-xl`}
+                              className={`${dashboardPreviewTileInteractive} flex flex-col`}
                               onClick={() => navigate(viewPath)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter" && e.key !== " ") return;
@@ -806,12 +901,57 @@ export default function ClientDashboard() {
                                 navigate(viewPath);
                               }}
                             >
-                              <div className={`${compactPreviewMediaWrap} shrink-0 rounded-t-xl`}>
+                              <div className={listingPreviewMediaWrap}>
                                 <HotSheetPreviewCollage photoUrls={hotSheetPreviewPhotosById[sheet.id] || []} />
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className={`absolute right-2 top-2 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-neutral-200 bg-white shadow-sm hover:bg-neutral-50`}
+                                      aria-label="Hot sheet menu"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="min-w-[10rem]"
+                                    onCloseAutoFocus={(e) => e.preventDefault()}
+                                  >
+                                    <DropdownMenuItem
+                                      className="cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!sheet.user_id) {
+                                          toast.error("This hot sheet cannot be edited right now.");
+                                          return;
+                                        }
+                                        setEditingHotSheetId(sheet.id);
+                                        setEditingHotSheetOwnerUserId(sheet.user_id);
+                                        setEditHotSheetDialogOpen(true);
+                                      }}
+                                    >
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setHotSheetDeleteId(sheet.id);
+                                      }}
+                                    >
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
-                              <div className={compactPreviewBody}>
-                                <p className="line-clamp-2 text-sm font-semibold leading-5 tracking-tight text-gray-900">
-                                  {sheet.name}
+                              <div className={`${listingPreviewBody} flex-1`}>
+                                <p className={`${dashTileTitleClass} line-clamp-2`}>{sheet.name}</p>
+                                <p className={`${dashTileSecondaryClass} line-clamp-2`}>
+                                  {formatBuyerCriteriaSummary(sheet.criteria)}
                                 </p>
                               </div>
                             </article>
@@ -819,14 +959,14 @@ export default function ClientDashboard() {
                         })}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                        <p className="max-w-md text-xs leading-relaxed text-gray-600">
+                      <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                        <p className={`max-w-md ${dashSectionDescClass}`}>
                           No hot sheets yet. Create one for alerts, or ask your agent to share one.
                         </p>
                         <Button
+                          type="button"
                           variant="outline"
-                          size="sm"
-                          className={`h-9 shrink-0 px-4 text-sm font-medium text-gray-800 ${outlineSecondaryClass}`}
+                          className={`h-9 px-6 ${outlineSecondaryClass}`}
                           onClick={() => navigate("/hot-sheets/new")}
                         >
                           <Plus className="mr-2 h-4 w-4" />
@@ -838,54 +978,45 @@ export default function ClientDashboard() {
                 </div>
               </div>
 
-              <div className={`${aacCardShell} overflow-visible`}>
+              <div className={`${aacCardShell} overflow-hidden`}>
                 <div className="rounded-none bg-transparent">
                 <CardHeader className={previewSectionHeaderClass}>
-                  <div className={previewSectionHeaderRowClass}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className={previewSectionTitleWrapClass}>
-                      <CardTitle className="text-base font-semibold text-gray-900">Favorites</CardTitle>
-                      <CardDescription className="text-sm text-gray-500">Homes you saved.</CardDescription>
+                      <CardTitle className={dashSectionTitleClass}>Favorites</CardTitle>
+                      <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>Homes you saved.</CardDescription>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={`h-8 rounded-md border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
-                        onClick={() => navigate("/client/favorites")}
-                      >
-                        View all
-                      </Button>
-                    </div>
+                    <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/favorites")}>
+                      View all
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent className={previewSectionContentClass}>
                   {favorites.length > 0 ? (
-                    <div className={previewGridClass}>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {favorites.slice(0, 3).map((fav) => {
                         const favPhotoUrl = getPrimaryPhotoUrl(fav.listing.photos);
                         return (
                           <button
                             key={fav.id}
                             type="button"
-                            className={`${dashboardPreviewTileInteractive} flex w-full flex-col rounded-xl`}
+                            className={`${dashboardPreviewTileInteractive} flex w-full flex-col`}
                             onClick={() => navigate(`/property/${fav.listing.id}`)}
                           >
-                            <div className={`${compactPreviewMediaWrap} rounded-t-xl`}>
+                            <div className={listingPreviewMediaWrap}>
                               <DashboardListingImage
                                 photoUrl={favPhotoUrl}
                                 alt=""
                                 imageClassName="absolute inset-0 h-full w-full object-cover"
                               />
                             </div>
-                            <div className={compactPreviewBody}>
-                              <p className="truncate text-sm font-semibold leading-5 tracking-tight text-gray-900">
+                            <div className={listingPreviewBody}>
+                              <p className={dashTileTitleClass}>
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
-                              <p className="truncate text-xs font-medium leading-4 text-gray-800">
-                                {getShortAddressLine(fav.listing.address)}
-                              </p>
-                              <p className="truncate text-xs leading-4 text-gray-500">
-                                Boston, MA
+                              <p className={dashTileAddressClass}>{fav.listing.address}</p>
+                              <p className={`${dashTileSecondaryClass} truncate`}>
+                                {fav.listing.city}, {fav.listing.state}
                               </p>
                             </div>
                           </button>
@@ -893,9 +1024,9 @@ export default function ClientDashboard() {
                       })}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-center py-12">
-                      <p className="max-w-sm text-sm text-gray-600">No favorites yet.</p>
-                      <Button className={`${primaryCtaClass} h-9 shrink-0 px-4 text-sm`} onClick={() => navigate("/client/search")}>
+                    <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                      <p className={`max-w-sm ${dashSectionDescClass}`}>No favorites yet.</p>
+                      <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/search")}>
                         <Search className="mr-2 h-4 w-4" />
                         Search homes
                       </Button>
@@ -908,24 +1039,21 @@ export default function ClientDashboard() {
 
             <div className={`${aacCardShell} overflow-visible`}>
               <div className="rounded-none bg-transparent">
-              <CardHeader className="p-5 pb-3 md:p-6 md:pb-4">
+              <CardHeader className={previewSectionHeaderClass}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="space-y-1">
-                    <CardTitle className="text-base font-semibold text-gray-900">Market activity</CardTitle>
-                    <CardDescription className="text-sm text-gray-500">New listings on the market.</CardDescription>
+                  <div className={previewSectionTitleWrapClass}>
+                    <CardTitle className={dashSectionTitleClass}>Market activity</CardTitle>
+                    <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
+                      New listings on the market.
+                    </CardDescription>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`h-8 shrink-0 border text-xs font-medium text-gray-700 ${outlineSecondaryClass}`}
-                    onClick={() => navigate("/client/search")}
-                  >
+                  <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/search")}>
                     <Search className="mr-1.5 h-3.5 w-3.5" />
                     Search homes
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="overflow-visible p-6 pt-4 md:p-7 md:pt-5">
+              <CardContent className={previewSectionMarketContentClass}>
                 {latestListingsPreview.length > 0 ? (
                   <div className="overflow-visible">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -943,7 +1071,7 @@ export default function ClientDashboard() {
                           }
                         }}
                       >
-                        <div className={`${listingPreviewMediaWrap} rounded-t-2xl`}>
+                        <div className={listingPreviewMediaWrap}>
                           <DashboardListingImage
                             photoUrl={getPrimaryPhotoUrl(listing.photos)}
                             alt={listing.address}
@@ -951,11 +1079,9 @@ export default function ClientDashboard() {
                           />
                         </div>
                         <div className={listingPreviewBody}>
-                          <p className="text-lg font-semibold tracking-tight text-gray-900">
-                            {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
-                          </p>
-                          <p className="line-clamp-2 text-sm font-medium leading-snug text-gray-800">{listing.address}</p>
-                          <p className="truncate text-sm text-gray-500">
+                          <p className={dashTileTitleClass}>{listing.price ? `$${listing.price.toLocaleString()}` : "—"}</p>
+                          <p className={dashTileAddressClass}>{listing.address}</p>
+                          <p className={`${dashTileSecondaryClass} truncate`}>
                             {listing.city}, {listing.state}
                           </p>
                         </div>
@@ -964,16 +1090,16 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                    <p className="text-sm text-gray-600">No listings to show yet.</p>
-                    <Button className={`${primaryCtaClass} h-8 shrink-0 text-xs`} onClick={() => navigate("/client/search")}>
+                  <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                    <p className={dashSectionDescClass}>No listings to show yet.</p>
+                    <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/search")}>
                       <Search className="mr-1.5 h-3.5 w-3.5" />
                       Search homes
                     </Button>
                   </div>
                 )}
                 {isDcmlsHost() ? (
-                  <p className="mt-4 text-center text-xs leading-snug text-gray-400">
+                  <p className={`mt-4 text-center ${dashSectionDescClass}`}>
                     Listings shown may include homes published on{" "}
                     <a
                       href="https://directconnectmls.com"
@@ -1008,12 +1134,57 @@ export default function ClientDashboard() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>No, cancel</AlertDialogCancel>
-            <Button type="button" className={primaryCtaClass} onClick={() => void handleEndRelationship()}>
+            <Button type="button" className={`h-9 px-5 ${primaryCtaClass}`} onClick={() => void handleEndRelationship()}>
               Yes, end relationship
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(hotSheetDeleteId)}
+        onOpenChange={(open) => {
+          if (!open && !hotSheetDeleteLoading) setHotSheetDeleteId(null);
+        }}
+      >
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
+            <AlertDialogDescription>This will remove this hot sheet and its alerts.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={hotSheetDeleteLoading}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={hotSheetDeleteLoading}
+              onClick={() => void handleConfirmDeleteDashboardHotSheet()}
+            >
+              {hotSheetDeleteLoading ? "Deleting…" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {editingHotSheetId && editingHotSheetOwnerUserId ? (
+        <CreateHotSheetDialog
+          key={editingHotSheetId}
+          open={editHotSheetDialogOpen}
+          onOpenChange={(open) => {
+            setEditHotSheetDialogOpen(open);
+            if (!open) {
+              setEditingHotSheetId(null);
+              setEditingHotSheetOwnerUserId(null);
+            }
+          }}
+          userId={editingHotSheetOwnerUserId}
+          hotSheetId={editingHotSheetId}
+          editMode
+          onSuccess={() => {
+            handleDashboardHotSheetEditSuccess();
+          }}
+        />
+      ) : null}
 
       <AddFriendDialog open={addFriendOpen} onOpenChange={setAddFriendOpen} />
     </div>
