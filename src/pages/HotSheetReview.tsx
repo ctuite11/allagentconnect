@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
+import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { format } from "date-fns";
@@ -1098,18 +1098,17 @@ if (comments && comments.length > 0) {
               </div>
             </Card>
           ) : (
-            <div className="mx-auto max-w-[88rem]">
-              <ListingResultsTable
-                listings={sortedListings}
-                loading={false}
-                sortColumn={sortBy}
-                sortDirection="desc"
-                onSort={() => undefined}
-                selectedRows={selectedListings}
-                onToggleSelect={toggleListing}
-                onRowClick={(listing) => navigate(`/property/${listing.id}`, { state: { from: `/hot-sheets/${id}/review` } })}
-                fromPath={`/hot-sheets/${id}/review`}
-              />
+            <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+              {sortedListings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  viewMode="compact"
+                  showActions={false}
+                  onSelect={toggleListing}
+                  isSelected={selectedListings.has(listing.id)}
+                />
+              ))}
             </div>
           )}
         </div>
