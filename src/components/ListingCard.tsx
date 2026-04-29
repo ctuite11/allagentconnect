@@ -59,6 +59,11 @@ interface ListingCardProps {
     agent_id?: string;
     price_range_min?: number | null;
     price_range_max?: number | null;
+    /** MLS / feed listing agent or office (search results) */
+    listing_agent_name?: string | null;
+    agent_name?: string | null;
+    brokerage_name?: string | null;
+    listing_brokerage?: string | null;
   };
   onReactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -107,6 +112,23 @@ const ListingCard = ({
   isHotSheetFavorite,
 }: ListingCardProps) => {
   const navigate = useNavigate();
+
+  const listedByAttribution = ((): string | null => {
+    const l = listing;
+    const candidates = [
+      l.listing_agent_name,
+      l.agent_name,
+      l.brokerage_name,
+      l.listing_brokerage,
+    ];
+    for (const c of candidates) {
+      if (typeof c === "string") {
+        const t = c.trim();
+        if (t) return t;
+      }
+    }
+    return null;
+  })();
   const [agentCount, setAgentCount] = useState<number>(0);
   const [buyerCount, setBuyerCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
@@ -769,6 +791,15 @@ const ListingCard = ({
               </div>}
           </div>
 
+          {listedByAttribution && (
+            <p
+              className="mt-1.5 truncate text-[12px] text-neutral-500"
+              title={`Listed by ${listedByAttribution}`}
+            >
+              Listed by {listedByAttribution}
+            </p>
+          )}
+
           {/* Comment + Attribution row */}
           {(onOpenChat || chatMessages?.length || clientComment || agentInfo) && (
             <div className="mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full gap-2">
@@ -1266,6 +1297,15 @@ const ListingCard = ({
             </div>
           )}
         </div>
+
+        {listedByAttribution && (
+          <p
+            className="mb-2 truncate text-[12px] text-neutral-500"
+            title={`Listed by ${listedByAttribution}`}
+          >
+            Listed by {listedByAttribution}
+          </p>
+        )}
 
         {/* Listing Number - blue and clickable */}
         {listing.listing_number && (
