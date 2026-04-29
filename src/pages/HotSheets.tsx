@@ -861,7 +861,7 @@ const HotSheets = ({
         {renderHotSheetsHero()}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-2xl border border-zinc-200 bg-zinc-50 animate-pulse">
+            <div key={i} className="rounded-2xl border border-zinc-200 bg-white animate-pulse">
               <div className="aspect-[4/3] bg-zinc-100 rounded-t-2xl" />
               <div className="p-4 space-y-3">
                 <div className="h-5 bg-zinc-200 rounded w-2/3" />
