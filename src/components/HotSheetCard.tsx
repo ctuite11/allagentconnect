@@ -1,12 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Home, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Eye, Home } from "lucide-react";
 
 interface HotSheetCardProps {
   id: string;
@@ -16,10 +10,8 @@ interface HotSheetCardProps {
   lastSentAt?: string | null;
   photos?: string[];
   onView?: (id: string) => void;
-  onEdit: (id: string) => void;
   onShare: (id: string) => void;
   onComments: (id: string) => void;
-  onDelete: (id: string) => void;
   onAddFriend?: (id: string) => void;
 }
 
@@ -28,8 +20,6 @@ export const HotSheetCard = ({
   name,
   photos = [],
   onView,
-  onEdit,
-  onDelete,
 }: HotSheetCardProps) => {
   const navigate = useNavigate();
 
@@ -90,33 +80,10 @@ export const HotSheetCard = ({
       <div className="flex items-center justify-between gap-4 p-5">
         <h3 className="min-w-0 flex-1 truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{name}</h3>
         <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" className="h-9 rounded-full px-4 text-sm font-semibold" onClick={handleCardClick}>
+          <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-sm font-semibold text-primary hover:bg-primary/5 hover:text-primary" onClick={handleCardClick}>
             <Eye className="mr-2 h-4 w-4" />
             View
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-muted">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[11rem] p-1">
-              <DropdownMenuItem
-                onClick={(e) => { e.stopPropagation(); onEdit(id); }}
-                className="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
-              >
-                <Pencil className="h-4 w-4 shrink-0" />
-                Edit Hot Sheet
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => { e.stopPropagation(); onDelete(id); }}
-                className="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-destructive focus:text-destructive data-[highlighted]:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 shrink-0 text-destructive" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </div>
