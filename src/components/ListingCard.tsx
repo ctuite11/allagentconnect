@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ListingCardShell } from "@/components/ListingCardShell";
-import DcmlsBadge from "@/components/DcmlsBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare } from "lucide-react";
 import { ListingInterestSignals } from "./ListingInterestSignals";
 import type { ListingSignals } from "@/hooks/useListingInterestSignals";
@@ -625,7 +623,6 @@ const ListingCard = ({
         onClick={() => navigate(`/property/${listing.id}`)}
       >
         <div className="relative group flex-shrink-0">
-          <DcmlsBadge listing={listing as any} />
           {onSelect && (
             <div className="absolute top-2 left-2 z-10 pointer-events-auto">
               <div
@@ -643,7 +640,7 @@ const ListingCard = ({
                     onSelect(listing.id);
                   }
                 }}
-                className={`w-5 h-5 shrink-0 rounded-sm border shadow-sm cursor-pointer transition-colors flex items-center justify-center ${
+                className={`w-5 h-5 shrink-0 rounded-[2px] border shadow-sm cursor-pointer transition-colors flex items-center justify-center ${
                   isSelected
                     ? "bg-[#0E56F5] border-[#0E56F5]"
                     : "bg-white border-zinc-300"
@@ -1131,11 +1128,37 @@ const ListingCard = ({
             className="absolute top-2 left-2 z-20 pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={() => onSelect(listing.id)}
-              className="h-5 w-5 min-h-5 min-w-5 rounded-sm border border-gray-300 bg-white shadow-sm data-[state=checked]:bg-primary data-[state=checked]:text-white data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 [&_svg]:h-3.5 [&_svg]:w-3.5"
-            />
+            <div
+              role="checkbox"
+              aria-checked={isSelected}
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(listing.id);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSelect(listing.id);
+                }
+              }}
+              className={`w-5 h-5 shrink-0 rounded-[2px] border shadow-sm cursor-pointer transition-colors flex items-center justify-center ${
+                isSelected ? "bg-[#0E56F5] border-[#0E56F5]" : "bg-white border-zinc-300"
+              }`}
+              title="Keep in shortlist for this visit"
+              aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
+            >
+              {isSelected && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </div>
           </div>
         )}
         
