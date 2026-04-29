@@ -18,6 +18,11 @@ import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { ListingAttribution } from "@/components/ListingAttribution";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
+import {
+  buyerMarketListingTileMediaWrap,
+  buyerPageMain,
+  buyerPageShell,
+} from "@/lib/buyerUi";
 
 interface Listing {
   id: string;
@@ -461,7 +466,7 @@ const ClientHotsheetPage = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex flex-col ${contentTopClass}`}>
+      <div className={`flex min-h-screen flex-col bg-white ${contentTopClass}`}>
         <main className="flex-1 flex items-center justify-center px-4">
           <p className="text-muted-foreground text-lg">Loading your saved search...</p>
         </main>
@@ -472,7 +477,7 @@ const ClientHotsheetPage = () => {
 
   if (!loading && error) {
     return (
-      <div className={`min-h-screen flex flex-col ${contentTopClass}`}>
+      <div className={`flex min-h-screen flex-col bg-white ${contentTopClass}`}>
         <main className="flex-1 flex items-center justify-center px-4">
           <Card className="max-w-md w-full p-6 text-center">
             <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
@@ -492,13 +497,13 @@ const ClientHotsheetPage = () => {
   // Show luxury onboarding modal for anonymous users BEFORE rendering main content
   if (showLoginPrompt && !currentUser && agentProfile) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex min-h-screen flex-col bg-white">
         <Dialog open={true} onOpenChange={() => {}}>
           <DialogContent className="sm:max-w-[600px]" hideCloseButton>
             <DialogHeader>
               {/* Agent Header Section */}
               <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-                <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                <div className="relative h-12 w-12 rounded-full overflow-hidden border border-neutral-200 bg-white flex items-center justify-center">
                   {agentProfile.headshot_url ? (
                     <img 
                       src={agentProfile.headshot_url} 
@@ -564,9 +569,9 @@ const ClientHotsheetPage = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-[#F7F8FA] flex flex-col ${contentTopClass}`}>
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
+    <div className={`flex flex-col ${buyerPageShell} ${contentTopClass}`}>
+      <main className={`flex-1 ${buyerPageMain}`}>
+        <div>
           {/* Back to Account */}
           <Button
             variant="ghost"
@@ -770,7 +775,7 @@ const ClientHotsheetPage = () => {
                     className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                     onClick={() => navigate(`/property/${listing.id}`)}
                   >
-                    <div className="relative h-48 bg-muted">
+                    <div className={buyerMarketListingTileMediaWrap}>
                       {photoUrl ? (
                         <img
                           src={photoUrl}
@@ -778,7 +783,7 @@ const ClientHotsheetPage = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="flex h-full w-full items-center justify-center bg-white">
                           <MapPin className="h-12 w-12 text-muted-foreground" />
                         </div>
                       )}

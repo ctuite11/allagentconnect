@@ -99,7 +99,7 @@ const ClientAgentSettings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           <p className="text-muted-foreground">Loading your settings...</p>
@@ -109,8 +109,8 @@ const ClientAgentSettings = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-20">
-      <main className="flex-1 bg-background">
+    <div className="flex min-h-screen flex-col bg-white pt-20">
+      <main className="flex-1 bg-white">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
             <PageTitle className="mb-2">My Agent</PageTitle>

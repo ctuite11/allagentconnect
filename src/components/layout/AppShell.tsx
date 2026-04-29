@@ -20,8 +20,8 @@ export function AppShell({ children }: AppShellProps) {
     <div className="h-screen flex w-full overflow-hidden">
       {/* Page title is controlled by mounted route components, not by layout */}
       <DashboardSidebar isAdmin={isAdmin} />
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">{children}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-white">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-white">{children}</div>
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { isDcmlsHost } from "@/lib/host";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import PropertyMap from "@/components/PropertyMap";
+import { buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
 
 const BED_PRESETS: Array<{ label: string; value: string }> = [
   { label: "Any", value: "" },
@@ -298,11 +299,11 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const dcmls = !forceBuyer && isDcmlsHost();
 
   return (
-    <div className={`min-h-screen flex flex-col ${dcmls ? "" : "pt-20"}`}>
+    <div className={`flex flex-col ${forceBuyer ? buyerPageShell : "min-h-screen"} ${dcmls ? "" : "pt-20"}`}>
       {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
-      <main className="flex-1 bg-background">
-        <div className={forceBuyer ? "px-4 lg:px-6 py-4" : "container mx-auto px-4 py-8"}>
+      <main className={forceBuyer ? "flex-1 bg-white" : "flex-1 bg-background"}>
+        <div className={forceBuyer ? buyerPageMain : "container mx-auto px-4 py-8"}>
           {/* Header — hidden in buyer mode */}
           {!forceBuyer && (
             <div className="mb-6">
@@ -334,7 +335,9 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 />
               </div>
 
-              <div className="inline-flex h-9 items-center rounded-full border border-zinc-200 bg-zinc-50 p-0.5 shrink-0">
+              <div
+                className={`inline-flex h-9 items-center rounded-full border border-zinc-200 p-0.5 shrink-0 ${forceBuyer ? "bg-white" : "bg-zinc-50"}`}
+              >
                 <button
                   className={`h-8 min-w-[86px] px-3 rounded-full inline-flex items-center justify-center text-[13px] font-semibold transition-all ${
                     criteria.listingType === "for_sale"

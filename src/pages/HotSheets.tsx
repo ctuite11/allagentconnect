@@ -7,14 +7,27 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Users, Search, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Users, Search, Pencil, MoreHorizontal, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
-import { HotSheetCard } from "@/components/HotSheetCard";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { Seo } from "@/components/Seo";
+import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
+import {
+  buyerSectionDesc as buyerSectionDescClass,
+  buyerSectionTitle as buyerSectionTitleClass,
+  buyerPageMain,
+  buyerPageStack,
+} from "@/lib/buyerUi";
+import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -95,20 +108,6 @@ interface AgentHotSheetRow {
   hot_sheet_clients?: HotSheetClientLink[] | null;
 }
 
-const asStringArray = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-
-const extractPhotoUrl = (photos: unknown): string | null => {
-  const photoList = Array.isArray(photos) ? photos : [];
-  const first = photoList[0];
-  if (typeof first === "string") return first.trim() || null;
-  if (first && typeof first === "object" && "url" in first) {
-    const url = (first as { url?: unknown }).url;
-    return typeof url === "string" && url.trim() ? url : null;
-  }
-  return null;
-};
-
 const HotSheets = ({
   isPublicMode = false,
   isAgentMode = false,
@@ -130,7 +129,8 @@ const HotSheets = ({
   const [rawHotSheets, setRawHotSheets] = useState<AgentHotSheetRow[]>([]);
   const [buyerHotSheets, setBuyerHotSheets] = useState<BuyerHotSheetItem[]>([]);
   const [buyerTokenByHotSheetId, setBuyerTokenByHotSheetId] = useState<Record<string, string>>({});
-  const [buyerPhotosByHotSheetId, setBuyerPhotosByHotSheetId] = useState<Record<string, string[]>>({});
+  const [buyerPreviewPhotosById, setBuyerPreviewPhotosById] = useState<Record<string, string[]>>({});
+  const [buyerMatchCountsById, setBuyerMatchCountsById] = useState<Record<string, number>>({});
   const [buyerLoading, setBuyerLoading] = useState(true);
   const [deleteBuyerSheetId, setDeleteBuyerSheetId] = useState<string | null>(null);
   const [deleteBuyerSheetLoading, setDeleteBuyerSheetLoading] = useState(false);
@@ -152,6 +152,12 @@ const HotSheets = ({
     window.localStorage.setItem(ALERT_FREQUENCY_STORAGE_KEY, alertFrequency);
   }, [alertFrequency, buyerMode]);
 
+  /** Hero / page sections: border only — no shadow so the white canvas beside panels stays clean. */
+  const AAC_CARD_SHELL =
+    "bg-white rounded-2xl border border-neutral-200 shadow-none transition-colors duration-150";
+  const DASH_SECTION_TITLE = buyerSectionTitleClass;
+  const DASH_SECTION_DESC = buyerSectionDescClass;
+
   const heroStatusItems = [
     "Coming Soon",
     "New Listings",
@@ -166,30 +172,37 @@ const HotSheets = ({
   ];
 
   const renderHotSheetsHero = () => (
-    <section className="rounded-2xl border border-zinc-200/70 bg-white p-4 sm:p-5 shadow-[0_10px_32px_rgba(15,23,42,0.08)]">
+    <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:items-start">
         <div>
-          <h1 className="text-3xl sm:text-[34px] font-semibold tracking-tight text-zinc-900">Hot Sheets</h1>
-          <p className="mt-2 text-[15px] leading-relaxed text-zinc-600">
-            Track listings that matter most with real-time alerts based on your saved search criteria.
-          </p>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Hot Sheets</h1>
+            <p className="text-sm text-gray-500">
+              Track listings that matter most with real-time alerts based on your saved search criteria.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
           {heroStatusItems.map((item) => (
             <span
               key={item}
-              className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-xs font-medium text-zinc-700"
+              className="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-[13px] font-medium text-neutral-800 shadow-none"
             >
               {item}
             </span>
           ))}
         </div>
 
-        <div className="space-y-3">
-          <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-[0_6px_18px_rgba(15,23,42,0.06)]">
-            <p className="text-sm font-semibold text-zinc-900">Alert Frequency</p>
-            <div className="mt-2 inline-flex w-full rounded-lg border border-zinc-200 bg-white p-1">
+        <div className="rounded-xl border border-neutral-200 bg-white p-3.5 shadow-none">
+          <p className={DASH_SECTION_TITLE}>Connected to your agent</p>
+          <p className={`mt-1 ${DASH_SECTION_DESC}`}>
+            Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
+          </p>
+
+
+            <p className={`mt-3.5 ${DASH_SECTION_TITLE}`}>Alert Frequency</p>
+            <div className="mt-2 inline-flex w-full rounded-lg border border-neutral-200 bg-white p-1">
               <button
                 type="button"
                 onClick={() => setAlertFrequency("instant")}
@@ -224,14 +237,6 @@ const HotSheets = ({
                 Weekly
               </button>
             </div>
-          </div>
-
-          <div className="rounded-xl border border-zinc-200/80 bg-white p-3.5">
-            <p className="text-sm font-semibold text-zinc-900">Connected to your agent</p>
-            <p className="mt-1 text-xs leading-relaxed text-zinc-600">
-              Your agent can view your Hot Sheets and share matching opportunities.
-            </p>
-          </div>
         </div>
       </div>
     </section>
@@ -320,6 +325,8 @@ const HotSheets = ({
       if (!allHotSheetIds.size) {
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
+        setBuyerPreviewPhotosById({});
+        setBuyerMatchCountsById({});
         return;
       }
 
@@ -333,36 +340,28 @@ const HotSheets = ({
         console.error("Failed to load hot sheets", sheetErr);
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
-        setBuyerPhotosByHotSheetId({});
+        setBuyerPreviewPhotosById({});
+        setBuyerMatchCountsById({});
         return;
       }
 
-      const sheets = (hotSheetRows || []) as BuyerHotSheetItem[];
-      const photoEntries = await Promise.all(
-        sheets.map(async (sheet) => {
-          if (!sheet.criteria) return [sheet.id, []] as const;
-          try {
-            const { data: matchedListings } = await buildListingsQuery(supabase, sheet.criteria).limit(12);
-            const photos = ((matchedListings || []) as Array<{ photos?: unknown }>)
-              .map((listing) => extractPhotoUrl(listing.photos))
-              .filter((url): url is string => Boolean(url))
-              .slice(0, 4);
-            return [sheet.id, photos] as const;
-          } catch {
-            return [sheet.id, []] as const;
-          }
-        })
-      );
-
-      setBuyerHotSheets(sheets);
+      const rows = (hotSheetRows || []) as BuyerHotSheetItem[];
+      setBuyerHotSheets(rows);
       setBuyerTokenByHotSheetId(tokenMap);
-      setBuyerPhotosByHotSheetId(Object.fromEntries(photoEntries));
+
+      const { photosById, countsById } = await loadHotSheetPhotosAndCounts(
+        supabase,
+        rows.map((r) => ({ id: r.id, criteria: r.criteria })),
+      );
+      setBuyerPreviewPhotosById(photosById);
+      setBuyerMatchCountsById(countsById);
     } catch (error) {
       console.error("Error loading buyer hot sheets", error);
       toast.error("Unable to load Hot Sheets right now");
       setBuyerHotSheets([]);
       setBuyerTokenByHotSheetId({});
-      setBuyerPhotosByHotSheetId({});
+      setBuyerPreviewPhotosById({});
+      setBuyerMatchCountsById({});
     } finally {
       setBuyerLoading(false);
     }
@@ -401,6 +400,16 @@ const HotSheets = ({
       delete next[id];
       return next;
     });
+    setBuyerPreviewPhotosById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setBuyerMatchCountsById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     setDeleteBuyerSheetLoading(false);
     setDeleteBuyerSheetId(null);
   };
@@ -435,13 +444,12 @@ const HotSheets = ({
           canonical="https://allagentconnect.com/hot-sheets"
           noindex
         />
-        <div className="min-h-screen bg-white">
-          <main className="mx-auto w-full max-w-7xl bg-white px-6 py-8 pb-12 md:px-8">
-            <div className="space-y-8 bg-white">
+        <div className={buyerPageMain}>
+          <div className={buyerPageStack}>
               <button
                 type="button"
                 onClick={() => navigate("/client/dashboard")}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Back to Dashboard
@@ -452,7 +460,7 @@ const HotSheets = ({
               {buyerLoading ? (
                 <section className="grid grid-cols-1 gap-5 bg-white md:grid-cols-2 lg:grid-cols-3">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+                    <div key={i} className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-none">
                       <div className="h-5 w-1/2 animate-pulse rounded bg-zinc-100" />
                       <div className="mt-3 h-4 w-5/6 animate-pulse rounded bg-zinc-100" />
                       <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-zinc-100" />
@@ -460,16 +468,16 @@ const HotSheets = ({
                   ))}
                 </section>
               ) : buyerHotSheets.length === 0 ? (
-                <section className="rounded-2xl border border-zinc-200/80 bg-white px-6 py-6 sm:py-6 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
+                <section className="rounded-2xl border border-neutral-100 bg-white px-6 py-6 sm:py-6 shadow-none">
                   <div className="mx-auto max-w-lg text-center">
                     <div className="relative mx-auto mb-3 h-14 w-14">
                       <div className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-[#0E56F5]/15 to-[#0E56F5]/5" />
-                      <div className="absolute inset-1.5 inline-flex items-center justify-center rounded-xl bg-white text-[#0E56F5] shadow-[0_8px_20px_rgba(14,86,245,0.2)]">
+                      <div className="absolute inset-1.5 inline-flex items-center justify-center rounded-xl bg-white text-[#0E56F5] shadow-sm">
                         <Search className="h-6 w-6" />
                       </div>
                     </div>
-                    <h3 className="text-xl font-semibold tracking-tight text-zinc-900">No Hot Sheets yet</h3>
-                    <p className="mt-2 text-sm text-zinc-600">
+                    <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">No Hot Sheets yet</h3>
+                    <p className="mt-2 text-[13px] leading-snug text-neutral-500">
                       Create your first Hot Sheet to track listings in your preferred neighborhoods, price range, and property type.
                     </p>
                     <Button
@@ -485,26 +493,77 @@ const HotSheets = ({
                 <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
-
                     return (
-                      <HotSheetCard
-                        key={sheet.id}
-                        id={sheet.id}
-                        name={sheet.name}
-                        criteria={sheet.criteria}
-                        clients={[]}
-                        lastSentAt={sheet.updated_at || sheet.last_sent_at || sheet.created_at}
-                        photos={buyerPhotosByHotSheetId[sheet.id] || []}
-                        onView={() => openBuyerHotSheet(sheet.id, token)}
-                        onShare={() => undefined}
-                        onComments={() => undefined}
-                      />
+                      <div key={sheet.id} className="relative">
+                        <BuyerHotSheetPreviewCard
+                          photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
+                          title={sheet.name}
+                          subtitle={`${buyerMatchCountsById[sheet.id] ?? 0} matches`}
+                          onClick={() => openBuyerHotSheet(sheet.id, token)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openBuyerHotSheet(sheet.id, token);
+                            }
+                          }}
+                        />
+                        <div className="absolute top-2 right-2 z-20 flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:bg-white"
+                            aria-label="Edit hot sheet"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (!sheet.user_id) {
+                                toast.error("This hot sheet cannot be edited right now");
+                                return;
+                              }
+                              setEditingHotSheetId(sheet.id);
+                              setEditingSheetOwnerUserId(sheet.user_id);
+                              setEditDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-lg border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:bg-white"
+                                aria-label="More options"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                }}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-[10rem] p-1">
+                              <DropdownMenuItem
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  setDeleteBuyerSheetId(sheet.id);
+                                }}
+                                className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 focus:bg-gray-50 focus:text-red-600 data-[highlighted]:bg-gray-50 data-[highlighted]:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 shrink-0 text-red-600" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
                     );
                   })}
                 </section>
               )}
-            </div>
-          </main>
+          </div>
         </div>
         {editingHotSheetId && editingSheetOwnerUserId && (
           <CreateHotSheetDialog

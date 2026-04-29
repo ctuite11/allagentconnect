@@ -8,6 +8,13 @@ import { CheckCircle2, Clock, AlertCircle, Home, MapPin, Pencil } from "lucide-r
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { toast } from "sonner";
+import {
+  buyerCollectionCardRoot,
+  buyerImageMosaicCell,
+  buyerImageMosaicEmpty,
+  buyerImageMosaicGrid,
+  buyerSectionCard,
+} from "@/lib/buyerUi";
 
 interface BuyerInfo {
   firstName: string;
@@ -34,8 +41,8 @@ function PhotoCell({ src }: { src?: string }) {
     );
   }
   return (
-    <div className="w-full h-full bg-zinc-100 flex items-center justify-center">
-      <Home className="h-5 w-5 text-zinc-300" />
+    <div className="flex h-full w-full items-center justify-center bg-white">
+      <Home className="h-5 w-5 text-neutral-300" />
     </div>
   );
 }
@@ -238,7 +245,7 @@ const HotSheetBuyerDetail = () => {
 
       {/* Hot Sheet Collection Cards */}
       {hotSheets.length === 0 ? (
-        <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-12 text-center">
+        <div className={`${buyerSectionCard} p-12 text-center`}>
           <p className="text-zinc-500">No hot sheets linked to this buyer.</p>
         </div>
       ) : (
@@ -247,7 +254,7 @@ const HotSheetBuyerDetail = () => {
             <div
               key={hs.id}
               onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
-              className="relative bg-white border border-zinc-200 rounded-2xl shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden"
+              className={`relative ${buyerCollectionCardRoot}`}
             >
               {/* Edit pencil — top right */}
               <button
@@ -257,21 +264,20 @@ const HotSheetBuyerDetail = () => {
                   e.stopPropagation();
                   setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
                 }}
-                className="absolute top-2 right-2 z-10 h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm border border-zinc-200 shadow-sm flex items-center justify-center hover:bg-white transition-colors"
+                className="absolute top-2 right-2 z-10 h-8 w-8 rounded-full bg-white border border-neutral-200 shadow-sm flex items-center justify-center hover:bg-white transition-colors"
               >
                 <Pencil className="h-3.5 w-3.5 text-zinc-700" />
               </button>
 
-              {/* 2x2 Photo Mosaic */}
-              <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-zinc-200">
+              <div className={buyerImageMosaicGrid}>
                 <PhotoCell src={hs.photos[0]} />
                 <PhotoCell src={hs.photos[1]} />
                 <PhotoCell src={hs.photos[2]} />
                 <PhotoCell src={hs.photos[3]} />
               </div>
 
-              {/* Card Body */}
-              <div className="px-4 pt-3 pb-4">
+              {/* Card Body — same white slab as parent; no muted fill */}
+              <div className="bg-white px-4 pt-3 pb-4">
                 <h3 className="text-lg font-semibold text-zinc-900 truncate">{hs.name}</h3>
                 <p className="text-sm text-zinc-500 mt-0.5">
                   {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match

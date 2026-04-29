@@ -2,12 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { BuyerStatusBadge, type BuyerStatus } from "@/lib/buyerStatus";
 import {
   Loader2, MessageSquare, Plus, Pencil,
-  ArrowLeft, Home, Clock, Eye, UserMinus, Mail, Heart, Image as ImageIcon
+  ArrowLeft, Home, Clock, UserMinus, Mail, Heart, Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBuyerDashboard } from "@/hooks/useBuyerDashboard";
@@ -23,29 +22,16 @@ import { findOrCreateConversation } from "@/lib/startConversation";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
+import {
+  buyerPreviewCardInteractive,
+  buyerSectionCard,
+} from "@/lib/buyerUi";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatPrice(n: number): string {
   return "$" + n.toLocaleString();
-}
-
-function criteriaPills(criteria: any): string[] {
-  if (!criteria) return [];
-  const pills: string[] = [];
-  if (criteria.cities?.length) pills.push(criteria.cities.join(", "));
-  if (criteria.state) pills.push(criteria.state);
-  if (criteria.minPrice || criteria.maxPrice) {
-    const min = criteria.minPrice ? formatPrice(criteria.minPrice) : "";
-    const max = criteria.maxPrice ? formatPrice(criteria.maxPrice) : "";
-    if (min && max) pills.push(`${min} – ${max}`);
-    else if (min) pills.push(`${min}+`);
-    else if (max) pills.push(`Up to ${max}`);
-  }
-  if (criteria.bedrooms) pills.push(`${criteria.bedrooms}+ Beds`);
-  if (criteria.bathrooms) pills.push(`${criteria.bathrooms}+ Baths`);
-  if (criteria.propertyTypes?.length) pills.push(criteria.propertyTypes.join(", "));
-  return pills;
 }
 
 // ── Section nav items ────────────────────────────────────────────────────────
@@ -271,7 +257,7 @@ export default function BuyerAccount() {
       </div>
 
       {/* ── Section Nav ──────────────────────── */}
-      <div className="border-b border-border mb-8">
+      <div className="border-b border-neutral-200 mb-8">
         <nav className="flex items-center gap-1">
           {SECTIONS.map((s) => (
             <button
@@ -307,97 +293,47 @@ export default function BuyerAccount() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {hotSheets.map((hs) => {
-              const pills = criteriaPills(hs.criteria);
-              // Extract up to 4 photos for the mosaic
-              const mosaicPhotos: (string | undefined)[] = [];
+              const mosaicPhotos: string[] = [];
               for (const listing of hs.topListings) {
                 const photos = listing.photos as any[] | null;
-                if (photos?.length && mosaicPhotos.length < 4) {
+                if (photos?.length && mosaicPhotos.length < 3) {
                   const raw = photos[0];
                   const url = typeof raw === "string" ? raw : raw?.url || undefined;
                   if (url) mosaicPhotos.push(url);
                 }
               }
-              while (mosaicPhotos.length < 4) mosaicPhotos.push(undefined);
-
               return (
-                <div
-                  key={hs.id}
-                  onClick={() =>
-                    navigate(`/hot-sheets/${hs.id}/review`, {
-                      state: { from: `/success-hub/buyers/${buyerId}` },
-                    })
-                  }
-                  className="relative bg-card rounded-2xl border border-border shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden flex flex-col h-full"
-                >
-                  {/* Edit pencil — top right over mosaic */}
+                <div key={hs.id} className="relative">
+                  <BuyerHotSheetPreviewCard
+                    photoUrls={mosaicPhotos}
+                    title={hs.name}
+                    subtitle={`${hs.matchCount} listing${hs.matchCount === 1 ? " match" : " matches"}`}
+                    onClick={() =>
+                      navigate(`/hot-sheets/${hs.id}/review`, {
+                        state: { from: `/success-hub/buyers/${buyerId}` },
+                      })
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/hot-sheets/${hs.id}/review`, {
+                          state: { from: `/success-hub/buyers/${buyerId}` },
+                        });
+                      }
+                    }}
+                  />
                   <button
                     type="button"
                     aria-label="Edit hot sheet"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      ev.stopPropagation();
                       setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
                     }}
-                    className="absolute top-2 right-2 z-10 h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm border border-border shadow-sm flex items-center justify-center hover:bg-white transition-colors"
+                    className="absolute top-2 right-2 z-20 h-8 w-8 rounded-lg border border-neutral-200 bg-white text-foreground shadow-sm flex items-center justify-center hover:bg-white"
                   >
-                    <Pencil className="h-3.5 w-3.5 text-foreground" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </button>
-
-                  {/* 2x2 Photo Mosaic — fixed aspect for alignment */}
-                  <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-muted shrink-0">
-                    {mosaicPhotos.map((src, i) => (
-                      <div key={i} className="relative w-full h-full overflow-hidden">
-                        {src ? (
-                          <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center">
-                            <Home className="h-5 w-5 text-muted-foreground/30" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Card Body — flex column so CTA pins to bottom */}
-                  <div className="px-4 pt-3 pb-4 flex flex-col flex-1">
-                    <h3 className="text-base font-semibold text-foreground truncate">{hs.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {hs.matchCount} listing{hs.matchCount === 1 ? " match" : " matches"}
-                    </p>
-
-                    {/* Reserved chips area — fixed min-height keeps cards aligned even when chips vary */}
-                    <div className="mt-2 min-h-[52px]">
-                      {pills.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {pills.map((pill, i) => (
-                            <Badge
-                              key={i}
-                              variant="outline"
-                              className="text-xs font-normal text-muted-foreground border-border rounded-md"
-                            >
-                              {pill}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* CTA pinned to bottom */}
-                    <div className="mt-auto pt-3">
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/hot-sheets/${hs.id}/review`, {
-                            state: { from: `/success-hub/buyers/${buyerId}` },
-                          });
-                        }}
-                      >
-                        <Eye className="h-3.5 w-3.5 mr-1.5" /> View Hot Sheet
-                      </Button>
-                    </div>
-                  </div>
                 </div>
               );
             })}
@@ -437,9 +373,9 @@ export default function BuyerAccount() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") navigate(`/property/${listing.id}`);
                   }}
-                  className="relative bg-card rounded-2xl border border-border shadow-sm cursor-pointer overflow-hidden flex flex-col h-full"
+                  className={`relative ${buyerPreviewCardInteractive} flex flex-col h-full`}
                 >
-                  <div className="aspect-[4/3] relative bg-muted shrink-0">
+                  <div className="aspect-[4/3] relative w-full shrink-0 overflow-hidden bg-white">
                     {photo ? (
                       <img
                         src={photo}
@@ -448,11 +384,11 @@ export default function BuyerAccount() {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center bg-white">
                         <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
                       </div>
                     )}
-                    <div className="absolute top-2 right-2 z-10 rounded-full bg-white/90 p-1.5 border border-border">
+                    <div className="absolute top-2 right-2 z-10 rounded-full bg-white p-1.5 border border-neutral-200 shadow-sm">
                       <Heart className="h-3.5 w-3.5 text-primary fill-primary" />
                     </div>
                   </div>

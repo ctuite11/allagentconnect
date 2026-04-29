@@ -5,6 +5,7 @@ import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
 import { Seo } from "@/components/Seo";
+import { buyerMessagingPanel } from "@/lib/buyerUi";
 
 interface MessagingWorkspaceProps {
   isPublicMode?: boolean;
@@ -27,7 +28,7 @@ export default function MessagingWorkspace({
   return (
     <>
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
-      <div className={`min-h-screen p-6 flex flex-col gap-5 bg-zinc-50 ${buyerMode ? "pt-20" : ""}`}>
+      <div className={`flex min-h-screen flex-col gap-5 bg-white p-6 ${buyerMode ? "pt-20" : ""}`}>
       {buyerMode && (
         <div className="px-1">
           <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
@@ -36,7 +37,7 @@ export default function MessagingWorkspace({
       )}
       <div className={buyerMode ? "flex gap-5 min-h-[calc(100vh-14rem)]" : "flex gap-5 h-[calc(100vh-2rem)]"}>
       {/* Left — Conversations List */}
-      <div className="w-[380px] flex-shrink-0 bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
+      <div className={`w-[380px] shrink-0 ${buyerMessagingPanel}`}>
         <ConversationsList
           selectedId={id}
           onNewMessage={() => setNewMessageOpen(true)}
@@ -49,7 +50,7 @@ export default function MessagingWorkspace({
       </div>
 
       {/* Right — Active Conversation */}
-      <div className="flex-[1.3] min-w-0 bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
+      <div className={`flex-[1.3] min-w-0 ${buyerMessagingPanel}`}>
         <ConversationPanel conversationId={id} />
       </div>
 

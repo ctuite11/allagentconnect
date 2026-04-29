@@ -20,7 +20,6 @@ import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
-import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import {
@@ -32,6 +31,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  buyerAacPrimarySectionCta as aacPrimarySectionCta,
+  buyerDashboardHotFavTile as unifiedHotFavCardClass,
+  buyerDashboardHotFavTileBody as unifiedHotFavBody,
+  buyerDashboardHotSheetMediaWrap as unifiedHotFavMediaWrap,
+  buyerMarketListingTileBody as listingPreviewBody,
+  buyerMarketListingTileMediaWrap as listingPreviewMediaWrap,
+  buyerOutlineSecondary as outlineSecondaryClass,
+  buyerPreviewCardInteractive as dashboardPreviewTileInteractive,
+  buyerPreviewGrid as previewGridClass,
+  buyerPreviewSectionContent as previewSectionContentClass,
+  buyerPreviewSectionHeader as previewSectionHeaderClass,
+  buyerPreviewSectionHeaderRow as previewSectionHeaderRowClass,
+  buyerPreviewSectionMarketContent as previewSectionMarketContentClass,
+  buyerPreviewSectionTitleWrap as previewSectionTitleWrapClass,
+  buyerPrimaryCta as primaryCtaClass,
+  buyerSectionCard as aacCardShell,
+  buyerSectionDesc as dashSectionDescClass,
+  buyerSectionTitle as dashSectionTitleClass,
+  buyerStatCardInteractive as aacCardInteractive,
+  buyerTileAddress as dashTileAddressClass,
+  buyerTileSecondary as dashTileSecondaryClass,
+  buyerTileTitle as dashTileTitleClass,
+  buyerPageMain,
+  buyerPageShell,
+  buyerPageStack,
+} from "@/lib/buyerUi";
+import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
+import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
+import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 
 interface AgentInfo {
   id: string;
@@ -59,34 +88,6 @@ interface ShareTokenRow {
   payload: unknown;
   accepted_at: string | null;
   accepted_by_user_id: string | null;
-}
-
-function HotSheetPreviewImage({ photoUrls }: { photoUrls: string[] }) {
-  const visiblePhotos = photoUrls.filter(Boolean).slice(0, 3);
-  const collagePhotos = visiblePhotos.length
-    ? Array.from({ length: 3 }, (_, index) => visiblePhotos[index % visiblePhotos.length])
-    : [];
-
-  if (!collagePhotos.length) {
-    return <div className="h-full w-full bg-neutral-50" aria-hidden />;
-  }
-
-  return (
-    <div className="grid h-full w-full grid-cols-[3fr_2fr] grid-rows-2 gap-0.5 bg-white [grid-template-rows:repeat(2,minmax(0,1fr))]">
-      {collagePhotos.map((photoUrl, index) => (
-        <div
-          key={`${photoUrl}-${index}`}
-          className={`${index === 0 ? "row-span-2" : ""} relative min-h-0 min-w-0 overflow-hidden bg-white`}
-        >
-          <DashboardListingImage
-            photoUrl={photoUrl}
-            alt=""
-            imageClassName="absolute inset-0 h-full w-full object-cover"
-          />
-        </div>
-      ))}
-    </div>
-  );
 }
 
 interface Favorite {
@@ -131,34 +132,6 @@ function formatUsPhoneForDisplay(raw: string | null | undefined): { display: str
     display: `(${core.slice(0, 3)}) ${core.slice(3, 6)}-${core.slice(6)}`,
     telHref: `tel:+1${core}`,
   };
-}
-
-function DashboardListingImage({
-  photoUrl,
-  alt,
-  imageClassName = "h-full w-full object-cover",
-}: {
-  photoUrl: string;
-  alt: string;
-  imageClassName?: string;
-}) {
-  const [loadFailed, setLoadFailed] = useState(false);
-  const useMonogram = !photoUrl || photoUrl === "/placeholder.svg" || loadFailed;
-  if (useMonogram) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-white text-[#0E56F5]" aria-hidden>
-        <AACMonogram className="h-7 w-7" size={28} />
-      </div>
-    );
-  }
-  return (
-    <img
-      src={photoUrl}
-      alt={alt}
-      className={imageClassName}
-      onError={() => setLoadFailed(true)}
-    />
-  );
 }
 
 export default function ClientDashboard() {
@@ -414,30 +387,12 @@ export default function ClientDashboard() {
       return;
     }
 
-    const previewEntries = await Promise.all(
-      sheets.map(async (sheet) => {
-        try {
-          const { data: listings, error } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(1000);
-          if (error) {
-            console.error("Failed to load preview listings for hot sheet", sheet.id, error);
-            return [sheet.id, [] as string[], 0] as const;
-          }
-
-          const photoUrls = (listings || [])
-            .map((listing: any) => getPrimaryPhotoUrl(listing?.photos))
-            .filter((url): url is string => Boolean(url && url !== "/placeholder.svg"))
-            .slice(0, 3);
-
-          return [sheet.id, photoUrls, listings?.length ?? 0] as const;
-        } catch (err) {
-          console.error("Unexpected preview listing load error", sheet.id, err);
-          return [sheet.id, [] as string[], 0] as const;
-        }
-      })
+    const { photosById, countsById } = await loadHotSheetPhotosAndCounts(
+      supabase,
+      sheets.map((s) => ({ id: s.id, criteria: s.criteria })),
     );
-
-    setHotSheetPreviewPhotosById(Object.fromEntries(previewEntries.map(([id, photos]) => [id, photos])));
-    setHotSheetPreviewMatchCountsById(Object.fromEntries(previewEntries.map(([id, , count]) => [id, count])));
+    setHotSheetPreviewPhotosById(photosById);
+    setHotSheetPreviewMatchCountsById(countsById);
   };
 
   const handleDashboardHotSheetEditSuccess = async (
@@ -634,49 +589,11 @@ export default function ClientDashboard() {
     },
   ];
 
-  /** Primary AAC blue surfaces (pill) — dialogs + key CTAs share this baseline. */
-  const primaryCtaClass =
-    "rounded-full bg-[#0E56F5] text-white shadow-sm transition-all duration-150 hover:bg-[#0B46CC]";
-  /** Section header CTAs (View all, Search homes): premium pill, AAC blue — not outline/ghost. */
-  const aacPrimarySectionCta =
-    "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-[13px] font-medium shadow-none";
-  /** AAC shells (section chrome; no hover motion). */
-  const aacCardShell =
-    "bg-white rounded-2xl border border-neutral-200 shadow-sm transition-colors duration-150";
-  const aacPreviewCardBase =
-    "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md";
-  const dashboardPreviewTile = aacPreviewCardBase;
-  const dashboardPreviewTileInteractive =
-    `${aacPreviewCardBase} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
-  const listingPreviewMediaWrap =
-    "relative h-48 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
-  /** Shared dashboard card body rhythm (Hot Sheets + listings). */
-  const listingPreviewBody = "flex flex-col gap-1.5 px-4 pb-4 pt-3 text-left";
-  const unifiedHotFavCardClass = `${dashboardPreviewTileInteractive} flex h-60 flex-col`;
-  const unifiedHotFavMediaWrap = "relative h-40 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
-  const unifiedHotFavBody = "flex h-20 flex-col gap-0.5 px-3 pb-2 pt-3 text-left";
-  const dashSectionTitleClass = "text-[15px] font-semibold text-neutral-900";
-  const dashSectionDescClass = "text-[13px] leading-snug text-neutral-500";
-  const dashTileTitleClass = "text-[15px] font-semibold leading-snug tracking-tight text-neutral-900";
-  const dashTileSecondaryClass = "text-[13px] leading-snug text-neutral-500";
-  const dashTileAddressClass = "truncate text-[13px] leading-snug text-neutral-800";
-  const aacCardInteractive =
-    `${aacCardShell} cursor-pointer transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
-  const outlineSecondaryClass =
-    "rounded-full border border-neutral-200 bg-white text-[13px] font-medium text-neutral-800 shadow-sm transition-all duration-150 hover:bg-neutral-50";
-  /** Layout tokens from remote buyer dashboard structure (same spacing as AAC classes above). */
-  const previewSectionHeaderClass = "border-0 p-5 pb-4 md:p-6 md:pb-5";
-  const previewSectionContentClass = "px-5 pb-6 pt-0 md:px-6";
-  const previewSectionMarketContentClass = "overflow-visible px-5 pb-6 pt-0 md:px-6";
-  const previewGridClass = "grid grid-cols-3 gap-4";
-  const previewSectionHeaderRowClass =
-    "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between";
-  const previewSectionTitleWrapClass = "min-w-0 space-y-1";
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-white">
+      <div className={`flex flex-col items-center justify-center gap-3 ${buyerPageShell}`}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <p className="text-sm text-muted-foreground">
           {relationshipHydrating ? "Connecting your inviting agent..." : "Loading your dashboard..."}
@@ -686,9 +603,9 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <main className="mx-auto w-full max-w-7xl px-6 py-8 pb-12 md:px-8">
-        <div className="space-y-8">
+    <div className={buyerPageShell}>
+      <main className={buyerPageMain}>
+        <div className={buyerPageStack}>
           <section className={`${aacCardShell} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
@@ -868,30 +785,18 @@ export default function ClientDashboard() {
                         {hotSheets.slice(0, 3).map((sheet) => {
                           const viewPath = `/client/hot-sheets/${sheet.id}`;
                           return (
-                            <article
+                            <BuyerHotSheetPreviewCard
                               key={sheet.id}
-                              role="button"
-                              tabIndex={0}
-                              className={unifiedHotFavCardClass}
+                              photoUrls={hotSheetPreviewPhotosById[sheet.id] || []}
+                              title={sheet.name}
+                              subtitle={`${hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches`}
                               onClick={() => navigate(viewPath)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter" && e.key !== " ") return;
                                 e.preventDefault();
                                 navigate(viewPath);
                               }}
-                            >
-                              <div className={unifiedHotFavMediaWrap}>
-                                <HotSheetPreviewImage
-                                  photoUrls={hotSheetPreviewPhotosById[sheet.id] || []}
-                                />
-                              </div>
-                              <div className={`${unifiedHotFavBody} flex-1`}>
-                                <p className="line-clamp-1 text-[16px] font-medium leading-snug tracking-tight text-neutral-900">{sheet.name}</p>
-                                <p className="text-[12px] font-normal leading-tight text-gray-500">
-                                  {hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches
-                                </p>
-                              </div>
-                            </article>
+                            />
                           );
                         })}
                       </div>

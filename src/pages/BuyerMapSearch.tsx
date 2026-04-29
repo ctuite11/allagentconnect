@@ -703,8 +703,8 @@ export default function BuyerMapSearch() {
   }, [criteria]);
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
-      <div className="sticky top-14 z-40 bg-[#F7F8FA]/92 backdrop-blur supports-[backdrop-filter]:bg-[#F7F8FA]/84">
+    <div className="min-h-screen bg-white">
+      <div className="sticky top-14 z-40 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/84">
         <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 pt-6 pb-3">
             <div className="flex flex-wrap lg:flex-nowrap items-center gap-2.5">
               <div className="relative min-w-[230px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_36%] lg:max-w-[620px]">

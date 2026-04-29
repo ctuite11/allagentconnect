@@ -1,4 +1,10 @@
 import { Home } from "lucide-react";
+import {
+  buyerCollectionCardRoot,
+  buyerImageMosaicCell,
+  buyerImageMosaicEmpty,
+  buyerImageMosaicGrid,
+} from "@/lib/buyerUi";
 
 interface BuyerCollectionCardProps {
   clientId: string;
@@ -24,7 +30,7 @@ function InitialCircle({ initials, className = "" }: { initials: string; classNa
 function PhotoCell({ src }: { src?: string }) {
   if (src) {
     return (
-      <div className="relative w-full h-full overflow-hidden">
+      <div className={buyerImageMosaicCell}>
         <img
           src={src}
           alt=""
@@ -35,8 +41,8 @@ function PhotoCell({ src }: { src?: string }) {
     );
   }
   return (
-    <div className="w-full h-full bg-zinc-100 flex items-center justify-center">
-      <Home className="h-5 w-5 text-zinc-300" />
+    <div className={buyerImageMosaicEmpty}>
+      <Home className="h-5 w-5 text-neutral-300" />
     </div>
   );
 }
@@ -56,20 +62,16 @@ export function BuyerCollectionCard({
   const visibleCollabs = collaborators.slice(0, 2);
 
   return (
-    <div
-      onClick={onClick}
-      className="bg-white border border-zinc-200 rounded-2xl shadow-sm cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden"
-    >
-      {/* 2x2 Image Mosaic */}
-      <div className="aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-px bg-zinc-200">
+    <div onClick={onClick} className={buyerCollectionCardRoot}>
+      <div className={buyerImageMosaicGrid}>
         <PhotoCell src={p[0]} />
         <PhotoCell src={p[1]} />
         <PhotoCell src={p[2]} />
         <PhotoCell src={p[3]} />
       </div>
 
-      {/* Card Body */}
-      <div className="px-4 pt-3 pb-4">
+      {/* Card Body — explicit white slab (same surface as image area) */}
+      <div className="bg-white px-4 pt-3 pb-4">
         <h3 className="text-lg font-semibold text-zinc-900 truncate">{clientName}</h3>
         <p className="text-sm text-zinc-500 mt-0.5">
           {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}
@@ -78,13 +80,13 @@ export function BuyerCollectionCard({
         {/* Participant Row */}
         <div className="flex items-center gap-1.5 mt-3">
           <InitialCircle initials={agentInitials} className="bg-zinc-800 text-white" />
-          <div className="w-px h-5 bg-zinc-200 mx-1" />
+          <div className="mx-1 h-5 w-px bg-neutral-100" />
           <InitialCircle initials={clientInitials} />
           {visibleCollabs.map((c, i) => (
             <InitialCircle key={i} initials={c} />
           ))}
           {extraCount > 0 && (
-            <div className="h-8 w-8 rounded-full bg-zinc-100 text-zinc-500 text-xs font-medium flex items-center justify-center shrink-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-100 bg-white text-[11px] font-medium text-neutral-500">
               +{extraCount}
             </div>
           )}

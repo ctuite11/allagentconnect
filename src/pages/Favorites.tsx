@@ -36,6 +36,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MapPin, BedDouble, Bath, Ruler, Heart, Check } from "lucide-react";
 import { toast } from "sonner";
+import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 
 interface Listing {
   id: string;
@@ -727,7 +728,7 @@ const Favorites = ({
   };
 
   const buyerStickyHeader = (
-    <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-[#F7F8FA]/92 backdrop-blur supports-[backdrop-filter]:bg-[#F7F8FA]/84">
+    <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/84">
       <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
         <div className="flex items-start gap-2">
           <Button
@@ -753,16 +754,16 @@ const Favorites = ({
 
   if (loading && buyerMode) {
     return (
-      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+      <div className="flex min-h-screen flex-col bg-white">
         {buyerStickyHeader}
         <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
           <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-            <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full">
+            <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}>
               <div className="h-full flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
               </div>
             </section>
-            <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+            <section className={`${buyerFavoritesSplitPane} h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col`}>
               <div className="p-4 flex-1 flex items-center justify-center text-sm text-zinc-500">Loading your saved homes…</div>
             </section>
           </div>
@@ -773,8 +774,8 @@ const Favorites = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
-        <main className="flex-1 flex items-center justify-center">
+      <div className="flex min-h-screen flex-col bg-white pt-20">
+        <main className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <p className="text-muted-foreground">Loading favorites...</p>
           </div>
@@ -785,7 +786,7 @@ const Favorites = ({
 
   if (buyerMode) {
     return (
-      <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+      <div className="flex min-h-screen flex-col bg-white">
         {buyerStickyHeader}
 
         {favorites.length === 0 ? (
@@ -804,7 +805,7 @@ const Favorites = ({
         ) : (
           <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
             <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-              <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+              <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]`}>
                 {loading ? (
                   <div className="h-full flex items-center justify-center">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
@@ -822,7 +823,7 @@ const Favorites = ({
                     />
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
+                  <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-white">
                     <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
                     <p className="text-sm text-zinc-600 max-w-md">
                       No homes in the current list to show on the map.
@@ -831,8 +832,8 @@ const Favorites = ({
                 )}
               </section>
 
-              <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
-                <div className="shrink-0 border-b border-zinc-200/60 bg-white px-6 py-2.5">
+              <section className={`${buyerFavoritesSplitPane} h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col`}>
+                <div className="shrink-0 border-b border-neutral-200 bg-white px-6 py-2.5">
                   <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">
                     Results: {displayListingRecords.length.toLocaleString()}
                   </p>
@@ -1001,10 +1002,7 @@ const Favorites = ({
                                   : "shadow-[0_2px_8px_rgba(15,23,42,0.07)] ring-1 ring-zinc-200/80 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(15,23,42,0.12)] hover:ring-zinc-300/80"
                             }`}
                           >
-                            <div
-                              className="relative w-full bg-zinc-100"
-                              style={{ aspectRatio: "16/10" }}
-                            >
+                            <div className="relative w-full overflow-hidden rounded-t-[24px] bg-white" style={{ aspectRatio: "16/10" }}>
                               <ListingImage photos={listing.photos} alt={listing.address} />
                               <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white/55 via-white/15 to-transparent pointer-events-none" />
                               <div
@@ -1032,7 +1030,7 @@ const Favorites = ({
                                 />
                               </div>
                             </div>
-                            <div className="relative border-t border-zinc-200/45 bg-gradient-to-b from-white via-white to-[#fbfcff] px-3.5 pb-3.5 pt-3">
+                            <div className="relative border-t border-neutral-100 bg-white px-3.5 pb-3.5 pt-3">
                               <p className="text-[1.05rem] font-semibold tracking-[-0.02em] leading-none text-zinc-950">
                                 ${listing.price?.toLocaleString()}
                               </p>
@@ -1244,7 +1242,7 @@ const Favorites = ({
                     }}
                     className="group w-full bg-white rounded-2xl border border-gray-200 shadow-[0_4px_14px_rgba(15,23,42,0.10)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.16)] hover:-translate-y-1 transition-all duration-200 ease-out cursor-pointer overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
                   >
-                    <div className="relative mb-2 w-full overflow-hidden rounded-t-2xl bg-zinc-100" style={{ aspectRatio: "16/10" }}>
+                    <div className="relative mb-2 w-full overflow-hidden rounded-t-2xl bg-white" style={{ aspectRatio: "16/10" }}>
                       <img
                         src={getMainPhoto(listing.photos)}
                         alt={listing.address}

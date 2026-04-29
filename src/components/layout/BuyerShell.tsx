@@ -14,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import { buyerPageShell } from "@/lib/buyerUi";
 
 const NAV_ITEMS = [
   { to: "/client/search", label: "Search", icon: Search },
@@ -39,9 +40,9 @@ export function BuyerShell() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className={`flex flex-col ${buyerPageShell}`}>
       {/* ── Top navigation bar ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white">
+      <header className="sticky top-0 z-50 w-full border-b border-neutral-100 bg-white shadow-none">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Brand */}
           <button
@@ -114,7 +115,7 @@ export function BuyerShell() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="sm:hidden border-t border-zinc-200 bg-white px-4 py-3 space-y-1">
+          <div className="sm:hidden border-t border-neutral-100 bg-white px-4 py-3 space-y-1">
             {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
