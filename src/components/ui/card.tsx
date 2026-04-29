@@ -6,8 +6,9 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   <div 
     ref={ref} 
     className={cn(
-      "rounded-2xl border border-aac-card-border bg-white text-card-foreground transition-all",
-      "hover:border-aac-card-borderHover",
+      /* Explicit neutral border — never inherit `currentColor` (listing cards use blue `text-primary` inside). */
+      "rounded-2xl border border-zinc-200/90 bg-white text-card-foreground transition-[box-shadow,border-color,transform]",
+      "hover:border-zinc-300/95",
       "aac-shadow aac-shadow-hover",
       className
     )} 
