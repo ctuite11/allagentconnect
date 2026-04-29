@@ -1,14 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Home, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { humanizeSnakeCase } from "@/lib/format";
 
 interface HotSheetCardProps {
   id: string;
@@ -28,44 +26,12 @@ interface HotSheetCardProps {
 export const HotSheetCard = ({
   id,
   name,
-  criteria,
-  lastSentAt,
   photos = [],
   onView,
   onEdit,
   onDelete,
 }: HotSheetCardProps) => {
   const navigate = useNavigate();
-  const asStringArray = (value: unknown): string[] =>
-    Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-
-  const formatCurrencyShort = (value: unknown) => {
-    const amount = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(amount) || amount <= 0) return null;
-    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(amount % 1_000_000 === 0 ? 0 : 1)}M`;
-    return `$${Math.round(amount / 1_000)}k`;
-  };
-
-  const locationParts = asStringArray(criteria?.cities).length
-    ? asStringArray(criteria?.cities)
-    : asStringArray(criteria?.towns).length
-      ? asStringArray(criteria?.towns)
-      : asStringArray(criteria?.counties);
-  const location = locationParts.length
-    ? locationParts.slice(0, 2).join(", ") + (locationParts.length > 2 ? ` +${locationParts.length - 2}` : "")
-    : "Saved search area";
-
-  const minPrice = formatCurrencyShort(criteria?.minPrice);
-  const maxPrice = formatCurrencyShort(criteria?.maxPrice);
-  const propertyTypes = asStringArray(criteria?.propertyTypes);
-  const statuses = asStringArray(criteria?.statuses);
-  const chips = [
-    minPrice || maxPrice ? (minPrice && maxPrice ? `${minPrice}–${maxPrice}` : minPrice ? `${minPrice}+` : `Under ${maxPrice}`) : null,
-    criteria?.bedrooms ? `${String(criteria.bedrooms)}+ beds` : null,
-    criteria?.bathrooms ? `${String(criteria.bathrooms)}+ baths` : null,
-    propertyTypes.length ? propertyTypes.slice(0, 2).map(humanizeSnakeCase).join(", ") : null,
-    statuses.length ? statuses.slice(0, 2).map(humanizeSnakeCase).join(", ") : null,
-  ].filter(Boolean) as string[];
 
   const handleCardClick = () => {
     if (onView) onView(id);
@@ -121,55 +87,37 @@ export const HotSheetCard = ({
         {renderPhotoPreview()}
       </div>
 
-      <div className="p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{name}</h3>
-          <p className="mt-1 truncate text-sm text-muted-foreground">{location}</p>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:bg-muted" onClick={(e) => e.stopPropagation()}>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[10rem] p-1">
-            <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); onDelete(id); }}
-              className="flex cursor-pointer items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-destructive hover:bg-muted focus:bg-muted focus:text-destructive data-[highlighted]:bg-muted data-[highlighted]:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 shrink-0 text-destructive" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {chips.length > 0 && (
-        <div className="mt-5 flex flex-wrap gap-2">
-          {chips.map((chip) => (
-            <span key={chip} className="inline-flex items-center rounded-full border border-aac-card-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-sm">
-              {chip}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
-        <p className="min-w-0 truncate text-xs text-muted-foreground">
-          {lastSentAt ? `Last updated ${formatDistanceToNow(new Date(lastSentAt), { addSuffix: true })}` : "Last updated just now"}
-        </p>
+      <div className="flex items-center justify-between gap-4 p-5">
+        <h3 className="min-w-0 flex-1 truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{name}</h3>
         <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" className="h-9 rounded-full px-4 text-sm font-semibold" onClick={() => handleCardClick()}>
+          <Button size="sm" className="h-9 rounded-full px-4 text-sm font-semibold" onClick={handleCardClick}>
             <Eye className="mr-2 h-4 w-4" />
             View
           </Button>
-          <Button variant="outline" size="sm" className="h-9 rounded-full border-aac-card-border px-4 text-sm font-semibold text-foreground hover:bg-muted" onClick={() => onEdit(id)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-muted">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[11rem] p-1">
+              <DropdownMenuItem
+                onClick={(e) => { e.stopPropagation(); onEdit(id); }}
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
+              >
+                <Pencil className="h-4 w-4 shrink-0" />
+                Edit Hot Sheet
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => { e.stopPropagation(); onDelete(id); }}
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-destructive focus:text-destructive data-[highlighted]:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 shrink-0 text-destructive" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </div>
       </div>
     </div>
   );
