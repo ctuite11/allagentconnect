@@ -71,14 +71,14 @@ export const HotSheetCard = ({
   return (
     <div
       onClick={handleCardClick}
-      className="group cursor-pointer overflow-hidden rounded-[22px] border border-aac-card-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-aac-card-borderHover hover:shadow-md"
+      className="group cursor-pointer overflow-hidden rounded-[22px] border border-zinc-200 bg-card shadow-[var(--aac-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-200 hover:shadow-[var(--aac-shadow-hover)]"
     >
       <div className="aspect-[4/3] overflow-hidden bg-muted">
         {renderPhotoPreview()}
       </div>
 
-      <div className="flex flex-col gap-2 px-5 pb-2 pt-4">
-        <h3 className="min-w-0 truncate text-sm font-semibold leading-tight tracking-tight text-foreground">Hot Sheet Name: {name}</h3>
+      <div className="flex flex-col gap-1.5 px-5 pb-1 pt-4">
+        <h3 className="min-w-0 truncate text-sm font-semibold leading-tight text-foreground">Hot Sheet Name: {name}</h3>
         <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="sm" className="h-7 rounded-full px-2.5 text-sm font-semibold text-primary hover:bg-primary/5 hover:text-primary" onClick={handleCardClick}>
             <Eye className="mr-2 h-4 w-4" />
