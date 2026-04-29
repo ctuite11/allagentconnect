@@ -373,8 +373,6 @@ const HotSheets = ({
     const id = deleteBuyerSheetId;
     setDeleteBuyerSheetLoading(true);
 
-    console.log("Deleting hot sheet:", id);
-
     const { error: clientsError } = await supabase
       .from("hot_sheet_clients")
       .delete()
@@ -837,8 +835,6 @@ const HotSheets = ({
   const handleDeleteHotSheet = async (hotSheetId: string) => {
     if (!user?.id) return;
     if (!confirm("Are you sure you want to delete this hot sheet?")) return;
-
-    console.log("Deleting hot sheet:", hotSheetId);
 
     const { error: clientsError } = await supabase
       .from("hot_sheet_clients")
