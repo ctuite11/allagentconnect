@@ -77,9 +77,9 @@ export const HotSheetCard = ({
         {renderPhotoPreview()}
       </div>
 
-      <div className="flex items-center justify-between gap-4 p-5">
-        <h3 className="min-w-0 flex-1 truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{name}</h3>
-        <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="flex min-h-[112px] flex-col gap-3 p-5">
+        <h3 className="min-w-0 truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{name}</h3>
+        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-sm font-semibold text-primary hover:bg-primary/5 hover:text-primary" onClick={handleCardClick}>
             <Eye className="mr-2 h-4 w-4" />
             View
