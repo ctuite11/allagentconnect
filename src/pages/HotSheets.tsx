@@ -435,9 +435,9 @@ const HotSheets = ({
           canonical="https://allagentconnect.com/hot-sheets"
           noindex
         />
-        <div className="min-h-screen bg-white flex flex-col">
-          <PageShell className="flex-1 bg-white pb-10">
-            <div className="mx-auto w-full max-w-6xl bg-white py-5 sm:py-6 space-y-5">
+        <div className="min-h-screen bg-white">
+          <main className="mx-auto w-full max-w-7xl bg-white px-6 py-8 pb-12 md:px-8">
+            <div className="space-y-8 bg-white">
               <button
                 type="button"
                 onClick={() => navigate("/client/dashboard")}
@@ -504,7 +504,7 @@ const HotSheets = ({
                 </section>
               )}
             </div>
-          </PageShell>
+          </main>
         </div>
         {editingHotSheetId && editingSheetOwnerUserId && (
           <CreateHotSheetDialog
