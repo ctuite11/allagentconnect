@@ -10,7 +10,52 @@ import {
   buyerPreviewCardInteractive,
 } from "@/lib/buyerUi";
 
-function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
+/** Hot Sheets listing page — 2×2 mosaic: tall left column + stacked right cells (optional empty quadrant). */
+function HotSheetPageMosaic({ photoUrls }: { photoUrls: string[] }) {
+  const [a, b, c] = photoUrls.filter(Boolean).slice(0, 3);
+
+  if (!a) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-white text-[#0E56F5]" aria-hidden>
+        <AACMonogram className="h-8 w-8" size={32} />
+      </div>
+    );
+  }
+
+  const cellWrap = "relative min-h-0 min-w-0 overflow-hidden bg-white";
+
+  return (
+    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0 bg-white [grid-template-columns:minmax(0,3fr)_minmax(0,2fr)]">
+      <div className={`${cellWrap} row-span-2`}>
+        <DashboardListingImage
+          photoUrl={a}
+          alt=""
+          imageClassName="absolute inset-0 h-full w-full object-cover"
+        />
+      </div>
+      <div className={cellWrap}>
+        {b ? (
+          <DashboardListingImage
+            photoUrl={b}
+            alt=""
+            imageClassName="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+      </div>
+      <div className={cellWrap}>
+        {c ? (
+          <DashboardListingImage
+            photoUrl={c}
+            alt=""
+            imageClassName="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function HotSheetDashboardCollage({ photoUrls }: { photoUrls: string[] }) {
   const visiblePhotos = photoUrls.filter(Boolean).slice(0, 3);
   const collagePhotos = visiblePhotos.length
     ? Array.from({ length: 3 }, (_, index) => visiblePhotos[index % visiblePhotos.length])
@@ -70,8 +115,11 @@ export function BuyerHotSheetPreviewCard({
 }: BuyerHotSheetPreviewCardProps) {
   const isHotSheetsPage = variant === "hotSheetsPage";
   const rootClass = isHotSheetsPage
-    ? `${buyerPreviewCardInteractive} flex h-60 flex-col`
+    ? `${buyerPreviewCardInteractive} flex min-h-[19rem] flex-col md:min-h-[20rem]`
     : buyerDashboardHotFavTile;
+  const mediaWrapClass = isHotSheetsPage
+    ? "relative h-52 shrink-0 w-full overflow-hidden rounded-t-2xl bg-white md:h-56"
+    : buyerDashboardHotSheetMediaWrap;
 
   return (
     <article
@@ -81,17 +129,21 @@ export function BuyerHotSheetPreviewCard({
       onClick={onClick}
       onKeyDown={onKeyDown}
     >
-      <div className={buyerDashboardHotSheetMediaWrap}>
-        <HotSheetPreviewCollage photoUrls={photoUrls} />
+      <div className={mediaWrapClass}>
+        {isHotSheetsPage ? (
+          <HotSheetPageMosaic photoUrls={photoUrls} />
+        ) : (
+          <HotSheetDashboardCollage photoUrls={photoUrls} />
+        )}
       </div>
       {isHotSheetsPage ? (
-        <div className="flex h-20 flex-col justify-between gap-1.5 bg-white px-3 pb-2 pt-3 text-left">
-          <p className="line-clamp-1 text-sm leading-snug text-neutral-900">
+        <div className="flex min-h-[5.5rem] flex-1 flex-col bg-white px-4 pb-5 pt-3 text-left">
+          <p className="line-clamp-2 text-base font-semibold leading-snug text-neutral-900">
             <span className="font-semibold">Hot Sheet Name: </span>
-            <span className="font-semibold">{title}</span>
+            <span>{title}</span>
           </p>
-          <div className="flex justify-end">
-            <span className="inline-flex items-center gap-1 text-sm font-medium text-[#0E56F5] pointer-events-none" aria-hidden>
+          <div className="mt-auto flex justify-end pt-3">
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0E56F5] pointer-events-none" aria-hidden>
               <Eye className="h-4 w-4 shrink-0" strokeWidth={2} />
               View
             </span>

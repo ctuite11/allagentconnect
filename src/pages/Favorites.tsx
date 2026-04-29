@@ -731,11 +731,11 @@ const Favorites = ({
   const buyerStickyHeader = (
     <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/84">
       <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-        <div className="flex items-start gap-2">
+        <div className="flex flex-col gap-2">
           <Button
             type="button"
             variant="ghost"
-            className="h-auto -ml-1 shrink-0 px-2 py-1 text-sm text-zinc-600 hover:text-zinc-900"
+            className="h-auto -ml-1 w-fit self-start px-2 py-1 text-sm text-zinc-600 hover:text-zinc-900"
             onClick={() => navigate("/client/dashboard")}
             aria-label="Back to Dashboard"
           >
@@ -744,10 +744,8 @@ const Favorites = ({
               <span>Back to Dashboard</span>
             </span>
           </Button>
-          <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-zinc-900">Your Favorite Homes</h1>
-            <p className="text-sm text-zinc-500">Homes you saved for quick access.</p>
-          </div>
+          <h1 className="text-lg font-semibold text-zinc-900">Your Favorite Homes</h1>
+          <p className="text-sm text-zinc-500">Homes you saved for quick access.</p>
         </div>
       </div>
     </div>
