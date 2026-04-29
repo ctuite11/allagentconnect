@@ -747,7 +747,7 @@ const ListingCard = ({
           </div>
           
           <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
-            <MapPin className="h-4 w-4 shrink-0 text-[#047857]" aria-hidden />
+            <MapPin className="h-4 w-4 shrink-0 text-[#50C878]" aria-hidden />
             <p className="font-medium text-sm">
               {displayAddress}
             </p>

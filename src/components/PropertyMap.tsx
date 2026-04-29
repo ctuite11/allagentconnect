@@ -213,14 +213,26 @@ const PropertyMap = ({
     return "";
   };
 
+  /** Map pins only: short labels (never full dollar amounts) for readability. */
   const formatCompactPrice = (value?: number | null) => {
-    if (!value || Number.isNaN(value)) return "$--";
-    if (value >= 1_000_000) {
-      if (value >= 10_000_000) return `$${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
-      return `$${(value / 1_000_000).toFixed(2).replace(/0$/, "").replace(/\.$/, "")}M`;
+    if (value == null || Number.isNaN(Number(value))) return "$--";
+    const v = Math.round(Number(value));
+    if (v < 0) return "$--";
+
+    if (v >= 10_000_000) {
+      const m = v / 1_000_000;
+      return `$${m.toFixed(1).replace(/\.0$/, "")}M`;
     }
-    if (value >= 1_000) return `$${Math.round(value / 1_000)}K`;
-    return `$${Math.round(value)}`;
+    if (v >= 1_000_000) {
+      const m = v / 1_000_000;
+      // e.g. 1_375_000 → $1.38M; 1_300_000 → $1.3M
+      return `$${parseFloat(m.toFixed(2)).toString()}M`;
+    }
+    if (v >= 1_000) {
+      // e.g. 345_555 → $346K
+      return `$${Math.round(v / 1_000)}K`;
+    }
+    return `$${v}`;
   };
 
   const applyPriceBadgeStyles = (
