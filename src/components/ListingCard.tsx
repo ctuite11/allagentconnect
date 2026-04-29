@@ -643,8 +643,10 @@ const ListingCard = ({
                     onSelect(listing.id);
                   }
                 }}
-                className={`w-5 h-5 rounded-full border cursor-pointer transition-all flex items-center justify-center ${
-                  isSelected ? "bg-emerald-500 border-emerald-500 ring-1 ring-emerald-500/20" : "bg-white border-zinc-300"
+                className={`w-5 h-5 shrink-0 rounded-sm border shadow-sm cursor-pointer transition-colors flex items-center justify-center ${
+                  isSelected
+                    ? "bg-[#0E56F5] border-[#0E56F5]"
+                    : "bg-white border-zinc-300"
                 }`}
                 title="Keep in shortlist for this visit"
                 aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
@@ -666,14 +668,11 @@ const ListingCard = ({
             onClick={(e) => e.stopPropagation()}
           >
             {isHotSheetFavorite && (
-              <div
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border bg-background/95 shadow-sm"
-                title="Favorited on hot sheet"
-              >
-                <Heart className="h-2.5 w-2.5 text-primary" fill="currentColor" />
-              </div>
+              <span className="inline-flex shrink-0" title="Favorited on hot sheet">
+                <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
+              </span>
             )}
-            <FavoriteButton listingId={listing.id} size="icon" variant="secondary" className="h-8 w-8 shrink-0 p-0" />
+            <FavoriteButton listingId={listing.id} size="icon" photoIcon className="!h-auto !w-auto min-h-[2rem] min-w-[2rem]" />
           </div>
           {/* Property type badge overlay */}
           {listing.property_type && (
@@ -732,7 +731,7 @@ const ListingCard = ({
         </div>
         <CardContent className="p-2.5 flex flex-col flex-1">
           <div className="flex items-start justify-between mb-1.5">
-            <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-primary cursor-pointer text-lg">
+            <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-neutral-950 cursor-pointer text-lg">
               {displayPrice}
             </p>
             {!hideMlsMeta && (
@@ -755,18 +754,18 @@ const ListingCard = ({
           </div>
           
           
-          <div className="flex items-center gap-6 text-lg mt-1">
+          <div className="flex items-center gap-6 text-lg mt-1 text-neutral-950">
             {listing.bedrooms && <div className="flex items-center gap-1.5">
-                <Bed className="h-5 w-5 text-primary" />
-                <span className="text-foreground font-semibold">{listing.bedrooms}</span>
+                <Bed className="h-5 w-5 text-neutral-700" aria-hidden />
+                <span className="font-semibold">{listing.bedrooms}</span>
               </div>}
             {listing.bathrooms && <div className="flex items-center gap-1.5">
-                <Bath className="h-5 w-5 text-primary" />
-                <span className="text-foreground font-semibold">{listing.bathrooms}</span>
+                <Bath className="h-5 w-5 text-neutral-700" aria-hidden />
+                <span className="font-semibold">{listing.bathrooms}</span>
               </div>}
             {listing.square_feet && <div className="flex items-center gap-1.5">
-                <Maximize className="h-5 w-5 text-primary" />
-                <span className="text-foreground font-semibold">{listing.square_feet.toLocaleString()}</span>
+                <Maximize className="h-5 w-5 text-neutral-700" aria-hidden />
+                <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
               </div>}
           </div>
 
@@ -814,7 +813,7 @@ const ListingCard = ({
                 ) : onOpenChat ? (
                   <button
                     type="button"
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-neutral-950 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onOpenChat();
