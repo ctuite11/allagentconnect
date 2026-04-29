@@ -179,7 +179,7 @@ const HotSheets = ({
           {heroStatusItems.map((item) => (
             <span
               key={item}
-              className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1.5 text-xs font-medium text-zinc-700"
+              className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-xs font-medium text-zinc-700"
             >
               {item}
             </span>
@@ -189,7 +189,7 @@ const HotSheets = ({
         <div className="space-y-3">
           <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-[0_6px_18px_rgba(15,23,42,0.06)]">
             <p className="text-sm font-semibold text-zinc-900">Alert Frequency</p>
-            <div className="mt-2 inline-flex w-full rounded-lg border border-zinc-200 bg-zinc-50 p-1">
+            <div className="mt-2 inline-flex w-full rounded-lg border border-zinc-200 bg-white p-1">
               <button
                 type="button"
                 onClick={() => setAlertFrequency("instant")}
@@ -226,7 +226,7 @@ const HotSheets = ({
             </div>
           </div>
 
-          <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-3.5">
+          <div className="rounded-xl border border-zinc-200/80 bg-white p-3.5">
             <p className="text-sm font-semibold text-zinc-900">Connected to your agent</p>
             <p className="mt-1 text-xs leading-relaxed text-zinc-600">
               Your agent can view your Hot Sheets and share matching opportunities.
@@ -861,7 +861,7 @@ const HotSheets = ({
         {renderHotSheetsHero()}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-2xl border border-zinc-200 bg-zinc-50 animate-pulse">
+            <div key={i} className="rounded-2xl border border-zinc-200 bg-white animate-pulse">
               <div className="aspect-[4/3] bg-zinc-100 rounded-t-2xl" />
               <div className="p-4 space-y-3">
                 <div className="h-5 bg-zinc-200 rounded w-2/3" />

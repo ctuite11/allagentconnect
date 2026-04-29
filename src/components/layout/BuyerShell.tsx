@@ -39,7 +39,7 @@ export function BuyerShell() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50">
+    <div className="min-h-screen flex flex-col bg-white">
       {/* ── Top navigation bar ─────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full bg-white/96 shadow-[0_1px_0_rgba(15,23,42,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/90">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
