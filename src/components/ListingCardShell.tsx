@@ -261,7 +261,7 @@ export function ListingCardShell({
                   )}
                 </h3>
                 <div className="flex items-center text-muted-foreground text-xs mb-2">
-                  <MapPin className="w-3 h-3 mr-1 shrink-0 text-[#50C878]" aria-hidden />
+                  <MapPin className="w-3 h-3 mr-1 shrink-0 text-[#047857]" aria-hidden />
                   {listing.city}, {listing.state} {listing.zip_code}
                   {listing.neighborhood && (
                     <Badge variant="secondary" className="ml-2 text-xs">

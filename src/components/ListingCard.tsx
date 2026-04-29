@@ -623,9 +623,9 @@ const ListingCard = ({
         onClick={() => navigate(`/property/${listing.id}`)}
       >
         <div className="relative group flex-shrink-0">
-          {/* Single top overlay row so shortlist square and favorites align vertically (same cross-axis baseline). */}
-          <div className="absolute inset-x-0 top-0 z-10 flex min-h-[2rem] items-center justify-between gap-2 px-2 pt-2 pointer-events-none">
-            <div className="pointer-events-auto flex min-w-0 shrink-0 items-center">
+          {/* Top overlay: shared h-9 row so shortlist chip and FavoriteButton square/circle share one center line — do not override FavoriteButton sizing. */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 px-2 pt-2">
+            <div className="pointer-events-auto flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center">
               {onSelect ? (
                 <div
                   role="checkbox"
@@ -663,15 +663,15 @@ const ListingCard = ({
               ) : null}
             </div>
             <div
-              className="pointer-events-auto flex min-w-0 max-w-[calc(100%-3.25rem)] items-center justify-end gap-1"
+              className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
               onClick={(e) => e.stopPropagation()}
             >
               {isHotSheetFavorite && (
-                <span className="inline-flex shrink-0 items-center" title="Favorited on hot sheet">
+                <span className="inline-flex h-9 shrink-0 items-center justify-center" title="Favorited on hot sheet">
                   <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
                 </span>
               )}
-              <FavoriteButton listingId={listing.id} size="icon" photoIcon className="!h-auto !w-auto min-h-[2rem] min-w-[2rem]" />
+              <FavoriteButton listingId={listing.id} size="icon" photoIcon />
             </div>
           </div>
           {/* Property type badge overlay */}
@@ -747,7 +747,7 @@ const ListingCard = ({
           </div>
           
           <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
-            <MapPin className="h-4 w-4 shrink-0 text-[#50C878]" aria-hidden />
+            <MapPin className="h-4 w-4 shrink-0 text-[#047857]" aria-hidden />
             <p className="font-medium text-sm">
               {displayAddress}
             </p>
@@ -1210,7 +1210,7 @@ const ListingCard = ({
           {/* Left Column - Address */}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 shrink-0 text-[#50C878]" aria-hidden />
+              <MapPin className="h-4 w-4 shrink-0 text-[#047857]" aria-hidden />
               <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
                 {(() => {
                   // Extract just the street address (first part before any comma)
