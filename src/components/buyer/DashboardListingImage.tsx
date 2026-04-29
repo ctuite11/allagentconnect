@@ -25,6 +25,9 @@ export function DashboardListingImage({
       src={photoUrl}
       alt={alt}
       className={imageClassName}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
       onError={() => setLoadFailed(true)}
     />
   );

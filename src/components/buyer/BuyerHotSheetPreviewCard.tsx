@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import { Eye } from "lucide-react";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
@@ -6,6 +7,7 @@ import {
   buyerDashboardHotFavTile,
   buyerDashboardHotSheetCollageGrid,
   buyerDashboardHotSheetMediaWrap,
+  buyerPreviewCardInteractive,
 } from "@/lib/buyerUi";
 
 function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
@@ -43,38 +45,64 @@ function HotSheetPreviewCollage({ photoUrls }: { photoUrls: string[] }) {
 export interface BuyerHotSheetPreviewCardProps {
   photoUrls: string[];
   title: string;
-  /** Second line — e.g. “12 matches”; dashboard uses match count text. */
-  subtitle: string;
+  /** Second line — e.g. “12 matches”; dashboard uses match count text. Omitted when `variant` is hotSheetsPage. */
+  subtitle?: string;
+  /**
+   * `dashboard` — default strip tile (two-line title + matches).
+   * `hotSheetsPage` — buyer Hot Sheets route: labeled name + Eye/View footer (whole card still primary action).
+   */
+  variant?: "dashboard" | "hotSheetsPage";
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent<HTMLElement>) => void;
 }
 
 /**
- * The Hot Sheet preview tile from Buyer Dashboard (“Hot Sheets” strip): collage + footer, nothing else.
- * Do not restyle — keep in sync with `ClientDashboard` markup.
+ * Hot Sheet collage tile — `dashboard` matches `ClientDashboard` strip.
+ * `hotSheetsPage` adds labeled title + Eye/View affordance for `/client/hot-sheets`; whole-card click unchanged.
  */
 export function BuyerHotSheetPreviewCard({
   photoUrls,
   title,
-  subtitle,
+  subtitle = "",
+  variant = "dashboard",
   onClick,
   onKeyDown,
 }: BuyerHotSheetPreviewCardProps) {
+  const isHotSheetsPage = variant === "hotSheetsPage";
+  const rootClass = isHotSheetsPage
+    ? `${buyerPreviewCardInteractive} flex min-h-[16rem] flex-col`
+    : buyerDashboardHotFavTile;
+
   return (
     <article
       role="button"
       tabIndex={0}
-      className={buyerDashboardHotFavTile}
+      className={rootClass}
       onClick={onClick}
       onKeyDown={onKeyDown}
     >
       <div className={buyerDashboardHotSheetMediaWrap}>
         <HotSheetPreviewCollage photoUrls={photoUrls} />
       </div>
-      <div className={`${buyerDashboardHotFavTileBody} flex-1`}>
-        <p className="line-clamp-1 text-[14px] font-medium leading-snug tracking-tight text-neutral-800">{title}</p>
-        <p className="text-[12px] font-normal leading-tight text-gray-500">{subtitle}</p>
-      </div>
+      {isHotSheetsPage ? (
+        <div className="flex flex-1 flex-col justify-between gap-2 bg-white px-3 pb-3 pt-3 text-left">
+          <p className="text-sm leading-snug text-neutral-900">
+            <span className="font-semibold">Hot Sheet Name: </span>
+            <span className="font-semibold">{title}</span>
+          </p>
+          <div className="flex justify-end">
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-[#0E56F5] pointer-events-none" aria-hidden>
+              <Eye className="h-4 w-4 shrink-0" strokeWidth={2} />
+              View
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className={`${buyerDashboardHotFavTileBody} flex-1`}>
+          <p className="line-clamp-1 text-[16px] font-medium leading-snug tracking-tight text-neutral-900">{title}</p>
+          {subtitle ? <p className="text-[12px] font-normal leading-tight text-gray-500">{subtitle}</p> : null}
+        </div>
+      )}
     </article>
   );
 }

@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
-import { HotSheetCard } from "@/components/HotSheetCard";
+import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { Seo } from "@/components/Seo";
 import {
@@ -174,11 +174,14 @@ const HotSheets = ({
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+          {/* LOCKED UI — do not restyle without design approval
+           * Matches AAC premium system (Dashboard-aligned) */}
           {heroStatusItems.map((item) => (
             <span
               key={item}
-              className="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-[13px] font-medium text-neutral-800 shadow-none"
+              className="flex items-center gap-2 text-[13px] font-medium text-neutral-700"
             >
+              <span className="w-2 h-2 rounded-full bg-[#50C878] shrink-0" aria-hidden />
               {item}
             </span>
           ))}
@@ -416,17 +419,18 @@ const HotSheets = ({
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
                     return (
-                      <HotSheetCard
+                      <BuyerHotSheetPreviewCard
                         key={sheet.id}
-                        id={sheet.id}
-                        name={sheet.name}
-                        criteria={sheet.criteria}
-                        clients={[]}
-                        lastSentAt={sheet.last_sent_at}
-                        photos={buyerPreviewPhotosById[sheet.id] ?? []}
-                        onView={() => openBuyerHotSheet(sheet.id, token)}
-                        onShare={() => {}}
-                        onComments={() => {}}
+                        variant="hotSheetsPage"
+                        photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
+                        title={sheet.name}
+                        onClick={() => openBuyerHotSheet(sheet.id, token)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openBuyerHotSheet(sheet.id, token);
+                          }
+                        }}
                       />
                     );
                   })}

@@ -17,12 +17,18 @@ export const buyerPageStack = "space-y-8";
 export const buyerSectionCard =
   "bg-white rounded-2xl border border-neutral-200 shadow-sm transition-colors duration-150";
 
-/** Base preview tile (listing / hot sheet hover lift) */
+/**
+ * Base preview tile — shared hover/interaction for Hot Sheet previews (buyerDashboardHotFavTile),
+ * Dashboard “Market activity” listing tiles (`buyerPreviewCardInteractive`), etc.
+ *
+ * Listing grids (client Favorites, Map search rows) intentionally use bespoke cards + `ListingImage`;
+ * only Hot Sheet *collages* use `BuyerHotSheetPreviewCard` — do not interchange.
+ */
 export const buyerPreviewCardBase =
-  "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md";
+  "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-[2px] hover:shadow-md";
 
-/** Interactive preview (keyboard focus ring) */
-export const buyerPreviewCardInteractive = `${buyerPreviewCardBase} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
+/** Interactive preview (keyboard focus ring) — cursor on base tile; rings here only */
+export const buyerPreviewCardInteractive = `${buyerPreviewCardBase} outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
 
 /** Alias — same as `buyerPreviewCardInteractive` (Dashboard listing / saved-search tiles). */
 export const buyerPreviewCard = buyerPreviewCardInteractive;

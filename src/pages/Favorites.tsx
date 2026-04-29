@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import { Card } from "@/components/ui/card";
+import ListingCard from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -964,10 +965,6 @@ const Favorites = ({
                     <div className="grid grid-cols-2 gap-3">
                       {displayFavorites.map((favorite, idx) => {
                         const listing = favorite.listings;
-                        const rec = displayListingRecords[idx];
-                        const brokerageLine = rec
-                          ? formatBrokerageLine(resolveListingBrokerage(rec))
-                          : null;
                         const isKept = sessionKeptListingIds.has(listing.id);
                         return (
                           <div
@@ -994,74 +991,16 @@ const Favorites = ({
                                 });
                               }
                             }}
-                            className={`group w-full rounded-[24px] bg-white overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 transition-all duration-200 ease-out transform-gpu ${
-                              listing.id === selectedListingId
-                                ? "ring-2 ring-[#0E56F5]/50 shadow-[0_8px_28px_rgba(14,86,245,0.18)]"
-                                : listing.id === hoveredListingId
-                                  ? "-translate-y-px shadow-[0_8px_24px_rgba(15,23,42,0.13)] ring-1 ring-zinc-200"
-                                  : "shadow-[0_2px_8px_rgba(15,23,42,0.07)] ring-1 ring-zinc-200/80 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(15,23,42,0.12)] hover:ring-zinc-300/80"
-                            }`}
+                            className="w-full"
                           >
-                            <div className="relative w-full overflow-hidden rounded-t-[24px] bg-white" style={{ aspectRatio: "16/10" }}>
-                              <ListingImage photos={listing.photos} alt={listing.address} />
-                              <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white/55 via-white/15 to-transparent pointer-events-none" />
-                              <div
-                                className="absolute top-3 left-3 z-20 h-8 w-8 flex items-center justify-center pointer-events-auto"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isKept}
-                                  onChange={() => toggleSessionKeepListing(listing.id)}
-                                  className="h-5 w-5 rounded-sm border border-gray-300 bg-white accent-[#0E56F5] shadow-sm"
-                                  title="Keep in this search"
-                                  aria-label={isKept ? "Remove from this session" : "Keep in this search"}
-                                />
-                              </div>
-                              <div
-                                className="absolute top-[10px] right-3 z-20 h-8 w-8 flex items-center justify-center pointer-events-auto"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <FavoriteButton
-                                  listingId={listing.id}
-                                  size="icon"
-                                  photoIcon
-                                  className="!h-6 !w-6 [&_svg]:h-6 [&_svg]:w-6"
-                                />
-                              </div>
-                            </div>
-                            <div className="relative border-t border-neutral-100 bg-white px-3.5 pb-3.5 pt-3">
-                              <p className="text-[1.05rem] font-semibold tracking-[-0.02em] leading-none text-zinc-950">
-                                ${listing.price?.toLocaleString()}
-                              </p>
-                              <p className="mt-1.5 text-[13px] font-medium leading-[1.3] text-zinc-900 break-words">
-                                {listing.address}
-                              </p>
-                              <p className="mt-1 text-[11.5px] font-medium leading-[1.35] text-zinc-500">
-                                {listing.city}, {listing.state} {listing.zip_code}
-                              </p>
-                              <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] font-medium leading-none text-zinc-600">
-                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                                  <BedDouble className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
-                                  {listing.bedrooms ?? "--"} bd
-                                </span>
-                                <span className="text-zinc-300">•</span>
-                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                                  <Bath className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
-                                  {listing.bathrooms ?? "--"} ba
-                                </span>
-                                <span className="text-zinc-300">•</span>
-                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                                  <Ruler className="h-[13px] w-[13px] text-zinc-500" strokeWidth={2.1} />
-                                  {listing.square_feet
-                                    ? `${listing.square_feet.toLocaleString()} sqft`
-                                    : "--"}
-                                </span>
-                              </div>
-                              {brokerageLine && (
-                                <p className="mt-2 text-[12px] leading-none text-zinc-400">{brokerageLine}</p>
-                              )}
-                            </div>
+                            <ListingCard
+                              listing={listing}
+                              viewMode="compact"
+                              showActions={false}
+                              hideMlsMeta
+                              onSelect={toggleSessionKeepListing}
+                              isSelected={isKept}
+                            />
                           </div>
                         );
                       })}
@@ -1240,57 +1179,16 @@ const Favorites = ({
                         });
                       }
                     }}
-                    className="group w-full bg-white rounded-2xl border border-gray-200 shadow-[0_4px_14px_rgba(15,23,42,0.10)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.16)] hover:-translate-y-1 transition-all duration-200 ease-out cursor-pointer overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+                    className="w-full"
                   >
-                    <div className="relative mb-2 w-full overflow-hidden rounded-t-2xl bg-white" style={{ aspectRatio: "16/10" }}>
-                      <img
-                        src={getMainPhoto(listing.photos)}
-                        alt={listing.address}
-                        className="w-full h-full object-cover object-center"
-                      />
-                      <div className="absolute top-3 left-3 z-20 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          aria-label={isSelected ? "Unselect listing" : "Select listing"}
-                          aria-pressed={isSelected}
-                          onClick={() => toggleSelectFavorite(favorite.id)}
-                          style={{ width: 20, height: 20, borderRadius: 2 }}
-                          className={`!h-[20px] !w-[20px] !min-h-[20px] !min-w-[20px] !rounded-[2px] !border-2 !border-gray-500 !bg-white inline-flex items-center justify-center leading-none ${
-                            isSelected ? "!border-[#0E56F5] !bg-[#0E56F5] text-white" : "text-transparent"
-                          }`}
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="relative bg-white px-3.5 pb-3.5 pt-1">
-                      <p className="text-lg font-semibold leading-none text-gray-900">
-                        {formatPrice(listing.price)}
-                      </p>
-                      <p className="mt-1.5 text-sm font-medium leading-[1.3] text-gray-700 break-words">
-                        {listing.address}
-                      </p>
-                      <p className="mt-1 text-xs font-medium leading-[1.35] text-gray-500">
-                        <MapPin className="mr-1 inline h-3.5 w-3.5 align-[-1px]" />
-                        {listing.city}, {listing.state} {listing.zip_code}
-                      </p>
-                      <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium leading-none text-gray-500">
-                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                          <BedDouble className="h-[13px] w-[13px] text-gray-500" strokeWidth={2.1} />
-                          {listing.bedrooms ?? "--"} bd
-                        </span>
-                        <span className="text-gray-300">•</span>
-                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                          <Bath className="h-[13px] w-[13px] text-gray-500" strokeWidth={2.1} />
-                          {listing.bathrooms ?? "--"} ba
-                        </span>
-                        <span className="text-gray-300">•</span>
-                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap align-middle">
-                          <Ruler className="h-[13px] w-[13px] text-gray-500" strokeWidth={2.1} />
-                          {listing.square_feet ? `${listing.square_feet.toLocaleString()} sqft` : "--"}
-                        </span>
-                      </div>
-                    </div>
+                    <ListingCard
+                      listing={listing}
+                      viewMode="compact"
+                      showActions={false}
+                      hideMlsMeta={isPublicMode || isBuyerMode}
+                      onSelect={() => toggleSelectFavorite(favorite.id)}
+                      isSelected={isSelected}
+                    />
                   </div>
                 );
               })}
