@@ -496,18 +496,8 @@ const HotSheets = ({
                         lastSentAt={sheet.updated_at || sheet.last_sent_at || sheet.created_at}
                         photos={buyerPhotosByHotSheetId[sheet.id] || []}
                         onView={() => openBuyerHotSheet(sheet.id, token)}
-                        onEdit={() => {
-                          if (!sheet.user_id) {
-                            toast.error("This hot sheet cannot be edited right now");
-                            return;
-                          }
-                          setEditingHotSheetId(sheet.id);
-                          setEditingSheetOwnerUserId(sheet.user_id);
-                          setEditDialogOpen(true);
-                        }}
                         onShare={() => undefined}
                         onComments={() => undefined}
-                        onDelete={() => setDeleteBuyerSheetId(sheet.id)}
                       />
                     );
                   })}
