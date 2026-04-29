@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Users, Search, Pencil, MoreHorizontal, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Users, Search, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
@@ -22,12 +22,6 @@ import {
   buyerPageStack,
 } from "@/lib/buyerUi";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -132,10 +126,6 @@ const HotSheets = ({
   const [buyerPreviewPhotosById, setBuyerPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [buyerMatchCountsById, setBuyerMatchCountsById] = useState<Record<string, number>>({});
   const [buyerLoading, setBuyerLoading] = useState(true);
-  const [deleteBuyerSheetId, setDeleteBuyerSheetId] = useState<string | null>(null);
-  const [deleteBuyerSheetLoading, setDeleteBuyerSheetLoading] = useState(false);
-  /** `hot_sheets.user_id` (agent owner) — required for CreateHotSheetDialog `userId` in buyer edit mode. */
-  const [editingSheetOwnerUserId, setEditingSheetOwnerUserId] = useState<string | null>(null);
   const [alertFrequency, setAlertFrequency] = useState<"instant" | "daily" | "weekly">("instant");
   const buyerMode = isBuyerMode;
 
@@ -367,74 +357,6 @@ const HotSheets = ({
     }
   };
 
-  const handleDeleteBuyerHotSheet = async () => {
-    if (!deleteBuyerSheetId || deleteBuyerSheetLoading) return;
-    const id = deleteBuyerSheetId;
-    setDeleteBuyerSheetLoading(true);
-
-    const { error: clientsError } = await supabase
-      .from("hot_sheet_clients")
-      .delete()
-      .eq("hot_sheet_id", id);
-
-    if (clientsError) {
-      console.error("Delete hot_sheet_clients failed:", clientsError);
-      toast.error("Unable to delete this Hot Sheet");
-      setDeleteBuyerSheetLoading(false);
-      return;
-    }
-
-    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
-
-    if (sheetError) {
-      console.error("Delete hot_sheets failed:", sheetError);
-      toast.error("Unable to delete this Hot Sheet");
-      setDeleteBuyerSheetLoading(false);
-      return;
-    }
-
-    toast.success("Hot Sheet deleted");
-    setBuyerHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
-    setBuyerTokenByHotSheetId((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setBuyerPreviewPhotosById((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setBuyerMatchCountsById((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setDeleteBuyerSheetLoading(false);
-    setDeleteBuyerSheetId(null);
-  };
-
-  const handleBuyerEditSuccess = async (
-    hotSheetId: string,
-    updatedHotSheet?: { id: string; name: string; criteria: Record<string, unknown> | null }
-  ) => {
-    if (updatedHotSheet) {
-      setBuyerHotSheets((prev) =>
-        prev.map((sheet) =>
-          sheet.id === hotSheetId
-            ? {
-                ...sheet,
-                name: updatedHotSheet.name,
-                criteria: updatedHotSheet.criteria,
-              }
-            : sheet
-        )
-      );
-      return;
-    }
-    await loadBuyerHotSheets();
-  };
-
   if (buyerMode) {
     return (
       <>
@@ -494,125 +416,25 @@ const HotSheets = ({
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
                     return (
-                      <div key={sheet.id} className="relative">
-                        <BuyerHotSheetPreviewCard
-                          photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
-                          title={sheet.name}
-                          subtitle={`${buyerMatchCountsById[sheet.id] ?? 0} matches`}
-                          onClick={() => openBuyerHotSheet(sheet.id, token)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              openBuyerHotSheet(sheet.id, token);
-                            }
-                          }}
-                        />
-                        <div className="absolute top-2 right-2 z-20 flex items-center gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-lg border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:bg-white"
-                            aria-label="Edit hot sheet"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              if (!sheet.user_id) {
-                                toast.error("This hot sheet cannot be edited right now");
-                                return;
-                              }
-                              setEditingHotSheetId(sheet.id);
-                              setEditingSheetOwnerUserId(sheet.user_id);
-                              setEditDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-lg border border-neutral-200 bg-white text-neutral-600 shadow-sm hover:bg-white"
-                                aria-label="More options"
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                }}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="min-w-[10rem] p-1">
-                              <DropdownMenuItem
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  setDeleteBuyerSheetId(sheet.id);
-                                }}
-                                className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-gray-50 focus:bg-gray-50 focus:text-red-600 data-[highlighted]:bg-gray-50 data-[highlighted]:text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 shrink-0 text-red-600" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
+                      <BuyerHotSheetPreviewCard
+                        key={sheet.id}
+                        photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
+                        title={sheet.name}
+                        subtitle={`${buyerMatchCountsById[sheet.id] ?? 0} matches`}
+                        onClick={() => openBuyerHotSheet(sheet.id, token)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openBuyerHotSheet(sheet.id, token);
+                          }
+                        }}
+                      />
                     );
                   })}
                 </section>
               )}
           </div>
         </div>
-        {editingHotSheetId && editingSheetOwnerUserId && (
-          <CreateHotSheetDialog
-            key={editingHotSheetId}
-            open={editDialogOpen}
-            onOpenChange={(open) => {
-              setEditDialogOpen(open);
-              if (!open) {
-                setEditingHotSheetId(null);
-                setEditingSheetOwnerUserId(null);
-              }
-            }}
-            userId={editingSheetOwnerUserId}
-            hotSheetId={editingHotSheetId}
-            editMode
-            onSuccess={handleBuyerEditSuccess}
-          />
-        )}
-        <Dialog
-          open={Boolean(deleteBuyerSheetId)}
-          onOpenChange={(open) => {
-            if (!open && !deleteBuyerSheetLoading) setDeleteBuyerSheetId(null);
-          }}
-        >
-          <DialogContent onClick={(event) => event.stopPropagation()}>
-            <DialogHeader>
-              <DialogTitle>Delete hot sheet?</DialogTitle>
-              <DialogDescription>
-                This will remove this hot sheet and its alerts.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteBuyerSheetId(null)}
-                disabled={deleteBuyerSheetLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDeleteBuyerHotSheet}
-                disabled={deleteBuyerSheetLoading}
-              >
-                {deleteBuyerSheetLoading ? "Deleting..." : "Delete hot sheet"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </>
     );
   }
