@@ -15,7 +15,6 @@ import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
 import { HotSheetCard } from "@/components/HotSheetCard";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { Seo } from "@/components/Seo";
-import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
 import {
   buyerSectionDesc as buyerSectionDescClass,
   buyerSectionTitle as buyerSectionTitleClass,
