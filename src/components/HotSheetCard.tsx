@@ -77,7 +77,7 @@ export const HotSheetCard = ({
         {renderPhotoPreview()}
       </div>
 
-      <div className="flex flex-col gap-2 px-5 pb-4 pt-4">
+      <div className="flex flex-col gap-2 px-5 pb-2 pt-4">
         <h3 className="min-w-0 truncate text-sm font-semibold leading-tight tracking-tight text-foreground">Hot Sheet Name: {name}</h3>
         <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="sm" className="h-7 rounded-full px-2.5 text-sm font-semibold text-primary hover:bg-primary/5 hover:text-primary" onClick={handleCardClick}>
