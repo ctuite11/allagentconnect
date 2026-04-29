@@ -22,8 +22,6 @@ export const HotSheetCard = ({
   name,
   photos = [],
   onView,
-  onEdit,
-  onDelete,
 }: HotSheetCardProps) => {
   const navigate = useNavigate();
 
