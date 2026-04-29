@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
+import { HotSheetCard } from "@/components/HotSheetCard";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { Seo } from "@/components/Seo";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
@@ -416,18 +417,17 @@ const HotSheets = ({
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
                     return (
-                      <BuyerHotSheetPreviewCard
+                      <HotSheetCard
                         key={sheet.id}
-                        photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
-                        title={sheet.name}
-                        subtitle={`${buyerMatchCountsById[sheet.id] ?? 0} matches`}
-                        onClick={() => openBuyerHotSheet(sheet.id, token)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            openBuyerHotSheet(sheet.id, token);
-                          }
-                        }}
+                        id={sheet.id}
+                        name={sheet.name}
+                        criteria={sheet.criteria}
+                        clients={[]}
+                        lastSentAt={sheet.last_sent_at}
+                        photos={buyerPreviewPhotosById[sheet.id] ?? []}
+                        onView={() => openBuyerHotSheet(sheet.id, token)}
+                        onShare={() => {}}
+                        onComments={() => {}}
                       />
                     );
                   })}
