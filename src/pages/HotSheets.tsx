@@ -436,8 +436,8 @@ const HotSheets = ({
           noindex
         />
         <div className="min-h-screen bg-white flex flex-col">
-          <PageShell className="flex-1 pb-10">
-            <div className="mx-auto w-full max-w-6xl py-5 sm:py-6 space-y-5">
+          <PageShell className="flex-1 bg-white pb-10">
+            <div className="mx-auto w-full max-w-6xl bg-white py-5 sm:py-6 space-y-5">
               <button
                 type="button"
                 onClick={() => navigate("/client/dashboard")}
@@ -450,7 +450,7 @@ const HotSheets = ({
               {renderHotSheetsHero()}
 
               {buyerLoading ? (
-                <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <section className="grid grid-cols-1 gap-5 bg-white md:grid-cols-2 lg:grid-cols-3">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                       <div className="h-5 w-1/2 animate-pulse rounded bg-zinc-100" />
@@ -886,7 +886,7 @@ const HotSheets = ({
         canonical="https://allagentconnect.com/hot-sheets"
         noindex
       />
-      <PageShell className="pb-8">
+      <PageShell className="bg-white pb-8">
         <div className="mb-5">
           {renderHotSheetsHero()}
         </div>
@@ -906,7 +906,7 @@ const HotSheets = ({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white">
             {collections.map((collection) => (
               <BuyerCollectionCard
                 key={collection.clientId}
