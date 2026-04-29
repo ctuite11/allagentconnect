@@ -27,7 +27,7 @@ export function ListingInterestSignals({
         </span>
       )}
       {commentsCount > 0 && (
-        <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
+        <span className="inline-flex items-center gap-1 text-[#0E56F5] font-medium">
           <MessageSquare className="h-3.5 w-3.5" />
           {commentsCount} buyer{commentsCount !== 1 ? "s" : ""} asked
         </span>

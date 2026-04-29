@@ -972,25 +972,8 @@ const Favorites = ({
                             ref={(el) => {
                               cardRefs.current[listing.id] = el;
                             }}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() =>
-                              navigate(propertyUrlWithFavoritesContext(listing.id), {
-                                state: { from: "/client/favorites" },
-                              })
-                            }
                             onMouseEnter={() => setHoveredListingId(listing.id)}
                             onMouseLeave={() => setHoveredListingId(null)}
-                            onFocus={() => setHoveredListingId(listing.id)}
-                            onBlur={() => setHoveredListingId(null)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                navigate(propertyUrlWithFavoritesContext(listing.id), {
-                                  state: { from: "/client/favorites" },
-                                });
-                              }
-                            }}
                             className="w-full"
                           >
                             <ListingCard
@@ -1162,25 +1145,7 @@ const Favorites = ({
                 const listing = favorite.listings;
                 const isSelected = selectedFavoriteIds.has(favorite.id);
                 return (
-                  <div
-                    key={favorite.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() =>
-                      navigate(propertyUrlWithFavoritesContext(listing.id), {
-                        state: { from: "/client/favorites" },
-                      })
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        navigate(propertyUrlWithFavoritesContext(listing.id), {
-                          state: { from: "/client/favorites" },
-                        });
-                      }
-                    }}
-                    className="w-full"
-                  >
+                  <div key={favorite.id} className="w-full">
                     <ListingCard
                       listing={listing}
                       viewMode="compact"

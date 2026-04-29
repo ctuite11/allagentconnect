@@ -241,10 +241,11 @@ const PropertyMap = ({
     element.style.userSelect = "none";
     element.style.cursor = "pointer";
     element.style.border = selected ? "2px solid #34C58A" : "1px solid rgba(255,255,255,0.18)";
-    element.style.background = selected ? "#0A2E8A" : highlighted ? "#0C4ADE" : "#0E56F5";
+    // Keep all “blue” fills on the exact AAC brand blue; use size/scale to show emphasis.
+    element.style.background = "#0E56F5";
     element.style.color = "#FFFFFF";
     element.style.boxShadow = selected
-      ? "0 14px 30px rgba(10, 46, 138, 0.34)"
+      ? "0 14px 30px rgba(14, 86, 245, 0.38)"
       : highlighted
         ? "0 12px 24px rgba(14, 86, 245, 0.34)"
         : "0 8px 18px rgba(14, 86, 245, 0.24)";
@@ -253,7 +254,7 @@ const PropertyMap = ({
   };
 
   const buildPriceMarkerIcon = (googleMaps: GoogleMapsApi, label: string, highlighted: boolean, selected: boolean): google.maps.Icon => {
-    const fill = selected ? "#0A2E8A" : highlighted ? "#0C4ADE" : "#0E56F5";
+    const fill = "#0E56F5";
     const text = "#FFFFFF";
     const stroke = selected ? "#34C58A" : "rgba(255,255,255,0.22)";
     const strokeWidth = selected ? 2 : 1;
@@ -264,11 +265,11 @@ const PropertyMap = ({
     const width = Math.max(56, Math.round(label.length * estCharWidth + padX * 2));
     const radius = 14;
     const shadow = selected
-      ? "0 14px 30px rgba(10, 46, 138, 0.34)"
+      ? "0 14px 30px rgba(14, 86, 245, 0.38)"
       : highlighted
         ? "0 12px 24px rgba(14, 86, 245, 0.34)"
         : "0 8px 18px rgba(14, 86, 245, 0.24)";
-    const shadowColor = selected ? "#0A2E8A" : "#0E56F5";
+    const shadowColor = "#0E56F5";
     const shadowOpacity = selected ? "0.36" : highlighted ? "0.34" : "0.24";
 
     const svg = `

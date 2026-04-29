@@ -470,7 +470,7 @@ const ListingCard = ({
       if (isNewStatus) {
         return {
           text: "NEW LISTING",
-          color: "bg-blue-600",
+          color: "bg-[#0E56F5]",
           iconType: "sparkles" as const
         };
       }
@@ -484,7 +484,7 @@ const ListingCard = ({
           if (daysSinceActive <= 7) {
             return {
               text: "NEW LISTING",
-              color: "bg-blue-600",
+              color: "bg-[#0E56F5]",
               iconType: "sparkles" as const
             };
           }

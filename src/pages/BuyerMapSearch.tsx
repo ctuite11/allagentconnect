@@ -788,7 +788,7 @@ export default function BuyerMapSearch() {
                           <span
                             key={chip.key}
                             className={`block h-2.5 flex-1 rounded-full ${
-                              active ? "bg-[#1a72ff] opacity-100" : "bg-zinc-300 opacity-45"
+                              active ? "bg-[#0E56F5] opacity-100" : "bg-zinc-300 opacity-45"
                             }`}
                           />
                         );
@@ -811,11 +811,11 @@ export default function BuyerMapSearch() {
                         }}
                         className="relative flex w-full touch-none select-none items-center"
                       >
-                        <SliderPrimitive.Track className="relative h-[3px] w-full grow overflow-hidden rounded-full bg-zinc-200">
-                          <SliderPrimitive.Range className="absolute h-full bg-[#1a72ff]" />
+                          <SliderPrimitive.Track className="relative h-[3px] w-full grow overflow-hidden rounded-full bg-zinc-200">
+                          <SliderPrimitive.Range className="absolute h-full bg-[#0E56F5]" />
                         </SliderPrimitive.Track>
-                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-[3px] border-[#1a72ff] bg-white shadow-[0_2px_8px_rgba(26,114,255,0.35)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a72ff] focus-visible:ring-offset-1" />
-                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-[3px] border-[#1a72ff] bg-white shadow-[0_2px_8px_rgba(26,114,255,0.35)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a72ff] focus-visible:ring-offset-1" />
+                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-[3px] border-[#0E56F5] bg-white shadow-[0_2px_8px_rgba(14,86,245,0.35)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5] focus-visible:ring-offset-1" />
+                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-[3px] border-[#0E56F5] bg-white shadow-[0_2px_8px_rgba(14,86,245,0.35)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5] focus-visible:ring-offset-1" />
                       </SliderPrimitive.Root>
                       <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-zinc-600">
                         <span>$50k</span>
@@ -877,7 +877,7 @@ export default function BuyerMapSearch() {
                     </Button>
                     <Button
                       type="button"
-                      className="h-11 flex-1 rounded-lg bg-[#1a72ff] hover:bg-[#1460d8] text-sm font-semibold"
+                      className="h-11 flex-1 rounded-lg bg-[#0E56F5] hover:bg-[#0B46CC] text-sm font-semibold"
                       onClick={applyPriceDraft}
                     >
                       Done
@@ -1361,19 +1361,8 @@ export default function BuyerMapSearch() {
                     <div
                       key={listing.id}
                       ref={(el) => { cardRefs.current[listing.id] = el; }}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => navigate(`/property/${listing.id}`)}
                       onMouseEnter={() => setHoveredListingId(listing.id)}
                       onMouseLeave={() => setHoveredListingId(null)}
-                      onFocus={() => setHoveredListingId(listing.id)}
-                      onBlur={() => setHoveredListingId(null)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          navigate(`/property/${listing.id}`);
-                        }
-                      }}
                       className="w-full"
                     >
                       <ListingCard
