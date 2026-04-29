@@ -10,10 +10,8 @@ interface HotSheetCardProps {
   lastSentAt?: string | null;
   photos?: string[];
   onView?: (id: string) => void;
-  onEdit: (id: string) => void;
   onShare: (id: string) => void;
   onComments: (id: string) => void;
-  onDelete: (id: string) => void;
   onAddFriend?: (id: string) => void;
 }
 
