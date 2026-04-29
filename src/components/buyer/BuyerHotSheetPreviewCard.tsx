@@ -72,7 +72,7 @@ export function BuyerHotSheetPreviewCard({
         <HotSheetPreviewCollage photoUrls={photoUrls} />
       </div>
       <div className={`${buyerDashboardHotFavTileBody} flex-1`}>
-        <p className="line-clamp-1 text-[16px] font-medium leading-snug tracking-tight text-neutral-900">{title}</p>
+        <p className="line-clamp-1 text-[14px] font-medium leading-snug tracking-tight text-neutral-800">{title}</p>
         <p className="text-[12px] font-normal leading-tight text-gray-500">{subtitle}</p>
       </div>
     </article>
