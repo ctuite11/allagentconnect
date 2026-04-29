@@ -70,7 +70,7 @@ export function BuyerHotSheetPreviewCard({
 }: BuyerHotSheetPreviewCardProps) {
   const isHotSheetsPage = variant === "hotSheetsPage";
   const rootClass = isHotSheetsPage
-    ? `${buyerPreviewCardInteractive} flex min-h-[16rem] flex-col`
+    ? `${buyerPreviewCardInteractive} flex h-60 flex-col`
     : buyerDashboardHotFavTile;
 
   return (
@@ -85,8 +85,8 @@ export function BuyerHotSheetPreviewCard({
         <HotSheetPreviewCollage photoUrls={photoUrls} />
       </div>
       {isHotSheetsPage ? (
-        <div className="flex flex-1 flex-col justify-between gap-2 bg-white px-3 pb-3 pt-3 text-left">
-          <p className="text-sm leading-snug text-neutral-900">
+        <div className="flex h-20 flex-col justify-between gap-1.5 bg-white px-3 pb-2 pt-3 text-left">
+          <p className="line-clamp-1 text-sm leading-snug text-neutral-900">
             <span className="font-semibold">Hot Sheet Name: </span>
             <span className="font-semibold">{title}</span>
           </p>

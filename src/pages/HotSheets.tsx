@@ -369,7 +369,7 @@ const HotSheets = ({
           canonical="https://allagentconnect.com/hot-sheets"
           noindex
         />
-        <div className={buyerPageMain}>
+        <div className={`${buyerPageMain} pb-20`}>
           <div className={buyerPageStack}>
               <button
                 type="button"

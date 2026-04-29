@@ -60,13 +60,13 @@ export function ActiveAgentBanner() {
   if (!isBuyerShellRoute || !agent) return null;
 
   return (
-    <div className="w-full bg-gradient-to-r from-[#f8fbff] via-white to-[#f8fbff] px-4 py-1.5 text-[12px] text-zinc-500">
-      <div className="mx-auto flex max-w-6xl items-center justify-center gap-2">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#0E56F5] align-middle" aria-hidden />
+    <div className="bg-[#0E56F5] text-white" style={{ backgroundColor: "#0E56F5" }}>
+      <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 px-4 py-1.5 text-[12px]">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-white/90 align-middle" aria-hidden />
         <span className="tracking-[0.01em]">
-          Working with <span className="font-medium text-zinc-700">{agent.first_name} {agent.last_name}</span>
-          <span className="mx-2 text-zinc-300">|</span>
-          <span className="text-zinc-500">Direct Connect MLS Partner</span>
+          Working with <span className="font-medium text-white">{agent.first_name} {agent.last_name}</span>
+          <span className="mx-2 text-white/40">|</span>
+          <span className="text-white/85">Direct Connect MLS Partner</span>
         </span>
       </div>
     </div>
