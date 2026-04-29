@@ -186,15 +186,10 @@ const HotSheets = ({
           ))}
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-3.5">
-          <p className="text-sm font-semibold text-zinc-900">Connected to your agent</p>
-          <p className="mt-1 text-xs leading-relaxed text-zinc-600">
-            Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
-          </p>
-
-
-            <p className="mt-3.5 text-sm font-semibold text-zinc-900">Alert Frequency</p>
-            <div className="mt-2 inline-flex w-full rounded-lg border border-zinc-200 bg-white p-1">
+        <div className="space-y-3">
+          <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-[0_6px_18px_rgba(15,23,42,0.06)]">
+            <p className="text-sm font-semibold text-zinc-900">Alert Frequency</p>
+            <div className="mt-2 inline-flex w-full rounded-lg border border-zinc-200 bg-zinc-50 p-1">
               <button
                 type="button"
                 onClick={() => setAlertFrequency("instant")}
@@ -229,6 +224,14 @@ const HotSheets = ({
                 Weekly
               </button>
             </div>
+          </div>
+
+          <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-3.5">
+            <p className="text-sm font-semibold text-zinc-900">Connected to your agent</p>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+              Your agent can view your Hot Sheets and share matching opportunities.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -369,8 +372,6 @@ const HotSheets = ({
     if (!deleteBuyerSheetId || deleteBuyerSheetLoading) return;
     const id = deleteBuyerSheetId;
     setDeleteBuyerSheetLoading(true);
-
-    console.log("Deleting hot sheet:", id);
 
     const { error: clientsError } = await supabase
       .from("hot_sheet_clients")
@@ -834,8 +835,6 @@ const HotSheets = ({
   const handleDeleteHotSheet = async (hotSheetId: string) => {
     if (!user?.id) return;
     if (!confirm("Are you sure you want to delete this hot sheet?")) return;
-
-    console.log("Deleting hot sheet:", hotSheetId);
 
     const { error: clientsError } = await supabase
       .from("hot_sheet_clients")
