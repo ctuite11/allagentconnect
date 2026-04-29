@@ -13,6 +13,7 @@ import {
   Search,
   Sparkles,
   Mail,
+  MapPin,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
@@ -856,9 +857,15 @@ export default function ClientDashboard() {
                               <p className={dashTileTitleClass}>
                                 {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
                               </p>
-                              <p className={`${dashTileAddressClass} truncate`}>{fav.listing.address}</p>
-                              <p className={`${dashTileSecondaryClass} truncate`}>
-                                {fav.listing.city}, {fav.listing.state}
+                              <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
+                                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                                <span className="min-w-0 truncate">{fav.listing.address}</span>
+                              </p>
+                              <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
+                                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                                <span className="min-w-0 truncate">
+                                  {fav.listing.city}, {fav.listing.state}
+                                </span>
                               </p>
                             </div>
                           </button>
@@ -922,9 +929,15 @@ export default function ClientDashboard() {
                         </div>
                         <div className={listingPreviewBody}>
                           <p className={dashTileTitleClass}>{listing.price ? `$${listing.price.toLocaleString()}` : "—"}</p>
-                          <p className={dashTileAddressClass}>{listing.address}</p>
-                          <p className={`${dashTileSecondaryClass} truncate`}>
-                            {listing.city}, {listing.state}
+                          <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                            <span className="min-w-0 truncate">{listing.address}</span>
+                          </p>
+                          <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                            <span className="min-w-0 truncate">
+                              {listing.city}, {listing.state}
+                            </span>
                           </p>
                         </div>
                       </article>
