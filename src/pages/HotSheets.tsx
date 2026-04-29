@@ -886,7 +886,7 @@ const HotSheets = ({
         canonical="https://allagentconnect.com/hot-sheets"
         noindex
       />
-      <PageShell className="pb-8">
+      <PageShell className="bg-white pb-8">
         <div className="mb-5">
           {renderHotSheetsHero()}
         </div>
@@ -906,7 +906,7 @@ const HotSheets = ({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white">
             {collections.map((collection) => (
               <BuyerCollectionCard
                 key={collection.clientId}
