@@ -435,7 +435,7 @@ const HotSheets = ({
           canonical="https://allagentconnect.com/hot-sheets"
           noindex
         />
-        <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+        <div className="min-h-screen bg-white flex flex-col">
           <PageShell className="flex-1 pb-10">
             <div className="mx-auto w-full max-w-6xl py-5 sm:py-6 space-y-5">
               <button
