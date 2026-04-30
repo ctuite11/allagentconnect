@@ -37,6 +37,7 @@ const ListingChatDrawer = ({
   listingAddress,
   messages,
   onNewMessage,
+  viewerPerspective = "agent",
 }: ListingChatDrawerProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
