@@ -105,7 +105,7 @@ function buildQueryParams(criteria: SearchCriteria): URLSearchParams {
 export default function BuyerMapSearch() {
   const navigate = useNavigate();
   const [criteria, setCriteria] = useState<SearchCriteria>(() => ({
-    ...DEFAULT_CRITERIA,
+    ...defaultSaleToolbarCriteria(),
     ...parseCriteriaFromUrl(window.location.search),
   }));
   const [locationInput, setLocationInput] = useState("");
