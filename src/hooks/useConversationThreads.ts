@@ -24,7 +24,11 @@ export function useConversationThreads() {
   const [loading, setLoading] = useState(true);
 
   const fetchThreads = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setThreads([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data: inboxData, error } = await supabase
@@ -83,7 +87,7 @@ export function useConversationThreads() {
     if (!user) return;
 
     const channel = supabase
-      .channel("conversation_threads")
+      .channel(`conversation_threads_${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -91,6 +95,18 @@ export function useConversationThreads() {
           schema: "public",
           table: "conversation_messages",
           filter: `recipient_agent_id=eq.${user.id}`,
+        },
+        () => {
+          fetchThreads();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "conversation_messages",
+          filter: `sender_agent_id=eq.${user.id}`,
         },
         () => {
           fetchThreads();

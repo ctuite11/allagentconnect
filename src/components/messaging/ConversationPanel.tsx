@@ -14,13 +14,15 @@ import { cn } from "@/lib/utils";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
+  /** Refetch inbox thread list (e.g. after send — sidebar previews update for sender). */
+  onInboxInvalidate?: () => void;
 }
 
-export function ConversationPanel({ conversationId }: ConversationPanelProps) {
+export function ConversationPanel({ conversationId, onInboxInvalidate }: ConversationPanelProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from as string | undefined;
-  const { messages, details, loading, notFound, sending, sendMessage } =
+  const { messages, details, loading, notFound, fetchError, sending, sendMessage, refetch } =
     useConversation(conversationId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
@@ -92,6 +94,37 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
         >
           Go back
         </button>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="px-6 py-4 border-b border-zinc-200 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[15px] font-semibold text-zinc-900 truncate">
+              {details?.otherUserName ?? "Conversation"}
+            </h2>
+            <button
+              onClick={() => navigate(from ?? "/agent-dashboard")}
+              className="p-2 -mr-2 hover:bg-zinc-100 rounded-lg transition-colors text-zinc-400 hover:text-zinc-600"
+              type="button"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-8 py-10">
+          <p className="text-sm text-zinc-600 mb-3 max-w-md">{fetchError}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
@@ -182,7 +215,14 @@ export function ConversationPanel({ conversationId }: ConversationPanelProps) {
       </div>
 
       {/* Composer */}
-      <MessageComposer onSend={sendMessage} sending={sending} />
+      <MessageComposer
+        onSend={async (body) => {
+          const ok = await sendMessage(body);
+          if (ok) onInboxInvalidate?.();
+          return ok;
+        }}
+        sending={sending}
+      />
     </div>
   );
 }

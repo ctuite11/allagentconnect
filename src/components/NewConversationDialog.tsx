@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,9 +27,21 @@ interface Recipient {
 interface NewConversationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Navigate here after sending (matches workspace route), without trailing slash. */
+  messagesRouteBase?: string;
+  /** Agent inbox: CRM + agents. Buyer inbox: agents from active relationships only. */
+  composeVariant?: "agent" | "buyer";
+  /** Refresh thread list immediately after starting a DM. */
+  onConversationCreated?: () => void;
 }
 
-export function NewConversationDialog({ open, onOpenChange }: NewConversationDialogProps) {
+export function NewConversationDialog({
+  open,
+  onOpenChange,
+  messagesRouteBase = "/messages",
+  composeVariant = "agent",
+  onConversationCreated,
+}: NewConversationDialogProps) {
   const navigate = useNavigate();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,13 +55,7 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
   const [selectedListing, setSelectedListing] = useState<{ id: string; address: string } | null>(null);
   const [loadingListings, setLoadingListings] = useState(false);
 
-  // Fetch recipients on open
-  useEffect(() => {
-    if (!open) return;
-    fetchRecipients();
-  }, [open]);
-
-  const fetchRecipients = async () => {
+  const fetchRecipients = useCallback(async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -57,7 +63,34 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
 
       const results: Recipient[] = [];
 
-      // Fetch agents
+      if (composeVariant === "buyer") {
+        const { data: rels } = await supabase
+          .from("client_agent_relationships")
+          .select("agent_id")
+          .eq("client_id", user.id)
+          .eq("status", "active");
+
+        const agentIds = [...new Set((rels ?? []).map((r) => r.agent_id).filter(Boolean))];
+        if (agentIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("agent_profiles")
+            .select("id, first_name, last_name, email")
+            .in("id", agentIds);
+
+          (profiles || []).forEach((a) => {
+            results.push({
+              id: a.id,
+              name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || a.email || "Unknown",
+              email: a.email,
+              group: "agent",
+            });
+          });
+        }
+        setRecipients(results);
+        return;
+      }
+
+      // Fetch agents (agent compose)
       const { data: agents } = await supabase
         .from("agent_profiles")
         .select("id, first_name, last_name, email")
@@ -103,7 +136,12 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
     } finally {
       setLoading(false);
     }
-  };
+  }, [composeVariant]);
+
+  useEffect(() => {
+    if (!open) return;
+    void fetchRecipients();
+  }, [open, fetchRecipients]);
 
   // Search listings
   useEffect(() => {
@@ -184,9 +222,11 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
 
       supabase.functions.invoke("kick-email-queue").catch(() => {});
 
+      onConversationCreated?.();
       toast.success("Message sent!");
       handleClose();
-      navigate(`/messages/${conversationId}`);
+      const base = messagesRouteBase.replace(/\/$/, "");
+      navigate(`${base}/${conversationId}`);
     } catch (err: any) {
       console.error("Error sending message:", err);
       toast.error(err.message || "Failed to send message");
@@ -219,7 +259,7 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
         <div className="p-6 pb-0">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-zinc-900">
-              New Message
+              New Chat
             </DialogTitle>
           </DialogHeader>
         </div>
@@ -292,7 +332,11 @@ export function NewConversationDialog({ open, onOpenChange }: NewConversationDia
                       </>
                     )}
                     {agentRecipients.length === 0 && buyerRecipients.length === 0 && (
-                      <p className="text-sm text-zinc-400 text-center py-6">No results found</p>
+                      <p className="text-sm text-zinc-400 text-center px-2 py-6">
+                        {composeVariant === "buyer"
+                          ? "No agent linked yet. Accept your invitation or finish setup with your agent to message them here."
+                          : "No results found"}
+                      </p>
                     )}
                   </div>
                 </ScrollArea>

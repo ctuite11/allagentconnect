@@ -16,7 +16,16 @@ export default function Conversation() {
   const location = useLocation();
   const from = (location.state as any)?.from as string | undefined;
   const fromLabel = (location.state as any)?.fromLabel as string | undefined;
-  const { messages, details, loading, notFound, sending, sendMessage } = useConversation(id);
+  const {
+    messages,
+    details,
+    loading,
+    notFound,
+    fetchError,
+    sending,
+    sendMessage,
+    refetch,
+  } = useConversation(id);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
@@ -86,6 +95,24 @@ export default function Conversation() {
           <Button variant="outline" className="mt-4" onClick={() => from ? navigate(from) : navigate("/messages")}>
             {fromLabel ?? "Back to Messages"}
           </Button>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <PageShell>
+        <div className="max-w-2xl mx-auto py-8 px-4 text-center space-y-4">
+          <p className="text-zinc-600 text-sm">{fetchError}</p>
+          <div className="flex gap-3 justify-center">
+            <Button type="button" variant="outline" onClick={() => void refetch()}>
+              Try again
+            </Button>
+            <Button type="button" variant="outline" onClick={() => (from ? navigate(from) : navigate("/messages"))}>
+              {fromLabel ?? "Back to Messages"}
+            </Button>
+          </div>
         </div>
       </PageShell>
     );

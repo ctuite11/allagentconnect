@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
@@ -22,30 +22,41 @@ export interface ConversationDetails {
   listingId: string | null;
 }
 
+function normalizeConversationId(conversationId: string | undefined): string | undefined {
+  if (conversationId === undefined || conversationId === null) return undefined;
+  const t = String(conversationId).trim();
+  return t.length > 0 ? t : undefined;
+}
+
 export function useConversation(conversationId: string | undefined) {
   const { user } = useAuthRole();
+  const normalizedId = normalizeConversationId(conversationId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [details, setDetails] = useState<ConversationDetails | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!normalizedId);
   const [notFound, setNotFound] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    setNotFound(false);
-    setLoading(true);
-    setDetails(null);
-    setMessages([]);
-  }, [conversationId]);
+  const loadSeqRef = useRef(0);
 
   const fetchConversation = useCallback(async () => {
-    if (!conversationId || !user) return;
+    if (!normalizedId || !user) return;
+
+    const seq = ++loadSeqRef.current;
+    setLoading(true);
+    setFetchError(null);
+    setNotFound(false);
+    setMessages([]);
+    setDetails(null);
 
     try {
       const { data: convo, error: convoError } = await supabase
         .from("conversations")
         .select("id, agent_a_id, agent_b_id, listing_id")
-        .eq("id", conversationId)
+        .eq("id", normalizedId)
         .maybeSingle();
+
+      if (seq !== loadSeqRef.current) return;
 
       if (convoError || !convo) {
         console.error("Error fetching conversation:", convoError);
@@ -56,14 +67,33 @@ export function useConversation(conversationId: string | undefined) {
 
       const otherUserId = convo.agent_a_id === user.id ? convo.agent_b_id : convo.agent_a_id;
 
+      const minimalProfiles = await resolveDisplayProfiles([otherUserId]);
+
+      if (seq !== loadSeqRef.current) return;
+
+      const otherProfileEarly = minimalProfiles.get(otherUserId);
+      setDetails({
+        id: convo.id,
+        otherUserId,
+        otherUserName: otherProfileEarly
+          ? `${otherProfileEarly.first_name ?? ""} ${otherProfileEarly.last_name ?? ""}`.trim() || "Unknown User"
+          : "Unknown User",
+        otherUserHeadshotUrl: otherProfileEarly?.headshot_url ?? null,
+        otherUserIsAgent: otherProfileEarly?.isAgent ?? false,
+        listingId: convo.listing_id,
+      });
+
       const { data: msgs, error: msgsError } = await supabase
         .from("conversation_messages")
         .select("id, sender_agent_id, body, created_at")
-        .eq("conversation_id", conversationId)
+        .eq("conversation_id", normalizedId)
         .order("created_at", { ascending: true });
+
+      if (seq !== loadSeqRef.current) return;
 
       if (msgsError) {
         console.error("Error fetching messages:", msgsError);
+        setFetchError(msgsError.message || "Could not load messages for this conversation.");
         setLoading(false);
         return;
       }
@@ -72,17 +102,20 @@ export function useConversation(conversationId: string | undefined) {
       const allUserIds = [...new Set([otherUserId, ...senderIds])];
       const profileMap = await resolveDisplayProfiles(allUserIds);
 
+      if (seq !== loadSeqRef.current) return;
+
       const otherProfile = profileMap.get(otherUserId);
-      setDetails({
-        id: convo.id,
-        otherUserId,
-        otherUserName: otherProfile
-          ? `${otherProfile.first_name ?? ""} ${otherProfile.last_name ?? ""}`.trim() || "Unknown User"
-          : "Unknown User",
-        otherUserHeadshotUrl: otherProfile?.headshot_url ?? null,
-        otherUserIsAgent: otherProfile?.isAgent ?? false,
-        listingId: convo.listing_id,
-      });
+      if (otherProfile) {
+        setDetails({
+          id: convo.id,
+          otherUserId,
+          otherUserName:
+            `${otherProfile.first_name ?? ""} ${otherProfile.last_name ?? ""}`.trim() || "Unknown User",
+          otherUserHeadshotUrl: otherProfile.headshot_url ?? null,
+          otherUserIsAgent: otherProfile.isAgent ?? false,
+          listingId: convo.listing_id,
+        });
+      }
 
       const formattedMessages: Message[] = (msgs || []).map((m) => {
         const profile = profileMap.get(m.sender_agent_id);
@@ -102,62 +135,85 @@ export function useConversation(conversationId: string | undefined) {
 
       setMessages(formattedMessages);
       setNotFound(false);
+      setFetchError(null);
 
       await supabase
         .from("conversation_participants")
         .update({ last_read_at: new Date().toISOString() })
-        .eq("conversation_id", conversationId)
+        .eq("conversation_id", normalizedId)
         .eq("user_id", user.id);
     } catch (error) {
       console.error("Error in useConversation:", error);
+      if (seq === loadSeqRef.current) {
+        setFetchError(error instanceof Error ? error.message : "Something went wrong loading this thread.");
+      }
     } finally {
-      setLoading(false);
+      if (seq === loadSeqRef.current) {
+        setLoading(false);
+      }
     }
-  }, [conversationId, user]);
+  }, [normalizedId, user]);
 
   useEffect(() => {
+    if (!normalizedId) {
+      loadSeqRef.current += 1;
+      setLoading(false);
+      setNotFound(false);
+      setFetchError(null);
+      setMessages([]);
+      setDetails(null);
+      return;
+    }
+
+    if (!user) {
+      setLoading(true);
+      setFetchError(null);
+      return;
+    }
+
     fetchConversation();
-  }, [fetchConversation]);
+  }, [normalizedId, user, fetchConversation]);
 
   useEffect(() => {
-    if (!conversationId || !user) return;
+    if (!normalizedId || !user) return;
 
     const channel = supabase
-      .channel(`conversation_${conversationId}`)
+      .channel(`conversation_${normalizedId}_${user.id}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "conversation_messages",
-          filter: `conversation_id=eq.${conversationId}`,
+          filter: `conversation_id=eq.${normalizedId}`,
         },
         async (payload) => {
-          const newMsg = payload.new as any;
+          const newMsg = payload.new as Record<string, unknown>;
+          const sid = newMsg.sender_agent_id as string;
 
-          const profileMap = await resolveDisplayProfiles([newMsg.sender_agent_id]);
-          const profile = profileMap.get(newMsg.sender_agent_id);
+          const profileMap = await resolveDisplayProfiles([sid]);
+          const profile = profileMap.get(sid);
           const name = profile
             ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown User"
             : "Unknown User";
 
           const message: Message = {
-            id: newMsg.id,
-            senderId: newMsg.sender_agent_id,
+            id: newMsg.id as string,
+            senderId: sid,
             senderName: name,
             senderHeadshotUrl: profile?.headshot_url ?? null,
-            body: newMsg.body,
-            createdAt: newMsg.created_at,
-            isOwn: newMsg.sender_agent_id === user.id,
+            body: newMsg.body as string,
+            createdAt: newMsg.created_at as string,
+            isOwn: sid === user.id,
           };
 
-          setMessages((prev) => [...prev, message]);
+          setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
 
-          if (newMsg.sender_agent_id !== user.id) {
+          if (sid !== user.id) {
             await supabase
               .from("conversation_participants")
               .update({ last_read_at: new Date().toISOString() })
-              .eq("conversation_id", conversationId)
+              .eq("conversation_id", normalizedId)
               .eq("user_id", user.id);
           }
         }
@@ -167,16 +223,16 @@ export function useConversation(conversationId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, user]);
+  }, [normalizedId, user]);
 
   const sendMessage = useCallback(
     async (body: string) => {
-      if (!conversationId || !user || !details || sending) return false;
+      if (!normalizedId || !user || !details || sending) return false;
 
       setSending(true);
       try {
         const { error } = await supabase.from("conversation_messages").insert({
-          conversation_id: conversationId,
+          conversation_id: normalizedId,
           sender_agent_id: user.id,
           recipient_agent_id: details.otherUserId,
           body,
@@ -197,8 +253,17 @@ export function useConversation(conversationId: string | undefined) {
         setSending(false);
       }
     },
-    [conversationId, user, details, sending]
+    [normalizedId, user, details, sending]
   );
 
-  return { messages, details, loading, notFound, sending, sendMessage, refetch: fetchConversation };
+  return {
+    messages,
+    details,
+    loading,
+    notFound,
+    fetchError,
+    sending,
+    sendMessage,
+    refetch: fetchConversation,
+  };
 }

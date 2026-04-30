@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
+import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
@@ -39,9 +40,11 @@ export default function MessagingWorkspace({
       {/* Left — Conversations List */}
       <div className={`w-[380px] shrink-0 ${buyerMessagingPanel}`}>
         <ConversationsList
-          selectedId={id}
+          threads={threads}
+          threadsLoading={threadsLoading}
+          selectedId={selectedConversationId}
           onNewMessage={() => setNewMessageOpen(true)}
-          showNewMessageButton={agentMode}
+          showNewMessageButton
           routeBase={agentMode ? "/agent/messages" : "/messages"}
           heading={buyerMode ? "Messages" : "Recent chats"}
           searchPlaceholder={buyerMode ? "Search messages" : "Search name, message, or address"}
@@ -51,15 +54,19 @@ export default function MessagingWorkspace({
 
       {/* Right — Active Conversation */}
       <div className={`flex-[1.3] min-w-0 ${buyerMessagingPanel}`}>
-        <ConversationPanel conversationId={id} />
+        <ConversationPanel
+          conversationId={selectedConversationId}
+          onInboxInvalidate={() => void refetchThreads()}
+        />
       </div>
 
-      {agentMode && (
-        <NewConversationDialog
-          open={newMessageOpen}
-          onOpenChange={setNewMessageOpen}
-        />
-      )}
+      <NewConversationDialog
+        open={newMessageOpen}
+        onOpenChange={setNewMessageOpen}
+        messagesRouteBase={agentMode ? "/agent/messages" : "/messages"}
+        composeVariant={buyerMode ? "buyer" : "agent"}
+        onConversationCreated={() => void refetchThreads()}
+      />
       </div>
     </div>
     </>

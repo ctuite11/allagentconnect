@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { SquarePen, Search } from "lucide-react";
-import { useConversationThreads } from "@/hooks/useConversationThreads";
+import type { ConversationThread } from "@/hooks/useConversationThreads";
 import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,8 @@ import { UserAvatar } from "./UserAvatar";
 import { cn } from "@/lib/utils";
 
 interface ConversationsListProps {
+  threads: ConversationThread[];
+  threadsLoading: boolean;
   selectedId: string | undefined;
   onNewMessage?: () => void;
   showNewMessageButton?: boolean;
@@ -20,6 +22,8 @@ interface ConversationsListProps {
 }
 
 export function ConversationsList({
+  threads,
+  threadsLoading: loading,
   selectedId,
   onNewMessage,
   showNewMessageButton = true,
@@ -29,7 +33,6 @@ export function ConversationsList({
   emptyStateLabel = "No conversations yet",
 }: ConversationsListProps) {
   const navigate = useNavigate();
-  const { threads, loading } = useConversationThreads();
   const [search, setSearch] = useState("");
   const [addressCache, setAddressCache] = useState<Record<string, string>>({});
 
@@ -91,12 +94,13 @@ export function ConversationsList({
           </div>
           {showNewMessageButton && onNewMessage && (
             <button
+              type="button"
               onClick={onNewMessage}
               className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:bg-zinc-100 rounded-lg transition-colors px-2 py-1.5 text-[13px] font-semibold"
-              title="New message"
+              title="New chat"
             >
               <SquarePen className="w-4 h-4" />
-              <span>New Message</span>
+              <span>New Chat</span>
             </button>
           )}
         </div>
