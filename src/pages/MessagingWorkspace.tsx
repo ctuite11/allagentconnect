@@ -57,6 +57,7 @@ function MessagingWorkspaceContent({
   isAgentMode = false,
   isBuyerMode = false,
 }: MessagingWorkspaceProps) {
+  const navigate = useNavigate();
   const { id: routeConversationId } = useParams<{ id: string }>();
   const selectedConversationId =
     typeof routeConversationId === "string"
