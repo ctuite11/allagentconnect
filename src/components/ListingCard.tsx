@@ -92,6 +92,8 @@ interface ListingCardProps {
   interestSignals?: ListingSignals | null;
   /** Favorited on the current hot sheet (e.g. by client) */
   isHotSheetFavorite?: boolean;
+  /** When true (e.g. public search `/search` results), compact cards show subtle “Listed by” line */
+  showListedBy?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -110,6 +112,7 @@ const ListingCard = ({
   onOpenChat,
   interestSignals,
   isHotSheetFavorite,
+  showListedBy = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
@@ -790,7 +793,7 @@ const ListingCard = ({
               </div>}
           </div>
 
-          {listedByAttribution && (
+          {showListedBy && listedByAttribution && (
             <p
               className="mt-2 truncate text-[12px] font-normal text-neutral-500"
               title={`Listed by: ${listedByAttribution}`}
