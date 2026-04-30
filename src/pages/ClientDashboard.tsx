@@ -891,7 +891,6 @@ export default function ClientDashboard() {
                                   <span className="min-w-0 truncate">{listing.address}</span>
                                 </p>
                                 <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
-                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
                                   <span className="min-w-0 truncate">
                                     {listing.city}, {listing.state}
                                   </span>
@@ -965,7 +964,6 @@ export default function ClientDashboard() {
                             <span className="min-w-0 truncate">{listing.address}</span>
                           </p>
                           <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
-                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
                             <span className="min-w-0 truncate">
                               {listing.city}, {listing.state}
                             </span>
