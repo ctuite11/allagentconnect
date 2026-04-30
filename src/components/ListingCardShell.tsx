@@ -85,6 +85,9 @@ export interface ListingCardShellProps {
 
   // ── Slots ──────────────────────────────────────────────────────────────
 
+  /** Shown immediately below bed/bath/sqft (e.g. “Listed by: …”). */
+  listedByLine?: ReactNode;
+
   /** Extra rows in col 1-6 below bed/bath/sqft (match count, micro-facts, attribution, etc.) */
   metadataSlot?: ReactNode;
 
@@ -167,6 +170,7 @@ export function ListingCardShell({
   openHouseBanner,
   nextOpenHouse,
   dateDisplay,
+  listedByLine,
   metadataSlot,
   addressSlot,
   actionsSlot,
@@ -297,6 +301,8 @@ export function ListingCardShell({
               )}
               {statsExtra}
             </div>
+
+            {listedByLine ? <div className="mb-2 min-w-0">{listedByLine}</div> : null}
 
             {/* Open House Info (inline) */}
             {nextOpenHouse && (

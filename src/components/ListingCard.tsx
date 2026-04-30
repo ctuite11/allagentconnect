@@ -793,10 +793,10 @@ const ListingCard = ({
 
           {listedByAttribution && (
             <p
-              className="mt-1.5 truncate text-[12px] text-neutral-500"
-              title={`Listed by ${listedByAttribution}`}
+              className="mt-2 truncate text-[12px] font-normal text-neutral-500"
+              title={`Listed by: ${listedByAttribution}`}
             >
-              Listed by {listedByAttribution}
+              Listed by: {listedByAttribution}
             </p>
           )}
 
@@ -994,6 +994,13 @@ const ListingCard = ({
         openHouseBanner={openHouseBanner}
         nextOpenHouse={nextOpenHouse}
         dateDisplay={listing.created_at ? format(new Date(listing.created_at), "MM/dd/yy") : null}
+        listedByLine={
+          listedByAttribution ? (
+            <p className="truncate text-[12px] font-normal text-neutral-500" title={`Listed by: ${listedByAttribution}`}>
+              Listed by: {listedByAttribution}
+            </p>
+          ) : undefined
+        }
         onClick={() => {
           sessionStorage.setItem('fromAgentDashboard', 'true');
           navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
@@ -1300,10 +1307,10 @@ const ListingCard = ({
 
         {listedByAttribution && (
           <p
-            className="mb-2 truncate text-[12px] text-neutral-500"
-            title={`Listed by ${listedByAttribution}`}
+            className="mb-3 truncate text-[12px] font-normal text-neutral-500"
+            title={`Listed by: ${listedByAttribution}`}
           >
-            Listed by {listedByAttribution}
+            Listed by: {listedByAttribution}
           </p>
         )}
 
