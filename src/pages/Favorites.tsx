@@ -1024,6 +1024,7 @@ const Favorites = ({
                               viewMode="compact"
                               showActions={false}
                               hideMlsMeta
+                              isFavorites
                               onSelect={toggleSessionKeepListing}
                               isSelected={isKept}
                               supplementalAgentProfile={
@@ -1197,6 +1198,7 @@ const Favorites = ({
                       viewMode="compact"
                       showActions={false}
                       hideMlsMeta={isPublicMode || isBuyerMode}
+                      isFavorites
                       onSelect={() => toggleSelectFavorite(favorite.id)}
                       isSelected={isSelected}
                       supplementalAgentProfile={

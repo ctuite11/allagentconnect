@@ -101,6 +101,8 @@ interface ListingCardProps {
   isHotSheetFavorite?: boolean;
   /** Listing row lacks `agent_profile` embed; pass batch-fetched profiles for “Listed by” */
   supplementalAgentProfile?: ListedByAgentProfile | null;
+  /** Favorites: reserve listed-by row height so async profile hydrate does not jump layout */
+  isFavorites?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -120,6 +122,7 @@ const ListingCard = ({
   interestSignals,
   isHotSheetFavorite,
   supplementalAgentProfile = null,
+  isFavorites = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
@@ -794,13 +797,28 @@ const ListingCard = ({
               </div>}
           </div>
 
-          {listedByAttribution && (
-            <p
-              className="mt-2 truncate text-[12px] font-normal text-neutral-500"
-              title={`Listed by: ${listedByAttribution}`}
-            >
-              Listed by: {listedByAttribution}
-            </p>
+          {isFavorites ? (
+            <div className="mt-2">
+              {listedByAttribution ? (
+                <p
+                  className="truncate text-[12px] font-normal text-neutral-500 leading-4"
+                  title={`Listed by: ${listedByAttribution}`}
+                >
+                  Listed by: {listedByAttribution}
+                </p>
+              ) : (
+                <div className="h-[16px]" aria-hidden />
+              )}
+            </div>
+          ) : (
+            listedByAttribution && (
+              <p
+                className="mt-2 truncate text-[12px] font-normal text-neutral-500"
+                title={`Listed by: ${listedByAttribution}`}
+              >
+                Listed by: {listedByAttribution}
+              </p>
+            )
           )}
 
           {/* Comment + Attribution row */}
