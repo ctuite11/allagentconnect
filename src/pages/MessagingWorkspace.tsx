@@ -84,57 +84,65 @@ function MessagingWorkspaceContent({
       <div
         className={
           buyerMode
-            ? "flex min-h-0 flex-col gap-3 bg-white px-4 pb-6 pt-4 sm:px-6"
-            : "flex min-h-screen flex-col gap-5 bg-white p-6"
+            ? "flex min-h-0 flex-col bg-white pt-4"
+            : "flex min-h-screen flex-col bg-white"
         }
       >
-        {buyerMode && (
-          <div className="shrink-0 px-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mb-2 gap-2 text-muted-foreground hover:text-foreground"
-              type="button"
-              onClick={() => navigate("/client/dashboard")}
-            >
-              ← Back to Dashboard
-            </Button>
-            <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Stay in touch with your agent and keep everything about your home search in one place.
-            </p>
-          </div>
-        )}
         <div
           className={
             buyerMode
-              ? "flex h-[calc(100dvh-3.5rem-8.25rem)] min-h-[420px] flex-1 gap-4 sm:gap-5"
-              : "flex gap-5 h-[calc(100vh-2rem)]"
+              ? "mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col gap-3 px-6 pb-10 md:px-8"
+              : "mx-auto flex w-full max-w-7xl flex-col gap-5 px-6 pb-10 pt-6 md:px-8"
           }
         >
-          <div className={`h-full min-h-0 w-[320px] shrink-0 ${buyerMessagingPanel}`}>
-            <ConversationsList
-              threads={safeThreads}
-              threadsLoading={Boolean(threadsLoading)}
-              inboxFetchError={inboxFetchError}
-              onRetryInbox={() => void refetchThreads()}
-              selectedId={selectedConversationId}
-              onNewMessage={() => setNewMessageOpen(true)}
-              showNewMessageButton
-              routeBase={agentMode ? "/agent/messages" : "/messages"}
-              heading={buyerMode ? "Messages" : "Recent chats"}
-              searchPlaceholder={
-                buyerMode ? "Search messages" : "Search name, message, or address"
-              }
-              emptyStateLabel={buyerMode ? "No messages yet" : "No conversations yet"}
-            />
-          </div>
+          {buyerMode && (
+            <div className="shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mb-2 gap-2 text-muted-foreground hover:text-foreground"
+                type="button"
+                onClick={() => navigate("/client/dashboard")}
+              >
+                ← Back to Dashboard
+              </Button>
+              <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
+              <p className="mt-1 text-sm text-zinc-500">
+                Stay in touch with your agent and keep everything about your home search in one place.
+              </p>
+            </div>
+          )}
+          <div
+            className={
+              buyerMode
+                ? "flex min-h-0 flex-1 gap-4 sm:gap-5 h-[calc(100dvh-3.5rem-8.25rem)] min-h-[420px]"
+                : "flex h-[calc(100vh-2rem)] gap-5"
+            }
+          >
+            <div className={`h-full min-h-0 w-[320px] shrink-0 ${buyerMessagingPanel}`}>
+              <ConversationsList
+                threads={safeThreads}
+                threadsLoading={Boolean(threadsLoading)}
+                inboxFetchError={inboxFetchError}
+                onRetryInbox={() => void refetchThreads()}
+                selectedId={selectedConversationId}
+                onNewMessage={() => setNewMessageOpen(true)}
+                showNewMessageButton
+                routeBase={agentMode ? "/agent/messages" : "/messages"}
+                heading={buyerMode ? "Messages" : "Recent chats"}
+                searchPlaceholder={
+                  buyerMode ? "Search messages" : "Search name, message, or address"
+                }
+                emptyStateLabel={buyerMode ? "No messages yet" : "No conversations yet"}
+              />
+            </div>
 
-          <div className={`flex flex-1 min-h-0 min-w-0 flex-col h-full ${buyerMessagingPanel}`}>
-            <ConversationPanel
-              conversationId={selectedConversationId}
-              onInboxInvalidate={() => void refetchThreads()}
-            />
+            <div className={`flex flex-1 min-h-0 min-w-0 flex-col h-full ${buyerMessagingPanel}`}>
+              <ConversationPanel
+                conversationId={selectedConversationId}
+                onInboxInvalidate={() => void refetchThreads()}
+              />
+            </div>
           </div>
         </div>
 
