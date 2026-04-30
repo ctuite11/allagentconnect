@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { buildDisplayAddress, propertyTypeToEnum } from "@/lib/utils";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
+import { resolveListedByAttribution } from "@/lib/listingListedBy";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -92,8 +93,6 @@ interface ListingCardProps {
   interestSignals?: ListingSignals | null;
   /** Favorited on the current hot sheet (e.g. by client) */
   isHotSheetFavorite?: boolean;
-  /** When true (e.g. public search `/search` results), compact cards show subtle “Listed by” line */
-  showListedBy?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -112,26 +111,10 @@ const ListingCard = ({
   onOpenChat,
   interestSignals,
   isHotSheetFavorite,
-  showListedBy = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
-  const listedByAttribution = ((): string | null => {
-    const l = listing;
-    const candidates = [
-      l.listing_agent_name,
-      l.agent_name,
-      l.brokerage_name,
-      l.listing_brokerage,
-    ];
-    for (const c of candidates) {
-      if (typeof c === "string") {
-        const t = c.trim();
-        if (t) return t;
-      }
-    }
-    return null;
-  })();
+  const listedByAttribution = resolveListedByAttribution(listing);
   const [agentCount, setAgentCount] = useState<number>(0);
   const [buyerCount, setBuyerCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
@@ -793,7 +776,7 @@ const ListingCard = ({
               </div>}
           </div>
 
-          {showListedBy && listedByAttribution && (
+          {listedByAttribution && (
             <p
               className="mt-2 truncate text-[12px] font-normal text-neutral-500"
               title={`Listed by: ${listedByAttribution}`}

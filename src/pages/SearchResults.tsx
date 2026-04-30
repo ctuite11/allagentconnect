@@ -427,7 +427,6 @@ const SearchResults = ({
                     viewMode="compact"
                     showActions={false}
                     hideMlsMeta={publicMode || buyerMode}
-                    showListedBy
                     onSelect={toggleSessionKeep}
                     isSelected={sessionKeptIds.has(listing.id)}
                     agentInfo={

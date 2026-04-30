@@ -24,6 +24,7 @@ import ContactAgentDialog from "@/components/ContactAgentDialog";
 import { LISTING_STATUS, isComingSoon } from "@/constants/status";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import DcmlsBadge from "@/components/DcmlsBadge";
+import { resolveListedByAttribution } from "@/lib/listingListedBy";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -196,6 +197,7 @@ export const SearchListingCard = ({
     ? Math.round(listing.price / listing.square_feet) : null;
 
   const fullAddress = `${listing.address}${unitNumber ? ` #${unitNumber}` : ""}, ${listing.city}, ${listing.state}`;
+  const listedByLine = resolveListedByAttribution(listing);
 
   const handleCardClick = () => {
     if (onRowClick) {
@@ -440,6 +442,15 @@ export const SearchListingCard = ({
               </div>
             )}
 
+            {listedByLine && (
+              <p
+                className={`truncate text-[12px] font-normal text-neutral-500 ${facts.length > 0 ? "mt-3" : "mt-4"}`}
+                title={`Listed by: ${listedByLine}`}
+              >
+                Listed by: {listedByLine}
+              </p>
+            )}
+
             {/* SECTION 3 — Remarks preview */}
             {listing.description && (
               <div className="mt-4 text-sm leading-relaxed text-muted-foreground/80 line-clamp-3">
@@ -542,6 +553,12 @@ export const SearchListingCard = ({
               </span>
             </div>
           </div>
+
+          {listedByLine && (
+            <p className="mt-2 truncate text-[12px] font-normal text-neutral-500" title={`Listed by: ${listedByLine}`}>
+              Listed by: {listedByLine}
+            </p>
+          )}
 
           {listing.year_built && (
             <div className="mt-1.5 text-[11px] text-muted-foreground truncate">
