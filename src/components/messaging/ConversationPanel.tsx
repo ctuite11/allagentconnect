@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { X, MessageSquare } from "lucide-react";
 import { useConversation } from "@/hooks/useConversation";
@@ -15,6 +15,17 @@ interface ConversationPanelProps {
   conversationId: string | undefined;
   /** Refetch inbox thread list (e.g. after send — sidebar previews update for sender). */
   onInboxInvalidate?: () => void;
+}
+
+/** Outer flex-1 full width; inner centers header + thread + composer at 720px. */
+function MessageContentWrap({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-0 h-full min-w-0 w-full flex-1 flex-col">
+      <div className="w-full max-w-[720px] mx-auto flex min-h-0 h-full flex-1 flex-col">
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export function ConversationPanel({ conversationId, onInboxInvalidate }: ConversationPanelProps) {
@@ -68,7 +79,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
   if (loading) {
     return (
-      <div className="flex h-full min-h-0 flex-1 flex-col">
+      <MessageContentWrap>
         <div className="shrink-0 border-b border-zinc-200 px-4 py-3">
           <div className="flex w-full items-center gap-3">
             <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
@@ -85,7 +96,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
             ))}
           </div>
         </div>
-      </div>
+      </MessageContentWrap>
     );
   }
 
@@ -105,7 +116,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
   if (fetchError) {
     return (
-      <div className="flex flex-col h-full">
+      <MessageContentWrap>
         <div className="shrink-0 border-b border-zinc-200 px-4 py-3">
           <div className="flex w-full items-center justify-between">
             <h2 className="text-[15px] font-semibold text-zinc-900 truncate">
@@ -120,7 +131,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
             </button>
           </div>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-8 py-10">
+        <div className="flex flex-1 flex-col items-center justify-center px-8 py-10 text-center">
           <p className="text-sm text-zinc-600 mb-3 max-w-md">{fetchError}</p>
           <button
             type="button"
@@ -130,7 +141,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
             Try again
           </button>
         </div>
-      </div>
+      </MessageContentWrap>
     );
   }
 
@@ -161,7 +172,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
     : null;
 
   return (
-    <div className="flex min-h-0 h-full flex-col">
+    <MessageContentWrap>
       {/* Header */}
       <div className="shrink-0 border-b border-zinc-200 px-4 py-3">
         <div className="flex w-full items-center justify-between gap-4">
@@ -231,6 +242,6 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
         }}
         sending={sending}
       />
-    </div>
+    </MessageContentWrap>
   );
 }

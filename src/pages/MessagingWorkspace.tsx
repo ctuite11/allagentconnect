@@ -138,12 +138,10 @@ function MessagingWorkspaceContent({
             </div>
 
             <div className={`flex h-full min-h-0 min-w-0 flex-1 flex-col ${buyerMessagingPanel}`}>
-              <div className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col min-w-0">
-                <ConversationPanel
-                  conversationId={selectedConversationId}
-                  onInboxInvalidate={() => void refetchThreads()}
-                />
-              </div>
+              <ConversationPanel
+                conversationId={selectedConversationId}
+                onInboxInvalidate={() => void refetchThreads()}
+              />
             </div>
           </div>
         </div>
