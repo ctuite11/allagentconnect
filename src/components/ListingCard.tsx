@@ -848,6 +848,7 @@ const ListingCard = ({
                       type="button"
                       className="inline-flex w-full min-w-0 items-start gap-1.5 rounded-sm text-left text-[12px] text-neutral-500 transition-colors hover:text-neutral-800"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         onOpenChat?.();
                       }}
@@ -888,6 +889,7 @@ const ListingCard = ({
                       type="button"
                       className="inline-flex w-full min-w-0 items-start gap-1.5 rounded-sm text-left text-[12px] text-neutral-500 hover:text-neutral-800"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         onOpenChat?.();
                       }}
@@ -917,6 +919,7 @@ const ListingCard = ({
                     type="button"
                     className="inline-flex items-center gap-1.5 rounded-sm text-[12px] text-neutral-500 transition-colors hover:text-neutral-900"
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       onOpenChat();
                     }}

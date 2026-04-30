@@ -871,7 +871,7 @@ const Favorites = ({
     return (
       <div className="flex min-h-screen flex-col bg-white">
         {buyerStickyHeader}
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8 py-3">
+        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
           <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
             <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}>
               <div className="h-full flex items-center justify-center">
@@ -918,7 +918,7 @@ const Favorites = ({
             </Card>
           </main>
         ) : (
-          <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
             <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
               <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]`}>
                 {loading ? (
