@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
 import { Seo } from "@/components/Seo";
+import { Button } from "@/components/ui/button";
 import { buyerMessagingPanel } from "@/lib/buyerUi";
 
 interface MessagingWorkspaceProps {
@@ -79,9 +80,24 @@ function MessagingWorkspaceContent({
   return (
     <>
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
-      <div className={`flex min-h-screen flex-col gap-5 bg-white p-6 ${buyerMode ? "pt-20" : ""}`}>
+      <div
+        className={
+          buyerMode
+            ? "flex min-h-0 flex-col gap-3 bg-white px-4 pb-6 pt-4 sm:px-6"
+            : "flex min-h-screen flex-col gap-5 bg-white p-6"
+        }
+      >
         {buyerMode && (
-          <div className="px-1">
+          <div className="shrink-0 px-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mb-2 gap-2 text-muted-foreground hover:text-foreground"
+              type="button"
+              onClick={() => navigate("/client/dashboard")}
+            >
+              ← Back to Dashboard
+            </Button>
             <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
             <p className="mt-1 text-sm text-zinc-500">
               Stay in touch with your agent and keep everything about your home search in one place.
@@ -90,10 +106,12 @@ function MessagingWorkspaceContent({
         )}
         <div
           className={
-            buyerMode ? "flex gap-5 min-h-[calc(100vh-14rem)]" : "flex gap-5 h-[calc(100vh-2rem)]"
+            buyerMode
+              ? "flex h-[calc(100dvh-3.5rem-8.25rem)] min-h-[420px] flex-1 gap-4 sm:gap-5"
+              : "flex gap-5 h-[calc(100vh-2rem)]"
           }
         >
-          <div className={`w-[380px] shrink-0 ${buyerMessagingPanel}`}>
+          <div className={`h-full min-h-0 w-[380px] shrink-0 ${buyerMessagingPanel}`}>
             <ConversationsList
               threads={safeThreads}
               threadsLoading={Boolean(threadsLoading)}
@@ -111,7 +129,7 @@ function MessagingWorkspaceContent({
             />
           </div>
 
-          <div className={`flex-[1.3] min-w-0 ${buyerMessagingPanel}`}>
+          <div className={`flex-[1.3] min-h-0 min-w-0 h-full ${buyerMessagingPanel}`}>
             <ConversationPanel
               conversationId={selectedConversationId}
               onInboxInvalidate={() => void refetchThreads()}
