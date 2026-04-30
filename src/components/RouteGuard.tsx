@@ -6,10 +6,6 @@ import { authDebug } from "@/lib/authDebug";
 
 type AllowedRole = "agent" | "admin" | "buyer";
 
-const dbgRouteGuard = (msg: string, data?: Record<string, unknown>) => {
-  if (import.meta.env.DEV) console.log("[AAC_DEBUG RouteGuard]", msg, data ?? {});
-};
-
 type Props = {
   children: React.ReactElement;
   requireAuth?: boolean;
@@ -34,10 +30,7 @@ export const RouteGuard: React.FC<Props> = ({
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    if (loading) {
-      dbgRouteGuard("effect:skip (auth still loading)", { pathname: location.pathname });
-      return;
-    }
+    if (loading) return;
 
     authDebug("RouteGuard", {
       pathname: location.pathname,
@@ -53,10 +46,6 @@ export const RouteGuard: React.FC<Props> = ({
     // Route requires auth but no user → login
     if (requireAuth && !user) {
       if (location.pathname !== "/auth") {
-        dbgRouteGuard("navigate → /auth (requireAuth, no user)", {
-          from: location.pathname,
-          requireRole: requireRole ?? null,
-        });
         navigate("/auth", { replace: true, state: { from: location.pathname } });
       }
       return;
@@ -74,25 +63,10 @@ export const RouteGuard: React.FC<Props> = ({
     const roleAllowed = Array.isArray(requireRole) ? requireRole.includes(role as AllowedRole) : role === requireRole;
     if (user && requireRole && role && !roleAllowed && role !== "admin") {
       if (role === "agent") {
-        dbgRouteGuard("navigate → /agent-dashboard (role mismatch)", {
-          pathname: location.pathname,
-          requireRole,
-          role,
-        });
         navigate("/agent-dashboard", { replace: true });
       } else if (role === "buyer") {
-        dbgRouteGuard("navigate → /client/dashboard (role mismatch)", {
-          pathname: location.pathname,
-          requireRole,
-          role,
-        });
         navigate("/client/dashboard", { replace: true });
       } else {
-        dbgRouteGuard("navigate → /auth (role mismatch, unknown role)", {
-          pathname: location.pathname,
-          requireRole,
-          role,
-        });
         navigate("/auth", { replace: true });
       }
       return;
@@ -108,7 +82,6 @@ export const RouteGuard: React.FC<Props> = ({
       if (isVerifiedAgent) {
         setIsVerified(true);
       } else {
-        dbgRouteGuard("navigate → /pending-verification (agent unverified)", {});
         navigate("/pending-verification", { replace: true });
         return;
       }
@@ -125,9 +98,6 @@ export const RouteGuard: React.FC<Props> = ({
 
   // loading is false + no user → effect fired navigate("/auth"); show neutral placeholder, not a blank white screen
   if (requireAuth && !user) {
-    dbgRouteGuard("render → Redirecting/no user overlay", {
-      pathname: location.pathname,
-    });
     if (location.pathname !== "/auth") {
       return <LoadingScreen message="Redirecting..." />;
     }
@@ -142,11 +112,6 @@ export const RouteGuard: React.FC<Props> = ({
   // Role mismatch — navigated in effect
   const roleMatchesRender = Array.isArray(requireRole) ? requireRole.includes(role as AllowedRole) : role === requireRole;
   if (requireRole && role && user && !roleMatchesRender && role !== "admin") {
-    dbgRouteGuard("render: null (role mismatch pending redirect)", {
-      pathname: location.pathname,
-      requireRole,
-      role,
-    });
     return null;
   }
 
@@ -155,15 +120,8 @@ export const RouteGuard: React.FC<Props> = ({
   }
 
   if (shouldVerify && !isVerified && verificationChecked) {
-    dbgRouteGuard("render: null (agent verify pending)", { pathname: location.pathname });
     return null; // Already navigating
   }
 
-  dbgRouteGuard("render: children (guards passed)", {
-    pathname: location.pathname,
-    requireRole: requireRole ?? null,
-    role,
-    userId: user?.id ?? null,
-  });
   return children;
 };

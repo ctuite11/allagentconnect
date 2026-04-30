@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,6 @@ function formatUsPhoneForDisplay(raw: string | null | undefined): { display: str
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { unreadCount } = useUnreadConversations();
   const [loading, setLoading] = useState(true);
   const [relationshipHydrating, setRelationshipHydrating] = useState(false);
@@ -159,17 +158,8 @@ export default function ClientDashboard() {
   const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
 
   useEffect(() => {
-    dbgClientDashboard("mount boot checkAuth()", { pathname: location.pathname });
     checkAuth();
   }, []);
-
-  useEffect(() => {
-    if (!loading) {
-      dbgClientDashboard("dashboard loading → false (checkAuth settled)", {
-        pathname: location.pathname,
-      });
-    }
-  }, [loading, location.pathname]);
 
   const sanitizeFirstName = (value: string | null | undefined): string | null => {
     const trimmed = value?.trim();
@@ -245,14 +235,7 @@ export default function ClientDashboard() {
         user = refreshed.user ?? null;
       }
 
-      dbgClientDashboard("checkAuth session/user", {
-        pathname: location.pathname,
-        sessionUserId: sessionResult.data.session?.user?.id ?? null,
-        resolvedUserId: user?.id ?? null,
-      });
-
       if (!user) {
-        dbgClientDashboard("checkAuth — no session/user; NOT navigating (RouteGuard owns /auth redirects)", {});
         return;
       }
 
