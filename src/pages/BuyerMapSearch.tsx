@@ -715,8 +715,8 @@ export default function BuyerMapSearch() {
     <div className="min-h-screen bg-white">
       <div className="sticky top-14 z-40 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/84">
         <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 pt-6 pb-3">
-            <div className="flex flex-wrap lg:flex-nowrap items-center gap-2.5">
-              <div className="relative min-w-[230px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_36%] lg:max-w-[620px]">
+            <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 md:gap-4">
+              <div className="relative w-full max-w-[420px] min-w-0 shrink-0">
                 <SearchIcon className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   value={locationInput}

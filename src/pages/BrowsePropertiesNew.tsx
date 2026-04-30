@@ -343,12 +343,8 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
           )}
 
           <div className="mb-6 rounded-2xl border border-zinc-200/80 bg-white p-3">
-            <div className={`flex flex-wrap items-center ${forceBuyer ? "lg:flex-nowrap gap-2" : "gap-2.5"}`}>
-              <div className={
-                forceBuyer
-                  ? "relative w-full sm:flex-1 sm:min-w-[200px] lg:max-w-[420px]"
-                  : "relative min-w-[220px] w-full sm:min-w-[280px] lg:w-auto lg:flex-[0_0_32%] lg:max-w-[560px]"
-              }>
+            <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 md:gap-4">
+              <div className="relative w-full max-w-[420px] min-w-0 shrink-0">
                 <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   value={locationInput}
