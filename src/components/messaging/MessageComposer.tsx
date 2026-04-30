@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Send, Paperclip, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { messagingChatColumnClass } from "./chatColumnClasses";
 
 interface MessageComposerProps {
   onSend: (body: string) => Promise<boolean>;
@@ -27,8 +25,8 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
   };
 
   return (
-    <div className="flex-shrink-0 border-t border-zinc-300 px-6 py-3">
-      <div className={cn("flex items-center gap-3", messagingChatColumnClass)}>
+    <div className="flex-shrink-0 border-t border-neutral-200 px-4 py-3">
+      <div className="flex w-full items-center gap-3">
         <button
           type="button"
           className="p-1.5 text-zinc-600 hover:text-zinc-700 transition-colors"

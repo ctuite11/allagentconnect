@@ -91,8 +91,8 @@ function MessagingWorkspaceContent({
         <div
           className={
             buyerMode
-              ? "mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col gap-3 px-6 pb-10 md:px-8"
-              : "mx-auto flex w-full max-w-7xl flex-col gap-5 px-6 pb-10 pt-6 md:px-8"
+              ? "mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col gap-2 px-6 pb-10 md:px-8"
+              : "mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 pb-10 pt-6 md:px-8"
           }
         >
           {buyerMode && (
@@ -100,14 +100,14 @@ function MessagingWorkspaceContent({
               <Button
                 variant="ghost"
                 size="sm"
-                className="mb-2 gap-2 text-muted-foreground hover:text-foreground"
+                className="mb-1.5 gap-2 text-muted-foreground hover:text-foreground"
                 type="button"
                 onClick={() => navigate("/client/dashboard")}
               >
                 ← Back to Dashboard
               </Button>
               <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-0.5 text-sm text-zinc-500">
                 Stay in touch with your agent and keep everything about your home search in one place.
               </p>
             </div>
@@ -115,8 +115,8 @@ function MessagingWorkspaceContent({
           <div
             className={
               buyerMode
-                ? "flex min-h-0 flex-1 gap-4 sm:gap-5 h-[calc(100dvh-3.5rem-8.25rem)] min-h-[420px]"
-                : "flex h-[calc(100vh-2rem)] gap-5"
+                ? "flex h-[calc(100dvh-3.5rem-7.75rem)] min-h-[420px] flex-1 gap-4"
+                : "flex h-[calc(100vh-2rem)] gap-4"
             }
           >
             <div className={`h-full min-h-0 w-[320px] shrink-0 ${buyerMessagingPanel}`}>
@@ -137,11 +137,13 @@ function MessagingWorkspaceContent({
               />
             </div>
 
-            <div className={`flex flex-1 min-h-0 min-w-0 flex-col h-full ${buyerMessagingPanel}`}>
-              <ConversationPanel
-                conversationId={selectedConversationId}
-                onInboxInvalidate={() => void refetchThreads()}
-              />
+            <div className={`flex h-full min-h-0 min-w-0 flex-1 flex-col ${buyerMessagingPanel}`}>
+              <div className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col min-w-0">
+                <ConversationPanel
+                  conversationId={selectedConversationId}
+                  onInboxInvalidate={() => void refetchThreads()}
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -25,7 +25,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
       message.isOwn ? "justify-end" : "justify-start",
       showHeader ? "mt-6 first:mt-0" : "mt-1.5"
     )}>
-      <div className={cn("max-w-[72%]", message.isOwn ? "items-end" : "items-start")}>
+      <div className={cn("max-w-[70%]", message.isOwn ? "items-end" : "items-start")}>
         {/* Header: avatar + name + time (incoming only) */}
         {showHeader && !message.isOwn && (
           <div className="flex items-center gap-2.5 mb-1.5">

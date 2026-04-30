@@ -84,8 +84,8 @@ export function ConversationsList({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex-shrink-0 p-4 pb-3">
+        <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-[15px] font-semibold text-zinc-900 tracking-[-0.01em]">
               {heading}
@@ -127,7 +127,7 @@ export function ConversationsList({
         {loading ? (
           <div className="p-4 space-y-1">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5">
                 <Skeleton className="w-10 h-10 rounded-full" />
                 <div className="flex-1">
                   <Skeleton className="h-3.5 w-24 mb-2" />
