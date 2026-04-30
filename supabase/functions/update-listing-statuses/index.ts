@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
       .select('id, address, status, expiration_date')
       .in('status', ['active', 'new', 'coming_soon', 'off_market'])
       .not('expiration_date', 'is', null)
-      .lte('expiration_date', today);
+      .lt('expiration_date', today);
 
     if (expireQueryError) {
       console.error('Error querying listings to expire:', expireQueryError);

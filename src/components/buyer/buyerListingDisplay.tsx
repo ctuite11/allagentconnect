@@ -8,6 +8,7 @@ export interface ListingRecord {
   state: string;
   zip_code: string;
   price: number;
+  status: string;
   bedrooms?: number | null;
   bathrooms?: number | null;
   square_feet?: number | null;
