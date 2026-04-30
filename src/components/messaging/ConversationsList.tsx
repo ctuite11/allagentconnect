@@ -13,6 +13,8 @@ interface ConversationsListProps {
   threads: ConversationThread[];
   threadsLoading: boolean;
   selectedId: string | undefined;
+  inboxFetchError?: string | null;
+  onRetryInbox?: () => void;
   onNewMessage?: () => void;
   showNewMessageButton?: boolean;
   routeBase?: string;
@@ -24,6 +26,8 @@ interface ConversationsListProps {
 export function ConversationsList({
   threads,
   threadsLoading: loading,
+  inboxFetchError,
+  onRetryInbox,
   selectedId,
   onNewMessage,
   showNewMessageButton = true,
@@ -131,6 +135,19 @@ export function ConversationsList({
                 </div>
               </div>
             ))}
+          </div>
+        ) : inboxFetchError ? (
+          <div className="p-8 text-center space-y-3">
+            <p className="text-[13px] text-zinc-600 whitespace-pre-wrap break-words">{inboxFetchError}</p>
+            {onRetryInbox ? (
+              <button
+                type="button"
+                onClick={() => onRetryInbox()}
+                className="text-[13px] font-semibold text-primary hover:underline"
+              >
+                Try again
+              </button>
+            ) : null}
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center">

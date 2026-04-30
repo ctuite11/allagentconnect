@@ -22,15 +22,19 @@ export function useConversationThreads() {
   const { user } = useAuthRole();
   const [threads, setThreads] = useState<ConversationThread[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inboxFetchError, setInboxFetchError] = useState<string | null>(null);
 
   const fetchThreads = useCallback(async () => {
     if (!user) {
       setThreads([]);
+      setInboxFetchError(null);
       setLoading(false);
       return;
     }
 
     try {
+      setInboxFetchError(null);
+
       const { data: inboxData, error } = await supabase
         .from("conversation_inbox")
         .select("*")
@@ -38,6 +42,8 @@ export function useConversationThreads() {
 
       if (error) {
         console.error("Error fetching inbox:", error);
+        setThreads([]);
+        setInboxFetchError(error.message ?? "Could not load conversation list.");
         setLoading(false);
         return;
       }
@@ -119,5 +125,5 @@ export function useConversationThreads() {
     };
   }, [user, fetchThreads]);
 
-  return { threads, loading, refetch: fetchThreads };
+  return { threads, loading, refetch: fetchThreads, inboxFetchError };
 }

@@ -58,7 +58,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
         <MessageSquare className="w-12 h-12 text-zinc-200 mb-4" />
         <h3 className="text-lg font-semibold text-zinc-900 mb-1">
-          Select a message
+          Select a conversation
         </h3>
         <p className="text-sm text-zinc-400">
           Choose a conversation from the left to keep chatting
