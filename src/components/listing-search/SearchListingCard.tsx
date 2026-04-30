@@ -47,6 +47,9 @@ interface SearchListing {
   listing_number?: string | null;
   neighborhood?: string | null;
   agent_id?: string | null;
+  brokerage_name?: string | null;
+  listing_brokerage?: string | null;
+  listing_agent_name?: string | null;
   agent_name?: string | null;
   agent_email?: string | null;
   agent_phone?: string | null;

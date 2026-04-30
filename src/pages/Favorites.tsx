@@ -38,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MapPin, BedDouble, Bath, Ruler, Heart, Check } from "lucide-react";
 import { toast } from "sonner";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
+import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 
 interface Listing {
   id: string;
@@ -149,6 +150,9 @@ const Favorites = ({
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [showKeptOnly, setShowKeptOnly] = useState(false);
   const [officeByAgentId, setOfficeByAgentId] = useState<Map<string, string | null>>(new Map());
+  const [listedByProfileByAgentId, setListedByProfileByAgentId] = useState<Map<string, ListedByAgentProfile>>(
+    () => new Map(),
+  );
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const buyerMode = isBuyerMode || (!isAgentMode && !isPublicMode);
 
@@ -157,8 +161,9 @@ const Favorites = ({
   }, []);
 
   useEffect(() => {
-    if (!buyerMode || favorites.length === 0) {
+    if (favorites.length === 0) {
       setOfficeByAgentId(new Map());
+      setListedByProfileByAgentId(new Map());
       return;
     }
     const agentIds = Array.from(
@@ -166,19 +171,32 @@ const Favorites = ({
     );
     if (agentIds.length === 0) {
       setOfficeByAgentId(new Map());
+      setListedByProfileByAgentId(new Map());
       return;
     }
     let cancelled = false;
     void (async () => {
       const { data, error } = await supabase
         .from("agent_profiles")
-        .select("id, company, office_name")
+        .select("id, company, office_name, first_name, last_name")
         .in("id", agentIds);
       if (error || cancelled) return;
-      const m = new Map(
-        ((data || []) as AgentOfficeRecord[]).map((r) => [r.id, r.office_name?.trim() || r.company?.trim() || null]),
-      );
-      if (!cancelled) setOfficeByAgentId(m);
+      const offices = new Map<string, string | null>();
+      const profiles = new Map<string, ListedByAgentProfile>();
+      for (const r of data || []) {
+        const row = r as AgentOfficeRecord & { first_name?: string; last_name?: string };
+        offices.set(row.id, row.office_name?.trim() || row.company?.trim() || null);
+        profiles.set(row.id, {
+          company: row.company ?? null,
+          office_name: row.office_name ?? null,
+          first_name: row.first_name ?? null,
+          last_name: row.last_name ?? null,
+        });
+      }
+      if (!cancelled) {
+        setListedByProfileByAgentId(profiles);
+        setOfficeByAgentId(buyerMode ? offices : new Map());
+      }
     })();
     return () => {
       cancelled = true;
@@ -1008,6 +1026,9 @@ const Favorites = ({
                               hideMlsMeta
                               onSelect={toggleSessionKeepListing}
                               isSelected={isKept}
+                              supplementalAgentProfile={
+                                listing.agent_id ? listedByProfileByAgentId.get(listing.agent_id) ?? null : null
+                              }
                             />
                           </div>
                         );
@@ -1178,6 +1199,9 @@ const Favorites = ({
                       hideMlsMeta={isPublicMode || isBuyerMode}
                       onSelect={() => toggleSelectFavorite(favorite.id)}
                       isSelected={isSelected}
+                      supplementalAgentProfile={
+                        listing.agent_id ? listedByProfileByAgentId.get(listing.agent_id) ?? null : null
+                      }
                     />
                   </div>
                 );

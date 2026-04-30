@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 // HotSheetSubscribersSection removed — sharing belongs in create/edit flow
 // ─── Pending Invites section ────────────────────────────────────────────────
 
@@ -239,6 +240,7 @@ interface Listing {
   attom_data?: any;
   created_at: string;
   status: string;
+  agent_profile?: ListedByAgentProfile;
 }
 
 interface HotSheet {
@@ -262,7 +264,6 @@ const HotSheetReview = () => {
   const [agentDisplayName, setAgentDisplayName] = useState("Your agent");
   const [listings, setListings] = useState<Listing[]>([]);
   const [allListings, setAllListings] = useState<Listing[]>([]);
-  const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
   const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>({});
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState("newest");
@@ -491,24 +492,34 @@ const HotSheetReview = () => {
       const { data: listingsData, error: listingsError } = await query;
 
       if (listingsError) throw listingsError;
-      setListings(listingsData || []);
-      setAllListings(listingsData || []);
 
-// Load listing agents for display
-const agentIds = Array.from(new Set((listingsData || []).map((l: any) => l.agent_id).filter(Boolean)));
-if (agentIds.length > 0) {
-  const { data: agents } = await supabase
-    .from("agent_profiles")
-    .select("id, first_name, last_name, company")
-    .in("id", agentIds as string[]);
-  const map: Record<string, { fullName: string; company?: string | null }> = {};
-  (agents || []).forEach((a: any) => {
-    map[a.id] = { fullName: `${a.first_name} ${a.last_name}`.trim(), company: a.company };
-  });
-  setAgentMap(map);
-}
+      let nextListings: Listing[] = (listingsData || []) as Listing[];
+      const agentIds = Array.from(new Set(nextListings.map((l) => l.agent_id).filter(Boolean)));
+      if (agentIds.length > 0) {
+        const { data: agents } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, company, office_name")
+          .in("id", agentIds as string[]);
 
-// Fetch all chat messages for this hot sheet
+        const byId = new Map((agents ?? []).map((a) => [a.id, a]));
+        nextListings = nextListings.map((l) => ({
+          ...l,
+                  agent_profile:
+            typeof l.agent_id === "string" && byId.has(l.agent_id)
+              ? {
+                  company: byId.get(l.agent_id)?.company ?? null,
+                  office_name: byId.get(l.agent_id)?.office_name ?? null,
+                  first_name: byId.get(l.agent_id)?.first_name ?? null,
+                  last_name: byId.get(l.agent_id)?.last_name ?? null,
+                }
+              : undefined,
+        }));
+      }
+
+      setListings(nextListings);
+      setAllListings(nextListings);
+
+      // Fetch all chat messages for this hot sheet
 const { data: comments } = await supabase
   .from("hot_sheet_comments")
   .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")

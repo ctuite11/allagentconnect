@@ -173,15 +173,16 @@ const ListingSearchResults = () => {
         const agentIds = [...new Set(data.map(l => l.agent_id))];
         const { data: agents } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, email, phone, cell_phone, office_name, office_phone")
+          .select("id, first_name, last_name, company, email, phone, cell_phone, office_name, office_phone")
           .in("id", agentIds);
 
         const agentMap = new Map(
           agents?.map(a => [a.id, {
             name: `${a.first_name || ''} ${a.last_name || ''}`.trim(),
+            brokerageName: typeof a.company === "string" && a.company.trim() ? a.company.trim() : null,
             email: a.email,
             phone: a.cell_phone || a.phone,
-            office: a.office_name,
+            office: typeof a.office_name === "string" && a.office_name.trim() ? a.office_name.trim() : null,
             officePhone: a.office_phone,
           }]) || []
         );
@@ -190,6 +191,7 @@ const ListingSearchResults = () => {
           const agentInfo = agentMap.get(l.agent_id);
           return {
             ...l,
+            brokerage_name: agentInfo?.brokerageName || null,
             agent_name: agentInfo?.name || null,
             agent_email: agentInfo?.email || null,
             agent_phone: agentInfo?.phone || null,

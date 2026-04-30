@@ -25,7 +25,11 @@ import { toast } from "sonner";
 import { buildDisplayAddress, propertyTypeToEnum } from "@/lib/utils";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
-import { resolveListedByAttribution } from "@/lib/listingListedBy";
+import {
+  resolveListedByAttribution,
+  type ListedByAgentProfile,
+  type ListedBySource,
+} from "@/lib/listingListedBy";
 interface ListingCardProps {
   listing: {
     id: string;
@@ -65,6 +69,8 @@ interface ListingCardProps {
     agent_name?: string | null;
     brokerage_name?: string | null;
     listing_brokerage?: string | null;
+    list_office?: string | null;
+    agent_profile?: ListedByAgentProfile;
   };
   onReactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -93,6 +99,8 @@ interface ListingCardProps {
   interestSignals?: ListingSignals | null;
   /** Favorited on the current hot sheet (e.g. by client) */
   isHotSheetFavorite?: boolean;
+  /** Listing row lacks `agent_profile` embed; pass batch-fetched profiles for “Listed by” */
+  supplementalAgentProfile?: ListedByAgentProfile | null;
 }
 const ListingCard = ({
   listing,
@@ -111,10 +119,20 @@ const ListingCard = ({
   onOpenChat,
   interestSignals,
   isHotSheetFavorite,
+  supplementalAgentProfile = null,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
-  const listedByAttribution = resolveListedByAttribution(listing);
+  const rowProfile = (listing as { agent_profile?: ListedByAgentProfile }).agent_profile;
+  const listedByFromProfiles = resolveListedByAttribution(listing as ListedBySource, rowProfile ?? supplementalAgentProfile);
+
+  const listedByAttribution =
+    listedByFromProfiles ||
+    (typeof agentInfo?.company === "string" && agentInfo.company.trim()
+      ? agentInfo.company.trim()
+      : typeof agentInfo?.name === "string" && agentInfo.name.trim()
+        ? agentInfo.name.trim()
+        : null);
   const [agentCount, setAgentCount] = useState<number>(0);
   const [buyerCount, setBuyerCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
