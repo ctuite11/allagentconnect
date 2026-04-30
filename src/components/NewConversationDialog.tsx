@@ -463,7 +463,7 @@ export function NewConversationDialog({
                 <Button
                   onClick={handleSend}
                   disabled={sending || !message.trim()}
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  className="bg-[#0E56F5] text-white hover:bg-[#0C4ED1] disabled:bg-zinc-200 disabled:text-zinc-500 disabled:hover:bg-zinc-200 disabled:opacity-100"
                 >
                   {sending ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
