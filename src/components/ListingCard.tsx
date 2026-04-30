@@ -399,9 +399,10 @@ const ListingCard = ({
     return null;
   };
   const displayPrice = listing.price ? formatPrice(listing.price) : (formatPriceRange() || formatPrice(0));
+  const listingPhotos = Array.isArray(listing?.photos) ? listing.photos : [];
   const getPhotoByIndex = (index: number) => {
-    if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-      const photo = listing.photos[index];
+    if (listingPhotos.length > 0) {
+      const photo = listingPhotos[index];
       if (!photo) return null;
 
       // If it's a string, assume it's already a URL
@@ -429,9 +430,7 @@ const ListingCard = ({
     return getPhotoByIndex(0);
   };
   
-  const getTotalPhotos = () => {
-    return listing.photos && Array.isArray(listing.photos) ? listing.photos.length : 0;
-  };
+  const getTotalPhotos = () => listingPhotos.length;
   
   const handlePreviousPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();

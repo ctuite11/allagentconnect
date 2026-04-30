@@ -480,9 +480,22 @@ export default function ClientDashboard() {
       .eq("user_id", userId)
       .limit(6);
 
-    if (data) {
-      setFavorites(data as any);
+    if (!data) {
+      setFavorites([]);
+      return;
     }
+
+    type Row = typeof data[number] & { listing?: Favorite["listing"] | Favorite["listing"][] | null };
+    const normalized = (data as Row[])
+      .map((row) => {
+        const raw = row.listing;
+        const single = Array.isArray(raw) ? raw[0] : raw;
+        if (single == null) return null;
+        return { ...row, listing: single } as Favorite;
+      })
+      .filter((r): r is Favorite => r != null);
+
+    setFavorites(normalized);
   };
 
   const loadMarketListings = async () => {
@@ -567,7 +580,9 @@ export default function ClientDashboard() {
     return "/placeholder.svg";
   };
 
-  const latestListingsPreview = marketListings.slice(0, 4);
+  const latestListingsPreview = (marketListings || [])
+    .filter((l): l is MarketListing => l != null && Boolean(l.id))
+    .slice(0, 4);
 
   const stats = [
     {
@@ -846,40 +861,45 @@ export default function ClientDashboard() {
                 <CardContent className={previewSectionContentClass}>
                   {favorites.length > 0 ? (
                     <div className="grid grid-cols-3 gap-4">
-                      {favorites.slice(0, 3).map((fav) => {
-                        const favPhotoUrl = getPrimaryPhotoUrl(fav.listing.photos);
-                        return (
-                          <button
-                            key={fav.id}
-                            type="button"
-                            className={unifiedHotFavCardClass}
-                            onClick={() => navigate(`/property/${fav.listing.id}`)}
-                          >
-                            <div className={unifiedHotFavMediaWrap}>
-                              <DashboardListingImage
-                                photoUrl={favPhotoUrl}
-                                alt=""
-                                imageClassName="absolute inset-0 h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className={unifiedHotFavBody}>
-                              <p className={dashTileTitleClass}>
-                                {fav.listing.price ? `$${fav.listing.price.toLocaleString()}` : "—"}
-                              </p>
-                              <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
-                                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
-                                <span className="min-w-0 truncate">{fav.listing.address}</span>
-                              </p>
-                              <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
-                                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
-                                <span className="min-w-0 truncate">
-                                  {fav.listing.city}, {fav.listing.state}
-                                </span>
-                              </p>
-                            </div>
-                          </button>
-                        );
-                      })}
+                      {favorites
+                        .filter((fav) => fav.listing != null)
+                        .slice(0, 3)
+                        .map((fav) => {
+                          const listing = fav.listing;
+                          const photos = listing.photos ?? [];
+                          const favPhotoUrl = getPrimaryPhotoUrl(photos);
+                          return (
+                            <button
+                              key={fav.id}
+                              type="button"
+                              className={unifiedHotFavCardClass}
+                              onClick={() => navigate(`/property/${listing.id}`)}
+                            >
+                              <div className={unifiedHotFavMediaWrap}>
+                                <DashboardListingImage
+                                  photoUrl={favPhotoUrl}
+                                  alt=""
+                                  imageClassName="absolute inset-0 h-full w-full object-cover"
+                                />
+                              </div>
+                              <div className={unifiedHotFavBody}>
+                                <p className={dashTileTitleClass}>
+                                  {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
+                                </p>
+                                <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
+                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                                  <span className="min-w-0 truncate">{listing.address}</span>
+                                </p>
+                                <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
+                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                                  <span className="min-w-0 truncate">
+                                    {listing.city}, {listing.state}
+                                  </span>
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
@@ -915,7 +935,9 @@ export default function ClientDashboard() {
                 {latestListingsPreview.length > 0 ? (
                   <div className="overflow-visible">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    {latestListingsPreview.map((listing) => (
+                    {latestListingsPreview.map((listing) => {
+                      const photos = listing.photos ?? [];
+                      return (
                       <article
                         key={listing.id}
                         role="button"
@@ -931,7 +953,7 @@ export default function ClientDashboard() {
                       >
                         <div className={listingPreviewMediaWrap}>
                           <DashboardListingImage
-                            photoUrl={getPrimaryPhotoUrl(listing.photos)}
+                            photoUrl={getPrimaryPhotoUrl(photos)}
                             alt={listing.address}
                             imageClassName="absolute inset-0 h-full w-full object-cover"
                           />
@@ -950,7 +972,8 @@ export default function ClientDashboard() {
                           </p>
                         </div>
                       </article>
-                    ))}
+                      );
+                    })}
                     </div>
                   </div>
                 ) : (

@@ -311,18 +311,29 @@ const Favorites = ({
     return next;
   }, [favorites, sortBy]);
 
+  const sortedFavoritesWithListing = useMemo(
+    () => sortedFavorites.filter((f) => normalizeEmbeddedListing(f) != null),
+    [sortedFavorites],
+  );
+
   const displayFavorites = useMemo(() => {
-    if (!buyerMode || !showKeptOnly) return sortedFavorites;
-    return sortedFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id));
-  }, [buyerMode, showKeptOnly, sortedFavorites, sessionKeptListingIds]);
+    if (!buyerMode || !showKeptOnly) return sortedFavoritesWithListing;
+    return sortedFavoritesWithListing.filter((f) => {
+      const lid = normalizeEmbeddedListing(f)?.id;
+      return lid != null && sessionKeptListingIds.has(lid);
+    });
+  }, [buyerMode, showKeptOnly, sortedFavoritesWithListing, sessionKeptListingIds]);
 
   /** Matches BuyerMapSearch: listings kept in the current “display” list, used for share */
   const favoritesForShare = useMemo(() => {
     if (buyerMode) {
-      return displayFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id));
+      return displayFavorites.filter((f) => {
+        const lid = normalizeEmbeddedListing(f)?.id;
+        return lid != null && sessionKeptListingIds.has(lid);
+      });
     }
-    return sortedFavorites.filter((fav) => selectedFavoriteIds.has(fav.id));
-  }, [buyerMode, displayFavorites, sortedFavorites, sessionKeptListingIds, selectedFavoriteIds]);
+    return sortedFavoritesWithListing.filter((fav) => selectedFavoriteIds.has(fav.id));
+  }, [buyerMode, displayFavorites, sortedFavoritesWithListing, sessionKeptListingIds, selectedFavoriteIds]);
 
   const displayListingRecords: ListingRecord[] = useMemo(() => {
     return displayFavorites
@@ -368,7 +379,10 @@ const Favorites = ({
     }
     const n = displayFavorites.length;
     if (n === 0) return { allVisible: false, someVisible: false, noneVisible: true };
-    const selected = displayFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id)).length;
+    const selected = displayFavorites.filter((f) => {
+      const lid = normalizeEmbeddedListing(f)?.id;
+      return lid != null && sessionKeptListingIds.has(lid);
+    }).length;
     if (selected === 0) return { allVisible: false, someVisible: false, noneVisible: true };
     if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
     return { allVisible: false, someVisible: true, noneVisible: false };
@@ -378,7 +392,10 @@ const Favorites = ({
     if (!buyerMode) return;
     setSessionKeptListingIds((prev) => {
       const next = new Set(prev);
-      displayFavorites.forEach((f) => next.add(f.listings.id));
+      displayFavorites.forEach((f) => {
+        const id = normalizeEmbeddedListing(f)?.id;
+        if (id) next.add(id);
+      });
       return next;
     });
   }, [buyerMode, displayFavorites]);
@@ -387,7 +404,10 @@ const Favorites = ({
     if (!buyerMode) return;
     setSessionKeptListingIds((prev) => {
       const next = new Set(prev);
-      displayFavorites.forEach((f) => next.delete(f.listings.id));
+      displayFavorites.forEach((f) => {
+        const id = normalizeEmbeddedListing(f)?.id;
+        if (id) next.delete(id);
+      });
       return next;
     });
   }, [buyerMode, displayFavorites]);
@@ -433,7 +453,11 @@ const Favorites = ({
 
   useEffect(() => {
     if (!buyerMode) return;
-    const keep = new Set(favorites.map((f) => f.listings.id));
+    const keep = new Set(
+      favorites
+        .map((f) => normalizeEmbeddedListing(f)?.id)
+        .filter((id): id is string => Boolean(id)),
+    );
     setSessionKeptListingIds((prev) => {
       let next: Set<string> | null = null;
       for (const lid of prev) {
@@ -502,18 +526,20 @@ const Favorites = ({
         const sharePhotoH = 150;
         const shareImgColW = 240;
         const shareRows = favoritesForShare;
+        const shareRowsWithListing = shareRows
+          .map((fav) => normalizeEmbeddedListing(fav))
+          .filter((listing): listing is Listing => listing != null);
 
         if (buyerMode) {
-          const listingCardsHtml = shareRows
-            .map((fav) => {
-              const listing = fav.listings;
+          const listingCardsHtml = shareRowsWithListing
+            .map((listing) => {
               const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
               const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
               const address = escapeHtml(listing.address || "Address unavailable");
               const cityStateZip = escapeHtml(
                 `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
               );
-              const photoUrl = getPrimaryPhotoUrl(listing.photos);
+              const photoUrl = getPrimaryPhotoUrl(listing?.photos ?? []);
               const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
               return [
                 `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
@@ -535,9 +561,8 @@ const Favorites = ({
             })
             .join("");
 
-          const plainTextFallback = shareRows
-            .map((fav) => {
-              const listing = fav.listings;
+          const plainTextFallback = shareRowsWithListing
+            .map((listing) => {
               const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
               const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
               const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
@@ -598,16 +623,15 @@ const Favorites = ({
           return;
         }
 
-        const listingCardsHtml = shareRows
-          .map((fav) => {
-            const listing = fav.listings;
+        const listingCardsHtml = shareRowsWithListing
+          .map((listing) => {
             const listingUrl = `${window.location.origin}/property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = escapeHtml(listing.address || "Address unavailable");
             const cityStateZip = escapeHtml(
               `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
             );
-            const photoUrl = getMainPhoto(listing.photos || []);
+            const photoUrl = getMainPhoto((listing?.photos ?? []) as any[]);
             const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
             return [
               `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
@@ -629,9 +653,8 @@ const Favorites = ({
           })
           .join("");
 
-        const plainTextFallback = shareRows
-          .map((fav) => {
-            const listing = fav.listings;
+        const plainTextFallback = shareRowsWithListing
+          .map((listing) => {
             const listingUrl = `${window.location.origin}/property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
             const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
@@ -692,7 +715,10 @@ const Favorites = ({
 
   const handleDeleteSelected = async () => {
     if (buyerMode) {
-      const toRemove = sortedFavorites.filter((f) => sessionKeptListingIds.has(f.listings.id));
+      const toRemove = sortedFavoritesWithListing.filter((f) => {
+        const lid = normalizeEmbeddedListing(f)?.id;
+        return lid != null && sessionKeptListingIds.has(lid);
+      });
       if (toRemove.length === 0) return;
       const ids = toRemove.map((f) => f.id);
       const removedListingIds = toRemove.map((f) => f.listings.id);
@@ -1095,13 +1121,13 @@ const Favorites = ({
                     className="h-8 rounded-md px-2.5 text-xs"
                     onClick={() =>
                       setSelectedFavoriteIds((prev) =>
-                        prev.size === sortedFavorites.length
+                        prev.size === sortedFavoritesWithListing.length
                           ? new Set()
-                          : new Set(sortedFavorites.map((fav) => fav.id)),
+                          : new Set(sortedFavoritesWithListing.map((fav) => fav.id)),
                       )
                     }
                   >
-                    {selectedFavoriteIds.size === sortedFavorites.length ? "Unselect all" : "Select all"}
+                    {selectedFavoriteIds.size === sortedFavoritesWithListing.length ? "Unselect all" : "Select all"}
                   </Button>
                   <Button
                     type="button"
@@ -1139,7 +1165,7 @@ const Favorites = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedFavorites.map((favorite) => {
+              {sortedFavoritesWithListing.map((favorite) => {
                 const listing = favorite.listings;
                 const isSelected = selectedFavoriteIds.has(favorite.id);
                 return (

@@ -220,7 +220,10 @@ export default function BuyerMapSearch() {
   }, [displayListings, sessionKeptIds]);
 
   const selectedVisibleListings = useMemo(
-    () => displayListings.filter((l) => sessionKeptIds.has(l.id)),
+    () =>
+      displayListings
+        .filter((l): l is (typeof displayListings)[number] => l != null && Boolean(l.id))
+        .filter((l) => sessionKeptIds.has(l.id)),
     [displayListings, sessionKeptIds],
   );
 
@@ -346,7 +349,7 @@ export default function BuyerMapSearch() {
             const cityStateZip = escapeHtml(
               `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
             );
-            const photoUrl = getPrimaryPhotoUrl(listing.photos);
+            const photoUrl = getPrimaryPhotoUrl(listing?.photos ?? []);
             const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
             return [
               `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
