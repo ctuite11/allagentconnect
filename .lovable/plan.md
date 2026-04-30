@@ -1,21 +1,22 @@
+I found the listing: `28-32 ATLANTIC AVE` still exists in the database, but it was automatically changed from `active` to `expired` at midnight because its `expiration_date` is `2026-04-30`. That is why it disappeared from active/search views.
+
 Plan:
 
-1. Restore the Hot Sheet card component to match the screenshot layout/structure
-   - Use the existing `HotSheetCard` card with the screenshot-style large collage image area, footer name line, and second-line right-aligned View button.
-   - Do not move the View button, change the footer structure, or alter card spacing beyond restoring the screenshot state.
+1. Restore the listing visibility
+   - Update `28-32 ATLANTIC AVE` from `expired` back to `active`.
+   - Extend or clear its `expiration_date` so the scheduled status job does not immediately expire it again.
+   - Add a status-history entry noting it was restored after unintended auto-expiration.
 
-2. Keep only the requested typography fix
-   - Change the Hot Sheet name/title typography to:
-     `text-[14px] font-medium text-neutral-800 leading-snug`
-   - Remove/avoid stronger title styling such as `text-[16px]`, `font-semibold`, `text-zinc-900`, or header-like treatment.
+2. Prevent this specific issue from recurring
+   - Review the scheduled `update-listing-statuses` behavior for expiration dates.
+   - Adjust the auto-expiration condition if needed so listings do not disappear unexpectedly on the expiration date without an intentional post-expiration window.
+   - Keep the existing lifecycle system intact; no schema redesign.
 
-3. Ensure the Hot Sheets page renders those screenshot-style cards again
-   - In `src/pages/HotSheets.tsx`, replace the current collection-card rendering path with the Hot Sheet card rendering that matches the screenshot.
-   - Preserve existing data/loading behavior and navigation.
-   - Do not change the page background, hero/header section, card grid layout, collage behavior, or View behavior except as needed to restore the screenshot cards.
+3. Fix the current build error surfaced during inspection
+   - `src/pages/BuyerMapSearch.tsx` is passing listings into `ListingCard`, but TypeScript says `status` may be missing.
+   - Normalize/hydrate the listing data so each record passed to `ListingCard` includes `status`, without changing UI layout.
 
-Technical details:
-- Primary files to edit after approval:
-  - `src/components/HotSheetCard.tsx`
-  - `src/pages/HotSheets.tsx`
-- No database/backend changes are needed.
+4. Verify
+   - Confirm the database row for `28-32 ATLANTIC AVE` is active again.
+   - Confirm it appears in active listing/search queries.
+   - Confirm the TypeScript build error is resolved by the code change.

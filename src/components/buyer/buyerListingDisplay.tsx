@@ -8,13 +8,14 @@ export interface ListingRecord {
   state: string;
   zip_code: string;
   price: number;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  square_feet?: number | null;
+  status: string;
+  property_type: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_feet: number | null;
   latitude?: number | null;
   longitude?: number | null;
   photos?: string[] | null;
-  property_type?: string | null;
   list_office?: string | null;
   office_name?: string | null;
 }
