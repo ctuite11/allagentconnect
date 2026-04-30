@@ -13,13 +13,9 @@ export interface ListingRecord {
   bedrooms: number | null;
   bathrooms: number | null;
   square_feet: number | null;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  square_feet?: number | null;
   latitude?: number | null;
   longitude?: number | null;
   photos?: string[] | null;
-  property_type?: string | null;
   list_office?: string | null;
   office_name?: string | null;
 }
