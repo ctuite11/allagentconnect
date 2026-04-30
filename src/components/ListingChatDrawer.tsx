@@ -25,6 +25,8 @@ interface ListingChatDrawerProps {
   listingAddress: string;
   messages: ChatMessage[];
   onNewMessage: (msg: ChatMessage) => void;
+  /** Agent workspace vs buyer: controls bubble alignment + insert shape (matches `ClientHotSheet` client posts). */
+  viewerPerspective?: "agent" | "client";
 }
 
 const ListingChatDrawer = ({
@@ -89,17 +91,23 @@ const ListingChatDrawer = ({
         return;
       }
 
-      const { data, error } = await supabase
-        .from("hot_sheet_comments")
-        .insert({
-          hot_sheet_id: hotSheetId,
-          listing_id: listingId,
-          comment: text,
-          sender_role: "agent",
-          sender_id: user.id,
-        })
-        .select()
-        .single();
+      const insertRow =
+        viewerPerspective === "agent"
+          ? {
+              hot_sheet_id: hotSheetId,
+              listing_id: listingId,
+              comment: text,
+              sender_role: "agent",
+              sender_id: user.id,
+            }
+          : {
+              hot_sheet_id: hotSheetId,
+              listing_id: listingId,
+              comment: text,
+              sender_id: user.id,
+            };
+
+      const { data, error } = await supabase.from("hot_sheet_comments").insert(insertRow).select().single();
 
       if (error) throw error;
 
@@ -140,15 +148,18 @@ const ListingChatDrawer = ({
             </p>
           )}
           {sorted.map((msg) => {
-            const isAgent = msg.sender_role === "agent";
+            const isMine =
+              viewerPerspective === "agent"
+                ? msg.sender_role === "agent"
+                : msg.sender_role !== "agent";
             return (
               <div
                 key={msg.id}
-                className={`flex ${isAgent ? "justify-end" : "justify-start"}`}
+                className={`flex ${isMine ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                    isAgent
+                    isMine
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-foreground"
                   }`}
@@ -156,7 +167,7 @@ const ListingChatDrawer = ({
                   <p className="leading-snug">{msg.comment}</p>
                   <p
                     className={`text-[10px] mt-1 ${
-                      isAgent
+                      isMine
                         ? "text-primary-foreground/70"
                         : "text-muted-foreground"
                     }`}
@@ -175,7 +186,7 @@ const ListingChatDrawer = ({
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a reply..."
+            placeholder={viewerPerspective === "client" ? "Message your agent..." : "Type a reply..."}
             className="min-h-[40px] max-h-[120px] resize-none"
             rows={1}
           />

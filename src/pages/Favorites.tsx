@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import { Card } from "@/components/ui/card";
 import ListingCard from "@/components/ListingCard";
+import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -155,6 +156,76 @@ const Favorites = ({
   );
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const buyerMode = isBuyerMode || (!isAgentMode && !isPublicMode);
+  /** When buyer is linked to hot sheets — load `hot_sheet_comments` tied to favorites */
+  const [favoritesHotSheetForComments, setFavoritesHotSheetForComments] = useState<string | null>(null);
+  const [favoritesChatMap, setFavoritesChatMap] = useState<Record<string, ChatMessage[]>>({});
+  const [favoritesChatOpen, setFavoritesChatOpen] = useState(false);
+  const [favoritesChatListingId, setFavoritesChatListingId] = useState<string | null>(null);
+
+  const handleFavoritesChatMessage = useCallback((msg: ChatMessage) => {
+    setFavoritesChatMap((prev) => {
+      const lid = msg.listing_id;
+      const cur = prev[lid] ?? [];
+      if (cur.some((m) => m.id === msg.id)) return prev;
+      return { ...prev, [lid]: [...cur, msg] };
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!buyerMode || favorites.length === 0) {
+      setFavoritesHotSheetForComments(null);
+      setFavoritesChatMap({});
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user || cancelled) return;
+      const { data: hscRows, error: hscErr } = await supabase.from("hot_sheet_clients").select("hot_sheet_id");
+      if (hscErr || cancelled) return;
+      const hsIds = [...new Set((hscRows ?? []).map((r: { hot_sheet_id: string }) => r.hot_sheet_id))];
+      if (hsIds.length === 0) {
+        if (!cancelled) {
+          setFavoritesHotSheetForComments(null);
+          setFavoritesChatMap({});
+        }
+        return;
+      }
+      const primaryHs = hsIds[0];
+      const listingIds = favorites.map((f) => f.listings?.id).filter((id): id is string => Boolean(id));
+      if (listingIds.length === 0) return;
+
+      const { data: rows, error } = await supabase
+        .from("hot_sheet_comments")
+        .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
+        .in("hot_sheet_id", hsIds)
+        .in("listing_id", listingIds)
+        .order("created_at", { ascending: true });
+
+      if (error || cancelled) return;
+      const map: Record<string, ChatMessage[]> = {};
+      for (const row of rows ?? []) {
+        const lid = row.listing_id;
+        if (!lid) continue;
+        if (!map[lid]) map[lid] = [];
+        map[lid].push(row as ChatMessage);
+      }
+      if (!cancelled) {
+        setFavoritesHotSheetForComments(primaryHs);
+        setFavoritesChatMap(map);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [buyerMode, favorites]);
+
+  const favoritesDrawerHotSheetId = useMemo(() => {
+    if (!favoritesChatListingId) return null;
+    const msgs = favoritesChatMap[favoritesChatListingId];
+    if (msgs?.length) return msgs[msgs.length - 1].hot_sheet_id;
+    return favoritesHotSheetForComments;
+  }, [favoritesChatListingId, favoritesChatMap, favoritesHotSheetForComments]);
 
   useEffect(() => {
     checkAuth();
@@ -775,7 +846,7 @@ const Favorites = ({
 
   const buyerStickyHeader = (
     <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/84">
-      <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex flex-col gap-2">
           <Button
             type="button"
@@ -800,7 +871,7 @@ const Favorites = ({
     return (
       <div className="flex min-h-screen flex-col bg-white">
         {buyerStickyHeader}
-        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
             <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}>
               <div className="h-full flex items-center justify-center">
@@ -834,7 +905,7 @@ const Favorites = ({
         {buyerStickyHeader}
 
         {favorites.length === 0 ? (
-          <main className="mx-auto w-full max-w-7xl flex-1 flex flex-col items-center justify-center px-5 py-10">
+          <main className="mx-auto w-full max-w-7xl flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
             <Card className="w-full max-w-lg bg-white rounded-2xl border border-zinc-200/80 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] p-8 md:p-10 text-center">
               <div className="text-center">
                 <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
@@ -847,7 +918,7 @@ const Favorites = ({
             </Card>
           </main>
         ) : (
-          <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
+          <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
               <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]`}>
                 {loading ? (
@@ -1030,6 +1101,18 @@ const Favorites = ({
                               supplementalAgentProfile={
                                 listing.agent_id ? listedByProfileByAgentId.get(listing.agent_id) ?? null : null
                               }
+                              showCompactComments={buyerMode && Boolean(favoritesHotSheetForComments)}
+                              chatMessages={favoritesChatMap[listing.id] ?? []}
+                              onNewMessage={handleFavoritesChatMessage}
+                              onOpenChat={
+                                buyerMode && favoritesHotSheetForComments
+                                  ? () => {
+                                      setFavoritesChatListingId(listing.id);
+                                      setFavoritesChatOpen(true);
+                                    }
+                                  : undefined
+                              }
+                              hotSheetId={favoritesHotSheetForComments ?? undefined}
                             />
                           </div>
                         );
@@ -1103,6 +1186,26 @@ const Favorites = ({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {buyerMode && favoritesChatListingId && favoritesDrawerHotSheetId ? (
+          <ListingChatDrawer
+            viewerPerspective="client"
+            open={favoritesChatOpen}
+            onOpenChange={(open) => {
+              setFavoritesChatOpen(open);
+              if (!open) setFavoritesChatListingId(null);
+            }}
+            hotSheetId={favoritesDrawerHotSheetId}
+            listingId={favoritesChatListingId}
+            listingAddress={(() => {
+              const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
+              const l = fav?.listings;
+              return l ? `${l.address}, ${l.city}` : "";
+            })()}
+            messages={favoritesChatMap[favoritesChatListingId] ?? []}
+            onNewMessage={handleFavoritesChatMessage}
+          />
+        ) : null}
       </div>
     );
   }
@@ -1204,6 +1307,18 @@ const Favorites = ({
                       supplementalAgentProfile={
                         listing.agent_id ? listedByProfileByAgentId.get(listing.agent_id) ?? null : null
                       }
+                      showCompactComments={buyerMode && Boolean(favoritesHotSheetForComments)}
+                      chatMessages={favoritesChatMap[listing.id] ?? []}
+                      onNewMessage={handleFavoritesChatMessage}
+                      onOpenChat={
+                        buyerMode && favoritesHotSheetForComments
+                          ? () => {
+                              setFavoritesChatListingId(listing.id);
+                              setFavoritesChatOpen(true);
+                            }
+                          : undefined
+                      }
+                      hotSheetId={favoritesHotSheetForComments ?? undefined}
                     />
                   </div>
                 );
@@ -1275,6 +1390,26 @@ const Favorites = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {buyerMode && favoritesChatListingId && favoritesDrawerHotSheetId ? (
+        <ListingChatDrawer
+          viewerPerspective="client"
+          open={favoritesChatOpen}
+          onOpenChange={(open) => {
+            setFavoritesChatOpen(open);
+            if (!open) setFavoritesChatListingId(null);
+          }}
+          hotSheetId={favoritesDrawerHotSheetId}
+          listingId={favoritesChatListingId}
+          listingAddress={(() => {
+            const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
+            const l = fav?.listings;
+            return l ? `${l.address}, ${l.city}` : "";
+          })()}
+          messages={favoritesChatMap[favoritesChatListingId] ?? []}
+          onNewMessage={handleFavoritesChatMessage}
+        />
+      ) : null}
 
     </div>
   );

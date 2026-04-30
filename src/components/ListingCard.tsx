@@ -103,6 +103,11 @@ interface ListingCardProps {
   supplementalAgentProfile?: ListedByAgentProfile | null;
   /** Favorites: reserve listed-by row height so async profile hydrate does not jump layout */
   isFavorites?: boolean;
+  /**
+   * Favorites + hot-sheet listing grids: minimal comment row below stats / Listed by.
+   * Map/search compact cards omit this prop so the bar stays hidden.
+   */
+  showCompactComments?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -123,6 +128,7 @@ const ListingCard = ({
   isHotSheetFavorite,
   supplementalAgentProfile = null,
   isFavorites = false,
+  showCompactComments = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
@@ -642,6 +648,11 @@ const ListingCard = ({
 
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
+    const hasCommentThread = Boolean((chatMessages && chatMessages.length > 0) || clientComment);
+    const legacyCommentRowSignals = Boolean(onOpenChat || hasCommentThread || agentInfo);
+    const buyerCommentRowSignals = Boolean(showCompactComments && (onOpenChat || hasCommentThread));
+    const showCompactCommentsRow = buyerCommentRowSignals || (!showCompactComments && legacyCommentRowSignals);
+
     const currentPhoto = getPhotoByIndex(currentPhotoIndex);
     const totalPhotos = getTotalPhotos();
     const hasMultiplePhotos = totalPhotos > 1;
@@ -821,62 +832,103 @@ const ListingCard = ({
             )
           )}
 
-          {/* Comment + Attribution row */}
-          {(onOpenChat || chatMessages?.length || clientComment || agentInfo) && (
-            <div className="mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full gap-2">
-              <div className="flex-1 min-w-0">
+          {/* Comment row — minimal on Favorites / hot-sheet grids; legacy row if agent attribution without buyer flag */}
+          {showCompactCommentsRow && (
+            <div
+              className={
+                showCompactComments
+                  ? "mt-2 w-full"
+                  : "mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full gap-2"
+              }
+            >
+              <div className={showCompactComments ? "min-w-0 w-full" : "flex-1 min-w-0"}>
                 {chatMessages && chatMessages.length > 0 ? (
-                  <div
-                    className="flex items-start gap-2 text-sm p-2 rounded-md bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenChat?.();
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-foreground text-sm leading-snug truncate">
-                        <span className="font-medium">
-                          {chatMessages[chatMessages.length - 1].sender_role === "agent" ? "You" : "Client"}:
+                  showCompactComments ? (
+                    <button
+                      type="button"
+                      className="inline-flex w-full min-w-0 items-start gap-1.5 rounded-sm text-left text-[12px] text-neutral-500 transition-colors hover:text-neutral-800"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenChat?.();
+                      }}
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden />
+                      <span className="min-w-0 truncate">
+                        <span className="font-medium text-neutral-600">
+                          {chatMessages[chatMessages.length - 1].sender_role === "agent" ? "Agent" : "You"}:
                         </span>{" "}
-                        "{chatMessages[chatMessages.length - 1].comment}"
-                      </p>
-                      <p className="text-muted-foreground text-xs mt-0.5">
-                        {chatMessages.length} message{chatMessages.length !== 1 ? "s" : ""} ›
-                      </p>
+                        {chatMessages[chatMessages.length - 1].comment}
+                      </span>
+                    </button>
+                  ) : (
+                    <div
+                      className="flex items-start gap-2 text-sm p-2 rounded-md bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenChat?.();
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-foreground text-sm leading-snug truncate">
+                          <span className="font-medium">
+                            {chatMessages[chatMessages.length - 1].sender_role === "agent" ? "You" : "Client"}:
+                          </span>{" "}
+                          &quot;{chatMessages[chatMessages.length - 1].comment}&quot;
+                        </p>
+                        <p className="text-muted-foreground text-xs mt-0.5">
+                          {chatMessages.length} message{chatMessages.length !== 1 ? "s" : ""} ›
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : !chatMessages?.length && clientComment ? (
-                  <div
-                    className="flex items-start gap-2 text-sm p-2 rounded-md bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenChat?.();
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-foreground italic text-sm leading-snug truncate">
-                        Client: "{clientComment}"
-                      </p>
-                      <p className="text-muted-foreground text-xs mt-0.5">1 message ›</p>
+                  showCompactComments ? (
+                    <button
+                      type="button"
+                      className="inline-flex w-full min-w-0 items-start gap-1.5 rounded-sm text-left text-[12px] text-neutral-500 hover:text-neutral-800"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenChat?.();
+                      }}
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden />
+                      <span className="min-w-0 truncate italic">{clientComment}</span>
+                    </button>
+                  ) : (
+                    <div
+                      className="flex items-start gap-2 text-sm p-2 rounded-md bg-muted/60 border border-border cursor-pointer hover:bg-muted transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenChat?.();
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-foreground italic text-sm leading-snug truncate">
+                          Client: &quot;{clientComment}&quot;
+                        </p>
+                        <p className="text-muted-foreground text-xs mt-0.5">1 message ›</p>
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : onOpenChat ? (
                   <button
                     type="button"
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-neutral-950 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-sm text-[12px] text-neutral-500 transition-colors hover:text-neutral-900"
                     onClick={(e) => {
                       e.stopPropagation();
                       onOpenChat();
                     }}
                   >
-                    <MessageSquare className="h-3.5 w-3.5" />
+                    <MessageSquare className="h-3.5 w-3.5 shrink-0" aria-hidden />
                     Add Comment
                   </button>
-                ) : <span />}
+                ) : (
+                  <span />
+                )}
               </div>
-              {agentInfo && (
+              {!showCompactComments && agentInfo && (
                 <ListingAttribution
                   listingAgentName={agentInfo.name}
                   listingAgentCompany={agentInfo.company}

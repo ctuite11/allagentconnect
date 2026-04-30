@@ -1116,8 +1116,16 @@ if (comments && comments.length > 0) {
                   listing={listing}
                   viewMode="compact"
                   showActions={false}
+                  showCompactComments
                   onSelect={toggleListing}
                   isSelected={selectedListings.has(listing.id)}
+                  chatMessages={messagesMap[listing.id] || []}
+                  onNewMessage={handleNewMessage}
+                  onOpenChat={() => {
+                    setChatListingId(listing.id);
+                    setChatDrawerOpen(true);
+                  }}
+                  hotSheetId={id ?? undefined}
                 />
               ))}
             </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, type ComponentProps } from "react";
+import { useState, useEffect, useCallback, type ComponentProps } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate, useMatch } from "react-router-dom";
 import Footer from "@/components/Footer";
@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import ListingCard from "@/components/ListingCard";
+import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
+import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
 import {
   buyerMarketListingTileMediaWrap,
@@ -83,7 +85,20 @@ const ClientHotsheetPage = () => {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showEditCriteria, setShowEditCriteria] = useState(false);
   const [showAddFriend, setShowAddFriend] = useState(false);
+  /** Per-listing `hot_sheet_comments` for compact card thread + drawer */
+  const [listingChatByListingId, setListingChatByListingId] = useState<Record<string, ChatMessage[]>>({});
+  const [listingChatOpen, setListingChatOpen] = useState(false);
+  const [listingChatListingId, setListingChatListingId] = useState<string | null>(null);
   const hidePublicFooter = isBuyerHotSheetByIdRoute || Boolean(currentUser);
+
+  const handleListingChatMessage = useCallback((msg: ChatMessage) => {
+    setListingChatByListingId((prev) => {
+      const lid = msg.listing_id;
+      const cur = prev[lid] ?? [];
+      if (cur.some((m) => m.id === msg.id)) return prev;
+      return { ...prev, [lid]: [...cur, msg] };
+    });
+  }, []);
 
   useEffect(() => {
     if (hotSheetIdParam) {
@@ -161,6 +176,36 @@ const ClientHotsheetPage = () => {
 
     void markTokenAccepted();
   }, [hotSheetIdParam, token, tokenData, currentUser]);
+
+  useEffect(() => {
+    const hsId = hotSheet?.id as string | undefined;
+    if (!hsId || listings.length === 0) {
+      setListingChatByListingId({});
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const ids = listings.map((l) => l.id);
+      const { data, error } = await supabase
+        .from("hot_sheet_comments")
+        .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
+        .eq("hot_sheet_id", hsId)
+        .in("listing_id", ids)
+        .order("created_at", { ascending: true });
+      if (error || cancelled) return;
+      const map: Record<string, ChatMessage[]> = {};
+      for (const row of data ?? []) {
+        const lid = row.listing_id;
+        if (!lid) continue;
+        if (!map[lid]) map[lid] = [];
+        map[lid].push(row as ChatMessage);
+      }
+      if (!cancelled) setListingChatByListingId(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hotSheet?.id, listings]);
 
   const loadBuyerHotSheetById = async (hotSheetId: string) => {
     try {
@@ -752,12 +797,40 @@ const ClientHotsheetPage = () => {
                   viewMode="compact"
                   showActions={false}
                   hideMlsMeta
+                  showCompactComments
+                  hotSheetId={hotSheet?.id}
+                  chatMessages={listingChatByListingId[listing.id] ?? []}
+                  onNewMessage={handleListingChatMessage}
+                  onOpenChat={() => {
+                    setListingChatListingId(listing.id);
+                    setListingChatOpen(true);
+                  }}
                 />
               ))}
             </div>
           )}
         </div>
       </main>
+
+      {listingChatListingId && hotSheet?.id ? (
+        <ListingChatDrawer
+          viewerPerspective="client"
+          open={listingChatOpen}
+          onOpenChange={(open) => {
+            setListingChatOpen(open);
+            if (!open) setListingChatListingId(null);
+          }}
+          hotSheetId={hotSheet.id}
+          listingId={listingChatListingId}
+          listingAddress={(() => {
+            const row = listings.find((l) => l.id === listingChatListingId);
+            return row ? `${row.address}, ${row.city}` : "";
+          })()}
+          messages={listingChatByListingId[listingChatListingId] ?? []}
+          onNewMessage={handleListingChatMessage}
+        />
+      ) : null}
+
       {!hidePublicFooter && <Footer />}
     </div>
   );
