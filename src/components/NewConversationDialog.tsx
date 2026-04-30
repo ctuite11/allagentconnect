@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 interface Recipient {
   id: string;
@@ -344,8 +345,9 @@ export function NewConversationDialog({
       <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden p-0 bg-white">
         <div className="p-6 pb-0">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-zinc-900">
-              New Chat
+            <DialogTitle className="text-xl font-semibold text-zinc-900 flex items-center gap-2.5">
+              <AACMonogram className="h-8 w-8 shrink-0 text-[#50C878]" size={32} />
+              <span>New Chat</span>
             </DialogTitle>
           </DialogHeader>
         </div>
@@ -377,7 +379,7 @@ export function NewConversationDialog({
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by name or email..."
-                    className="pl-9 w-full"
+                    className="pl-9 w-full bg-white border-neutral-200 text-neutral-900 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none focus:border-[#0E56F5] focus-visible:border-[#0E56F5]"
                     autoFocus
                   />
                 </div>
@@ -400,8 +402,8 @@ export function NewConversationDialog({
                               onClick={() => setSelectedRecipient(r)}
                               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-zinc-50 transition-colors text-left"
                             >
-                              <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                                <User className="w-4 h-4 text-emerald-500" />
+                              <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                                <User className="w-4 h-4 text-neutral-500" />
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium text-zinc-900 truncate">{r.name}</p>
@@ -459,26 +461,36 @@ export function NewConversationDialog({
                   setSelectedListing(null);
                 }}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors",
+                  "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors bg-white hover:border-neutral-300 hover:bg-neutral-50",
                   listingContext === "general"
-                    ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                    : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                    ? "border-[#0E56F5] text-[#0E56F5]"
+                    : "border-neutral-200 text-neutral-600"
                 )}
               >
-                <MessageSquare className="w-4 h-4 shrink-0" />
+                <MessageSquare
+                  className={cn(
+                    "w-4 h-4 shrink-0",
+                    listingContext === "general" ? "text-[#0E56F5]" : "text-neutral-500"
+                  )}
+                />
                 General
               </button>
               <button
                 type="button"
                 onClick={() => setListingContext("listing")}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors",
+                  "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors bg-white hover:border-neutral-300 hover:bg-neutral-50",
                   listingContext === "listing"
-                    ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                    : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                    ? "border-[#0E56F5] text-[#0E56F5]"
+                    : "border-neutral-200 text-neutral-600"
                 )}
               >
-                <Building2 className="w-4 h-4 shrink-0" />
+                <Building2
+                  className={cn(
+                    "w-4 h-4 shrink-0",
+                    listingContext === "listing" ? "text-[#0E56F5]" : "text-neutral-500"
+                  )}
+                />
                 About a listing
               </button>
             </div>
@@ -597,7 +609,7 @@ export function NewConversationDialog({
               type="button"
               onClick={() => void handleSend()}
               disabled={!canSend}
-              className="bg-[#0E56F5] text-white hover:bg-[#0C4ED1] disabled:bg-zinc-200 disabled:text-zinc-500 disabled:hover:bg-zinc-200 disabled:opacity-100"
+              className="bg-[#0E56F5] text-white hover:bg-[#0C4ED1] disabled:pointer-events-auto disabled:bg-neutral-200 disabled:text-neutral-500 disabled:hover:bg-neutral-200 disabled:opacity-100 disabled:cursor-not-allowed"
             >
               {sending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
