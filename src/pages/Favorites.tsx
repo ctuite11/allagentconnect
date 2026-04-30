@@ -350,6 +350,7 @@ const Favorites = ({
           state: l.state,
           zip_code: l.zip_code,
           price: l.price,
+          status: l.status,
           bedrooms: l.bedrooms,
           bathrooms: l.bathrooms,
           square_feet: l.square_feet,
