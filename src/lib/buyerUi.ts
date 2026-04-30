@@ -44,7 +44,7 @@ export const buyerDashboardHotFavTileBody =
 
 /** 3-cell collage on dashboard hot-sheet preview (left tall + right stack) */
 export const buyerDashboardHotSheetCollageGrid =
-  "grid h-full w-full grid-cols-[3fr_2fr] grid-rows-2 gap-0 bg-white [grid-template-rows:repeat(2,minmax(0,1fr))]";
+  "grid h-full w-full grid-cols-[3fr_2fr] grid-rows-2 gap-[2px] bg-white [grid-template-rows:repeat(2,minmax(0,1fr))]";
 
 /** Market activity / search result–style listing preview on dashboard */
 export const buyerMarketListingTileMediaWrap =
@@ -99,9 +99,9 @@ export const buyerPreviewSectionHeaderRow =
 
 export const buyerPreviewSectionTitleWrap = "min-w-0 space-y-1";
 
-/** 2×2 listing photo mosaic — no gutters */
+/** 2×2 listing photo mosaic — thin white gutters between cells */
 export const buyerImageMosaicGrid =
-  "aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-0 bg-white shrink-0";
+  "aspect-[4/3] grid grid-cols-2 grid-rows-2 gap-[2px] bg-white shrink-0";
 
 export const buyerImageMosaicCell =
   "relative h-full w-full min-h-0 overflow-hidden bg-white";

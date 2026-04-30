@@ -25,7 +25,7 @@ function HotSheetPageMosaic({ photoUrls }: { photoUrls: string[] }) {
   const cellWrap = "relative min-h-0 min-w-0 overflow-hidden bg-white";
 
   return (
-    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-px bg-white [grid-template-columns:minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-[2px] bg-white [grid-template-columns:minmax(0,3fr)_minmax(0,2fr)]">
       <div className={`${cellWrap} row-span-2`}>
         <DashboardListingImage
           photoUrl={a}
