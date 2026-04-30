@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentProps } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate, useMatch } from "react-router-dom";
 import Footer from "@/components/Footer";
@@ -9,14 +9,13 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { Heart, Bed, Bath, Maximize, MapPin, UserCircle2, MessageSquare, Mail, Phone, Building2, ArrowLeft, UserPlus, Plus } from "lucide-react";
-import FavoriteButton from "@/components/FavoriteButton";
+import { ArrowLeft, UserPlus, Plus } from "lucide-react";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
-import { ListingAttribution } from "@/components/ListingAttribution";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
+import ListingCard from "@/components/ListingCard";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
 import {
   buyerMarketListingTileMediaWrap,
@@ -24,9 +23,10 @@ import {
   buyerPageShell,
 } from "@/lib/buyerUi";
 
-interface Listing {
+/** Row from `buildListingsQuery` with optional embed for “Listed by” */
+interface HotSheetListingRow {
   id: string;
-  listing_number: string;
+  listing_number?: string | null;
   address: string;
   city: string;
   state: string;
@@ -39,7 +39,31 @@ interface Listing {
   square_feet: number | null;
   property_type: string | null;
   photos: any;
-  description: string | null;
+  description?: string | null;
+  status: string;
+  agent_profile?: ListedByAgentProfile;
+  [key: string]: unknown;
+}
+
+function mergeListingAgentProfiles<T extends { agent_id?: string | null }>(
+  rows: T[],
+  agentsData: { id: string; first_name: string; last_name: string; company: string | null; office_name: string | null }[],
+): (T & { agent_profile?: ListedByAgentProfile })[] {
+  const byId = new Map(agentsData.map((a) => [a.id, a]));
+  return rows.map((l) => {
+    const aid = l.agent_id;
+    if (typeof aid !== "string" || !byId.has(aid)) return { ...l } as T & { agent_profile?: ListedByAgentProfile };
+    const a = byId.get(aid)!;
+    return {
+      ...l,
+      agent_profile: {
+        company: a.company,
+        office_name: a.office_name,
+        first_name: a.first_name,
+        last_name: a.last_name,
+      },
+    };
+  });
 }
 
 const ClientHotsheetPage = () => {
@@ -53,8 +77,7 @@ const ClientHotsheetPage = () => {
   const [hotSheet, setHotSheet] = useState<any>(null);
   const [agentProfile, setAgentProfile] = useState<any>(null);
   const [agent, setAgent] = useState<any>(null);
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
+  const [listings, setListings] = useState<HotSheetListingRow[]>([]);
   const [tokenData, setTokenData] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -208,41 +231,21 @@ const ClientHotsheetPage = () => {
         throw listingsError;
       }
 
-      setListings(listingsData || []);
-
+      const rawListings = listingsData || [];
       const agentIds = Array.from(
-        new Set(
-          (listingsData || [])
-            .map((l: any) => l.agent_id)
-            .filter((id: string | null | undefined) => Boolean(id))
-        )
+        new Set(rawListings.map((l: { agent_id?: string | null }) => l.agent_id).filter((id): id is string => Boolean(id))),
       );
-
+      let hydrated: HotSheetListingRow[] = rawListings as HotSheetListingRow[];
       if (agentIds.length > 0) {
         const { data: agentsData, error: agentsError } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, company")
+          .select("id, first_name, last_name, company, office_name")
           .in("id", agentIds);
-
-        if (agentsError) {
-          console.error("Failed to load listing agents for client hotsheet", agentsError);
-        } else if (agentsData) {
-          const agentMapping = agentsData.reduce(
-            (
-              acc: Record<string, { fullName: string; company?: string | null }>,
-              row: any
-            ) => {
-              acc[row.id] = {
-                fullName: `${row.first_name} ${row.last_name}`,
-                company: row.company,
-              };
-              return acc;
-            },
-            {} as Record<string, { fullName: string; company?: string | null }>
-          );
-          setAgentMap(agentMapping);
+        if (!agentsError && agentsData?.length) {
+          hydrated = mergeListingAgentProfiles(rawListings as { agent_id?: string }[], agentsData);
         }
       }
+      setListings(hydrated);
 
       setLoading(false);
     } catch (err: any) {
@@ -358,42 +361,21 @@ const ClientHotsheetPage = () => {
       }
 
       console.log("Client hotsheet listings", listingsData);
-      setListings(listingsData || []);
-
-      // Load listing agents for display
+      const rawListings = listingsData || [];
       const agentIds = Array.from(
-        new Set(
-          (listingsData || [])
-            .map((l: any) => l.agent_id)
-            .filter((id: string | null | undefined) => Boolean(id))
-        )
+        new Set(rawListings.map((l: { agent_id?: string | null }) => l.agent_id).filter((id): id is string => Boolean(id))),
       );
-
+      let hydrated: HotSheetListingRow[] = rawListings as HotSheetListingRow[];
       if (agentIds.length > 0) {
         const { data: agentsData, error: agentsError } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, company")
+          .select("id, first_name, last_name, company, office_name")
           .in("id", agentIds);
-
-        if (agentsError) {
-          console.error("Failed to load listing agents for client hotsheet", agentsError);
-        } else if (agentsData) {
-          const agentMapping = agentsData.reduce(
-            (
-              acc: Record<string, { fullName: string; company?: string | null }>,
-              agent: any
-            ) => {
-              acc[agent.id] = {
-                fullName: `${agent.first_name} ${agent.last_name}`,
-                company: agent.company,
-              };
-              return acc;
-            },
-            {} as Record<string, { fullName: string; company?: string | null }>
-          );
-          setAgentMap(agentMapping);
+        if (!agentsError && agentsData?.length) {
+          hydrated = mergeListingAgentProfiles(rawListings as { agent_id?: string }[], agentsData);
         }
       }
+      setListings(hydrated);
 
       // ✅ SUCCESS – stop loading
       setLoading(false);
@@ -583,28 +565,27 @@ const ClientHotsheetPage = () => {
             {isBuyerHotSheetByIdRoute ? "Back to Hot Sheets" : "Back to Your Account"}
           </Button>
 
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-lg font-medium">
-              Saved Search:{" "}
-              <span className="text-[#0E56F5]">{hotSheet?.name || "Your Custom Saved Search"}</span>
-            </h1>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={() => navigate("/client/hotsheets/new")}
-            >
-              <Plus className="w-4 h-4" />
-              Create New Saved Search
-            </Button>
-          </div>
-
-          {/* Search Criteria */}
+          {/* Search criteria + header (hot sheet name + create) */}
           <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Search Criteria</CardTitle>
-                <div className="flex items-center gap-2">
+            <CardHeader className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <p className="text-base font-medium text-foreground">
+                  Hot Sheet Name:{" "}
+                  <span className="text-[#0E56F5]">{hotSheet?.name || "Untitled hot sheet"}</span>
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 gap-1.5 sm:self-start"
+                  onClick={() => navigate("/client/hotsheets/new")}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create New Hot Sheet
+                </Button>
+              </div>
+              <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="text-base font-semibold">Search Criteria</CardTitle>
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -617,7 +598,7 @@ const ClientHotsheetPage = () => {
                   <Button
                     onClick={() => {
                       if (!hotSheet?.user_id) {
-                        toast.error("This saved search cannot be edited right now");
+                        toast.error("This hot sheet cannot be edited right now");
                         return;
                       }
                       setShowEditCriteria(true);
@@ -764,77 +745,15 @@ const ClientHotsheetPage = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((listing) => {
-                const photos = listing.photos || [];
-                const photoUrl = photos[0]?.url || "";
-                const agent = agentMap[listing.agent_id];
-
-                return (
-                  <Card
-                    key={listing.id}
-                    className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => navigate(`/property/${listing.id}`)}
-                  >
-                    <div className={buyerMarketListingTileMediaWrap}>
-                      {photoUrl ? (
-                        <img
-                          src={photoUrl}
-                          alt={listing.address}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-white">
-                          <MapPin className="h-12 w-12 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
-                        <FavoriteButton listingId={listing.id} size="icon" />
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="mb-2">
-                        <h3 className="font-semibold text-lg mb-1">{listing.address}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {listing.city}, {listing.state} {listing.zip_code}
-                        </p>
-                      </div>
-                      <p className="text-2xl font-bold text-primary mb-3">
-                        ${listing.price?.toLocaleString()}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                        {listing.bedrooms !== null && (
-                          <div className="flex items-center gap-1">
-                            <Bed className="h-4 w-4" />
-                            <span>{listing.bedrooms} beds</span>
-                          </div>
-                        )}
-                        {listing.bathrooms !== null && (
-                          <div className="flex items-center gap-1">
-                            <Bath className="h-4 w-4" />
-                            <span>{listing.bathrooms} baths</span>
-                          </div>
-                        )}
-                        {listing.square_feet && (
-                          <div className="flex items-center gap-1">
-                            <Maximize className="h-4 w-4" />
-                            <span>{listing.square_feet.toLocaleString()} sqft</span>
-                          </div>
-                        )}
-                      </div>
-                      {agentProfile && (
-                        <p className="text-xs text-muted-foreground border-t pt-2">
-                          <ListingAttribution
-                            listingAgentName={agent?.fullName}
-                            listingAgentCompany={agent?.company}
-                            viewerRole="buyer"
-                            stickyAgentName={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                          />
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+              {listings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing as ComponentProps<typeof ListingCard>["listing"]}
+                  viewMode="compact"
+                  showActions={false}
+                  hideMlsMeta
+                />
+              ))}
             </div>
           )}
         </div>
