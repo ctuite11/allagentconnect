@@ -161,6 +161,10 @@ const Favorites = ({
   const [favoritesChatMap, setFavoritesChatMap] = useState<Record<string, ChatMessage[]>>({});
   const [favoritesChatOpen, setFavoritesChatOpen] = useState(false);
   const [favoritesChatListingId, setFavoritesChatListingId] = useState<string | null>(null);
+  /** `undefined` = not resolved yet (omit inbox sync); `null` = sheet has no owner */
+  const [favoritesConversationAgentUserId, setFavoritesConversationAgentUserId] = useState<
+    string | null | undefined
+  >(undefined);
 
   const handleFavoritesChatMessage = useCallback((msg: ChatMessage) => {
     setFavoritesChatMap((prev) => {
@@ -226,6 +230,32 @@ const Favorites = ({
     if (msgs?.length) return msgs[msgs.length - 1].hot_sheet_id;
     return favoritesHotSheetForComments;
   }, [favoritesChatListingId, favoritesChatMap, favoritesHotSheetForComments]);
+
+  useEffect(() => {
+    if (!buyerMode || !favoritesDrawerHotSheetId) {
+      setFavoritesConversationAgentUserId(undefined);
+      return;
+    }
+    setFavoritesConversationAgentUserId(undefined);
+    let cancelled = false;
+    void supabase
+      .from("hot_sheets")
+      .select("user_id")
+      .eq("id", favoritesDrawerHotSheetId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          console.error("hot_sheets lookup for messaging sync:", error);
+          setFavoritesConversationAgentUserId(null);
+          return;
+        }
+        setFavoritesConversationAgentUserId(data?.user_id ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [buyerMode, favoritesDrawerHotSheetId]);
 
   useEffect(() => {
     checkAuth();
@@ -1204,6 +1234,7 @@ const Favorites = ({
             })()}
             messages={favoritesChatMap[favoritesChatListingId] ?? []}
             onNewMessage={handleFavoritesChatMessage}
+            conversationRecipientUserId={favoritesConversationAgentUserId}
           />
         ) : null}
       </div>
@@ -1408,6 +1439,7 @@ const Favorites = ({
           })()}
           messages={favoritesChatMap[favoritesChatListingId] ?? []}
           onNewMessage={handleFavoritesChatMessage}
+          conversationRecipientUserId={favoritesConversationAgentUserId}
         />
       ) : null}
 

@@ -828,6 +828,9 @@ const ClientHotsheetPage = () => {
           })()}
           messages={listingChatByListingId[listingChatListingId] ?? []}
           onNewMessage={handleListingChatMessage}
+          conversationRecipientUserId={
+            !loading && !error && hotSheet ? hotSheet.user_id ?? null : undefined
+          }
         />
       ) : null}
 

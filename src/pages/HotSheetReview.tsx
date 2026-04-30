@@ -274,6 +274,12 @@ const HotSheetReview = () => {
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
+  /** Buyer auth user id for mirroring listing comments into `/messages`; null if none linked */
+  const [conversationRecipientBuyerId, setConversationRecipientBuyerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setConversationRecipientBuyerId(null);
+  }, [id]);
 
   useEffect(() => {
     if (id) {
@@ -377,6 +383,35 @@ const HotSheetReview = () => {
       if (hotSheetError) throw hotSheetError;
       setHotSheet(hotSheetData);
       if (!hscErr) setClientCount(hscCount ?? 0);
+
+      let buyerAuthForConversationSync: string | null = null;
+      if (hotSheetData && user) {
+        const { data: hscRelRows } = await supabase
+          .from("hot_sheet_clients")
+          .select("client_id")
+          .eq("hot_sheet_id", hotSheetData.id);
+        const crmIds = new Set<string>();
+        for (const row of hscRelRows ?? []) {
+          if (row.client_id) crmIds.add(row.client_id);
+        }
+        if (hotSheetData.client_id) crmIds.add(hotSheetData.client_id);
+        if (crmIds.size > 0) {
+          const { data: relRows } = await supabase
+            .from("client_agent_relationships")
+            .select("client_id, crm_client_id")
+            .eq("agent_id", user.id)
+            .eq("status", "active")
+            .in("crm_client_id", [...crmIds]);
+          const relList = relRows ?? [];
+          const primaryCrm = hotSheetData.client_id;
+          const chosen =
+            primaryCrm && relList.some((r) => r.crm_client_id === primaryCrm)
+              ? relList.find((r) => r.crm_client_id === primaryCrm)
+              : relList[0];
+          buyerAuthForConversationSync = chosen?.client_id ?? null;
+        }
+      }
+      setConversationRecipientBuyerId(buyerAuthForConversationSync);
 
       // Check if invites already sent: ALL eligible clients have an email_enqueued/invite_resent event
       if (hotSheetData && user) {
@@ -1146,6 +1181,7 @@ if (comments && comments.length > 0) {
           }
           messages={messagesMap[chatListingId] || []}
           onNewMessage={handleNewMessage}
+          conversationRecipientUserId={loading ? undefined : conversationRecipientBuyerId}
         />
       )}
 

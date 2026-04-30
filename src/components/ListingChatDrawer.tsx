@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { mirrorListingChatToConversation } from "@/lib/mirrorListingChatToConversation";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -27,6 +28,11 @@ interface ListingChatDrawerProps {
   onNewMessage: (msg: ChatMessage) => void;
   /** Agent workspace vs buyer: controls bubble alignment + insert shape (matches `ClientHotSheet` client posts). */
   viewerPerspective?: "agent" | "client";
+  /**
+   * When set (auth.users id of the DM counterparty), each successful hot-sheet comment
+   * is also written to `conversation_messages` so it appears under /messages and emails the recipient.
+   */
+  conversationRecipientUserId?: string | null;
 }
 
 const ListingChatDrawer = ({
@@ -38,6 +44,7 @@ const ListingChatDrawer = ({
   messages,
   onNewMessage,
   viewerPerspective = "agent",
+  conversationRecipientUserId,
 }: ListingChatDrawerProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -110,14 +117,46 @@ const ListingChatDrawer = ({
 
       const { data, error } = await supabase.from("hot_sheet_comments").insert(insertRow).select().single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("hot_sheet_comments insert:", error.message, error);
+        toast.error(error.message || "Failed to save comment");
+        return;
+      }
 
       // Optimistic: add locally (realtime will also fire but we dedupe by id)
       onNewMessage(data as ChatMessage);
       setNewMessage("");
+
+      if (conversationRecipientUserId !== undefined) {
+        const recipient =
+          typeof conversationRecipientUserId === "string"
+            ? conversationRecipientUserId.trim()
+            : "";
+        if (recipient) {
+          const synced = await mirrorListingChatToConversation({
+            listingId,
+            body: text,
+            recipientUserId: recipient,
+          });
+          if (!synced.ok) {
+            console.warn("conversation mirror failed:", synced.message);
+            toast.error(`Saved on listing, but inbox sync failed: ${synced.message}`);
+          }
+        } else if (viewerPerspective === "agent") {
+          toast.warning(
+            "Comment saved on this hot sheet. Link an onboarded buyer to your sheet for inbox and email alerts.",
+            { duration: 6000 },
+          );
+        } else {
+          toast.warning(
+            "Comment saved here, but Messages could not be synced — this sheet has no tied agent.",
+            { duration: 6000 },
+          );
+        }
+      }
     } catch (err: any) {
       console.error("Error sending message:", err);
-      toast.error("Failed to send message");
+      toast.error(err?.message ?? "Failed to send message");
     } finally {
       setSending(false);
     }
