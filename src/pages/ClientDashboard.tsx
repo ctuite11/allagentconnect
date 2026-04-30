@@ -226,41 +226,44 @@ export default function ClientDashboard() {
   };
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/consumer/auth");
-      return;
-    }
-
-    const resolvedName = await resolveBuyerGreetingName(
-      user.id,
-      user.email,
-      (user.user_metadata?.display_name as string | undefined) ?? null
-    );
-    setBuyerFirstName(resolvedName);
-
-    const cameFromInviteAcceptance = consumeInviteHandoffMarker();
-    if (cameFromInviteAcceptance) {
-      setRelationshipHydrating(true);
-    }
-
-    setCurrentUserId(user.id);
-
     try {
-      const activeAgentId = await loadAgentRelationship(user.id);
-      await Promise.all([
-        loadBuyerHotSheetsForDashboard(user.id),
-        loadFavorites(user.id),
-        loadMarketListings(),
-      ]);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth", { replace: true });
+        return;
+      }
 
-      if (cameFromInviteAcceptance && !activeAgentId) {
-        await new Promise((resolve) => window.setTimeout(resolve, 1200));
-        await loadAgentRelationship(user.id);
-        await loadBuyerHotSheetsForDashboard(user.id);
+      const resolvedName = await resolveBuyerGreetingName(
+        user.id,
+        user.email,
+        (user.user_metadata?.display_name as string | undefined) ?? null
+      );
+      setBuyerFirstName(resolvedName);
+
+      const cameFromInviteAcceptance = consumeInviteHandoffMarker();
+      if (cameFromInviteAcceptance) {
+        setRelationshipHydrating(true);
+      }
+
+      setCurrentUserId(user.id);
+
+      try {
+        const activeAgentId = await loadAgentRelationship(user.id);
+        await Promise.all([
+          loadBuyerHotSheetsForDashboard(user.id),
+          loadFavorites(user.id),
+          loadMarketListings(),
+        ]);
+
+        if (cameFromInviteAcceptance && !activeAgentId) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1200));
+          await loadAgentRelationship(user.id);
+          await loadBuyerHotSheetsForDashboard(user.id);
+        }
+      } finally {
+        setRelationshipHydrating(false);
       }
     } finally {
-      setRelationshipHydrating(false);
       setLoading(false);
     }
   };
@@ -723,18 +726,18 @@ export default function ClientDashboard() {
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                  if (label === "Favorites") navigate("/client/favorites");
+                  if (label === "Favorites") navigate("/favorites");
                   if (label === "New Matches") navigate("/client/search");
                   if (label === "Unread Messages") navigate("/messages");
-                  if (label === "Hot Sheets") navigate("/client/hot-sheets");
+                  if (label === "Hot Sheets") navigate("/hot-sheets");
                 }}
                 onKeyDown={(e) => {
                   if (e.key !== "Enter" && e.key !== " ") return;
                   e.preventDefault();
-                  if (label === "Favorites") navigate("/client/favorites");
+                  if (label === "Favorites") navigate("/favorites");
                   if (label === "New Matches") navigate("/client/search");
                   if (label === "Unread Messages") navigate("/messages");
-                  if (label === "Hot Sheets") navigate("/client/hot-sheets");
+                  if (label === "Hot Sheets") navigate("/hot-sheets");
                 }}
                 className={`${aacCardInteractive} p-5 md:p-6`}
               >
@@ -773,7 +776,7 @@ export default function ClientDashboard() {
                         <Button
                           type="button"
                           className={aacPrimarySectionCta}
-                          onClick={() => navigate("/client/hot-sheets")}
+                          onClick={() => navigate("/hot-sheets")}
                         >
                           View all
                         </Button>
@@ -829,7 +832,7 @@ export default function ClientDashboard() {
                       <CardTitle className={dashSectionTitleClass}>Favorites</CardTitle>
                       <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>Homes you saved.</CardDescription>
                     </div>
-                    <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/favorites")}>
+                    <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/favorites")}>
                       View all
                     </Button>
                   </div>

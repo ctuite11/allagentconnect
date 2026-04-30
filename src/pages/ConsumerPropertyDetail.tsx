@@ -369,7 +369,9 @@ const ConsumerPropertyDetail = () => {
           const searchParams = new URLSearchParams(location.search);
           const stateFrom = (location.state as { from?: string } | null)?.from;
           const fromFavorites =
-            searchParams.get("from") === "favorites" || stateFrom === "/client/favorites";
+            searchParams.get("from") === "favorites" ||
+            stateFrom === "/client/favorites" ||
+            stateFrom === "/favorites";
           const backLabel = fromFavorites
             ? "← Back to Favorites"
             : stateFrom === "/client/search"
@@ -383,8 +385,8 @@ const ConsumerPropertyDetail = () => {
               onClick={() => {
                 const p = new URLSearchParams(location.search);
                 const st = (location.state as { from?: string } | null)?.from;
-                if (p.get("from") === "favorites" || st === "/client/favorites") {
-                  navigate("/client/favorites");
+                if (p.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
+                  navigate("/favorites");
                   return;
                 }
                 if (st) {

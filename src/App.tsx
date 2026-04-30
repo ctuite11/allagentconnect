@@ -1,10 +1,10 @@
 
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
@@ -134,6 +134,31 @@ import BuyerMessagingWorkspace from "./pages/BuyerMessagingWorkspace";
 import PublicAgentProfile from "./pages/PublicAgentProfile";
 import Footer from "./components/Footer";
 import { useAuthRole } from "./hooks/useAuthRole";
+import { LoadingScreen } from "./components/LoadingScreen";
+
+/** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
+function LegacyDashboardRedirect() {
+  const { role, loading } = useAuthRole();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    if (role === "admin") {
+      navigate("/admin/approvals", { replace: true });
+    } else if (role === "agent") {
+      navigate("/agent-dashboard", { replace: true });
+    } else if (role === "buyer") {
+      navigate("/client/dashboard", { replace: true });
+    } else {
+      navigate("/auth", { replace: true });
+    }
+  }, [loading, role, navigate]);
+
+  if (loading) {
+    return <LoadingScreen message="Redirecting..." />;
+  }
+  return null;
+}
 
 // Legacy redirect for /client-hot-sheet/:token → /client/hotsheet/:token
 function LegacyClientHotSheetRedirect() {
@@ -329,6 +354,7 @@ const App = () => (
                 <Route path="/property/:id" element={<><PropertyDetail /><Footer /></>} />
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowseEntry />} />
+                <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
                 <Route path="/search" element={<PublicSearchResults />} />
                 <Route path="/our-agents" element={<PublicOurAgents />} />
                 <Route path="/agents" element={<PublicOurAgents />} />
