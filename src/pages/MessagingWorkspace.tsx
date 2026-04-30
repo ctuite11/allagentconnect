@@ -112,7 +112,7 @@ function MessagingWorkspaceContent({
               : "flex gap-5 h-[calc(100vh-2rem)]"
           }
         >
-          <div className={`h-full min-h-0 w-[380px] shrink-0 ${buyerMessagingPanel}`}>
+          <div className={`h-full min-h-0 w-[320px] shrink-0 ${buyerMessagingPanel}`}>
             <ConversationsList
               threads={safeThreads}
               threadsLoading={Boolean(threadsLoading)}
@@ -130,7 +130,7 @@ function MessagingWorkspaceContent({
             />
           </div>
 
-          <div className={`flex-[1.3] min-h-0 min-w-0 h-full ${buyerMessagingPanel}`}>
+          <div className={`flex flex-1 min-h-0 min-w-0 flex-col h-full ${buyerMessagingPanel}`}>
             <ConversationPanel
               conversationId={selectedConversationId}
               onInboxInvalidate={() => void refetchThreads()}

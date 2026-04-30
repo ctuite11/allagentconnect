@@ -9,6 +9,7 @@ import { MessageRow } from "./MessageRow";
 import { DateSeparator } from "./DateSeparator";
 import { MessageComposer } from "./MessageComposer";
 import { UserAvatar } from "./UserAvatar";
+import { messagingChatColumnClass } from "./chatColumnClasses";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -69,17 +70,23 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 space-y-4">
-        <div className="flex items-center gap-3 mb-6">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <Skeleton className="h-6 w-40" />
-        </div>
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-2 mt-5">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-56" />
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <div className="shrink-0 border-b border-zinc-200 px-6 py-3">
+          <div className={cn(messagingChatColumnClass, "flex items-center gap-3")}>
+            <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+            <Skeleton className="h-6 w-40" />
           </div>
-        ))}
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-6 pt-4 pb-5">
+          <div className={cn(messagingChatColumnClass, "space-y-4")}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="mt-5 space-y-2 first:mt-0">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-56" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -101,8 +108,8 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   if (fetchError) {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-6 py-4 border-b border-zinc-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
+        <div className="shrink-0 border-b border-zinc-200 px-6 py-3">
+          <div className={cn(messagingChatColumnClass, "flex items-center justify-between")}>
             <h2 className="text-[15px] font-semibold text-zinc-900 truncate">
               {details?.otherUserName ?? "Conversation"}
             </h2>
@@ -156,11 +163,11 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
     : null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 h-full flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-zinc-200 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="shrink-0 border-b border-zinc-200 px-6 py-3">
+        <div className={cn(messagingChatColumnClass, "flex items-center justify-between gap-4")}>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <UserAvatar
               name={details?.otherUserName ?? ""}
               headshotUrl={details?.otherUserHeadshotUrl ?? null}
@@ -194,6 +201,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
             </div>
           </div>
           <button
+            type="button"
             onClick={() => navigate(from ?? "/agent-dashboard")}
             className="p-2 -mr-2 hover:bg-zinc-100 rounded-lg transition-colors text-zinc-400 hover:text-zinc-600"
           >
@@ -203,15 +211,17 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
       </div>
 
       {/* Thread */}
-      <div className="flex-1 overflow-y-auto px-6 py-5 bg-zinc-50">
-        {messages.length === 0 ? (
-          <div className="text-center text-zinc-400 py-12 text-sm">
-            No messages yet. Send the first message when you are ready.
-          </div>
-        ) : (
-          threadElements
-        )}
-        <div ref={messagesEndRef} />
+      <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-6 pt-4 pb-5">
+        <div className={messagingChatColumnClass}>
+          {messages.length === 0 ? (
+            <div className="py-10 text-center text-sm text-zinc-400">
+              No messages yet. Send the first message when you are ready.
+            </div>
+          ) : (
+            threadElements
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Composer */}
