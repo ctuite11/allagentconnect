@@ -8,6 +8,15 @@ import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import PropertyMap from "@/components/PropertyMap";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { isDcmlsHost } from "@/lib/host";
+import {
+  RENT_PRICE_ABS_MAX,
+  RENT_PRICE_ABS_MIN,
+  RENT_PRICE_STEP_VALUES,
+  SALE_PRICE_ABS_MAX,
+  SALE_PRICE_ABS_MIN,
+  defaultRentToolbarCriteria,
+  salePriceStepValues,
+} from "@/lib/buyerSearchRentFilters";
 import { toast } from "sonner";
 import FavoriteButton from "@/components/FavoriteButton";
 import {
@@ -61,8 +70,6 @@ const PROPERTY_TYPE_OPTIONS = [
 ];
 
 const BATH_PRESETS = ["Any", "1+", "1.5+", "2+", "3+", "4+"];
-const PRICE_ABS_MIN = 50_000;
-const PRICE_ABS_MAX = 10_000_000;
 
 function parseCriteriaFromUrl(search: string): Partial<SearchCriteria> {
   const params = new URLSearchParams(search);
@@ -81,6 +88,11 @@ function parseCriteriaFromUrl(search: string): Partial<SearchCriteria> {
   if (params.has("towns")) urlCriteria.towns = params.get("towns")!.split("|");
   if (params.has("neighborhoods")) urlCriteria.neighborhoods = params.get("neighborhoods")!.split("|");
   if (params.has("showAreas")) urlCriteria.showAreas = params.get("showAreas") === "yes";
+
+  // Rental URLs always resolve to residential rentals only (purpose-built rental search).
+  if (urlCriteria.listingType === "for_rent") {
+    urlCriteria.propertyTypes = ["residential_rental"];
+  }
 
   return urlCriteria;
 }
@@ -159,7 +171,11 @@ export default function BuyerMapSearch() {
     setLocationInput("");
   }, [criteria.zipCode, criteria.towns]);
 
+  const isRentSearch = criteria.listingType === "for_rent";
+
   const hasActiveFilters = useMemo(() => {
+    const typesCount =
+      !isRentSearch && criteria.propertyTypes && criteria.propertyTypes.length > 0;
     return Boolean(
       (criteria.towns && criteria.towns.length > 0) ||
         (criteria.neighborhoods && criteria.neighborhoods.length > 0) ||
@@ -168,9 +184,9 @@ export default function BuyerMapSearch() {
         criteria.maxPrice ||
         criteria.bedrooms ||
         criteria.bathrooms ||
-        (criteria.propertyTypes && criteria.propertyTypes.length > 0)
+        typesCount
     );
-  }, [criteria]);
+  }, [criteria, isRentSearch]);
 
   useEffect(() => {
     if (!selectedListingId) return;
@@ -449,10 +465,10 @@ export default function BuyerMapSearch() {
     if (criteria.zipCode || (criteria.towns && criteria.towns.length > 0)) count += 1;
     if (criteria.minPrice || criteria.maxPrice) count += 1;
     if (criteria.bedrooms || criteria.bathrooms) count += 1;
-    if (criteria.propertyTypes && criteria.propertyTypes.length > 0) count += 1;
+    if (!isRentSearch && criteria.propertyTypes && criteria.propertyTypes.length > 0) count += 1;
     if (criteria.statuses && criteria.statuses.length > 0 && criteria.statuses.length < 4) count += 1;
     return count;
-  }, [criteria]);
+  }, [criteria, isRentSearch]);
 
   const priceButtonLabel = useMemo(() => {
     if (!criteria.minPrice && !criteria.maxPrice) return "Price";
@@ -485,36 +501,36 @@ export default function BuyerMapSearch() {
     return `${criteria.bathrooms}+`;
   }, [criteria.bathrooms]);
 
-  const priceStepValues = useMemo(() => {
-    const values: number[] = [];
+  const priceFloor = isRentSearch ? RENT_PRICE_ABS_MIN : SALE_PRICE_ABS_MIN;
+  const priceCeil = isRentSearch ? RENT_PRICE_ABS_MAX : SALE_PRICE_ABS_MAX;
 
-    for (let v = 50_000; v <= 500_000; v += 25_000) values.push(v);
-    for (let v = 550_000; v <= 1_000_000; v += 50_000) values.push(v);
-    for (let v = 1_250_000; v <= 5_000_000; v += 250_000) values.push(v);
-    for (let v = 6_000_000; v <= 10_000_000; v += 1_000_000) values.push(v);
+  const priceStepValues = useMemo(
+    () => (isRentSearch ? [...RENT_PRICE_STEP_VALUES] : salePriceStepValues()),
+    [isRentSearch],
+  );
 
-    return values;
-  }, []);
+  const snapToNearestPriceStep = useCallback(
+    (value: number) => {
+      if (!Number.isFinite(value)) return priceFloor;
+      const bounded = Math.max(priceFloor, Math.min(value, priceCeil));
 
-  const snapToNearestPriceStep = useCallback((value: number) => {
-    if (!Number.isFinite(value)) return PRICE_ABS_MIN;
-    const bounded = Math.max(PRICE_ABS_MIN, Math.min(value, PRICE_ABS_MAX));
-
-    let nearest = priceStepValues[0];
-    let minDiff = Math.abs(nearest - bounded);
-    for (const candidate of priceStepValues) {
-      const diff = Math.abs(candidate - bounded);
-      if (diff < minDiff) {
-        minDiff = diff;
-        nearest = candidate;
+      let nearest = priceStepValues[0] ?? bounded;
+      let minDiff = Math.abs(nearest - bounded);
+      for (const candidate of priceStepValues) {
+        const diff = Math.abs(candidate - bounded);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nearest = candidate;
+        }
       }
-    }
 
-    return nearest;
-  }, [priceStepValues]);
+      return nearest;
+    },
+    [priceStepValues, priceFloor, priceCeil],
+  );
 
   const normalizePriceDraft = (field: "min" | "max") => {
-    const fallback = field === "min" ? PRICE_ABS_MIN : PRICE_ABS_MAX;
+    const fallback = field === "min" ? priceFloor : priceCeil;
     const raw = field === "min" ? priceDraft.min : priceDraft.max;
     const parsed = Number(raw);
     const snapped = snapToNearestPriceStep(Number.isFinite(parsed) && parsed > 0 ? parsed : fallback);
@@ -547,25 +563,27 @@ export default function BuyerMapSearch() {
 
   const draftMinNumber = useMemo(() => {
     const parsed = Number(priceDraft.min);
-    if (!priceDraft.min || !Number.isFinite(parsed)) return PRICE_ABS_MIN;
+    if (!priceDraft.min || !Number.isFinite(parsed)) return priceFloor;
     return snapToNearestPriceStep(parsed);
-  }, [priceDraft.min, snapToNearestPriceStep]);
+  }, [priceDraft.min, snapToNearestPriceStep, priceFloor]);
 
   const draftMaxNumber = useMemo(() => {
     const parsed = Number(priceDraft.max);
-    if (!priceDraft.max || !Number.isFinite(parsed)) return PRICE_ABS_MAX;
+    if (!priceDraft.max || !Number.isFinite(parsed)) return priceCeil;
     return snapToNearestPriceStep(parsed);
-  }, [priceDraft.max, snapToNearestPriceStep]);
+  }, [priceDraft.max, snapToNearestPriceStep, priceCeil]);
 
   const sliderMinValue = Math.min(draftMinNumber, draftMaxNumber);
   const sliderMaxValue = Math.max(draftMinNumber, draftMaxNumber);
 
   const sliderMinIndex = useMemo(() => {
-    return Math.max(0, priceStepValues.indexOf(sliderMinValue));
+    const i = priceStepValues.indexOf(sliderMinValue);
+    return Math.max(0, i >= 0 ? i : 0);
   }, [priceStepValues, sliderMinValue]);
 
   const sliderMaxIndex = useMemo(() => {
-    return Math.max(0, priceStepValues.indexOf(sliderMaxValue));
+    const i = priceStepValues.indexOf(sliderMaxValue);
+    return Math.max(0, i >= 0 ? i : priceStepValues.length - 1);
   }, [priceStepValues, sliderMaxValue]);
 
   const sliderChips = useMemo(() => {
@@ -580,26 +598,26 @@ export default function BuyerMapSearch() {
     if (!value) return "";
     const asNumber = Number(value);
     if (!Number.isFinite(asNumber) || asNumber <= 0) return "";
-    if (field === "max" && asNumber >= PRICE_ABS_MAX) return `$${asNumber.toLocaleString()}+`;
+    if (field === "max" && asNumber >= priceCeil) return `$${asNumber.toLocaleString()}+`;
     return `$${asNumber.toLocaleString()}`;
   };
 
   const isMaxAtTop = useMemo(() => {
     if (!priceDraft.max) return true;
     const n = Number(priceDraft.max);
-    return !Number.isFinite(n) || n >= PRICE_ABS_MAX;
-  }, [priceDraft.max]);
+    return !Number.isFinite(n) || n >= priceCeil;
+  }, [priceDraft.max, priceCeil]);
 
   const applyPriceDraft = () => {
-    const minValue = snapToNearestPriceStep(Number(priceDraft.min) || PRICE_ABS_MIN);
-    const maxValue = snapToNearestPriceStep(Number(priceDraft.max) || PRICE_ABS_MAX);
+    const minValue = snapToNearestPriceStep(Number(priceDraft.min) || priceFloor);
+    const maxValue = snapToNearestPriceStep(Number(priceDraft.max) || priceCeil);
     const normalizedMin = Math.min(minValue, maxValue);
     const normalizedMax = Math.max(minValue, maxValue);
 
     setCriteria((prev) => ({
       ...prev,
-      minPrice: normalizedMin <= PRICE_ABS_MIN ? "" : String(normalizedMin),
-      maxPrice: normalizedMax >= PRICE_ABS_MAX ? "" : String(normalizedMax),
+      minPrice: normalizedMin <= priceFloor ? "" : String(normalizedMin),
+      maxPrice: normalizedMax >= priceCeil ? "" : String(normalizedMax),
     }));
     setPriceOpen(false);
   };
@@ -731,7 +749,15 @@ export default function BuyerMapSearch() {
                       ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
                       : "text-zinc-600 hover:text-zinc-900"
                   }`}
-                  onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_sale" }))}
+                  onClick={() =>
+                    setCriteria((prev) => ({
+                      ...prev,
+                      listingType: "for_sale",
+                      propertyTypes: [],
+                      minPrice: "",
+                      maxPrice: "",
+                    }))
+                  }
                 >
                   For Sale
                 </button>
@@ -741,7 +767,15 @@ export default function BuyerMapSearch() {
                       ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
                       : "text-zinc-600 hover:text-zinc-900"
                   }`}
-                  onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_rent" }))}
+                  onClick={() =>
+                    setCriteria((prev) => ({
+                      ...prev,
+                      listingType: "for_rent",
+                      propertyTypes: ["residential_rental"],
+                      minPrice: "",
+                      maxPrice: "",
+                    }))
+                  }
                 >
                   For Rent
                 </button>
@@ -753,8 +787,8 @@ export default function BuyerMapSearch() {
                   setPriceOpen(open);
                   if (open) {
                     setPriceDraft({
-                      min: criteria.minPrice || String(PRICE_ABS_MIN),
-                      max: criteria.maxPrice || String(PRICE_ABS_MAX),
+                      min: criteria.minPrice || String(priceFloor),
+                      max: criteria.maxPrice || String(priceCeil),
                     });
                   }
                 }}
@@ -779,7 +813,9 @@ export default function BuyerMapSearch() {
                   }}
                 >
                   {/* Header */}
-                  <p className="text-[11px] font-bold tracking-[0.08em] uppercase text-zinc-500 mb-1">LIST PRICE</p>
+                  <p className="text-[11px] font-bold tracking-[0.08em] uppercase text-zinc-500 mb-1">
+                    {isRentSearch ? "MONTHLY RENT" : "LIST PRICE"}
+                  </p>
 
                   {/* Histogram + Slider container */}
                   <div className="mt-4 rounded-xl border border-zinc-200/70 bg-zinc-50/50 px-4 py-4">
@@ -808,8 +844,8 @@ export default function BuyerMapSearch() {
                         onValueChange={([nextMinIndex, nextMaxIndex]) => {
                           const safeMinIndex = Math.max(0, Math.min(nextMinIndex, priceStepValues.length - 1));
                           const safeMaxIndex = Math.max(0, Math.min(nextMaxIndex, priceStepValues.length - 1));
-                          const nextMin = priceStepValues[Math.min(safeMinIndex, safeMaxIndex)] ?? PRICE_ABS_MIN;
-                          const nextMax = priceStepValues[Math.max(safeMinIndex, safeMaxIndex)] ?? PRICE_ABS_MAX;
+                          const nextMin = priceStepValues[Math.min(safeMinIndex, safeMaxIndex)] ?? priceFloor;
+                          const nextMax = priceStepValues[Math.max(safeMinIndex, safeMaxIndex)] ?? priceCeil;
                           setPriceDraft({ min: String(nextMin), max: String(nextMax) });
                         }}
                         className="relative flex w-full touch-none select-none items-center"
@@ -821,8 +857,17 @@ export default function BuyerMapSearch() {
                         <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-[3px] border-[#0E56F5] bg-white shadow-[0_2px_8px_rgba(14,86,245,0.35)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5] focus-visible:ring-offset-1" />
                       </SliderPrimitive.Root>
                       <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-zinc-600">
-                        <span>$50k</span>
-                        <span>$10M+</span>
+                        {isRentSearch ? (
+                          <>
+                            <span>$500</span>
+                            <span>$10k+</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>$50k</span>
+                            <span>$10M+</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -871,7 +916,7 @@ export default function BuyerMapSearch() {
                       variant="outline"
                       className="h-11 flex-1 rounded-lg border-zinc-300 text-zinc-700 text-sm font-medium hover:bg-zinc-50"
                       onClick={() => {
-                        setPriceDraft({ min: String(PRICE_ABS_MIN), max: String(PRICE_ABS_MAX) });
+                        setPriceDraft({ min: String(priceFloor), max: String(priceCeil) });
                         setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
                         setPriceOpen(false);
                       }}
@@ -989,6 +1034,7 @@ export default function BuyerMapSearch() {
                 </PopoverContent>
               </Popover>
 
+              {!isRentSearch && (
               <Popover
                 open={propertyTypeOpen}
                 onOpenChange={(open) => {
@@ -1064,6 +1110,7 @@ export default function BuyerMapSearch() {
                   </div>
                 </PopoverContent>
               </Popover>
+              )}
 
               <Popover>
                 <PopoverTrigger asChild>
@@ -1168,12 +1215,23 @@ export default function BuyerMapSearch() {
                 Save Search
               </Button>
 
-              <Button
-                className="h-9 rounded-md bg-[#0E56F5] hover:bg-[#0B46CC] text-[12px] text-white"
-                onClick={applyLocationInput}
-              >
-                Update
-              </Button>
+              {isRentSearch ? (
+                <Button
+                  variant="outline"
+                  className="h-9 rounded-md border-zinc-200/80 text-[12px] text-zinc-700"
+                  type="button"
+                  onClick={() => setCriteria(defaultRentToolbarCriteria())}
+                >
+                  Clear Filters
+                </Button>
+              ) : (
+                <Button
+                  className="h-9 rounded-md bg-[#0E56F5] hover:bg-[#0B46CC] text-[12px] text-white"
+                  onClick={applyLocationInput}
+                >
+                  Update
+                </Button>
+              )}
             </div>
         </div>
       </div>

@@ -19,6 +19,10 @@ import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/Unifi
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { useUserRole } from "@/hooks/useUserRole";
 import { isDcmlsHost } from "@/lib/host";
+import {
+  RENT_PRICE_STEP_VALUES,
+  defaultRentToolbarCriteria,
+} from "@/lib/buyerSearchRentFilters";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import PropertyMap from "@/components/PropertyMap";
 import { buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
@@ -122,6 +126,10 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     if (params.has("neighborhoods")) urlCriteria.neighborhoods = params.get("neighborhoods")!.split("|");
     if (params.has("showAreas")) urlCriteria.showAreas = params.get("showAreas") === "yes";
 
+    if (urlCriteria.listingType === "for_rent") {
+      urlCriteria.propertyTypes = ["residential_rental"];
+    }
+
     if (Object.keys(urlCriteria).length > 0) {
       setCriteria({ ...criteria, ...urlCriteria });
     }
@@ -138,6 +146,14 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   useEffect(() => {
     fetchListings();
   }, [criteria]);
+
+  // Rental toolbar is residential-rentals only (ignore property type changes from embedded advanced search).
+  useEffect(() => {
+    if (criteria.listingType !== "for_rent") return;
+    const pts = criteria.propertyTypes || [];
+    if (pts.length === 1 && pts[0] === "residential_rental") return;
+    setCriteria((prev) => ({ ...prev, propertyTypes: ["residential_rental"] }));
+  }, [criteria.listingType, criteria.propertyTypes]);
 
   const fetchListings = async () => {
     try {
@@ -274,6 +290,27 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   };
 
   const applyPriceDraft = () => {
+    if (isRentSearch) {
+      const minV = priceDraft.min ? Number(priceDraft.min) : NaN;
+      const maxV = priceDraft.max ? Number(priceDraft.max) : NaN;
+      let lo = "";
+      let hi = "";
+      if (Number.isFinite(minV) && Number.isFinite(maxV)) {
+        lo = String(Math.min(minV, maxV));
+        hi = String(Math.max(minV, maxV));
+      } else if (Number.isFinite(minV)) {
+        lo = String(minV);
+      } else if (Number.isFinite(maxV)) {
+        hi = String(maxV);
+      }
+      setCriteria((prev) => ({
+        ...prev,
+        minPrice: lo,
+        maxPrice: hi,
+      }));
+      setPriceOpen(false);
+      return;
+    }
     setCriteria((prev) => ({
       ...prev,
       minPrice: priceDraft.min,
@@ -344,7 +381,15 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                       ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
                       : "text-zinc-600 hover:text-zinc-900"
                   }`}
-                  onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_sale" }))}
+                  onClick={() =>
+                    setCriteria((prev) => ({
+                      ...prev,
+                      listingType: "for_sale",
+                      propertyTypes: [],
+                      minPrice: "",
+                      maxPrice: "",
+                    }))
+                  }
                 >
                   For Sale
                 </button>
@@ -354,7 +399,15 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                       ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
                       : "text-zinc-600 hover:text-zinc-900"
                   }`}
-                  onClick={() => setCriteria((prev) => ({ ...prev, listingType: "for_rent" }))}
+                  onClick={() =>
+                    setCriteria((prev) => ({
+                      ...prev,
+                      listingType: "for_rent",
+                      propertyTypes: ["residential_rental"],
+                      minPrice: "",
+                      maxPrice: "",
+                    }))
+                  }
                 >
                   For Rent
                 </button>
@@ -376,45 +429,106 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-[320px] rounded-xl border-zinc-200 p-4">
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-zinc-600">Min</Label>
-                        <Input
-                          value={priceDraft.min}
-                          onChange={(e) => setPriceDraft((prev) => ({ ...prev, min: e.target.value.replace(/[^\d]/g, "") }))}
-                          placeholder="No min"
-                          className="h-9"
-                        />
+                  {isRentSearch ? (
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Monthly rent</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-zinc-600">Minimum</Label>
+                          <Select
+                            value={priceDraft.min === "" ? "none-m" : priceDraft.min}
+                            onValueChange={(v) => setPriceDraft((prev) => ({ ...prev, min: v === "none-m" ? "" : v }))}
+                          >
+                            <SelectTrigger className="h-9 border-zinc-200">
+                              <SelectValue placeholder="Minimum" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {rentMonthlyPriceLabels.minOptions.map((o) => (
+                                <SelectItem key={o.value === "" ? "none-m" : `m-${o.value}`} value={o.value === "" ? "none-m" : o.value}>
+                                  {o.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-zinc-600">Maximum</Label>
+                          <Select
+                            value={priceDraft.max === "" ? "none-x" : priceDraft.max}
+                            onValueChange={(v) => setPriceDraft((prev) => ({ ...prev, max: v === "none-x" ? "" : v }))}
+                          >
+                            <SelectTrigger className="h-9 border-zinc-200">
+                              <SelectValue placeholder="Maximum" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {rentMonthlyPriceLabels.maxOptions.map((o) => (
+                                <SelectItem key={o.value === "" ? "none-x" : `x-${o.value}`} value={o.value === "" ? "none-x" : o.value}>
+                                  {o.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-zinc-600">Max</Label>
-                        <Input
-                          value={priceDraft.max}
-                          onChange={(e) => setPriceDraft((prev) => ({ ...prev, max: e.target.value.replace(/[^\d]/g, "") }))}
-                          placeholder="No max"
-                          className="h-9"
-                        />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-9 flex-1"
+                          onClick={() => {
+                            setPriceDraft({ min: "", max: "" });
+                            setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
+                            setPriceOpen(false);
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPriceDraft}>
+                          Apply
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-9 flex-1"
-                        onClick={() => {
-                          setPriceDraft({ min: "", max: "" });
-                          setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
-                          setPriceOpen(false);
-                        }}
-                      >
-                        Reset
-                      </Button>
-                      <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPriceDraft}>
-                        Apply
-                      </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-zinc-600">Min</Label>
+                          <Input
+                            value={priceDraft.min}
+                            onChange={(e) => setPriceDraft((prev) => ({ ...prev, min: e.target.value.replace(/[^\d]/g, "") }))}
+                            placeholder="No min"
+                            className="h-9"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-zinc-600">Max</Label>
+                          <Input
+                            value={priceDraft.max}
+                            onChange={(e) => setPriceDraft((prev) => ({ ...prev, max: e.target.value.replace(/[^\d]/g, "") }))}
+                            placeholder="No max"
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-9 flex-1"
+                          onClick={() => {
+                            setPriceDraft({ min: "", max: "" });
+                            setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
+                            setPriceOpen(false);
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPriceDraft}>
+                          Apply
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </PopoverContent>
               </Popover>
 
@@ -488,59 +602,61 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 </PopoverContent>
               </Popover>
 
-              <Popover
-                open={propertyTypeOpen}
-                onOpenChange={(open) => {
-                  setPropertyTypeOpen(open);
-                  if (open) {
-                    setPropertyTypesDraft([...(criteria.propertyTypes || [])]);
-                  }
-                }}
-              >
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
-                    {propertyTypeButtonLabel}
-                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-[320px] rounded-xl border-zinc-200 p-4">
-                  <div className="space-y-2">
-                    {INLINE_PROPERTY_TYPES.map((type) => {
-                      const checked = propertyTypesDraft.includes(type.value);
-                      return (
-                        <label key={type.value} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-zinc-700 hover:bg-zinc-50">
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={() => {
-                              setPropertyTypesDraft((prev) =>
-                                checked ? prev.filter((item) => item !== type.value) : [...prev, type.value]
-                              );
-                            }}
-                          />
-                          <span>{type.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-9 flex-1"
-                      onClick={() => {
-                        setPropertyTypesDraft([]);
-                        setCriteria((prev) => ({ ...prev, propertyTypes: [] }));
-                        setPropertyTypeOpen(false);
-                      }}
-                    >
-                      Reset
+              {!isRentSearch && (
+                <Popover
+                  open={propertyTypeOpen}
+                  onOpenChange={(open) => {
+                    setPropertyTypeOpen(open);
+                    if (open) {
+                      setPropertyTypesDraft([...(criteria.propertyTypes || [])]);
+                    }
+                  }}
+                >
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
+                      {propertyTypeButtonLabel}
+                      <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
                     </Button>
-                    <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPropertyTypesDraft}>
-                      Apply
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-[320px] rounded-xl border-zinc-200 p-4">
+                    <div className="space-y-2">
+                      {INLINE_PROPERTY_TYPES.map((type) => {
+                        const checked = propertyTypesDraft.includes(type.value);
+                        return (
+                          <label key={type.value} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-zinc-700 hover:bg-zinc-50">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => {
+                                setPropertyTypesDraft((prev) =>
+                                  checked ? prev.filter((item) => item !== type.value) : [...prev, type.value]
+                                );
+                              }}
+                            />
+                            <span>{type.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 flex-1"
+                        onClick={() => {
+                          setPropertyTypesDraft([]);
+                          setCriteria((prev) => ({ ...prev, propertyTypes: [] }));
+                          setPropertyTypeOpen(false);
+                        }}
+                      >
+                        Reset
+                      </Button>
+                      <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPropertyTypesDraft}>
+                        Apply
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
 
               <Sheet>
                 <SheetTrigger asChild>
@@ -577,12 +693,23 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 Save Search
               </Button>
 
-              <Button
-                className={`h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-white`}
-                onClick={applyLocationInput}
-              >
-                Update
-              </Button>
+              {isRentSearch ? (
+                <Button
+                  variant="outline"
+                  type="button"
+                  className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-zinc-700`}
+                  onClick={() => setCriteria(defaultRentToolbarCriteria())}
+                >
+                  Clear Filters
+                </Button>
+              ) : (
+                <Button
+                  className={`h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-white`}
+                  onClick={applyLocationInput}
+                >
+                  Update
+                </Button>
+              )}
             </div>
           </div>
 

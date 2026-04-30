@@ -14,6 +14,9 @@ import {
   Sparkles,
   Mail,
   MapPin,
+  Bed,
+  Bath,
+  Maximize,
 } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
@@ -62,6 +65,11 @@ import {
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
+import {
+  resolveListedByAttribution,
+  type ListedByAgentProfile,
+  type ListedBySource,
+} from "@/lib/listingListedBy";
 
 interface AgentInfo {
   id: string;
@@ -116,6 +124,8 @@ interface MarketListing {
   square_feet: number | null;
   photos: any;
   created_at: string;
+  agent_id?: string | null;
+  agent_profile?: ListedByAgentProfile;
 }
 
 /** US-style display (e.g. (617) 770-5191); returns null if digits cannot be formatted cleanly. */
@@ -501,7 +511,9 @@ export default function ClientDashboard() {
   const loadMarketListings = async () => {
     const { data, error } = await supabase
       .from("listings")
-      .select("id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at")
+      .select(
+        "id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at, agent_id",
+      )
       .in("status", ["coming_soon", "active", "back_on_market"])
       .order("created_at", { ascending: false })
       .limit(6);
@@ -512,7 +524,42 @@ export default function ClientDashboard() {
       return;
     }
 
-    setMarketListings((data || []) as MarketListing[]);
+    const rows = (data || []) as MarketListing[];
+    const agentIds = Array.from(
+      new Set(rows.map((r) => r.agent_id).filter((id): id is string => Boolean(id))),
+    );
+    if (agentIds.length === 0) {
+      setMarketListings(rows);
+      return;
+    }
+
+    const { data: agents, error: agentsErr } = await supabase
+      .from("agent_profiles")
+      .select("id, first_name, last_name, company, office_name")
+      .in("id", agentIds);
+
+    if (agentsErr || !agents?.length) {
+      setMarketListings(rows);
+      return;
+    }
+
+    const byId = new Map(agents.map((a) => [a.id, a]));
+    setMarketListings(
+      rows.map((r) => {
+        const aid = r.agent_id;
+        if (typeof aid !== "string" || !byId.has(aid)) return r;
+        const a = byId.get(aid)!;
+        return {
+          ...r,
+          agent_profile: {
+            company: a.company,
+            office_name: a.office_name,
+            first_name: a.first_name,
+            last_name: a.last_name,
+          },
+        };
+      }),
+    );
   };
 
   const handleEndRelationship = async () => {
@@ -921,7 +968,7 @@ export default function ClientDashboard() {
                   <div className={previewSectionTitleWrapClass}>
                     <CardTitle className={dashSectionTitleClass}>Market activity</CardTitle>
                     <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
-                      New listings on the market.
+                      New listings on Direct Connect MLS.
                     </CardDescription>
                   </div>
                   <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/search")}>
@@ -936,6 +983,10 @@ export default function ClientDashboard() {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     {latestListingsPreview.map((listing) => {
                       const photos = listing.photos ?? [];
+                      const listedBy = resolveListedByAttribution(
+                        listing as ListedBySource,
+                        listing.agent_profile ?? null,
+                      );
                       return (
                       <article
                         key={listing.id}
@@ -968,6 +1019,34 @@ export default function ClientDashboard() {
                               {listing.city}, {listing.state}
                             </span>
                           </p>
+                          <div className="flex items-center gap-6 text-lg mt-1 text-neutral-950">
+                            {listing.bedrooms ? (
+                              <div className="flex items-center gap-1.5">
+                                <Bed className="h-5 w-5 text-neutral-700" aria-hidden />
+                                <span className="font-semibold">{listing.bedrooms}</span>
+                              </div>
+                            ) : null}
+                            {listing.bathrooms ? (
+                              <div className="flex items-center gap-1.5">
+                                <Bath className="h-5 w-5 text-neutral-700" aria-hidden />
+                                <span className="font-semibold">{listing.bathrooms}</span>
+                              </div>
+                            ) : null}
+                            {listing.square_feet ? (
+                              <div className="flex items-center gap-1.5">
+                                <Maximize className="h-5 w-5 text-neutral-700" aria-hidden />
+                                <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
+                              </div>
+                            ) : null}
+                          </div>
+                          {listedBy ? (
+                            <p
+                              className="mt-2 truncate text-[12px] font-normal text-neutral-500"
+                              title={`Listed by: ${listedBy}`}
+                            >
+                              Listed by: {listedBy}
+                            </p>
+                          ) : null}
                         </div>
                       </article>
                       );
