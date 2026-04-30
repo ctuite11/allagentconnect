@@ -22,6 +22,7 @@ import { isDcmlsHost } from "@/lib/host";
 import {
   RENT_PRICE_STEP_VALUES,
   defaultRentToolbarCriteria,
+  defaultSaleToolbarCriteria,
 } from "@/lib/buyerSearchRentFilters";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import PropertyMap from "@/components/PropertyMap";
@@ -74,19 +75,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const { role } = useUserRole(user);
   const searchMode = role === "agent" ? "agent" : "consumer";
 
-  const [criteria, setCriteria] = useState<SearchCriteria>({
-    listingType: "for_sale",
-    state: "MA",
-    county: "all",
-    towns: [],
-    showAreas: true,
-    propertyTypes: [],
-    statuses: ["coming_soon", "active", "off_market", "back_on_market"],
-    minPrice: "",
-    maxPrice: "",
-    bedrooms: "",
-    bathrooms: "",
-  });
+  const [criteria, setCriteria] = useState<SearchCriteria>(() => defaultSaleToolbarCriteria());
   const [locationInput, setLocationInput] = useState("");
   const [priceOpen, setPriceOpen] = useState(false);
   const [bedsBathsOpen, setBedsBathsOpen] = useState(false);
@@ -693,23 +682,16 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 Save Search
               </Button>
 
-              {isRentSearch ? (
-                <Button
-                  variant="outline"
-                  type="button"
-                  className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-zinc-700`}
-                  onClick={() => setCriteria(defaultRentToolbarCriteria())}
-                >
-                  Clear Filters
-                </Button>
-              ) : (
-                <Button
-                  className={`h-9 rounded-full bg-[#0E56F5] hover:bg-[#0B46CC] ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-white`}
-                  onClick={applyLocationInput}
-                >
-                  Update
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                type="button"
+                className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-zinc-700`}
+                onClick={() =>
+                  setCriteria(isRentSearch ? defaultRentToolbarCriteria() : defaultSaleToolbarCriteria())
+                }
+              >
+                Clear Filters
+              </Button>
             </div>
           </div>
 

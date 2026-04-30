@@ -15,6 +15,7 @@ import {
   SALE_PRICE_ABS_MAX,
   SALE_PRICE_ABS_MIN,
   defaultRentToolbarCriteria,
+  defaultSaleToolbarCriteria,
   salePriceStepValues,
 } from "@/lib/buyerSearchRentFilters";
 import { toast } from "sonner";
@@ -35,20 +36,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-const DEFAULT_CRITERIA: SearchCriteria = {
-  listingType: "for_sale",
-  state: "MA",
-  county: "all",
-  towns: [],
-  showAreas: true,
-  propertyTypes: [],
-  statuses: ["coming_soon", "active", "off_market", "back_on_market"],
-  minPrice: "",
-  maxPrice: "",
-  bedrooms: "",
-  bathrooms: "",
-};
 
 const BED_PRESETS: Array<{ label: string; bedrooms: string }> = [
   { label: "Any", bedrooms: "" },
@@ -1215,23 +1202,16 @@ export default function BuyerMapSearch() {
                 Save Search
               </Button>
 
-              {isRentSearch ? (
-                <Button
-                  variant="outline"
-                  className="h-9 rounded-md border-zinc-200/80 text-[12px] text-zinc-700"
-                  type="button"
-                  onClick={() => setCriteria(defaultRentToolbarCriteria())}
-                >
-                  Clear Filters
-                </Button>
-              ) : (
-                <Button
-                  className="h-9 rounded-md bg-[#0E56F5] hover:bg-[#0B46CC] text-[12px] text-white"
-                  onClick={applyLocationInput}
-                >
-                  Update
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                className="h-9 rounded-md border-zinc-200/80 text-[12px] text-zinc-700"
+                type="button"
+                onClick={() =>
+                  setCriteria(isRentSearch ? defaultRentToolbarCriteria() : defaultSaleToolbarCriteria())
+                }
+              >
+                Clear Filters
+              </Button>
             </div>
         </div>
       </div>

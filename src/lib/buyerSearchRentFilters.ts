@@ -24,6 +24,27 @@ export function salePriceStepValues(): number[] {
   return values;
 }
 
+/** Default buyer map / browse toolbar state for sale (empty property-type filter — user picks types if needed). */
+export function defaultSaleToolbarCriteria(): SearchCriteria {
+  return {
+    listingType: "for_sale",
+    state: "MA",
+    county: "all",
+    towns: [],
+    showAreas: true,
+    propertyTypes: [],
+    statuses: ["coming_soon", "active", "off_market", "back_on_market"],
+    minPrice: "",
+    maxPrice: "",
+    bedrooms: "",
+    bathrooms: "",
+    zipCode: "",
+    neighborhoods: undefined,
+    minLivingArea: "",
+    maxLivingArea: "",
+  };
+}
+
 /** Default buyer map / browse toolbar state for rentals (aligns with sale defaults + rental property type). */
 export function defaultRentToolbarCriteria(): SearchCriteria {
   return {
