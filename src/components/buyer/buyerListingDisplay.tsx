@@ -9,6 +9,10 @@ export interface ListingRecord {
   zip_code: string;
   price: number;
   status: string;
+  property_type: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_feet: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   square_feet?: number | null;
