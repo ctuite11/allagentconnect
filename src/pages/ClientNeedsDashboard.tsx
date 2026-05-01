@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { PageHeader } from "@/components/ui/page-header";
+import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
-import { aacStyles } from "@/ui/aacStyles";
+import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
+import { cn } from "@/lib/utils";
 
 const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
@@ -32,7 +35,7 @@ const ClientNeedsDashboard = () => {
   }, [navigate]);
 
   return (
-    <div className="bg-white pt-6">
+    <>
       <Seo
         title="Comms | All Agent Connect"
         description="Use the canonical AAC Hot Sheet builder from the agent Hot Sheets flow."
@@ -40,23 +43,24 @@ const ClientNeedsDashboard = () => {
         noindex
       />
 
-      <main className={`${aacStyles.pageContainer} pb-12`}>
-        <PageHeader
+      <AgentAacPage className="pb-12">
+        <AgentPageHeader
           title="Communications Center"
           subtitle="Using the exact Hot Sheet form from /agent/hot-sheets"
+          className="mb-8"
         />
 
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-          <h2 className="text-[22px] font-semibold text-zinc-900">Hot Sheet Builder</h2>
-          <p className="mt-2 text-sm text-zinc-600">
+        <AgentSectionCard>
+          <h2 className={agentSectionTitle}>Hot Sheet Builder</h2>
+          <p className={cn("mt-2", agentSectionDesc)}>
             This launches the same form component used on agent Hot Sheets. Notification settings are hidden in this flow.
           </p>
 
           <div className="mt-5">
             <Button onClick={() => setBuilderOpen(true)}>Open Canonical Hot Sheet Form</Button>
           </div>
-        </section>
-      </main>
+        </AgentSectionCard>
+      </AgentAacPage>
 
       {user && (
         <CreateHotSheetDialog
@@ -71,7 +75,7 @@ const ClientNeedsDashboard = () => {
           }}
         />
       )}
-    </div>
+    </>
   );
 };
 

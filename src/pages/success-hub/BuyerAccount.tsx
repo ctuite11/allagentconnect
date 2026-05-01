@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { PageShell } from "@/components/layout/PageShell";
+import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BuyerStatusBadge, type BuyerStatus } from "@/lib/buyerStatus";
@@ -23,10 +25,7 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
-import {
-  buyerPreviewCardInteractive,
-  buyerSectionCard,
-} from "@/lib/buyerUi";
+import { buyerPreviewCardInteractive } from "@/lib/buyerUi";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -139,25 +138,21 @@ export default function BuyerAccount() {
 
   if (loading) {
     return (
-      <PageShell>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      </PageShell>
+      <AgentAacPage className="flex min-h-[40vh] flex-1 flex-col items-center justify-center pb-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </AgentAacPage>
     );
   }
 
   if (!client) {
     return (
-      <PageShell>
-        <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate("/success-hub/buyers")} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <h1 className="text-lg font-semibold text-foreground">Buyer Not Found</h1>
-        </div>
-        <p className="text-sm text-muted-foreground">No buyer found with that ID.</p>
-      </PageShell>
+      <AgentAacPage className="pb-12">
+        <AgentPageHeader
+          title="Buyer Not Found"
+          subtitle="No buyer found with that ID."
+          backTo="/success-hub/buyers"
+        />
+      </AgentAacPage>
     );
   }
 
@@ -170,29 +165,23 @@ export default function BuyerAccount() {
 
 
   return (
-    <PageShell>
-      {/* ── Back row ─────────────────── */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => navigate("/success-hub/buyers")}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <span className="text-sm text-muted-foreground">Back to Buyers</span>
-      </div>
+    <AgentAacPage className="pb-12">
+      <AgentPageHeader
+        title={capitalizedName}
+        subtitle={client.email}
+        backTo="/success-hub/buyers"
+        className="mb-8"
+      />
 
       {/* ── Buyer Summary Card ──────── */}
-      <div className="mb-8 rounded-xl border border-border bg-card shadow-sm p-6">
+      <AgentSectionCard className="mb-8 p-6">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-lg font-semibold text-foreground">{capitalizedName}</h1>
               <BuyerStatusBadge status={buyerStatus} />
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">{client.email}</p>
             {client.phone && (
-              <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
+              <p className="text-sm text-muted-foreground mt-2">{client.phone}</p>
             )}
             {buyerStatus === "pending_invite" && (
               <p className="text-sm text-zinc-500 mt-2">
@@ -277,21 +266,22 @@ export default function BuyerAccount() {
 
       {/* ── Hot Sheets ────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.hotsheets = el; }} className="mb-12">
-        <SectionHeading title="Hot Sheets" count={stats.hotSheetCount} />
+        <AgentSectionCard className="p-6">
+          <SectionHeading title="Hot Sheets" count={stats.hotSheetCount} />
 
-        {hotSheets.length === 0 ? (
-          <EmptyState
-            icon={<Home className="h-5 w-5 text-muted-foreground" />}
-            title="No Hot Sheets"
-            description="Create a hot sheet to start matching listings for this buyer."
-            action={
-              <Button size="sm" onClick={() => setCreateHsOpen(true)}>
-                <Plus className="h-3.5 w-3.5 mr-1.5" /> Create Hot Sheet
-              </Button>
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {hotSheets.length === 0 ? (
+            <EmptyState
+              icon={<Home className="h-5 w-5 text-muted-foreground" />}
+              title="No Hot Sheets"
+              description="Create a hot sheet to start matching listings for this buyer."
+              action={
+                <Button size="sm" onClick={() => setCreateHsOpen(true)}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Create Hot Sheet
+                </Button>
+              }
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {hotSheets.map((hs) => {
               const mosaicPhotos: string[] = [];
               for (const listing of hs.topListings) {
@@ -337,8 +327,9 @@ export default function BuyerAccount() {
                 </div>
               );
             })}
-          </div>
-        )}
+            </div>
+          )}
+        </AgentSectionCard>
       </section>
 
       {/* ── Saved listings (hot sheet favorites) ───────────────────────── */}
@@ -348,16 +339,17 @@ export default function BuyerAccount() {
         }}
         className="mb-12"
       >
-        <SectionHeading title="Saved Listings" count={favorites.length} />
+        <AgentSectionCard className="p-6">
+          <SectionHeading title="Saved Listings" count={favorites.length} />
 
-        {favorites.length === 0 ? (
-          <EmptyState
-            icon={<Heart className="h-5 w-5 text-muted-foreground" />}
-            title="No Saved Listings"
-            description="Favorites from your buyer’s hot sheets will show here."
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {favorites.length === 0 ? (
+            <EmptyState
+              icon={<Heart className="h-5 w-5 text-muted-foreground" />}
+              title="No Saved Listings"
+              description="Favorites from your buyer’s hot sheets will show here."
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favorites.map((listing: any) => {
               const photo =
                 listing.photos?.[0] &&
@@ -406,22 +398,24 @@ export default function BuyerAccount() {
                 </div>
               );
             })}
-          </div>
-        )}
+            </div>
+          )}
+        </AgentSectionCard>
       </section>
 
       {/* ── Activity ──────────────────────────── */}
       <section ref={(el: HTMLDivElement | null) => { sectionRefs.current.activity = el; }} className="mb-12">
-        <SectionHeading title="Activity" count={activity.length} />
+        <AgentSectionCard className="p-6">
+          <SectionHeading title="Activity" count={activity.length} />
 
-        {activity.length === 0 ? (
-          <EmptyState
-            icon={<Clock className="h-5 w-5 text-muted-foreground" />}
-            title="No Activity"
-            description="Comments and activity will appear here."
-          />
-        ) : (
-          <div className="space-y-2">
+          {activity.length === 0 ? (
+            <EmptyState
+              icon={<Clock className="h-5 w-5 text-muted-foreground" />}
+              title="No Activity"
+              description="Comments and activity will appear here."
+            />
+          ) : (
+            <div className="space-y-2">
             {activity.map((item) => (
               <Card key={item.id} className="shadow-sm">
                 <CardContent className="p-4">
@@ -467,8 +461,9 @@ export default function BuyerAccount() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        )}
+            </div>
+          )}
+        </AgentSectionCard>
       </section>
 
 
@@ -527,7 +522,7 @@ export default function BuyerAccount() {
           }}
         />
       )}
-    </PageShell>
+    </AgentAacPage>
   );
 }
 

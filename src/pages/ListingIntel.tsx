@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { PageHeader } from "@/components/ui/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
+import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,33 +123,28 @@ const ListingIntel = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pt-20">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </div>
-      </div>
+      <AgentAacPage className="flex min-h-[40vh] flex-1 flex-col items-center justify-center pb-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </AgentAacPage>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <PageHeader
-          title="Listing Intel"
-          subtitle="Filter and find potential buyers for your listings"
-          className="mb-8"
-        />
+    <AgentAacPage className="pb-12">
+      <AgentPageHeader
+        title="Listing Intel"
+        subtitle="Filter and find potential buyers for your listings"
+        className="mb-8"
+      />
 
-        {/* Filters */}
-        <Card className="mb-6 border-l-4 border-l-primary">
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter client needs by location, property type, and price</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Filters */}
+      <AgentSectionCard className="mb-6">
+            <h2 className={agentSectionTitle}>Filters</h2>
+            <p className={cn("mt-1", agentSectionDesc)}>
+              Filter client needs by location, property type, and price
+            </p>
+
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <div>
                 <Label htmlFor="state">State</Label>
                 <Select value={stateFilter} onValueChange={setStateFilter}>
@@ -281,16 +278,14 @@ const ListingIntel = () => {
                 Clear Filters
               </Button>
             </div>
-          </CardContent>
-        </Card>
+      </AgentSectionCard>
 
-        {/* Results - Prominent Count */}
-        <Card className="mb-6 bg-card border-l-4 border-accent border border-border">
-          <CardContent className="py-6">
+      {/* Results - Prominent Count */}
+      <AgentSectionCard className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold mb-1">Potential Buyer Pool</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className={agentSectionTitle}>Potential Buyer Pool</h3>
+                <p className={cn("mt-1", agentSectionDesc)}>
                   Active client needs matching your filters
                 </p>
               </div>
@@ -315,10 +310,9 @@ const ListingIntel = () => {
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+      </AgentSectionCard>
 
-        <ContactMatchesDialog
+      <ContactMatchesDialog
           open={contactDialogOpen}
           onOpenChange={setContactDialogOpen}
           matchCount={clientNeeds.length}
@@ -332,8 +326,7 @@ const ListingIntel = () => {
             endDate,
           }}
         />
-      </div>
-    </div>
+    </AgentAacPage>
   );
 };
 
