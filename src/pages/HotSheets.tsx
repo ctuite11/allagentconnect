@@ -168,26 +168,24 @@ const HotSheets = ({
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:items-start">
         <div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-            <div className="min-w-0 space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Hot Sheets</h1>
-              <p className="text-sm text-gray-500">
-                Track listings that matter most with real-time alerts based on your saved search criteria.
-              </p>
-            </div>
-            {showHeroCreate ? (
-              <Button
-                type="button"
-                className="h-10 shrink-0 rounded-xl bg-[#0E56F5] px-6 text-sm font-semibold text-white hover:bg-[#0B46CC]"
-                onClick={() =>
-                  buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
-                }
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Hot Sheet
-              </Button>
-            ) : null}
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Hot Sheets</h1>
+            <p className="text-sm text-gray-500">
+              Track listings that matter most with real-time alerts based on your saved search criteria.
+            </p>
           </div>
+          {showHeroCreate ? (
+            <Button
+              type="button"
+              className="mt-4 h-10 shrink-0 rounded-xl bg-[#0E56F5] px-6 text-sm font-semibold text-white hover:bg-[#0B46CC]"
+              onClick={() =>
+                buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
+              }
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Hot Sheet
+            </Button>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
