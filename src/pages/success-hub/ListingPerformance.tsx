@@ -35,7 +35,7 @@ export default function ListingPerformance() {
   }
 
   return (
-    <PageShell className="bg-secondary/40">
+    <PageShell className="pb-10">
       <PageHeader title={listing.address} backTo="/success-hub/listings" />
 
       {/* ── Top row ────────────────────────────────────── */}
@@ -63,7 +63,7 @@ export default function ListingPerformance() {
       </div>
 
       {/* ── Share with Seller ──────────────────────────── */}
-      <Card className="mb-10 border border-border bg-card">
+      <Card className="mb-10 border border-zinc-100 bg-white shadow-none">
         <CardContent className="p-6 text-center">
           <h3 className="text-sm font-semibold text-foreground mb-4">Share with Seller</h3>
           <div className="flex justify-center gap-3">

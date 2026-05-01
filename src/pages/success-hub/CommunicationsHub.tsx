@@ -26,15 +26,15 @@ export default function CommunicationsHub() {
   const activeThread = mockMessages.find((t) => t.threadId === selectedThread);
 
   return (
-    <PageShell className="bg-secondary/40">
+    <PageShell className="pb-10">
       <PageHeader title="Communications" />
 
       <div className="grid gap-8 lg:grid-cols-5">
         {/* ── Left: Feed ───────────────────────────────── */}
         <div className="lg:col-span-3">
           <h2 className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-4">Feed</h2>
-          <Card className="border border-border bg-card">
-            <CardContent className="p-0 divide-y divide-border">
+          <Card className="border border-zinc-100 bg-white shadow-none">
+            <CardContent className="divide-y divide-zinc-100 p-0">
               {mockCommunications.map((item) => (
                 <div key={item.feedId} className="flex items-center gap-3 px-5 py-3.5">
                   {feedIcon[item.type]}
@@ -56,10 +56,10 @@ export default function CommunicationsHub() {
             {mockMessages.map((t) => (
               <Card
                 key={t.threadId}
-                className={`cursor-pointer border transition-colors ${
+                className={`cursor-pointer border bg-white shadow-none transition-colors ${
                   selectedThread === t.threadId
-                    ? "border-primary bg-card"
-                    : "border-border bg-card hover:border-muted-foreground/30"
+                    ? "border-[#0E56F5]"
+                    : "border-zinc-100 hover:border-zinc-200"
                 }`}
                 onClick={() => setSelectedThread(t.threadId)}
               >
@@ -79,15 +79,15 @@ export default function CommunicationsHub() {
 
           {/* Conversation detail */}
           {activeThread && (
-            <Card className="border border-border bg-card">
+            <Card className="border border-zinc-100 bg-white shadow-none">
               <CardContent className="p-5">
                 <p className="font-semibold text-sm text-foreground mb-4">{activeThread.contactName}</p>
                 <div className="space-y-3">
-                  <div className="rounded-lg bg-secondary p-3.5">
+                  <div className="rounded-xl border border-zinc-100 bg-white p-3.5">
                     <p className="text-sm text-foreground">{activeThread.lastMessage}</p>
                     <p className="text-[11px] text-muted-foreground mt-1.5">{relativeTime(activeThread.timestamp)}</p>
                   </div>
-                  <div className="rounded-lg bg-primary/5 p-3.5 ml-8">
+                  <div className="ml-8 rounded-xl border border-zinc-100 bg-white p-3.5">
                     <p className="text-sm text-foreground">Thanks, I'll follow up on that today.</p>
                     <p className="text-[11px] text-muted-foreground mt-1.5">You · just now</p>
                   </div>

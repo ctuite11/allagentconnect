@@ -377,10 +377,10 @@ function MyListingsView({
                 <button
                   key={tab.value}
                   onClick={() => toggleStatus(tab.value)}
-                  className={`shrink-0 text-sm px-3 py-1.5 rounded-full font-medium transition-colors border ${
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                     selectedStatuses.has(tab.value)
-                      ? "bg-zinc-900 border-zinc-900 text-white"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-800"
+                      ? "border-[#0E56F5] bg-white text-[#0E56F5]"
+                      : "border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200 hover:text-zinc-900"
                   }`}
                 >
                   {tab.label}
@@ -404,7 +404,7 @@ function MyListingsView({
             {/* Sort dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 text-sm text-zinc-600 hover:text-zinc-800 border border-zinc-200 bg-white rounded-lg px-3 py-1.5 transition-colors">
+                <button className="flex items-center gap-1.5 rounded-lg border border-zinc-100 bg-white px-3 py-1.5 text-sm text-zinc-600 transition-colors hover:border-zinc-200 hover:text-zinc-900">
                   Sort
                   <ChevronDown className="h-3.5 w-3.5" />
                 </button>
@@ -467,7 +467,7 @@ function MyListingsView({
 
       {/* Draft bulk-action toolbar */}
       {selectedStatuses.has("draft") && draftListings.length > 0 && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5">
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-zinc-100 bg-white px-4 py-2.5 shadow-none">
           <Checkbox
             checked={selectedDraftIds.size === draftListings.length}
             onCheckedChange={selectAllDrafts}
@@ -493,10 +493,10 @@ function MyListingsView({
 
       {/* Auto-draft notice when agent has only drafts */}
       {hasOnlyDrafts && selectedStatuses.has("draft") && (
-        <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+        <div className="mt-4 rounded-xl border border-zinc-100 bg-white px-4 py-3 text-sm text-foreground shadow-none">
           Showing your drafts because you don't have any published listings yet. Continue editing a draft or{" "}
           <button
-            className="text-primary hover:text-primary/80 underline"
+            className="text-[#0E56F5] underline hover:text-[#0B46CC]"
             onClick={() => onNewListing("new")}
           >
             create a new listing
@@ -641,7 +641,7 @@ function MyListingsView({
                     {l.status === "draft" && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="mt-1 p-1 rounded hover:bg-zinc-100 transition-colors text-zinc-400 hover:text-zinc-600">
+                          <button className="mt-1 rounded p-1 text-zinc-400 transition-colors hover:text-zinc-600">
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
@@ -662,7 +662,7 @@ function MyListingsView({
                 {/* Content row - photo + info */}
                 <div className="relative flex items-start gap-4">
                   {/* Photo - locked size */}
-                  <div className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer">
+                  <div className="h-[100px] w-[140px] shrink-0 cursor-pointer overflow-hidden rounded-xl border border-zinc-100 bg-white">
                     <img
                       src={thumbnail || "/placeholder.svg"}
                       alt={l.address}
@@ -687,7 +687,7 @@ function MyListingsView({
                       {l.listing_type && (
                         <>
                           <span className="text-zinc-300">•</span>
-                          <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                          <span className="inline-block rounded border border-zinc-100 bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#0E56F5]">
                             {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
                           </span>
                         </>
@@ -1079,7 +1079,7 @@ const MyListings = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col bg-background pt-20">
+      <div className="flex min-h-[50vh] flex-1 flex-col justify-center bg-[#FFFFFF] px-6 py-12">
         <div className="flex-1 flex items-center justify-center p-6">
           <p className="text-muted-foreground">You must be signed in as an agent to view your listings.</p>
         </div>
@@ -1100,7 +1100,7 @@ const MyListings = () => {
         />
         
         {/* Empty State - matches Hot Sheets pattern */}
-        <div className="aac-card p-12 text-center">
+        <div className="rounded-2xl border border-zinc-100 bg-white p-12 text-center shadow-none">
           <Plus className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
           <h3 className="text-xl font-semibold text-zinc-800 mb-2">No listings yet</h3>
           <p className="text-zinc-600 mb-6">
@@ -1209,7 +1209,7 @@ const MyListings = () => {
       {/* Social Share Dialog */}
       {socialShareListing && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSocialShareListing(null)}>
-          <div className="bg-background p-6 rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="rounded-xl border border-zinc-100 bg-white p-6 shadow-none" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold mb-4">Share Listing</h3>
             <SocialShareMenu
               url={getListingShareUrl(socialShareListing.id)}

@@ -16,7 +16,7 @@ export default function ListingsList() {
   const navigate = useNavigate();
 
   return (
-    <PageShell className="bg-secondary/40">
+    <PageShell className="pb-10">
       <PageHeader
         title="Your Listings"
         subtitle="Click a listing to view its performance dashboard."

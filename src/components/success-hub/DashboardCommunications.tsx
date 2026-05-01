@@ -36,7 +36,7 @@ export function DashboardCommunications({ conversations }: DashboardCommunicatio
         <h3 className="text-base font-semibold text-foreground">Communications</h3>
         <button
           onClick={() => navigate("/client-needs")}
-          className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5"
+          className="inline-flex items-center gap-0.5 text-xs font-medium text-[#0E56F5] hover:underline"
         >
           Open Comm Center <ChevronRight className="h-3 w-3" />
         </button>
@@ -52,14 +52,14 @@ export function DashboardCommunications({ conversations }: DashboardCommunicatio
             conversations.slice(0, 5).map((c) => (
               <div
                 key={c.conversation_id}
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors"
+                className="flex cursor-pointer items-center gap-3 px-4 py-3"
                 onClick={() => navigate(`/messages/${c.conversation_id}`, { state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" } })}
               >
                 <Avatar className="h-8 w-8 shrink-0">
                   {c.other_headshot_url && (
                     <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
                   )}
-                  <AvatarFallback className="bg-emerald-500 text-white text-xs font-medium">
+                  <AvatarFallback className="bg-[#50C878] text-xs font-medium text-white">
                     {getInitials(c.other_name)}
                   </AvatarFallback>
                 </Avatar>

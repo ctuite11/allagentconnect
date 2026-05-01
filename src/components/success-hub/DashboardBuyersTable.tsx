@@ -16,13 +16,13 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
         <h3 className="text-base font-semibold text-foreground">Buyers</h3>
         <button
           onClick={() => navigate("/success-hub/buyers")}
-          className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5"
+          className="inline-flex items-center gap-0.5 text-xs font-medium text-[#0E56F5] hover:underline"
         >
           View all <ChevronRight className="h-3 w-3" />
         </button>
       </div>
 
-      <Card className="border border-border bg-card">
+      <Card className="border border-zinc-100 bg-white shadow-none">
         <CardContent className="p-0">
           {buyers.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
@@ -31,7 +31,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/60">
+                <tr className="border-b border-zinc-100">
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2.5">Name</th>
                   <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2.5">Status</th>
                   <th className="text-center text-xs font-medium text-muted-foreground px-4 py-2.5">Hot Sheets</th>
@@ -45,12 +45,12 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                   return (
                     <tr
                       key={b.id}
-                      className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      className="cursor-pointer"
 onClick={() => navigate(`/success-hub/buyers/${b.id}`)}
                     >
                       <td className="px-4 py-2.5 font-medium text-foreground truncate max-w-[140px]">{name}</td>
                       <td className="px-4 py-2.5">
-                        <span className="text-emerald-600 text-sm font-medium">
+                        <span className="text-sm font-medium text-[#50C878]">
                           {b.status === "active" ? "Active" : "Pending"}
                         </span>
                       </td>

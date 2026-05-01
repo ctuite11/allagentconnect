@@ -97,12 +97,14 @@ function SidebarRow({
         disabled && "opacity-40 cursor-not-allowed",
         !disabled && "cursor-default",
         active
-          ? "bg-[hsl(221,30%,35%)]/15 text-zinc-100 font-medium"
-          : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30"
+          ? "bg-transparent text-[#0E56F5] font-medium"
+          : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/50"
       )}
     >
       <span className="relative shrink-0">
-        <item.icon className={cn("h-[18px] w-[18px]", active ? "text-[hsl(221,55%,65%)]" : "text-zinc-400")} />
+        <item.icon
+          className={cn("h-[18px] w-[18px]", active ? "text-[#0E56F5]" : "text-zinc-400")}
+        />
         {collapsed && hasBadge && (
           <span className="absolute -top-1.5 -right-1.5 inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-white leading-none">
             {badgeText}
@@ -201,7 +203,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-800/30",
+            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-800/50",
             collapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -259,7 +261,7 @@ export function DashboardSidebar({
               <button
                 onClick={handleLogout}
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/30 transition-colors duration-150",
+                  "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/50 transition-colors duration-150",
                   collapsed && "justify-center px-0"
                 )}
               >

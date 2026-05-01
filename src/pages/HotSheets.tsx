@@ -803,7 +803,7 @@ const HotSheets = ({
         {renderHotSheetsHero()}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-2xl border border-zinc-200 bg-white animate-pulse">
+            <div key={i} className="animate-pulse rounded-2xl border border-zinc-100 bg-white shadow-none">
               <div className="aspect-[4/3] bg-zinc-100 rounded-t-2xl" />
               <div className="p-4 space-y-3">
                 <div className="h-5 bg-zinc-200 rounded w-2/3" />
@@ -828,13 +828,13 @@ const HotSheets = ({
         canonical="https://allagentconnect.com/hot-sheets"
         noindex
       />
-      <PageShell className="bg-white pb-8">
+      <PageShell className="pb-8">
         <div className="mb-5">
           {renderHotSheetsHero()}
         </div>
 
         {collections.length === 0 ? (
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-12 text-center">
+          <div className="rounded-2xl border border-zinc-100 bg-white p-12 text-center shadow-none">
             <Users className="h-16 w-16 mx-auto mb-4 text-zinc-300" />
             <h3 className="text-xl font-semibold text-zinc-900 mb-2">No buyer hot sheets yet</h3>
             <p className="mx-auto max-w-md text-zinc-500">
@@ -843,7 +843,7 @@ const HotSheets = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white">
+          <div className="grid grid-cols-1 gap-6 bg-[#FFFFFF] md:grid-cols-2 lg:grid-cols-3">
             {collections.map((collection) => (
               <BuyerCollectionCard
                 key={collection.clientId}

@@ -1355,7 +1355,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
       </PageShell>
 
       {/* Sticky Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg z-50">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-100 bg-[#FFFFFF]/95 backdrop-blur-sm shadow-none">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground hidden sm:block">
             {saving ? "Saving changes..." : "Changes are not auto-saved"}

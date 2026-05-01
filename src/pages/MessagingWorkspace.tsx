@@ -76,6 +76,10 @@ function MessagingWorkspaceContent({
   const buyerMode = isBuyerMode;
   const agentMode = isAgentMode || !buyerMode;
 
+  const panelShellClass = buyerMode
+    ? buyerMessagingPanel
+    : "flex flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-none";
+
   const safeThreads = Array.isArray(threads) ? threads : [];
 
   return (
@@ -85,7 +89,7 @@ function MessagingWorkspaceContent({
         className={
           buyerMode
             ? "flex min-h-0 flex-1 flex-col bg-white"
-            : "flex min-h-screen flex-col bg-white"
+            : "flex min-h-0 flex-1 flex-col bg-[#FFFFFF]"
         }
       >
         <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-6 pb-10 pt-6 md:px-8">
@@ -136,7 +140,7 @@ function MessagingWorkspaceContent({
               </div>
 
               <div
-                className={`h-full min-h-0 w-[560px] max-w-[560px] flex-none ${buyerMessagingPanel}`}
+                className={`h-full min-h-0 w-[560px] max-w-[560px] flex-none ${panelShellClass}`}
               >
                 <ConversationPanel
                   conversationId={selectedConversationId}

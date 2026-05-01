@@ -26,7 +26,7 @@ export function NeedsAttentionPills({ items }: NeedsAttentionPillsProps) {
           <button
             key={item.id}
             onClick={() => navigate(item.path)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary-soft text-primary whitespace-nowrap hover:brightness-105 transition-colors shrink-0"
+            className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-zinc-100 bg-white px-3 py-1.5 text-xs font-medium text-[#0E56F5] transition-colors hover:border-zinc-200"
           >
             <Icon className="h-3 w-3" />
             {item.sub}

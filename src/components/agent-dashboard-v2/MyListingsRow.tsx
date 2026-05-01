@@ -41,7 +41,7 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/listings")}
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-sm font-medium text-[#0E56F5] hover:underline"
           >
             View all →
           </button>
@@ -74,7 +74,7 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
             <div
               key={listing.id}
               onClick={() => navigate(`/listing/${listing.id}`)}
-              className="min-w-[240px] max-w-[260px] flex-shrink-0 rounded-xl border border-border bg-card cursor-pointer hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
+              className="min-w-[240px] max-w-[260px] flex-shrink-0 cursor-pointer rounded-xl border border-zinc-100 bg-white shadow-none transition-colors duration-200 hover:border-zinc-200"
             >
               {/* Stats bar */}
               <div className="flex items-center px-3 pt-3 pb-2">
@@ -118,7 +118,7 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
                 <p className="text-xs text-muted-foreground truncate">
                   {listing.city}, {listing.state}
                 </p>
-                <p className="text-base font-bold text-primary mt-1">
+                <p className="mt-1 text-base font-bold text-[#0E56F5]">
                   {formatPrice(listing.price)}
                 </p>
               </div>

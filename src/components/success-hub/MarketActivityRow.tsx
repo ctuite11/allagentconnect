@@ -171,7 +171,7 @@ export function MarketActivityRow() {
         <h3 className="text-lg font-semibold text-foreground mb-3">Market Activity</h3>
         <div className="flex gap-4 overflow-hidden">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="min-w-[220px] h-[220px] rounded-xl bg-muted animate-pulse" />
+            <div key={i} className="h-[220px] min-w-[220px] animate-pulse rounded-xl border border-zinc-100 bg-white" />
           ))}
         </div>
       </div>
@@ -182,7 +182,7 @@ export function MarketActivityRow() {
     return (
       <div>
         <h3 className="text-lg font-semibold text-foreground mb-3">Market Activity</h3>
-        <div className="rounded-xl border border-border bg-card px-6 py-8 text-center">
+        <div className="rounded-xl border border-zinc-100 bg-white px-6 py-8 text-center shadow-none">
           <p className="text-sm text-muted-foreground">No new market activity yet</p>
         </div>
       </div>
@@ -197,14 +197,14 @@ export function MarketActivityRow() {
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
-            className="p-1 rounded-full border border-border hover:bg-muted disabled:opacity-30 transition-colors"
+            className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
-            className="p-1 rounded-full border border-border hover:bg-muted disabled:opacity-30 transition-colors"
+            className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -224,10 +224,10 @@ export function MarketActivityRow() {
             <div
               key={listing.id}
               onClick={() => navigate(`/property/${listing.id}`)}
-              className="min-w-[220px] max-w-[240px] flex-shrink-0 rounded-xl border border-border bg-card cursor-pointer hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200"
+              className="min-w-[220px] max-w-[240px] flex-shrink-0 cursor-pointer rounded-xl border border-zinc-100 bg-white shadow-none transition-colors duration-200 hover:border-zinc-200"
             >
               {/* Photo */}
-              <div className="relative rounded-t-xl overflow-hidden aspect-[4/3] bg-muted">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-t-xl border-b border-zinc-100 bg-white">
                 {photo ? (
                   <img
                     src={photo}
@@ -244,7 +244,7 @@ export function MarketActivityRow() {
                   <ListingStatusBadge status={listing.status} size="sm" />
                 </div>
                 {isNew(listing.created_at) && (
-                  <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 rounded-full bg-[#50C878] px-1.5 py-0.5 text-[10px] font-semibold text-white">
                     New
                   </span>
                 )}
@@ -252,7 +252,7 @@ export function MarketActivityRow() {
 
               {/* Details */}
               <div className="px-3 pt-2 pb-3">
-                <p className="text-base font-bold text-primary">
+                <p className="text-base font-bold text-[#0E56F5]">
                   {formatPrice(listing.price)}
                 </p>
                 <p className="text-sm font-medium text-foreground truncate mt-0.5">

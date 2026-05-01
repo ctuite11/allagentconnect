@@ -185,23 +185,23 @@ export default function DraftListings() {
         </Button>
 
         {/* Stale filter toggle */}
-        <div className="inline-flex items-center border border-zinc-200 rounded-lg p-0.5 bg-white">
+        <div className="inline-flex items-center rounded-lg border border-zinc-100 bg-white p-0.5 shadow-none">
           <button
             onClick={() => setFilterStale(false)}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
               !filterStale
-                ? "bg-zinc-100 text-zinc-900"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                ? "border border-[#0E56F5] bg-white text-[#0E56F5]"
+                : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
             All
           </button>
           <button
             onClick={() => setFilterStale(true)}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
               filterStale
-                ? "bg-zinc-100 text-zinc-900"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                ? "border border-[#0E56F5] bg-white text-[#0E56F5]"
+                : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
             Stale
@@ -209,23 +209,23 @@ export default function DraftListings() {
         </div>
 
         {/* View toggle */}
-        <div className="ml-auto inline-flex items-center border border-zinc-200 rounded-lg p-0.5 bg-white">
+        <div className="ml-auto inline-flex items-center rounded-lg border border-zinc-100 bg-white p-0.5 shadow-none">
           <button
             onClick={() => setView("grid")}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`rounded-md p-1.5 transition-colors ${
               view === "grid"
-                ? "bg-zinc-100 text-zinc-900"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                ? "border border-[#0E56F5] text-[#0E56F5]"
+                : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
             <Grid size={16} />
           </button>
           <button
             onClick={() => setView("list")}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`rounded-md p-1.5 transition-colors ${
               view === "list"
-                ? "bg-zinc-100 text-zinc-900"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                ? "border border-[#0E56F5] text-[#0E56F5]"
+                : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
             <ListIcon size={16} />
@@ -319,7 +319,7 @@ export default function DraftListings() {
             return (
               <CardSurface key={l.id} interactive className="cursor-pointer">
                 <div
-                  className="w-full h-48 bg-zinc-100 overflow-hidden"
+                  className="h-48 w-full overflow-hidden border border-zinc-100 bg-white"
                   onClick={() => navigate(`/agent/listings/edit/${l.id}`)}
                 >
                   <img
@@ -427,7 +427,7 @@ export default function DraftListings() {
                 {/* Content row */}
                 <div className="flex items-start gap-4">
                   <div
-                    className="w-[140px] h-[100px] shrink-0 overflow-hidden rounded-xl bg-zinc-100 cursor-pointer"
+                    className="h-[100px] w-[140px] shrink-0 cursor-pointer overflow-hidden rounded-xl border border-zinc-100 bg-white"
                     onClick={() => navigate(`/agent/listings/edit/${l.id}`)}
                   >
                     <img

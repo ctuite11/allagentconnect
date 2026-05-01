@@ -17,11 +17,13 @@ export function AppShell({ children }: AppShellProps) {
   useAgentPresence();
 
   return (
-    <div className="h-screen flex w-full overflow-hidden">
+    <div className="h-screen flex w-full overflow-hidden bg-[#FFFFFF]">
       {/* Page title is controlled by mounted route components, not by layout */}
       <DashboardSidebar isAdmin={isAdmin} />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-white">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-white">{children}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col border-l border-zinc-100 bg-[#FFFFFF]">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#FFFFFF]">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -18,12 +18,12 @@ export function WelcomeHeader({ firstName, lastName, headshotUrl, aacId, userId 
         headshotUrl={headshotUrl}
         userId={userId}
         size="xl"
-        avatarClassName="h-14 w-14 border-2 border-border"
-        fallbackClassName="bg-muted text-muted-foreground"
+        avatarClassName="h-14 w-14 border-2 border-zinc-100"
+        fallbackClassName="border border-zinc-100 bg-white text-zinc-500"
       />
       <div>
         <h2 className="text-xl font-semibold text-foreground">
-          Welcome back, <span className="text-primary">{firstName}</span>.
+          Welcome back, <span className="text-[#0E56F5]">{firstName}</span>.
         </h2>
         {aacId && (
           <p className="text-sm text-muted-foreground">AAC Agent Id: {aacId}</p>

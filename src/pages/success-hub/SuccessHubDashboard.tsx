@@ -18,7 +18,7 @@ export default function SuccessHubDashboard() {
     <>
       <Seo title="Dashboard" />
       {loading ? (
-        <PageShell className="bg-secondary/40">
+        <PageShell className="pb-10">
           <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Skeleton className="h-14 w-14 rounded-full" />
@@ -40,7 +40,7 @@ export default function SuccessHubDashboard() {
         </div>
       </PageShell>
     ) : error || !summary ? (
-      <PageShell className="bg-secondary/40">
+      <PageShell className="pb-10">
         <Card className="border border-border bg-card">
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground text-sm">{error ?? "Unable to load dashboard data."}</p>
@@ -51,7 +51,7 @@ export default function SuccessHubDashboard() {
         </Card>
       </PageShell>
     ) : (
-    <PageShell className="bg-secondary/40">
+    <PageShell className="pb-10">
       <div className="pt-6">
       {/* ── 1. Welcome Header ──────────────────────────── */}
       <div className="mb-4">
@@ -82,7 +82,7 @@ export default function SuccessHubDashboard() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-foreground">My Listings</h3>
             </div>
-            <div className="rounded-xl border border-border bg-card p-6 text-center">
+            <div className="rounded-xl border border-zinc-100 bg-white p-6 text-center shadow-none">
               <h4 className="text-base font-semibold text-foreground">
                 No active listings yet
               </h4>

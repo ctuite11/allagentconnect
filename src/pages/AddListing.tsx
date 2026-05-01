@@ -2890,7 +2890,7 @@ const AddListing = () => {
   return (
     <>
       <Seo title="Add Listing" />
-      <div className="min-h-screen bg-background pt-20">
+      <div className="min-h-0 bg-[#FFFFFF] pb-12 pt-6">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header Section */}
@@ -4928,7 +4928,7 @@ const AddListing = () => {
                                   <SelectTrigger className="bg-white border-neutral-200">
                                     <SelectValue placeholder="Select document type..." />
                                   </SelectTrigger>
-                                  <SelectContent className="bg-background z-50">
+                                  <SelectContent className="z-50 bg-white">
                                     <SelectItem value="purchase_and_sale">Purchase & Sale Agreement</SelectItem>
                                     <SelectItem value="lead_paint">Lead Paint Disclosure</SelectItem>
                                     <SelectItem value="property_disclosure">Property Disclosure</SelectItem>
