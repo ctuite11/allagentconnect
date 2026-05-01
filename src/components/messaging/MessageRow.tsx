@@ -1,6 +1,13 @@
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "./UserAvatar";
+
+function formatMessageTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
 
 interface MessageRowProps {
   message: {
@@ -16,19 +23,19 @@ interface MessageRowProps {
 }
 
 export function MessageRow({ message, showHeader }: MessageRowProps) {
-  const time = format(new Date(message.createdAt), "HH:mm");
+  const time = formatMessageTime(message.createdAt);
   const displayName = message.isOwn ? "Me" : message.senderName;
 
   return (
     <div className={cn(
       "flex",
       message.isOwn ? "justify-end" : "justify-start",
-      showHeader ? "mt-4 first:mt-0" : "mt-1"
+      showHeader ? "mt-3 first:mt-0" : "mt-0.5"
     )}>
       <div className={cn("max-w-[70%]", message.isOwn ? "items-end" : "items-start")}>
         {/* Header: avatar + name + time (incoming only) */}
         {showHeader && !message.isOwn && (
-          <div className="flex items-center gap-2.5 mb-1.5">
+          <div className="mb-1 flex items-center gap-2">
             <UserAvatar
               name={displayName}
               headshotUrl={message.senderHeadshotUrl ?? null}
@@ -44,9 +51,9 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
 
         {/* Timestamp for own messages */}
         {showHeader && message.isOwn && (
-          <div className="flex items-center justify-end gap-2 mb-1.5">
-            <span className="text-[11px] text-zinc-400 tabular-nums">{time}</span>
-            <span className="text-[13px] font-medium text-primary">
+          <div className="mb-1 flex items-center justify-end gap-2">
+            <span className="text-[11px] tabular-nums text-zinc-400">{time}</span>
+            <span className="text-[13px] font-medium text-zinc-600">
               {displayName}
             </span>
           </div>
