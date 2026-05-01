@@ -243,7 +243,7 @@ export default function BuyerAccount() {
             </Button>
           )}
         </div>
-      </div>
+      </AgentSectionCard>
 
       {/* ── Section Nav ──────────────────────── */}
       <div className="border-b border-neutral-200 mb-8">
