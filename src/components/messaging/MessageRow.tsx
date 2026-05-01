@@ -23,7 +23,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
     <div className={cn(
       "flex",
       message.isOwn ? "justify-end" : "justify-start",
-      showHeader ? "mt-6 first:mt-0" : "mt-1.5"
+      showHeader ? "mt-4 first:mt-0" : "mt-1"
     )}>
       <div className={cn("max-w-[70%]", message.isOwn ? "items-end" : "items-start")}>
         {/* Header: avatar + name + time (incoming only) */}
@@ -54,7 +54,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
 
         {/* Bubble */}
         <div className={cn(
-          "rounded-2xl px-4 py-3 whitespace-pre-wrap break-words text-[14px] leading-[1.65]",
+          "w-full rounded-2xl px-3 py-2.5 whitespace-pre-wrap break-words text-[14px] leading-[1.65]",
           message.isOwn
             ? "bg-primary text-white"
             : "bg-white border border-zinc-200 text-zinc-800",

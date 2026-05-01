@@ -69,16 +69,16 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   if (loading) {
     return (
       <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-        <div className="shrink-0 border-b border-zinc-200 px-4 py-3">
+        <div className="shrink-0 border-b border-zinc-200 px-3 py-3">
           <div className="flex w-full items-center gap-3">
             <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
             <Skeleton className="h-6 w-40" />
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-4 pb-4 pt-3">
-          <div className="w-full space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-3 pb-3 pt-2">
+          <div className="w-full space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="mt-5 space-y-2 first:mt-0">
+              <div key={i} className="mt-3 space-y-2 first:mt-0">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-4 w-56" />
               </div>
@@ -106,7 +106,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   if (fetchError) {
     return (
       <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-        <div className="shrink-0 border-b border-zinc-200 px-4 py-3">
+        <div className="shrink-0 border-b border-zinc-200 px-3 py-3">
           <div className="flex w-full items-center justify-between">
             <h2 className="text-[15px] font-semibold text-zinc-900 truncate">
               {details?.otherUserName ?? "Conversation"}
@@ -209,7 +209,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
       </div>
 
       {/* Thread */}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-4 pb-4 pt-3">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-3 pb-3 pt-2">
         <div className="w-full">
           {messages.length === 0 ? (
             <div className="py-10 text-center text-sm text-zinc-400">
