@@ -60,147 +60,151 @@ export default function AgentSettings() {
 
   if (loading) {
     return (
-      <AgentAacPage className="max-w-2xl pb-12">
+      <>
         <Seo
           title="Settings | All Agent Connect"
           description="Manage account preferences, platform settings, and configuration inside All Agent Connect."
           canonical="https://allagentconnect.com/settings"
           noindex
         />
-        <div className="space-y-3">
-          <div className="mb-4 h-7 w-48 animate-pulse rounded-md bg-neutral-100" />
-          <div className="h-4 w-72 animate-pulse rounded-md bg-neutral-100" />
-        </div>
-      </AgentAacPage>
+        <AgentAacPage className="max-w-2xl pb-12">
+          <div aria-hidden className="space-y-3">
+            <div className="mb-6 h-7 w-48 animate-pulse rounded-md border border-zinc-100 bg-white" />
+            <div className="h-4 w-72 animate-pulse rounded-md border border-zinc-100 bg-white" />
+          </div>
+        </AgentAacPage>
+      </>
     );
   }
 
   return (
-    <AgentAacPage className="max-w-2xl pb-12">
+    <>
       <Seo
         title="Settings | All Agent Connect"
         description="Manage account preferences, platform settings, and configuration inside All Agent Connect."
         canonical="https://allagentconnect.com/settings"
         noindex
       />
-      <AgentPageHeader
-        className="mb-10"
-        title="Settings"
-        subtitle="Manage your subscription and account security."
-      />
+      <AgentAacPage className="max-w-2xl pb-12">
+        <AgentPageHeader
+          className="mb-8"
+          title="Settings"
+          subtitle="Manage your subscription and account security."
+        />
 
-      <div className="space-y-8">
-        <AgentSectionCard className="space-y-4 p-5 md:p-6">
-          <div>
-            <h2 className={agentSectionTitle}>Subscription</h2>
-            <p className={`mt-0.5 ${agentSectionDesc}`}>Your current plan and billing.</p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white">
-              <CreditCard className="h-4 w-4 text-[#0E56F5]" />
-            </div>
+        <div className="space-y-8">
+          <AgentSectionCard className="space-y-4 p-5 md:p-6">
             <div>
-              <p className="text-sm font-medium text-neutral-900">Agent Plan</p>
-              <p className="text-xs text-neutral-500">You&apos;re on the Agent plan.</p>
+              <h2 className={agentSectionTitle}>Subscription</h2>
+              <p className={`mt-0.5 ${agentSectionDesc}`}>Your current plan and billing.</p>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-1">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Status</p>
-              <p className="mt-0.5 text-sm text-neutral-700">Active</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-100 bg-white">
+                <CreditCard className="h-4 w-4 text-[#0E56F5]" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-neutral-900">Agent Plan</p>
+                <p className="text-xs text-neutral-500">You&apos;re on the Agent plan.</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Renewal</p>
-              <p className="mt-0.5 text-sm text-neutral-700">—</p>
-            </div>
-          </div>
 
-          <div className="pt-2">
-            <Button variant="outline" size="sm" disabled>
-              Upgrade Plan
-            </Button>
-            <p className="mt-1.5 text-xs text-neutral-400">Subscription plans coming soon.</p>
-          </div>
-        </AgentSectionCard>
-
-        <AgentSectionCard className="space-y-4 p-5 md:p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className={agentSectionTitle}>Password</h2>
-              <p className={`mt-0.5 ${agentSectionDesc}`}>Update your account password.</p>
+            <div className="grid grid-cols-2 gap-4 pt-1">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Status</p>
+                <p className="mt-0.5 text-sm text-neutral-700">Active</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Renewal</p>
+                <p className="mt-0.5 text-sm text-neutral-700">—</p>
+              </div>
             </div>
-            {!showPasswordForm && (
-              <Button variant="outline" size="sm" onClick={() => setShowPasswordForm(true)}>
-                Change Password
+
+            <div className="pt-2">
+              <Button variant="outline" size="sm" disabled>
+                Upgrade Plan
               </Button>
-            )}
-          </div>
+              <p className="mt-1.5 text-xs text-neutral-400">Subscription plans coming soon.</p>
+            </div>
+          </AgentSectionCard>
 
-          {showPasswordForm && (
-            <div className="max-w-sm space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="newPassword">New password</Label>
-                <PasswordInput id="newPassword" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          <AgentSectionCard className="space-y-4 p-5 md:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className={agentSectionTitle}>Password</h2>
+                <p className={`mt-0.5 ${agentSectionDesc}`}>Update your account password.</p>
               </div>
-
-              {newPassword && (
-                <ul className="space-y-1">
-                  {passwordValidation.results.map((r) => (
-                    <li key={r.id} className="flex items-center gap-1.5 text-xs">
-                      {r.valid ? (
-                        <Check className="h-3.5 w-3.5 text-[#50C878]" />
-                      ) : (
-                        <X className="h-3.5 w-3.5 text-neutral-300" />
-                      )}
-                      <span className={r.valid ? "text-[#50C878]" : "text-neutral-500"}>{r.label}</span>
-                    </li>
-                  ))}
-                </ul>
+              {!showPasswordForm && (
+                <Button variant="outline" size="sm" onClick={() => setShowPasswordForm(true)}>
+                  Change Password
+                </Button>
               )}
+            </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
-                <PasswordInput
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                {confirmPassword && confirmPassword !== newPassword && (
-                  <p className="text-xs text-red-500">Passwords don&apos;t match</p>
+            {showPasswordForm && (
+              <div className="max-w-sm space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="newPassword">New password</Label>
+                  <PasswordInput id="newPassword" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                </div>
+
+                {newPassword && (
+                  <ul className="space-y-1">
+                    {passwordValidation.results.map((r) => (
+                      <li key={r.id} className="flex items-center gap-1.5 text-xs">
+                        {r.valid ? (
+                          <Check className="h-3.5 w-3.5 text-[#50C878]" />
+                        ) : (
+                          <X className="h-3.5 w-3.5 text-neutral-300" />
+                        )}
+                        <span className={r.valid ? "text-[#50C878]" : "text-neutral-500"}>{r.label}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </div>
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleChangePassword}
-                  disabled={savingPassword || !passwordValidation.allPass || newPassword !== confirmPassword}
-                >
-                  {savingPassword ? "Updating..." : "Update Password"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setShowPasswordForm(false);
-                    setNewPassword("");
-                    setConfirmPassword("");
-                  }}
-                >
-                  Cancel
-                </Button>
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirmPassword">Confirm password</Label>
+                  <PasswordInput
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  {confirmPassword && confirmPassword !== newPassword && (
+                    <p className="text-xs text-red-500">Passwords don&apos;t match</p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleChangePassword}
+                    disabled={savingPassword || !passwordValidation.allPass || newPassword !== confirmPassword}
+                  >
+                    {savingPassword ? "Updating..." : "Update Password"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setShowPasswordForm(false);
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-zinc-100 pt-4">
+              <div className="flex items-center gap-2 text-neutral-400">
+                <Lock className="h-4 w-4" />
+                <span className="text-sm">Security settings coming soon</span>
               </div>
             </div>
-          )}
-
-          <div className="border-t border-neutral-100 pt-4">
-            <div className="flex items-center gap-2 text-neutral-400">
-              <Lock className="h-4 w-4" />
-              <span className="text-sm">Security settings coming soon</span>
-            </div>
-          </div>
-        </AgentSectionCard>
-      </div>
-    </AgentAacPage>
+          </AgentSectionCard>
+        </div>
+      </AgentAacPage>
+    </>
   );
 }

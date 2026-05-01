@@ -46,11 +46,11 @@ const ClientNeedsDashboard = () => {
       <AgentAacPage className="pb-12">
         <AgentPageHeader
           title="Communications Center"
-          subtitle="Using the exact Hot Sheet form from /agent/hot-sheets"
+          subtitle="Opens the same Hot Sheet builder used on Agent Hot Sheets—notifications are tucked away in this flow."
           className="mb-8"
         />
 
-        <AgentSectionCard>
+        <AgentSectionCard className="p-6">
           <h2 className={agentSectionTitle}>Hot Sheet Builder</h2>
           <p className={cn("mt-2", agentSectionDesc)}>
             This launches the same form component used on agent Hot Sheets. Notification settings are hidden in this flow.
