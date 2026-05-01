@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 
-import PageShell from "@/components/layout/PageShell";
+import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
@@ -23,7 +25,6 @@ import { EmailShareModal } from "@/components/EmailShareModal";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PageHeader } from "@/components/ui/page-header";
 type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
 
 // Single source of truth for the active pipeline statuses
@@ -351,7 +352,8 @@ function MyListingsView({
   return (
     <>
       {/* Header */}
-      <PageHeader
+      <AgentPageHeader
+        className="mb-8"
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
       />
@@ -1079,11 +1081,11 @@ const MyListings = () => {
 
   if (!user) {
     return (
-      <div className="flex min-h-[50vh] flex-1 flex-col justify-center bg-[#FFFFFF] px-6 py-12">
-        <div className="flex-1 flex items-center justify-center p-6">
-          <p className="text-muted-foreground">You must be signed in as an agent to view your listings.</p>
-        </div>
-      </div>
+      <AgentAacPage className="flex min-h-[50vh] flex-1 flex-col justify-center space-y-0">
+        <p className="text-center text-sm text-neutral-500">
+          You must be signed in as an agent to view your listings.
+        </p>
+      </AgentAacPage>
     );
   }
 
@@ -1093,34 +1095,28 @@ const MyListings = () => {
 
   if (listings.length === 0) {
     return (
-      <PageShell className="pb-8">
-        <PageHeader
-          title="My Listings"
-          subtitle="Create your first listing to get started."
-        />
-        
-        {/* Empty State - matches Hot Sheets pattern */}
-        <div className="rounded-2xl border border-zinc-100 bg-white p-12 text-center shadow-none">
-          <Plus className="h-16 w-16 mx-auto mb-4 text-zinc-400" />
-          <h3 className="text-xl font-semibold text-zinc-800 mb-2">No listings yet</h3>
-          <p className="text-zinc-600 mb-6">
-            Create your first listing to get started.
-          </p>
-          <Button 
-            onClick={() => handleNewListing("new")} 
-          >
-            <Plus className="h-4 w-4 mr-2" />
+      <>
+        <Seo title="My Listings" />
+        <AgentAacPage className="pb-12">
+        <AgentPageHeader title="My Listings" subtitle="Create your first listing to get started." className="mb-8" />
+        <AgentSectionCard className="p-12 text-center">
+          <Plus className="mx-auto mb-4 h-16 w-16 text-neutral-400" />
+          <h3 className="mb-2 text-xl font-semibold text-neutral-900">No listings yet</h3>
+          <p className="mb-6 text-neutral-500">Create your first listing to get started.</p>
+          <Button onClick={() => handleNewListing("new")}>
+            <Plus className="mr-2 h-4 w-4" />
             Create New Listing
           </Button>
-        </div>
-      </PageShell>
+        </AgentSectionCard>
+        </AgentAacPage>
+      </>
     );
   }
 
   return (
     <>
       <Seo title="My Listings" />
-      <PageShell className="pb-8">
+      <AgentAacPage className="pb-12">
       <MyListingsView
         listings={listings}
         onEdit={handleEdit}
@@ -1228,7 +1224,7 @@ const MyListings = () => {
         listingUrl={emailListing ? getListingShareUrl(emailListing.id) : ""}
         listingAddress={emailListing ? `${emailListing.address}, ${emailListing.city}` : ""}
       />
-      </PageShell>
+      </AgentAacPage>
     </>
   );
 };

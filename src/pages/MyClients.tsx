@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { PageHeader } from "@/components/ui/page-header";
 import { useNavigate } from "react-router-dom";
-import PageShell from "@/components/layout/PageShell";
+import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -639,15 +640,15 @@ const MyClients = () => {
 
   if (loading) {
     return (
-      <PageShell className="flex-1 flex items-center justify-center">
+      <AgentAacPage className="flex min-h-[40vh] flex-1 flex-col items-center justify-center space-y-0 pb-12">
         <Seo
           title="Contacts | All Agent Connect"
           description="Manage clients, contacts, and relationship workflows inside All Agent Connect."
           canonical="https://allagentconnect.com/my-clients"
           noindex
         />
-        <p className="text-zinc-500">Loading contacts...</p>
-      </PageShell>
+        <p className="text-sm text-neutral-500">Loading contacts...</p>
+      </AgentAacPage>
     );
   }
 
@@ -659,12 +660,12 @@ const MyClients = () => {
         canonical="https://allagentconnect.com/my-clients"
         noindex
       />
-      <PageShell className="py-8">
-        <PageHeader
-            title="My Contacts"
-            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
-            className="mb-8"
-          />
+      <AgentAacPage className="pb-12">
+        <AgentPageHeader
+          title="My Contacts"
+          subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
+          className="mb-8"
+        />
 
           {/* Action Buttons - Primary left, utilities right */}
           {/* Action Buttons - Two-row layout: CTAs top, Search/Filters bottom */}
@@ -809,22 +810,20 @@ const MyClients = () => {
           </div>
 
           {clients.length === 0 ? (
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-8">
-              <div className="text-center py-4">
-                  <User className="h-12 w-12 mx-auto mb-3 text-primary" />
-                  <h3 className="text-lg font-semibold text-zinc-900 mb-1">No contacts yet</h3>
-                  <p className="text-sm text-zinc-600 mb-5">
-                    Add your first contact to start managing their property search
-                  </p>
-                  <Button onClick={handleAddClient}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add First Contact
-                  </Button>
+            <AgentSectionCard className="p-8">
+              <div className="py-4 text-center">
+                <User className="mx-auto mb-3 h-12 w-12 text-[#0E56F5]" />
+                <h3 className="mb-1 text-lg font-semibold text-neutral-900">No contacts yet</h3>
+                <p className="mb-5 text-sm text-neutral-500">Add your first contact to start managing their property search</p>
+                <Button onClick={handleAddClient}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add First Contact
+                </Button>
               </div>
-            </div>
+            </AgentSectionCard>
           ) : (
             <>
-               <div className="border border-zinc-200 rounded-2xl mb-4">
+               <AgentSectionCard className="mb-4 overflow-hidden p-0">
                 <div className="p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1">
@@ -959,7 +958,6 @@ const MyClients = () => {
                     </p>
                   </div>
                 </div>
-              </div>
 
               {/* Bulk Action Bar - appears when contacts are selected */}
               {selectedClients.size > 0 && (
@@ -1239,9 +1237,10 @@ const MyClients = () => {
               )}
               </>
               )}
+            </AgentSectionCard>
             </>
           )}
-      </PageShell>
+      </AgentAacPage>
 
 
       {/* Hot Sheet Creation Dialog */}
