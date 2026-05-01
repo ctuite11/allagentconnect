@@ -161,15 +161,32 @@ const HotSheets = ({
     "Private",
   ];
 
-  const renderHotSheetsHero = () => (
+  const renderHotSheetsHero = () => {
+    const showHeroCreate = buyerMode || (!loading && !!user);
+
+    return (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:items-start">
         <div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Hot Sheets</h1>
-            <p className="text-sm text-gray-500">
-              Track listings that matter most with real-time alerts based on your saved search criteria.
-            </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0 space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Hot Sheets</h1>
+              <p className="text-sm text-gray-500">
+                Track listings that matter most with real-time alerts based on your saved search criteria.
+              </p>
+            </div>
+            {showHeroCreate ? (
+              <Button
+                type="button"
+                className="h-10 shrink-0 rounded-xl bg-[#0E56F5] px-6 text-sm font-semibold text-white hover:bg-[#0B46CC]"
+                onClick={() =>
+                  buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
+                }
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Hot Sheet
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -403,15 +420,9 @@ const HotSheets = ({
                     </div>
                     <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">No Hot Sheets yet</h3>
                     <p className="mt-2 text-[13px] leading-snug text-neutral-500">
-                      Create your first Hot Sheet to track listings in your preferred neighborhoods, price range, and property type.
+                      Create your first Hot Sheet to track listings in your preferred neighborhoods, price range, and property type—use{" "}
+                      <span className="font-medium text-neutral-700">Create Hot Sheet</span> at the top of this page.
                     </p>
-                    <Button
-                      className="mt-4 h-10 rounded-xl bg-[#0E56F5] px-6 text-sm font-semibold text-white hover:bg-[#0B46CC]"
-                      onClick={() => navigate("/hot-sheets/new")}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Hot Sheet
-                    </Button>
                   </div>
                 </section>
               ) : (
@@ -779,15 +790,10 @@ const HotSheets = ({
           <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-12 text-center">
             <Users className="h-16 w-16 mx-auto mb-4 text-zinc-300" />
             <h3 className="text-xl font-semibold text-zinc-900 mb-2">No buyer hot sheets yet</h3>
-            <p className="text-zinc-500 mb-6">
-              Create your first hot sheet to start curating listings for your buyers.
+            <p className="mx-auto max-w-md text-zinc-500">
+              Create your first hot sheet to start curating listings for your buyers—use{" "}
+              <span className="font-medium text-zinc-700">Create Hot Sheet</span> at the top of this page.
             </p>
-            <Button
-              onClick={() => setCreateDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Client Hot Sheet
-            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white">

@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Heart,
   UserX,
-  Plus,
   MessageSquare,
   UserPlus,
   Search,
@@ -64,6 +63,7 @@ import {
 } from "@/lib/buyerUi";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 import {
   resolveListedByAttribution,
@@ -166,6 +166,8 @@ export default function ClientDashboard() {
   const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
   const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
   const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
+
+  const { isOnline: agentPresenceOnline } = useAgentLastSeen(agent?.id);
 
   useEffect(() => {
     checkAuth();
@@ -732,8 +734,17 @@ export default function ClientDashboard() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
-                          <p className="text-sm font-bold text-gray-900">
-                            {agent.first_name} {agent.last_name}
+                          <p className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                            {agentPresenceOnline ? (
+                              <span
+                                className="h-2 w-2 shrink-0 rounded-full bg-[#50C878]"
+                                title="Recently active"
+                                aria-label="Recently active"
+                              />
+                            ) : null}
+                            <span>
+                              {agent.first_name} {agent.last_name}
+                            </span>
                           </p>
                           {agent.company ? (
                             <p className="text-xs text-gray-500">{agent.company}</p>
@@ -834,15 +845,6 @@ export default function ClientDashboard() {
                       <div className="flex shrink-0 flex-wrap items-center gap-2">
                         <Button
                           type="button"
-                          variant="outline"
-                          className={`h-9 px-4 ${outlineSecondaryClass}`}
-                          onClick={() => navigate("/hot-sheets/new")}
-                        >
-                          <Plus className="mr-1.5 h-3.5 w-3.5" />
-                          Create
-                        </Button>
-                        <Button
-                          type="button"
                           className={aacPrimarySectionCta}
                           onClick={() => navigate("/hot-sheets")}
                         >
@@ -875,17 +877,8 @@ export default function ClientDashboard() {
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
                         <p className={`max-w-md ${dashSectionDescClass}`}>
-                          No hot sheets yet. Create one for alerts, or ask your agent to share one.
+                          No hot sheets yet. Create one from Hot Sheets for alerts, or ask your agent to share one.
                         </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className={`h-9 px-6 ${outlineSecondaryClass}`}
-                          onClick={() => navigate("/hot-sheets/new")}
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Create hot sheet
-                        </Button>
                       </div>
                     )}
                   </CardContent>
