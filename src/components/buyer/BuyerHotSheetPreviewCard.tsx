@@ -97,6 +97,8 @@ export interface BuyerHotSheetPreviewCardProps {
    * `hotSheetsPage` — buyer Hot Sheets route: labeled name + Eye/View footer (whole card still primary action).
    */
   variant?: "dashboard" | "hotSheetsPage";
+  /** Shown under the hot sheet name on `hotSheetsPage` only (e.g. buyer’s linked agent). */
+  linkedAgentName?: string | null;
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent<HTMLElement>) => void;
 }
@@ -142,6 +144,11 @@ export function BuyerHotSheetPreviewCard({
             <span className="font-semibold">Hot Sheet Name: </span>
             <span>{title}</span>
           </p>
+          {linkedAgentName?.trim() ? (
+            <p className="mt-1 text-left text-xs text-zinc-500">
+              Your agent: {linkedAgentName.trim()}
+            </p>
+          ) : null}
           <div className="mt-auto flex justify-end pt-3">
             <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0E56F5] pointer-events-none" aria-hidden>
               <Eye className="h-4 w-4 shrink-0" strokeWidth={2} />

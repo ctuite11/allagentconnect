@@ -126,6 +126,7 @@ const HotSheets = ({
   const [buyerPreviewPhotosById, setBuyerPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [buyerMatchCountsById, setBuyerMatchCountsById] = useState<Record<string, number>>({});
   const [buyerLoading, setBuyerLoading] = useState(true);
+  const [buyerLinkedAgentName, setBuyerLinkedAgentName] = useState<string | null>(null);
   const [alertFrequency, setAlertFrequency] = useState<"instant" | "daily" | "weekly">("instant");
   const buyerMode = isBuyerMode;
 
@@ -270,11 +271,32 @@ const HotSheets = ({
   const loadBuyerHotSheets = async () => {
     try {
       setBuyerLoading(true);
+      setBuyerLinkedAgentName(null);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
+      }
+
+      const { data: relationship } = await supabase
+        .from("client_agent_relationships")
+        .select("agent_id")
+        .eq("client_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (relationship?.agent_id) {
+        const { data: agentProfile } = await supabase
+          .from("agent_profiles")
+          .select("first_name, last_name")
+          .eq("id", relationship.agent_id)
+          .maybeSingle();
+        const display = [agentProfile?.first_name, agentProfile?.last_name]
+          .map((s) => (typeof s === "string" ? s.trim() : ""))
+          .filter(Boolean)
+          .join(" ");
+        if (display) setBuyerLinkedAgentName(display);
       }
 
       const { data: profile } = await supabase
@@ -367,6 +389,7 @@ const HotSheets = ({
     } catch (error) {
       console.error("Error loading buyer hot sheets", error);
       toast.error("Unable to load Hot Sheets right now");
+      setBuyerLinkedAgentName(null);
       setBuyerHotSheets([]);
       setBuyerTokenByHotSheetId({});
       setBuyerPreviewPhotosById({});
@@ -434,6 +457,7 @@ const HotSheets = ({
                         variant="hotSheetsPage"
                         photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
                         title={sheet.name}
+                        linkedAgentName={buyerLinkedAgentName}
                         onClick={() => openBuyerHotSheet(sheet.id, token)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
