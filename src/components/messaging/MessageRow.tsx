@@ -53,7 +53,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
         {showHeader && message.isOwn && (
           <div className="mb-1 flex items-center justify-end gap-2">
             <span className="text-[11px] tabular-nums text-zinc-400">{time}</span>
-            <span className="text-[13px] font-medium text-zinc-600">
+            <span className="text-[13px] font-medium text-zinc-500">
               {displayName}
             </span>
           </div>
@@ -61,7 +61,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
 
         {/* Bubble */}
         <div className={cn(
-          "w-full rounded-2xl px-3 py-2.5 whitespace-pre-wrap break-words text-[14px] leading-[1.65]",
+          "w-full rounded-2xl px-3 py-2 whitespace-pre-wrap break-words text-[14px] leading-[1.65]",
           message.isOwn
             ? "bg-primary text-white"
             : "bg-white border border-zinc-200 text-zinc-800",

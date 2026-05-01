@@ -82,7 +82,7 @@ export function ConversationsList({
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col bg-white">
       {/* Header */}
       <div className="flex-shrink-0 p-4 pb-3">
         <div className="mb-3 flex items-center justify-between">

@@ -69,7 +69,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   if (loading) {
     return (
       <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-        <div className="shrink-0 border-b border-zinc-200 px-3 py-2.5">
+        <div className="shrink-0 border-b border-zinc-200 px-3 py-2">
           <div className="flex w-full items-center gap-2.5">
             <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
             <Skeleton className="h-6 w-40" />
@@ -106,7 +106,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   if (fetchError) {
     return (
       <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-        <div className="shrink-0 border-b border-zinc-200 px-3 py-3">
+        <div className="shrink-0 border-b border-zinc-200 px-3 py-2">
           <div className="flex w-full items-center justify-between">
             <h2 className="text-[15px] font-semibold text-zinc-900 truncate">
               {details?.otherUserName ?? "Conversation"}
@@ -163,7 +163,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   return (
     <div className="flex min-h-0 h-full w-full flex-1 flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-zinc-200 px-4 py-2.5">
+      <div className="shrink-0 border-b border-zinc-200 px-4 py-2">
         <div className="flex w-full items-center justify-between gap-4">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <UserAvatar
