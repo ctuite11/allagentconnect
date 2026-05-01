@@ -273,39 +273,63 @@ const HotSheets = ({
       setBuyerLoading(true);
       setBuyerLinkedAgentName(null);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      let user: User | null = null;
+      try {
+        const { data } = await supabase.auth.getUser();
+        user = data?.user ?? null;
+      } catch (authErr) {
+        console.warn("[HotSheets] auth.getUser failed", authErr);
+        user = null;
+      }
+
+      const userId = user?.id ?? null;
+      if (!userId) {
         navigate("/auth");
         return;
       }
 
-      const { data: relationship } = await supabase
-        .from("client_agent_relationships")
-        .select("agent_id")
-        .eq("client_id", user.id)
-        .eq("status", "active")
-        .maybeSingle();
-
-      if (relationship?.agent_id) {
-        const { data: agentProfile } = await supabase
-          .from("agent_profiles")
-          .select("first_name, last_name")
-          .eq("id", relationship.agent_id)
+      try {
+        const { data: relationship, error: relErr } = await supabase
+          .from("client_agent_relationships")
+          .select("agent_id")
+          .eq("client_id", userId)
+          .eq("status", "active")
           .maybeSingle();
-        const display = [agentProfile?.first_name, agentProfile?.last_name]
-          .map((s) => (typeof s === "string" ? s.trim() : ""))
-          .filter(Boolean)
-          .join(" ");
-        if (display) setBuyerLinkedAgentName(display);
+
+        const rawAid =
+          relationship && typeof relationship === "object"
+            ? (relationship as Record<string, unknown>).agent_id
+            : undefined;
+        const agentId =
+          typeof rawAid === "string" && rawAid.trim() ? rawAid.trim() : null;
+
+        if (!relErr && agentId) {
+          const { data: agentProfile, error: profileErr } = await supabase
+            .from("agent_profiles")
+            .select("first_name, last_name")
+            .eq("id", agentId)
+            .maybeSingle();
+
+          if (!profileErr && agentProfile && typeof agentProfile === "object") {
+            const ap = agentProfile as Record<string, unknown>;
+            const parts = [ap.first_name, ap.last_name].filter(
+              (x): x is string => typeof x === "string" && Boolean(x.trim()),
+            );
+            const display = parts.map((s) => s.trim()).join(" ");
+            if (display) setBuyerLinkedAgentName(display);
+          }
+        }
+      } catch (agentLookupErr) {
+        console.warn("[HotSheets] Linked agent attribution skipped", agentLookupErr);
       }
 
       const { data: profile } = await supabase
         .from("profiles")
         .select("email")
-        .eq("id", user.id)
+        .eq("id", userId)
         .maybeSingle();
 
-      const buyerEmailNorm = (profile?.email || user.email || "").toLowerCase().trim();
+      const buyerEmailNorm = (profile?.email || user?.email || "").toLowerCase().trim();
 
       const allHotSheetIds = new Set<string>();
       const tokenMap: Record<string, string> = {};
@@ -342,7 +366,7 @@ const HotSheets = ({
           const hotSheetId = String(payload.hot_sheet_id || "");
           if (!hotSheetId) continue;
 
-          const matchByUserId = tokenRow.accepted_by_user_id === user.id;
+          const matchByUserId = tokenRow.accepted_by_user_id === userId;
           const tokenEmail = String(payload.client_email || "").toLowerCase().trim();
           const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
 

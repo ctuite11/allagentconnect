@@ -112,9 +112,13 @@ export function BuyerHotSheetPreviewCard({
   title,
   subtitle = "",
   variant = "dashboard",
+  linkedAgentName,
   onClick,
   onKeyDown,
 }: BuyerHotSheetPreviewCardProps) {
+  const agentAttribution =
+    typeof linkedAgentName === "string" ? linkedAgentName.trim() : "";
+
   const isHotSheetsPage = variant === "hotSheetsPage";
   const rootClass = isHotSheetsPage
     ? `${buyerPreviewCardInteractive} flex min-h-[19rem] flex-col md:min-h-[20rem]`
@@ -144,9 +148,9 @@ export function BuyerHotSheetPreviewCard({
             <span className="font-semibold">Hot Sheet Name: </span>
             <span>{title}</span>
           </p>
-          {linkedAgentName?.trim() ? (
+          {agentAttribution ? (
             <p className="mt-1 text-left text-xs text-zinc-500">
-              Your agent: {linkedAgentName.trim()}
+              Your agent: {agentAttribution}
             </p>
           ) : null}
           <div className="mt-auto flex justify-end pt-3">
