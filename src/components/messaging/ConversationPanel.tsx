@@ -10,6 +10,10 @@ import { DateSeparator } from "./DateSeparator";
 import { MessageComposer } from "./MessageComposer";
 import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+
+/** Set `true` briefly to verify layout: red = panel fill, blue = chat column, yellow = scroll list. */
+const DEBUG_MESSAGE_LAYOUT_GUIDES = false;
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -17,11 +21,24 @@ interface ConversationPanelProps {
   onInboxInvalidate?: () => void;
 }
 
-/** Outer flex-1 full width; inner centers header + thread + composer at 720px. */
+/**
+ * Outer (red when DEBUG): fills the right panel — width = flexible strip, not the chat cap.
+ * Inner (blue when DEBUG): `w-full max-w-[640px] mx-auto` — controls header, list, and composer width.
+ */
 function MessageContentWrap({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-0 h-full min-w-0 w-full flex-1 flex-col">
-      <div className="w-full max-w-[720px] mx-auto flex min-h-0 h-full flex-1 flex-col">
+    <div
+      className={cn(
+        "flex min-h-0 h-full min-w-0 w-full flex-1 flex-col",
+        DEBUG_MESSAGE_LAYOUT_GUIDES && "border-4 border-red-500"
+      )}
+    >
+      <div
+        className={cn(
+          "w-full max-w-[640px] mx-auto flex min-h-0 h-full flex-1 flex-col min-w-0",
+          DEBUG_MESSAGE_LAYOUT_GUIDES && "border-4 border-blue-500"
+        )}
+      >
         {children}
       </div>
     </div>
@@ -86,7 +103,12 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
             <Skeleton className="h-6 w-40" />
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-4 pb-4 pt-3">
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-3",
+            DEBUG_MESSAGE_LAYOUT_GUIDES ? "bg-yellow-200" : "bg-zinc-50"
+          )}
+        >
           <div className="w-full space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="mt-5 space-y-2 first:mt-0">
@@ -219,8 +241,13 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
         </div>
       </div>
 
-      {/* Thread */}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-4 pb-4 pt-3">
+      {/* Thread — yellow when DEBUG: same width as blue inner column */}
+      <div
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-3",
+          DEBUG_MESSAGE_LAYOUT_GUIDES ? "bg-yellow-200" : "bg-zinc-50"
+        )}
+      >
         <div className="w-full">
           {messages.length === 0 ? (
             <div className="py-10 text-center text-sm text-zinc-400">
