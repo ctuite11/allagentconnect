@@ -95,7 +95,7 @@ export const buyerPreviewSectionMarketContent =
 export const buyerPreviewGrid = "grid grid-cols-3 gap-4";
 
 export const buyerPreviewSectionHeaderRow =
-  "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between";
+  "flex items-start justify-between gap-2";
 
 export const buyerPreviewSectionTitleWrap = "min-w-0 space-y-1";
 

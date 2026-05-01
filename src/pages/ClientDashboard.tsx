@@ -842,15 +842,13 @@ export default function ClientDashboard() {
                           Alerts for saved searches.
                         </CardDescription>
                       </div>
-                      <div className="flex shrink-0 flex-wrap items-center gap-2">
-                        <Button
-                          type="button"
-                          className={aacPrimarySectionCta}
-                          onClick={() => navigate("/hot-sheets")}
-                        >
-                          View all
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        className={aacPrimarySectionCta}
+                        onClick={() => navigate("/hot-sheets")}
+                      >
+                        View all
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className={previewSectionContentClass}>
@@ -888,7 +886,7 @@ export default function ClientDashboard() {
               <div className={`${aacCardShell} overflow-hidden`}>
                 <div className="rounded-none bg-transparent">
                 <CardHeader className={previewSectionHeaderClass}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className={previewSectionHeaderRowClass}>
                     <div className={previewSectionTitleWrapClass}>
                       <CardTitle className={dashSectionTitleClass}>Favorites</CardTitle>
                       <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>Homes you saved.</CardDescription>
