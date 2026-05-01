@@ -210,7 +210,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
       {/* Thread */}
       <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-3 pb-3 pt-2">
-        <div className="w-full">
+        <div className="mx-auto w-full max-w-[520px]">
           {messages.length === 0 ? (
             <div className="py-10 text-center text-sm text-zinc-400">
               No messages yet. Send the first message when you are ready.

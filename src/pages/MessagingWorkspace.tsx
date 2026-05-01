@@ -136,7 +136,7 @@ function MessagingWorkspaceContent({
               </div>
 
               <div
-                className={`h-full min-h-0 w-[640px] max-w-[640px] flex-none ${buyerMessagingPanel}`}
+                className={`h-full min-h-0 w-[560px] max-w-[560px] flex-none ${buyerMessagingPanel}`}
               >
                 <ConversationPanel
                   conversationId={selectedConversationId}
