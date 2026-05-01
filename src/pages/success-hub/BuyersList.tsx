@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageShell } from "@/components/layout/PageShell";
+import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -124,7 +126,7 @@ export default function BuyersList() {
   ];
 
   return (
-    <PageShell className="bg-white">
+    <>
       <Seo
         title="Buyers | All Agent Connect"
         description="View and manage buyer accounts, activity, and connected workflows inside All Agent Connect."
@@ -132,71 +134,69 @@ export default function BuyersList() {
         noindex
       />
 
-      <div className="max-w-5xl mx-auto pt-2 pb-10">
-        {/* Header */}
-        <div className="mb-8 flex items-start justify-between gap-6">
-          <div className="min-w-0">
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
-              My Buyers
-            </h1>
-            <p className="text-sm text-zinc-500 mt-0.5">
-              Manage buyer hot sheets, favorites, invites, and activity.
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowCreate(true)}
-            className="h-9 rounded-full px-4 shrink-0"
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            New Buyer
-          </Button>
-        </div>
+      <AgentAacPage className="pb-12">
+        <AgentPageHeader
+          title="My Buyers"
+          subtitle="Manage buyer hot sheets, favorites, invites, and activity."
+          className="mb-8"
+          actions={
+            <Button
+              onClick={() => setShowCreate(true)}
+              className="h-9 rounded-full px-4 shrink-0"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              New Buyer
+            </Button>
+          }
+        />
 
-        {/* Filter pills */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {filterPills.map((pill) => {
-            const active = filter === pill.key;
-            return (
-              <button
-                key={pill.key}
-                type="button"
-                onClick={() => setFilter(pill.key)}
-                className={cn(
-                  "h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
-                  active
-                    ? "bg-zinc-900 text-white"
-                    : "bg-white border border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50"
-                )}
-              >
-                {pill.label}
-              </button>
-            );
-          })}
-        </div>
+        <AgentSectionCard className="p-6">
+          {/* Filter pills */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {filterPills.map((pill) => {
+              const active = filter === pill.key;
+              return (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => setFilter(pill.key)}
+                  className={cn(
+                    "h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
+                    active
+                      ? "bg-zinc-900 text-white"
+                      : "border border-zinc-100 bg-white text-zinc-700 hover:border-zinc-200"
+                  )}
+                >
+                  {pill.label}
+                </button>
+              );
+            })}
+          </div>
 
-        {/* List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            hasAny={buyers.length > 0}
-            filter={filter}
-            onCreate={() => setShowCreate(true)}
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
-            {filtered.map((b) => (
-              <BuyerCard
-                key={b.clientId}
-                buyer={b}
-                onOpen={() => navigate(`/success-hub/buyers/${b.clientId}`)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          {/* List */}
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              hasAny={buyers.length > 0}
+              filter={filter}
+              onCreate={() => setShowCreate(true)}
+            />
+          ) : (
+            <div className="flex flex-col gap-2">
+              {filtered.map((b) => (
+                <BuyerCard
+                  key={b.clientId}
+                  buyer={b}
+                  onOpen={() => navigate(`/success-hub/buyers/${b.clientId}`)}
+                />
+              ))}
+            </div>
+          )}
+        </AgentSectionCard>
+      </AgentAacPage>
 
       <CreateBuyerDialog
         open={showCreate}
@@ -214,7 +214,7 @@ export default function BuyersList() {
           navigate(`/success-hub/buyers/${b.id}?createHotSheet=1`)
         }
       />
-    </PageShell>
+    </>
   );
 }
 
@@ -232,10 +232,8 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         }
       }}
       className={cn(
-        "group cursor-pointer rounded-2xl border border-zinc-200 bg-white",
-        "shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:border-zinc-300",
-        "transition-all duration-150",
-        "px-5 py-4 flex items-center justify-between gap-4"
+        "group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-zinc-100 bg-white px-5 py-4",
+        "transition-colors duration-150 hover:border-zinc-200",
       )}
     >
       <div className="min-w-0">
@@ -277,7 +275,7 @@ function EmptyState({
 }) {
   if (hasAny) {
     return (
-      <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-8 text-center">
+      <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-5 py-8 text-center">
         <p className="text-sm font-semibold text-zinc-900">
           No buyers in this view
         </p>
@@ -289,7 +287,7 @@ function EmptyState({
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-8 text-center">
+    <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-5 py-8 text-center">
       <h2 className="text-sm font-semibold text-zinc-900">No buyers yet</h2>
       <p className="mt-1 text-sm text-zinc-500">
         Create your first buyer to start building hot sheets and tracking activity.

@@ -13,7 +13,7 @@ type AgentAacPageProps = {
  */
 export function AgentAacPage({ children, className }: AgentAacPageProps) {
   return (
-    <main className={cn(buyerPageMain, buyerPageStack, className)}>
+    <main className={cn(buyerPageMain, buyerPageStack, "bg-white", className)}>
       {children}
     </main>
   );

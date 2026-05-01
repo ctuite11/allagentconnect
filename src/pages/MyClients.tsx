@@ -742,7 +742,7 @@ const MyClients = () => {
                     />
                   </div>
 
-                  <div className="border border-border rounded-lg p-4 bg-muted space-y-2">
+                  <div className="rounded-lg border border-zinc-100 bg-white space-y-2 p-4">
                     <Label htmlFor="client_type" className="text-base font-semibold">
                       Contact Type
                     </Label>
@@ -961,7 +961,7 @@ const MyClients = () => {
 
               {/* Bulk Action Bar - appears when contacts are selected */}
               {selectedClients.size > 0 && (
-                <div className="flex items-center gap-3 py-3 px-4 bg-zinc-50 border border-zinc-300 rounded-xl mb-4">
+                <div className="flex items-center gap-3 py-3 px-4 rounded-xl mb-4 border border-zinc-100 bg-white">
                   <span className="text-sm text-zinc-600 font-medium">
                     {selectedClients.size} contact{selectedClients.size > 1 ? 's' : ''} selected
                   </span>
@@ -981,7 +981,7 @@ const MyClients = () => {
               )}
 
               {filteredClients.length === 0 ? (
-                <div className="border border-zinc-200 rounded-2xl p-12">
+                <div className="border border-zinc-100 rounded-2xl p-12 bg-white">
                   <div className="text-center">
                     <User className="h-16 w-16 mx-auto mb-4 text-blue-500" />
                     <h3 className="text-xl font-semibold text-zinc-900 mb-2">No contacts found</h3>
@@ -995,9 +995,9 @@ const MyClients = () => {
                 </div>
               ) : (
                 <>
-                <div className="border border-zinc-200 rounded-2xl overflow-hidden">
+                <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-white">
                   <Table>
-                    <TableHeader className="border-b border-zinc-200">
+                    <TableHeader className="border-b border-zinc-100">
                       <TableRow className="border-b-0">
                       <TableHead className="w-12">
                           {(() => {

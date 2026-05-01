@@ -6,13 +6,16 @@
 export {
   buyerPageMain,
   buyerPageStack,
-  buyerSectionCard as agentSectionCard,
   buyerPreviewCardInteractive as agentPreviewCard,
   buyerSectionTitle as agentSectionTitle,
   buyerSectionDesc as agentSectionDesc,
   buyerPrimaryCta as agentPrimaryCta,
   buyerOutlineSecondary as agentOutlineSecondary,
 } from "./buyerUi";
+
+/** Section surface on agent AAC pages: white canvas, hairline border, no shadow */
+export const agentSectionCard =
+  "bg-white rounded-2xl border border-zinc-100 shadow-none transition-colors duration-150";
 
 /** Page title — matches buyer dashboard / Hot Sheets hero title scale */
 export const agentPageTitleClass =
