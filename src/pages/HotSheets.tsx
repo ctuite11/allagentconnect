@@ -250,7 +250,8 @@ const HotSheets = ({
         </div>
       </div>
     </section>
-  );
+    );
+  };
 
   useEffect(() => {
     if (buyerMode) {
