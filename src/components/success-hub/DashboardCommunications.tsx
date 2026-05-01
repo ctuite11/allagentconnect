@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, MessageSquare } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
@@ -32,28 +31,31 @@ export function DashboardCommunications({ conversations }: DashboardCommunicatio
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-semibold text-foreground">Communications</h3>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h3 className="text-[15px] font-semibold text-neutral-900">Communications</h3>
         <button
+          type="button"
           onClick={() => navigate("/client-needs")}
-          className="inline-flex items-center gap-0.5 text-xs font-medium text-[#0E56F5] hover:underline"
+          className="inline-flex items-center gap-0.5 text-sm font-medium text-[#0E56F5] hover:underline"
         >
-          Open Comm Center <ChevronRight className="h-3 w-3" />
+          Open Comm Center <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      <Card className="border border-border bg-card">
-        <CardContent className="p-0 divide-y divide-border/60">
-          {conversations.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              No messages yet.
-            </div>
-          ) : (
-            conversations.slice(0, 5).map((c) => (
-              <div
+      <div className="overflow-hidden rounded-xl md:rounded-2xl">
+        {conversations.length === 0 ? (
+          <div className="py-10 text-center text-sm text-neutral-500">No messages yet.</div>
+        ) : (
+          <ul className="divide-y divide-zinc-100">
+            {conversations.slice(0, 5).map((c) => (
+              <li
                 key={c.conversation_id}
-                className="flex cursor-pointer items-center gap-3 px-4 py-3"
-                onClick={() => navigate(`/messages/${c.conversation_id}`, { state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" } })}
+                className="flex cursor-pointer items-center gap-3 bg-white px-4 py-3.5 transition-colors hover:bg-neutral-50/50"
+                onClick={() =>
+                  navigate(`/messages/${c.conversation_id}`, {
+                    state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
+                  })
+                }
               >
                 <Avatar className="h-8 w-8 shrink-0">
                   {c.other_headshot_url && (
@@ -64,28 +66,26 @@ export function DashboardCommunications({ conversations }: DashboardCommunicatio
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {c.other_name ?? "Agent"}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="truncate text-sm font-medium text-neutral-900">{c.other_name ?? "Agent"}</p>
+                  <p className="truncate text-xs text-neutral-500">
                     {c.last_message_preview ?? "No messages yet"}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex shrink-0 items-center gap-2">
                   {c.is_unread && (
-                    <Badge variant="default" className="text-[10px] px-1.5 py-0">
+                    <Badge className="border-0 bg-[#50C878] px-1.5 py-0 text-[10px] font-medium text-white hover:bg-[#45b56a]">
                       New
                     </Badge>
                   )}
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                  <span className="whitespace-nowrap text-[11px] text-neutral-500">
                     {relativeTime(c.last_message_at)}
                   </span>
                 </div>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

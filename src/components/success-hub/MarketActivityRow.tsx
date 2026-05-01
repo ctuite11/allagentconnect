@@ -168,10 +168,13 @@ export function MarketActivityRow() {
   if (loading) {
     return (
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-3">Market Activity</h3>
+        <h3 className="mb-4 text-[15px] font-semibold text-neutral-900">Market activity</h3>
         <div className="flex gap-4 overflow-hidden">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[220px] min-w-[220px] animate-pulse rounded-xl border border-zinc-100 bg-white" />
+            <div
+              key={i}
+              className="h-[232px] min-w-[236px] animate-pulse rounded-2xl border border-zinc-100 bg-white"
+            />
           ))}
         </div>
       </div>
@@ -181,9 +184,9 @@ export function MarketActivityRow() {
   if (listings.length === 0) {
     return (
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-3">Market Activity</h3>
-        <div className="rounded-xl border border-zinc-100 bg-white px-6 py-8 text-center shadow-none">
-          <p className="text-sm text-muted-foreground">No new market activity yet</p>
+        <h3 className="mb-4 text-[15px] font-semibold text-neutral-900">Market activity</h3>
+        <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-6 py-10 text-center shadow-none">
+          <p className="text-sm text-neutral-500">No new market activity yet</p>
         </div>
       </div>
     );
@@ -195,6 +198,7 @@ export function MarketActivityRow() {
         <h3 className="text-lg font-semibold text-foreground">Market Activity</h3>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
             className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
@@ -202,6 +206,7 @@ export function MarketActivityRow() {
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
+            type="button"
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
             className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
@@ -223,11 +228,19 @@ export function MarketActivityRow() {
           return (
             <div
               key={listing.id}
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(`/property/${listing.id}`)}
-              className="min-w-[220px] max-w-[240px] flex-shrink-0 cursor-pointer rounded-xl border border-zinc-100 bg-white shadow-none transition-colors duration-200 hover:border-zinc-200"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/property/${listing.id}`);
+                }
+              }}
+              className="min-w-[236px] max-w-[248px] flex-shrink-0 cursor-pointer rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200"
             >
               {/* Photo */}
-              <div className="relative aspect-[4/3] overflow-hidden rounded-t-xl border-b border-zinc-100 bg-white">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-t-2xl border-b border-zinc-100 bg-white">
                 {photo ? (
                   <img
                     src={photo}
@@ -261,16 +274,16 @@ export function MarketActivityRow() {
                 <p className="text-xs text-muted-foreground truncate">
                   {listing.city}, {listing.state}
                 </p>
-                <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                <div className="mt-1.5 flex items-center gap-3 text-xs text-neutral-500">
                   <span className="inline-flex items-center gap-0.5">
-                    <Bed className="h-3 w-3 text-primary" /> {listing.bedrooms}
+                    <Bed className="h-3 w-3 text-[#0E56F5]" /> {listing.bedrooms}
                   </span>
                   <span className="inline-flex items-center gap-0.5">
-                    <Bath className="h-3 w-3 text-primary" /> {listing.bathrooms}
+                    <Bath className="h-3 w-3 text-[#0E56F5]" /> {listing.bathrooms}
                   </span>
                   {listing.square_feet && (
                     <span className="inline-flex items-center gap-0.5">
-                      <Square className="h-3 w-3 text-primary" /> {listing.square_feet.toLocaleString()}
+                      <Square className="h-3 w-3 text-[#0E56F5]" /> {listing.square_feet.toLocaleString()}
                     </span>
                   )}
                 </div>

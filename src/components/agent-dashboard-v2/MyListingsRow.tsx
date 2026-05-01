@@ -36,26 +36,29 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-foreground">My Listings</h3>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h3 className="text-[15px] font-semibold text-neutral-900">My listings</h3>
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/listings")}
+            type="button"
             className="text-sm font-medium text-[#0E56F5] hover:underline"
           >
             View all →
           </button>
           <button
+            type="button"
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
-            className="p-1 rounded-full border border-border hover:bg-muted disabled:opacity-30 transition-colors"
+            className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
+            type="button"
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
-            className="p-1 rounded-full border border-border hover:bg-muted disabled:opacity-30 transition-colors"
+            className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -73,8 +76,16 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
           return (
             <div
               key={listing.id}
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(`/listing/${listing.id}`)}
-              className="min-w-[240px] max-w-[260px] flex-shrink-0 cursor-pointer rounded-xl border border-zinc-100 bg-white shadow-none transition-colors duration-200 hover:border-zinc-200"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/listing/${listing.id}`);
+                }
+              }}
+              className="min-w-[248px] max-w-[268px] flex-shrink-0 cursor-pointer rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200"
             >
               {/* Stats bar */}
               <div className="flex items-center px-3 pt-3 pb-2">
@@ -92,7 +103,7 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
               </div>
 
               {/* Photo */}
-              <div className="relative mx-3 rounded-lg overflow-hidden aspect-[4/3] bg-muted">
+              <div className="relative mx-3 aspect-[4/3] overflow-hidden rounded-xl border border-zinc-100 bg-white">
                 {photo ? (
                   <img
                     src={photo}
