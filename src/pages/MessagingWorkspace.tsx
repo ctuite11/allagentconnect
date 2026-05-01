@@ -116,11 +116,11 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "mx-auto flex h-[calc(100dvh-3.5rem-7.75rem)] min-h-[420px] w-full max-w-[1236px] min-w-0 gap-4"
-                  : "mx-auto flex h-[calc(100vh-2rem)] w-full max-w-[1236px] min-w-0 gap-4"
+                  ? "mx-auto flex h-[calc(100dvh-3.5rem-7.75rem)] min-h-[420px] w-fit max-w-full gap-4"
+                  : "mx-auto flex h-[calc(100vh-2rem)] w-fit max-w-full gap-4"
               }
             >
-              <div className={`h-full min-h-0 w-[320px] shrink-0 ${buyerMessagingPanel}`}>
+              <div className={`h-full min-h-0 w-[320px] flex-none ${buyerMessagingPanel}`}>
                 <ConversationsList
                   threads={safeThreads}
                   threadsLoading={Boolean(threadsLoading)}
@@ -139,7 +139,7 @@ function MessagingWorkspaceContent({
               </div>
 
               <div
-                className={`flex h-full min-h-0 w-full max-w-[900px] min-w-0 flex-1 flex-col ${buyerMessagingPanel}`}
+                className={`h-full min-h-0 w-[720px] max-w-[720px] flex-none ${buyerMessagingPanel}`}
               >
                 <ConversationPanel
                   conversationId={selectedConversationId}
