@@ -1,16 +1,18 @@
-import { Fragment, useRef, useState, useMemo } from "react";
+import { Fragment, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Eye, Share2, Heart } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 import { cn } from "@/lib/utils";
 
-const DENSE_LISTING_IMAGE_H = "h-40";
+const AUTO_FIT_GRID =
+  "grid gap-4 grid-cols-1 md:gap-5 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]";
+const CARD_IMG_AUTO = "aspect-[4/3] min-h-[168px]";
 
 interface MyListingsRowProps {
   listings: SuccessHubSummary["listings"];
-  /** Success Hub 3-up grid aligned with Market activity cards */
-  denseGrid?: boolean;
+  /** Success Hub: responsive autofit grid (same rhythm as Market activity) */
+  autoFitGrid?: boolean;
 }
 
 function formatPrice(price: number | null) {
@@ -38,23 +40,13 @@ export function MyListingsRow({ listings, denseGrid = false }: MyListingsRowProp
     setTimeout(updateScrollState, 350);
   };
 
-  const gridListings = useMemo(() => (denseGrid ? listings.slice(0, 3) : listings), [denseGrid, listings]);
-
-  const gridClass = useMemo(() => {
-    if (!denseGrid) return "";
-    const n = gridListings.length;
-    if (n === 1) return "grid grid-cols-1 gap-4";
-    if (n === 2) return "grid grid-cols-1 gap-4 sm:grid-cols-2";
-    return "grid grid-cols-1 gap-4 sm:grid-cols-3";
-  }, [denseGrid, gridListings.length]);
-
   const renderCard = (
     listing: (typeof listings)[number],
-    opts: { dense: boolean },
+    opts: { autoFit: boolean },
   ) => {
     const raw = listing.photos?.[0];
     const photo = typeof raw === "string" ? raw : raw?.url ?? null;
-    const imgClass = opts.dense ? DENSE_LISTING_IMAGE_H : "h-44";
+    const imgClass = opts.autoFit ? CARD_IMG_AUTO : "h-44";
     return (
       <div
         role="button"
@@ -87,11 +79,11 @@ export function MyListingsRow({ listings, denseGrid = false }: MyListingsRowProp
           </div>
         </div>
 
-        <div className={cn("flex flex-1 flex-col", opts.dense ? "px-3 pb-3 pt-2.5" : "px-4 pb-3 pt-3")}>
+        <div className={cn("flex flex-1 flex-col", opts.autoFit ? "px-4 pb-3 pt-2.5" : "px-4 pb-3 pt-3")}>
           <p
             className={cn(
               "font-semibold leading-tight text-[#0E56F5]",
-              opts.dense ? "text-base font-bold" : "text-lg",
+              opts.autoFit ? "text-lg font-bold tracking-tight" : "text-lg",
             )}
           >
             {formatPrice(listing.price)}
@@ -101,8 +93,13 @@ export function MyListingsRow({ listings, denseGrid = false }: MyListingsRowProp
             {listing.city}, {listing.state}
           </p>
 
-          <div className={cn("mt-auto border-t border-zinc-100", opts.dense ? "pt-2" : "pt-2.5")}>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-neutral-500">
+          <div className={cn("mt-auto border-t border-zinc-100", opts.autoFit ? "pt-2.5" : "pt-2.5")}>
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-x-4 gap-y-1 text-neutral-500",
+                opts.autoFit ? "text-[13px]" : "text-[11px]",
+              )}
+            >
               <span className="inline-flex items-center gap-1">
                 <Eye className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" /> {listing.view_count.toLocaleString()}
               </span>
@@ -160,10 +157,10 @@ export function MyListingsRow({ listings, denseGrid = false }: MyListingsRowProp
         </div>
       </div>
 
-      {denseGrid ? (
-        <div className={cn(gridClass, gridListings.length === 1 && "max-w-[320px]")}>
-          {gridListings.map((listing) => (
-            <Fragment key={listing.id}>{renderCard(listing, { dense: true })}</Fragment>
+      {autoFitGrid ? (
+        <div className={AUTO_FIT_GRID}>
+          {listings.map((listing) => (
+            <Fragment key={listing.id}>{renderCard(listing, { autoFit: true })}</Fragment>
           ))}
         </div>
       ) : (
@@ -173,7 +170,7 @@ export function MyListingsRow({ listings, denseGrid = false }: MyListingsRowProp
           className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 scrollbar-hide"
         >
           {listings.map((listing) => (
-            <Fragment key={listing.id}>{renderCard(listing, { dense: false })}</Fragment>
+            <Fragment key={listing.id}>{renderCard(listing, { autoFit: false })}</Fragment>
           ))}
         </div>
       )}

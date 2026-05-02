@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bed, Bath, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,9 @@ function isNew(createdAt: string) {
   return diff < 48 * 60 * 60 * 1000;
 }
 
-const PREVIEW_IMAGE_H = "h-40";
+/** Taller previews — aligns with Success Hub listing cards before compact pass */
+const GRID_IMG = "aspect-[4/3] min-h-[168px]";
+const AUTO_FIT_GRID = "grid gap-4 grid-cols-1 md:gap-5 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]";
 
 export function MarketActivityRow() {
   const navigate = useNavigate();
@@ -71,7 +73,7 @@ export function MarketActivityRow() {
       `)
       .not("status", "in", "(draft,expired)")
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(42);
 
     if (error || !data) {
       setLoading(false);
@@ -94,7 +96,7 @@ export function MarketActivityRow() {
     }
 
     const parsed = data.map((row: any) => parseListing(row, companyMap));
-    const visible = filterVisibleListings(parsed, userId).slice(0, 10);
+    const visible = filterVisibleListings(parsed, userId).slice(0, 36);
     setListings(visible);
     setLoading(false);
   }, [parseListing]);
@@ -186,12 +188,9 @@ export function MarketActivityRow() {
             <p className="mt-0.5 text-[13px] text-neutral-500">Loading recent listings…</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="animate-pulse rounded-2xl border border-zinc-100 bg-white h-[220px]"
-            />
+        <div className={`${AUTO_FIT_GRID}`}>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-[260px] animate-pulse rounded-2xl border border-zinc-100 bg-white" />
           ))}
         </div>
       </div>
@@ -243,7 +242,7 @@ export function MarketActivityRow() {
               <div
                 className={cn(
                   "relative w-full shrink-0 overflow-hidden rounded-t-2xl border-b border-zinc-100 bg-white",
-                  PREVIEW_IMAGE_H,
+                  GRID_IMG,
                 )}
               >
                 {photo ? (
@@ -269,17 +268,17 @@ export function MarketActivityRow() {
               </div>
 
               {/* Details */}
-              <div className="flex min-h-0 flex-1 flex-col px-3 pt-2 pb-3">
-                <p className="text-base font-bold leading-tight text-[#0E56F5]">
+              <div className="flex min-h-0 flex-1 flex-col px-4 pt-2.5 pb-3">
+                <p className="text-lg font-bold leading-tight tracking-tight text-[#0E56F5]">
                   {formatPrice(listing.price)}
                 </p>
-                <p className="mt-1 line-clamp-2 text-sm font-medium leading-snug text-neutral-900">
+                <p className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">
                   {listing.address}
                 </p>
-                <p className="mt-0.5 truncate text-xs text-neutral-500">
+                <p className="mt-0.5 truncate text-[13px] text-neutral-500">
                   {listing.city}, {listing.state}
                 </p>
-                <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-0.5 pt-2 text-xs text-neutral-500">
+                <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-0.5 pt-2.5 text-[13px] text-neutral-600">
                   <span className="inline-flex items-center gap-0.5">
                     <Bed className="h-3 w-3 shrink-0 text-[#0E56F5]" /> {listing.bedrooms}
                   </span>

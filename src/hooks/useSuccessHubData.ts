@@ -55,10 +55,13 @@ export interface SuccessHubSummary {
     first_name: string | null;
     last_name: string | null;
     email: string;
+    phone: string | null;
     status: "active" | "pending";
     hotSheetCount: number;
+    favoriteCount: number;
     lastActivity: string | null;
     hasUnread: boolean;
+    attentionNote: string | null;
   }>;
 
   conversations: Array<{
@@ -146,7 +149,8 @@ export function useSuccessHubData(): {
         hotSheetsPreviewRes,
         hotSheetsCountRes,
         listingsPreviewRes,
-        relationshipsRes,
+        relationshipsBuyersPreviewRes,
+        relationshipsActiveCountRes,
         inboxPreviewRes,
         inboxUnreadCountRes,
         acceptedTokens30dRes,
@@ -191,23 +195,23 @@ export function useSuccessHubData(): {
           .eq("agent_id", agentId)
           .in("status", ["active", "pending", "coming_soon", "off_market"])
           .order("updated_at", { ascending: false })
-          .limit(6),
+          .limit(12),
 
-        // Active buyer relationships — count + preview rows
+        // Buyer relationships (active + pending) — preview rows
         supabase
           .from("client_agent_relationships")
           .select("id,client_id,agent_id,status,created_at", { count: "exact" })
           .eq("agent_id", agentId)
-          .eq("status", "active")
+          .in("status", ["active", "pending"])
           .order("created_at", { ascending: false })
-          .limit(8),
+          .limit(15),
 
         // Conversation inbox preview (view is already user-scoped by RLS)
         supabase
           .from("conversation_inbox")
           .select("conversation_id,last_message_preview,last_message_at,is_unread,other_user_id")
           .order("last_message_at", { ascending: false })
-          .limit(3),
+          .limit(12),
 
         // Unread message count (view is already user-scoped)
         supabase
@@ -252,7 +256,8 @@ export function useSuccessHubData(): {
       logQueryError("hot_sheets(preview)", hotSheetsPreviewRes.error);
       logQueryError("hot_sheets(count)", hotSheetsCountRes.error);
       logQueryError("listings(preview)", listingsPreviewRes.error);
-      logQueryError("client_agent_relationships", relationshipsRes.error);
+      logQueryError("client_agent_relationships(preview)", relationshipsBuyersPreviewRes.error);
+      logQueryError("client_agent_relationships(active count)", relationshipsActiveCountRes.error);
       logQueryError("conversation_inbox(preview)", inboxPreviewRes.error);
       logQueryError("conversation_inbox(unread count)", inboxUnreadCountRes.error);
       logQueryError("share_tokens(accepted 30d)", acceptedTokens30dRes.error);
@@ -281,13 +286,17 @@ export function useSuccessHubData(): {
       });
       const pendingInviteCount = pendingInviteTokens.length;
 
+      const pendingInviteEmails = new Set<string>();
+      for (const t of pendingInviteTokens) {
+        const em = safeLowerEmail((t as any)?.payload?.client_email);
+        if (em) pendingInviteEmails.add(em);
+      }
+
       const activeHotSheetCount =
         (hotSheetsCountRes.count as number | null) ??
         ((hotSheetsPreviewRes.data ?? []) as any[]).length;
 
-      const activeBuyerCount =
-        (relationshipsRes.count as number | null) ??
-        ((relationshipsRes.data ?? []) as any[]).length;
+      const activeBuyerCount = (relationshipsActiveCountRes.count as number | null) ?? 0;
 
       const unreadMessageCount = (inboxUnreadCountRes.count as number | null) ?? 0;
 
@@ -321,23 +330,29 @@ export function useSuccessHubData(): {
         lastUpdated: hs.updated_at ?? new Date().toISOString(),
       }));
 
-      // Buyers base (enrich in Wave 2)
-      const activeRelationships = (relationshipsRes.data ?? []) as any[];
-      const buyerClientIds = activeRelationships
+      // Buyers base (enrich in Wave 2) — preserves relationship status per row
+      const buyerRelationshipRows = (relationshipsBuyersPreviewRes.data ?? []) as any[];
+      const buyerClientIds = buyerRelationshipRows
         .map((r) => r.client_id)
         .filter(Boolean)
         .map(String);
 
-      const buyersBase: SuccessHubSummary["buyers"] = buyerClientIds.map((id) => ({
-        id,
-        first_name: null,
-        last_name: null,
-        email: "",
-        status: "active",
-        hotSheetCount: 0,
-        lastActivity: null,
-        hasUnread: false,
-      }));
+      const buyersBase: SuccessHubSummary["buyers"] = buyerRelationshipRows.map((r) => {
+        const status = r?.status === "pending" ? "pending" : "active";
+        return {
+          id: String(r.client_id),
+          first_name: null,
+          last_name: null,
+          email: "",
+          phone: null as string | null,
+          status,
+          hotSheetCount: 0,
+          favoriteCount: 0,
+          lastActivity: null,
+          hasUnread: false,
+          attentionNote: null as string | null,
+        };
+      });
 
       // Conversations base (enrich names in Wave 2)
       const conversationsBase = ((inboxPreviewRes.data ?? []) as any[]).map((c) => ({
@@ -448,7 +463,7 @@ export function useSuccessHubData(): {
         buyerClientIds.length
           ? supabase
               .from("clients")
-              .select("id,first_name,last_name,email,updated_at,created_at")
+              .select("id,first_name,last_name,email,phone,updated_at,created_at")
               .in("id", buyerClientIds)
           : (Promise.resolve({ data: [], error: null }) as any),
 
@@ -505,17 +520,75 @@ export function useSuccessHubData(): {
         hsByClient.set(cid, (hsByClient.get(cid) ?? 0) + 1);
       }
 
+      const emailsForProfiles = [
+        ...new Set(
+          buyerClientIds
+            .map((cid) => {
+              const row = clientById.get(cid);
+              const e = typeof row?.email === "string" ? row.email.trim() : "";
+              return e || "";
+            })
+            .filter(Boolean),
+        ),
+      ];
+
+      const emailLowerToAuthUserId = new Map<string, string>();
+      const favoritesCountByAuthUserId = new Map<string, number>();
+
+      if (emailsForProfiles.length > 0) {
+        const { data: profRows, error: profErr } = await supabase
+          .from("profiles")
+          .select("id,email")
+          .in("email", emailsForProfiles);
+        logQueryError("profiles(buyer emails)", profErr);
+
+        const authIds: string[] = [];
+        for (const p of (profRows ?? []) as any[]) {
+          const el = safeLowerEmail(p.email);
+          if (el && p.id) {
+            emailLowerToAuthUserId.set(el, String(p.id));
+            authIds.push(String(p.id));
+          }
+        }
+
+        const uniqueAuthIds = [...new Set(authIds)];
+        if (uniqueAuthIds.length > 0) {
+          const { data: favData, error: favErr } = await supabase
+            .from("favorites")
+            .select("user_id")
+            .in("user_id", uniqueAuthIds);
+          logQueryError("favorites(buyer counts)", favErr);
+          for (const row of (favData ?? []) as any[]) {
+            const uid = String(row.user_id);
+            favoritesCountByAuthUserId.set(uid, (favoritesCountByAuthUserId.get(uid) ?? 0) + 1);
+          }
+        }
+      }
+
       const buyersFinal: SuccessHubSummary["buyers"] = buyersBase.map((b) => {
         const c = clientById.get(b.id);
+        const emailLower = safeLowerEmail(c?.email ?? "");
+        const authId = emailLower ? emailLowerToAuthUserId.get(emailLower) : undefined;
+        const favoriteCount = authId ? (favoritesCountByAuthUserId.get(authId) ?? 0) : 0;
+
+        let attentionNote: string | null = null;
+        if (b.status === "pending") {
+          attentionNote = "Needs invite acceptance";
+        } else if (emailLower && pendingInviteEmails.has(emailLower)) {
+          attentionNote = "Hot sheet invite pending";
+        }
+
         return {
           ...b,
           first_name: c?.first_name ?? null,
           last_name: c?.last_name ?? null,
           email: c?.email ?? "",
-          status: "active" as const,
+          phone: typeof c?.phone === "string" && c.phone.trim() ? c.phone.trim() : null,
           hotSheetCount: hsByClient.get(b.id) ?? 0,
+          favoriteCount,
           lastActivity: c?.updated_at ?? c?.created_at ?? null,
           hasUnread: false,
+          attentionNote,
         };
       });
 

@@ -20,6 +20,12 @@ function relativeTime(iso: string) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+function snippetFromPreview(preview: string | null | undefined) {
+  const t = preview?.trim();
+  if (t) return t;
+  return "";
+}
+
 function getInitials(name: string | null) {
   if (!name) return "?";
   return name
@@ -32,7 +38,7 @@ function getInitials(name: string | null) {
 
 export function DashboardCommunications({ conversations, compact, inboxPreview }: DashboardCommunicationsProps) {
   const navigate = useNavigate();
-  const rows = conversations.slice(0, 5);
+  const rows = conversations.slice(0, inboxPreview ? 12 : 5);
 
   return (
     <div className="min-w-0">
@@ -68,44 +74,52 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
           </div>
         ) : inboxPreview ? (
           <ul className="divide-y divide-zinc-100">
-            {rows.map((c) => (
-              <li
-                key={c.conversation_id}
-                className="flex cursor-pointer gap-3 bg-white px-3 py-2.5 transition-colors hover:bg-zinc-50/80"
-                onClick={() =>
-                  navigate(`/messages/${c.conversation_id}`, {
-                    state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
-                  })
-                }
-              >
-                <Avatar className="mt-0.5 h-9 w-9 shrink-0">
-                  {c.other_headshot_url && (
-                    <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
-                  )}
-                  <AvatarFallback className="bg-[#50C878] text-xs font-medium text-white">
-                    {getInitials(c.other_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="truncate text-sm font-semibold text-neutral-900">{c.other_name ?? "Agent"}</p>
-                    <span className="shrink-0 whitespace-nowrap text-[11px] tabular-nums text-neutral-400">
-                      {relativeTime(c.last_message_at)}
-                    </span>
+            {rows.map((c) => {
+              const snippet = snippetFromPreview(c.last_message_preview);
+              return (
+                <li
+                  key={c.conversation_id}
+                  className="flex cursor-pointer gap-3 bg-white px-3 py-2.5 transition-colors hover:bg-zinc-50/80"
+                  onClick={() =>
+                    navigate(`/messages/${c.conversation_id}`, {
+                      state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
+                    })
+                  }
+                >
+                  <Avatar className="mt-0.5 h-9 w-9 shrink-0">
+                    {c.other_headshot_url && (
+                      <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
+                    )}
+                    <AvatarFallback className="bg-[#50C878] text-xs font-medium text-white">
+                      {getInitials(c.other_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="truncate text-sm font-semibold text-neutral-900">{c.other_name ?? "Agent"}</p>
+                      <span className="shrink-0 whitespace-nowrap text-[11px] tabular-nums text-neutral-400">
+                        {relativeTime(c.last_message_at)}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 flex items-start justify-between gap-2">
+                      <p
+                        className={`line-clamp-2 min-w-0 flex-1 text-left text-[13px] leading-snug ${
+                          snippet ? "text-neutral-600" : "italic text-neutral-400"
+                        }`}
+                        title={snippet || undefined}
+                      >
+                        {snippet || "Open thread — no message body yet."}
+                      </p>
+                      {c.is_unread ? (
+                        <Badge className="shrink-0 border-0 bg-[#50C878] px-1.5 py-0 text-[10px] font-semibold text-white hover:bg-[#45b56a]">
+                          New
+                        </Badge>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <p className="line-clamp-1 min-w-0 flex-1 text-[13px] text-neutral-500">
-                      {c.last_message_preview ?? "No messages yet"}
-                    </p>
-                    {c.is_unread ? (
-                      <Badge className="shrink-0 border-0 bg-[#50C878] px-1.5 py-0 text-[10px] font-semibold text-white hover:bg-[#45b56a]">
-                        New
-                      </Badge>
-                    ) : null}
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <ul className="divide-y divide-zinc-100">
@@ -131,8 +145,11 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                   <p className={`truncate font-medium text-neutral-900 ${compact ? "text-xs" : "text-sm"}`}>
                     {c.other_name ?? "Agent"}
                   </p>
-                  <p className={`line-clamp-1 text-neutral-500 ${compact ? "text-[11px]" : "text-xs"}`}>
-                    {c.last_message_preview ?? "No messages yet"}
+                  <p
+                    className={`line-clamp-2 text-neutral-600 ${compact ? "text-[11px]" : "text-xs"}`}
+                    title={c.last_message_preview?.trim() || undefined}
+                  >
+                    {snippetFromPreview(c.last_message_preview) || "Open thread — no message body yet."}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
