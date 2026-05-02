@@ -10,10 +10,13 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Loader2, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
-import { Logo } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
+
+/** Premium white card — email-template aligned (soft border, subtle shadow). */
+const authCardSurface =
+  "rounded-2xl border border-zinc-100 bg-white p-8 shadow-sm";
 
 // NOTE: This is generic only when it declares <T> and returns Promise<T>.
 // Timeout wrapper - truly generic + typed for PromiseLike
@@ -68,13 +71,18 @@ const US_STATES = [
 
 type AuthMode = "signin" | "register" | "forgot-password";
 
-/** Centered AAC monogram + canonical wordmark (no duplicate top bar). */
+/** Email-aligned lockup: green monogram + neutral wordmark (no blue in wordmark). */
 function AuthBrandLockup({ className }: { className?: string }) {
   return (
     <div className={cn("flex justify-center", className)}>
-      <div className="flex items-center justify-center gap-3">
-        <AACMonogram className="h-11 w-11 shrink-0 text-[#0E56F5]" aria-hidden />
-        <Logo variant="primary" size="lg" className="h-10 w-auto sm:h-12" />
+      <div className="flex items-center justify-center gap-3 sm:gap-4">
+        <AACMonogram className="h-11 w-11 shrink-0 text-[#50C878]" aria-hidden />
+        <span
+          className="text-xl font-semibold tracking-tight text-zinc-950 sm:text-2xl"
+          style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
+        >
+          All Agent Connect
+        </span>
       </div>
     </div>
   );
@@ -766,7 +774,7 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
           <AuthBrandLockup className="mb-8" />
-          <div className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
+          <div className={`${authCardSurface} text-center`}>
             <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
               <LogOut className="w-7 h-7 text-amber-600" />
             </div>
@@ -822,7 +830,7 @@ const Auth = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
-          <div className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
+          <div className={`${authCardSurface} text-center`}>
             {isPending ? (
               <>
                 <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -914,7 +922,7 @@ const Auth = () => {
         <AuthBrandLockup className="mb-8" />
 
         {/* Form Container */}
-        <div className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] relative">
+        <div className={`${authCardSurface} relative`}>
           {(mode === "forgot-password" || mode === "register") && (
             <button
               onClick={() => switchMode("signin")}
@@ -976,7 +984,7 @@ const Auth = () => {
                       required
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                      className="mt-1.5 h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                     />
                   </div>
                   <div>
@@ -990,7 +998,7 @@ const Auth = () => {
                       required
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                      className="mt-1.5 h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                     />
                   </div>
                 </div>
@@ -1009,7 +1017,7 @@ const Auth = () => {
                   autoFocus={mode !== "register"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                  className="mt-1.5 h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                 />
               </div>
 
@@ -1040,7 +1048,7 @@ const Auth = () => {
                       }
                       setPhone(formatted);
                     }}
-                    className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                    className="mt-1.5 h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                   />
                 </div>
               )}
@@ -1053,7 +1061,7 @@ const Auth = () => {
                       License State
                     </Label>
                     <Select value={licenseState} onValueChange={setLicenseState}>
-                      <SelectTrigger className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white focus:ring-0 focus:border-accent">
+                      <SelectTrigger className="mt-1.5 h-11 rounded-[10px] border-zinc-200 bg-white focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20">
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1076,7 +1084,7 @@ const Auth = () => {
                       required
                       value={licenseNumber}
                       onChange={(e) => setLicenseNumber(e.target.value)}
-                      className="mt-1.5 h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                      className="mt-1.5 h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                     />
                   </div>
                 </div>
@@ -1095,7 +1103,7 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     containerClassName="mt-1.5"
-                    className="h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                    className="h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                   />
                 </div>
               )}
@@ -1120,14 +1128,14 @@ const Auth = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     containerClassName="mt-1.5"
-                    className="h-11 border-neutral-300 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-accent focus-visible:ring-0 focus-visible:border-accent"
+                    className="h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                   />
                   {confirmPassword.length > 0 && (
                     <div className="flex items-center gap-2 text-sm mt-2">
                       {passwordsMatch ? (
                         <>
-                          <CheckCircle2 className="h-4 w-4 text-accent" />
-                          <span className="text-accent">Passwords match</span>
+                          <CheckCircle2 className="h-4 w-4 text-[#50C878]" />
+                          <span className="text-[#50C878]">Passwords match</span>
                         </>
                       ) : (
                         <>
@@ -1196,7 +1204,7 @@ const Auth = () => {
           )}
 
           {mode !== "forgot-password" && !resetEmailSent && (
-            <div className="mt-8 pt-6 border-t border-neutral-200 text-center">
+            <div className="mt-8 border-t border-zinc-100 pt-6 text-center">
               {mode === "signin" ? (
                 <div className="space-y-2">
                   <p className="text-neutral-500 text-sm">New to AllAgentConnect?</p>
