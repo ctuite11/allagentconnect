@@ -29,19 +29,23 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    const amount = 320;
-    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    el.scrollBy({ left: dir === "left" ? -340 : 340, behavior: "smooth" });
     setTimeout(updateScrollState, 350);
   };
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h3 className="text-[15px] font-semibold text-neutral-900">My listings</h3>
-        <div className="flex items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold text-neutral-900">My listings</h3>
+          <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">
+            Your active AAC listings — views and engagement at a glance.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <button
-            onClick={() => navigate("/listings")}
             type="button"
+            onClick={() => navigate("/agent/listings")}
             className="text-sm font-medium text-[#0E56F5] hover:underline"
           >
             View all →
@@ -68,7 +72,7 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
       <div
         ref={scrollRef}
         onScroll={updateScrollState}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
+        className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 scrollbar-hide"
       >
         {listings.map((listing) => {
           const raw = listing.photos?.[0];
@@ -85,58 +89,53 @@ export function MyListingsRow({ listings }: MyListingsRowProps) {
                   navigate(`/listing/${listing.id}`);
                 }
               }}
-              className="min-w-[248px] max-w-[268px] flex-shrink-0 cursor-pointer rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200"
+              className="flex min-h-[280px] w-[280px] max-w-[280px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200"
             >
-              {/* Stats bar */}
-              <div className="flex items-center px-3 pt-3 pb-2">
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <Eye className="h-3.5 w-3.5" /> {listing.view_count.toLocaleString()}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Share2 className="h-3.5 w-3.5" /> {listing.showing_request_count}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Heart className="h-3.5 w-3.5" /> {listing.view_count > 0 ? Math.floor(listing.view_count * 0.1) : 0}
-                  </span>
-                </div>
-              </div>
-
-              {/* Photo */}
-              <div className="relative mx-3 aspect-[4/3] overflow-hidden rounded-xl border border-zinc-100 bg-white">
+              <div className="relative h-44 w-full shrink-0 overflow-hidden bg-white">
                 {photo ? (
                   <img
                     src={photo}
                     alt={listing.address}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                  <div className="flex h-full w-full items-center justify-center text-xs text-neutral-400">
                     No photo
                   </div>
                 )}
-                <div className="absolute top-2 left-2">
+                <div className="absolute left-2 top-2">
                   <ListingStatusBadge status={listing.status} size="sm" />
                 </div>
               </div>
 
-              {/* Details */}
-              <div className="px-3 pt-2 pb-3">
-                <p className="text-sm font-medium text-foreground truncate">
+              <div className="flex flex-1 flex-col px-4 pb-3 pt-3">
+                <p className="text-lg font-semibold leading-tight text-[#0E56F5]">{formatPrice(listing.price)}</p>
+                <p className="mt-1 line-clamp-2 text-sm font-medium leading-snug text-neutral-900">
                   {listing.address}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="mt-0.5 truncate text-xs text-neutral-500">
                   {listing.city}, {listing.state}
                 </p>
-                <p className="mt-1 text-base font-bold text-[#0E56F5]">
-                  {formatPrice(listing.price)}
-                </p>
+
+                <div className="mt-auto border-t border-zinc-100 pt-2.5">
+                  <div className="flex items-center gap-4 text-[11px] text-neutral-500">
+                    <span className="inline-flex items-center gap-1">
+                      <Eye className="h-3.5 w-3.5 text-[#0E56F5]" /> {listing.view_count.toLocaleString()}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Share2 className="h-3.5 w-3.5 text-[#0E56F5]" /> {listing.showing_request_count}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Heart className="h-3.5 w-3.5 text-[#0E56F5]" />{" "}
+                      {listing.view_count > 0 ? Math.floor(listing.view_count * 0.1) : 0}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           );
         })}
-
       </div>
     </div>
   );

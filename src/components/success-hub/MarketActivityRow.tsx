@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Bed, Bath, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
+import { cn } from "@/lib/utils";
 
 interface MarketListing {
   id: string;
@@ -21,8 +22,6 @@ interface MarketListing {
   brokerage: string;
 }
 
-type ListingRow = Omit<MarketListing, "brokerage">;
-
 function formatPrice(price: number | null) {
   if (price == null) return "—";
   return `$${price.toLocaleString()}`;
@@ -33,7 +32,12 @@ function isNew(createdAt: string) {
   return diff < 48 * 60 * 60 * 1000;
 }
 
-export function MarketActivityRow() {
+type MarketActivityRowProps = {
+  /** Tighter header + tiles for Success Hub (bottom band) */
+  compact?: boolean;
+};
+
+export function MarketActivityRow({ compact = false }: MarketActivityRowProps) {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -165,15 +169,63 @@ export function MarketActivityRow() {
     };
   }, [currentUserId, parseListing]);
 
+  const tileMin = compact ? "min-w-[200px] max-w-[220px]" : "min-w-[236px] max-w-[248px]";
+  const imgBox = compact ? "h-36" : "aspect-[4/3]";
+
+  const headerBlock = (
+    <div className={`flex flex-wrap items-start justify-between gap-3 ${compact ? "mb-3" : "mb-4"}`}>
+      <div className="min-w-0">
+        <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
+        <p className="mt-0.5 max-w-md text-[13px] leading-snug text-neutral-500">
+          {compact ? "Latest listings across AAC." : "Fresh listings from the MLS feed — tap a card for details."}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => navigate("/browse")}
+          className="text-sm font-medium text-[#0E56F5] hover:underline"
+        >
+          Browse →
+        </button>
+        {listings.length > 0 ? (
+          <>
+            <button
+              type="button"
+              onClick={() => scroll("left")}
+              disabled={!canScrollLeft}
+              className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scroll("right")}
+              disabled={!canScrollRight}
+              className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div>
-        <h3 className="mb-4 text-[15px] font-semibold text-neutral-900">Market activity</h3>
-        <div className="flex gap-4 overflow-hidden">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
+            <p className="mt-0.5 text-[13px] text-neutral-500">Loading recent listings…</p>
+          </div>
+        </div>
+        <div className="flex gap-3 overflow-hidden md:gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-[232px] min-w-[236px] animate-pulse rounded-2xl border border-zinc-100 bg-white"
+              className={`animate-pulse rounded-2xl border border-zinc-100 bg-white ${compact ? "h-[200px] min-w-[200px]" : "h-[232px] min-w-[236px]"}`}
             />
           ))}
         </div>
@@ -184,8 +236,20 @@ export function MarketActivityRow() {
   if (listings.length === 0) {
     return (
       <div>
-        <h3 className="mb-4 text-[15px] font-semibold text-neutral-900">Market activity</h3>
-        <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-6 py-10 text-center shadow-none">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
+            <p className="mt-0.5 text-[13px] text-neutral-500">Fresh listings from the MLS feed.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/browse")}
+            className="text-sm font-medium text-[#0E56F5] hover:underline"
+          >
+            Browse →
+          </button>
+        </div>
+        <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-6 py-8 text-center shadow-none">
           <p className="text-sm text-neutral-500">No new market activity yet</p>
         </div>
       </div>
@@ -194,32 +258,12 @@ export function MarketActivityRow() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-foreground">Market Activity</h3>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => scroll("left")}
-            disabled={!canScrollLeft}
-            className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => scroll("right")}
-            disabled={!canScrollRight}
-            className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+      {headerBlock}
 
       <div
         ref={scrollRef}
         onScroll={updateScrollState}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
+        className={`flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 md:gap-4 ${compact ? "max-h-[260px]" : ""}`}
       >
         {listings.map((listing) => {
           const raw = listing.photos?.[0];
@@ -237,10 +281,15 @@ export function MarketActivityRow() {
                   navigate(`/property/${listing.id}`);
                 }
               }}
-              className="min-w-[236px] max-w-[248px] flex-shrink-0 cursor-pointer rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200"
+              className={`${tileMin} flex-shrink-0 cursor-pointer rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200`}
             >
               {/* Photo */}
-              <div className="relative aspect-[4/3] overflow-hidden rounded-t-2xl border-b border-zinc-100 bg-white">
+              <div
+                className={cn(
+                  "relative w-full overflow-hidden rounded-t-2xl border-b border-zinc-100 bg-white",
+                  compact ? "h-36" : "aspect-[4/3]",
+                )}
+              >
                 {photo ? (
                   <img
                     src={photo}
