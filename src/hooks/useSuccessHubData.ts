@@ -114,6 +114,12 @@ function logQueryError(label: string, error: any): void {
   console.warn(`[SuccessHubData] Query error — ${label}:`, error.message ?? error);
 }
 
+/** Supabase helpers sometimes return undefined; never read `.error` without a guard. */
+function supabaseResult<T>(result: { data?: T; error?: unknown; count?: unknown } | null | undefined) {
+  const { data = undefined, error = null, count = null } = result ?? {};
+  return { data: data as T, error, count };
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useSuccessHubData(): {
@@ -197,14 +203,20 @@ export function useSuccessHubData(): {
           .order("updated_at", { ascending: false })
           .limit(12),
 
-        // Buyer relationships (active + pending) — preview rows
+        // Buyer relationships (active + pending) — preview rows only
         supabase
           .from("client_agent_relationships")
-          .select("id,client_id,agent_id,status,created_at", { count: "exact" })
+          .select("id,client_id,agent_id,status,created_at")
           .eq("agent_id", agentId)
           .in("status", ["active", "pending"])
           .order("created_at", { ascending: false })
           .limit(15),
+
+        supabase
+          .from("client_agent_relationships")
+          .select("id", { count: "exact", head: true })
+          .eq("agent_id", agentId)
+          .eq("status", "active"),
 
         // Conversation inbox preview (view is already user-scoped by RLS)
         supabase
@@ -251,33 +263,34 @@ export function useSuccessHubData(): {
       if (!mountedRef.current || loadIdRef.current !== myLoadId) return;
 
       // Log non-fatal query errors; do not throw
-      logQueryError("agent_profiles", profileRes.error);
-      logQueryError("share_tokens(unaccepted)", unacceptedTokensRes.error);
-      logQueryError("hot_sheets(preview)", hotSheetsPreviewRes.error);
-      logQueryError("hot_sheets(count)", hotSheetsCountRes.error);
-      logQueryError("listings(preview)", listingsPreviewRes.error);
-      logQueryError("client_agent_relationships(preview)", relationshipsBuyersPreviewRes.error);
-      logQueryError("client_agent_relationships(active count)", relationshipsActiveCountRes.error);
-      logQueryError("conversation_inbox(preview)", inboxPreviewRes.error);
-      logQueryError("conversation_inbox(unread count)", inboxUnreadCountRes.error);
-      logQueryError("share_tokens(accepted 30d)", acceptedTokens30dRes.error);
-      logQueryError("clients(30d)", clients30dRes.error);
-      logQueryError("conversation_messages(30d)", messages30dRes.error);
+      logQueryError("agent_profiles", profileRes?.error ?? null);
+      logQueryError("share_tokens(unaccepted)", unacceptedTokensRes?.error ?? null);
+      logQueryError("hot_sheets(preview)", hotSheetsPreviewRes?.error ?? null);
+      logQueryError("hot_sheets(count)", hotSheetsCountRes?.error ?? null);
+      logQueryError("listings(preview)", listingsPreviewRes?.error ?? null);
+      logQueryError("client_agent_relationships(preview)", relationshipsBuyersPreviewRes?.error ?? null);
+      logQueryError("client_agent_relationships(active count)", relationshipsActiveCountRes?.error ?? null);
+      logQueryError("conversation_inbox(preview)", inboxPreviewRes?.error ?? null);
+      logQueryError("conversation_inbox(unread count)", inboxUnreadCountRes?.error ?? null);
+      logQueryError("share_tokens(accepted 30d)", acceptedTokens30dRes?.error ?? null);
+      logQueryError("clients(30d)", clients30dRes?.error ?? null);
+      logQueryError("conversation_messages(30d)", messages30dRes?.error ?? null);
 
       // ── Derive Wave 1 values ─────────────────────────────────────────────────
 
-      const profile = profileRes.data
+      const profileData = profileRes?.data;
+      const profile = profileData
         ? {
-            first_name: (profileRes.data as any).first_name ?? "",
-            last_name: (profileRes.data as any).last_name ?? "",
-            headshot_url: (profileRes.data as any).headshot_url ?? null,
-            company: (profileRes.data as any).company ?? null,
-            title: (profileRes.data as any).title ?? null,
+            first_name: (profileData as any).first_name ?? "",
+            last_name: (profileData as any).last_name ?? "",
+            headshot_url: (profileData as any).headshot_url ?? null,
+            company: (profileData as any).company ?? null,
+            title: (profileData as any).title ?? null,
           }
         : null;
 
       // Pending invite tokens: filter by payload.type in JS (no top-level type column)
-      const unacceptedTokens = (unacceptedTokensRes.data ?? []) as any[];
+      const unacceptedTokens = (unacceptedTokensRes?.data ?? []) as any[];
       unacceptedTokens.forEach((t) => validateTokenPayload(t, "unaccepted tokens"));
 
       const pendingInviteTokens = unacceptedTokens.filter((t) => {
@@ -292,13 +305,16 @@ export function useSuccessHubData(): {
         if (em) pendingInviteEmails.add(em);
       }
 
+      const hotSheetExactCount = hotSheetsCountRes?.count;
       const activeHotSheetCount =
-        (hotSheetsCountRes.count as number | null) ??
-        ((hotSheetsPreviewRes.data ?? []) as any[]).length;
+        (typeof hotSheetExactCount === "number" ? hotSheetExactCount : null) ??
+        ((hotSheetsPreviewRes?.data ?? []) as any[]).length;
 
-      const activeBuyerCount = (relationshipsActiveCountRes.count as number | null) ?? 0;
+      const { count: activeRelCount } = supabaseResult(relationshipsActiveCountRes as any);
+      const activeBuyerCount = typeof activeRelCount === "number" ? activeRelCount : 0;
 
-      const unreadMessageCount = (inboxUnreadCountRes.count as number | null) ?? 0;
+      const { count: unreadInboxCount } = supabaseResult(inboxUnreadCountRes as any);
+      const unreadMessageCount = typeof unreadInboxCount === "number" ? unreadInboxCount : 0;
 
       // Listings preview: listing_stats may be array or object depending on join type
       const listingsBase = ((listingsPreviewRes.data ?? []) as any[]).map((l) => {
@@ -322,7 +338,7 @@ export function useSuccessHubData(): {
       });
 
       // Hot sheets base
-      const hotSheetsBase = ((hotSheetsPreviewRes.data ?? []) as any[]).map((hs) => ({
+      const hotSheetsBase = ((hotSheetsPreviewRes?.data ?? []) as any[]).map((hs) => ({
         id: String(hs.id),
         name: hs.name ?? "Hot Sheet",
         buyerCount: 0,
@@ -331,7 +347,7 @@ export function useSuccessHubData(): {
       }));
 
       // Buyers base (enrich in Wave 2) — preserves relationship status per row
-      const buyerRelationshipRows = (relationshipsBuyersPreviewRes.data ?? []) as any[];
+      const buyerRelationshipRows = (relationshipsBuyersPreviewRes?.data ?? []) as any[];
       const buyerClientIds = buyerRelationshipRows
         .map((r) => r.client_id)
         .filter(Boolean)
@@ -355,7 +371,7 @@ export function useSuccessHubData(): {
       });
 
       // Conversations base (enrich names in Wave 2)
-      const conversationsBase = ((inboxPreviewRes.data ?? []) as any[]).map((c) => ({
+      const conversationsBase = ((inboxPreviewRes?.data ?? []) as any[]).map((c) => ({
         conversation_id: String(c.conversation_id),
         last_message_preview: c.last_message_preview ?? null,
         last_message_at: c.last_message_at ?? new Date().toISOString(),
@@ -365,9 +381,9 @@ export function useSuccessHubData(): {
       }));
 
       // Activity feed — belt+suspenders: safe field access, no nonexistent payload fields
-      const acceptedTokens30d = (acceptedTokens30dRes.data ?? []) as any[];
-      const clients30d = (clients30dRes.data ?? []) as any[];
-      const messages30d = (messages30dRes.data ?? []) as any[];
+      const acceptedTokens30d = (acceptedTokens30dRes?.data ?? []) as any[];
+      const clients30d = (clients30dRes?.data ?? []) as any[];
+      const messages30d = (messages30dRes?.data ?? []) as any[];
 
       const activityRaw: SuccessHubSummary["activity"] = [];
 
@@ -486,14 +502,14 @@ export function useSuccessHubData(): {
 
       if (!mountedRef.current || loadIdRef.current !== myLoadId) return;
 
-      logQueryError("agent_profiles(other users)", otherAgentsRes.error);
-      logQueryError("clients(buyers)", buyersClientsRes.error);
-      logQueryError("hot_sheet_clients(rows)", hotSheetClientsRowsRes.error);
-      logQueryError("hot_sheet_clients(buyer counts)", buyerHscRes.error);
+      logQueryError("agent_profiles(other users)", otherAgentsRes?.error ?? null);
+      logQueryError("clients(buyers)", buyersClientsRes?.error ?? null);
+      logQueryError("hot_sheet_clients(rows)", hotSheetClientsRowsRes?.error ?? null);
+      logQueryError("hot_sheet_clients(buyer counts)", buyerHscRes?.error ?? null);
 
       // Conversation names
       const otherInfoById = new Map<string, { name: string; headshot: string | null }>();
-      for (const ap of (otherAgentsRes.data ?? []) as any[]) {
+      for (const ap of (otherAgentsRes?.data ?? []) as any[]) {
         const name = [ap.first_name, ap.last_name].filter(Boolean).join(" ").trim();
         otherInfoById.set(String(ap.id), { name: name || "Agent", headshot: ap.headshot_url ?? null });
       }
@@ -515,7 +531,7 @@ export function useSuccessHubData(): {
 
       // hot_sheet count per buyer
       const hsByClient = new Map<string, number>();
-      for (const row of (buyerHscRes.data ?? []) as any[]) {
+      for (const row of (buyerHscRes?.data ?? []) as any[]) {
         const cid = String(row.client_id);
         hsByClient.set(cid, (hsByClient.get(cid) ?? 0) + 1);
       }
@@ -536,32 +552,32 @@ export function useSuccessHubData(): {
       const favoritesCountByAuthUserId = new Map<string, number>();
 
       if (emailsForProfiles.length > 0) {
-        const { data: profRows, error: profErr } = await supabase
-          .from("profiles")
-          .select("id,email")
-          .in("email", emailsForProfiles);
-        logQueryError("profiles(buyer emails)", profErr);
+        try {
+          const profRes = await supabase.from("profiles").select("id,email").in("email", emailsForProfiles);
+          const { data: profRows, error: profErr } = profRes ?? {};
+          logQueryError("profiles(buyer emails)", profErr ?? null);
 
-        const authIds: string[] = [];
-        for (const p of (profRows ?? []) as any[]) {
-          const el = safeLowerEmail(p.email);
-          if (el && p.id) {
-            emailLowerToAuthUserId.set(el, String(p.id));
-            authIds.push(String(p.id));
+          const authIds: string[] = [];
+          for (const p of (profRows ?? []) as any[]) {
+            const el = safeLowerEmail(p.email);
+            if (el && p.id) {
+              emailLowerToAuthUserId.set(el, String(p.id));
+              authIds.push(String(p.id));
+            }
           }
-        }
 
-        const uniqueAuthIds = [...new Set(authIds)];
-        if (uniqueAuthIds.length > 0) {
-          const { data: favData, error: favErr } = await supabase
-            .from("favorites")
-            .select("user_id")
-            .in("user_id", uniqueAuthIds);
-          logQueryError("favorites(buyer counts)", favErr);
-          for (const row of (favData ?? []) as any[]) {
-            const uid = String(row.user_id);
-            favoritesCountByAuthUserId.set(uid, (favoritesCountByAuthUserId.get(uid) ?? 0) + 1);
+          const uniqueAuthIds = [...new Set(authIds)];
+          if (uniqueAuthIds.length > 0) {
+            const favRes = await supabase.from("favorites").select("user_id").in("user_id", uniqueAuthIds);
+            const { data: favData, error: favErr } = favRes ?? {};
+            logQueryError("favorites(buyer counts)", favErr ?? null);
+            for (const row of (favData ?? []) as any[]) {
+              const uid = String(row.user_id);
+              favoritesCountByAuthUserId.set(uid, (favoritesCountByAuthUserId.get(uid) ?? 0) + 1);
+            }
           }
+        } catch (buyerFavErr) {
+          console.warn("[SuccessHubData] Optional buyer favorites load failed (non-fatal):", buyerFavErr);
         }
       }
 
@@ -593,7 +609,7 @@ export function useSuccessHubData(): {
       });
 
       // Hot sheet buyer counts + pending invites per hot sheet
-      const hscRows = (hotSheetClientsRowsRes.data ?? []) as any[];
+      const hscRows = (hotSheetClientsRowsRes?.data ?? []) as any[];
       const buyerCountByHotSheet = new Map<string, number>();
 
       for (const row of hscRows) {
