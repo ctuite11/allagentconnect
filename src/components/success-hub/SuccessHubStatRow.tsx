@@ -3,7 +3,7 @@ import { Home, Layers, MessageSquare, Users } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 const shell =
-  "rounded-2xl border border-zinc-100 bg-white p-5 shadow-none transition-colors duration-150 hover:border-zinc-200 md:p-6";
+  "rounded-2xl border border-zinc-100 bg-white p-5 shadow-none transition-colors duration-150 hover:border-zinc-200";
 
 type SuccessHubStatRowProps = {
   summary: SuccessHubSummary;
@@ -57,7 +57,7 @@ export function SuccessHubStatRow({ summary }: SuccessHubStatRowProps) {
   ];
 
   return (
-    <section className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+    <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {stats.map(({ key, label, value, subtle, icon: Icon, onClick }) => (
         <button
           key={key}

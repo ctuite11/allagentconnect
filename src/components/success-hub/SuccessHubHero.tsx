@@ -18,9 +18,9 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
   const aacShort = summary.agentId ? summary.agentId.slice(0, 8) : "";
 
   return (
-    <div className="rounded-2xl border border-zinc-100 bg-white p-6 shadow-none">
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
-        <div className="min-w-0 flex-1 space-y-4">
+    <div className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-none">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+        <div className="min-w-0 flex-1 space-y-3">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
               Hi, <span className="text-[#0E56F5]">{displayFirst}</span>
@@ -64,7 +64,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
           </div>
         </div>
 
-        <div className="flex w-full min-w-0 shrink-0 flex-col gap-3 border-t border-zinc-100 pt-6 sm:flex-row sm:items-center lg:w-[min(100%,22rem)] lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+        <div className="flex w-full min-w-0 shrink-0 flex-col gap-3 border-t border-zinc-100 pt-5 sm:flex-row sm:items-center lg:w-[min(100%,22rem)] lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
           <AgentAvatar
             name={fullName}
             headshotUrl={summary.profile?.headshot_url ?? null}

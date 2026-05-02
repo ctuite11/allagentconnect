@@ -8,6 +8,8 @@ interface DashboardCommunicationsProps {
   conversations: SuccessHubSummary["conversations"];
   /** Denser list for Success Hub 2-col layout */
   compact?: boolean;
+  /** Inbox-style row: sender, snippet, time, badge — height follows content */
+  inboxPreview?: boolean;
 }
 
 function relativeTime(iso: string) {
@@ -28,19 +30,18 @@ function getInitials(name: string | null) {
     .slice(0, 2);
 }
 
-export function DashboardCommunications({ conversations, compact }: DashboardCommunicationsProps) {
+export function DashboardCommunications({ conversations, compact, inboxPreview }: DashboardCommunicationsProps) {
   const navigate = useNavigate();
-  const cap = compact ? 4 : 5;
-  const rows = conversations.slice(0, cap);
+  const rows = conversations.slice(0, 5);
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold text-neutral-900">Communications</h3>
-          {compact ? (
-            <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">Recent message threads.</p>
-          ) : null}
+          {(compact || inboxPreview) && (
+            <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">Recent conversations</p>
+          )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
           <button
@@ -60,11 +61,52 @@ export function DashboardCommunications({ conversations, compact }: DashboardCom
         </div>
       </div>
 
-      <div className={`overflow-hidden rounded-xl md:rounded-2xl ${compact ? "max-h-72 overflow-y-auto" : ""}`}>
+      <div className="overflow-hidden rounded-xl border border-zinc-100 bg-white">
         {conversations.length === 0 ? (
-          <div className={`text-center text-sm text-neutral-500 ${compact ? "py-6" : "py-10"}`}>
+          <div className={`text-center text-sm text-neutral-500 ${compact || inboxPreview ? "py-5" : "py-10"}`}>
             No messages yet.
           </div>
+        ) : inboxPreview ? (
+          <ul className="divide-y divide-zinc-100">
+            {rows.map((c) => (
+              <li
+                key={c.conversation_id}
+                className="flex cursor-pointer gap-3 bg-white px-3 py-2.5 transition-colors hover:bg-zinc-50/80"
+                onClick={() =>
+                  navigate(`/messages/${c.conversation_id}`, {
+                    state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
+                  })
+                }
+              >
+                <Avatar className="mt-0.5 h-9 w-9 shrink-0">
+                  {c.other_headshot_url && (
+                    <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
+                  )}
+                  <AvatarFallback className="bg-[#50C878] text-xs font-medium text-white">
+                    {getInitials(c.other_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="truncate text-sm font-semibold text-neutral-900">{c.other_name ?? "Agent"}</p>
+                    <span className="shrink-0 whitespace-nowrap text-[11px] tabular-nums text-neutral-400">
+                      {relativeTime(c.last_message_at)}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 flex items-center justify-between gap-2">
+                    <p className="line-clamp-1 min-w-0 flex-1 text-[13px] text-neutral-500">
+                      {c.last_message_preview ?? "No messages yet"}
+                    </p>
+                    {c.is_unread ? (
+                      <Badge className="shrink-0 border-0 bg-[#50C878] px-1.5 py-0 text-[10px] font-semibold text-white hover:bg-[#45b56a]">
+                        New
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : (
           <ul className="divide-y divide-zinc-100">
             {rows.map((c) => (

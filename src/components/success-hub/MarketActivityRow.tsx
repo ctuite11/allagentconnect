@@ -1,6 +1,6 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Bed, Bath, Square } from "lucide-react";
+import { Bed, Bath, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
@@ -32,33 +32,13 @@ function isNew(createdAt: string) {
   return diff < 48 * 60 * 60 * 1000;
 }
 
-type MarketActivityRowProps = {
-  /** Tighter header + tiles for Success Hub (bottom band) */
-  compact?: boolean;
-};
+const PREVIEW_IMAGE_H = "h-40";
 
-export function MarketActivityRow({ compact = false }: MarketActivityRowProps) {
+export function MarketActivityRow() {
   const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  const updateScrollState = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 4);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  };
-
-  const scroll = (dir: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -320 : 320, behavior: "smooth" });
-    setTimeout(updateScrollState, 350);
-  };
 
   const parseListing = useCallback((row: any, companyMap: Record<string, string>): MarketListing => {
     return {
@@ -169,63 +149,48 @@ export function MarketActivityRow({ compact = false }: MarketActivityRowProps) {
     };
   }, [currentUserId, parseListing]);
 
-  const tileMin = compact ? "min-w-[200px] max-w-[220px]" : "min-w-[236px] max-w-[248px]";
-  const imgBox = compact ? "h-36" : "aspect-[4/3]";
+  const topListings = useMemo(() => listings.slice(0, 3), [listings]);
+
+  const gridClass = useMemo(() => {
+    const n = topListings.length;
+    if (n === 0) return "";
+    if (n === 1) return "grid grid-cols-1 gap-4";
+    if (n === 2) return "grid grid-cols-1 gap-4 sm:grid-cols-2";
+    return "grid grid-cols-1 gap-4 sm:grid-cols-3";
+  }, [topListings.length]);
 
   const headerBlock = (
-    <div className={`flex flex-wrap items-start justify-between gap-3 ${compact ? "mb-3" : "mb-4"}`}>
+    <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
         <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
-        <p className="mt-0.5 max-w-md text-[13px] leading-snug text-neutral-500">
-          {compact ? "Latest listings across AAC." : "Fresh listings from the MLS feed — tap a card for details."}
+        <p className="mt-0.5 max-w-lg text-[13px] leading-snug text-neutral-500">
+          Recent listings across AAC — open any card for full details.
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate("/browse")}
-          className="text-sm font-medium text-[#0E56F5] hover:underline"
-        >
-          Browse →
-        </button>
-        {listings.length > 0 ? (
-          <>
-            <button
-              type="button"
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className="rounded-full border border-zinc-100 p-1 transition-colors hover:border-zinc-200 disabled:opacity-30"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </>
-        ) : null}
-      </div>
+      <button
+        type="button"
+        onClick={() => navigate("/browse")}
+        className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+      >
+        Browse homes
+      </button>
     </div>
   );
 
   if (loading) {
     return (
       <div>
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
             <p className="mt-0.5 text-[13px] text-neutral-500">Loading recent listings…</p>
           </div>
         </div>
-        <div className="flex gap-3 overflow-hidden md:gap-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className={`animate-pulse rounded-2xl border border-zinc-100 bg-white ${compact ? "h-[200px] min-w-[200px]" : "h-[232px] min-w-[236px]"}`}
+              className="animate-pulse rounded-2xl border border-zinc-100 bg-white h-[220px]"
             />
           ))}
         </div>
@@ -235,37 +200,28 @@ export function MarketActivityRow({ compact = false }: MarketActivityRowProps) {
 
   if (listings.length === 0) {
     return (
-      <div>
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
-            <p className="mt-0.5 text-[13px] text-neutral-500">Fresh listings from the MLS feed.</p>
-          </div>
+      <div className="max-w-xl">
+        {headerBlock}
+        <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-4 py-5 text-center shadow-none">
+          <p className="text-sm text-neutral-600">No new market activity yet.</p>
           <button
             type="button"
             onClick={() => navigate("/browse")}
-            className="text-sm font-medium text-[#0E56F5] hover:underline"
+            className="mt-2 text-sm font-medium text-[#0E56F5] hover:underline"
           >
-            Browse →
+            Browse homes
           </button>
-        </div>
-        <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-6 py-8 text-center shadow-none">
-          <p className="text-sm text-neutral-500">No new market activity yet</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       {headerBlock}
 
-      <div
-        ref={scrollRef}
-        onScroll={updateScrollState}
-        className={`flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 md:gap-4 ${compact ? "max-h-[260px]" : ""}`}
-      >
-        {listings.map((listing) => {
+      <div className={cn(gridClass, topListings.length === 1 && "max-w-[320px]")}>
+        {topListings.map((listing) => {
           const raw = listing.photos?.[0];
           const photo = typeof raw === "string" ? raw : raw?.url ?? null;
 
@@ -281,13 +237,13 @@ export function MarketActivityRow({ compact = false }: MarketActivityRowProps) {
                   navigate(`/property/${listing.id}`);
                 }
               }}
-              className={`${tileMin} flex-shrink-0 cursor-pointer rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200`}
+              className="flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200"
             >
               {/* Photo */}
               <div
                 className={cn(
-                  "relative w-full overflow-hidden rounded-t-2xl border-b border-zinc-100 bg-white",
-                  compact ? "h-36" : "aspect-[4/3]",
+                  "relative w-full shrink-0 overflow-hidden rounded-t-2xl border-b border-zinc-100 bg-white",
+                  PREVIEW_IMAGE_H,
                 )}
               >
                 {photo ? (
@@ -313,32 +269,30 @@ export function MarketActivityRow({ compact = false }: MarketActivityRowProps) {
               </div>
 
               {/* Details */}
-              <div className="px-3 pt-2 pb-3">
-                <p className="text-base font-bold text-[#0E56F5]">
+              <div className="flex min-h-0 flex-1 flex-col px-3 pt-2 pb-3">
+                <p className="text-base font-bold leading-tight text-[#0E56F5]">
                   {formatPrice(listing.price)}
                 </p>
-                <p className="text-sm font-medium text-foreground truncate mt-0.5">
+                <p className="mt-1 line-clamp-2 text-sm font-medium leading-snug text-neutral-900">
                   {listing.address}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="mt-0.5 truncate text-xs text-neutral-500">
                   {listing.city}, {listing.state}
                 </p>
-                <div className="mt-1.5 flex items-center gap-3 text-xs text-neutral-500">
+                <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-0.5 pt-2 text-xs text-neutral-500">
                   <span className="inline-flex items-center gap-0.5">
-                    <Bed className="h-3 w-3 text-[#0E56F5]" /> {listing.bedrooms}
+                    <Bed className="h-3 w-3 shrink-0 text-[#0E56F5]" /> {listing.bedrooms}
                   </span>
                   <span className="inline-flex items-center gap-0.5">
-                    <Bath className="h-3 w-3 text-[#0E56F5]" /> {listing.bathrooms}
+                    <Bath className="h-3 w-3 shrink-0 text-[#0E56F5]" /> {listing.bathrooms}
                   </span>
-                  {listing.square_feet && (
+                  {listing.square_feet ? (
                     <span className="inline-flex items-center gap-0.5">
-                      <Square className="h-3 w-3 text-[#0E56F5]" /> {listing.square_feet.toLocaleString()}
+                      <Square className="h-3 w-3 shrink-0 text-[#0E56F5]" /> {listing.square_feet.toLocaleString()}
                     </span>
-                  )}
+                  ) : null}
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5 truncate">
-                  {listing.brokerage}
-                </p>
+                <p className="mt-1 truncate text-[11px] text-neutral-400">{listing.brokerage}</p>
               </div>
             </div>
           );
