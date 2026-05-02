@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Loader2, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { Logo } from "@/components/brand";
+import { cn } from "@/lib/utils";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 
@@ -65,6 +67,18 @@ const US_STATES = [
 ];
 
 type AuthMode = "signin" | "register" | "forgot-password";
+
+/** Centered AAC monogram + canonical wordmark (no duplicate top bar). */
+function AuthBrandLockup({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex justify-center", className)}>
+      <div className="flex items-center justify-center gap-3">
+        <AACMonogram className="h-11 w-11 shrink-0 text-[#0E56F5]" aria-hidden />
+        <Logo variant="primary" size="lg" className="h-10 w-auto sm:h-12" />
+      </div>
+    </div>
+  );
+}
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -751,14 +765,7 @@ const Auth = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-[420px]">
-          <div className="flex justify-center mb-8">
-            <div className="flex items-center justify-center gap-2">
-              <AACMonogram className="w-10 h-10 text-emerald-500" />
-              <span className="font-extrabold text-xl tracking-tight text-zinc-900" style={{ fontFamily: "Manrope, sans-serif" }}>
-                All Agent Connect
-              </span>
-            </div>
-          </div>
+          <AuthBrandLockup className="mb-8" />
           <div className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] text-center">
             <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
               <LogOut className="w-7 h-7 text-amber-600" />
@@ -904,15 +911,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
       <div className="w-full max-w-[420px]">
-        {/* Logo Only */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center justify-center gap-2">
-            <AACMonogram className="w-10 h-10 text-emerald-500" />
-            <span className="font-extrabold text-xl tracking-tight text-zinc-900" style={{ fontFamily: "Manrope, sans-serif" }}>
-              All Agent Connect
-            </span>
-          </div>
-        </div>
+        <AuthBrandLockup className="mb-8" />
 
         {/* Form Container */}
         <div className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] relative">

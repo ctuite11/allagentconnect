@@ -104,7 +104,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import VersionStamp from "./components/VersionStamp";
-import { AACPublicHeader } from "./components/layout/AACPublicHeader";
 import { NewMessageToastListener } from "./components/NewMessageToastListener";
 import CookieConsent from "./components/CookieConsent";
 
@@ -212,12 +211,11 @@ function BuyerLayout() {
   return <BuyerShell />;
 }
 
-/** Layout route: AAC public/auth pages (minimal white header) */
+/** Layout route: AAC public/auth pages — white canvas only (no top nav; brand lives in each page) */
 function PublicLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <AACPublicHeader />
-      <main className="flex-1"><Outlet /></main>
+    <div className="flex min-h-screen flex-col bg-white">
+      <Outlet />
     </div>
   );
 }
