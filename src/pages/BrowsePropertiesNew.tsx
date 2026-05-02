@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Grid3x3, List, Map as MapIcon, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { Search, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
@@ -65,7 +65,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const [loading, setLoading] = useState(false);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
   const [user, setUser] = useState<any>(null);
-  const [viewType, setViewType] = useState<"grid" | "list" | "map">("grid");
+  const [resultsView, setResultsView] = useState<"map" | "list">("map");
 
   // Fetch current user
   useEffect(() => {
@@ -691,10 +691,10 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
             </div>
           </div>
 
-          <div>
+          <div className="max-w-[1800px] mx-auto w-full">
             {loading ? (
               <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0E56F5]" />
               </div>
             ) : listings.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
@@ -702,101 +702,72 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 <h3 className="text-xl font-semibold mb-2">No properties found</h3>
                 <p className="text-muted-foreground">Try adjusting your search filters</p>
               </div>
-            ) : forceBuyer ? (
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="lg:w-1/2 lg:sticky lg:top-24 self-start w-full">
-                  <div className="bg-card rounded-xl border border-zinc-200 overflow-hidden h-[calc(100vh-220px)]">
-                    <PropertyMap
-                      listings={listings}
-                      onListingClick={(listingId) => navigate(`/property/${listingId}`)}
-                    />
-                  </div>
-                </div>
-                <div className="lg:w-1/2 w-full">
-                  <div className="flex items-end justify-between mb-3">
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">Results</span>
-                      <span className="text-base font-semibold text-zinc-900">{listings.length} Homes</span>
-                    </div>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-700 hover:text-zinc-900"
-                    >
-                      Recommended
-                      <ChevronDown className="h-3.5 w-3.5 text-zinc-500" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    {listings.map((listing) => (
-                      <ListingCard
-                        key={listing.id}
-                        listing={listing}
-                        viewMode="compact"
-                        showActions={false}
-                        agentInfo={
-                          agentMap[listing.agent_id]
-                            ? {
-                                name: agentMap[listing.agent_id].fullName,
-                                company: agentMap[listing.agent_id].company || undefined,
-                              }
-                            : undefined
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
             ) : (
               <>
-                <div className="flex items-center justify-end mb-4 gap-2">
-                  <Button
-                    variant={viewType === "grid" ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => setViewType("grid")}
-                  >
-                    <Grid3x3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewType === "list" ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => setViewType("list")}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewType === "map" ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => setViewType("map")}
-                  >
-                    <MapIcon className="h-4 w-4" />
-                  </Button>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">Results</span>
+                    <span className="text-base font-semibold text-zinc-900">{listings.length} Homes</span>
+                  </div>
+                  <BrowseResultsViewToggle value={resultsView} onChange={setResultsView} />
                 </div>
 
-                {viewType === "map" ? (
-                  <div className="bg-card rounded-lg border p-4">
-                    <PropertyMap
-                      listings={listings}
-                      onListingClick={(listingId) => navigate(`/property/${listingId}`)}
-                    />
+                {resultsView === "map" ? (
+                  <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+                    <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+                      <div className="h-full">
+                        <PropertyMap
+                          listings={listings}
+                          onListingClick={(listingId) => navigate(`/property/${listingId}`)}
+                        />
+                      </div>
+                    </section>
+
+                    <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+                      <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                          {listings.map((listing) => (
+                            <ListingCard
+                              key={listing.id}
+                              listing={listing}
+                              viewMode="compact"
+                              showActions={false}
+                              agentInfo={
+                                agentMap[listing.agent_id]
+                                  ? {
+                                      name: agentMap[listing.agent_id].fullName,
+                                      company: agentMap[listing.agent_id].company || undefined,
+                                    }
+                                  : undefined
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </section>
                   </div>
                 ) : (
-                  <div className={viewType === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-4"}>
-                    {listings.map((listing) => (
-                      <ListingCard
-                        key={listing.id}
-                        listing={listing}
-                        viewMode="compact"
-                        showActions={false}
-                        agentInfo={
-                          agentMap[listing.agent_id]
-                            ? {
-                                name: agentMap[listing.agent_id].fullName,
-                                company: agentMap[listing.agent_id].company || undefined,
-                              }
-                            : undefined
-                        }
-                      />
-                    ))}
+                  <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden">
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {listings.map((listing) => (
+                          <ListingCard
+                            key={listing.id}
+                            listing={listing}
+                            viewMode="compact"
+                            showActions={false}
+                            agentInfo={
+                              agentMap[listing.agent_id]
+                                ? {
+                                    name: agentMap[listing.agent_id].fullName,
+                                    company: agentMap[listing.agent_id].company || undefined,
+                                  }
+                                : undefined
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </>

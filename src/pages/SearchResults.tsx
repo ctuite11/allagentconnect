@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Grid3x3, List, MapPin, Map as MapIcon } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import PropertyMap from "@/components/PropertyMap";
 import { Seo } from "@/components/Seo";
@@ -36,7 +36,7 @@ const SearchResults = ({
   const [sessionKeptIds, setSessionKeptIds] = useState<Set<string>>(new Set());
   const [showKeptOnly, setShowKeptOnly] = useState(false);
   const [sortBy, setSortBy] = useState<string>("newest");
-  const [viewType, setViewType] = useState<"grid" | "list" | "map">("grid");
+  const [resultsView, setResultsView] = useState<"map" | "list">("map");
   const publicMode = isPublicMode;
   const buyerMode = isBuyerMode;
   const agentMode = isAgentMode;
@@ -256,7 +256,7 @@ const SearchResults = ({
       <div className="min-h-screen flex flex-col pt-20">
       {!publicMode && !buyerMode && <ActiveAgentBanner />}
       <main className="flex-1 bg-white">
-        <div className="container mx-auto px-4 py-8">
+        <div className="max-w-[1800px] mx-auto w-full px-4 md:px-7 py-8">
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <PageTitle>{publicMode || buyerMode ? "Homes Matching Your Search" : "Search Results"}</PageTitle>
@@ -366,30 +366,7 @@ const SearchResults = ({
                 )}
               </div>
 
-              {/* View Toggle */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewType === "grid" ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => setViewType("grid")}
-                >
-                  <Grid3x3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewType === "list" ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => setViewType("list")}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewType === "map" ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => setViewType("map")}
-                >
-                  <MapIcon className="h-4 w-4" />
-                </Button>
-              </div>
+              <SearchResultsViewToggle value={resultsView} onChange={setResultsView} />
             </div>
           )}
 
@@ -410,39 +387,72 @@ const SearchResults = ({
                 Show all
               </Button>
             </div>
-          ) : (
-            viewType === "map" ? (
-              <div className="bg-card rounded-lg border p-4">
-                <PropertyMap
-                  listings={displayListings}
-                  onListingClick={(listingId) => navigate(`/property/${listingId}`)}
-                />
-              </div>
-            ) : (
-              <div className={viewType === "grid" ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-                {displayListings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    viewMode="compact"
-                    showActions={false}
-                    hideMlsMeta={publicMode || buyerMode}
-                    onSelect={toggleSessionKeep}
-                    isSelected={sessionKeptIds.has(listing.id)}
-                    agentInfo={
-                      publicMode || buyerMode
-                        ? null
-                        : (listing as any).agent_profile
-                        ? {
-                            name: `${(listing as any).agent_profile.first_name} ${(listing as any).agent_profile.last_name}`.trim(),
-                            company: (listing as any).agent_profile.company
-                          }
-                        : null
-                    }
+          ) : resultsView === "map" ? (
+            <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+              <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+                <div className="h-full">
+                  <PropertyMap
+                    listings={displayListings}
+                    onListingClick={(listingId) => navigate(`/property/${listingId}`)}
                   />
-                ))}
+                </div>
+              </section>
+              <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+                <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {displayListings.map((listing) => (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        viewMode="compact"
+                        showActions={false}
+                        hideMlsMeta={publicMode || buyerMode}
+                        onSelect={toggleSessionKeep}
+                        isSelected={sessionKeptIds.has(listing.id)}
+                        agentInfo={
+                          publicMode || buyerMode
+                            ? null
+                            : (listing as any).agent_profile
+                            ? {
+                                name: `${(listing as any).agent_profile.first_name} ${(listing as any).agent_profile.last_name}`.trim(),
+                                company: (listing as any).agent_profile.company
+                              }
+                            : null
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden">
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {displayListings.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      viewMode="compact"
+                      showActions={false}
+                      hideMlsMeta={publicMode || buyerMode}
+                      onSelect={toggleSessionKeep}
+                      isSelected={sessionKeptIds.has(listing.id)}
+                      agentInfo={
+                        publicMode || buyerMode
+                          ? null
+                          : (listing as any).agent_profile
+                          ? {
+                              name: `${(listing as any).agent_profile.first_name} ${(listing as any).agent_profile.last_name}`.trim(),
+                              company: (listing as any).agent_profile.company
+                            }
+                          : null
+                      }
+                    />
+                  ))}
+                </div>
               </div>
-            )
+            </div>
           )}
         </div>
       </main>
