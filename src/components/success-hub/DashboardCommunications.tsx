@@ -5,9 +5,7 @@ import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 interface DashboardCommunicationsProps {
   conversations: SuccessHubSummary["conversations"];
-  /** Denser list for Success Hub 2-col layout */
   compact?: boolean;
-  /** Inbox-style row: sender, snippet, time, badge */
   inboxPreview?: boolean;
 }
 
@@ -44,7 +42,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="mb-2.5 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold text-neutral-900">Messages</h3>
           {(compact || inboxPreview) && (
@@ -56,7 +54,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
           onClick={() => navigate("/messages")}
           className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
         >
-          View messages
+          View all →
         </button>
       </div>
 
@@ -66,9 +64,11 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
             No messages yet.
           </div>
         ) : inboxPreview ? (
-          <ul className="max-h-[min(22rem,55vh)] divide-y divide-zinc-100 overflow-y-auto overscroll-contain lg:max-h-[min(24rem,50vh)]">
+          <ul className="max-h-[420px] divide-y divide-zinc-100 overflow-y-auto overscroll-contain">
             {rows.map((c) => {
               const snippet = snippetFromPreview(c.last_message_preview);
+              const truncated =
+                snippet.length > 140 ? `${snippet.slice(0, 137).trimEnd()}…` : snippet;
               return (
                 <li
                   key={c.conversation_id}
@@ -97,11 +97,11 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                     <div className="mt-0.5 flex items-start justify-between gap-2">
                       <p
                         className={`line-clamp-2 min-w-0 flex-1 text-left text-[12px] leading-snug ${
-                          snippet ? "text-neutral-600" : "italic text-neutral-400"
+                          truncated ? "text-neutral-600" : "italic text-neutral-400"
                         }`}
                         title={snippet || undefined}
                       >
-                        {snippet || "No preview yet."}
+                        {truncated || "No preview yet."}
                       </p>
                       {c.is_unread ? (
                         <Badge className="shrink-0 border-0 bg-[#50C878] px-1.5 py-0 text-[10px] font-semibold text-white hover:bg-[#45b56a]">

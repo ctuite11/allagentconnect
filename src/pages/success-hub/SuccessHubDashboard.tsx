@@ -1,17 +1,19 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import ListingCard from "@/components/ListingCard";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
-import { MyListingsRow } from "@/components/agent-dashboard-v2/MyListingsRow";
 import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
 import { SuccessHubHero } from "@/components/success-hub/SuccessHubHero";
 import { SuccessHubStatRow } from "@/components/success-hub/SuccessHubStatRow";
+import { mapSummaryListingToListingCard } from "@/components/success-hub/listingCardAdapter";
 import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
+
 function SectionHeader({
   title,
   description,
@@ -77,6 +79,9 @@ class SuccessHubErrorBoundary extends React.Component<
   }
 }
 
+const MY_LISTINGS_GRID =
+  "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 [&_img]:!h-40";
+
 function SuccessHubDashboardBody() {
   const {
     summary,
@@ -94,7 +99,7 @@ function SuccessHubDashboardBody() {
 
   if (loading) {
     return (
-      <AgentAacPage className="space-y-5 pb-10">
+      <AgentAacPage className="space-y-6 pb-10">
         <Skeleton className="h-36 w-full rounded-2xl border border-zinc-100 bg-white" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -102,7 +107,7 @@ function SuccessHubDashboardBody() {
           ))}
         </div>
         <Skeleton className="min-h-[160px] w-full rounded-2xl border border-zinc-100 bg-white" />
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[60%_40%] lg:gap-6">
           <Skeleton className="h-64 min-h-0 rounded-2xl border border-zinc-100 bg-white" />
           <Skeleton className="h-64 min-h-0 rounded-2xl border border-zinc-100 bg-white" />
         </div>
@@ -112,9 +117,9 @@ function SuccessHubDashboardBody() {
   }
 
   return (
-    <AgentAacPage className="space-y-5 pb-10">
+    <AgentAacPage className="space-y-6 pb-10">
       {error ? (
-        <AgentSectionCard className="border border-zinc-100 bg-white p-6">
+        <AgentSectionCard className="border border-zinc-100 bg-white p-5">
           <p className="text-sm font-medium text-neutral-900">Could not load Success Hub</p>
           <p className="mt-3 text-xs whitespace-pre-wrap break-words text-red-600">{error}</p>
           <Button variant="outline" size="sm" className="mt-4" type="button" onClick={() => refetch()}>
@@ -130,7 +135,7 @@ function SuccessHubDashboardBody() {
         <MarketActivityRow />
       </AgentSectionCard>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:items-stretch lg:gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[60%_40%] lg:items-stretch">
         <AgentSectionCard className="flex min-h-0 flex-col p-5">
           <DashboardBuyersTable buyers={safeBuyers} />
         </AgentSectionCard>
@@ -142,7 +147,36 @@ function SuccessHubDashboardBody() {
 
       <AgentSectionCard className="p-5">
         {safeListings.length > 0 ? (
-          <MyListingsRow listings={safeListings} autoFitGrid />
+          <>
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-[15px] font-semibold text-neutral-900">My listings</h3>
+                <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">
+                  Your active AAC listings — views and engagement at a glance.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/agent/listings";
+                }}
+                className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+              >
+                View all →
+              </button>
+            </div>
+            <div className={MY_LISTINGS_GRID}>
+              {safeListings.map((l) => (
+                <ListingCard
+                  key={l.id}
+                  listing={mapSummaryListingToListingCard(l, summary.agentId)}
+                  viewMode="compact"
+                  showActions={false}
+                  hideMlsMeta={true}
+                />
+              ))}
+            </div>
+          </>
         ) : (
           <>
             <SectionHeader
