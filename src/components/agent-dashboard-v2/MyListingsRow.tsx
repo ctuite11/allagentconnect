@@ -4,10 +4,9 @@ import { ChevronLeft, ChevronRight, Eye, Share2, Heart } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 import { cn } from "@/lib/utils";
-import {
-  SUCCESS_HUB_CARD_IMG,
-  SUCCESS_HUB_LISTING_GRID,
-} from "@/components/success-hub/successHubListingCardStyles";
+import { SUCCESS_HUB_LISTING_GRID } from "@/components/success-hub/successHubListingCardStyles";
+
+const CARD_IMG_AUTO = "h-36 md:h-40";
 
 interface MyListingsRowProps {
   listings: SuccessHubSummary["listings"];
