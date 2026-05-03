@@ -20,7 +20,7 @@ function formatPrice(price: number | null) {
   return `$${price.toLocaleString()}`;
 }
 
-export function MyListingsRow({ listings, denseGrid = false }: MyListingsRowProps) {
+export function MyListingsRow({ listings, autoFitGrid = false }: MyListingsRowProps) {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -134,7 +134,7 @@ export function MyListingsRow({ listings, denseGrid = false }: MyListingsRowProp
           >
             View all →
           </button>
-          {!denseGrid ? (
+          {!autoFitGrid ? (
             <>
               <button
                 type="button"
