@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight, Eye, Share2, Heart } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 import { cn } from "@/lib/utils";
-
-const AUTO_FIT_GRID =
-  "grid gap-4 grid-cols-1 md:gap-5 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]";
-const CARD_IMG_AUTO = "aspect-[4/3] min-h-[168px]";
+import {
+  SUCCESS_HUB_CARD_IMG,
+  SUCCESS_HUB_LISTING_GRID,
+} from "@/components/success-hub/successHubListingCardStyles";
 
 interface MyListingsRowProps {
   listings: SuccessHubSummary["listings"];
@@ -60,7 +60,7 @@ export function MyListingsRow({ listings, autoFitGrid = false }: MyListingsRowPr
         }}
         className={cn(
           "flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200",
-          opts.dense ? "min-w-0 w-full" : "min-h-[280px] w-[280px] max-w-[280px] shrink-0",
+          opts.autoFit ? "min-w-0 w-full" : "min-h-[280px] w-[280px] max-w-[280px] shrink-0",
         )}
       >
         <div
@@ -79,25 +79,32 @@ export function MyListingsRow({ listings, autoFitGrid = false }: MyListingsRowPr
           </div>
         </div>
 
-        <div className={cn("flex flex-1 flex-col", opts.autoFit ? "px-4 pb-3 pt-2.5" : "px-4 pb-3 pt-3")}>
+        <div className={cn("flex flex-1 flex-col", opts.autoFit ? "px-3 pb-2.5 pt-2" : "px-4 pb-3 pt-3")}>
           <p
             className={cn(
               "font-semibold leading-tight text-[#0E56F5]",
-              opts.autoFit ? "text-lg font-bold tracking-tight" : "text-lg",
+              opts.autoFit ? "text-base font-semibold tracking-tight" : "text-lg",
             )}
           >
             {formatPrice(listing.price)}
           </p>
-          <p className="mt-1 line-clamp-2 text-sm font-medium leading-snug text-neutral-900">{listing.address}</p>
+          <p
+            className={cn(
+              "mt-0.5 line-clamp-2 font-medium leading-snug text-neutral-900",
+              opts.autoFit ? "text-sm" : "text-sm",
+            )}
+          >
+            {listing.address}
+          </p>
           <p className="mt-0.5 truncate text-xs text-neutral-500">
             {listing.city}, {listing.state}
           </p>
 
-          <div className={cn("mt-auto border-t border-zinc-100", opts.autoFit ? "pt-2.5" : "pt-2.5")}>
+          <div className={cn("mt-auto border-t border-zinc-100", opts.autoFit ? "pt-2" : "pt-2.5")}>
             <div
               className={cn(
-                "flex flex-wrap items-center gap-x-4 gap-y-1 text-neutral-500",
-                opts.autoFit ? "text-[13px]" : "text-[11px]",
+                "flex flex-wrap items-center gap-x-3 gap-y-0.5 text-neutral-500",
+                opts.autoFit ? "text-[11px]" : "text-[11px]",
               )}
             >
               <span className="inline-flex items-center gap-1">
@@ -158,7 +165,7 @@ export function MyListingsRow({ listings, autoFitGrid = false }: MyListingsRowPr
       </div>
 
       {autoFitGrid ? (
-        <div className={AUTO_FIT_GRID}>
+        <div className={SUCCESS_HUB_LISTING_GRID}>
           {listings.map((listing) => (
             <Fragment key={listing.id}>{renderCard(listing, { autoFit: true })}</Fragment>
           ))}

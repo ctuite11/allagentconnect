@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bed, Bath, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
+import {
+  SUCCESS_HUB_CARD_IMG,
+  SUCCESS_HUB_LISTING_GRID,
+} from "@/components/success-hub/successHubListingCardStyles";
 
 interface MarketListing {
   id: string;
@@ -32,9 +36,7 @@ function isNew(createdAt: string) {
   return diff < 48 * 60 * 60 * 1000;
 }
 
-/** Taller previews — aligns with Success Hub listing cards before compact pass */
-const GRID_IMG = "aspect-[4/3] min-h-[168px]";
-const AUTO_FIT_GRID = "grid gap-4 grid-cols-1 md:gap-5 [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]";
+const DISPLAY_CAP = 24;
 
 export function MarketActivityRow() {
   const navigate = useNavigate();
@@ -80,7 +82,6 @@ export function MarketActivityRow() {
       return;
     }
 
-    // Fetch brokerage names for the agent_ids
     const agentIds = [...new Set(data.map((r: any) => r.agent_id))];
     const companyMap: Record<string, string> = {};
     if (agentIds.length > 0) {
@@ -96,7 +97,7 @@ export function MarketActivityRow() {
     }
 
     const parsed = data.map((row: any) => parseListing(row, companyMap));
-    const visible = filterVisibleListings(parsed, userId).slice(0, 36);
+    const visible = filterVisibleListings(parsed, userId).slice(0, DISPLAY_CAP);
     setListings(visible);
     setLoading(false);
   }, [parseListing]);
@@ -105,7 +106,6 @@ export function MarketActivityRow() {
     fetchListings();
   }, [fetchListings]);
 
-  // Realtime subscription for new listings
   useEffect(() => {
     const channel = supabase
       .channel("market-activity-inserts")
@@ -116,7 +116,6 @@ export function MarketActivityRow() {
           const newRow = payload.new as any;
           if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
 
-          // Fetch full row
           const { data } = await supabase
             .from("listings")
             .select(`
@@ -128,7 +127,6 @@ export function MarketActivityRow() {
 
           if (!data) return;
 
-          // Fetch brokerage
           const companyMap: Record<string, string> = {};
           const { data: profile } = await supabase
             .from("agent_profiles")
@@ -141,7 +139,7 @@ export function MarketActivityRow() {
           const visible = filterVisibleListings([parsed], currentUserId);
           if (visible.length === 0) return;
 
-          setListings((prev) => [visible[0], ...prev].slice(0, 10));
+          setListings((prev) => [visible[0], ...prev].slice(0, DISPLAY_CAP));
         }
       )
       .subscribe();
@@ -151,22 +149,12 @@ export function MarketActivityRow() {
     };
   }, [currentUserId, parseListing]);
 
-  const topListings = useMemo(() => listings.slice(0, 3), [listings]);
-
-  const gridClass = useMemo(() => {
-    const n = topListings.length;
-    if (n === 0) return "";
-    if (n === 1) return "grid grid-cols-1 gap-4";
-    if (n === 2) return "grid grid-cols-1 gap-4 sm:grid-cols-2";
-    return "grid grid-cols-1 gap-4 sm:grid-cols-3";
-  }, [topListings.length]);
-
   const headerBlock = (
     <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
         <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
         <p className="mt-0.5 max-w-lg text-[13px] leading-snug text-neutral-500">
-          Recent listings across AAC — open any card for full details.
+          Recent listings across AAC — tap a card for details.
         </p>
       </div>
       <button
@@ -188,9 +176,9 @@ export function MarketActivityRow() {
             <p className="mt-0.5 text-[13px] text-neutral-500">Loading recent listings…</p>
           </div>
         </div>
-        <div className={`${AUTO_FIT_GRID}`}>
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[260px] animate-pulse rounded-2xl border border-zinc-100 bg-white" />
+        <div className={SUCCESS_HUB_LISTING_GRID}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-[220px] animate-pulse rounded-2xl border border-zinc-100 bg-white" />
           ))}
         </div>
       </div>
@@ -199,9 +187,9 @@ export function MarketActivityRow() {
 
   if (listings.length === 0) {
     return (
-      <div className="max-w-xl">
+      <div className="min-w-0">
         {headerBlock}
-        <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-4 py-5 text-center shadow-none">
+        <div className="rounded-xl border border-dashed border-zinc-100 bg-white px-4 py-4 text-center">
           <p className="text-sm text-neutral-600">No new market activity yet.</p>
           <button
             type="button"
@@ -219,8 +207,8 @@ export function MarketActivityRow() {
     <div className="min-w-0">
       {headerBlock}
 
-      <div className={cn(gridClass, topListings.length === 1 && "max-w-[320px]")}>
-        {topListings.map((listing) => {
+      <div className={SUCCESS_HUB_LISTING_GRID}>
+        {listings.map((listing) => {
           const raw = listing.photos?.[0];
           const photo = typeof raw === "string" ? raw : raw?.url ?? null;
 
@@ -238,47 +226,45 @@ export function MarketActivityRow() {
               }}
               className="flex min-w-0 w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-none transition-colors duration-150 hover:border-zinc-200"
             >
-              {/* Photo */}
               <div
                 className={cn(
-                  "relative w-full shrink-0 overflow-hidden rounded-t-2xl border-b border-zinc-100 bg-white",
-                  GRID_IMG,
+                  "relative rounded-t-2xl border-b border-zinc-100 bg-white",
+                  SUCCESS_HUB_CARD_IMG,
                 )}
               >
                 {photo ? (
                   <img
                     src={photo}
                     alt={listing.address}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                  <div className="flex h-full w-full items-center justify-center text-xs text-neutral-400">
                     No photo
                   </div>
                 )}
-                <div className="absolute top-2 left-2">
+                <div className="absolute left-2 top-2">
                   <ListingStatusBadge status={listing.status} size="sm" />
                 </div>
                 {isNew(listing.created_at) && (
-                  <span className="absolute top-2 right-2 rounded-full bg-[#50C878] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="absolute right-2 top-2 rounded-full bg-[#50C878] px-1.5 py-0.5 text-[10px] font-semibold text-white">
                     New
                   </span>
                 )}
               </div>
 
-              {/* Details */}
-              <div className="flex min-h-0 flex-1 flex-col px-4 pt-2.5 pb-3">
-                <p className="text-lg font-bold leading-tight tracking-tight text-[#0E56F5]">
+              <div className="flex min-h-0 flex-1 flex-col px-3 pb-2.5 pt-2">
+                <p className="text-base font-semibold leading-tight tracking-tight text-[#0E56F5]">
                   {formatPrice(listing.price)}
                 </p>
-                <p className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">
+                <p className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-neutral-900">
                   {listing.address}
                 </p>
-                <p className="mt-0.5 truncate text-[13px] text-neutral-500">
+                <p className="mt-0.5 truncate text-xs text-neutral-500">
                   {listing.city}, {listing.state}
                 </p>
-                <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-0.5 pt-2.5 text-[13px] text-neutral-600">
+                <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-zinc-100 pt-2 text-[11px] text-neutral-600">
                   <span className="inline-flex items-center gap-0.5">
                     <Bed className="h-3 w-3 shrink-0 text-[#0E56F5]" /> {listing.bedrooms}
                   </span>
@@ -287,11 +273,12 @@ export function MarketActivityRow() {
                   </span>
                   {listing.square_feet ? (
                     <span className="inline-flex items-center gap-0.5">
-                      <Square className="h-3 w-3 shrink-0 text-[#0E56F5]" /> {listing.square_feet.toLocaleString()}
+                      <Square className="h-3 w-3 shrink-0 text-[#0E56F5]" />{" "}
+                      {listing.square_feet.toLocaleString()}
                     </span>
                   ) : null}
                 </div>
-                <p className="mt-1 truncate text-[11px] text-neutral-400">{listing.brokerage}</p>
+                <p className="mt-1 truncate text-[10px] text-neutral-400">{listing.brokerage}</p>
               </div>
             </div>
           );

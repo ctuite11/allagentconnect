@@ -94,25 +94,25 @@ function SuccessHubDashboardBody() {
 
   if (loading) {
     return (
-      <AgentAacPage className="space-y-6 pb-10">
+      <AgentAacPage className="space-y-5 pb-10">
         <Skeleton className="h-36 w-full rounded-2xl border border-zinc-100 bg-white" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-24 rounded-2xl border border-zinc-100 bg-white" />
           ))}
         </div>
-        <Skeleton className="min-h-[200px] w-full rounded-2xl border border-zinc-100 bg-white" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Skeleton className="h-56 rounded-2xl border border-zinc-100 bg-white" />
-          <Skeleton className="h-56 rounded-2xl border border-zinc-100 bg-white" />
+        <Skeleton className="min-h-[160px] w-full rounded-2xl border border-zinc-100 bg-white" />
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:gap-6">
+          <Skeleton className="h-64 min-h-0 rounded-2xl border border-zinc-100 bg-white" />
+          <Skeleton className="h-64 min-h-0 rounded-2xl border border-zinc-100 bg-white" />
         </div>
-        <Skeleton className="min-h-[180px] w-full rounded-2xl border border-zinc-100 bg-white" />
+        <Skeleton className="min-h-[140px] w-full rounded-2xl border border-zinc-100 bg-white" />
       </AgentAacPage>
     );
   }
 
   return (
-    <AgentAacPage className="space-y-6 pb-10">
+    <AgentAacPage className="space-y-5 pb-10">
       {error ? (
         <AgentSectionCard className="border border-zinc-100 bg-white p-6">
           <p className="text-sm font-medium text-neutral-900">Could not load Success Hub</p>
@@ -130,12 +130,12 @@ function SuccessHubDashboardBody() {
         <MarketActivityRow />
       </AgentSectionCard>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <AgentSectionCard className="p-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:items-stretch lg:gap-6">
+        <AgentSectionCard className="flex min-h-0 flex-col p-5">
           <DashboardBuyersTable buyers={safeBuyers} />
         </AgentSectionCard>
 
-        <AgentSectionCard className="p-5">
+        <AgentSectionCard className="flex min-h-0 flex-col p-5">
           <DashboardCommunications conversations={safeCommunications} compact inboxPreview />
         </AgentSectionCard>
       </div>
@@ -153,7 +153,7 @@ function SuccessHubDashboardBody() {
                 window.location.href = "/agent/listings/new";
               }}
             />
-            <div className="rounded-xl border border-dashed border-zinc-100 px-4 py-4 text-center">
+            <div className="rounded-xl border border-dashed border-zinc-100 px-4 py-3 text-center">
               <h3 className="text-sm font-semibold text-neutral-900">No active listings yet</h3>
               <p className="mx-auto mt-1 max-w-sm text-xs text-neutral-500">
                 Add a listing to appear here and in buyer matching.
@@ -161,7 +161,7 @@ function SuccessHubDashboardBody() {
               <Button
                 type="button"
                 size="sm"
-                className="mt-3 rounded-full bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
+                className="mt-2 rounded-full bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
                 onClick={() => {
                   window.location.href = "/agent/listings/new";
                 }}

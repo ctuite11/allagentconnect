@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
@@ -8,9 +7,11 @@ interface DashboardCommunicationsProps {
   conversations: SuccessHubSummary["conversations"];
   /** Denser list for Success Hub 2-col layout */
   compact?: boolean;
-  /** Inbox-style row: sender, snippet, time, badge — height follows content */
+  /** Inbox-style row: sender, snippet, time, badge */
   inboxPreview?: boolean;
 }
+
+const INBOX_SLICE = 6;
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -38,59 +39,51 @@ function getInitials(name: string | null) {
 
 export function DashboardCommunications({ conversations, compact, inboxPreview }: DashboardCommunicationsProps) {
   const navigate = useNavigate();
-  const rows = conversations.slice(0, inboxPreview ? 12 : 5);
+  const limit = inboxPreview ? INBOX_SLICE : 5;
+  const rows = conversations.slice(0, limit);
 
   return (
-    <div className="min-w-0">
-      <div className="mb-3 flex items-start justify-between gap-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-neutral-900">Communications</h3>
+          <h3 className="text-[15px] font-semibold text-neutral-900">Messages</h3>
           {(compact || inboxPreview) && (
-            <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">Recent conversations</p>
+            <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">Recent message threads.</p>
           )}
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/messages")}
-            className="text-sm font-medium text-[#0E56F5] hover:underline"
-          >
-            Inbox
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/client-needs")}
-            className="inline-flex items-center gap-0.5 text-sm font-medium text-[#0E56F5] hover:underline"
-          >
-            Comm Center <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/messages")}
+          className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+        >
+          View messages
+        </button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-zinc-100 bg-white">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-zinc-100 bg-white">
         {conversations.length === 0 ? (
-          <div className={`text-center text-sm text-neutral-500 ${compact || inboxPreview ? "py-5" : "py-10"}`}>
+          <div className={`text-center text-sm text-neutral-500 ${compact || inboxPreview ? "py-4" : "py-8"}`}>
             No messages yet.
           </div>
         ) : inboxPreview ? (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="max-h-[min(22rem,55vh)] divide-y divide-zinc-100 overflow-y-auto overscroll-contain lg:max-h-[min(24rem,50vh)]">
             {rows.map((c) => {
               const snippet = snippetFromPreview(c.last_message_preview);
               return (
                 <li
                   key={c.conversation_id}
-                  className="flex cursor-pointer gap-3 bg-white px-3 py-2.5 transition-colors hover:bg-zinc-50/80"
+                  className="flex cursor-pointer gap-2.5 bg-white px-3 py-2 transition-colors hover:bg-zinc-50/80"
                   onClick={() =>
                     navigate(`/messages/${c.conversation_id}`, {
                       state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
                     })
                   }
                 >
-                  <Avatar className="mt-0.5 h-9 w-9 shrink-0">
+                  <Avatar className="mt-0.5 h-8 w-8 shrink-0">
                     {c.other_headshot_url && (
                       <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
                     )}
-                    <AvatarFallback className="bg-[#50C878] text-xs font-medium text-white">
+                    <AvatarFallback className="bg-[#50C878] text-[10px] font-medium text-white">
                       {getInitials(c.other_name)}
                     </AvatarFallback>
                   </Avatar>
@@ -103,12 +96,12 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                     </div>
                     <div className="mt-0.5 flex items-start justify-between gap-2">
                       <p
-                        className={`line-clamp-2 min-w-0 flex-1 text-left text-[13px] leading-snug ${
+                        className={`line-clamp-2 min-w-0 flex-1 text-left text-[12px] leading-snug ${
                           snippet ? "text-neutral-600" : "italic text-neutral-400"
                         }`}
                         title={snippet || undefined}
                       >
-                        {snippet || "Open thread — no message body yet."}
+                        {snippet || "No preview yet."}
                       </p>
                       {c.is_unread ? (
                         <Badge className="shrink-0 border-0 bg-[#50C878] px-1.5 py-0 text-[10px] font-semibold text-white hover:bg-[#45b56a]">
@@ -126,7 +119,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
             {rows.map((c) => (
               <li
                 key={c.conversation_id}
-                className={`flex cursor-pointer items-center gap-2.5 bg-white transition-colors hover:bg-neutral-50/50 md:gap-3 ${compact ? "px-3 py-2.5" : "px-4 py-3.5"}`}
+                className={`flex cursor-pointer items-center gap-2.5 bg-white transition-colors hover:bg-neutral-50/50 md:gap-3 ${compact ? "px-3 py-2" : "px-4 py-3"}`}
                 onClick={() =>
                   navigate(`/messages/${c.conversation_id}`, {
                     state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
@@ -149,7 +142,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                     className={`line-clamp-2 text-neutral-600 ${compact ? "text-[11px]" : "text-xs"}`}
                     title={c.last_message_preview?.trim() || undefined}
                   >
-                    {snippetFromPreview(c.last_message_preview) || "Open thread — no message body yet."}
+                    {snippetFromPreview(c.last_message_preview) || "No preview yet."}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
