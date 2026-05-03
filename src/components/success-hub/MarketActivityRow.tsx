@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ListingCard from "@/components/ListingCard";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
+import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
+import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
 
 interface MarketListingRow {
   id: string;
@@ -24,10 +25,6 @@ interface MarketListingRow {
 }
 
 const DISPLAY_CAP = 24;
-
-/** Compact cards: match Browse grid image band (ListingCard compact uses h-48; Success Hub targets h-40). */
-const LISTING_CARD_GRID =
-  "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [&_img]:!h-40";
 
 export function MarketActivityRow() {
   const navigate = useNavigate();
@@ -147,8 +144,8 @@ export function MarketActivityRow() {
   const headerBlock = (
     <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
-        <p className="mt-0.5 max-w-lg text-[13px] leading-snug text-neutral-500">
+        <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">Market activity</h3>
+        <p className="mt-0.5 max-w-lg text-xs leading-snug text-neutral-500">
           Recent listings across AAC — tap a card for details.
         </p>
       </div>
@@ -167,13 +164,13 @@ export function MarketActivityRow() {
       <div>
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold text-neutral-900">Market activity</h3>
-            <p className="mt-0.5 text-[13px] text-neutral-500">Loading recent listings…</p>
+            <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">Market activity</h3>
+            <p className="mt-0.5 text-xs text-neutral-500">Loading recent listings…</p>
           </div>
         </div>
-        <div className={LISTING_CARD_GRID}>
+        <div className={SUCCESS_HUB_LISTINGS_GRID}>
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="h-52 animate-pulse rounded-xl border border-zinc-100 bg-white" />
+            <div key={i} className="h-[17.5rem] max-w-full animate-pulse rounded-lg border border-zinc-100 bg-white" />
           ))}
         </div>
       </div>
@@ -202,16 +199,9 @@ export function MarketActivityRow() {
     <div className="min-w-0">
       {headerBlock}
 
-      <div className={LISTING_CARD_GRID}>
+      <div className={SUCCESS_HUB_LISTINGS_GRID}>
         {listings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={mapMarketRowToListingCard(listing)}
-            viewMode="compact"
-            showActions={false}
-            hideMlsMeta={true}
-            agentInfo={listing.brokerage ? { name: listing.brokerage, company: null } : undefined}
-          />
+          <SuccessHubListingCard key={listing.id} listing={mapMarketRowToListingCard(listing)} />
         ))}
       </div>
     </div>

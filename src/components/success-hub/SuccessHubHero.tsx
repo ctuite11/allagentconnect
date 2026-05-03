@@ -25,7 +25,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
               Hi, {displayFirst}
             </h1>
-            <p className="max-w-xl text-sm leading-snug text-neutral-500">
+            <p className="max-w-xl text-xs leading-snug text-neutral-500">
               Manage your buyers, listings, hot sheets, and messages.
             </p>
           </div>

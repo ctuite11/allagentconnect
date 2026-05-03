@@ -42,11 +42,11 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="mb-2.5 flex items-start justify-between gap-2">
+      <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-neutral-900">Messages</h3>
+          <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">Messages</h3>
           {(compact || inboxPreview) && (
-            <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">Recent message threads.</p>
+            <p className="mt-0.5 text-xs leading-snug text-neutral-500">Recent message threads.</p>
           )}
         </div>
         <button
@@ -79,7 +79,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                     })
                   }
                 >
-                  <Avatar className="mt-0.5 h-8 w-8 shrink-0">
+                  <Avatar className="mt-0.5 h-7 w-7 shrink-0">
                     {c.other_headshot_url && (
                       <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
                     )}
@@ -96,7 +96,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                     </div>
                     <div className="mt-0.5 flex items-start justify-between gap-2">
                       <p
-                        className={`line-clamp-2 min-w-0 flex-1 text-left text-[12px] leading-snug ${
+                        className={`line-clamp-2 min-w-0 flex-1 text-left text-[11px] leading-snug ${
                           truncated ? "text-neutral-600" : "italic text-neutral-400"
                         }`}
                         title={snippet || undefined}

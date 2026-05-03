@@ -1,13 +1,14 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import ListingCard from "@/components/ListingCard";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
 import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
 import { SuccessHubHero } from "@/components/success-hub/SuccessHubHero";
 import { SuccessHubStatRow } from "@/components/success-hub/SuccessHubStatRow";
+import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
+import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
 import { mapSummaryListingToListingCard } from "@/components/success-hub/listingCardAdapter";
 import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
@@ -79,9 +80,6 @@ class SuccessHubErrorBoundary extends React.Component<
   }
 }
 
-const MY_LISTINGS_GRID =
-  "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 [&_img]:!h-40";
-
 function SuccessHubDashboardBody() {
   const {
     summary,
@@ -150,8 +148,8 @@ function SuccessHubDashboardBody() {
           <>
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="text-[15px] font-semibold text-neutral-900">My listings</h3>
-                <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">
+                <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">My listings</h3>
+                <p className="mt-0.5 text-xs leading-snug text-neutral-500">
                   Your active AAC listings — views and engagement at a glance.
                 </p>
               </div>
@@ -165,14 +163,11 @@ function SuccessHubDashboardBody() {
                 View all →
               </button>
             </div>
-            <div className={MY_LISTINGS_GRID}>
+            <div className={SUCCESS_HUB_LISTINGS_GRID}>
               {safeListings.map((l) => (
-                <ListingCard
+                <SuccessHubListingCard
                   key={l.id}
                   listing={mapSummaryListingToListingCard(l, summary.agentId)}
-                  viewMode="compact"
-                  showActions={false}
-                  hideMlsMeta={true}
                 />
               ))}
             </div>

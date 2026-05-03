@@ -72,7 +72,7 @@ export function SuccessHubStatRow({ summary }: SuccessHubStatRowProps) {
           className={`${shell} text-left outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/30 focus-visible:ring-offset-2`}
         >
           <Icon className="h-4 w-4 text-[hsl(160_84%_39%)]" aria-hidden />
-          <div className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">{value}</div>
+          <div className="mt-2 text-xl font-semibold tracking-tight text-neutral-900">{value}</div>
           <div className="mt-0.5 text-sm font-medium text-neutral-500">{label}</div>
           <div className="mt-1 text-xs text-neutral-400">{subtle}</div>
         </button>

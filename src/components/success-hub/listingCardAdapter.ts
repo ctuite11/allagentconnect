@@ -20,7 +20,10 @@ export function mapMarketRowToListingCard(row: {
   status: string;
   created_at: string;
   agent_id: string;
+  /** Display brokerage once via listing attribution (avoid duplicate agentInfo + Listed by). */
+  brokerage?: string;
 }): ListingCardModel {
+  const broker = row.brokerage?.trim();
   return {
     id: row.id,
     address: row.address ?? "",
@@ -36,6 +39,7 @@ export function mapMarketRowToListingCard(row: {
     photos: row.photos,
     created_at: row.created_at,
     agent_id: row.agent_id,
+    brokerage_name: broker || undefined,
     listing_stats: {
       view_count: 0,
       save_count: 0,
@@ -43,7 +47,7 @@ export function mapMarketRowToListingCard(row: {
       showing_request_count: 0,
       cumulative_active_days: 0,
     },
-  };
+  } as ListingCardModel;
 }
 
 /** Map Success Hub summary listing preview for `ListingCard`. */

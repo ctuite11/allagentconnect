@@ -20,10 +20,10 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-      <div className="mb-2.5 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold text-neutral-900">Buyers</h3>
-          <p className="mt-0.5 text-[12px] leading-snug text-neutral-500">
+          <p className="mt-0.5 text-xs leading-snug text-neutral-500">
             Name, phone, email, hot sheets, and favorites
           </p>
         </div>
@@ -50,7 +50,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                       className="w-full px-3 py-2 text-left transition-colors hover:bg-zinc-50/80"
                       onClick={() => navigate(`/success-hub/buyers/${b.id}`)}
                     >
-                      <span className="block truncate text-sm font-semibold text-neutral-900">{displayName(b)}</span>
+                      <span className="block truncate text-[13px] font-medium text-neutral-900">{displayName(b)}</span>
                       <div className="mt-0.5 space-y-0.5 text-[12px] text-neutral-500">
                         <p className="truncate">{formatPhone(b.phone)}</p>
                         <p className="truncate">{b.email || "—"}</p>
