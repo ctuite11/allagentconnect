@@ -156,7 +156,7 @@ export function MarketActivityRow() {
         onClick={() => navigate("/browse")}
         className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
       >
-        View all →
+        Search
       </button>
     </div>
   );
@@ -190,7 +190,7 @@ export function MarketActivityRow() {
             onClick={() => navigate("/browse")}
             className="mt-2 text-sm font-medium text-[#0E56F5] hover:underline"
           >
-            View all →
+            Search
           </button>
         </div>
       </div>

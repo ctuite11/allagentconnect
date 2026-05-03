@@ -774,9 +774,12 @@ const ListingCard = ({
               {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
             </div>}
         </div>
-        <CardContent className="p-2.5 flex flex-col flex-1">
-          <div className="flex items-start justify-between mb-1.5">
-            <p onClick={() => navigate(`/property/${listing.id}`)} className="cursor-pointer text-base font-bold leading-tight text-neutral-950">
+        <CardContent className="flex flex-1 flex-col gap-1.5 px-4 pb-3 pt-3">
+          <div className="mb-0 flex items-start justify-between gap-2">
+            <p
+              onClick={() => navigate(`/property/${listing.id}`)}
+              className="cursor-pointer text-[15px] font-semibold leading-snug tracking-tight text-neutral-900"
+            >
               {displayPrice}
             </p>
             {!hideMlsMeta && (
@@ -790,53 +793,54 @@ const ListingCard = ({
               </div>
             )}
           </div>
-          
-          <div className="flex items-start gap-1.5 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
-            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden />
-            <p className="text-sm font-normal leading-snug text-neutral-900">
-              {displayAddress}
-            </p>
+
+          <div className="flex cursor-pointer items-start gap-1.5" onClick={() => navigate(`/property/${listing.id}`)}>
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+            <p className="truncate text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
           </div>
-          
-          
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm tabular-nums text-neutral-900">
-            {listing.bedrooms && <div className="flex items-center gap-1">
-                <Bed className="h-4 w-4 text-neutral-600" aria-hidden />
+
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
+            {listing.bedrooms ? (
+              <div className="flex items-center gap-1">
+                <Bed className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
                 <span className="font-medium">{listing.bedrooms}</span>
-              </div>}
-            {listing.bathrooms && <div className="flex items-center gap-1">
-                <Bath className="h-4 w-4 text-neutral-600" aria-hidden />
+              </div>
+            ) : null}
+            {listing.bathrooms ? (
+              <div className="flex items-center gap-1">
+                <Bath className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
                 <span className="font-medium">{listing.bathrooms}</span>
-              </div>}
-            {listing.square_feet && <div className="flex items-center gap-1">
-                <Maximize className="h-4 w-4 text-neutral-600" aria-hidden />
+              </div>
+            ) : null}
+            {listing.square_feet ? (
+              <div className="flex items-center gap-1">
+                <Maximize className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
                 <span className="font-medium">{listing.square_feet.toLocaleString()}</span>
-              </div>}
+              </div>
+            ) : null}
           </div>
 
           {(compactAgentOwned ? false : isFavorites) ? (
-            <div className="mt-2">
+            <div className="mt-1.5">
               {listedByAttribution ? (
                 <p
-                  className="truncate text-[12px] font-normal text-neutral-500 leading-4"
+                  className="truncate text-[11px] font-normal leading-snug text-neutral-500"
                   title={`Listed by: ${listedByAttribution}`}
                 >
                   Listed by: {listedByAttribution}
                 </p>
               ) : (
-                <div className="h-[16px]" aria-hidden />
+                <div className="h-[14px]" aria-hidden />
               )}
             </div>
-          ) : (
-            listedByAttribution && (
-              <p
-                className="mt-2 truncate text-[12px] font-normal text-neutral-500"
-                title={`Listed by: ${listedByAttribution}`}
-              >
-                Listed by: {listedByAttribution}
-              </p>
-            )
-          )}
+          ) : listedByAttribution ? (
+            <p
+              className="mt-1.5 truncate text-[11px] font-normal leading-snug text-neutral-500"
+              title={`Listed by: ${listedByAttribution}`}
+            >
+              Listed by: {listedByAttribution}
+            </p>
+          ) : null}
 
           {/* Comment row — minimal on Favorites / hot-sheet grids; legacy row if agent attribution without buyer flag */}
           {showCompactCommentsRow && (
@@ -937,7 +941,7 @@ const ListingCard = ({
                   <span />
                 )}
               </div>
-              {!showCompactComments && agentInfo && (
+              {!showCompactComments && agentInfo && !listedByAttribution && (
                 <ListingAttribution
                   listingAgentName={agentInfo.name}
                   listingAgentCompany={agentInfo.company}

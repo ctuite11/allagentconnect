@@ -50,8 +50,9 @@ export const buyerDashboardHotSheetCollageGrid =
 export const buyerMarketListingTileMediaWrap =
   "relative h-48 w-full shrink-0 overflow-hidden rounded-t-2xl bg-white";
 
+/** Matches `ListingCard` compact `CardContent` padding and rhythm. */
 export const buyerMarketListingTileBody =
-  "flex flex-col gap-1.5 px-4 pb-4 pt-3 text-left";
+  "flex flex-col gap-1.5 px-4 pb-3 pt-3 text-left";
 
 /** Stat tiles on dashboard */
 export const buyerStatCardInteractive = `${buyerSectionCard} cursor-pointer transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;

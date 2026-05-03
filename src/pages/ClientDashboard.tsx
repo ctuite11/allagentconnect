@@ -35,7 +35,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  buyerAacPrimarySectionCta as aacPrimarySectionCta,
   buyerDashboardHotFavTile as unifiedHotFavCardClass,
   buyerDashboardHotFavTileBody as unifiedHotFavBody,
   buyerDashboardHotSheetMediaWrap as unifiedHotFavMediaWrap,
@@ -821,9 +820,9 @@ export default function ClientDashboard() {
                 className={`${aacCardInteractive} p-5 md:p-6`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Icon className="h-5 w-5 text-[hsl(160_84%_39%)]" />
+                  <Icon className="h-4 w-4 text-[hsl(160_84%_39%)]" />
                 </div>
-                <div className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">{value}</div>
+                <div className="mt-2 text-xl font-semibold tracking-tight text-gray-900">{value}</div>
                 <div className="mt-1 text-sm font-medium text-gray-500">{label}</div>
                 {subtle && <div className="mt-2 text-xs text-gray-400">{subtle}</div>}
               </div>
@@ -842,13 +841,13 @@ export default function ClientDashboard() {
                           Alerts for saved searches.
                         </CardDescription>
                       </div>
-                      <Button
+                      <button
                         type="button"
-                        className={aacPrimarySectionCta}
                         onClick={() => navigate("/hot-sheets")}
+                        className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
                       >
-                        View all
-                      </Button>
+                        View all →
+                      </button>
                     </div>
                   </CardHeader>
                   <CardContent className={previewSectionContentClass}>
@@ -891,9 +890,13 @@ export default function ClientDashboard() {
                       <CardTitle className={dashSectionTitleClass}>Favorites</CardTitle>
                       <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>Homes you saved.</CardDescription>
                     </div>
-                    <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/favorites")}>
-                      View all
-                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/favorites")}
+                      className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+                    >
+                      View all →
+                    </button>
                   </div>
                 </CardHeader>
                 <CardContent className={previewSectionContentClass}>
@@ -941,10 +944,13 @@ export default function ClientDashboard() {
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
                       <p className={`max-w-sm ${dashSectionDescClass}`}>No favorites yet.</p>
-                      <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/search")}>
-                        <Search className="mr-2 h-4 w-4" />
-                        Search homes
-                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/client/search")}
+                        className="text-sm font-medium text-[#0E56F5] hover:underline"
+                      >
+                        Search →
+                      </button>
                     </div>
                   )}
                 </CardContent>
@@ -962,10 +968,13 @@ export default function ClientDashboard() {
                       New listings on Direct Connect MLS.
                     </CardDescription>
                   </div>
-                  <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/search")}>
-                    <Search className="mr-1.5 h-3.5 w-3.5" />
-                    Search homes
-                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/client/search")}
+                    className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+                  >
+                    Search
+                  </button>
                 </div>
               </CardHeader>
               <CardContent className={previewSectionMarketContentClass}>
@@ -1010,29 +1019,29 @@ export default function ClientDashboard() {
                               {listing.city}, {listing.state}
                             </span>
                           </p>
-                          <div className="flex items-center gap-6 text-lg mt-1 text-neutral-950">
+                          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
                             {listing.bedrooms ? (
-                              <div className="flex items-center gap-1.5">
-                                <Bed className="h-5 w-5 text-neutral-700" aria-hidden />
-                                <span className="font-semibold">{listing.bedrooms}</span>
+                              <div className="flex items-center gap-1">
+                                <Bed className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                                <span className="font-medium">{listing.bedrooms}</span>
                               </div>
                             ) : null}
                             {listing.bathrooms ? (
-                              <div className="flex items-center gap-1.5">
-                                <Bath className="h-5 w-5 text-neutral-700" aria-hidden />
-                                <span className="font-semibold">{listing.bathrooms}</span>
+                              <div className="flex items-center gap-1">
+                                <Bath className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                                <span className="font-medium">{listing.bathrooms}</span>
                               </div>
                             ) : null}
                             {listing.square_feet ? (
-                              <div className="flex items-center gap-1.5">
-                                <Maximize className="h-5 w-5 text-neutral-700" aria-hidden />
-                                <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
+                              <div className="flex items-center gap-1">
+                                <Maximize className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                                <span className="font-medium">{listing.square_feet.toLocaleString()}</span>
                               </div>
                             ) : null}
                           </div>
                           {listedBy ? (
                             <p
-                              className="mt-2 truncate text-[12px] font-normal text-neutral-500"
+                              className="mt-1.5 truncate text-[11px] font-normal leading-snug text-neutral-500"
                               title={`Listed by: ${listedBy}`}
                             >
                               Listed by: {listedBy}
@@ -1047,10 +1056,13 @@ export default function ClientDashboard() {
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
                     <p className={dashSectionDescClass}>No listings to show yet.</p>
-                    <Button type="button" className={aacPrimarySectionCta} onClick={() => navigate("/client/search")}>
-                      <Search className="mr-1.5 h-3.5 w-3.5" />
-                      Search homes
-                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/client/search")}
+                      className="text-sm font-medium text-[#0E56F5] hover:underline"
+                    >
+                      Search →
+                    </button>
                   </div>
                 )}
                 {isDcmlsHost() ? (
