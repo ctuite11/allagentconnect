@@ -1,19 +1,25 @@
 import { useState } from "react";
 import AACMonogram from "@/components/ui/AACMonogram";
 
-/** Listing photo or AAC monogram — same behavior as the original `ClientDashboard` helper. */
+/** Listing photo or fallback — default monogram; `neutral` = empty white cell (hot sheet mosaics). */
 export function DashboardListingImage({
   photoUrl,
   alt,
   imageClassName = "h-full w-full object-cover",
+  emptyFallback = "monogram",
 }: {
   photoUrl: string;
   alt: string;
   imageClassName?: string;
+  /** `neutral` — blank cell for collage tiles (no AAC monogram). */
+  emptyFallback?: "monogram" | "neutral";
 }) {
   const [loadFailed, setLoadFailed] = useState(false);
-  const useMonogram = !photoUrl || photoUrl === "/placeholder.svg" || loadFailed;
-  if (useMonogram) {
+  const useFallback = !photoUrl || photoUrl === "/placeholder.svg" || loadFailed;
+  if (useFallback) {
+    if (emptyFallback === "neutral") {
+      return <div className={`${imageClassName} bg-white`} aria-hidden />;
+    }
     return (
       <div className="flex h-full w-full items-center justify-center bg-white text-[#0E56F5]" aria-hidden>
         <AACMonogram className="h-7 w-7" size={28} />

@@ -1,7 +1,6 @@
 import type { KeyboardEvent } from "react";
 import { Eye } from "lucide-react";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
-import AACMonogram from "@/components/ui/AACMonogram";
 import {
   buyerDashboardHotFavTileBody,
   buyerDashboardHotFavTile,
@@ -10,46 +9,25 @@ import {
   buyerPreviewCardInteractive,
 } from "@/lib/buyerUi";
 
-/** Hot Sheets listing page — 2×2 mosaic: tall left column + stacked right cells (optional empty quadrant). */
+const mosaicCell = "relative min-h-0 min-w-0 overflow-hidden bg-white";
+const mosaicImg = "absolute inset-0 h-full w-full object-cover";
+
+/** Hot Sheets listing page — 2×2 mosaic: tall left column + stacked right cells (empty slots stay white). */
 function HotSheetPageMosaic({ photoUrls }: { photoUrls: string[] }) {
   const [a, b, c] = photoUrls.filter(Boolean).slice(0, 3);
 
-  if (!a) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-white text-[#0E56F5]" aria-hidden>
-        <AACMonogram className="h-8 w-8" size={32} />
-      </div>
-    );
-  }
-
-  const cellWrap = "relative min-h-0 min-w-0 overflow-hidden bg-white";
-
   return (
     <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-[2px] bg-white [grid-template-columns:minmax(0,3fr)_minmax(0,2fr)]">
-      <div className={`${cellWrap} row-span-2`}>
-        <DashboardListingImage
-          photoUrl={a}
-          alt=""
-          imageClassName="absolute inset-0 h-full w-full object-cover"
-        />
-      </div>
-      <div className={cellWrap}>
-        {b ? (
-          <DashboardListingImage
-            photoUrl={b}
-            alt=""
-            imageClassName="absolute inset-0 h-full w-full object-cover"
-          />
+      <div className={`${mosaicCell} row-span-2`}>
+        {a ? (
+          <DashboardListingImage photoUrl={a} alt="" imageClassName={mosaicImg} emptyFallback="neutral" />
         ) : null}
       </div>
-      <div className={cellWrap}>
-        {c ? (
-          <DashboardListingImage
-            photoUrl={c}
-            alt=""
-            imageClassName="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : null}
+      <div className={mosaicCell}>
+        {b ? <DashboardListingImage photoUrl={b} alt="" imageClassName={mosaicImg} emptyFallback="neutral" /> : null}
+      </div>
+      <div className={mosaicCell}>
+        {c ? <DashboardListingImage photoUrl={c} alt="" imageClassName={mosaicImg} emptyFallback="neutral" /> : null}
       </div>
     </div>
   );
@@ -143,19 +121,19 @@ export function BuyerHotSheetPreviewCard({
         )}
       </div>
       {isHotSheetsPage ? (
-        <div className="flex min-h-[5.5rem] flex-1 flex-col bg-white px-4 pb-5 pt-3 text-left">
-          <p className="line-clamp-2 text-base font-semibold leading-snug text-neutral-900">
-            <span className="font-semibold">Hot Sheet Name: </span>
-            <span>{title}</span>
-          </p>
-          {agentAttribution ? (
-            <p className="mt-1 text-left text-xs text-zinc-500">
-              Your agent: {agentAttribution}
+        <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
+          <div className="min-w-0 shrink-0">
+            <p className="line-clamp-2 text-base font-semibold leading-snug text-neutral-900">
+              <span className="font-semibold">Hot Sheet Name: </span>
+              <span>{title}</span>
             </p>
-          ) : null}
-          <div className="mt-auto flex justify-end pt-3">
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0E56F5] pointer-events-none" aria-hidden>
-              <Eye className="h-4 w-4 shrink-0" strokeWidth={2} />
+            {agentAttribution ? (
+              <p className="mt-1 text-left text-xs text-zinc-500">Your agent: {agentAttribution}</p>
+            ) : null}
+          </div>
+          <div className="mt-auto flex w-full shrink-0 items-center justify-end pt-3">
+            <span className="pointer-events-none inline-flex items-center gap-1.5 text-sm font-medium text-[#0E56F5]">
+              <Eye className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               View
             </span>
           </div>
