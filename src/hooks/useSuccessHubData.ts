@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Public Types ─────────────────────────────────────────────────────────────
@@ -82,6 +82,38 @@ export interface SuccessHubSummary {
   }>;
 }
 
+/** Safe shell when load fails or before first paint — never omit fields consumers read. */
+export const EMPTY_SUCCESS_HUB_SUMMARY: SuccessHubSummary = {
+  agentId: "",
+  profile: null,
+  metrics: {
+    pendingInviteCount: 0,
+    activeHotSheetCount: 0,
+    activeBuyerCount: 0,
+    unreadMessageCount: 0,
+  },
+  attentionItems: [],
+  listings: [],
+  hotSheets: [],
+  buyers: [],
+  conversations: [],
+  activity: [],
+};
+
+export type UseSuccessHubDataResult = {
+  loading: boolean;
+  error: string | null;
+  /** Always a full object — use when you need `summary.metrics` etc. without optional chaining. */
+  summary: SuccessHubSummary;
+  buyers: SuccessHubSummary["buyers"];
+  listings: SuccessHubSummary["listings"];
+  conversations: SuccessHubSummary["conversations"];
+  communications: SuccessHubSummary["conversations"];
+  /** Reserved; market cards load inside `MarketActivityRow`. Always []. */
+  marketActivity: [];
+  refetch: () => void;
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function daysAgoISO(days: number): string {
@@ -122,12 +154,7 @@ function supabaseResult<T>(result: { data?: T; error?: unknown; count?: unknown 
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useSuccessHubData(): {
-  summary: SuccessHubSummary | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
-} {
+export function useSuccessHubData(): UseSuccessHubDataResult {
   const [summary, setSummary] = useState<SuccessHubSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -317,7 +344,7 @@ export function useSuccessHubData(): {
       const unreadMessageCount = typeof unreadInboxCount === "number" ? unreadInboxCount : 0;
 
       // Listings preview: listing_stats may be array or object depending on join type
-      const listingsBase = ((listingsPreviewRes.data ?? []) as any[]).map((l) => {
+      const listingsBase = ((listingsPreviewRes?.data ?? []) as any[]).map((l) => {
         const stats = Array.isArray(l.listing_stats)
           ? l.listing_stats[0]
           : l.listing_stats;
@@ -682,5 +709,20 @@ export function useSuccessHubData(): {
     };
   }, [loadAll]);
 
-  return { summary, loading, error, refetch };
+  const merged = summary ?? EMPTY_SUCCESS_HUB_SUMMARY;
+
+  return useMemo(
+    (): UseSuccessHubDataResult => ({
+      loading,
+      error,
+      summary: merged,
+      buyers: merged.buyers ?? [],
+      listings: merged.listings ?? [],
+      conversations: merged.conversations ?? [],
+      communications: merged.conversations ?? [],
+      marketActivity: [],
+      refetch,
+    }),
+    [loading, error, merged, refetch],
+  );
 }

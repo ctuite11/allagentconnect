@@ -1,3 +1,4 @@
+import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
@@ -39,89 +40,149 @@ function SectionHeader({
   );
 }
 
-export default function SuccessHubDashboard() {
-  const { summary, loading, error } = useSuccessHubData();
+type SuccessHubBoundaryState = { error: Error | null };
 
-  return (
-    <>
-      <Seo title="Dashboard" />
-      {loading ? (
-        <AgentAacPage className="space-y-6 pb-10">
-          <Skeleton className="h-36 w-full rounded-2xl border border-zinc-100 bg-white" />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-24 rounded-2xl border border-zinc-100 bg-white" />
-            ))}
-          </div>
-          <Skeleton className="min-h-[200px] w-full rounded-2xl border border-zinc-100 bg-white" />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Skeleton className="h-56 rounded-2xl border border-zinc-100 bg-white" />
-            <Skeleton className="h-56 rounded-2xl border border-zinc-100 bg-white" />
-          </div>
-          <Skeleton className="min-h-[180px] w-full rounded-2xl border border-zinc-100 bg-white" />
-        </AgentAacPage>
-      ) : error || !summary ? (
+/** Last resort for render-time failures so the route never stays blank. */
+class SuccessHubErrorBoundary extends React.Component<
+  React.PropsWithChildren,
+  SuccessHubBoundaryState
+> {
+  state: SuccessHubBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): SuccessHubBoundaryState {
+    return { error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("[SuccessHubDashboard]", error.message, info.componentStack);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
         <AgentAacPage className="pb-10">
-          <AgentSectionCard className="p-6 text-center">
-            <p className="text-sm text-neutral-500">{error ?? "Unable to load dashboard data."}</p>
+          <AgentSectionCard className="border border-zinc-100 bg-white p-6">
+            <p className="text-sm font-medium text-neutral-900">Could not load Success Hub</p>
+            <p className="mt-3 text-xs whitespace-pre-wrap break-words text-red-600">
+              {this.state.error.message}
+            </p>
             <Button variant="outline" size="sm" className="mt-4" onClick={() => window.location.reload()}>
-              Try Again
+              Retry
             </Button>
           </AgentSectionCard>
         </AgentAacPage>
-      ) : (
-        <AgentAacPage className="space-y-6 pb-10">
-          <SuccessHubHero summary={summary} />
-          <SuccessHubStatRow summary={summary} />
+      );
+    }
+    return this.props.children;
+  }
+}
 
-          <AgentSectionCard className="p-5">
-            <MarketActivityRow />
-          </AgentSectionCard>
+function SuccessHubDashboardBody() {
+  const {
+    summary,
+    loading,
+    error,
+    buyers,
+    listings,
+    communications,
+    refetch,
+  } = useSuccessHubData();
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <AgentSectionCard className="p-5">
-              <DashboardBuyersTable buyers={summary.buyers} />
-            </AgentSectionCard>
+  const safeBuyers = buyers ?? [];
+  const safeListings = listings ?? [];
+  const safeCommunications = communications ?? [];
 
-            <AgentSectionCard className="p-5">
-              <DashboardCommunications conversations={summary.conversations} compact inboxPreview />
-            </AgentSectionCard>
-          </div>
+  if (loading) {
+    return (
+      <AgentAacPage className="space-y-6 pb-10">
+        <Skeleton className="h-36 w-full rounded-2xl border border-zinc-100 bg-white" />
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-2xl border border-zinc-100 bg-white" />
+          ))}
+        </div>
+        <Skeleton className="min-h-[200px] w-full rounded-2xl border border-zinc-100 bg-white" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Skeleton className="h-56 rounded-2xl border border-zinc-100 bg-white" />
+          <Skeleton className="h-56 rounded-2xl border border-zinc-100 bg-white" />
+        </div>
+        <Skeleton className="min-h-[180px] w-full rounded-2xl border border-zinc-100 bg-white" />
+      </AgentAacPage>
+    );
+  }
 
-          <AgentSectionCard className="p-5">
-            {summary.listings.length > 0 ? (
-              <MyListingsRow listings={summary.listings} autoFitGrid />
-            ) : (
-              <>
-                <SectionHeader
-                  title="My listings"
-                  description="Properties you represent on AAC."
-                  actionLabel="Add listing"
-                  onAction={() => {
-                    window.location.href = "/agent/listings/new";
-                  }}
-                />
-                <div className="rounded-xl border border-dashed border-zinc-100 px-4 py-4 text-center">
-                  <h3 className="text-sm font-semibold text-neutral-900">No active listings yet</h3>
-                  <p className="mx-auto mt-1 max-w-sm text-xs text-neutral-500">
-                    Add a listing to appear here and in buyer matching.
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="mt-3 rounded-full bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
-                    onClick={() => {
-                      window.location.href = "/agent/listings/new";
-                    }}
-                  >
-                    Add Listing
-                  </Button>
-                </div>
-              </>
-            )}
-          </AgentSectionCard>
-        </AgentAacPage>
-      )}
+  return (
+    <AgentAacPage className="space-y-6 pb-10">
+      {error ? (
+        <AgentSectionCard className="border border-zinc-100 bg-white p-6">
+          <p className="text-sm font-medium text-neutral-900">Could not load Success Hub</p>
+          <p className="mt-3 text-xs whitespace-pre-wrap break-words text-red-600">{error}</p>
+          <Button variant="outline" size="sm" className="mt-4" type="button" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </AgentSectionCard>
+      ) : null}
+
+      <SuccessHubHero summary={summary} />
+      <SuccessHubStatRow summary={summary} />
+
+      <AgentSectionCard className="p-5">
+        <MarketActivityRow />
+      </AgentSectionCard>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <AgentSectionCard className="p-5">
+          <DashboardBuyersTable buyers={safeBuyers} />
+        </AgentSectionCard>
+
+        <AgentSectionCard className="p-5">
+          <DashboardCommunications conversations={safeCommunications} compact inboxPreview />
+        </AgentSectionCard>
+      </div>
+
+      <AgentSectionCard className="p-5">
+        {safeListings.length > 0 ? (
+          <MyListingsRow listings={safeListings} autoFitGrid />
+        ) : (
+          <>
+            <SectionHeader
+              title="My listings"
+              description="Properties you represent on AAC."
+              actionLabel="Add listing"
+              onAction={() => {
+                window.location.href = "/agent/listings/new";
+              }}
+            />
+            <div className="rounded-xl border border-dashed border-zinc-100 px-4 py-4 text-center">
+              <h3 className="text-sm font-semibold text-neutral-900">No active listings yet</h3>
+              <p className="mx-auto mt-1 max-w-sm text-xs text-neutral-500">
+                Add a listing to appear here and in buyer matching.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-3 rounded-full bg-[#0E56F5] text-white hover:bg-[#0B46CC]"
+                onClick={() => {
+                  window.location.href = "/agent/listings/new";
+                }}
+              >
+                Add Listing
+              </Button>
+            </div>
+          </>
+        )}
+      </AgentSectionCard>
+    </AgentAacPage>
+  );
+}
+
+export default function SuccessHubDashboard() {
+  return (
+    <>
+      <Seo title="Dashboard" />
+      <SuccessHubErrorBoundary>
+        <SuccessHubDashboardBody />
+      </SuccessHubErrorBoundary>
     </>
   );
 }

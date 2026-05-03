@@ -11,8 +11,14 @@ type SuccessHubStatRowProps = {
 
 export function SuccessHubStatRow({ summary }: SuccessHubStatRowProps) {
   const navigate = useNavigate();
-  const m = summary.metrics;
-  const listingPreviewCount = summary.listings.length;
+  const m = summary.metrics ?? {
+    pendingInviteCount: 0,
+    activeHotSheetCount: 0,
+    activeBuyerCount: 0,
+    unreadMessageCount: 0,
+  };
+  const listingRows = summary.listings ?? [];
+  const listingPreviewCount = listingRows.length;
 
   const stats: Array<{
     key: string;
