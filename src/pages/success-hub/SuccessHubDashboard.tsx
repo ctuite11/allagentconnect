@@ -167,7 +167,8 @@ function SuccessHubDashboardBody() {
               {safeListings.map((l) => (
                 <SuccessHubListingCard
                   key={l.id}
-                  listing={mapSummaryListingToListingCard(l, summary.agentId)}
+                  compactAgentOwned
+                  listing={mapSummaryListingToListingCard(l, summary.agentId, summary.profile)}
                 />
               ))}
             </div>

@@ -56,20 +56,29 @@ export function mapMarketRowToListingCard(row: {
 export function mapSummaryListingToListingCard(
   l: SuccessHubSummary["listings"][number],
   agentId: string | undefined,
+  listedByProfile: SuccessHubSummary["profile"] = null,
 ): ListingCardModel {
+  const company = listedByProfile?.company?.trim();
+  const fullName = [listedByProfile?.first_name, listedByProfile?.last_name]
+    .map((s) => (typeof s === "string" ? s.trim() : ""))
+    .filter(Boolean)
+    .join(" ")
+    .trim();
   return {
     id: l.id,
     address: l.address,
     city: l.city,
     state: l.state,
-    zip_code: "",
+    zip_code: l.zip_code ?? "",
     price: l.price ?? 0,
-    property_type: null,
-    bedrooms: null,
-    bathrooms: null,
-    square_feet: null,
+    property_type: l.property_type,
+    bedrooms: l.bedrooms,
+    bathrooms: l.bathrooms,
+    square_feet: l.square_feet,
     status: l.status,
     photos: l.photos,
+    brokerage_name: company || undefined,
+    listing_agent_name: !company && fullName ? fullName : undefined,
     listing_stats: {
       view_count: l.view_count,
       save_count: 0,

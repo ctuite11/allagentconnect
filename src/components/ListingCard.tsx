@@ -108,6 +108,11 @@ interface ListingCardProps {
    * Map/search compact cards omit this prop so the bar stays hidden.
    */
   showCompactComments?: boolean;
+  /**
+   * Agent-owned compact grids (Success Hub «My listings»): first photo only, no favorite/shortlist overlay,
+   * no carousel arrows, no NEW LISTING / promo banners — same typography/shell as buyer compact cards.
+   */
+  compactAgentOwned?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -129,6 +134,7 @@ const ListingCard = ({
   supplementalAgentProfile = null,
   isFavorites = false,
   showCompactComments = false,
+  compactAgentOwned = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
@@ -653,9 +659,9 @@ const ListingCard = ({
     const buyerCommentRowSignals = Boolean(showCompactComments && (onOpenChat || hasCommentThread));
     const showCompactCommentsRow = buyerCommentRowSignals || (!showCompactComments && legacyCommentRowSignals);
 
-    const currentPhoto = getPhotoByIndex(currentPhotoIndex);
     const totalPhotos = getTotalPhotos();
-    const hasMultiplePhotos = totalPhotos > 1;
+    const currentPhoto = compactAgentOwned ? getPhotoByIndex(0) : getPhotoByIndex(currentPhotoIndex);
+    const showCarouselArrows = !compactAgentOwned && totalPhotos > 1;
     
     return <Card
         className="overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full cursor-pointer"
@@ -663,7 +669,7 @@ const ListingCard = ({
       >
         <div className="relative group flex-shrink-0">
           {/* Top overlay: shared h-9 row so shortlist chip and FavoriteButton square/circle share one center line — do not override FavoriteButton sizing. */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 px-2 pt-2">
+          {!compactAgentOwned ? <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 px-2 pt-2">
             <div className="pointer-events-auto flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center">
               {onSelect ? (
                 <div
@@ -712,7 +718,7 @@ const ListingCard = ({
               )}
               <FavoriteButton listingId={listing.id} size="icon" photoIcon />
             </div>
-          </div>
+          </div> : null}
           {/* Property type badge overlay */}
           {listing.property_type && (
             <div className="absolute bottom-2 left-2 z-10">
@@ -728,7 +734,7 @@ const ListingCard = ({
             </div>}
           
           {/* Photo navigation arrows */}
-          {hasMultiplePhotos && (
+          {showCarouselArrows && (
             <>
               <button
                 onClick={handlePreviousPhoto}
@@ -752,19 +758,19 @@ const ListingCard = ({
             </div>}
           
           {/* Status Change Banner (top priority) */}
-          {statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+          {!compactAgentOwned && statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
               {statusBanner.iconType === 'sparkles' ? <Sparkles className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
               {statusBanner.text}
             </div>}
           
           {/* Price Change Banner (second priority) */}
-          {priceChangeBanner && !statusBanner && <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+          {!compactAgentOwned && priceChangeBanner && !statusBanner && <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
               <TrendingDown className="w-3 h-3" />
               {priceChangeBanner.text}
             </div>}
           
           {/* Open House Banner (third priority) */}
-          {openHouseBanner && !statusBanner && !priceChangeBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
+          {!compactAgentOwned && openHouseBanner && !statusBanner && !priceChangeBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
               {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
             </div>}
         </div>
@@ -808,7 +814,7 @@ const ListingCard = ({
               </div>}
           </div>
 
-          {isFavorites ? (
+          {(compactAgentOwned ? false : isFavorites) ? (
             <div className="mt-2">
               {listedByAttribution ? (
                 <p

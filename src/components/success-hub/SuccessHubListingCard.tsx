@@ -10,6 +10,7 @@ export type SuccessHubListingCardProps = Omit<
 /**
  * Success Hub listing tile — standard `ListingCard` compact only.
  * No typography/icon overrides (those caused cross-surface regressions).
+ * Pass `compactAgentOwned` for agent-owned grids (Success Hub «My listings»): no favorites overlay, single photo, no promo banners — same compact shell as market/search.
  */
 export function SuccessHubListingCard({ hideMlsMeta, className, ...rest }: SuccessHubListingCardProps) {
   return (

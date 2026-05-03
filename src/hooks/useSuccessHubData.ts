@@ -35,9 +35,14 @@ export interface SuccessHubSummary {
     address: string;
     city: string;
     state: string;
+    zip_code: string;
     status: string;
     photos: (string | { url: string })[] | null;
     price: number | null;
+    property_type: string | null;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    square_feet: number | null;
     view_count: number;
     showing_request_count: number;
     neighborhood?: string | null;
@@ -225,7 +230,9 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         // Listings preview — listings table uses agent_id (NOT user_id)
         supabase
           .from("listings")
-          .select("id,address,city,state,status,photos,price,updated_at,listing_stats(view_count,showing_request_count)")
+          .select(
+            "id,address,city,state,zip_code,neighborhood,status,photos,price,updated_at,property_type,bedrooms,bathrooms,square_feet,listing_stats(view_count,showing_request_count)",
+          )
           .eq("agent_id", agentId)
           .in("status", ["active", "pending", "coming_soon", "off_market"])
           .order("updated_at", { ascending: false })
@@ -354,9 +361,14 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           address: l.address ?? "",
           city: l.city ?? "",
           state: l.state ?? "",
+          zip_code: typeof l.zip_code === "string" ? l.zip_code : "",
           status: l.status ?? "",
           photos: (l.photos as string[] | null) ?? null,
           price: typeof l.price === "number" ? l.price : null,
+          property_type: typeof l.property_type === "string" ? l.property_type : null,
+          bedrooms: typeof l.bedrooms === "number" ? l.bedrooms : null,
+          bathrooms: typeof l.bathrooms === "number" ? l.bathrooms : null,
+          square_feet: typeof l.square_feet === "number" ? l.square_feet : null,
           neighborhood: typeof l.neighborhood === "string" ? l.neighborhood : null,
           view_count: typeof stats?.view_count === "number" ? stats.view_count : 0,
           showing_request_count:
