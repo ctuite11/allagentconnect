@@ -40,6 +40,7 @@ export interface SuccessHubSummary {
     price: number | null;
     view_count: number;
     showing_request_count: number;
+    neighborhood?: string | null;
   }>;
 
   hotSheets: Array<{
@@ -356,6 +357,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           status: l.status ?? "",
           photos: (l.photos as string[] | null) ?? null,
           price: typeof l.price === "number" ? l.price : null,
+          neighborhood: typeof l.neighborhood === "string" ? l.neighborhood : null,
           view_count: typeof stats?.view_count === "number" ? stats.view_count : 0,
           showing_request_count:
             typeof stats?.showing_request_count === "number"

@@ -770,7 +770,7 @@ const ListingCard = ({
         </div>
         <CardContent className="p-2.5 flex flex-col flex-1">
           <div className="flex items-start justify-between mb-1.5">
-            <p onClick={() => navigate(`/property/${listing.id}`)} className="font-bold text-neutral-950 cursor-pointer text-lg">
+            <p onClick={() => navigate(`/property/${listing.id}`)} className="cursor-pointer text-base font-bold leading-tight text-neutral-950">
               {displayPrice}
             </p>
             {!hideMlsMeta && (
@@ -785,26 +785,26 @@ const ListingCard = ({
             )}
           </div>
           
-          <div className="flex items-center gap-1 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
-            <MapPin className="h-4 w-4 shrink-0 text-[#50C878]" aria-hidden />
-            <p className="font-medium text-sm">
+          <div className="flex items-start gap-1.5 mb-1.5 cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden />
+            <p className="text-sm font-normal leading-snug text-neutral-900">
               {displayAddress}
             </p>
           </div>
           
           
-          <div className="flex items-center gap-6 text-lg mt-1 text-neutral-950">
-            {listing.bedrooms && <div className="flex items-center gap-1.5">
-                <Bed className="h-5 w-5 text-neutral-700" aria-hidden />
-                <span className="font-semibold">{listing.bedrooms}</span>
+          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm tabular-nums text-neutral-900">
+            {listing.bedrooms && <div className="flex items-center gap-1">
+                <Bed className="h-4 w-4 text-neutral-600" aria-hidden />
+                <span className="font-medium">{listing.bedrooms}</span>
               </div>}
-            {listing.bathrooms && <div className="flex items-center gap-1.5">
-                <Bath className="h-5 w-5 text-neutral-700" aria-hidden />
-                <span className="font-semibold">{listing.bathrooms}</span>
+            {listing.bathrooms && <div className="flex items-center gap-1">
+                <Bath className="h-4 w-4 text-neutral-600" aria-hidden />
+                <span className="font-medium">{listing.bathrooms}</span>
               </div>}
-            {listing.square_feet && <div className="flex items-center gap-1.5">
-                <Maximize className="h-5 w-5 text-neutral-700" aria-hidden />
-                <span className="font-semibold">{listing.square_feet.toLocaleString()}</span>
+            {listing.square_feet && <div className="flex items-center gap-1">
+                <Maximize className="h-4 w-4 text-neutral-600" aria-hidden />
+                <span className="font-medium">{listing.square_feet.toLocaleString()}</span>
               </div>}
           </div>
 

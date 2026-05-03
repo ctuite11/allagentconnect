@@ -22,6 +22,7 @@ interface MarketListingRow {
   created_at: string;
   agent_id: string;
   brokerage: string;
+  neighborhood: string | null;
 }
 
 const DISPLAY_CAP = 24;
@@ -49,6 +50,7 @@ export function MarketActivityRow() {
       created_at: row.created_at,
       agent_id: row.agent_id,
       brokerage: companyMap[row.agent_id] || "AAC Agent",
+      neighborhood: typeof row.neighborhood === "string" ? row.neighborhood : null,
     };
   }, []);
 
@@ -61,7 +63,7 @@ export function MarketActivityRow() {
       .from("listings")
       .select(`
         id, address, city, state, zip_code, price, property_type,
-        bedrooms, bathrooms, square_feet,
+        bedrooms, bathrooms, square_feet, neighborhood,
         photos, status, created_at, agent_id
       `)
       .not("status", "in", "(draft,expired)")
@@ -111,7 +113,7 @@ export function MarketActivityRow() {
             .from("listings")
             .select(`
               id, address, city, state, zip_code, price, property_type,
-              bedrooms, bathrooms, square_feet,
+              bedrooms, bathrooms, square_feet, neighborhood,
               photos, status, created_at, agent_id
             `)
             .eq("id", newRow.id)
