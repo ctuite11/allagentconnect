@@ -183,6 +183,7 @@ export function ClientDashboardView({
   navigate,
   buyerDisplayName,
   buyerEmail,
+  buyerPhoneFmt = null,
   agent,
   agentPresenceOnline,
   agentPhoneFmt,
