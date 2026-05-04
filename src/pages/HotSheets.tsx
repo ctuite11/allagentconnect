@@ -111,7 +111,6 @@ const HotSheets = ({
   const [collections, setCollections] = useState<BuyerCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [agentInitials, setAgentInitials] = useState("AG");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState<string | null>(null);
   const [commentsDialogOpen, setCommentsDialogOpen] = useState<string | null>(null);
@@ -509,16 +508,6 @@ const HotSheets = ({
     }
     setUser(user);
 
-    // Fetch agent initials
-    const { data: profile } = await supabase
-      .from("agent_profiles")
-      .select("first_name, last_name")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (profile) {
-      setAgentInitials(getInitials(profile.first_name, profile.last_name));
-    }
-
     fetchData(user.id);
   };
 
@@ -847,13 +836,9 @@ const HotSheets = ({
             {collections.map((collection) => (
               <BuyerCollectionCard
                 key={collection.clientId}
-                clientId={collection.clientId}
                 clientName={collection.clientName}
                 hotSheetCount={collection.hotSheets.length}
                 photos={collection.photos}
-                agentInitials={agentInitials}
-                clientInitials={collection.clientInitials}
-                collaborators={collection.collaborators}
                 onClick={() => handleCardClick(collection)}
               />
             ))}
