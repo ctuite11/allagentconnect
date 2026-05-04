@@ -682,12 +682,7 @@ export default function ClientDashboard() {
           <section className={`${aacCardShell} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-                    {buyerFirstName ? `Hi, ${buyerFirstName}` : "Welcome"}
-                  </h1>
-                  <p className="text-sm text-gray-500">Your dashboard — favorites, hot sheets, and new listings.</p>
-                </div>
+                <h1 className="text-2xl font-semibold text-zinc-950">{buyerFirstName?.trim() ?? ""}</h1>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
