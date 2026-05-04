@@ -41,8 +41,13 @@ function HotSheetDashboardCollage({ photoUrls }: { photoUrls: string[] }) {
 
   if (!collagePhotos.length) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-white text-[#0E56F5]" aria-hidden>
-        <AACMonogram className="h-7 w-7" size={28} />
+      <div className={buyerDashboardHotSheetCollageGrid}>
+        {[0, 1, 2].map((index) => (
+          <div
+            key={index}
+            className={`${index === 0 ? "row-span-2" : ""} relative min-h-0 min-w-0 bg-white`}
+          />
+        ))}
       </div>
     );
   }
@@ -57,7 +62,8 @@ function HotSheetDashboardCollage({ photoUrls }: { photoUrls: string[] }) {
           <DashboardListingImage
             photoUrl={photoUrl}
             alt=""
-            imageClassName="absolute inset-0 h-full w-full object-cover"
+            imageClassName={mosaicImg}
+            emptyFallback="neutral"
           />
         </div>
       ))}
