@@ -270,93 +270,87 @@ export function ClientDashboardView({
                   {mirrorManagementActions}
                 </div>
               </div>
-              {showAssignedAgentPanel ? (
-              <div className="relative w-full shrink-0 pt-2 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:pt-0">
-                {agent ? (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className={`absolute right-0 top-2 z-10 h-9 w-9 shrink-0 rounded-full bg-white lg:top-0 ${outlineSecondaryClass}`}
-                      aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
-                      onClick={goMessagesIcon}
-                    >
-                      <MessageSquare className="h-4 w-4 text-gray-700" />
-                      {unreadCount > 0 ? (
-                        <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
-                          {unreadCount > 9 ? "9+" : unreadCount}
-                        </span>
-                      ) : null}
-                    </Button>
-                    <div className="flex flex-col items-center gap-2 pr-11 lg:pr-12">
-                      <div className="flex max-w-full items-start gap-3">
-                        <Avatar className="h-16 w-16 shrink-0 ring-1 ring-gray-200">
-                          <AvatarImage src={agent.headshot_url || ""} />
-                          <AvatarFallback className="text-sm font-medium text-gray-600">
-                            {agent.first_name[0]}
-                            {agent.last_name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
-                          <p className="flex items-center gap-2 text-sm font-bold text-gray-900">
-                            {agentPresenceOnline ? (
-                              <span
-                                className="h-2 w-2 shrink-0 rounded-full bg-[#50C878]"
-                                title="Recently active"
-                                aria-label="Recently active"
-                              />
-                            ) : null}
-                            <span>
-                              {agent.first_name} {agent.last_name}
-                            </span>
-                          </p>
-                          {agent.company ? <p className="text-xs text-gray-500">{agent.company}</p> : null}
-                          {agentPhoneFmt ? (
-                            <a href={agentPhoneFmt.telHref} className="block text-sm text-gray-800 hover:underline">
-                              {agentPhoneFmt.display}
-                            </a>
+              {variant === "buyer" && agent ? (
+                <div className="relative w-full shrink-0 pt-2 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:pt-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={`absolute right-0 top-2 z-10 h-9 w-9 shrink-0 rounded-full bg-white lg:top-0 ${outlineSecondaryClass}`}
+                    aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
+                    onClick={goMessagesIcon}
+                  >
+                    <MessageSquare className="h-4 w-4 text-gray-700" />
+                    {unreadCount > 0 ? (
+                      <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    ) : null}
+                  </Button>
+                  <div className="flex flex-col items-center gap-2 pr-11 lg:pr-12">
+                    <div className="flex max-w-full items-start gap-3">
+                      <Avatar className="h-16 w-16 shrink-0 ring-1 ring-gray-200">
+                        <AvatarImage src={agent.headshot_url || ""} />
+                        <AvatarFallback className="text-sm font-medium text-gray-600">
+                          {agent.first_name[0]}
+                          {agent.last_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
+                        <p className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                          {agentPresenceOnline ? (
+                            <span
+                              className="h-2 w-2 shrink-0 rounded-full bg-[#50C878]"
+                              title="Recently active"
+                              aria-label="Recently active"
+                            />
                           ) : null}
-                          <a
-                            href={`mailto:${agent.email}`}
-                            className="block break-all text-xs leading-snug text-gray-600 hover:underline"
-                          >
-                            {agent.email}
+                          <span>
+                            {agent.first_name} {agent.last_name}
+                          </span>
+                        </p>
+                        {agent.company ? <p className="text-xs text-gray-500">{agent.company}</p> : null}
+                        {agentPhoneFmt ? (
+                          <a href={agentPhoneFmt.telHref} className="block text-sm text-gray-800 hover:underline">
+                            {agentPhoneFmt.display}
                           </a>
-                        </div>
+                        ) : null}
+                        <a
+                          href={`mailto:${agent.email}`}
+                          className="block break-all text-xs leading-snug text-gray-600 hover:underline"
+                        >
+                          {agent.email}
+                        </a>
                       </div>
-                      <div className="flex w-full max-w-[19rem] shrink-0 flex-row flex-nowrap items-center justify-center gap-2 sm:gap-3">
+                    </div>
+                    <div className="flex w-full max-w-[19rem] shrink-0 flex-row flex-nowrap items-center justify-center gap-2 sm:gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={`h-9 shrink-0 whitespace-nowrap rounded-md px-3 text-xs sm:text-sm ${outlineSecondaryClass}`}
+                        onClick={() => {
+                          window.location.href = `mailto:${agent.email}`;
+                        }}
+                      >
+                        <Mail className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
+                        Email
+                      </Button>
+                      {showBuyerSelfServiceChrome ? (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className={`h-9 shrink-0 whitespace-nowrap rounded-md px-3 text-xs sm:text-sm ${outlineSecondaryClass}`}
-                          onClick={() => {
-                            window.location.href = `mailto:${agent.email}`;
-                          }}
+                          className="h-9 shrink-0 whitespace-nowrap rounded-md border border-red-200/80 bg-white px-2.5 text-xs text-red-700 shadow-sm transition-shadow duration-200 hover:bg-red-50 hover:shadow-sm sm:px-3 sm:text-sm"
+                          onClick={() => setShowEndDialog?.(true)}
                         >
-                          <Mail className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
-                          Email
+                          <UserX className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
+                          End relationship
                         </Button>
-                        {showBuyerSelfServiceChrome ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-9 shrink-0 whitespace-nowrap rounded-md border border-red-200/80 bg-white px-2.5 text-xs text-red-700 shadow-sm transition-shadow duration-200 hover:bg-red-50 hover:shadow-sm sm:px-3 sm:text-sm"
-                            onClick={() => setShowEndDialog?.(true)}
-                          >
-                            <UserX className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
-                            End relationship
-                          </Button>
-                        ) : null}
-                      </div>
+                      ) : null}
                     </div>
-                  </>
-                ) : (
-                  <p className="text-xs text-gray-500 lg:text-right">No agent linked yet.</p>
-                )}
-              </div>
+                  </div>
+                </div>
               ) : null}
             </div>
           </section>
