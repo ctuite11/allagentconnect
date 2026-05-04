@@ -625,7 +625,7 @@ export default function ClientDashboard() {
         setShowEndDialog={setShowEndDialog}
       />
 
-            {/* End Relationship Dialog */}
+      {/* End Relationship Dialog */}
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
