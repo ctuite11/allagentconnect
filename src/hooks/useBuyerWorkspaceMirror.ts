@@ -102,6 +102,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [client, setClient] = useState<BuyerMirrorClient | null>(null);
   const [unreadCount] = useState(0);
+  const [resolvedBuyerUserId, setResolvedBuyerUserId] = useState<string | null>(null);
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [hotSheetPreviewMatchCountsById, setHotSheetPreviewMatchCountsById] = useState<Record<string, number>>({});
@@ -109,6 +110,9 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
 
   const { isOnline: agentPresenceOnline } = useAgentLastSeen(agent?.id);
+  const { isOnline: buyerPresenceOnline } = useAgentLastSeen(
+    resolvedBuyerUserId ?? undefined,
+  );
 
   const refresh = () => setRefreshKey((k) => k + 1);
 
@@ -116,6 +120,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     if (!buyerClientId || !agentUserId) {
       setClient(null);
       setBuyerDisplayName("");
+      setResolvedBuyerUserId(null);
       setLoading(false);
       return;
     }
@@ -136,6 +141,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
         if (cancelled || clientErr || !clientRow) {
           setClient(null);
           setBuyerDisplayName("");
+          setResolvedBuyerUserId(null);
           setAgent(null);
           setHotSheets([]);
           setFavorites([]);
@@ -147,6 +153,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           console.warn("[BuyerWorkspaceMirror] client.agent_id does not match current agent");
           setClient(null);
           setBuyerDisplayName("");
+          setResolvedBuyerUserId(null);
           setAgent(null);
           setHotSheets([]);
           setFavorites([]);
@@ -167,29 +174,46 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
         });
 
         const fn = typeof clientRow.first_name === "string" ? clientRow.first_name.trim() : "";
-        setBuyerFirstName(fn || null);
+        const ln = typeof clientRow.last_name === "string" ? clientRow.last_name.trim() : "";
+        const displayLine = [fn, ln].filter(Boolean).join(" ").trim();
+        setBuyerDisplayName(
+          displayLine || (typeof clientRow.email === "string" ? clientRow.email : ""),
+        );
 
+        const agentProfileId = String(clientRow.agent_id);
         const { data: agentProf } = await supabase
           .from("agent_profiles")
           .select("id,first_name,last_name,email,phone,company,headshot_url")
-          .eq("id", agentUserId)
+          .eq("id", agentProfileId)
           .maybeSingle();
 
         if (!cancelled && agentProf) {
           setAgent(agentProf as AgentInfo);
+        } else if (!cancelled) {
+          setAgent(null);
         }
 
         const buyerUserId = await resolveBuyerAuthUserId({
           email: clientRow.email,
           agent_user_id: clientRow.agent_user_id,
         });
+        if (!cancelled) {
+          setResolvedBuyerUserId(buyerUserId);
+        }
 
         const buyerEmailNorm = (clientRow.email || "").toLowerCase().trim();
 
         async function loadMirrorHotSheets(userId: string | null, emailNorm: string) {
           const allHotSheetIds = new Set<string>();
 
-          const { data: hscRows } = await supabase.from("hot_sheet_clients").select("hot_sheet_id").eq("client_id", buyerClientId);
+          const { data: hscRows, error: hscErr } = await supabase
+            .from("hot_sheet_clients")
+            .select("hot_sheet_id")
+            .eq("client_id", buyerClientId);
+
+          if (hscErr) {
+            console.warn("[BuyerWorkspaceMirror] hot_sheet_clients:", hscErr.message);
+          }
 
           for (const row of hscRows || []) {
             const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
@@ -236,6 +260,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
             .order("created_at", { ascending: false });
 
           if (sheetErr || !hotSheetRows) {
+            if (sheetErr) console.warn("[BuyerWorkspaceMirror] hot_sheets:", sheetErr.message);
             setHotSheets([]);
             setHotSheetPreviewPhotosById({});
             setHotSheetPreviewMatchCountsById({});
@@ -254,7 +279,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
         }
 
         async function loadMirrorFavorites(userId: string) {
-          const { data } = await supabase
+          const { data, error: favErr } = await supabase
             .from("favorites")
             .select(
               `
@@ -266,6 +291,12 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
             )
             .eq("user_id", userId)
             .limit(6);
+
+          if (favErr) {
+            console.warn("[BuyerWorkspaceMirror] favorites:", favErr.message);
+            setFavorites([]);
+            return;
+          }
 
           if (!data) {
             setFavorites([]);
@@ -296,6 +327,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
             .limit(6);
 
           if (error) {
+            console.warn("[BuyerWorkspaceMirror] listings (market):", error.message);
             setMarketListings([]);
             return;
           }
@@ -397,6 +429,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     buyerDisplayName,
     agent,
     agentPresenceOnline,
+    buyerPresenceOnline,
     unreadCount,
     hotSheets,
     hotSheetPreviewPhotosById,

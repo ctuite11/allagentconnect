@@ -123,6 +123,29 @@ export default function BuyerAccount() {
         latestListingsPreview={mirror.latestListingsPreview}
         getHotSheetCardPath={(sheetId) => `/hot-sheets/${sheetId}/review`}
         showBuyerSelfServiceChrome={false}
+        buyerPresenceOnline={mirror.buyerPresenceOnline}
+        mirrorManagementActions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-full border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-none transition-colors hover:bg-zinc-50"
+              onClick={() => setEditOpen(true)}
+            >
+              Edit buyer
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-full border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-none transition-colors hover:bg-zinc-50"
+              onClick={() => setRemoveOpen(true)}
+            >
+              Remove buyer
+            </Button>
+          </>
+        }
         onMessagesPrimary={handleGeneralMessage}
         onMessagesIcon={handleGeneralMessage}
         onStatTileNavigate={(label) => {
@@ -140,18 +163,10 @@ export default function BuyerAccount() {
         }}
         topBanner={
           <div className="border-b border-gray-200 bg-white px-4 py-3 md:px-6">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2">
               <Button variant="ghost" size="sm" asChild className="-ml-2 text-gray-600">
                 <Link to="/success-hub/buyers">← Back to buyers</Link>
               </Button>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                  Edit buyer
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setRemoveOpen(true)}>
-                  Remove buyer
-                </Button>
-              </div>
             </div>
           </div>
         }

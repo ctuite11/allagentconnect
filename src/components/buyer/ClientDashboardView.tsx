@@ -129,6 +129,10 @@ export interface ClientDashboardViewProps {
     marketSearch: string;
     favoritesEmptySearch: string;
   };
+  /** Buyer auth user presence — green dot beside name (e.g. agent mirror). */
+  buyerPresenceOnline?: boolean;
+  /** Extra outline actions in the header row (e.g. Edit / Remove buyer on agent mirror). */
+  mirrorManagementActions?: ReactNode;
 }
 
 const buyerHeaderSoftBtn =
@@ -196,6 +200,8 @@ export function ClientDashboardView({
   topBanner,
   onStatTileNavigate,
   dashboardPaths,
+  buyerPresenceOnline = false,
+  mirrorManagementActions,
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
@@ -226,7 +232,16 @@ export function ClientDashboardView({
           <section className={`${aacCardShell} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
-                <h1 className="text-2xl font-semibold text-zinc-950">{buyerDisplayName.trim()}</h1>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-semibold text-zinc-950">{buyerDisplayName.trim()}</h1>
+                  {buyerPresenceOnline ? (
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-[#50C878]"
+                      title="Recently active"
+                      aria-label="Recently active"
+                    />
+                  ) : null}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {buyerEmail?.trim() ? (
                     <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
@@ -252,8 +267,10 @@ export function ClientDashboardView({
                       Add a Friend
                     </Button>
                   ) : null}
+                  {mirrorManagementActions}
                 </div>
               </div>
+              {showAssignedAgentPanel ? (
               <div className="relative w-full shrink-0 pt-2 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:pt-0">
                 {agent ? (
                   <>
@@ -340,6 +357,7 @@ export function ClientDashboardView({
                   <p className="text-xs text-gray-500 lg:text-right">No agent linked yet.</p>
                 )}
               </div>
+              ) : null}
             </div>
           </section>
 
