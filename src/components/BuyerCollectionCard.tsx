@@ -66,15 +66,15 @@ export function BuyerCollectionCard({
       <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
         <div className="min-w-0 shrink-0">
           <h3 className="truncate text-lg font-semibold text-zinc-900">{clientName}</h3>
-          <p className="mt-0.5 text-sm text-zinc-500">
-            {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className="mt-auto flex w-full shrink-0 items-center justify-end pt-3">
-          <span className="pointer-events-none inline-flex items-center gap-1.5 text-sm font-medium text-[#0E56F5]">
-            <Eye className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-            View
-          </span>
+          <div className="mt-2 flex items-center justify-between">
+            <p className="text-sm text-zinc-500">
+              {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}
+            </p>
+            <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
+              <Eye className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+              <span>View</span>
+            </div>
+          </div>
         </div>
       </div>
     </article>
