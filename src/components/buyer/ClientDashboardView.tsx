@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX } from "lucide-react";
+import { Heart, MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import {
@@ -102,6 +102,8 @@ export interface ClientDashboardViewProps {
   buyerDisplayName: string;
   /** Logged-in buyer or CRM client — used for header mailto. */
   buyerEmail: string | null;
+  /** CRM / mirror — buyer phone line under name (optional). */
+  buyerPhoneFmt?: { display: string; telHref: string } | null;
   agent: ClientDashboardAgentInfo | null;
   agentPresenceOnline: boolean;
   agentPhoneFmt: { display: string; telHref: string } | null;
@@ -242,6 +244,32 @@ export function ClientDashboardView({
                     />
                   ) : null}
                 </div>
+                {variant === "agent" && (buyerEmail?.trim() || buyerPhoneFmt) ? (
+                  <div className="flex flex-col gap-1.5 text-xs text-zinc-500">
+                    {buyerEmail?.trim() ? (
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 shrink-0 text-zinc-400" aria-hidden />
+                        <a
+                          href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
+                          className="min-w-0 truncate text-zinc-600 hover:text-zinc-900 hover:underline"
+                        >
+                          {buyerEmail.trim()}
+                        </a>
+                      </span>
+                    ) : null}
+                    {buyerPhoneFmt ? (
+                      <span className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 shrink-0 text-zinc-400" aria-hidden />
+                        <a
+                          href={buyerPhoneFmt.telHref}
+                          className="text-zinc-600 hover:text-zinc-900 hover:underline"
+                        >
+                          {buyerPhoneFmt.display}
+                        </a>
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {buyerEmail?.trim() ? (
                     <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>

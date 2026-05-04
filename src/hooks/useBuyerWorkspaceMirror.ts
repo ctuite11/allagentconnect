@@ -203,7 +203,11 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
 
         const buyerEmailNorm = (clientRow.email || "").toLowerCase().trim();
 
-        async function loadMirrorHotSheets(userId: string | null, emailNorm: string) {
+        /** Same union as buyer `/client/dashboard`: hot_sheet_clients + accepted share_tokens. */
+        async function collectMirrorHotSheetIds(
+          userId: string | null,
+          emailNorm: string,
+        ): Promise<string[]> {
           const allHotSheetIds = new Set<string>();
 
           const { data: hscRows, error: hscErr } = await supabase
@@ -246,7 +250,11 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
             }
           }
 
-          if (!allHotSheetIds.size) {
+          return [...allHotSheetIds];
+        }
+
+        async function loadMirrorHotSheetsFromIds(hotSheetIds: string[]) {
+          if (!hotSheetIds.length) {
             setHotSheets([]);
             setHotSheetPreviewPhotosById({});
             setHotSheetPreviewMatchCountsById({});
@@ -256,7 +264,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           const { data: hotSheetRows, error: sheetErr } = await supabase
             .from("hot_sheets")
             .select("id, name, user_id, criteria, created_at, is_active, last_sent_at")
-            .in("id", [...allHotSheetIds])
+            .in("id", hotSheetIds)
             .order("created_at", { ascending: false });
 
           if (sheetErr || !hotSheetRows) {
@@ -278,42 +286,93 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           setHotSheetPreviewMatchCountsById(countsById);
         }
 
-        async function loadMirrorFavorites(userId: string) {
-          const { data, error: favErr } = await supabase
-            .from("favorites")
-            .select(
-              `
+        /**
+         * Matches buyer dashboard `favorites` table plus `hot_sheet_favorites` for this buyer’s hot sheets
+         * (same idea as `useBuyerDashboard` aggregating saved listings from hot sheets).
+         */
+        async function loadMirrorFavoritesMerged(userId: string | null, hotSheetIds: string[]) {
+          const seenListingIds = new Set<string>();
+          const merged: Favorite[] = [];
+
+          if (userId) {
+            const { data, error: favErr } = await supabase
+              .from("favorites")
+              .select(
+                `
               id,
               listing:listings (
                 id, address, city, state, price, bedrooms, bathrooms, photos
               )
             `,
-            )
-            .eq("user_id", userId)
-            .limit(6);
+              )
+              .eq("user_id", userId)
+              .limit(40);
 
-          if (favErr) {
-            console.warn("[BuyerWorkspaceMirror] favorites:", favErr.message);
-            setFavorites([]);
-            return;
+            if (favErr) {
+              console.warn("[BuyerWorkspaceMirror] favorites:", favErr.message);
+            } else if (data?.length) {
+              type Row = (typeof data)[number] & {
+                listing?: Favorite["listing"] | Favorite["listing"][] | null;
+              };
+              const normalized = (data as Row[])
+                .map((row) => {
+                  const raw = row.listing;
+                  const single = Array.isArray(raw) ? raw[0] : raw;
+                  if (single == null) return null;
+                  return { ...row, listing: single } as Favorite;
+                })
+                .filter((r): r is Favorite => r != null);
+
+              for (const fav of normalized) {
+                seenListingIds.add(fav.listing.id);
+                merged.push(fav);
+              }
+            }
           }
 
-          if (!data) {
-            setFavorites([]);
-            return;
+          if (hotSheetIds.length > 0) {
+            const { data: hsfRows, error: hsfErr } = await supabase
+              .from("hot_sheet_favorites")
+              .select("id, listing_id")
+              .in("hot_sheet_id", hotSheetIds);
+
+            if (hsfErr) {
+              console.warn("[BuyerWorkspaceMirror] hot_sheet_favorites:", hsfErr.message);
+            } else if (hsfRows?.length) {
+              const listingIds = [...new Set(hsfRows.map((r) => r.listing_id))];
+              const { data: listingsRows, error: listErr } = await supabase
+                .from("listings")
+                .select("id, address, city, state, price, bedrooms, bathrooms, photos")
+                .in("id", listingIds);
+
+              if (listErr) {
+                console.warn("[BuyerWorkspaceMirror] listings (hsf):", listErr.message);
+              } else {
+                const byId = new Map((listingsRows ?? []).map((l) => [l.id, l]));
+                for (const row of hsfRows) {
+                  const listing = byId.get(row.listing_id);
+                  if (!listing) continue;
+                  if (seenListingIds.has(listing.id)) continue;
+                  seenListingIds.add(listing.id);
+                  merged.push({
+                    id: `hsf-${row.id}`,
+                    listing: {
+                      id: listing.id,
+                      address: String(listing.address ?? ""),
+                      city: String(listing.city ?? ""),
+                      state: String(listing.state ?? ""),
+                      price: Number(listing.price ?? 0),
+                      bedrooms: listing.bedrooms ?? null,
+                      bathrooms: listing.bathrooms ?? null,
+                      photos: listing.photos,
+                    },
+                  });
+                }
+              }
+            }
           }
 
-          type Row = (typeof data)[number] & { listing?: Favorite["listing"] | Favorite["listing"][] | null };
-          const normalized = (data as Row[])
-            .map((row) => {
-              const raw = row.listing;
-              const single = Array.isArray(raw) ? raw[0] : raw;
-              if (single == null) return null;
-              return { ...row, listing: single } as Favorite;
-            })
-            .filter((r): r is Favorite => r != null);
-
-          setFavorites(normalized);
+          setFavorites(merged.slice(0, 80));
         }
 
         async function loadMirrorMarket() {
@@ -368,9 +427,11 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           );
         }
 
+        const hotSheetIdList = await collectMirrorHotSheetIds(buyerUserId, buyerEmailNorm);
+
         await Promise.all([
-          loadMirrorHotSheets(buyerUserId, buyerEmailNorm),
-          buyerUserId ? loadMirrorFavorites(buyerUserId) : Promise.resolve().then(() => setFavorites([])),
+          loadMirrorHotSheetsFromIds(hotSheetIdList),
+          loadMirrorFavoritesMerged(buyerUserId, hotSheetIdList),
           loadMirrorMarket(),
         ]);
       } finally {
@@ -382,7 +443,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     return () => {
       cancelled = true;
     };
-  }, [buyerClientId, agentUserId]);
+  }, [buyerClientId, agentUserId, refreshKey]);
 
   const latestListingsPreview = (marketListings || [])
     .filter((l): l is MarketListing => l != null && Boolean(l.id))

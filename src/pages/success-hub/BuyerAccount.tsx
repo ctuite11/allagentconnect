@@ -103,6 +103,7 @@ export default function BuyerAccount() {
   }
 
   const client = mirror.client;
+  const buyerPhoneFmt = formatUsPhoneForDisplay(client.phone);
 
   return (
     <>
@@ -111,6 +112,7 @@ export default function BuyerAccount() {
         navigate={navigate}
         buyerDisplayName={capitalizedName}
         buyerEmail={client.email}
+        buyerPhoneFmt={buyerPhoneFmt}
         agent={mirror.agent}
         agentPresenceOnline={mirror.agentPresenceOnline}
         agentPhoneFmt={agentPhoneFmt}
