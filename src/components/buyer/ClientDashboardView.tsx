@@ -25,7 +25,6 @@ import {
   buyerPreviewSectionHeaderRow as previewSectionHeaderRowClass,
   buyerPreviewSectionMarketContent as previewSectionMarketContentClass,
   buyerPreviewSectionTitleWrap as previewSectionTitleWrapClass,
-  buyerPrimaryCta as primaryCtaClass,
   buyerSectionCard as aacCardShell,
   buyerSectionDesc as dashSectionDescClass,
   buyerSectionTitle as dashSectionTitleClass,
@@ -99,7 +98,10 @@ export type ClientDashboardVariant = "buyer" | "agent";
 export interface ClientDashboardViewProps {
   variant: ClientDashboardVariant;
   navigate: NavigateFunction;
-  buyerFirstName: string | null;
+  /** Full name (first + last) for the header title. */
+  buyerDisplayName: string;
+  /** Logged-in buyer or CRM client — used for header mailto. */
+  buyerEmail: string | null;
   agent: ClientDashboardAgentInfo | null;
   agentPresenceOnline: boolean;
   agentPhoneFmt: { display: string; telHref: string } | null;
@@ -128,6 +130,9 @@ export interface ClientDashboardViewProps {
     favoritesEmptySearch: string;
   };
 }
+
+const buyerHeaderSoftBtn =
+  "h-9 rounded-full border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-none transition-colors hover:bg-zinc-50";
 
 function getPrimaryPhotoUrl(photos: unknown): string {
   if (!photos) return "/placeholder.svg";
@@ -170,7 +175,8 @@ function getPrimaryPhotoUrl(photos: unknown): string {
 export function ClientDashboardView({
   variant,
   navigate,
-  buyerFirstName,
+  buyerDisplayName,
+  buyerEmail,
   agent,
   agentPresenceOnline,
   agentPhoneFmt,
@@ -188,11 +194,24 @@ export function ClientDashboardView({
   setAddFriendOpen,
   setShowEndDialog,
   topBanner,
+  onStatTileNavigate,
+  dashboardPaths,
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
 
+  const paths = {
+    hotSheetsViewAll: dashboardPaths?.hotSheetsViewAll ?? "/hot-sheets",
+    favoritesViewAll: dashboardPaths?.favoritesViewAll ?? "/favorites",
+    marketSearch: dashboardPaths?.marketSearch ?? "/client/search",
+    favoritesEmptySearch: dashboardPaths?.favoritesEmptySearch ?? "/client/search",
+  };
+
   const statNavigate = (label: string) => {
+    if (onStatTileNavigate) {
+      onStatTileNavigate(label);
+      return;
+    }
     if (label === "Favorites") navigate("/favorites");
     if (label === "New Matches") navigate("/client/search");
     if (label === "Unread Messages") navigate("/messages");
@@ -207,31 +226,32 @@ export function ClientDashboardView({
           <section className={`${aacCardShell} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
-                <h1 className="text-2xl font-semibold text-zinc-950">{buyerFirstName?.trim() ?? ""}</h1>
+                <h1 className="text-2xl font-semibold text-zinc-950">{buyerDisplayName.trim()}</h1>
                 <div className="flex flex-wrap gap-2">
-                  {showBuyerSelfServiceChrome ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        type="button"
-                        className={`h-9 rounded-full px-4 ${outlineSecondaryClass}`}
-                        onClick={() => setAddFriendOpen?.(true)}
-                      >
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Add a Friend
-                      </Button>
-                      <Button size="sm" className={`h-9 ${primaryCtaClass}`} onClick={goMessages}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Messages
-                      </Button>
-                    </>
-                  ) : (
-                    <Button size="sm" className={`h-9 ${primaryCtaClass}`} onClick={goMessages}>
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      Messages
+                  {buyerEmail?.trim() ? (
+                    <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
+                      <a href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Email
+                      </a>
                     </Button>
-                  )}
+                  ) : null}
+                  <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} onClick={goMessages}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Message
+                  </Button>
+                  {showBuyerSelfServiceChrome ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      className={buyerHeaderSoftBtn}
+                      onClick={() => setAddFriendOpen?.(true)}
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Add a Friend
+                    </Button>
+                  ) : null}
                 </div>
               </div>
               <div className="relative w-full shrink-0 pt-2 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:pt-0">

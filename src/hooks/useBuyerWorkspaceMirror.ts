@@ -98,7 +98,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
   const [loading, setLoading] = useState(true);
   const [relationshipHydrating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [buyerFirstName, setBuyerFirstName] = useState<string | null>(null);
+  const [buyerDisplayName, setBuyerDisplayName] = useState("");
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [client, setClient] = useState<BuyerMirrorClient | null>(null);
   const [unreadCount] = useState(0);
@@ -115,6 +115,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
   useEffect(() => {
     if (!buyerClientId || !agentUserId) {
       setClient(null);
+      setBuyerDisplayName("");
       setLoading(false);
       return;
     }
@@ -126,12 +127,15 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
       try {
         const { data: clientRow, error: clientErr } = await supabase
           .from("clients")
-          .select("id,first_name,last_name,email,phone,notes,client_type,agent_id,agent_user_id")
+          .select(
+            "id,first_name,last_name,email,phone,notes,client_type,agent_id,agent_user_id",
+          )
           .eq("id", buyerClientId)
           .maybeSingle();
 
         if (cancelled || clientErr || !clientRow) {
           setClient(null);
+          setBuyerDisplayName("");
           setAgent(null);
           setHotSheets([]);
           setFavorites([]);
@@ -142,6 +146,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
         if (String(clientRow.agent_id) !== agentUserId) {
           console.warn("[BuyerWorkspaceMirror] client.agent_id does not match current agent");
           setClient(null);
+          setBuyerDisplayName("");
           setAgent(null);
           setHotSheets([]);
           setFavorites([]);
@@ -389,7 +394,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
   return {
     loading,
     relationshipHydrating,
-    buyerFirstName,
+    buyerDisplayName,
     agent,
     agentPresenceOnline,
     unreadCount,

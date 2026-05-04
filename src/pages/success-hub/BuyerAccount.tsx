@@ -109,7 +109,8 @@ export default function BuyerAccount() {
       <ClientDashboardView
         variant="agent"
         navigate={navigate}
-        buyerFirstName={mirror.buyerFirstName}
+        buyerDisplayName={capitalizedName}
+        buyerEmail={client.email}
         agent={mirror.agent}
         agentPresenceOnline={mirror.agentPresenceOnline}
         agentPhoneFmt={agentPhoneFmt}
@@ -149,9 +150,6 @@ export default function BuyerAccount() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setRemoveOpen(true)}>
                   Remove buyer
-                </Button>
-                <Button size="sm" onClick={() => setCreateHsOpen(true)}>
-                  Create hot sheet
                 </Button>
               </div>
             </div>
