@@ -6,8 +6,15 @@ interface DashboardBuyersTableProps {
 }
 
 function displayName(b: SuccessHubSummary["buyers"][number]) {
-  const n = [b.first_name, b.last_name].filter(Boolean).join(" ").trim();
-  return n || b.email || "Buyer";
+  const n = [b.first_name, b.last_name]
+    .filter((x): x is string => typeof x === "string" && Boolean(x.trim()))
+    .map((x) => x.trim())
+    .join(" ")
+    .trim();
+  if (n) return n;
+  const em = typeof b.email === "string" ? b.email.trim() : "";
+  if (em) return em;
+  return "Buyer";
 }
 
 function formatPhone(phone: string | null) {
@@ -53,7 +60,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                       <span className="block truncate text-[13px] font-medium text-neutral-900">{displayName(b)}</span>
                       <div className="mt-0.5 space-y-0.5 text-[12px] text-neutral-500">
                         <p className="truncate">{formatPhone(b.phone)}</p>
-                        <p className="truncate">{b.email || "—"}</p>
+                        <p className="truncate">{typeof b.email === "string" && b.email.trim() ? b.email.trim() : "—"}</p>
                         <p className="text-[11px] text-neutral-600">
                           <span className="tabular-nums font-medium">{b.hotSheetCount}</span> Hot Sheets ·{" "}
                           <span className="tabular-nums font-medium">{b.favoriteCount}</span> Favorites
@@ -94,7 +101,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                         {formatPhone(b.phone)}
                       </td>
                       <td className="max-w-[14rem] truncate px-2.5 py-1.5 text-[12px] text-neutral-600">
-                        {b.email || "—"}
+                        {typeof b.email === "string" && b.email.trim() ? b.email.trim() : "—"}
                       </td>
                       <td className="px-1.5 py-1.5 text-center text-[12px] tabular-nums text-neutral-600">
                         {b.hotSheetCount}

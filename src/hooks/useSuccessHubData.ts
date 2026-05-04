@@ -133,6 +133,17 @@ function safeLowerEmail(v: unknown): string | null {
   return s ? s.toLowerCase() : null;
 }
 
+/** `client_agent_relationships` may use `client_id` and/or `crm_client_id` for the same `clients` row. */
+function resolveRelationshipClientId(row: {
+  client_id?: string | null;
+  crm_client_id?: string | null;
+}): string | null {
+  const raw = row?.client_id ?? row?.crm_client_id;
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  return s || null;
+}
+
 /** Belt+suspenders: log warn for malformed tokens but don't crash */
 function validateTokenPayload(t: any, context: string): void {
   const p = t?.payload ?? {};
@@ -189,6 +200,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         hotSheetsCountRes,
         listingsPreviewRes,
         relationshipsBuyersPreviewRes,
+        allAgentHotSheetsRes,
         relationshipsActiveCountRes,
         inboxPreviewRes,
         inboxUnreadCountRes,
@@ -238,14 +250,17 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           .order("updated_at", { ascending: false })
           .limit(12),
 
-        // Buyer relationships (active + pending) — preview rows only
+        // Buyer relationships (active + pending)
         supabase
           .from("client_agent_relationships")
-          .select("id,client_id,agent_id,status,created_at")
+          .select("id,client_id,crm_client_id,agent_id,status,created_at")
           .eq("agent_id", agentId)
           .in("status", ["active", "pending"])
           .order("created_at", { ascending: false })
-          .limit(15),
+          .limit(100),
+
+        // All agent hot sheet IDs — merge buyers linked via hot_sheet_clients (even if CRM row used only crm_client_id)
+        supabase.from("hot_sheets").select("id").eq("user_id", agentId),
 
         supabase
           .from("client_agent_relationships")
@@ -304,6 +319,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
       logQueryError("hot_sheets(count)", hotSheetsCountRes?.error ?? null);
       logQueryError("listings(preview)", listingsPreviewRes?.error ?? null);
       logQueryError("client_agent_relationships(preview)", relationshipsBuyersPreviewRes?.error ?? null);
+      logQueryError("hot_sheets(all ids agent)", allAgentHotSheetsRes?.error ?? null);
       logQueryError("client_agent_relationships(active count)", relationshipsActiveCountRes?.error ?? null);
       logQueryError("conversation_inbox(preview)", inboxPreviewRes?.error ?? null);
       logQueryError("conversation_inbox(unread count)", inboxUnreadCountRes?.error ?? null);
@@ -387,17 +403,16 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         lastUpdated: hs.updated_at ?? new Date().toISOString(),
       }));
 
-      // Buyers base (enrich in Wave 2) — preserves relationship status per row
+      // Buyers: relationships (`client_id` or `crm_client_id`) + anyone on agent hot sheets via hot_sheet_clients
       const buyerRelationshipRows = (relationshipsBuyersPreviewRes?.data ?? []) as any[];
-      const buyerClientIds = buyerRelationshipRows
-        .map((r) => r.client_id)
-        .filter(Boolean)
-        .map(String);
+      const buyersById = new Map<string, SuccessHubSummary["buyers"][0]>();
 
-      const buyersBase: SuccessHubSummary["buyers"] = buyerRelationshipRows.map((r) => {
+      for (const r of buyerRelationshipRows) {
+        const cid = resolveRelationshipClientId(r);
+        if (!cid || buyersById.has(cid)) continue;
         const status = r?.status === "pending" ? "pending" : "active";
-        return {
-          id: String(r.client_id),
+        buyersById.set(cid, {
+          id: cid,
           first_name: null,
           last_name: null,
           email: "",
@@ -408,8 +423,42 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           lastActivity: null,
           hasUnread: false,
           attentionNote: null as string | null,
-        };
-      });
+        });
+      }
+
+      const allHotSheetIds = ((allAgentHotSheetsRes?.data ?? []) as any[]).map((row) => String(row.id));
+      if (allHotSheetIds.length > 0) {
+        const hscAgentSheetsRes = await supabase
+          .from("hot_sheet_clients")
+          .select("client_id")
+          .in("hot_sheet_id", allHotSheetIds);
+        if (!mountedRef.current || loadIdRef.current !== myLoadId) return;
+        logQueryError("hot_sheet_clients(agent hot sheets)", hscAgentSheetsRes?.error ?? null);
+        const hscRows = (hscAgentSheetsRes?.data ?? []) as any[];
+        const seen = new Set<string>();
+        for (const row of hscRows) {
+          const cid = row?.client_id != null ? String(row.client_id).trim() : "";
+          if (!cid || seen.has(cid)) continue;
+          seen.add(cid);
+          if (buyersById.has(cid)) continue;
+          buyersById.set(cid, {
+            id: cid,
+            first_name: null,
+            last_name: null,
+            email: "",
+            phone: null as string | null,
+            status: "active",
+            hotSheetCount: 0,
+            favoriteCount: 0,
+            lastActivity: null,
+            hasUnread: false,
+            attentionNote: null as string | null,
+          });
+        }
+      }
+
+      const buyersBase: SuccessHubSummary["buyers"] = Array.from(buyersById.values());
+      const buyerClientIds = buyersBase.map((b) => b.id);
 
       // Conversations base (enrich names in Wave 2)
       const conversationsBase = ((inboxPreviewRes?.data ?? []) as any[]).map((c) => ({
@@ -521,6 +570,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           ? supabase
               .from("clients")
               .select("id,first_name,last_name,email,phone,updated_at,created_at")
+              .eq("agent_id", agentId)
               .in("id", buyerClientIds)
           : (Promise.resolve({ data: [], error: null }) as any),
 
@@ -635,11 +685,15 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           attentionNote = "Hot sheet invite pending";
         }
 
+        const fn = typeof c?.first_name === "string" ? c.first_name.trim() : "";
+        const ln = typeof c?.last_name === "string" ? c.last_name.trim() : "";
+        const em = typeof c?.email === "string" ? c.email.trim() : "";
+
         return {
           ...b,
-          first_name: c?.first_name ?? null,
-          last_name: c?.last_name ?? null,
-          email: c?.email ?? "",
+          first_name: fn || null,
+          last_name: ln || null,
+          email: em,
           phone: typeof c?.phone === "string" && c.phone.trim() ? c.phone.trim() : null,
           hotSheetCount: hsByClient.get(b.id) ?? 0,
           favoriteCount,
