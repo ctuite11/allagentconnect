@@ -1,6 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
+/** Matches `BuyersList`: `navigate(\`/success-hub/buyers/${b.clientId}\`)` where id is `clients.id`. */
+function buyerAccountPath(clientId: string) {
+  return `/success-hub/buyers/${clientId}`;
+}
+
 interface DashboardBuyersTableProps {
   buyers: SuccessHubSummary["buyers"];
 }
@@ -24,6 +29,10 @@ function formatPhone(phone: string | null) {
 
 export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
   const navigate = useNavigate();
+
+  const openBuyer = (clientId: string) => {
+    navigate(buyerAccountPath(clientId));
+  };
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
@@ -54,8 +63,8 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                   <li key={b.id}>
                     <button
                       type="button"
-                      className="w-full px-3 py-2 text-left transition-colors hover:bg-zinc-50/80"
-                      onClick={() => navigate(`/success-hub/buyers/${b.id}`)}
+                      className="w-full cursor-pointer px-3 py-2 text-left transition-colors duration-150 hover:bg-zinc-50/90 active:bg-zinc-50"
+                      onClick={() => openBuyer(b.id)}
                     >
                       <span className="block truncate text-[13px] font-medium text-neutral-900">{displayName(b)}</span>
                       <div className="mt-0.5 space-y-0.5 text-[12px] text-neutral-500">
@@ -91,8 +100,16 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                   {buyers.map((b) => (
                     <tr
                       key={b.id}
-                      className="cursor-pointer bg-white hover:bg-neutral-50/40"
-                      onClick={() => navigate(`/success-hub/buyers/${b.id}`)}
+                      role="button"
+                      tabIndex={0}
+                      className="cursor-pointer bg-white outline-none transition-colors duration-150 hover:bg-zinc-50/90 focus-visible:bg-zinc-50/90 focus-visible:ring-2 focus-visible:ring-zinc-200 focus-visible:ring-inset"
+                      onClick={() => openBuyer(b.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openBuyer(b.id);
+                        }
+                      }}
                     >
                       <td className="max-w-[9rem] truncate px-2.5 py-1.5 text-[13px] font-medium text-neutral-900">
                         {displayName(b)}
