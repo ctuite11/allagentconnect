@@ -4070,7 +4070,7 @@ export type Database = {
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
       get_client_favorites_for_agent: {
-        Args: { p_client_id: string }
+        Args: { p_buyer_user_id: string; p_crm_client_id?: string | null }
         Returns: {
           address: string
           bathrooms: number

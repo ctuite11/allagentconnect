@@ -1,9 +1,9 @@
 /**
  * Single source for buyer “saved listings” on the dashboard card:
- * - Generic MLS favorites: table `favorites` filtered by auth `user_id` (same as /client/dashboard).
- * - Agent viewing a client: `get_client_favorites_for_agent(p_client_id)` where p_client_id is that same auth user id
- *   (agents cannot read `favorites` directly under RLS).
- * - Hot sheet saves: `hot_sheet_favorites` has `hot_sheet_id` + `listing_id` only (no client_id / user_id) — see ClientHotSheet.
+ * - Generic MLS favorites: `favorites.user_id ===` buyer auth UUID (same as /client/dashboard).
+ * - Agents: `get_client_favorites_for_agent(p_buyer_user_id, p_crm_client_id?)` reads those rows after RPC auth
+ *   (CRM ownership / `crm_client_id` relationship / legacy auth `client_id` relationship).
+ * - Hot sheet saves: `hot_sheet_favorites` uses `hot_sheet_id` + `listing_id` only — see ClientHotSheet.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
@@ -87,9 +87,10 @@ export async function loadBuyerGenericFavorites(
   supabase: SupabaseClient,
   buyerAuthUserId: string,
   access: BuyerFavoritesAccess,
-  options?: { limit?: number },
+  options?: { limit?: number; crmClientId?: string | null },
 ): Promise<ClientDashboardFavoriteRow[]> {
   const limit = options?.limit ?? (access === "buyer_self" ? 6 : 40);
+  const crmClientId = options?.crmClientId ?? null;
 
   if (access === "buyer_self") {
     const { data, error } = await supabase
@@ -110,9 +111,17 @@ export async function loadBuyerGenericFavorites(
     return normalizeFavoritesJoin(data, limit);
   }
 
-  const { data: rpcRows, error: rpcErr } = await supabase.rpc("get_client_favorites_for_agent", {
-    p_client_id: buyerAuthUserId,
-  });
+  const rpcPayload: {
+    p_buyer_user_id: string;
+    p_crm_client_id?: string;
+  } = {
+    p_buyer_user_id: buyerAuthUserId,
+  };
+  if (crmClientId) {
+    rpcPayload.p_crm_client_id = crmClientId;
+  }
+
+  const { data: rpcRows, error: rpcErr } = await supabase.rpc("get_client_favorites_for_agent", rpcPayload);
 
   if (rpcErr) {
     console.warn("loadBuyerGenericFavorites agent_mirror:", rpcErr.message);

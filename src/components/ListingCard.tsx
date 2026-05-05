@@ -30,6 +30,27 @@ import {
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
+
+/** Normalize MLS photos (array, JSON string, single URL string) for compact/grid photo helpers. */
+function normalizeListingPhotos(raw: unknown): unknown[] {
+  if (raw == null) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (!t) return [];
+    if (t.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(t) as unknown;
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [t];
+  }
+  return [];
+}
+
 interface ListingCardProps {
   listing: {
     id: string;
@@ -178,6 +199,10 @@ const ListingCard = ({
     loadStatusHistory();
     loadPriceHistory();
   }, [listing.id]);
+
+  useEffect(() => {
+    setCompactPhotoFailed(false);
+  }, [listing.id, currentPhotoIndex]);
 
   // Fetch agent profile for grid view
   useEffect(() => {
@@ -418,7 +443,7 @@ const ListingCard = ({
     return null;
   };
   const displayPrice = listing.price ? formatPrice(listing.price) : (formatPriceRange() || formatPrice(0));
-  const listingPhotos = Array.isArray(listing?.photos) ? listing.photos : [];
+  const listingPhotos = normalizeListingPhotos(listing?.photos);
   const getPhotoByIndex = (index: number) => {
     if (listingPhotos.length > 0) {
       const photo = listingPhotos[index];
@@ -664,7 +689,7 @@ const ListingCard = ({
     const showCarouselArrows = !compactAgentOwned && totalPhotos > 1;
     
     return <Card
-        className="overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full cursor-pointer"
+        className="flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm transition-[box-shadow,border-color] hover:border-zinc-200 hover:shadow-md"
         onClick={() => navigate(`/property/${listing.id}`)}
       >
         <div className="relative group flex-shrink-0">
@@ -719,19 +744,21 @@ const ListingCard = ({
               <FavoriteButton listingId={listing.id} size="icon" photoIcon />
             </div>
           </div> : null}
-          {/* Property type badge overlay */}
-          {listing.property_type && (
+          {/* Property/neighborhood overlays — omitted on agent-owned Success Hub grids (cleaner AAC tile). */}
+          {!compactAgentOwned && listing.property_type && (
             <div className="absolute bottom-2 left-2 z-10">
               <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-2.5 py-1 text-xs font-medium shadow-md backdrop-blur-sm">
                 {listing.property_type}
               </span>
             </div>
           )}
-          {(listing.neighborhood || (listing as any).attom_data?.neighborhood) && <div className="absolute bottom-2 right-2 z-10">
+          {!compactAgentOwned && (listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
+            <div className="absolute bottom-2 right-2 z-10">
               <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-2.5 py-1 text-xs font-medium shadow-md backdrop-blur-sm">
                 {listing.neighborhood || (listing as any).attom_data?.neighborhood}
               </span>
-            </div>}
+            </div>
+          )}
           
           {/* Photo navigation arrows */}
           {showCarouselArrows && (
@@ -753,9 +780,21 @@ const ListingCard = ({
             </>
           )}
           
-          {currentPhoto ? <img src={currentPhoto} alt={listing.address || `${listing.city}, ${listing.state} ${listing.zip_code}`} className="w-full h-48 object-cover cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)} /> : <div className="w-full h-48 bg-muted flex items-center justify-center">
-              <Home className="h-12 w-12 text-muted-foreground" />
-            </div>}
+          {currentPhoto && !compactPhotoFailed ? (
+            <img
+              src={currentPhoto}
+              alt={listing.address ? `${listing.address}, ${listing.city}` : "Listing photo"}
+              className="h-48 w-full cursor-pointer bg-zinc-50 object-cover"
+              loading="lazy"
+              onClick={() => navigate(`/property/${listing.id}`)}
+              onError={() => setCompactPhotoFailed(true)}
+            />
+          ) : (
+            <div
+              className="h-48 w-full shrink-0 bg-zinc-50"
+              aria-hidden
+            />
+          )}
           
           {/* Status Change Banner (top priority) */}
           {!compactAgentOwned && statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>

@@ -290,7 +290,10 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
         async function loadMirrorFavoritesMerged(resolvedUserId: string | null, hotSheetIds: string[]) {
           const genericFavorites =
             resolvedUserId != null && resolvedUserId !== ""
-              ? await loadBuyerGenericFavorites(supabase, resolvedUserId, "agent_mirror", { limit: 40 })
+              ? await loadBuyerGenericFavorites(supabase, resolvedUserId, "agent_mirror", {
+                  limit: 40,
+                  crmClientId: buyerClientId,
+                })
               : [];
 
           const hotSheetFavorites = await fetchHotSheetFavoriteRowsForHotSheetIds(supabase, hotSheetIds);
@@ -435,7 +438,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     hotSheetPreviewPhotosById,
     hotSheetPreviewMatchCountsById,
     favorites,
-    /** Buyer auth UUID used for `get_client_favorites_for_agent` / presence — not CRM `clients.id`. */
+    /** Buyer auth UUID (`favorites.user_id`); CRM id is passed separately to the favorites RPC. */
     resolvedBuyerUserId,
     marketListings,
     latestListingsPreview,

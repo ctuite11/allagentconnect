@@ -1,8 +1,53 @@
 import type { ComponentProps } from "react";
 import ListingCard from "@/components/ListingCard";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
+import { LISTING_STATUS } from "@/constants/status";
 
 export type ListingCardModel = ComponentProps<typeof ListingCard>["listing"];
+
+/** Row shape from RPC `get_client_favorites_for_agent` (joined listing fields). */
+export type AgentClientFavoriteRpcRow = {
+  listing_id: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  price: number | string | null;
+  bedrooms: number | null;
+  bathrooms: number | string | null;
+  square_feet: number | null;
+  property_type: string | null;
+  photos: unknown;
+  created_at?: string | null;
+};
+
+/** Agent «client favorites» page — same `ListingCard` model as Success Hub grids. */
+export function mapAgentClientFavoriteRpcToListingCard(row: AgentClientFavoriteRpcRow): ListingCardModel {
+  const priceRaw = row.price;
+  const baths = row.bathrooms;
+  return {
+    id: row.listing_id,
+    address: row.address ?? "",
+    city: row.city ?? "",
+    state: row.state ?? "",
+    zip_code: row.zip_code ?? "",
+    price: typeof priceRaw === "number" ? priceRaw : Number(priceRaw ?? 0),
+    property_type: row.property_type,
+    bedrooms: row.bedrooms,
+    bathrooms: baths == null ? null : Number(baths),
+    square_feet: row.square_feet,
+    status: LISTING_STATUS.ACTIVE,
+    photos: row.photos,
+    created_at: row.created_at ?? undefined,
+    listing_stats: {
+      view_count: 0,
+      save_count: 0,
+      contact_count: 0,
+      showing_request_count: 0,
+      cumulative_active_days: 0,
+    },
+  } as ListingCardModel;
+}
 
 /** Map Supabase market-activity row for `ListingCard`. */
 export function mapMarketRowToListingCard(row: {
