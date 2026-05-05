@@ -177,6 +177,7 @@ const ListingCard = ({
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [compactPhotoFailed, setCompactPhotoFailed] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [quickOpenHouseDialogOpen, setQuickOpenHouseDialogOpen] = useState(false);
   const [quickOHType, setQuickOHType] = useState<'public' | 'broker'>('public');
@@ -685,7 +686,7 @@ const ListingCard = ({
     const showCompactCommentsRow = buyerCommentRowSignals || (!showCompactComments && legacyCommentRowSignals);
 
     const totalPhotos = getTotalPhotos();
-    const currentPhoto = compactAgentOwned ? getPhotoByIndex(0) : getPhotoByIndex(currentPhotoIndex);
+    const compactPhotoUrl = compactAgentOwned ? getPhotoByIndex(0) : getPhotoByIndex(currentPhotoIndex);
     const showCarouselArrows = !compactAgentOwned && totalPhotos > 1;
     
     return <Card
@@ -780,21 +781,20 @@ const ListingCard = ({
             </>
           )}
           
-          {currentPhoto && !compactPhotoFailed ? (
-            <img
-              src={currentPhoto}
-              alt={listing.address ? `${listing.address}, ${listing.city}` : "Listing photo"}
-              className="h-48 w-full cursor-pointer bg-zinc-50 object-cover"
-              loading="lazy"
-              onClick={() => navigate(`/property/${listing.id}`)}
-              onError={() => setCompactPhotoFailed(true)}
-            />
-          ) : (
-            <div
-              className="h-48 w-full shrink-0 bg-zinc-50"
-              aria-hidden
-            />
-          )}
+          <div className="relative h-48 w-full shrink-0 overflow-hidden bg-zinc-50">
+            {compactPhotoUrl && !compactPhotoFailed ? (
+              <img
+                src={compactPhotoUrl}
+                alt={listing.address ? `${listing.address}, ${listing.city}` : "Listing photo"}
+                className="h-full w-full cursor-pointer object-cover"
+                loading="lazy"
+                onClick={() => navigate(`/property/${listing.id}`)}
+                onError={() => setCompactPhotoFailed(true)}
+              />
+            ) : (
+              <div className="h-full w-full bg-zinc-50" aria-hidden />
+            )}
+          </div>
           
           {/* Status Change Banner (top priority) */}
           {!compactAgentOwned && statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
