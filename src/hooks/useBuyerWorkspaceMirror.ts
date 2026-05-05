@@ -8,6 +8,12 @@ import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
+import {
+  fetchHotSheetFavoriteRowsForHotSheetIds,
+  loadBuyerGenericFavorites,
+  mergeHotSheetFavoriteRowsIntoBuyerFavorites,
+} from "@/lib/loadBuyerFavorites";
+import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
 
 interface AgentInfo {
   id: string;
@@ -36,20 +42,6 @@ interface ShareTokenRow {
   accepted_by_user_id: string | null;
 }
 
-interface Favorite {
-  id: string;
-  listing: {
-    id: string;
-    address: string;
-    city: string;
-    state: string;
-    price: number;
-    bedrooms: number | null;
-    bathrooms: number | null;
-    photos: unknown;
-  };
-}
-
 interface MarketListing {
   id: string;
   address: string;
@@ -74,11 +66,13 @@ async function resolveBuyerAuthUserId(client: {
   email: string;
   agent_user_id: string | null;
 }): Promise<string | null> {
-  if (client.agent_user_id) return client.agent_user_id;
+  if (client.agent_user_id) return String(client.agent_user_id);
   const email = client.email?.trim();
   if (!email) return null;
-  const { data } = await supabase.from("profiles").select("id").ilike("email", email).maybeSingle();
-  return data?.id ? String(data.id) : null;
+  const { data: exact } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
+  if (exact?.id) return String(exact.id);
+  const { data: loose } = await supabase.from("profiles").select("id").ilike("email", email).maybeSingle();
+  return loose?.id ? String(loose.id) : null;
 }
 
 /** CRM row for dialogs and messaging — same fields as `useBuyerDashboard` client. */
@@ -161,26 +155,29 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           return;
         }
 
+        /** CRM `clients` row for this load — used in diagnostics (`client?.id` is CRM id, not auth uid). */
+        const client = clientRow;
+
         setClient({
-          id: clientRow.id,
-          first_name: typeof clientRow.first_name === "string" ? clientRow.first_name : "",
-          last_name: typeof clientRow.last_name === "string" ? clientRow.last_name : "",
-          email: typeof clientRow.email === "string" ? clientRow.email : "",
-          phone: clientRow.phone ?? null,
-          notes: clientRow.notes ?? null,
-          client_type: clientRow.client_type ?? null,
-          agent_id: String(clientRow.agent_id),
-          agent_user_id: clientRow.agent_user_id ?? null,
+          id: client.id,
+          first_name: typeof client.first_name === "string" ? client.first_name : "",
+          last_name: typeof client.last_name === "string" ? client.last_name : "",
+          email: typeof client.email === "string" ? client.email : "",
+          phone: client.phone ?? null,
+          notes: client.notes ?? null,
+          client_type: client.client_type ?? null,
+          agent_id: String(client.agent_id),
+          agent_user_id: client.agent_user_id ?? null,
         });
 
-        const fn = typeof clientRow.first_name === "string" ? clientRow.first_name.trim() : "";
-        const ln = typeof clientRow.last_name === "string" ? clientRow.last_name.trim() : "";
+        const fn = typeof client.first_name === "string" ? client.first_name.trim() : "";
+        const ln = typeof client.last_name === "string" ? client.last_name.trim() : "";
         const displayLine = [fn, ln].filter(Boolean).join(" ").trim();
         setBuyerDisplayName(
-          displayLine || (typeof clientRow.email === "string" ? clientRow.email : ""),
+          displayLine || (typeof client.email === "string" ? client.email : ""),
         );
 
-        const agentProfileId = String(clientRow.agent_id);
+        const agentProfileId = String(client.agent_id);
         const { data: agentProf } = await supabase
           .from("agent_profiles")
           .select("id,first_name,last_name,email,phone,company,headshot_url")
@@ -194,14 +191,14 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
         }
 
         const buyerUserId = await resolveBuyerAuthUserId({
-          email: clientRow.email,
-          agent_user_id: clientRow.agent_user_id,
+          email: client.email,
+          agent_user_id: client.agent_user_id,
         });
         if (!cancelled) {
           setResolvedBuyerUserId(buyerUserId);
         }
 
-        const buyerEmailNorm = (clientRow.email || "").toLowerCase().trim();
+        const buyerEmailNorm = (client.email || "").toLowerCase().trim();
 
         /** Same union as buyer `/client/dashboard`: hot_sheet_clients + accepted share_tokens. */
         async function collectMirrorHotSheetIds(
@@ -287,92 +284,34 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
         }
 
         /**
-         * Matches buyer dashboard `favorites` table plus `hot_sheet_favorites` for this buyer’s hot sheets
-         * (same idea as `useBuyerDashboard` aggregating saved listings from hot sheets).
+         * Shared loader: `@/lib/loadBuyerFavorites` (same `favorites.user_id` as /client/dashboard; agent path uses RPC).
+         * `hot_sheet_favorites`: `hot_sheet_id` + `listing_id` (see ClientHotSheet).
          */
-        async function loadMirrorFavoritesMerged(userId: string | null, hotSheetIds: string[]) {
-          const seenListingIds = new Set<string>();
-          const merged: Favorite[] = [];
+        async function loadMirrorFavoritesMerged(resolvedUserId: string | null, hotSheetIds: string[]) {
+          const genericFavorites =
+            resolvedUserId != null && resolvedUserId !== ""
+              ? await loadBuyerGenericFavorites(supabase, resolvedUserId, "agent_mirror", { limit: 40 })
+              : [];
 
-          if (userId) {
-            const { data, error: favErr } = await supabase
-              .from("favorites")
-              .select(
-                `
-              id,
-              listing:listings (
-                id, address, city, state, price, bedrooms, bathrooms, photos
-              )
-            `,
-              )
-              .eq("user_id", userId)
-              .limit(40);
+          const hotSheetFavorites = await fetchHotSheetFavoriteRowsForHotSheetIds(supabase, hotSheetIds);
 
-            if (favErr) {
-              console.warn("[BuyerWorkspaceMirror] favorites:", favErr.message);
-            } else if (data?.length) {
-              type Row = (typeof data)[number] & {
-                listing?: Favorite["listing"] | Favorite["listing"][] | null;
-              };
-              const normalized = (data as Row[])
-                .map((row) => {
-                  const raw = row.listing;
-                  const single = Array.isArray(raw) ? raw[0] : raw;
-                  if (single == null) return null;
-                  return { ...row, listing: single } as Favorite;
-                })
-                .filter((r): r is Favorite => r != null);
+          const mergedFull = await mergeHotSheetFavoriteRowsIntoBuyerFavorites(
+            supabase,
+            genericFavorites,
+            hotSheetFavorites,
+          );
+          const mergedFavorites = mergedFull.slice(0, 80);
+          const favoritesForUI = mergedFavorites;
 
-              for (const fav of normalized) {
-                seenListingIds.add(fav.listing.id);
-                merged.push(fav);
-              }
-            }
-          }
+          console.log("CRM client id", client?.id);
+          console.log("resolved buyer user id", resolvedUserId);
+          console.log("hot sheet ids", hotSheetIds);
+          console.log("favorites rows (generic)", genericFavorites?.length);
+          console.log("hot_sheet_favorites rows", hotSheetFavorites?.length);
+          console.log("merged favorites", mergedFavorites?.length);
+          console.log("favorites passed to UI", favoritesForUI);
 
-          if (hotSheetIds.length > 0) {
-            const { data: hsfRows, error: hsfErr } = await supabase
-              .from("hot_sheet_favorites")
-              .select("id, listing_id")
-              .in("hot_sheet_id", hotSheetIds);
-
-            if (hsfErr) {
-              console.warn("[BuyerWorkspaceMirror] hot_sheet_favorites:", hsfErr.message);
-            } else if (hsfRows?.length) {
-              const listingIds = [...new Set(hsfRows.map((r) => r.listing_id))];
-              const { data: listingsRows, error: listErr } = await supabase
-                .from("listings")
-                .select("id, address, city, state, price, bedrooms, bathrooms, photos")
-                .in("id", listingIds);
-
-              if (listErr) {
-                console.warn("[BuyerWorkspaceMirror] listings (hsf):", listErr.message);
-              } else {
-                const byId = new Map((listingsRows ?? []).map((l) => [l.id, l]));
-                for (const row of hsfRows) {
-                  const listing = byId.get(row.listing_id);
-                  if (!listing) continue;
-                  if (seenListingIds.has(listing.id)) continue;
-                  seenListingIds.add(listing.id);
-                  merged.push({
-                    id: `hsf-${row.id}`,
-                    listing: {
-                      id: listing.id,
-                      address: String(listing.address ?? ""),
-                      city: String(listing.city ?? ""),
-                      state: String(listing.state ?? ""),
-                      price: Number(listing.price ?? 0),
-                      bedrooms: listing.bedrooms ?? null,
-                      bathrooms: listing.bathrooms ?? null,
-                      photos: listing.photos,
-                    },
-                  });
-                }
-              }
-            }
-          }
-
-          setFavorites(merged.slice(0, 80));
+          setFavorites(favoritesForUI);
         }
 
         async function loadMirrorMarket() {
@@ -496,6 +435,8 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     hotSheetPreviewPhotosById,
     hotSheetPreviewMatchCountsById,
     favorites,
+    /** Buyer auth UUID used for `get_client_favorites_for_agent` / presence — not CRM `clients.id`. */
+    resolvedBuyerUserId,
     marketListings,
     latestListingsPreview,
     stats,

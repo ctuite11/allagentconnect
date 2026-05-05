@@ -22,6 +22,8 @@ import { ClientDashboardView } from "@/components/buyer/ClientDashboardView";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
+import { loadBuyerGenericFavorites } from "@/lib/loadBuyerFavorites";
+import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
 
 interface AgentInfo {
   id: string;
@@ -49,20 +51,6 @@ interface ShareTokenRow {
   payload: unknown;
   accepted_at: string | null;
   accepted_by_user_id: string | null;
-}
-
-interface Favorite {
-  id: string;
-  listing: {
-    id: string;
-    address: string;
-    city: string;
-    state: string;
-    price: number;
-    bedrooms: number | null;
-    bathrooms: number | null;
-    photos: any;
-  };
 }
 
 interface MarketListing {
@@ -105,7 +93,7 @@ export default function ClientDashboard() {
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [relationshipId, setRelationshipId] = useState<string | null>(null);
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [favorites, setFavorites] = useState<ClientDashboardFavoriteRow[]>([]);
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -445,33 +433,8 @@ export default function ClientDashboard() {
   };
 
   const loadFavorites = async (userId: string) => {
-    const { data } = await supabase
-      .from("favorites")
-      .select(`
-        id,
-        listing:listings (
-          id, address, city, state, price, bedrooms, bathrooms, photos
-        )
-      `)
-      .eq("user_id", userId)
-      .limit(6);
-
-    if (!data) {
-      setFavorites([]);
-      return;
-    }
-
-    type Row = typeof data[number] & { listing?: Favorite["listing"] | Favorite["listing"][] | null };
-    const normalized = (data as Row[])
-      .map((row) => {
-        const raw = row.listing;
-        const single = Array.isArray(raw) ? raw[0] : raw;
-        if (single == null) return null;
-        return { ...row, listing: single } as Favorite;
-      })
-      .filter((r): r is Favorite => r != null);
-
-    setFavorites(normalized);
+    const rows = await loadBuyerGenericFavorites(supabase, userId, "buyer_self", { limit: 6 });
+    setFavorites(rows);
   };
 
   const loadMarketListings = async () => {

@@ -522,7 +522,7 @@ export function ClientDashboardView({
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                        <p className={`max-w-sm ${dashSectionDescClass}`}>No favorites yet.</p>
+                        <p className={`max-w-sm ${dashSectionDescClass}`}>No saved listings yet.</p>
                         <button
                           type="button"
                           onClick={() => navigate(paths.favoritesEmptySearch)}
