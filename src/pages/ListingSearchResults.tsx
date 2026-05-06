@@ -578,6 +578,14 @@ const ListingSearchResults = () => {
               {renderAgentToolbar()}
             </div>
           )}
+          {showMapSplit && (
+            <div
+              className="border-b border-zinc-200 bg-white px-5"
+              aria-label="Agent listing search toolbar"
+            >
+              {renderAgentToolbar()}
+            </div>
+          )}
 
           <SaveToHotSheetDialog
             open={hotSheetDialogOpen}
@@ -588,7 +596,7 @@ const ListingSearchResults = () => {
 
           <section className="bg-transparent px-5 pb-6 pt-0">
             {showMapSplit ? (
-              <div className="flex min-h-[50vh] flex-col-reverse gap-4 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:h-[calc(100dvh-6.25rem)] lg:min-h-0 lg:flex-none lg:gap-4">
+              <div className="flex min-h-[50vh] flex-col-reverse gap-4 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:h-[calc(100dvh-12rem)] lg:min-h-0 lg:flex-none lg:gap-4 mt-4">
                 <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-4 lg:self-start">
                   <div className="h-full">
                     <PropertyMap
@@ -603,7 +611,6 @@ const ListingSearchResults = () => {
                 </section>
 
                 <section className="flex min-h-[50vh] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] lg:h-full lg:min-h-0">
-                  {renderMapSplitCardsChrome()}
                   <div className="min-h-0 flex-1 overflow-y-auto">
                     <div className="px-6 py-4">
                       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
