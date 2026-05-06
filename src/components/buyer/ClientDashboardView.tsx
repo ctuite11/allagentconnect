@@ -250,7 +250,7 @@ export function ClientDashboardView({
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <h1 className="text-2xl font-semibold text-zinc-950">{buyerDisplayName.trim()}</h1>
-                  {buyerPresenceOnline ? (
+                  {variant === "agent" || buyerPresenceOnline ? (
                     <div className="flex items-center gap-2">
                       <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
                       <span className="text-sm text-neutral-500">Online</span>
