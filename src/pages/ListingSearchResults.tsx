@@ -263,7 +263,7 @@ const ListingSearchResults = () => {
     navigate(`/listing-search${window.location.search}`);
   };
 
-  /** Map+cards split only: right-column toolbar. List / loading / empty map keep the full-width toolbar. */
+  /** Map+cards split only: toolbar above split (full content width); list path keeps classic full-width bar. */
   const showMapSplit =
     resultsView === "map" && !loading && displayedListings.length > 0;
 
@@ -271,17 +271,17 @@ const ListingSearchResults = () => {
     const actionBtnClass = cn(
       "font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors",
       compact
-        ? "h-6 shrink-0 whitespace-nowrap px-1.5 text-[11px]"
+        ? "h-7 shrink-0 whitespace-nowrap px-2 text-[12px]"
         : "h-8 px-3 text-[13px]",
     );
     const actionIconClass = cn(
       "shrink-0 !text-[hsl(221,92%,51%)]",
-      compact ? "mr-0.5 h-2.5 w-2.5" : "h-3.5 w-3.5 mr-1",
+      compact ? "mr-1 h-3 w-3" : "h-3.5 w-3.5 mr-1",
     );
     const shareTriggerClass = compact
-      ? "h-6 shrink-0 whitespace-nowrap px-1.5 text-[11px] font-medium rounded-lg [&_svg]:!mr-1 [&_svg]:!h-3 [&_svg]:!w-3"
+      ? "h-7 shrink-0 whitespace-nowrap px-2 text-[12px] font-medium rounded-lg [&_svg]:!mr-1 [&_svg]:!h-3.5 [&_svg]:!w-3.5"
       : "h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:size-3.5 [&_svg]:mr-1";
-    const metaText = compact ? "text-[11px]" : "text-[13px]";
+    const metaText = compact ? "text-[12px]" : "text-[13px]";
 
     return (
       <>
@@ -297,7 +297,7 @@ const ListingSearchResults = () => {
             <h1
               className={cn(
                 "font-semibold text-zinc-900 tracking-tight",
-                compact ? "text-[11px]" : "text-sm",
+                compact ? "text-xs" : "text-sm",
               )}
             >
               Edit Search
@@ -306,7 +306,7 @@ const ListingSearchResults = () => {
           <span
             className={cn(
               "inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 font-medium text-zinc-700 leading-tight",
-              compact ? "px-1.5 py-0 text-[11px]" : "px-2.5 py-0.5 text-[13px]",
+              compact ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
             )}
           >
             {loading ? "…" : displayedListings.length} listings found
@@ -316,17 +316,15 @@ const ListingSearchResults = () => {
         <div
           className={cn(
             "flex items-center justify-between gap-2 border-t border-zinc-100",
-            /* List: allow wrap; map split: single aligned row — actions scroll horizontally if needed */
-            compact ? "min-w-0 flex-nowrap py-1.5" : "flex-wrap pb-2 pt-2",
+            /* List: allow wrap; map split (wide bar above split): one row, room for full-width shell */
+            compact ? "w-full flex-nowrap py-1.5" : "flex-wrap pb-2 pt-2",
           )}
           aria-label="Result actions and view controls"
         >
           <div
             className={cn(
-              "flex min-w-0 flex-1 items-center",
-              compact
-                ? "flex-nowrap gap-1 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                : "flex-wrap gap-1.5",
+              "flex items-center",
+              compact ? "flex-nowrap gap-1.5" : "min-w-0 flex-1 flex-wrap gap-1.5",
             )}
           >
             <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
@@ -373,7 +371,7 @@ const ListingSearchResults = () => {
               <span
                 className={cn(
                   "inline-flex shrink-0 items-center rounded-full border border-primary/20 bg-blue-50/50 font-medium text-primary leading-tight whitespace-nowrap",
-                  compact ? "px-1.5 py-0 text-[11px]" : "px-2.5 py-0.5 text-[13px]",
+                  compact ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
                 )}
               >
                 {selectedRows.size} selected
@@ -384,24 +382,19 @@ const ListingSearchResults = () => {
           <div
             className={cn(
               "flex items-center",
-              compact ? "shrink-0 flex-nowrap gap-1 pl-1" : "shrink-0 gap-2",
+              compact ? "shrink-0 flex-nowrap gap-2 pl-2" : "shrink-0 gap-2",
             )}
           >
             {!loading && displayedListings.length > 0 && (
-              <div className={cn("flex items-center", compact ? "gap-1" : "gap-1.5")}>
+              <div className={cn("flex items-center", compact ? "gap-1.5" : "gap-1.5")}>
                 <span className={cn("text-zinc-500 whitespace-nowrap", metaText)}>View:</span>
-                <div
-                  className={cn(
-                    "inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80",
-                    compact ? "p-0.5" : "p-[3px]",
-                  )}
-                >
+                <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
                   <button
                     type="button"
                     onClick={() => setResultsView("map")}
                     className={cn(
                       "font-medium transition-colors min-w-0 leading-none whitespace-nowrap",
-                      compact ? "h-5 rounded px-1.5 text-[11px]" : "h-7 rounded-md px-2.5 text-[13px]",
+                      compact ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
                       resultsView === "map"
                         ? "bg-zinc-900 text-white shadow-sm"
                         : "text-zinc-600 hover:text-zinc-900",
@@ -414,7 +407,7 @@ const ListingSearchResults = () => {
                     onClick={() => setResultsView("list")}
                     className={cn(
                       "font-medium transition-colors min-w-0 leading-none whitespace-nowrap",
-                      compact ? "h-5 rounded px-1.5 text-[11px]" : "h-7 rounded-md px-2.5 text-[13px]",
+                      compact ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
                       resultsView === "list"
                         ? "bg-zinc-900 text-white shadow-sm"
                         : "text-zinc-600 hover:text-zinc-900",
@@ -425,7 +418,7 @@ const ListingSearchResults = () => {
                 </div>
               </div>
             )}
-            <div className={cn("flex items-center", compact ? "gap-1" : "gap-1.5")}>
+            <div className={cn("flex items-center", compact ? "gap-1.5" : "gap-1.5")}>
               <span className={cn("text-zinc-500 whitespace-nowrap", metaText)}>Sort:</span>
               <Select
                 value={
@@ -459,7 +452,7 @@ const ListingSearchResults = () => {
                   className={cn(
                     "rounded-lg border-zinc-300 bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400",
                     compact
-                      ? "h-6 w-[min(100%,5.85rem)] min-w-[4.75rem] max-w-[6.25rem] shrink-0 text-[11px] px-1.5"
+                      ? "h-7 w-[136px] shrink-0 text-[12px] px-2"
                       : "h-8 w-[136px] text-[13px] px-2.5",
                   )}
                 >
@@ -504,46 +497,51 @@ const ListingSearchResults = () => {
 
           <section className="bg-transparent px-5 pb-6 pt-0">
             {showMapSplit ? (
-              <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-5.5rem)] lg:min-h-0">
-                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-4 lg:self-start">
-                  <div className="h-full">
-                    <PropertyMap
-                      listings={displayedListings}
-                      onListingClick={(listingId) =>
-                        navigate(`/property/${listingId}`, {
-                          state: { from: `/listing-results${window.location.search}` },
-                        })
-                      }
-                    />
-                  </div>
-                </section>
-                <div className="flex min-h-[50vh] flex-col rounded-2xl shadow-[0_10px_26px_rgba(15,23,42,0.07)] lg:h-full lg:min-h-0">
-                  <div
-                    className="sticky top-0 z-20 shrink-0 rounded-t-2xl border border-b-0 border-zinc-200/70 bg-white/95 px-3 pt-2 pb-2 backdrop-blur supports-[backdrop-filter]:bg-white/80"
-                    aria-label="Agent split map search toolbar"
-                  >
-                    {renderAgentToolbar(true)}
-                  </div>
-                  <section className="min-h-0 flex-1 overflow-y-auto rounded-b-2xl border border-t border-zinc-200/70 bg-white">
-                    <div className="px-6 py-4">
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                        {displayedListings.map((listing) => (
-                          <ListingCard
-                            key={listing.id}
-                            listing={listingRowForMapCompactGrid(listing)}
-                            viewMode="compact"
-                            showActions={false}
-                            hideMlsMeta
-                            agentInfo={null}
-                            showCompactComments={false}
-                            hideCompactFavorite
-                            compactDetailNavigateState={{
-                              from: `/listing-results${search}`,
-                            }}
-                            onSelect={(id) => toggleRowSelection(id)}
-                            isSelected={selectedRows.has(listing.id)}
-                          />
-                        ))}
+              <div className="flex flex-col gap-3 min-h-0 lg:gap-4">
+                {/* Narrow “command card” vs list header: floats above split, spans full inner width */}
+                <div
+                  className="sticky top-0 z-20 shrink-0 rounded-2xl border border-zinc-200/70 bg-white/95 px-4 pb-2 pt-2 shadow-[0_2px_16px_rgba(15,23,42,0.07)] backdrop-blur supports-[backdrop-filter]:bg-white/85"
+                  aria-label="Agent split map search toolbar"
+                >
+                  {renderAgentToolbar(true)}
+                </div>
+
+                <div className="flex min-h-[50vh] flex-col-reverse gap-4 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:h-[calc(100dvh-11rem)] lg:min-h-0 lg:flex-none lg:gap-4">
+                  <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-28 lg:self-start">
+                    <div className="h-full">
+                      <PropertyMap
+                        listings={displayedListings}
+                        onListingClick={(listingId) =>
+                          navigate(`/property/${listingId}`, {
+                            state: { from: `/listing-results${window.location.search}` },
+                          })
+                        }
+                      />
+                    </div>
+                  </section>
+
+                  <section className="flex min-h-[50vh] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] lg:h-full lg:min-h-0">
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                      <div className="px-6 py-4">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                          {displayedListings.map((listing) => (
+                            <ListingCard
+                              key={listing.id}
+                              listing={listingRowForMapCompactGrid(listing)}
+                              viewMode="compact"
+                              showActions={false}
+                              hideMlsMeta
+                              agentInfo={null}
+                              showCompactComments={false}
+                              hideCompactFavorite
+                              compactDetailNavigateState={{
+                                from: `/listing-results${search}`,
+                              }}
+                              onSelect={(id) => toggleRowSelection(id)}
+                              isSelected={selectedRows.has(listing.id)}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </section>
