@@ -99,6 +99,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const searchMode = role === "agent" ? "agent" : "consumer";
 
   const [criteria, setCriteria] = useState<SearchCriteria>(() => defaultSaleToolbarCriteria());
+  const isRentSearch = criteria.listingType === "for_rent";
   const [locationInput, setLocationInput] = useState("");
   const [priceOpen, setPriceOpen] = useState(false);
   const [bedsBathsOpen, setBedsBathsOpen] = useState(false);
