@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +28,28 @@ import {
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import PropertyMap from "@/components/PropertyMap";
 import { buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
+
+const rentMonthlyPriceLabels = {
+  minOptions: [{ value: "", label: "No min" }, ...RENT_PRICE_STEP_VALUES.map((v) => ({ value: String(v), label: `$${v.toLocaleString()}` }))],
+  maxOptions: [{ value: "", label: "No max" }, ...RENT_PRICE_STEP_VALUES.map((v) => ({ value: String(v), label: `$${v.toLocaleString()}` }))],
+};
+
+function BrowseResultsViewToggle({ value, onChange }: { value: "map" | "list"; onChange: (v: "map" | "list") => void }) {
+  return (
+    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
+      {(["map", "list"] as const).map((v) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className={`h-7 rounded-md px-3 text-[13px] font-medium transition-colors ${value === v ? "bg-zinc-900 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900"}`}
+        >
+          {v === "map" ? "Map" : "List"}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 const BED_PRESETS: Array<{ label: string; value: string }> = [
   { label: "Any", value: "" },
@@ -76,6 +99,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const searchMode = role === "agent" ? "agent" : "consumer";
 
   const [criteria, setCriteria] = useState<SearchCriteria>(() => defaultSaleToolbarCriteria());
+  const isRentSearch = criteria.listingType === "for_rent";
   const [locationInput, setLocationInput] = useState("");
   const [priceOpen, setPriceOpen] = useState(false);
   const [bedsBathsOpen, setBedsBathsOpen] = useState(false);

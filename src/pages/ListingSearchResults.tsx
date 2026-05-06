@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 
 /** Drop list-side agent/office fields so compact `ListingCard` has no “Listed by” row (buyer map grid parity). */
-function listingRowForMapCompactGrid(row: Record<string, unknown>) {
+function listingRowForMapCompactGrid(row: any): any {
   return {
     ...row,
     brokerage_name: null,
@@ -455,10 +455,10 @@ const ListingSearchResults = () => {
         </div>
 
         <div
-          className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pb-2 pt-2"
+          className="flex items-center justify-between gap-2 border-t border-zinc-100 pb-2 pt-2 flex-wrap xl:flex-nowrap"
           aria-label="Result actions and view controls"
         >
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 flex-wrap xl:flex-nowrap">
             <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
               <ListChecks className={actionIconClass} />
               {selectedRows.size === displayedListings.length && displayedListings.length > 0

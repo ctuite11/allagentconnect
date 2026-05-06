@@ -465,15 +465,16 @@ const ListingCard = ({
       }
 
       // If it's an object with a url property
-      if (photo.url) {
+      const p = photo as { url?: string };
+      if (p.url) {
         // Check if it's a full URL or a storage path
-        if (photo.url.startsWith('http')) {
-          return photo.url;
+        if (p.url.startsWith('http')) {
+          return p.url;
         }
         // If it's a storage path, construct the public URL
         const {
           data
-        } = supabase.storage.from('listing-photos').getPublicUrl(photo.url);
+        } = supabase.storage.from('listing-photos').getPublicUrl(p.url);
         return data.publicUrl;
       }
     }

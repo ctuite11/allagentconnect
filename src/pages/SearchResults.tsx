@@ -17,6 +17,23 @@ import { Seo } from "@/components/Seo";
 
 const useQuery = () => new URLSearchParams(useLocation().search);
 
+function SearchResultsViewToggle({ value, onChange }: { value: "map" | "list"; onChange: (v: "map" | "list") => void }) {
+  return (
+    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
+      {(["map", "list"] as const).map((v) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className={`h-7 rounded-md px-3 text-[13px] font-medium transition-colors ${value === v ? "bg-zinc-900 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900"}`}
+        >
+          {v === "map" ? "Map" : "List"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 interface SearchResultsProps {
   isPublicMode?: boolean;
   isAgentMode?: boolean;

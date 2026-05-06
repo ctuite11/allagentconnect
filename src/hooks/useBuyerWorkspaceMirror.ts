@@ -197,7 +197,6 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
 
         const buyerUserId = await resolveBuyerAuthUserId({
           email: client.email,
-          agent_user_id: client.agent_user_id,
         });
         if (!cancelled) {
           setResolvedBuyerUserId(buyerUserId);
