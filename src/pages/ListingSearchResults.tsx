@@ -8,6 +8,9 @@ import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { parseAdvancedParams } from "@/lib/buildSearchParams";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
+import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
+import PropertyMap from "@/components/PropertyMap";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, ListChecks, Check, FileSpreadsheet } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
@@ -54,6 +57,8 @@ const ListingSearchResults = () => {
   
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
+  /** Default split map + cards (same shell as consumer browse); list = full-width stacked cards. */
+  const [resultsView, setResultsView] = useState<"map" | "list">("map");
 
   // Displayed listings based on selected-only filter
   const displayedListings = showSelectedOnly
@@ -117,6 +122,7 @@ const ListingSearchResults = () => {
       .from("listings")
       .select(`
         id, listing_number, address, unit_number, city, state, zip_code,
+        latitude, longitude,
         price, bedrooms, bathrooms, square_feet, status, list_date,
         property_type, agent_id, lot_size, year_built, garage_spaces,
         total_parking_spaces, description, photos, neighborhood, open_houses,
@@ -308,7 +314,38 @@ const ListingSearchResults = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap justify-end">
+                {!loading && displayedListings.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-zinc-500">View:</span>
+                    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setResultsView("map")}
+                        className={cn(
+                          "h-8 rounded-md px-3 text-sm font-medium transition-colors",
+                          resultsView === "map"
+                            ? "bg-zinc-900 text-white shadow-sm"
+                            : "text-zinc-600 hover:text-zinc-900"
+                        )}
+                      >
+                        Map
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setResultsView("list")}
+                        className={cn(
+                          "h-8 rounded-md px-3 text-sm font-medium transition-colors",
+                          resultsView === "list"
+                            ? "bg-zinc-900 text-white shadow-sm"
+                            : "text-zinc-600 hover:text-zinc-900"
+                        )}
+                      >
+                        List
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {selectedRows.size > 0 && (
                   <span className="inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 px-3 py-1 text-sm font-medium text-primary">
                     {selectedRows.size} selected
@@ -369,19 +406,52 @@ const ListingSearchResults = () => {
             selectedListingIds={Array.from(selectedRows)}
           />
 
-          {/* ── Results ────────────────────────────────────────────────── */}
+          {/* ── Results: split map+cards (default) or full-width list — same cards & selection as list mode ─ */}
           <section className="bg-transparent px-5 pb-6 pt-4">
-            <ListingResultsTable
-              listings={displayedListings}
-              loading={loading}
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-              onRowClick={handleRowClick}
-              selectedRows={selectedRows}
-              onToggleSelect={toggleRowSelection}
-              fromPath={`/listing-results${window.location.search}`}
-            />
+            {!loading && displayedListings.length > 0 && resultsView === "map" ? (
+              <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
+                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+                  <div className="h-full">
+                    <PropertyMap
+                      listings={displayedListings}
+                      onListingClick={(listingId) =>
+                        navigate(`/property/${listingId}`, {
+                          state: { from: `/listing-results${window.location.search}` },
+                        })
+                      }
+                    />
+                  </div>
+                </section>
+                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
+                  <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      {displayedListings.map((listing) => (
+                        <SearchListingCard
+                          key={listing.id}
+                          listing={listing}
+                          isSelected={selectedRows.has(listing.id)}
+                          onSelect={toggleRowSelection}
+                          onRowClick={handleRowClick}
+                          fromPath={`/listing-results${window.location.search}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              </div>
+            ) : (
+              <ListingResultsTable
+                listings={displayedListings}
+                loading={loading}
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onRowClick={handleRowClick}
+                selectedRows={selectedRows}
+                onToggleSelect={toggleRowSelection}
+                fromPath={`/listing-results${window.location.search}`}
+              />
+            )}
           </section>
         </div>
       </main>
