@@ -98,7 +98,7 @@ function SuccessHubDashboardBody() {
   if (loading) {
     return (
       <AgentAacPage className="space-y-6 pb-10">
-        <Skeleton className="h-36 w-full rounded-2xl border border-zinc-100 bg-white" />
+        <Skeleton className="h-28 w-full rounded-2xl border border-zinc-100 bg-white" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-24 rounded-2xl border border-zinc-100 bg-white" />

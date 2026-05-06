@@ -1,7 +1,4 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
-import { Home, MessageSquare, UserPlus } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 type SuccessHubHeroProps = {
@@ -9,7 +6,6 @@ type SuccessHubHeroProps = {
 };
 
 export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
-  const navigate = useNavigate();
   const rawFirst = summary.profile?.first_name?.trim();
   const displayFirst = rawFirst || "there";
   const last = summary.profile?.last_name?.trim() ?? "";
@@ -18,53 +14,18 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
   const aacShort = summary.agentId ? summary.agentId.slice(0, 8) : "";
 
   return (
-    <div className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-none">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
-              Hi, {displayFirst}
-            </h1>
-            <p className="max-w-xl text-xs leading-snug text-neutral-500">
-              Manage your buyers, listings, hot sheets, and messages.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              className="h-9 rounded-full bg-[#0E56F5] px-4 text-white hover:bg-[#0B46CC]"
-              onClick={() => {
-                window.location.href = "/agent/listings/new";
-              }}
-            >
-              <Home className="mr-2 h-4 w-4" />
-              Add Listing
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 rounded-full border-zinc-200 bg-white px-4 text-neutral-800 hover:bg-neutral-50"
-              onClick={() => navigate("/success-hub/buyers")}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Buyer
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 rounded-full border-zinc-200 bg-white px-4 text-neutral-800 hover:bg-neutral-50"
-              onClick={() => navigate("/messages")}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Messages
-            </Button>
-          </div>
+    <div className="rounded-2xl border border-zinc-100 bg-white px-5 py-3.5 shadow-none">
+      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
+        <div className="min-w-0 flex-1 space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-950">
+            Hi, {displayFirst}
+          </h1>
+          <p className="max-w-xl text-xs leading-snug text-neutral-500">
+            Manage your buyers, listings, hot sheets, and messages.
+          </p>
         </div>
 
-        <div className="flex w-full min-w-0 shrink-0 flex-col gap-3 border-t border-zinc-100 pt-5 sm:flex-row sm:items-center lg:w-[min(100%,22rem)] lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+        <div className="flex w-full min-w-0 shrink-0 flex-col gap-2.5 border-t border-zinc-100 pt-3.5 sm:flex-row sm:items-center lg:w-[min(100%,22rem)] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
           <AgentAvatar
             name={fullName}
             headshotUrl={summary.profile?.headshot_url ?? null}
