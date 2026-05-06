@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 
 /** Drop list-side agent/office fields so compact `ListingCard` has no “Listed by” row (buyer map grid parity). */
-function listingRowForMapCompactGrid(row: Record<string, unknown>) {
+function listingRowForMapCompactGrid(row: any): any {
   return {
     ...row,
     brokerage_name: null,
