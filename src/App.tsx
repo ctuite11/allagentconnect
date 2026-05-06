@@ -278,6 +278,10 @@ const App = () => (
                   <Route path="/agent-dashboard-v2" element={<Navigate to="/agent-dashboard" replace />} />
                   <Route path="/success-hub" element={<Navigate to="/agent-dashboard" replace />} />
                   <Route path="/success-hub/buyers" element={<RouteGuard requireRole="agent"><BuyersList /></RouteGuard>} />
+                  <Route
+                    path="/success-hub/buyers/:buyerId/favorites"
+                    element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>}
+                  />
                   <Route path="/success-hub/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
                   <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
                   <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />

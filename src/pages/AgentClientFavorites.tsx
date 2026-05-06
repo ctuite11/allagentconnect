@@ -11,7 +11,9 @@ import {
 } from "@/components/success-hub/listingCardAdapter";
 
 export default function AgentClientFavorites() {
-  const { clientId } = useParams<{ clientId: string }>();
+  const { buyerId, clientId } = useParams<{ buyerId?: string; clientId?: string }>();
+  /** CRM `clients.id` — Success Hub uses `buyerId`; legacy route uses `clientId`. */
+  const crmClientId = buyerId ?? clientId ?? "";
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<AgentClientFavoriteRpcRow[]>([]);
@@ -19,11 +21,14 @@ export default function AgentClientFavorites() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (clientId) {
-      loadClientInfo(clientId);
-      loadFavorites(clientId);
+    if (!crmClientId) {
+      setLoading(false);
+      setError("Missing buyer");
+      return;
     }
-  }, [clientId]);
+    loadClientInfo(crmClientId);
+    loadFavorites(crmClientId);
+  }, [crmClientId]);
 
   const loadClientInfo = async (id: string) => {
     const { data } = await supabase
@@ -88,17 +93,25 @@ export default function AgentClientFavorites() {
   const count = favorites.length;
   const countLabel = `${count} saved listing${count === 1 ? "" : "s"}`;
 
+  const handleBack = () => {
+    if (buyerId) {
+      navigate(`/success-hub/buyers/${buyerId}`);
+      return;
+    }
+    navigate("/my-clients");
+  };
+
   return (
     <AgentAacPage className="pb-12">
       <div className="mx-auto w-full max-w-6xl px-4 pt-5 md:px-6">
         <div className="mb-6 flex flex-col gap-1 border-b border-zinc-100 pb-5">
           <button
             type="button"
-            onClick={() => navigate("/my-clients")}
+            onClick={handleBack}
             className="mb-1 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-            Back to Clients
+            {buyerId ? "← Back to Buyer" : "← Back to Clients"}
           </button>
           <h1 className="text-lg font-semibold tracking-tight text-neutral-900">
             {clientName || "Client favorites"}

@@ -43,6 +43,7 @@ import {
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
+import { cn } from "@/lib/utils";
 
 export interface ClientDashboardAgentInfo {
   id: string;
@@ -135,6 +136,8 @@ export interface ClientDashboardViewProps {
   buyerPresenceOnline?: boolean;
   /** Extra outline actions in the header row (e.g. Edit / Remove buyer on agent mirror). */
   mirrorManagementActions?: ReactNode;
+  /** CRM `clients.id` for agent mirror — used for favorites deep links and section ordering. */
+  crmBuyerId?: string | null;
 }
 
 const buyerHeaderSoftBtn =
@@ -205,6 +208,7 @@ export function ClientDashboardView({
   dashboardPaths,
   buyerPresenceOnline = false,
   mirrorManagementActions,
+  crmBuyerId = null,
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
@@ -410,7 +414,9 @@ export function ClientDashboardView({
 
           <section className="space-y-8">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className={`${aacCardShell} overflow-visible`}>
+              <div
+                className={cn(`${aacCardShell} overflow-visible`, variant === "agent" && "lg:order-2")}
+              >
                 <div className="rounded-none bg-transparent">
                   <CardHeader className={previewSectionHeaderClass}>
                     <div className={previewSectionHeaderRowClass}>
@@ -461,20 +467,34 @@ export function ClientDashboardView({
                 </div>
               </div>
 
-              <div className={`${aacCardShell} overflow-hidden`}>
+              <div
+                className={cn(`${aacCardShell} overflow-hidden`, variant === "agent" && "lg:order-1")}
+              >
                 <div className="rounded-none bg-transparent">
                   <CardHeader className={previewSectionHeaderClass}>
                     <div className={previewSectionHeaderRowClass}>
                       <div className={previewSectionTitleWrapClass}>
                         <CardTitle className={dashSectionTitleClass}>Favorites</CardTitle>
-                        <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>Homes you saved.</CardDescription>
+                        <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
+                          {variant === "agent" && crmBuyerId ? (
+                            favorites.length > 0 ? (
+                              <>
+                                {favorites.length} saved listing{favorites.length === 1 ? "" : "s"} — open the full list for details.
+                              </>
+                            ) : (
+                              <>Saved MLS listings for this buyer.</>
+                            )
+                          ) : (
+                            <>Homes you saved.</>
+                          )}
+                        </CardDescription>
                       </div>
                       <button
                         type="button"
                         onClick={() => navigate(paths.favoritesViewAll)}
                         className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
                       >
-                        View all →
+                        {variant === "agent" && crmBuyerId ? "View saved listings →" : "View all →"}
                       </button>
                     </div>
                   </CardHeader>
@@ -523,13 +543,15 @@ export function ClientDashboardView({
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
                         <p className={`max-w-sm ${dashSectionDescClass}`}>No saved listings yet.</p>
-                        <button
-                          type="button"
-                          onClick={() => navigate(paths.favoritesEmptySearch)}
-                          className="text-sm font-medium text-[#0E56F5] hover:underline"
-                        >
-                          Search →
-                        </button>
+                        {variant === "buyer" || !crmBuyerId ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate(paths.favoritesEmptySearch)}
+                            className="text-sm font-medium text-[#0E56F5] hover:underline"
+                          >
+                            Search →
+                          </button>
+                        ) : null}
                       </div>
                     )}
                   </CardContent>

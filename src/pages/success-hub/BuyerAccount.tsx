@@ -110,6 +110,7 @@ export default function BuyerAccount() {
       <ClientDashboardView
         variant="agent"
         navigate={navigate}
+        crmBuyerId={buyerId ?? null}
         buyerDisplayName={capitalizedName}
         buyerEmail={client.email}
         buyerPhoneFmt={buyerPhoneFmt}
@@ -152,14 +153,14 @@ export default function BuyerAccount() {
         onMessagesIcon={handleGeneralMessage}
         onStatTileNavigate={(label) => {
           if (!buyerId) return;
-          if (label === "Favorites") navigate(`/my-clients/${buyerId}/favorites`);
+          if (label === "Favorites") navigate(`/success-hub/buyers/${buyerId}/favorites`);
           if (label === "New Matches") navigate("/search");
           if (label === "Unread Messages") navigate("/agent/messages");
           if (label === "Hot Sheets") navigate("/agent/hot-sheets");
         }}
         dashboardPaths={{
           hotSheetsViewAll: "/agent/hot-sheets",
-          favoritesViewAll: `/my-clients/${buyerId}/favorites`,
+          favoritesViewAll: `/success-hub/buyers/${buyerId}/favorites`,
           marketSearch: "/search",
           favoritesEmptySearch: "/search",
         }}
