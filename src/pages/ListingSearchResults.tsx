@@ -267,7 +267,7 @@ const ListingSearchResults = () => {
     <div className="min-h-screen flex flex-col bg-white pt-6">
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto">
-          {/* Row 1 only — page context; actions live in results section */}
+          {/* Unified sticky command bar — both rows scroll as one (fixes disconnect when inner content scrolls). */}
           <div className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5">
             <div className="flex items-center justify-between py-2.5">
               <div className="flex items-center gap-2.5">
@@ -284,20 +284,9 @@ const ListingSearchResults = () => {
                 {loading ? "…" : displayedListings.length} listings found
               </span>
             </div>
-          </div>
 
-          {/* ── Hot Sheet Dialog ────────────────────────────────────────── */}
-          <SaveToHotSheetDialog
-            open={hotSheetDialogOpen}
-            onOpenChange={setHotSheetDialogOpen}
-            currentSearch={buildHotSheetCriteria()}
-            selectedListingIds={Array.from(selectedRows)}
-          />
-
-          {/* Sticky header = row 1 only. Row 2 lives inside this section so actions sit with results/cards. */}
-          <section className="bg-transparent px-5 pb-6 pt-0">
             <div
-              className="flex items-center justify-between gap-2 flex-wrap border-b border-zinc-100 pb-2 pt-2"
+              className="flex items-center justify-between gap-2 flex-wrap border-t border-zinc-100 pb-2 pt-2"
               aria-label="Result actions and view controls"
             >
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
@@ -430,10 +419,20 @@ const ListingSearchResults = () => {
                 </div>
               </div>
             </div>
+          </div>
 
+          {/* ── Hot Sheet Dialog ────────────────────────────────────────── */}
+          <SaveToHotSheetDialog
+            open={hotSheetDialogOpen}
+            onOpenChange={setHotSheetDialogOpen}
+            currentSearch={buildHotSheetCriteria()}
+            selectedListingIds={Array.from(selectedRows)}
+          />
+
+          <section className="bg-transparent px-5 pb-6 pt-0">
             {!loading && displayedListings.length > 0 && resultsView === "map" ? (
               <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[7.25rem]">
                   <div className="h-full">
                     <PropertyMap
                       listings={displayedListings}
