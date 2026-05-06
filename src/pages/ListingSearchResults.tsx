@@ -295,6 +295,16 @@ const ListingSearchResults = () => {
             )}
             aria-label={mapSplitToolbar ? "Agent split map search toolbar" : "Agent listing search toolbar"}
           >
+            {/* TEMP: remove after verifying live deploy hits map split toolbar (resultsView === "map"). */}
+            {mapSplitToolbar && (
+              <div
+                className="mb-1 rounded-md border-4 border-red-600 bg-red-200 px-2 py-2 text-center text-sm font-black uppercase tracking-wide text-red-950 shadow-inner"
+                role="status"
+                data-debug-map-split-toolbar="true"
+              >
+                MAP SPLIT TOOLBAR ACTIVE
+              </div>
+            )}
             <div className={cn("flex items-center justify-between", mapSplitToolbar ? "py-1.5" : "py-2.5")}>
               <div className={cn("flex items-center", mapSplitToolbar ? "gap-2" : "gap-2.5")}>
                 <button
