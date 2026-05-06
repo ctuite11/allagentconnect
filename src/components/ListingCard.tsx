@@ -134,6 +134,11 @@ interface ListingCardProps {
    * no carousel arrows, no NEW LISTING / promo banners — same typography/shell as buyer compact cards.
    */
   compactAgentOwned?: boolean;
+  /**
+   * When set, compact `viewMode` navigations to listing detail include this router `state` (e.g. `{ from }` back link).
+   * Omit everywhere else — default is plain `/property/:id`.
+   */
+  compactDetailNavigateState?: Record<string, unknown>;
 }
 const ListingCard = ({
   listing,
@@ -156,6 +161,7 @@ const ListingCard = ({
   isFavorites = false,
   showCompactComments = false,
   compactAgentOwned = false,
+  compactDetailNavigateState,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
@@ -680,6 +686,14 @@ const ListingCard = ({
 
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
+    const openListingDetail = () => {
+      if (compactDetailNavigateState !== undefined) {
+        navigate(`/property/${listing.id}`, { state: compactDetailNavigateState });
+        return;
+      }
+      navigate(`/property/${listing.id}`);
+    };
+
     const hasCommentThread = Boolean((chatMessages && chatMessages.length > 0) || clientComment);
     const legacyCommentRowSignals = Boolean(onOpenChat || hasCommentThread || agentInfo);
     const buyerCommentRowSignals = Boolean(showCompactComments && (onOpenChat || hasCommentThread));
@@ -691,7 +705,7 @@ const ListingCard = ({
     
     return <Card
         className="flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm transition-[box-shadow,border-color] hover:border-zinc-200 hover:shadow-md"
-        onClick={() => navigate(`/property/${listing.id}`)}
+        onClick={openListingDetail}
       >
         <div className="relative group flex-shrink-0">
           {/* Top overlay: shared h-9 row so shortlist chip and FavoriteButton square/circle share one center line — do not override FavoriteButton sizing. */}
@@ -788,7 +802,7 @@ const ListingCard = ({
                 alt={listing.address ? `${listing.address}, ${listing.city}` : "Listing photo"}
                 className="h-full w-full cursor-pointer object-cover"
                 loading="lazy"
-                onClick={() => navigate(`/property/${listing.id}`)}
+                onClick={openListingDetail}
                 onError={() => setCompactPhotoFailed(true)}
               />
             ) : (
@@ -816,7 +830,7 @@ const ListingCard = ({
         <CardContent className="flex flex-1 flex-col gap-1.5 px-4 pb-3 pt-3">
           <div className="mb-0 flex items-start justify-between gap-2">
             <p
-              onClick={() => navigate(`/property/${listing.id}`)}
+              onClick={openListingDetail}
               className="cursor-pointer text-[15px] font-semibold leading-snug tracking-tight text-neutral-900"
             >
               {displayPrice}
@@ -833,7 +847,7 @@ const ListingCard = ({
             )}
           </div>
 
-          <div className="flex cursor-pointer items-start gap-1.5" onClick={() => navigate(`/property/${listing.id}`)}>
+          <div className="flex cursor-pointer items-start gap-1.5" onClick={openListingDetail}>
             <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
             <p className="truncate text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
           </div>

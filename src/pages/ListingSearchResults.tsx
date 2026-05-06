@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { filterByPricePerSqft } from "@/lib/filterByPricePerSqft";
@@ -8,7 +8,7 @@ import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { parseAdvancedParams } from "@/lib/buildSearchParams";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
-import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
+import ListingCard from "@/components/ListingCard";
 import PropertyMap from "@/components/PropertyMap";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -19,10 +19,31 @@ import { FilterState, initialFilters } from "@/components/listing-search/Listing
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 
+/** Drop list-side agent/office fields so compact `ListingCard` has no “Listed by” row (buyer map grid parity). */
+function listingRowForMapCompactGrid(row: Record<string, unknown>) {
+  return {
+    ...row,
+    brokerage_name: null,
+    agent_name: null,
+    listing_brokerage: null,
+    listing_agent_name: null,
+    list_office: null,
+    list_office_phone: null,
+    agent_email: null,
+    agent_phone: null,
+    agent_profile: undefined,
+  };
+}
 
+/**
+ * Agent listing results (`/listing-results`). Default: split map + compact `ListingCard` grid (same shell as
+ * buyer browse). “List” keeps full-width `ListingResultsTable` / MLS-style `SearchListingCard`. Selection,
+ * share, and hot-sheet unchanged. Coordinates loaded for `PropertyMap`. Buyer routes not modified here.
+ */
 const ListingSearchResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { search } = useLocation();
   
   const [filters] = useState<FilterState>(() => {
     const urlFilters = { ...initialFilters };
@@ -426,13 +447,19 @@ const ListingSearchResults = () => {
                   <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                       {displayedListings.map((listing) => (
-                        <SearchListingCard
+                        <ListingCard
                           key={listing.id}
-                          listing={listing}
+                          listing={listingRowForMapCompactGrid(listing)}
+                          viewMode="compact"
+                          showActions={false}
+                          hideMlsMeta
+                          agentInfo={null}
+                          showCompactComments={false}
+                          compactDetailNavigateState={{
+                            from: `/listing-results${search}`,
+                          }}
+                          onSelect={(id) => toggleRowSelection(id)}
                           isSelected={selectedRows.has(listing.id)}
-                          onSelect={toggleRowSelection}
-                          onRowClick={handleRowClick}
-                          fromPath={`/listing-results${window.location.search}`}
                         />
                       ))}
                     </div>
