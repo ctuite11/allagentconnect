@@ -268,34 +268,34 @@ const ListingSearchResults = () => {
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto">
           {/* ── Unified Sticky Command Bar ──────────────────────────────── */}
-          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-zinc-200 px-5 py-4">
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-zinc-200 px-5 py-3">
             {/* Row 1: Navigation + Count */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <button
                   onClick={handleBackToSearch}
-                  className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
+                  className="p-1 -ml-1 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
                   aria-label="Go back"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-[18px] w-[18px]" />
                 </button>
-                <h1 className="text-lg font-semibold text-zinc-900">Edit Search</h1>
+                <h1 className="text-sm font-semibold text-zinc-900 tracking-tight">Edit Search</h1>
               </div>
-              <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm font-medium text-zinc-700">
+              <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-[13px] leading-tight font-medium text-zinc-700">
                 {loading ? "…" : displayedListings.length} listings found
               </span>
             </div>
 
             {/* Row 2: Actions + Sort */}
-            <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2">
+            <div className="mt-2 flex items-center justify-between gap-2.5 flex-wrap">
+              <div className="flex items-center gap-1.5">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={toggleSelectAll}
-                  className="h-9 px-4 text-sm font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors"
+                  className="h-8 px-3 text-[13px] font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors"
                 >
-                  <ListChecks className="h-4 w-4 mr-1.5 !text-[hsl(221,92%,51%)]" />
+                  <ListChecks className="h-3.5 w-3.5 mr-1 !text-[hsl(221,92%,51%)] shrink-0" />
                   {selectedRows.size === displayedListings.length && displayedListings.length > 0
                     ? "Deselect All"
                     : "Select All"}
@@ -305,15 +305,16 @@ const ListingSearchResults = () => {
                   size="sm"
                   disabled={selectedRows.size === 0 && !showSelectedOnly}
                   onClick={handleKeepSelected}
-                  className="h-9 px-4 text-sm font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors disabled:opacity-50"
+                  className="h-8 px-3 text-[13px] font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors disabled:opacity-50"
                 >
-                  <Check className="h-4 w-4 mr-1.5 !text-[hsl(221,92%,51%)]" />
+                  <Check className="h-3.5 w-3.5 mr-1 !text-[hsl(221,92%,51%)] shrink-0" />
                   {showSelectedOnly ? "Show All" : "Keep Selected"}
                 </Button>
                 {selectedRows.size > 0 && (
                   <BulkShareListingsDialog
                     listingIds={Array.from(selectedRows)}
                     listingCount={selectedRows.size}
+                    triggerClassName="h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:size-3.5 [&_svg]:mr-1"
                   />
                 )}
                 <Button
@@ -328,23 +329,23 @@ const ListingSearchResults = () => {
                     }
                     setHotSheetDialogOpen(true);
                   }}
-                  className="h-9 px-4 text-sm font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors"
+                  className="h-8 px-3 text-[13px] font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors"
                 >
-                  <FileSpreadsheet className="h-4 w-4 mr-1.5 !text-[hsl(221,92%,51%)]" />
+                  <FileSpreadsheet className="h-3.5 w-3.5 mr-1 !text-[hsl(221,92%,51%)] shrink-0" />
                   Save as Hot Sheet
                 </Button>
               </div>
 
-              <div className="flex items-center gap-3 flex-wrap justify-end">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 {!loading && displayedListings.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-zinc-500">View:</span>
-                    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] text-zinc-500">View:</span>
+                    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
                       <button
                         type="button"
                         onClick={() => setResultsView("map")}
                         className={cn(
-                          "h-8 rounded-md px-3 text-sm font-medium transition-colors",
+                          "h-7 rounded-md px-2.5 text-[13px] font-medium transition-colors min-w-0 leading-none",
                           resultsView === "map"
                             ? "bg-zinc-900 text-white shadow-sm"
                             : "text-zinc-600 hover:text-zinc-900"
@@ -356,7 +357,7 @@ const ListingSearchResults = () => {
                         type="button"
                         onClick={() => setResultsView("list")}
                         className={cn(
-                          "h-8 rounded-md px-3 text-sm font-medium transition-colors",
+                          "h-7 rounded-md px-2.5 text-[13px] font-medium transition-colors min-w-0 leading-none",
                           resultsView === "list"
                             ? "bg-zinc-900 text-white shadow-sm"
                             : "text-zinc-600 hover:text-zinc-900"
@@ -368,12 +369,12 @@ const ListingSearchResults = () => {
                   </div>
                 )}
                 {selectedRows.size > 0 && (
-                  <span className="inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 px-3 py-1 text-sm font-medium text-primary">
+                  <span className="inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 px-2.5 py-0.5 text-[13px] leading-tight font-medium text-primary">
                     {selectedRows.size} selected
                   </span>
                 )}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-zinc-500">Sort:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[13px] text-zinc-500">Sort:</span>
                   <Select
                     value={
                       (() => {
@@ -402,7 +403,7 @@ const ListingSearchResults = () => {
                       setSortDirection(dir);
                     }}
                   >
-                    <SelectTrigger className="w-[150px] h-9 text-sm rounded-lg border-zinc-300 bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400">
+                    <SelectTrigger className="w-[136px] h-8 text-[13px] rounded-lg border-zinc-300 bg-white px-2.5 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-lg border-zinc-200 bg-white">

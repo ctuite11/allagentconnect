@@ -5,10 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient } from "@/components/share/ShareListingsDialog";
+import { cn } from "@/lib/utils";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
   listingCount: number;
+  /** Merged onto the toolbar trigger for density alignment (e.g. agent search results). */
+  triggerClassName?: string;
 }
 
 interface Client {
@@ -30,7 +33,11 @@ interface ListingPreview {
 
 // Recipient type imported from ShareListingsDialog
 
-export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareListingsDialogProps) {
+export function BulkShareListingsDialog({
+  listingIds,
+  listingCount,
+  triggerClassName,
+}: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [recipientName, setRecipientName] = useState("");
@@ -249,7 +256,12 @@ export function BulkShareListingsDialog({ listingIds, listingCount }: BulkShareL
 
   return (
     <>
-      <Button variant="default" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        variant="default"
+        size="sm"
+        className={cn(triggerClassName)}
+        onClick={() => setOpen(true)}
+      >
         <Share2 className="mr-2 h-4 w-4" />
         Share Selected ({listingCount})
       </Button>
