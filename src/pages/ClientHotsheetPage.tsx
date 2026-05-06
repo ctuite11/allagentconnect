@@ -287,7 +287,7 @@ const ClientHotsheetPage = () => {
           .select("id, first_name, last_name, company, office_name")
           .in("id", agentIds);
         if (!agentsError && agentsData?.length) {
-          hydrated = mergeListingAgentProfiles(rawListings as { agent_id?: string }[], agentsData);
+          hydrated = mergeListingAgentProfiles(rawListings as { agent_id?: string }[], agentsData) as any;
         }
       }
       setListings(hydrated);
