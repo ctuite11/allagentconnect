@@ -267,8 +267,14 @@ const ListingSearchResults = () => {
     <div className="min-h-screen flex flex-col bg-white pt-6">
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto">
-          {/* Unified sticky command bar — both rows scroll as one (fixes disconnect when inner content scrolls). */}
-          <div className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5">
+          {/*
+            Single sticky stack: row 1 (Edit Search + count) and row 2 (actions + view/sort) share one
+            sticky top-0 wrapper so both rows stay attached while the results section scrolls.
+          */}
+          <div
+            className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5"
+            aria-label="Agent listing search toolbar"
+          >
             <div className="flex items-center justify-between py-2.5">
               <div className="flex items-center gap-2.5">
                 <button
