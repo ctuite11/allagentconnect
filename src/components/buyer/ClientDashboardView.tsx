@@ -574,7 +574,7 @@ export function ClientDashboardView({
                     <button
                       type="button"
                       onClick={() => navigate(paths.marketSearch)}
-                      className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+                      className={dashboardPreviewViewAllCtaClass}
                     >
                       Search
                     </button>
@@ -664,7 +664,7 @@ export function ClientDashboardView({
                       <button
                         type="button"
                         onClick={() => navigate(paths.marketSearch)}
-                        className="text-sm font-medium text-[#0E56F5] hover:underline"
+                        className={dashboardPreviewViewAllCtaClass}
                       >
                         Search →
                       </button>
