@@ -62,16 +62,21 @@ interface MarketListing {
   };
 }
 
-async function resolveBuyerAuthUserId(client: {
-  email: string;
-  agent_user_id: string | null;
-}): Promise<string | null> {
-  if (client.agent_user_id) return String(client.agent_user_id);
+/**
+ * Buyer auth UUID for `favorites.user_id` / RPC — same as `AgentClientFavorites`:
+ * resolve from `profiles` using the CRM client's email.
+ * Do not use `clients.agent_user_id` here: it is legacy/mis-set (e.g. agent id on insert) and is not authoritative.
+ */
+async function resolveBuyerAuthUserId(client: { email: string }): Promise<string | null> {
   const email = client.email?.trim();
   if (!email) return null;
   const { data: exact } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
   if (exact?.id) return String(exact.id);
-  const { data: loose } = await supabase.from("profiles").select("id").ilike("email", email).maybeSingle();
+  const { data: loose } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("email", email.toLowerCase())
+    .maybeSingle();
   return loose?.id ? String(loose.id) : null;
 }
 
@@ -100,7 +105,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
   const [hotSheets, setHotSheets] = useState<HotSheet[]>([]);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [hotSheetPreviewMatchCountsById, setHotSheetPreviewMatchCountsById] = useState<Record<string, number>>({});
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [favorites, setFavorites] = useState<ClientDashboardFavoriteRow[]>([]);
   const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
 
   const { isOnline: agentPresenceOnline } = useAgentLastSeen(agent?.id);
@@ -306,15 +311,9 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           const mergedFavorites = mergedFull.slice(0, 80);
           const favoritesForUI = mergedFavorites;
 
-          console.log("CRM client id", client?.id);
-          console.log("resolved buyer user id", resolvedUserId);
-          console.log("hot sheet ids", hotSheetIds);
-          console.log("favorites rows (generic)", genericFavorites?.length);
-          console.log("hot_sheet_favorites rows", hotSheetFavorites?.length);
-          console.log("merged favorites", mergedFavorites?.length);
-          console.log("favorites passed to UI", favoritesForUI);
-
-          setFavorites(favoritesForUI);
+          if (!cancelled) {
+            setFavorites(favoritesForUI);
+          }
         }
 
         async function loadMirrorMarket() {

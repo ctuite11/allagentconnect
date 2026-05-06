@@ -220,6 +220,15 @@ export function ClientDashboardView({
     favoritesEmptySearch: dashboardPaths?.favoritesEmptySearch ?? "/client/search",
   };
 
+  const favoritesPreviewRows = favorites.filter(
+    (fav) =>
+      fav != null &&
+      fav.listing != null &&
+      typeof fav.listing === "object" &&
+      fav.listing.id != null &&
+      String(fav.listing.id).length > 0,
+  );
+
   const statNavigate = (label: string) => {
     if (onStatTileNavigate) {
       onStatTileNavigate(label);
@@ -501,10 +510,7 @@ export function ClientDashboardView({
                   <CardContent className={previewSectionContentClass}>
                     {favorites.length > 0 ? (
                       <div className="grid grid-cols-3 gap-4">
-                        {favorites
-                          .filter((fav) => fav.listing != null)
-                          .slice(0, 3)
-                          .map((fav) => {
+                        {favoritesPreviewRows.slice(0, 3).map((fav) => {
                             const listing = fav.listing;
                             const photos = listing.photos ?? [];
                             const favPhotoUrl = getPrimaryPhotoUrl(photos);

@@ -105,6 +105,9 @@ export default function BuyerAccount() {
   const client = mirror.client;
   const buyerPhoneFmt = formatUsPhoneForDisplay(client.phone);
 
+  // Temporary: verify mirror favorites match `/success-hub/buyers/:id/favorites` data path.
+  console.log("Buyer mirror favorites summary count", mirror.favorites?.length, mirror.favorites);
+
   return (
     <>
       <ClientDashboardView
