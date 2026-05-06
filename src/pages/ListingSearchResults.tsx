@@ -538,22 +538,28 @@ const ListingSearchResults = () => {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[13px] text-zinc-500">Sort:</span>
-              <Select value={sortSelectValue} onValueChange={handleSortSelect}>
-                <SelectTrigger className="h-8 w-[136px] rounded-lg border-zinc-300 bg-white px-2.5 text-[13px] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-lg border-zinc-200 bg-white">
-                  <SelectItem value="date_new">Date (New)</SelectItem>
-                  <SelectItem value="date_old">Date (Old)</SelectItem>
-                  <SelectItem value="price_high">Price (High)</SelectItem>
-                  <SelectItem value="price_low">Price (Low)</SelectItem>
-                  <SelectItem value="sqft">Square Feet</SelectItem>
-                  <SelectItem value="beds">Bedrooms</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          </div>
+        </div>
+
+        <div
+          className="flex items-center justify-end pb-2"
+          aria-label="Sort control"
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] text-zinc-500">Sort:</span>
+            <Select value={sortSelectValue} onValueChange={handleSortSelect}>
+              <SelectTrigger className="h-8 w-[136px] rounded-lg border-zinc-300 bg-white px-2.5 text-[13px] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-lg border-zinc-200 bg-white">
+                <SelectItem value="date_new">Date (New)</SelectItem>
+                <SelectItem value="date_old">Date (Old)</SelectItem>
+                <SelectItem value="price_high">Price (High)</SelectItem>
+                <SelectItem value="price_low">Price (Low)</SelectItem>
+                <SelectItem value="sqft">Square Feet</SelectItem>
+                <SelectItem value="beds">Bedrooms</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </>
