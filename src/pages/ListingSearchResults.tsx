@@ -270,16 +270,18 @@ const ListingSearchResults = () => {
   const renderAgentToolbar = (compact: boolean) => {
     const actionBtnClass = cn(
       "font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors",
-      compact ? "h-7 px-2 text-[12px]" : "h-8 px-3 text-[13px]",
+      compact
+        ? "h-6 shrink-0 whitespace-nowrap px-1.5 text-[11px]"
+        : "h-8 px-3 text-[13px]",
     );
     const actionIconClass = cn(
       "shrink-0 !text-[hsl(221,92%,51%)]",
-      compact ? "h-3 w-3 mr-1" : "h-3.5 w-3.5 mr-1",
+      compact ? "mr-0.5 h-2.5 w-2.5" : "h-3.5 w-3.5 mr-1",
     );
     const shareTriggerClass = compact
-      ? "h-7 px-2 text-[12px] font-medium rounded-lg [&_svg]:size-3 [&_svg]:mr-1"
+      ? "h-6 shrink-0 whitespace-nowrap px-1.5 text-[11px] font-medium rounded-lg [&_svg]:!mr-1 [&_svg]:!h-3 [&_svg]:!w-3"
       : "h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:size-3.5 [&_svg]:mr-1";
-    const metaText = compact ? "text-[12px]" : "text-[13px]";
+    const metaText = compact ? "text-[11px]" : "text-[13px]";
 
     return (
       <>
@@ -295,7 +297,7 @@ const ListingSearchResults = () => {
             <h1
               className={cn(
                 "font-semibold text-zinc-900 tracking-tight",
-                compact ? "text-xs" : "text-sm",
+                compact ? "text-[11px]" : "text-sm",
               )}
             >
               Edit Search
@@ -304,7 +306,7 @@ const ListingSearchResults = () => {
           <span
             className={cn(
               "inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 font-medium text-zinc-700 leading-tight",
-              compact ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
+              compact ? "px-1.5 py-0 text-[11px]" : "px-2.5 py-0.5 text-[13px]",
             )}
           >
             {loading ? "…" : displayedListings.length} listings found
@@ -313,12 +315,20 @@ const ListingSearchResults = () => {
 
         <div
           className={cn(
-            "flex items-center justify-between gap-2 flex-wrap border-t border-zinc-100",
-            compact ? "py-1.5" : "pb-2 pt-2",
+            "flex items-center justify-between gap-2 border-t border-zinc-100",
+            /* List: allow wrap; map split: single aligned row — actions scroll horizontally if needed */
+            compact ? "min-w-0 flex-nowrap py-1.5" : "flex-wrap pb-2 pt-2",
           )}
           aria-label="Result actions and view controls"
         >
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <div
+            className={cn(
+              "flex min-w-0 flex-1 items-center",
+              compact
+                ? "flex-nowrap gap-1 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                : "flex-wrap gap-1.5",
+            )}
+          >
             <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
               <ListChecks className={actionIconClass} />
               {selectedRows.size === displayedListings.length && displayedListings.length > 0
@@ -362,8 +372,8 @@ const ListingSearchResults = () => {
             {selectedRows.size > 0 && (
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 font-medium text-primary leading-tight",
-                  compact ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
+                  "inline-flex shrink-0 items-center rounded-full border border-primary/20 bg-blue-50/50 font-medium text-primary leading-tight whitespace-nowrap",
+                  compact ? "px-1.5 py-0 text-[11px]" : "px-2.5 py-0.5 text-[13px]",
                 )}
               >
                 {selectedRows.size} selected
@@ -371,17 +381,27 @@ const ListingSearchResults = () => {
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div
+            className={cn(
+              "flex items-center",
+              compact ? "shrink-0 flex-nowrap gap-1 pl-1" : "shrink-0 gap-2",
+            )}
+          >
             {!loading && displayedListings.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                <span className={cn("text-zinc-500", metaText)}>View:</span>
-                <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
+              <div className={cn("flex items-center", compact ? "gap-1" : "gap-1.5")}>
+                <span className={cn("text-zinc-500 whitespace-nowrap", metaText)}>View:</span>
+                <div
+                  className={cn(
+                    "inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80",
+                    compact ? "p-0.5" : "p-[3px]",
+                  )}
+                >
                   <button
                     type="button"
                     onClick={() => setResultsView("map")}
                     className={cn(
-                      "font-medium transition-colors min-w-0 leading-none",
-                      compact ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
+                      "font-medium transition-colors min-w-0 leading-none whitespace-nowrap",
+                      compact ? "h-5 rounded px-1.5 text-[11px]" : "h-7 rounded-md px-2.5 text-[13px]",
                       resultsView === "map"
                         ? "bg-zinc-900 text-white shadow-sm"
                         : "text-zinc-600 hover:text-zinc-900",
@@ -393,8 +413,8 @@ const ListingSearchResults = () => {
                     type="button"
                     onClick={() => setResultsView("list")}
                     className={cn(
-                      "font-medium transition-colors min-w-0 leading-none",
-                      compact ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
+                      "font-medium transition-colors min-w-0 leading-none whitespace-nowrap",
+                      compact ? "h-5 rounded px-1.5 text-[11px]" : "h-7 rounded-md px-2.5 text-[13px]",
                       resultsView === "list"
                         ? "bg-zinc-900 text-white shadow-sm"
                         : "text-zinc-600 hover:text-zinc-900",
@@ -405,8 +425,8 @@ const ListingSearchResults = () => {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-1.5">
-              <span className={cn("text-zinc-500", metaText)}>Sort:</span>
+            <div className={cn("flex items-center", compact ? "gap-1" : "gap-1.5")}>
+              <span className={cn("text-zinc-500 whitespace-nowrap", metaText)}>Sort:</span>
               <Select
                 value={
                   (() => {
@@ -438,7 +458,9 @@ const ListingSearchResults = () => {
                 <SelectTrigger
                   className={cn(
                     "rounded-lg border-zinc-300 bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400",
-                    compact ? "h-7 w-[118px] text-[12px] px-2" : "h-8 w-[136px] text-[13px] px-2.5",
+                    compact
+                      ? "h-6 w-[min(100%,5.85rem)] min-w-[4.75rem] max-w-[6.25rem] shrink-0 text-[11px] px-1.5"
+                      : "h-8 w-[136px] text-[13px] px-2.5",
                   )}
                 >
                   <SelectValue />
