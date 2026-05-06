@@ -139,8 +139,9 @@ const ListingChatDrawer = ({
             recipientUserId: recipient,
           });
           if (!synced.ok) {
-            console.warn("conversation mirror failed:", synced.message);
-            toast.error(`Saved on listing, but inbox sync failed: ${synced.message}`);
+            const msg = (synced as { ok: false; message: string }).message;
+            console.warn("conversation mirror failed:", msg);
+            toast.error(`Saved on listing, but inbox sync failed: ${msg}`);
           }
         } else if (viewerPerspective === "agent") {
           toast.warning(
