@@ -1,22 +1,31 @@
-I found the listing: `28-32 ATLANTIC AVE` still exists in the database, but it was automatically changed from `active` to `expired` at midnight because its `expiration_date` is `2026-04-30`. That is why it disappeared from active/search views.
+## Goal
 
-Plan:
+On the Edit Search results page (map split view), put **all action buttons on a single row** that spans the full content width — extending across both the map column and the cards column. The Sort control stays on its own line below.
 
-1. Restore the listing visibility
-   - Update `28-32 ATLANTIC AVE` from `expired` back to `active`.
-   - Extend or clear its `expiration_date` so the scheduled status job does not immediately expire it again.
-   - Add a status-history entry noting it was restored after unintended auto-expiration.
+## Layout (map split view)
 
-2. Prevent this specific issue from recurring
-   - Review the scheduled `update-listing-statuses` behavior for expiration dates.
-   - Adjust the auto-expiration condition if needed so listings do not disappear unexpectedly on the expiration date without an intentional post-expiration window.
-   - Keep the existing lifecycle system intact; no schema redesign.
+Row 1 — Header (unchanged):
+- Left: back arrow + "Edit Search"
+- Right: "{N} listings found" pill
 
-3. Fix the current build error surfaced during inspection
-   - `src/pages/BuyerMapSearch.tsx` is passing listings into `ListingCard`, but TypeScript says `status` may be missing.
-   - Normalize/hydrate the listing data so each record passed to `ListingCard` includes `status`, without changing UI layout.
+Row 2 — Single-line action bar, full content width (over map + cards):
+- Left cluster: Select All · Keep Selected · Save as Hot Sheet · Share Selected (when items selected) · selected-count chip
+- Right cluster: View: [Map | List] toggle
+- All on one line; allow horizontal room since the row extends over the map. No wrapping at the current ≥1280px viewport. (At narrow widths, fall back to wrap.)
 
-4. Verify
-   - Confirm the database row for `28-32 ATLANTIC AVE` is active again.
-   - Confirm it appears in active listing/search queries.
-   - Confirm the TypeScript build error is resolved by the code change.
+Row 3 — Sort, right-aligned, on its own line directly below the action bar.
+
+Row 4 — Map (left 40%) + Cards (right 60%) grid, map height matches cards height (already in place).
+
+## Implementation notes (single file)
+
+`src/pages/ListingSearchResults.tsx`:
+- In `renderAgentToolbar()` (used for both views per current code), keep the existing single-row action bar but remove the `flex-wrap` constraint on large screens so all buttons stay on one line. Move the View toggle into the same row's right cluster (already there).
+- Keep Sort on its own line below (already there).
+- Ensure the toolbar container spans the full `max-w-[1400px]` content width above the split grid (already true — it's outside the grid).
+- No business logic changes. List view toolbar untouched.
+
+## Out of scope
+
+- Google Maps "Oops" error in screenshot is a Maps API key/referrer issue, not layout.
+- No data, routing, or component-API changes.
