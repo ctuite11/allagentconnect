@@ -1,5 +1,5 @@
 /**
- * Single source for buyer “saved listings” on the dashboard card:
+ * Single source for buyer favorites on the dashboard card:
  * - Generic MLS favorites: `favorites.user_id ===` buyer auth UUID (same as /client/dashboard).
  * - Agents: `get_client_favorites_for_agent(p_buyer_user_id, p_crm_client_id?)` reads those rows after RPC auth
  *   (CRM ownership / `crm_client_id` relationship / legacy auth `client_id` relationship).

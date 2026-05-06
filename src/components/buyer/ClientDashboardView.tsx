@@ -43,7 +43,6 @@ import {
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
-import { cn } from "@/lib/utils";
 
 export interface ClientDashboardAgentInfo {
   id: string;
@@ -136,7 +135,7 @@ export interface ClientDashboardViewProps {
   buyerPresenceOnline?: boolean;
   /** Extra outline actions in the header row (e.g. Edit / Remove buyer on agent mirror). */
   mirrorManagementActions?: ReactNode;
-  /** CRM `clients.id` for agent mirror — used for favorites deep links and section ordering. */
+  /** CRM `clients.id` for agent mirror — used for favorites deep links and mirror-only copy. */
   crmBuyerId?: string | null;
 }
 
@@ -423,9 +422,7 @@ export function ClientDashboardView({
 
           <section className="space-y-8">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div
-                className={cn(`${aacCardShell} overflow-visible`, variant === "agent" && "lg:order-2")}
-              >
+              <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
                   <CardHeader className={previewSectionHeaderClass}>
                     <div className={previewSectionHeaderRowClass}>
@@ -476,9 +473,7 @@ export function ClientDashboardView({
                 </div>
               </div>
 
-              <div
-                className={cn(`${aacCardShell} overflow-hidden`, variant === "agent" && "lg:order-1")}
-              >
+              <div className={`${aacCardShell} overflow-hidden`}>
                 <div className="rounded-none bg-transparent">
                   <CardHeader className={previewSectionHeaderClass}>
                     <div className={previewSectionHeaderRowClass}>
@@ -488,10 +483,10 @@ export function ClientDashboardView({
                           {variant === "agent" && crmBuyerId ? (
                             favorites.length > 0 ? (
                               <>
-                                {favorites.length} saved listing{favorites.length === 1 ? "" : "s"} — open the full list for details.
+                                {favorites.length} favorite{favorites.length === 1 ? "" : "s"}
                               </>
                             ) : (
-                              <>Saved MLS listings for this buyer.</>
+                              <>MLS favorites for this buyer.</>
                             )
                           ) : (
                             <>Homes you saved.</>
@@ -503,7 +498,7 @@ export function ClientDashboardView({
                         onClick={() => navigate(paths.favoritesViewAll)}
                         className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
                       >
-                        {variant === "agent" && crmBuyerId ? "View saved listings →" : "View all →"}
+                        View all →
                       </button>
                     </div>
                   </CardHeader>
@@ -548,7 +543,7 @@ export function ClientDashboardView({
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                        <p className={`max-w-sm ${dashSectionDescClass}`}>No saved listings yet.</p>
+                        <p className={`max-w-sm ${dashSectionDescClass}`}>No favorites yet.</p>
                         {variant === "buyer" || !crmBuyerId ? (
                           <button
                             type="button"

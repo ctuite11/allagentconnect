@@ -91,7 +91,7 @@ export default function AgentClientFavorites() {
   };
 
   const count = favorites.length;
-  const countLabel = `${count} saved listing${count === 1 ? "" : "s"}`;
+  const countLabel = `${count} favorite${count === 1 ? "" : "s"}`;
 
   const handleBack = () => {
     if (buyerId) {
@@ -114,7 +114,7 @@ export default function AgentClientFavorites() {
             {buyerId ? "← Back to Buyer" : "← Back to Clients"}
           </button>
           <h1 className="text-lg font-semibold tracking-tight text-neutral-900">
-            {clientName || "Client favorites"}
+            {clientName || "Favorites"}
           </h1>
           <p className="text-sm text-neutral-500">
             {error ? <span className="text-red-600">{error}</span> : loading ? "Loading…" : countLabel}
@@ -136,7 +136,7 @@ export default function AgentClientFavorites() {
             ))}
           </div>
         ) : (
-          <p className="py-14 text-center text-sm text-neutral-500">No saved listings yet.</p>
+          <p className="py-14 text-center text-sm text-neutral-500">No favorites yet.</p>
         )}
       </div>
     </AgentAacPage>
