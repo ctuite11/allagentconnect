@@ -96,7 +96,11 @@ export const buyerPreviewSectionMarketContent =
 export const buyerPreviewGrid = "grid grid-cols-3 gap-4";
 
 export const buyerPreviewSectionHeaderRow =
-  "flex items-start justify-between gap-2";
+  "flex items-baseline justify-between gap-2";
+
+/** Hot Sheets / Favorites “View all →” — matches section title cap size for baseline alignment. */
+export const buyerDashboardPreviewViewAllCta =
+  "shrink-0 text-[15px] font-medium leading-none tracking-tight text-[#0E56F5] hover:underline";
 
 export const buyerPreviewSectionTitleWrap = "min-w-0 space-y-1";
 

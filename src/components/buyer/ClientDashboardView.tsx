@@ -23,6 +23,7 @@ import {
   buyerPreviewSectionContent as previewSectionContentClass,
   buyerPreviewSectionHeader as previewSectionHeaderClass,
   buyerPreviewSectionHeaderRow as previewSectionHeaderRowClass,
+  buyerDashboardPreviewViewAllCta as dashboardPreviewViewAllCtaClass,
   buyerPreviewSectionMarketContent as previewSectionMarketContentClass,
   buyerPreviewSectionTitleWrap as previewSectionTitleWrapClass,
   buyerSectionCard as aacCardShell,
@@ -435,7 +436,7 @@ export function ClientDashboardView({
                       <button
                         type="button"
                         onClick={() => navigate(paths.hotSheetsViewAll)}
-                        className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+                        className={dashboardPreviewViewAllCtaClass}
                       >
                         View all →
                       </button>
@@ -496,7 +497,7 @@ export function ClientDashboardView({
                       <button
                         type="button"
                         onClick={() => navigate(paths.favoritesViewAll)}
-                        className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+                        className={dashboardPreviewViewAllCtaClass}
                       >
                         View all →
                       </button>

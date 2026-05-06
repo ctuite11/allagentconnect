@@ -397,10 +397,13 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     subtle: string | null;
   }[] = [
     {
-      label: "Favorites",
-      value: String(favorites.length),
-      icon: Heart,
-      subtle: null,
+      label: "Hot Sheets",
+      value: String(hotSheets.length),
+      icon: Search,
+      subtle:
+        hotSheets.length > 0
+          ? `${hotSheets.length} saved search${hotSheets.length === 1 ? "" : "es"}`
+          : "No hot sheets yet",
     },
     {
       label: "New Matches",
@@ -409,19 +412,16 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
       subtle: marketListings.length > 0 ? "On the market" : "Awaiting activity",
     },
     {
+      label: "Favorites",
+      value: String(favorites.length),
+      icon: Heart,
+      subtle: null,
+    },
+    {
       label: "Unread Messages",
       value: String(unreadCount),
       icon: MessageSquare,
       subtle: unreadCount > 0 ? "Needs review" : "No new messages from your agent.",
-    },
-    {
-      label: "Hot Sheets",
-      value: String(hotSheets.length),
-      icon: Search,
-      subtle:
-        hotSheets.length > 0
-          ? `${hotSheets.length} saved search${hotSheets.length === 1 ? "" : "es"}`
-          : "No hot sheets yet",
     },
   ];
 
