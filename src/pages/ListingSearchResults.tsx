@@ -267,9 +267,8 @@ const ListingSearchResults = () => {
     <div className="min-h-screen flex flex-col bg-white pt-6">
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto">
-          {/* ── Sticky header: title row, then controls flush above results ─ */}
+          {/* Row 1 only — page context; actions live in results section */}
           <div className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5">
-            {/* Row 1 — context only */}
             <div className="flex items-center justify-between py-2.5">
               <div className="flex items-center gap-2.5">
                 <button
@@ -285,9 +284,19 @@ const ListingSearchResults = () => {
                 {loading ? "…" : displayedListings.length} listings found
               </span>
             </div>
+          </div>
 
-            {/* Row 2 — directly above results */}
-            <div className="flex items-center justify-between gap-2 flex-wrap border-t border-zinc-100 py-2">
+          {/* ── Hot Sheet Dialog ────────────────────────────────────────── */}
+          <SaveToHotSheetDialog
+            open={hotSheetDialogOpen}
+            onOpenChange={setHotSheetDialogOpen}
+            currentSearch={buildHotSheetCriteria()}
+            selectedListingIds={Array.from(selectedRows)}
+          />
+
+          {/* ── Row 2 + results — toolbar scoped to results/cards ─ */}
+          <section className="bg-transparent px-5 pb-6 pt-0">
+            <div className="flex items-center justify-between gap-2 flex-wrap border-b border-zinc-100 pb-2 pt-2">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
                 <Button
                   variant="outline"
@@ -418,18 +427,8 @@ const ListingSearchResults = () => {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* ── Hot Sheet Dialog ────────────────────────────────────────── */}
-          <SaveToHotSheetDialog
-            open={hotSheetDialogOpen}
-            onOpenChange={setHotSheetDialogOpen}
-            currentSearch={buildHotSheetCriteria()}
-            selectedListingIds={Array.from(selectedRows)}
-          />
-
-          {/* ── Results: split map+cards (default) or full-width list — same cards & selection as list mode ─ */}
-          <section className="bg-transparent px-5 pb-6 pt-2">
+            <div className="pt-2">
             {!loading && displayedListings.length > 0 && resultsView === "map" ? (
               <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
                 <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
@@ -481,6 +480,7 @@ const ListingSearchResults = () => {
                 fromPath={`/listing-results${window.location.search}`}
               />
             )}
+            </div>
           </section>
         </div>
       </main>
