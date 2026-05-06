@@ -100,7 +100,7 @@ export const buyerPreviewSectionHeaderRow =
 
 /** Hot Sheets / Favorites “View all →” — matches section title cap size for baseline alignment. */
 export const buyerDashboardPreviewViewAllCta =
-  "shrink-0 text-[15px] font-medium leading-none tracking-tight text-[#0E56F5] hover:underline";
+  "shrink-0 text-sm font-medium leading-normal tracking-normal text-[#0E56F5] hover:underline";
 
 export const buyerPreviewSectionTitleWrap = "min-w-0 space-y-1";
 
