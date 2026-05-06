@@ -267,10 +267,10 @@ const ListingSearchResults = () => {
     <div className="min-h-screen flex flex-col bg-white pt-6">
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto">
-          {/* ── Unified Sticky Command Bar ──────────────────────────────── */}
-          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-zinc-200 px-5 py-3">
-            {/* Row 1: Navigation + Count */}
-            <div className="flex items-center justify-between">
+          {/* ── Sticky header: title row, then controls flush above results ─ */}
+          <div className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5">
+            {/* Row 1 — context only */}
+            <div className="flex items-center justify-between py-2.5">
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={handleBackToSearch}
@@ -286,9 +286,9 @@ const ListingSearchResults = () => {
               </span>
             </div>
 
-            {/* Row 2: Actions + Sort */}
-            <div className="mt-2 flex items-center justify-between gap-2.5 flex-wrap">
-              <div className="flex items-center gap-1.5">
+            {/* Row 2 — directly above results */}
+            <div className="flex items-center justify-between gap-2 flex-wrap border-t border-zinc-100 py-2">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
                 <Button
                   variant="outline"
                   size="sm"
@@ -310,13 +310,6 @@ const ListingSearchResults = () => {
                   <Check className="h-3.5 w-3.5 mr-1 !text-[hsl(221,92%,51%)] shrink-0" />
                   {showSelectedOnly ? "Show All" : "Keep Selected"}
                 </Button>
-                {selectedRows.size > 0 && (
-                  <BulkShareListingsDialog
-                    listingIds={Array.from(selectedRows)}
-                    listingCount={selectedRows.size}
-                    triggerClassName="h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:size-3.5 [&_svg]:mr-1"
-                  />
-                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -334,9 +327,21 @@ const ListingSearchResults = () => {
                   <FileSpreadsheet className="h-3.5 w-3.5 mr-1 !text-[hsl(221,92%,51%)] shrink-0" />
                   Save as Hot Sheet
                 </Button>
+                {selectedRows.size > 0 && (
+                  <BulkShareListingsDialog
+                    listingIds={Array.from(selectedRows)}
+                    listingCount={selectedRows.size}
+                    triggerClassName="h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:size-3.5 [&_svg]:mr-1"
+                  />
+                )}
+                {selectedRows.size > 0 && (
+                  <span className="inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 px-2.5 py-0.5 text-[13px] leading-tight font-medium text-primary">
+                    {selectedRows.size} selected
+                  </span>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap justify-end">
+              <div className="flex shrink-0 items-center gap-2">
                 {!loading && displayedListings.length > 0 && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-[13px] text-zinc-500">View:</span>
@@ -367,11 +372,6 @@ const ListingSearchResults = () => {
                       </button>
                     </div>
                   </div>
-                )}
-                {selectedRows.size > 0 && (
-                  <span className="inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 px-2.5 py-0.5 text-[13px] leading-tight font-medium text-primary">
-                    {selectedRows.size} selected
-                  </span>
                 )}
                 <div className="flex items-center gap-1.5">
                   <span className="text-[13px] text-zinc-500">Sort:</span>
@@ -429,7 +429,7 @@ const ListingSearchResults = () => {
           />
 
           {/* ── Results: split map+cards (default) or full-width list — same cards & selection as list mode ─ */}
-          <section className="bg-transparent px-5 pb-6 pt-4">
+          <section className="bg-transparent px-5 pb-6 pt-2">
             {!loading && displayedListings.length > 0 && resultsView === "map" ? (
               <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
                 <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
@@ -456,6 +456,7 @@ const ListingSearchResults = () => {
                           hideMlsMeta
                           agentInfo={null}
                           showCompactComments={false}
+                          hideCompactFavorite
                           compactDetailNavigateState={{
                             from: `/listing-results${search}`,
                           }}

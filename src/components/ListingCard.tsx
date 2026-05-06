@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { buildDisplayAddress, propertyTypeToEnum } from "@/lib/utils";
+import { buildDisplayAddress, cn, propertyTypeToEnum } from "@/lib/utils";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
 import {
@@ -139,6 +139,8 @@ interface ListingCardProps {
    * Omit everywhere else — default is plain `/property/:id`.
    */
   compactDetailNavigateState?: Record<string, unknown>;
+  /** Agent MLS search / workflow: hide consumer favorite heart on compact cards only. */
+  hideCompactFavorite?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -162,6 +164,7 @@ const ListingCard = ({
   showCompactComments = false,
   compactAgentOwned = false,
   compactDetailNavigateState,
+  hideCompactFavorite = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
@@ -709,56 +712,65 @@ const ListingCard = ({
       >
         <div className="relative group flex-shrink-0">
           {/* Top overlay: shared h-9 row so shortlist chip and FavoriteButton square/circle share one center line — do not override FavoriteButton sizing. */}
-          {!compactAgentOwned ? <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 px-2 pt-2">
-            <div className="pointer-events-auto flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center">
-              {onSelect ? (
-                <div
-                  role="checkbox"
-                  aria-checked={isSelected}
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelect(listing.id);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+          {!compactAgentOwned ? (
+            <div
+              className={cn(
+                "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-2 pt-2",
+                isHotSheetFavorite || !hideCompactFavorite ? "justify-between" : "justify-start"
+              )}
+            >
+              <div className="pointer-events-auto flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center">
+                {onSelect ? (
+                  <div
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    tabIndex={0}
+                    onClick={(e) => {
                       e.stopPropagation();
                       onSelect(listing.id);
-                    }
-                  }}
-                  className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors ${
-                    isSelected
-                      ? "bg-[#0E56F5] border-[#0E56F5]"
-                      : "border-zinc-300 bg-white"
-                  }`}
-                  title="Keep in shortlist for this visit"
-                  aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onSelect(listing.id);
+                      }
+                    }}
+                    className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors ${
+                      isSelected
+                        ? "bg-[#0E56F5] border-[#0E56F5]"
+                        : "border-zinc-300 bg-white"
+                    }`}
+                    title="Keep in shortlist for this visit"
+                    aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
+                  >
+                    {isSelected && (
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+              {(isHotSheetFavorite || !hideCompactFavorite) && (
+                <div
+                  className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {isSelected && (
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                  {isHotSheetFavorite && (
+                    <span className="inline-flex h-9 shrink-0 items-center justify-center" title="Favorited on hot sheet">
+                      <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
+                    </span>
                   )}
+                  {!hideCompactFavorite && <FavoriteButton listingId={listing.id} size="icon" photoIcon />}
                 </div>
-              ) : null}
-            </div>
-            <div
-              className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {isHotSheetFavorite && (
-                <span className="inline-flex h-9 shrink-0 items-center justify-center" title="Favorited on hot sheet">
-                  <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
-                </span>
               )}
-              <FavoriteButton listingId={listing.id} size="icon" photoIcon />
             </div>
-          </div> : null}
+          ) : null}
           {/* Property/neighborhood overlays — omitted on agent-owned Success Hub grids (cleaner AAC tile). */}
           {!compactAgentOwned && listing.property_type && (
             <div className="absolute bottom-2 left-2 z-10">
