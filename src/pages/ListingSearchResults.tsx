@@ -263,223 +263,214 @@ const ListingSearchResults = () => {
     navigate(`/listing-search${window.location.search}`);
   };
 
-  /** Split map view: tighter toolbar; list view: unchanged full-density toolbar. */
-  const mapSplitToolbar = resultsView === "map";
-  const actionBtnClass = cn(
-    "font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors",
-    mapSplitToolbar ? "h-7 px-2 text-[12px]" : "h-8 px-3 text-[13px]"
-  );
-  const actionIconClass = cn(
-    "shrink-0 !text-[hsl(221,92%,51%)]",
-    mapSplitToolbar ? "h-3 w-3 mr-1" : "h-3.5 w-3.5 mr-1"
-  );
-  const shareTriggerClass = mapSplitToolbar
-    ? "h-7 px-2 text-[12px] font-medium rounded-lg [&_svg]:size-3 [&_svg]:mr-1"
-    : "h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:size-3.5 [&_svg]:mr-1";
-  const metaText = mapSplitToolbar ? "text-[12px]" : "text-[13px]";
+  /** Map+cards split only: right-column toolbar. List / loading / empty map keep the full-width toolbar. */
+  const showMapSplit =
+    resultsView === "map" && !loading && displayedListings.length > 0;
 
-  return (
-    <div className={cn("min-h-screen flex flex-col bg-white", mapSplitToolbar ? "pt-3" : "pt-6")}>
-      <main className="flex-1">
-        <div className="max-w-[1400px] mx-auto">
-          {/*
-            Single sticky stack (list + map): row 1 + row 2 share one sticky top-0 wrapper.
-            Map split uses compact spacing/typography; list view keeps the original sizing.
-          */}
-          <div
+  const renderAgentToolbar = (compact: boolean) => {
+    const actionBtnClass = cn(
+      "font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-colors",
+      compact ? "h-7 px-2 text-[12px]" : "h-8 px-3 text-[13px]",
+    );
+    const actionIconClass = cn(
+      "shrink-0 !text-[hsl(221,92%,51%)]",
+      compact ? "h-3 w-3 mr-1" : "h-3.5 w-3.5 mr-1",
+    );
+    const shareTriggerClass = compact
+      ? "h-7 px-2 text-[12px] font-medium rounded-lg [&_svg]:size-3 [&_svg]:mr-1"
+      : "h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:size-3.5 [&_svg]:mr-1";
+    const metaText = compact ? "text-[12px]" : "text-[13px]";
+
+    return (
+      <>
+        <div className={cn("flex items-center justify-between", compact ? "py-1.5" : "py-2.5")}>
+          <div className={cn("flex items-center", compact ? "gap-2" : "gap-2.5")}>
+            <button
+              onClick={handleBackToSearch}
+              className="p-1 -ml-1 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
+              aria-label="Go back"
+            >
+              <ArrowLeft className={compact ? "h-4 w-4" : "h-[18px] w-[18px]"} />
+            </button>
+            <h1
+              className={cn(
+                "font-semibold text-zinc-900 tracking-tight",
+                compact ? "text-xs" : "text-sm",
+              )}
+            >
+              Edit Search
+            </h1>
+          </div>
+          <span
             className={cn(
-              "sticky top-0 z-20 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5",
-              mapSplitToolbar
-                ? "border-zinc-200/80 shadow-[0_1px_0_rgba(15,23,42,0.06)]"
-                : "border-zinc-200",
+              "inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 font-medium text-zinc-700 leading-tight",
+              compact ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
             )}
-            aria-label={mapSplitToolbar ? "Agent split map search toolbar" : "Agent listing search toolbar"}
           >
-            {/* TEMP: remove after verifying live deploy hits map split toolbar (resultsView === "map"). */}
-            {mapSplitToolbar && (
-              <div
-                className="mb-1 rounded-md border-4 border-red-600 bg-red-200 px-2 py-2 text-center text-sm font-black uppercase tracking-wide text-red-950 shadow-inner"
-                role="status"
-                data-debug-map-split-toolbar="true"
-              >
-                MAP SPLIT TOOLBAR ACTIVE
-              </div>
+            {loading ? "…" : displayedListings.length} listings found
+          </span>
+        </div>
+
+        <div
+          className={cn(
+            "flex items-center justify-between gap-2 flex-wrap border-t border-zinc-100",
+            compact ? "py-1.5" : "pb-2 pt-2",
+          )}
+          aria-label="Result actions and view controls"
+        >
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
+              <ListChecks className={actionIconClass} />
+              {selectedRows.size === displayedListings.length && displayedListings.length > 0
+                ? "Deselect All"
+                : "Select All"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selectedRows.size === 0 && !showSelectedOnly}
+              onClick={handleKeepSelected}
+              className={cn(actionBtnClass, "disabled:opacity-50")}
+            >
+              <Check className={actionIconClass} />
+              {showSelectedOnly ? "Show All" : "Keep Selected"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (selectedRows.size === 0) {
+                  toast.error("You haven't selected any properties", {
+                    description: "Select one or more properties from the results to save a hotsheet.",
+                  });
+                  return;
+                }
+                setHotSheetDialogOpen(true);
+              }}
+              className={actionBtnClass}
+            >
+              <FileSpreadsheet className={actionIconClass} />
+              Save as Hot Sheet
+            </Button>
+            {selectedRows.size > 0 && (
+              <BulkShareListingsDialog
+                listingIds={Array.from(selectedRows)}
+                listingCount={selectedRows.size}
+                triggerClassName={shareTriggerClass}
+              />
             )}
-            <div className={cn("flex items-center justify-between", mapSplitToolbar ? "py-1.5" : "py-2.5")}>
-              <div className={cn("flex items-center", mapSplitToolbar ? "gap-2" : "gap-2.5")}>
-                <button
-                  onClick={handleBackToSearch}
-                  className="p-1 -ml-1 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
-                  aria-label="Go back"
-                >
-                  <ArrowLeft className={mapSplitToolbar ? "h-4 w-4" : "h-[18px] w-[18px]"} />
-                </button>
-                <h1
-                  className={cn(
-                    "font-semibold text-zinc-900 tracking-tight",
-                    mapSplitToolbar ? "text-xs" : "text-sm",
-                  )}
-                >
-                  Edit Search
-                </h1>
-              </div>
+            {selectedRows.size > 0 && (
               <span
                 className={cn(
-                  "inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 font-medium text-zinc-700 leading-tight",
-                  mapSplitToolbar ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
+                  "inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 font-medium text-primary leading-tight",
+                  compact ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
                 )}
               >
-                {loading ? "…" : displayedListings.length} listings found
+                {selectedRows.size} selected
               </span>
-            </div>
+            )}
+          </div>
 
-            <div
-              className={cn(
-                "flex items-center justify-between gap-2 flex-wrap border-t border-zinc-100",
-                mapSplitToolbar ? "py-1.5" : "pb-2 pt-2",
-              )}
-              aria-label="Result actions and view controls"
-            >
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
-                  <ListChecks className={actionIconClass} />
-                  {selectedRows.size === displayedListings.length && displayedListings.length > 0
-                    ? "Deselect All"
-                    : "Select All"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={selectedRows.size === 0 && !showSelectedOnly}
-                  onClick={handleKeepSelected}
-                  className={cn(actionBtnClass, "disabled:opacity-50")}
-                >
-                  <Check className={actionIconClass} />
-                  {showSelectedOnly ? "Show All" : "Keep Selected"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (selectedRows.size === 0) {
-                      toast.error("You haven't selected any properties", {
-                        description: "Select one or more properties from the results to save a hotsheet.",
-                      });
-                      return;
-                    }
-                    setHotSheetDialogOpen(true);
-                  }}
-                  className={actionBtnClass}
-                >
-                  <FileSpreadsheet className={actionIconClass} />
-                  Save as Hot Sheet
-                </Button>
-                {selectedRows.size > 0 && (
-                  <BulkShareListingsDialog
-                    listingIds={Array.from(selectedRows)}
-                    listingCount={selectedRows.size}
-                    triggerClassName={shareTriggerClass}
-                  />
-                )}
-                {selectedRows.size > 0 && (
-                  <span
+          <div className="flex shrink-0 items-center gap-2">
+            {!loading && displayedListings.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className={cn("text-zinc-500", metaText)}>View:</span>
+                <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
+                  <button
+                    type="button"
+                    onClick={() => setResultsView("map")}
                     className={cn(
-                      "inline-flex items-center rounded-full border border-primary/20 bg-blue-50/50 font-medium text-primary leading-tight",
-                      mapSplitToolbar ? "px-2 py-0 text-[12px]" : "px-2.5 py-0.5 text-[13px]",
+                      "font-medium transition-colors min-w-0 leading-none",
+                      compact ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
+                      resultsView === "map"
+                        ? "bg-zinc-900 text-white shadow-sm"
+                        : "text-zinc-600 hover:text-zinc-900",
                     )}
                   >
-                    {selectedRows.size} selected
-                  </span>
-                )}
-              </div>
-
-              <div className="flex shrink-0 items-center gap-2">
-                {!loading && displayedListings.length > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <span className={cn("text-zinc-500", metaText)}>View:</span>
-                    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
-                      <button
-                        type="button"
-                        onClick={() => setResultsView("map")}
-                        className={cn(
-                          "font-medium transition-colors min-w-0 leading-none",
-                          mapSplitToolbar ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
-                          resultsView === "map"
-                            ? "bg-zinc-900 text-white shadow-sm"
-                            : "text-zinc-600 hover:text-zinc-900",
-                        )}
-                      >
-                        Map
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setResultsView("list")}
-                        className={cn(
-                          "font-medium transition-colors min-w-0 leading-none",
-                          mapSplitToolbar ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
-                          resultsView === "list"
-                            ? "bg-zinc-900 text-white shadow-sm"
-                            : "text-zinc-600 hover:text-zinc-900",
-                        )}
-                      >
-                        List
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <span className={cn("text-zinc-500", metaText)}>Sort:</span>
-                  <Select
-                    value={
-                      (() => {
-                        const rev: Record<string, string> = {
-                          "list_date_desc": "date_new",
-                          "list_date_asc": "date_old",
-                          "price_desc": "price_high",
-                          "price_asc": "price_low",
-                          "square_feet_desc": "sqft",
-                          "bedrooms_desc": "beds",
-                        };
-                        return rev[`${sortColumn}_${sortDirection}`] ?? "date_new";
-                      })()
-                    }
-                    onValueChange={(value) => {
-                      const colDir: Record<string, [string, "asc" | "desc"]> = {
-                        date_new: ["list_date", "desc"],
-                        date_old: ["list_date", "asc"],
-                        price_high: ["price", "desc"],
-                        price_low: ["price", "asc"],
-                        sqft: ["square_feet", "desc"],
-                        beds: ["bedrooms", "desc"],
-                      };
-                      const [col, dir] = colDir[value] ?? ["list_date", "desc"];
-                      setSortColumn(col);
-                      setSortDirection(dir);
-                    }}
+                    Map
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResultsView("list")}
+                    className={cn(
+                      "font-medium transition-colors min-w-0 leading-none",
+                      compact ? "h-6 rounded px-2 text-[12px]" : "h-7 rounded-md px-2.5 text-[13px]",
+                      resultsView === "list"
+                        ? "bg-zinc-900 text-white shadow-sm"
+                        : "text-zinc-600 hover:text-zinc-900",
+                    )}
                   >
-                    <SelectTrigger
-                      className={cn(
-                        "rounded-lg border-zinc-300 bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400",
-                        mapSplitToolbar
-                          ? "h-7 w-[118px] text-[12px] px-2"
-                          : "h-8 w-[136px] text-[13px] px-2.5",
-                      )}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-lg border-zinc-200 bg-white">
-                      <SelectItem value="date_new">Date (New)</SelectItem>
-                      <SelectItem value="date_old">Date (Old)</SelectItem>
-                      <SelectItem value="price_high">Price (High)</SelectItem>
-                      <SelectItem value="price_low">Price (Low)</SelectItem>
-                      <SelectItem value="sqft">Square Feet</SelectItem>
-                      <SelectItem value="beds">Bedrooms</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    List
+                  </button>
                 </div>
               </div>
+            )}
+            <div className="flex items-center gap-1.5">
+              <span className={cn("text-zinc-500", metaText)}>Sort:</span>
+              <Select
+                value={
+                  (() => {
+                    const rev: Record<string, string> = {
+                      list_date_desc: "date_new",
+                      list_date_asc: "date_old",
+                      price_desc: "price_high",
+                      price_asc: "price_low",
+                      square_feet_desc: "sqft",
+                      bedrooms_desc: "beds",
+                    };
+                    return rev[`${sortColumn}_${sortDirection}`] ?? "date_new";
+                  })()
+                }
+                onValueChange={(value) => {
+                  const colDir: Record<string, [string, "asc" | "desc"]> = {
+                    date_new: ["list_date", "desc"],
+                    date_old: ["list_date", "asc"],
+                    price_high: ["price", "desc"],
+                    price_low: ["price", "asc"],
+                    sqft: ["square_feet", "desc"],
+                    beds: ["bedrooms", "desc"],
+                  };
+                  const [col, dir] = colDir[value] ?? ["list_date", "desc"];
+                  setSortColumn(col);
+                  setSortDirection(dir);
+                }}
+              >
+                <SelectTrigger
+                  className={cn(
+                    "rounded-lg border-zinc-300 bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-zinc-400",
+                    compact ? "h-7 w-[118px] text-[12px] px-2" : "h-8 w-[136px] text-[13px] px-2.5",
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg border-zinc-200 bg-white">
+                  <SelectItem value="date_new">Date (New)</SelectItem>
+                  <SelectItem value="date_old">Date (Old)</SelectItem>
+                  <SelectItem value="price_high">Price (High)</SelectItem>
+                  <SelectItem value="price_low">Price (Low)</SelectItem>
+                  <SelectItem value="sqft">Square Feet</SelectItem>
+                  <SelectItem value="beds">Bedrooms</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-white pt-6">
+      <main className="flex-1">
+        <div className="max-w-[1400px] mx-auto">
+          {!showMapSplit && (
+            <div
+              className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5"
+              aria-label="Agent listing search toolbar"
+            >
+              {renderAgentToolbar(false)}
+            </div>
+          )}
 
           {/* ── Hot Sheet Dialog ────────────────────────────────────────── */}
           <SaveToHotSheetDialog
@@ -490,9 +481,9 @@ const ListingSearchResults = () => {
           />
 
           <section className="bg-transparent px-5 pb-6 pt-0">
-            {!loading && displayedListings.length > 0 && resultsView === "map" ? (
-              <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-6.25rem)] lg:min-h-0">
-                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6rem]">
+            {showMapSplit ? (
+              <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-5.5rem)] lg:min-h-0">
+                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-4 lg:self-start">
                   <div className="h-full">
                     <PropertyMap
                       listings={displayedListings}
@@ -504,29 +495,37 @@ const ListingSearchResults = () => {
                     />
                   </div>
                 </section>
-                <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
-                  <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                      {displayedListings.map((listing) => (
-                        <ListingCard
-                          key={listing.id}
-                          listing={listingRowForMapCompactGrid(listing)}
-                          viewMode="compact"
-                          showActions={false}
-                          hideMlsMeta
-                          agentInfo={null}
-                          showCompactComments={false}
-                          hideCompactFavorite
-                          compactDetailNavigateState={{
-                            from: `/listing-results${search}`,
-                          }}
-                          onSelect={(id) => toggleRowSelection(id)}
-                          isSelected={selectedRows.has(listing.id)}
-                        />
-                      ))}
-                    </div>
+                <div className="flex min-h-[50vh] flex-col rounded-2xl shadow-[0_10px_26px_rgba(15,23,42,0.07)] lg:h-full lg:min-h-0">
+                  <div
+                    className="sticky top-0 z-20 shrink-0 rounded-t-2xl border border-b-0 border-zinc-200/70 bg-white/95 px-3 pt-2 pb-2 backdrop-blur supports-[backdrop-filter]:bg-white/80"
+                    aria-label="Agent split map search toolbar"
+                  >
+                    {renderAgentToolbar(true)}
                   </div>
-                </section>
+                  <section className="min-h-0 flex-1 overflow-y-auto rounded-b-2xl border border-t border-zinc-200/70 bg-white">
+                    <div className="px-6 py-4">
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        {displayedListings.map((listing) => (
+                          <ListingCard
+                            key={listing.id}
+                            listing={listingRowForMapCompactGrid(listing)}
+                            viewMode="compact"
+                            showActions={false}
+                            hideMlsMeta
+                            agentInfo={null}
+                            showCompactComments={false}
+                            hideCompactFavorite
+                            compactDetailNavigateState={{
+                              from: `/listing-results${search}`,
+                            }}
+                            onSelect={(id) => toggleRowSelection(id)}
+                            isSelected={selectedRows.has(listing.id)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                </div>
               </div>
             ) : (
               <ListingResultsTable
