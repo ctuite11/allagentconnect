@@ -248,14 +248,13 @@ export function ClientDashboardView({
           <section className={`${aacCardShell} p-5 md:p-6`}>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
               <div className="min-w-0 flex-1 space-y-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <div className="flex min-w-0 items-center gap-3">
                   <h1 className="text-2xl font-semibold text-zinc-950">{buyerDisplayName.trim()}</h1>
                   {buyerPresenceOnline ? (
-                    <span
-                      className="h-2 w-2 shrink-0 rounded-full bg-[#50C878]"
-                      title="Recently active"
-                      aria-label="Recently active"
-                    />
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+                      <span className="text-sm text-neutral-500">Online</span>
+                    </div>
                   ) : null}
                 </div>
                 {variant === "agent" && (buyerEmail?.trim() || buyerPhoneFmt) ? (
