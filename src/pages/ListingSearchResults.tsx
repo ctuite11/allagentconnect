@@ -290,134 +290,133 @@ const ListingSearchResults = () => {
     setSortDirection(dir);
   };
 
-  /** Single-row command bar spanning map+cards columns (map view only). */
+  /** Two-row compact command bar above map+cards split (map view only). */
   const renderMapSplitCommandBar = () => {
     const actionBtnClass =
-      "h-8 shrink-0 whitespace-nowrap rounded-lg border border-zinc-300/90 bg-white px-2.5 text-[13px] font-medium text-zinc-700 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-50";
-    const actionIconClass =
-      "mr-1 h-3.5 w-3.5 shrink-0 !text-[hsl(221,92%,51%)]";
+      "h-6 shrink-0 whitespace-nowrap rounded-md border border-zinc-300/85 bg-white px-1.5 text-[11px] font-medium text-zinc-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-zinc-400/90 hover:bg-zinc-50";
+    const actionIconClass = "mr-0.5 h-3 w-3 shrink-0 !text-[hsl(221,92%,51%)]";
     const shareTriggerClass =
-      "h-8 shrink-0 whitespace-nowrap rounded-lg px-2.5 text-[13px] font-medium [&_svg]:mr-1.5 [&_svg]:size-3.5";
+      "h-6 shrink-0 whitespace-nowrap rounded-md px-1.5 text-[11px] font-medium [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3";
 
     return (
-      <div
-        className="flex min-w-0 flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3"
-        aria-label="Map results command bar"
-      >
-        <div className="flex shrink-0 items-center gap-2 border-zinc-200/80 pb-px sm:border-0 sm:pb-0">
-          <button
-            type="button"
-            onClick={handleBackToSearch}
-            className="-ml-0.5 rounded-md p-1 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-[18px] w-[18px]" />
-          </button>
-          <h1 className="text-sm font-semibold tracking-tight text-zinc-900 whitespace-nowrap">
-            Edit Search
-          </h1>
-        </div>
-
-        <div className="hidden h-5 w-px shrink-0 bg-zinc-200/90 sm:block" aria-hidden />
-
-        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-center [&::-webkit-scrollbar]:hidden">
-          <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
-            <ListChecks className={actionIconClass} />
-            {selectedRows.size === displayedListings.length && displayedListings.length > 0
-              ? "Deselect All"
-              : "Select All"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={selectedRows.size === 0 && !showSelectedOnly}
-            onClick={handleKeepSelected}
-            className={cn(actionBtnClass, "disabled:opacity-50")}
-          >
-            <Check className={actionIconClass} />
-            {showSelectedOnly ? "Show All" : "Keep Selected"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (selectedRows.size === 0) {
-                toast.error("You haven't selected any properties", {
-                  description: "Select one or more properties from the results to save a hotsheet.",
-                });
-                return;
-              }
-              setHotSheetDialogOpen(true);
-            }}
-            className={actionBtnClass}
-          >
-            <FileSpreadsheet className={actionIconClass} />
-            Save as Hot Sheet
-          </Button>
-          {selectedRows.size > 0 && (
-            <BulkShareListingsDialog
-              listingIds={Array.from(selectedRows)}
-              listingCount={selectedRows.size}
-              triggerClassName={shareTriggerClass}
-            />
-          )}
-          {selectedRows.size > 0 && (
-            <span className="inline-flex shrink-0 items-center rounded-full border border-primary/20 bg-blue-50/60 px-2.5 py-0.5 text-[13px] font-medium leading-none text-primary whitespace-nowrap">
-              {selectedRows.size} selected
-            </span>
-          )}
-        </div>
-
-        <div className="hidden h-5 w-px shrink-0 bg-zinc-200/90 sm:block" aria-hidden />
-
-        <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-2 sm:flex-nowrap sm:justify-end">
-          <span className="inline-flex items-center rounded-full border border-zinc-200/90 bg-zinc-50 px-2.5 py-0.5 text-[13px] font-medium text-zinc-700 whitespace-nowrap">
+      <div className="flex min-w-0 flex-col gap-0.5" aria-label="Map results command bar">
+        <div className="flex items-center justify-between gap-3 pb-1 leading-none">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleBackToSearch}
+              className="-ml-px rounded-md p-0.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
+            <h1 className="text-[11px] font-semibold tracking-tight text-zinc-800">
+              Edit Search
+            </h1>
+          </div>
+          <span className="inline-flex items-center rounded-full border border-zinc-200/80 bg-zinc-50/95 px-1.5 py-px text-[11px] font-medium tabular-nums text-zinc-600">
             {displayedListings.length} listings found
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[13px] whitespace-nowrap text-zinc-500">View:</span>
-            <div className="inline-flex rounded-lg border border-zinc-200/90 bg-zinc-50/90 p-[3px] shadow-sm">
-              <button
-                type="button"
-                onClick={() => setResultsView("map")}
-                className={cn(
-                  "h-7 rounded-md px-2.5 text-[13px] font-medium whitespace-nowrap transition-colors",
-                  resultsView === "map"
-                    ? "bg-zinc-900 text-white shadow-sm"
-                    : "text-zinc-600 hover:text-zinc-900",
-                )}
-              >
-                Map
-              </button>
-              <button
-                type="button"
-                onClick={() => setResultsView("list")}
-                className={cn(
-                  "h-7 rounded-md px-2.5 text-[13px] font-medium whitespace-nowrap transition-colors",
-                  resultsView === "list"
-                    ? "bg-zinc-900 text-white shadow-sm"
-                    : "text-zinc-600 hover:text-zinc-900",
-                )}
-              >
-                List
-              </button>
-            </div>
+        </div>
+
+        <div
+          className="flex min-w-0 items-center justify-between gap-2 border-t border-zinc-100 pb-px pt-1.5"
+          aria-label="Result actions and view controls"
+        >
+          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
+              <ListChecks className={actionIconClass} />
+              {selectedRows.size === displayedListings.length && displayedListings.length > 0
+                ? "Deselect All"
+                : "Select All"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selectedRows.size === 0 && !showSelectedOnly}
+              onClick={handleKeepSelected}
+              className={cn(actionBtnClass, "disabled:opacity-50")}
+            >
+              <Check className={actionIconClass} />
+              {showSelectedOnly ? "Show All" : "Keep Selected"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (selectedRows.size === 0) {
+                  toast.error("You haven't selected any properties", {
+                    description: "Select one or more properties from the results to save a hotsheet.",
+                  });
+                  return;
+                }
+                setHotSheetDialogOpen(true);
+              }}
+              className={actionBtnClass}
+            >
+              <FileSpreadsheet className={actionIconClass} />
+              Save as Hot Sheet
+            </Button>
+            {selectedRows.size > 0 && (
+              <BulkShareListingsDialog
+                listingIds={Array.from(selectedRows)}
+                listingCount={selectedRows.size}
+                triggerClassName={shareTriggerClass}
+              />
+            )}
+            {selectedRows.size > 0 && (
+              <span className="inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-blue-50/70 px-1.5 py-px text-[11px] font-medium leading-none text-primary whitespace-nowrap">
+                {selectedRows.size} selected
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[13px] whitespace-nowrap text-zinc-500">Sort:</span>
-            <Select value={sortSelectValue} onValueChange={handleSortSelect}>
-              <SelectTrigger className="h-8 w-[136px] shrink-0 rounded-lg border-zinc-300/90 bg-white px-2.5 text-[13px] shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-lg border border-zinc-200 bg-white">
-                <SelectItem value="date_new">Date (New)</SelectItem>
-                <SelectItem value="date_old">Date (Old)</SelectItem>
-                <SelectItem value="price_high">Price (High)</SelectItem>
-                <SelectItem value="price_low">Price (Low)</SelectItem>
-                <SelectItem value="sqft">Square Feet</SelectItem>
-                <SelectItem value="beds">Bedrooms</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div className="flex shrink-0 flex-nowrap items-center gap-2 pl-0.5 md:gap-2.5">
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] font-medium whitespace-nowrap text-zinc-500">View:</span>
+              <div className="inline-flex rounded-md border border-zinc-200/85 bg-zinc-50/95 p-[2px] shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)]">
+                <button
+                  type="button"
+                  onClick={() => setResultsView("map")}
+                  className={cn(
+                    "h-[22px] min-w-[2.25rem] rounded px-1.5 text-[11px] font-medium whitespace-nowrap leading-none transition-colors",
+                    resultsView === "map"
+                      ? "bg-zinc-900 text-white shadow-sm"
+                      : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900",
+                  )}
+                >
+                  Map
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResultsView("list")}
+                  className={cn(
+                    "h-[22px] min-w-[2.25rem] rounded px-1.5 text-[11px] font-medium whitespace-nowrap leading-none transition-colors",
+                    resultsView === "list"
+                      ? "bg-zinc-900 text-white shadow-sm"
+                      : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900",
+                  )}
+                >
+                  List
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] font-medium whitespace-nowrap text-zinc-500">Sort:</span>
+              <Select value={sortSelectValue} onValueChange={handleSortSelect}>
+                <SelectTrigger className="h-6 w-[118px] shrink-0 rounded-md border-zinc-300/85 bg-white px-2 text-[11px] font-medium shadow-[0_1px_2px_rgba(15,23,42,0.05)] focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg border border-zinc-200 bg-white">
+                  <SelectItem value="date_new">Date (New)</SelectItem>
+                  <SelectItem value="date_old">Date (Old)</SelectItem>
+                  <SelectItem value="price_high">Price (High)</SelectItem>
+                  <SelectItem value="price_low">Price (Low)</SelectItem>
+                  <SelectItem value="sqft">Square Feet</SelectItem>
+                  <SelectItem value="beds">Bedrooms</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
@@ -579,12 +578,12 @@ const ListingSearchResults = () => {
           <section className="bg-transparent px-5 pb-6 pt-0">
             {showMapSplit ? (
               <div className="flex min-h-0 flex-col gap-3 lg:gap-3">
-                <div className="sticky top-0 z-20 shrink-0 rounded-xl border border-zinc-200/70 bg-white/95 px-3 py-2.5 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.12)] ring-1 ring-zinc-900/[0.04] backdrop-blur supports-[backdrop-filter]:bg-white/90 md:rounded-2xl md:px-4">
+                <div className="sticky top-0 z-20 shrink-0 rounded-xl border border-zinc-200/65 bg-white/97 px-2.5 py-1.5 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.08)] ring-1 ring-zinc-950/[0.035] backdrop-blur supports-[backdrop-filter]:bg-white/92 md:rounded-2xl md:px-3 md:py-1.5">
                   {renderMapSplitCommandBar()}
                 </div>
 
-                <div className="flex min-h-[50vh] flex-col-reverse gap-4 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:h-[calc(100dvh-10.25rem)] lg:min-h-0 lg:flex-none lg:gap-4">
-                  <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-24 lg:self-start">
+                <div className="flex min-h-[50vh] flex-col-reverse gap-4 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:h-[calc(100dvh-9.75rem)] lg:min-h-0 lg:flex-none lg:gap-4">
+                  <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[5rem] lg:self-start">
                     <div className="h-full">
                       <PropertyMap
                         listings={displayedListings}
