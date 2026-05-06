@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export type SuccessHubListingCardProps = Omit<
   ComponentProps<typeof ListingCard>,
   "viewMode" | "showActions" | "isFavorites"
->;
+> & { className?: string };
 
 /**
  * Success Hub listing tile — standard `ListingCard` compact only.
