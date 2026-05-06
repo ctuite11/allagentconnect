@@ -92,13 +92,10 @@ function SidebarRow({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight transition-colors duration-150 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
+        "relative flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-300 font-normal transition-colors duration-150 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0",
         collapsed && "justify-center px-0",
         disabled && "opacity-40 cursor-not-allowed",
-        !disabled && "cursor-default",
-        active
-          ? "bg-transparent text-[#0E56F5] font-medium"
-          : "text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/50"
+        !disabled && "cursor-default hover:text-white hover:bg-zinc-800/50"
       )}
     >
       <span className="relative shrink-0">
@@ -190,7 +187,7 @@ export function DashboardSidebar({
         )}
       >
         {/* Logo area */}
-        <div className={cn("flex items-center px-4 py-3", collapsed ? "justify-center" : "gap-2")}>
+        <div className={cn("flex items-center px-4 pt-6 pb-8", collapsed ? "justify-center" : "gap-2")}>
           <AACMonogram className={cn("shrink-0 text-emerald-500", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
           {!collapsed && (
             <span className="text-[14px] font-semibold text-white tracking-tight">
@@ -203,7 +200,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 rounded-md hover:bg-zinc-800/50",
+            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
             collapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
