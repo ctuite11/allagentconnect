@@ -25,10 +25,12 @@ import { EmailShareModal } from "@/components/EmailShareModal";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "back_on_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
+type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
 
-// Single source of truth for the active pipeline statuses
-const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "back_on_market", "temporarily_withdrawn", "cancelled", "expired", "draft"];
+// Managed statuses for My Listings controls (intentionally excludes BOM).
+const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "temporarily_withdrawn", "cancelled", "expired", "draft"];
+// Keep legacy BOM rows visible in My Listings without exposing BOM as a managed status option.
+const FETCH_STATUSES = [...PIPELINE_STATUSES, "back_on_market"];
 
 interface Listing {
   id: string;
@@ -289,7 +291,10 @@ function MyListingsView({
   const filteredListings = useMemo(() => {
     let result = selectedStatuses.size === 0 
       ? listings 
-      : listings.filter((l) => selectedStatuses.has(l.status as ListingStatus));
+      : listings.filter((l) => {
+          const statusForFilter = (l.status === "back_on_market" ? "active" : l.status) as ListingStatus;
+          return selectedStatuses.has(statusForFilter);
+        });
     
     // Apply search query filter
     if (searchQuery.trim()) {
@@ -325,7 +330,8 @@ function MyListingsView({
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
     setEditPrice(listing.price);
-    setEditStatus(listing.status as ListingStatus);
+    // Treat BOM as an activation action in management UI, not a managed status.
+    setEditStatus((listing.status === "back_on_market" ? "active" : listing.status) as ListingStatus);
   };
 
   const cancelQuickEdit = () => {
@@ -876,7 +882,7 @@ const MyListings = () => {
           listing_stats (view_count, save_count, share_count, contact_count, showing_request_count)
         `)
         .eq("agent_id", user.id)
-        .in("status", PIPELINE_STATUSES);
+        .in("status", FETCH_STATUSES);
 
       if (error) throw error;
       
@@ -990,7 +996,26 @@ const MyListings = () => {
 
   const handleQuickUpdate = async (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => {
     try {
-      const { data, error } = await supabase.from("listings").update(updates).eq("id", id).select("*").single();
+      const current = listings.find((l) => l.id === id);
+      const isInactiveStatus = (status?: string | null) =>
+        status === "expired" ||
+        status === "cancelled" ||
+        status === "off_market" ||
+        status === "temporarily_withdrawn" ||
+        status === "withdrawn" ||
+        status === "draft";
+
+      let nextUpdates = { ...updates };
+      // My Listings-only behavior: BOM action reactivates to `active` for inactive listings.
+      if (
+        updates.status === "back_on_market" &&
+        current &&
+        isInactiveStatus(current.status)
+      ) {
+        nextUpdates = { ...nextUpdates, status: "active" };
+      }
+
+      const { data, error } = await supabase.from("listings").update(nextUpdates).eq("id", id).select("*").single();
 
       if (error) throw error;
 
