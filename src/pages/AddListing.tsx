@@ -2728,12 +2728,22 @@ const AddListing = () => {
         freshUser.id  // Use fresh user ID from server-verified session
       );
       
+      const isRangeOnlySalePricing =
+        formData.listing_type === "for_sale" &&
+        validatedData.price == null &&
+        (validatedData.price_range_min != null || validatedData.price_range_max != null);
+
       // Override with validated data for consistency
       listingData.address = validatedData.address;
       listingData.city = validatedData.city;
       listingData.state = validatedData.state;
       listingData.zip_code = validatedData.zip_code;
-      listingData.price = validatedData.price;
+      // For range-only sale listings, keep the price derived in buildListingDataFromForm.
+      if (!isRangeOnlySalePricing) {
+        listingData.price = validatedData.price ?? listingData.price;
+      }
+      const effectivePrice = Number(listingData.price ?? 0);
+      listingData.price = Number.isFinite(effectivePrice) ? effectivePrice : 0;
       listingData.bedrooms = validatedData.bedrooms || null;
       listingData.bathrooms = validatedData.bathrooms || null;
       listingData.square_feet = validatedData.square_feet || null;
@@ -2776,7 +2786,7 @@ const AddListing = () => {
         resultListingId = targetListingId;
 
         // Track price changes
-        const newPrice = validatedData.price;
+        const newPrice = effectivePrice;
         if (originalPriceRef.current !== null && originalPriceRef.current !== newPrice) {
           try {
             const { data: userData } = await supabase.auth.getUser();
@@ -2834,7 +2844,7 @@ const AddListing = () => {
             await supabase.from("listing_price_history").insert({
               listing_id: resultListingId,
               old_price: null,
-              new_price: validatedData.price,
+              new_price: effectivePrice,
               changed_by: currentUserId,
               note: "Initial listing price",
             });
