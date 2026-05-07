@@ -5,6 +5,17 @@ import { ROUTES } from "@/constants/routes";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +29,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw, Trash2 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
@@ -114,6 +125,7 @@ const AddListing = () => {
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingDraft, setDeletingDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -2627,6 +2639,31 @@ const AddListing = () => {
     toast.info("Preview functionality coming soon");
   };
 
+  const handleDeleteDraft = async () => {
+    const targetId = listingId || draftId;
+    const isDraftRecord = backendStatusRef.current === "draft";
+    if (!targetId || !isDraftRecord) {
+      toast.error("Only draft listings can be deleted.");
+      return;
+    }
+
+    setDeletingDraft(true);
+    try {
+      const { error } = await supabase.rpc("delete_draft_listing", {
+        p_listing_id: targetId,
+      });
+      if (error) throw error;
+
+      toast.success("Draft deleted");
+      navigate("/agent/listings?status=draft");
+    } catch (error: any) {
+      console.error("Delete draft error:", error);
+      toast.error(error?.message || "Failed to delete draft");
+    } finally {
+      setDeletingDraft(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
     setSubmitting(true);
@@ -3023,6 +3060,40 @@ const AddListing = () => {
               {/* Edit mode: Preview + Save Changes only */}
               {listingId ? (
                 <>
+                  {backendStatusRef.current === "draft" && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="lg"
+                          type="button"
+                          disabled={deletingDraft || submitting || autoSaving}
+                          className="gap-2"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                          {deletingDraft ? "Deleting..." : "Delete Draft"}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this draft?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently remove the draft listing. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={deletingDraft}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteDraft}
+                            disabled={deletingDraft}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {deletingDraft ? "Deleting..." : "Delete Draft"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   <Button 
                     variant="outline" 
                     size="lg" 
