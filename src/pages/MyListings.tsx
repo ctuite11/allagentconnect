@@ -239,7 +239,7 @@ function MyListingsView({
   const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
   const [isDeletingSingle, setIsDeletingSingle] = useState(false);
 
-  // Draft listings won't appear (filtered server-side), but keep state for type compat
+  // Draft rows for bulk actions when Draft filter is on (still fetched with pipeline).
   const draftListings = useMemo(() => listings.filter(l => l.status === "draft"), [listings]);
 
   const toggleDraftSelection = (id: string) => {
@@ -289,12 +289,18 @@ function MyListingsView({
   const [sortKey, setSortKey] = useState<"date" | "dom" | "price" | "status">("date");
 
   const filteredListings = useMemo(() => {
-    let result = selectedStatuses.size === 0 
-      ? listings 
-      : listings.filter((l) => {
-          const statusForFilter = (l.status === "back_on_market" ? "active" : l.status) as ListingStatus;
-          return selectedStatuses.has(statusForFilter);
-        });
+    // Default (no status pills): show live/pipeline inventory only — never mix drafts in.
+    // Drafts appear only when Draft is selected or URL includes `status=draft` (see selectedStatuses).
+    // Exception: agents with only drafts still see their drafts on first paint while URL syncs to `?status=draft`.
+    let result =
+      selectedStatuses.size === 0
+        ? hasOnlyDrafts
+          ? listings
+          : listings.filter((l) => l.status !== "draft")
+        : listings.filter((l) => {
+            const statusForFilter = (l.status === "back_on_market" ? "active" : l.status) as ListingStatus;
+            return selectedStatuses.has(statusForFilter);
+          });
     
     // Apply search query filter
     if (searchQuery.trim()) {
@@ -325,7 +331,7 @@ function MyListingsView({
       }
     });
     return result;
-  }, [listings, selectedStatuses, searchQuery, sortKey]);
+  }, [listings, selectedStatuses, searchQuery, sortKey, hasOnlyDrafts]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
