@@ -1993,6 +1993,16 @@ const AddListing = () => {
     
     const dcmlsSnapshot = dcmlsPublishSnapshot(formData.show_on_dcmls);
     
+    const draftPrice =
+      formData.listing_type === "for_rent"
+        ? (() => {
+            const r = parseFloat(String(formData.monthly_rent ?? "").trim());
+            return Number.isFinite(r) ? r : 0;
+          })()
+        : formData.price
+          ? parseFloat(formData.price)
+          : 0;
+
     const minimalPayload = {
       agent_id: user.id,
       status: 'draft',
@@ -2000,7 +2010,7 @@ const AddListing = () => {
       city: formData.city || 'TBD',
       state: formData.state || 'MA',
       zip_code: formData.zip_code || '00000',
-      price: formData.price ? parseFloat(formData.price) : 0,
+      price: draftPrice,
       ...dcmlsSnapshot,
     };
     
@@ -2085,7 +2095,15 @@ const AddListing = () => {
     longitude: formData.longitude,
     
     // Property Details ("meat and potatoes")
-    price: formData.price ? parseFloat(formData.price) : 0,
+    price:
+      formData.listing_type === "for_rent"
+        ? (() => {
+            const r = parseFloat(String(formData.monthly_rent ?? "").trim());
+            return Number.isFinite(r) ? r : 0;
+          })()
+        : formData.price
+          ? parseFloat(formData.price)
+          : 0,
     bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
     bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
     square_feet: formData.square_feet ? parseInt(formData.square_feet) : null,
