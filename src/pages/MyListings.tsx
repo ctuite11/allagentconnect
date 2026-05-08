@@ -68,7 +68,7 @@ interface Listing {
 
 // Status filter options restricted to active pipeline
 const ALL_STATUSES: { label: string; value: ListingStatus }[] = PIPELINE_STATUSES.map(s => ({
-  label: LISTING_STATUS_LABELS[s] || s,
+  label: s === "draft" ? "Drafts" : (LISTING_STATUS_LABELS[s] || s),
   value: s,
 }));
 
@@ -268,6 +268,9 @@ function MyListingsView({
     try {
       await onBulkDeleteDrafts(Array.from(selectedDraftIds));
       setSelectedDraftIds(new Set());
+      // After deleting drafts, return to default view (no Draft filter selected).
+      setSelectedStatuses(new Set());
+      setSearchParams({});
     } finally {
       setIsDeleting(false);
       setShowBulkDeleteConfirm(false);
@@ -279,7 +282,13 @@ function MyListingsView({
     if (!listingToDelete) return;
     setIsDeletingSingle(true);
     try {
+      const wasDraft = listingToDelete.status === "draft";
       await onDelete(listingToDelete.id);
+      if (wasDraft) {
+        // After deleting a draft, return to default view and clear Draft selection.
+        setSelectedStatuses(new Set());
+        setSearchParams({});
+      }
     } finally {
       setIsDeletingSingle(false);
       setListingToDelete(null);
