@@ -12,10 +12,27 @@ interface NotificationSettings {
 }
 
 const OPTIONS: { value: Frequency; label: string; description: string }[] = [
-  { value: "immediate", label: "Immediately", description: "Get a copy of every invite + listing email sent to your buyers, plus buyer activity" },
-  { value: "daily", label: "Daily Digest", description: "One daily summary of buyer activity" },
-  { value: "weekly", label: "Weekly Digest", description: "One weekly summary of buyer activity" },
-  { value: "off", label: "Off", description: "Don't send me buyer notification copies" },
+  {
+    value: "immediate",
+    label: "Immediately",
+    description:
+      "Get an alert for outbound communications and high-signal network sends as communications activity happens",
+  },
+  {
+    value: "daily",
+    label: "Daily Digest",
+    description: "One daily summary of agent-network communications activity and updates",
+  },
+  {
+    value: "weekly",
+    label: "Weekly Digest",
+    description: "One weekly summary of agent-network communications activity and updates",
+  },
+  {
+    value: "off",
+    label: "Off",
+    description: "Don't email me Communications Center or network workflow alerts",
+  },
 ];
 
 export const ClientNeedsNotificationSettings = () => {
@@ -99,10 +116,10 @@ export const ClientNeedsNotificationSettings = () => {
       <CardHeader className="p-0">
         <div className="flex items-center gap-1.5">
           <Bell className="h-5 w-5 text-emerald-600/80" />
-          <CardTitle className="text-base font-medium text-zinc-900">Buyer Notifications</CardTitle>
+          <CardTitle className="text-base font-medium text-zinc-900">Communications Notifications</CardTitle>
         </div>
         <p className="text-sm text-zinc-500 mt-1">
-          Controls invite copies, buyer listing sends, and buyer activity emails.
+          Chooses cadence for email about Comms Center activity: outbound communications, network sends, and agent-network updates.
         </p>
       </CardHeader>
       <CardContent className="space-y-4 p-0 mt-3">
@@ -118,9 +135,9 @@ export const ClientNeedsNotificationSettings = () => {
                 key={opt.value}
                 className={`flex items-start gap-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-zinc-50 ${active ? "bg-zinc-100" : ""}`}
               >
-                <RadioGroupItem value={opt.value} id={`buyer-notif-${opt.value}`} className="mt-0.5" />
+                <RadioGroupItem value={opt.value} id={`comms-notif-${opt.value}`} className="mt-0.5" />
                 <Label
-                  htmlFor={`buyer-notif-${opt.value}`}
+                  htmlFor={`comms-notif-${opt.value}`}
                   className={`cursor-pointer text-sm leading-snug ${active ? "font-medium text-zinc-900" : "text-zinc-700"}`}
                 >
                   <span className="block">{opt.label}</span>

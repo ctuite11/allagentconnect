@@ -267,7 +267,9 @@ const ClientNeedsDashboard = () => {
 
           <section data-preferences-section>
             <h2 className={aacStyles.sectionH2}>My Preferences</h2>
-            <p className={aacStyles.sectionHelper}>For receiving email notifications only</p>
+            <p className={aacStyles.sectionHelper}>
+              Narrow which agent-network communications activity can trigger Comms Center email alerts.
+            </p>
 
             <div className="space-y-3 mt-4">
               <PriceRangePreferences
@@ -290,7 +292,7 @@ const ClientNeedsDashboard = () => {
 
           <section>
             <h2 className={aacStyles.sectionH2}>Notification Settings</h2>
-            <p className={aacStyles.sectionHelper}>Configure how you receive alerts</p>
+            <p className={aacStyles.sectionHelper}>Configure cadence for agent communication alerts from the network</p>
             <div className="mt-4">
               <ClientNeedsNotificationSettings />
             </div>
@@ -302,11 +304,11 @@ const ClientNeedsDashboard = () => {
                 <div className="text-amber-600 text-xl">⚠️</div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-amber-900 text-sm mb-1">
-                    Important: You&apos;ll Receive All Notifications
+                    Important: Broad network communications alerts
                   </h3>
                   <p className="text-xs text-amber-800 mb-3">
-                    You have email notifications enabled but haven&apos;t set any filters. This means you will
-                    receive notifications for <strong>ALL</strong> client needs.
+                    You have Comms Center email alerts enabled but haven&apos;t set any filters below. That can mean alerts for{' '}
+                    <strong>a wide range</strong> of agent-network communications activity.
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -334,11 +336,10 @@ const ClientNeedsDashboard = () => {
           <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Set Your Notification Preferences</AlertDialogTitle>
+                <AlertDialogTitle>Set your communications preferences</AlertDialogTitle>
                 <AlertDialogDescription>
-                  In order to receive email notifications, you must select your preferences. Please set at least one
-                  filter: price range, property types, or geographic areas. Without filters, you&apos;ll receive
-                  notifications for ALL client needs.
+                  To keep Comms Center email aligned with how you work, set at least one filter: price range, property types,
+                  or geographic areas. Without filters, you may receive alerts for broad network communications activity.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -356,7 +357,7 @@ const ClientNeedsDashboard = () => {
                       .upsert({ user_id: user.id, client_needs_enabled: false }, { onConflict: "user_id" });
                   }}
                 >
-                  Disable Notifications
+                  Turn off email alerts
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => {
