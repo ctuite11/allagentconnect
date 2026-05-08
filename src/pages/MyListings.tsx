@@ -66,6 +66,15 @@ interface Listing {
   };
 }
 
+type MyListingsCache = {
+  userId: string;
+  listings: Listing[];
+  updatedAt: number;
+};
+
+let myListingsCache: MyListingsCache | null = null;
+const MY_LISTINGS_SCROLL_KEY = "myListings:scrollY";
+
 // Status filter options restricted to active pipeline
 const ALL_STATUSES: { label: string; value: ListingStatus }[] = PIPELINE_STATUSES.map(s => ({
   label: s === "draft" ? "Drafts" : (LISTING_STATUS_LABELS[s] || s),
@@ -880,15 +889,43 @@ const MyListings = () => {
   const [emailListing, setEmailListing] = useState<Listing | null>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchListings();
-    }
-  }, [user]);
-
-  const fetchListings = async () => {
     if (!user) return;
 
-    setLoading(true);
+    const hasCached =
+      myListingsCache &&
+      myListingsCache.userId === user.id &&
+      Array.isArray(myListingsCache.listings);
+
+    if (hasCached) {
+      // Reuse recently loaded listings immediately, then refresh in background.
+      setListings(myListingsCache!.listings);
+      setLoading(false);
+      fetchListings({ background: true });
+      return;
+    }
+    fetchListings();
+  }, [user]);
+
+  useEffect(() => {
+    const savedY = sessionStorage.getItem(MY_LISTINGS_SCROLL_KEY);
+    if (!savedY) return;
+    const y = Number(savedY);
+    if (!Number.isFinite(y)) return;
+    requestAnimationFrame(() => window.scrollTo({ top: y }));
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem(MY_LISTINGS_SCROLL_KEY, String(window.scrollY));
+    };
+  }, []);
+
+  const fetchListings = async ({ background = false }: { background?: boolean } = {}) => {
+    if (!user) return;
+
+    if (!background) {
+      setLoading(true);
+    }
     try {
       const { data, error } = await supabase
         .from("listings")
@@ -960,11 +997,20 @@ const MyListings = () => {
       );
 
       setListings(listingsWithMatches);
+      myListingsCache = {
+        userId: user.id,
+        listings: listingsWithMatches,
+        updatedAt: Date.now(),
+      };
     } catch (error) {
       console.error("Error fetching listings:", error);
-      toast.error("Failed to load listings");
+      if (!background) {
+        toast.error("Failed to load listings");
+      }
     } finally {
-      setLoading(false);
+      if (!background) {
+        setLoading(false);
+      }
     }
   };
 
