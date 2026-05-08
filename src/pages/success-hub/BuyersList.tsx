@@ -139,16 +139,18 @@ export default function BuyersList() {
           title="My Buyers"
           subtitle="Manage buyer hot sheets, favorites, invites, and activity."
           className="mb-6"
-          actions={
-            <Button
-              onClick={() => setShowCreate(true)}
-              className="h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
-            >
-              <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-              New Buyer
-            </Button>
-          }
         />
+
+        <div className="mb-4 flex items-center">
+          <Button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            className="h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+          >
+            <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+            New Buyer
+          </Button>
+        </div>
 
         <AgentSectionCard className="p-6">
           {/* Filter pills */}

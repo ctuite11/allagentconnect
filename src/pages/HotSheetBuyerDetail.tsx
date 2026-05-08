@@ -232,21 +232,22 @@ const HotSheetBuyerDetail = () => {
           titleClassName={buyerDetailTitleClass}
           compactBack
           className="mb-1"
-          actions={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={newHotSheetBtnClass}
-              onClick={() => setCreateHotSheetOpen(true)}
-            >
-              New Hot Sheet
-            </Button>
-          }
         />
         {buyer?.email ? (
           <p className="text-sm font-normal text-zinc-500">{buyer.email}</p>
         ) : null}
+      </div>
+
+      <div className="mb-4 flex items-center">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={newHotSheetBtnClass}
+          onClick={() => setCreateHotSheetOpen(true)}
+        >
+          New Hot Sheet
+        </Button>
       </div>
 
       {/* Hot Sheet Collection Cards */}
