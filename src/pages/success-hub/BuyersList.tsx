@@ -255,7 +255,7 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         >
           {isPending ? "Pending Invite" : "Invite Accepted"}
         </span>
-        <span className="hidden sm:inline whitespace-nowrap text-sm font-medium text-zinc-600">
+        <span className="hidden sm:inline whitespace-nowrap text-sm font-normal tracking-tight text-zinc-600">
           {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
         </span>
         <ChevronRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-0.5" />
