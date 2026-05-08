@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, MapPin, RefreshCw, CheckCircle2, Clock, ChevronDown, ArrowLeft, Pencil, Info } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import {
   AlertDialog,
@@ -41,6 +43,11 @@ interface ReviewRecipient {
   /** Present when invite pending and a share token exists (for Resend). */
   resendTokenId?: string;
   resendToken?: string;
+  /**
+   * True only if this CRM contact has never been invited (agent-wide) and is not buyer-linked —
+   * primary Send may enqueue a one-time dashboard/search invite email.
+   */
+  sendDashboardInvite: boolean;
 }
 
 function initialsFromName(name: string): string {
@@ -244,11 +251,13 @@ const HotSheetReview = () => {
   /** CRM buyer id to return to buyer hot sheet list when applicable */
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
+  const [removedListingsOpen, setRemovedListingsOpen] = useState(false);
 
   useEffect(() => {
     setConversationRecipientBuyerId(null);
     setBuyerContextClientId(null);
     setReviewRecipients([]);
+    setRemovedListingsOpen(false);
   }, [id]);
 
   useEffect(() => {
@@ -430,6 +439,50 @@ const HotSheetReview = () => {
               );
             });
 
+            /** Any hot-sheet invite tokens for this agent (all sheets / buyers) — one-time dashboard invite eligibility. */
+            const allInviteForAgent = (stRows ?? []).filter(
+              (t: any) => t?.payload?.type === "client_hotsheet_invite",
+            );
+            const globalInviteByClientId = new Map<string, any[]>();
+            const globalInviteByEmail = new Map<string, any[]>();
+            for (const t of allInviteForAgent) {
+              const cid = (t as any)?.payload?.client_id ?? null;
+              const em = (t as any)?.payload?.client_email ?? null;
+              if (cid) {
+                const k = String(cid);
+                const arr = globalInviteByClientId.get(k) ?? [];
+                arr.push(t);
+                globalInviteByClientId.set(k, arr);
+              }
+              if (em) {
+                const k = String(em).toLowerCase();
+                const arr = globalInviteByEmail.get(k) ?? [];
+                arr.push(t);
+                globalInviteByEmail.set(k, arr);
+              }
+            }
+
+            const mergeGlobalInviteTokens = (cid: string, emailKey: string | null) => {
+              const uniq = new Map<string, any>();
+              for (const t of globalInviteByClientId.get(cid) ?? []) uniq.set(String((t as any).id), t);
+              if (emailKey) {
+                for (const t of globalInviteByEmail.get(emailKey) ?? []) uniq.set(String((t as any).id), t);
+              }
+              return [...uniq.values()];
+            };
+
+            const { data: relationshipRows } = await supabase
+              .from("client_agent_relationships")
+              .select("crm_client_id, client_id, status")
+              .eq("agent_id", user.id)
+              .in("crm_client_id", clientIds);
+
+            const buyerLinkedCrmIds = new Set(
+              (relationshipRows ?? [])
+                .filter((r: any) => String(r.status) === "active" && r.client_id != null)
+                .map((r: any) => String(r.crm_client_id)),
+            );
+
             const tokensByClientId = new Map<string, any[]>();
             const tokensByEmail = new Map<string, any[]>();
 
@@ -503,6 +556,10 @@ const HotSheetReview = () => {
               const merged = mergeTokensForClient(cid, emailKey);
               const hasAccepted = merged.some((t: any) => Boolean(t?.accepted_at));
               const pick = pickPendingTokenRow(merged);
+              const globalMerged = mergeGlobalInviteTokens(cid, emailKey);
+              const sendDashboardInvite =
+                !buyerLinkedCrmIds.has(cid) && globalMerged.length === 0;
+
               built.push({
                 clientId: cid,
                 displayName,
@@ -511,6 +568,7 @@ const HotSheetReview = () => {
                 inviteAccepted: hasAccepted,
                 resendTokenId: !hasAccepted && pick ? pick.id : undefined,
                 resendToken: !hasAccepted && pick ? pick.token : undefined,
+                sendDashboardInvite,
               });
             }
             setReviewRecipients(built);
@@ -621,6 +679,25 @@ if (comments && comments.length > 0) {
     }
   };
 
+  const removedListings = useMemo(() => {
+    const visible = new Set(listings.map((l) => l.id));
+    return allListings.filter((l) => !visible.has(l.id));
+  }, [allListings, listings]);
+
+  const restoreListing = useCallback(
+    (listingId: string) => {
+      const item = allListings.find((l) => l.id === listingId);
+      if (!item) return;
+      if (listings.some((l) => l.id === listingId)) return;
+      const order = new Map(allListings.map((l, i) => [l.id, i]));
+      setListings((prev) =>
+        [...prev, item].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)),
+      );
+      toast.success("Listing restored");
+    },
+    [allListings, listings],
+  );
+
   const handleKeepSelected = () => {
     if (selectedListings.size === 0) {
       toast.error("No listings selected");
@@ -629,6 +706,7 @@ if (comments && comments.length > 0) {
     const filtered = listings.filter(l => selectedListings.has(l.id));
     setListings(filtered);
     setSelectedListings(new Set());
+    if (filtered.length < allListings.length) setRemovedListingsOpen(true);
     toast.success(`Kept ${filtered.length} listings, removed ${listings.length - filtered.length}`);
   };
 
@@ -654,6 +732,9 @@ if (comments && comments.length > 0) {
       }
 
       const recipientClientIds = hscRows.map((r: any) => r.client_id);
+      const dashEligibleByClientId = new Map(
+        reviewRecipients.map((r) => [r.clientId, r.sendDashboardInvite]),
+      );
 
       // ── 2) Batch-fetch agent name, client emails, existing tokens ─────────
       const [agentProfileRes, clientsRes, existingTokensRes] = await Promise.all([
@@ -717,11 +798,14 @@ if (comments && comments.length > 0) {
       let skippedNoEmail = 0;
       let skippedTokenInsert = 0;
       let skippedAcceptedInvite = 0;
+      let skippedDashboardIneligible = 0;
       let resendCount = 0;
 
       for (const clientId of recipientClientIds) {
         const clientData = clientMap.get(clientId);
         if (!clientData?.email) { skippedNoEmail++; continue; }
+
+        const dashboardInviteOk = dashEligibleByClientId.get(clientId) ?? false;
 
         let tokenId: string;
         let finalToken: string;
@@ -731,6 +815,13 @@ if (comments && comments.length > 0) {
         if (existing?.accepted_at) {
           skippedAcceptedInvite++;
           console.log(`[handleSendInvites] Skipping invite enqueue — token already accepted for client ${clientId}`);
+          continue;
+        }
+        if (!dashboardInviteOk) {
+          skippedDashboardIneligible++;
+          console.log(
+            `[handleSendInvites] Skipping dashboard invite — buyer already invited or in search (client ${clientId})`,
+          );
           continue;
         }
         if (existing && !existing.accepted_at) {
@@ -830,6 +921,16 @@ if (comments && comments.length > 0) {
         if (skippedAcceptedInvite > 0 && skippedAcceptedInvite >= recipientsWithEmail) {
           toast.info(
             "Everyone on this hot sheet has already accepted the invitation. Use Notify to send listing updates.",
+          );
+          await fetchHotSheetAndListings();
+          return;
+        }
+        if (
+          recipientsWithEmail > 0 &&
+          skippedAcceptedInvite + skippedDashboardIneligible >= recipientsWithEmail
+        ) {
+          toast.info(
+            "No new search invitations needed — buyers were already invited or are in your search. Use Notify to send listings.",
           );
           await fetchHotSheetAndListings();
           return;
@@ -934,7 +1035,7 @@ if (comments && comments.length > 0) {
       <div className="pt-6 px-6 pb-6">
         <div className="mx-auto w-full max-w-7xl">
           <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
             ))}
@@ -964,14 +1065,16 @@ if (comments && comments.length > 0) {
     reviewRecipients.length > 0
       ? reviewRecipients.map((r) => r.displayName).join(", ")
       : getClientDisplay() || "your contact";
-  const anyInviteStillPending =
-    reviewRecipients.length > 0 ? reviewRecipients.some((r) => !r.inviteAccepted) : unacceptedCount > 0;
+  const showDashboardInviteCopy =
+    reviewRecipients.length > 0
+      ? reviewRecipients.some((r) => r.sendDashboardInvite && !r.inviteAccepted)
+      : unacceptedCount > 0;
 
   return (
       <div className="pt-4 px-6 pb-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
-          {/* Header */}
-          <div className="mb-3 flex items-center justify-between gap-4">
+          {/* Header — compact; hot sheet name lives in criteria strip */}
+          <div className="mb-2 flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-2">
               <button
                 type="button"
@@ -989,10 +1092,7 @@ if (comments && comments.length > 0) {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="truncate text-xl font-semibold tracking-tight">
-                <span className="text-zinc-800">Hot Sheet: </span>
-                <span className="text-[#0E56F5]">{hotSheet.name}</span>
-              </h1>
+              <h1 className="truncate text-sm font-semibold tracking-tight text-zinc-600">Review matches</h1>
             </div>
           </div>
 
@@ -1012,6 +1112,9 @@ if (comments && comments.length > 0) {
             <div className="flex min-w-0 flex-1 items-start gap-1.5 text-[11px] leading-snug text-zinc-600 sm:items-center">
               <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400 sm:mt-0" />
               <p className="min-w-0">
+                <span className="font-semibold text-zinc-700">Hot Sheet:</span>{" "}
+                <span className="text-zinc-800">{hotSheet.name}</span>
+                <span className="text-zinc-300"> · </span>
                 <span className="font-semibold text-zinc-700">Scope:</span> {criteriaSummary.scope}
                 <span className="text-zinc-300"> · </span>
                 <span className="font-semibold text-zinc-700">State:</span> {criteriaSummary.state}
@@ -1034,8 +1137,8 @@ if (comments && comments.length > 0) {
             <div className="mb-2 flex gap-2 rounded-lg border border-sky-200/90 bg-sky-50/90 px-3 py-2">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" aria-hidden />
               <p className="text-xs leading-snug text-sky-950">
-                {anyInviteStillPending
-                  ? `Select listings below to send your first batch to ${buyerNamesLabel}. They’ll receive these listings along with an invitation to join.`
+                {showDashboardInviteCopy
+                  ? `Select listings below to send your first batch to ${buyerNamesLabel}. Send the listings along with an invitation to join your search.`
                   : `Select listings below to send to ${buyerNamesLabel}.`}
               </p>
             </div>
@@ -1107,9 +1210,7 @@ if (comments && comments.length > 0) {
                     <Send className="h-3.5 w-3.5" />
                     {sending
                       ? "Sending…"
-                      : unacceptedCount > 0 &&
-                          acceptedCount === 0 &&
-                          !conversationRecipientBuyerId
+                      : showDashboardInviteCopy
                         ? "Send Listings & Invite"
                         : "Send Listings"}
                   </Button>
@@ -1159,7 +1260,44 @@ if (comments && comments.length > 0) {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-5">
+              {removedListings.length > 0 && (
+                <Collapsible
+                  open={removedListingsOpen}
+                  onOpenChange={setRemovedListingsOpen}
+                  className="mb-3 rounded-lg border border-zinc-200/90 bg-zinc-50/50"
+                >
+                  <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100/80 rounded-lg">
+                    <ChevronDown
+                      className={cn("h-4 w-4 shrink-0 text-zinc-500 transition-transform", removedListingsOpen && "rotate-180")}
+                    />
+                    Removed listings ({removedListings.length})
+                    <span className="truncate font-normal text-zinc-500">— restore if removed by mistake</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="border-t border-zinc-200/80 px-3 py-2">
+                    <ul className="max-h-48 space-y-2 overflow-y-auto">
+                      {removedListings.map((l) => (
+                        <li
+                          key={l.id}
+                          className="flex items-center justify-between gap-2 rounded-md border border-zinc-200/60 bg-white px-2 py-1.5 text-xs"
+                        >
+                          <span className="min-w-0 truncate text-zinc-700">
+                            {l.address}, {l.city}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-7 shrink-0 rounded-md px-2 text-[11px] font-medium border-zinc-200"
+                            onClick={() => restoreListing(l.id)}
+                          >
+                            Restore
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
                 {sortedListings.map((listing) => (
                   <ListingCard
                     key={listing.id}
@@ -1180,7 +1318,7 @@ if (comments && comments.length > 0) {
                 ))}
               </div>
               <p className="mt-3 text-center text-xs text-zinc-500">
-                Showing {listings.length} of {listings.length} listings
+                Showing {listings.length} of {allListings.length} listings
               </p>
             </>
           )}
@@ -1208,9 +1346,21 @@ if (comments && comments.length > 0) {
       <AlertDialog open={confirmInviteOpen} onOpenChange={setConfirmInviteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Send invite without selected listings?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {showDashboardInviteCopy ? "Send search invite without listings?" : "Send without selected listings?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              There are current matches, but you haven't selected any listings to include. You can still invite the client to view matches after accepting.
+              {showDashboardInviteCopy ? (
+                <>
+                  You haven&apos;t selected listings to include yet. You can still send your one-time invitation to join your
+                  buyer search dashboard; listings can follow on the next send.
+                </>
+              ) : (
+                <>
+                  There are current matches, but you haven&apos;t selected any listings. Send updates from this hot sheet once
+                  you&apos;ve made a selection if you prefer.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:justify-end">
@@ -1224,7 +1374,7 @@ if (comments && comments.length > 0) {
                 handleSendInvites();
               }}
             >
-              Send Invite Anyway
+              {showDashboardInviteCopy ? "Send Invite Anyway" : "Continue"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
