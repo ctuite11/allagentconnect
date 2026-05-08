@@ -39,7 +39,7 @@ interface SidebarItem {
 const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard" },
   { label: "Search", icon: Search, route: "/listing-search" },
-  { label: "Comms", icon: Radio, route: "/client-needs" },
+  { label: "Comms", icon: Radio, route: "/communications" },
   { label: "Messages", icon: MessageSquare, route: "/agent/messages" },
   { label: "Buyers", icon: Users, route: "/success-hub/buyers" },
   { label: "Agent Network", icon: Users, route: "/our-members" },

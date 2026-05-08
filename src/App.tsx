@@ -352,7 +352,7 @@ const App = () => (
                 {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
-                <Route path="/communication-center" element={<Navigate to="/client-needs" replace />} />
+                <Route path="/communication-center" element={<Navigate to="/communications" replace />} />
                 <Route path="/property/:id" element={<><PropertyDetail /><Footer /></>} />
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowseEntry />} />
