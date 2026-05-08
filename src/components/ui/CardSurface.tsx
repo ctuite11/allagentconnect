@@ -9,9 +9,9 @@ export function CardSurface({ className, interactive, ...props }: CardSurfacePro
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-none",
+        "overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
         interactive &&
-          "transition-colors duration-200 hover:border-zinc-200 focus-within:border-zinc-200",
+          "transition-[box-shadow,border-color,transform] duration-200 hover:-translate-y-[1px] hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] focus-within:border-zinc-300/90",
         className
       )}
       {...props}

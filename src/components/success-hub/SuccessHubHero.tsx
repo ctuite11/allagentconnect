@@ -14,7 +14,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
   const aacShort = summary.agentId ? summary.agentId.slice(0, 8) : "";
 
   return (
-    <div className="rounded-2xl border border-zinc-100 bg-white px-5 py-3.5 shadow-none">
+    <div className="rounded-2xl border border-zinc-200/90 bg-white px-5 py-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color] duration-150 hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
       <div className="flex flex-col gap-3.5 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
         <div className="min-w-0 flex-1 space-y-1">
           <h1 className="text-xl font-semibold tracking-tight text-zinc-950">

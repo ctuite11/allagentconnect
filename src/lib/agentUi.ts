@@ -15,7 +15,7 @@ export {
 
 /** Section surface on agent AAC pages: white canvas, hairline border, no shadow */
 export const agentSectionCard =
-  "bg-white rounded-2xl border border-zinc-100 shadow-none transition-colors duration-150";
+  "bg-white rounded-2xl border border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color] duration-150 hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]";
 
 /** Page title — compact AAC tool-first scale */
 export const agentPageTitleClass =

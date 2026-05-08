@@ -3,7 +3,7 @@ import { Home, Layers, MessageSquare, Users } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 const shell =
-  "rounded-2xl border border-zinc-100 bg-white p-4 shadow-none transition-colors duration-150 hover:border-zinc-200";
+  "rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-150 hover:-translate-y-[1px] hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]";
 
 type SuccessHubStatRowProps = {
   summary: SuccessHubSummary;
