@@ -277,8 +277,8 @@ const HotSheetReview = () => {
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
   const [removedListingsOpen, setRemovedListingsOpen] = useState(false);
-  /** Total listings matching criteria (before buyer-hidden filter in shared workspace) */
-  const [criteriaMatchCount, setCriteriaMatchCount] = useState(0);
+  /** Buyer hot-sheet saves — read-only hearts on shared workspace cards */
+  const [buyerHotSheetFavoriteIds, setBuyerHotSheetFavoriteIds] = useState<Set<string>>(new Set());
 
   const isSharedWorkspace = useMemo(
     () =>
@@ -350,7 +350,7 @@ const HotSheetReview = () => {
     try {
       setLoading(true);
       setReviewRecipients([]);
-      setCriteriaMatchCount(0);
+      setBuyerHotSheetFavoriteIds(new Set());
 
       // Resolve current agent identity
       const { data: { user } } = await supabase.auth.getUser();
@@ -658,7 +658,6 @@ const HotSheetReview = () => {
         }));
       }
 
-      const fullCriteriaCount = nextListings.length;
       let visibleListings = nextListings;
       if (workspaceIsShared && hotSheetData?.id) {
         const { data: deletedRows } = await supabase
@@ -670,7 +669,20 @@ const HotSheetReview = () => {
         visibleListings = nextListings.filter((l) => !deletedIds.has(l.id));
       }
 
-      setCriteriaMatchCount(fullCriteriaCount);
+      if (workspaceIsShared && hotSheetData?.id) {
+        const { data: favRows } = await supabase
+          .from("hot_sheet_favorites")
+          .select("listing_id")
+          .eq("hot_sheet_id", hotSheetData.id);
+        const favIds = new Set<string>();
+        for (const row of favRows ?? []) {
+          if ((row as any)?.listing_id) favIds.add(String((row as any).listing_id));
+        }
+        setBuyerHotSheetFavoriteIds(favIds);
+      } else {
+        setBuyerHotSheetFavoriteIds(new Set());
+      }
+
       setListings(visibleListings);
       setAllListings(workspaceIsShared ? visibleListings : nextListings);
       setSelectedListings(new Set());
@@ -1153,19 +1165,14 @@ if (comments && comments.length > 0) {
                   !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
                 navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
               }}
-              className="group -ml-1.5 mb-2 inline-flex max-w-full items-center gap-1.5 rounded-md py-1 pl-1.5 pr-2 text-left text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+              className="group -ml-1 mb-2 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
             >
-              <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+              <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-zinc-900" aria-hidden />
               <span className="min-w-0 truncate">{backLinkLabel}</span>
             </button>
             <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
-              Review matches
+              {isSharedWorkspace ? "Buyer Activity" : "Review matches"}
             </h1>
-            {isSharedWorkspace ? (
-              <p className="mt-1 max-w-2xl text-xs leading-snug text-zinc-500">
-                Shared workspace — matches and visibility follow the buyer dashboard (including buyer-hidden listings).
-              </p>
-            ) : null}
           </div>
 
           {agentUserId && id && (
@@ -1185,7 +1192,7 @@ if (comments && comments.length > 0) {
             <div className="flex min-w-0 flex-1 items-start gap-1.5 text-[11px] leading-snug text-zinc-600 sm:items-center">
               <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400 sm:mt-0" />
               <p className="min-w-0">
-                <span className="font-semibold text-zinc-700">Hot Sheet:</span>{" "}
+                <span className="font-semibold text-zinc-700">Hot Sheet Name:</span>{" "}
                 <span className="text-zinc-800">{hotSheet.name}</span>
                 <span className="text-zinc-300"> · </span>
                 <span className="font-semibold text-zinc-700">Scope:</span> {criteriaSummary.scope}
@@ -1376,16 +1383,13 @@ if (comments && comments.length > 0) {
                       setChatDrawerOpen(true);
                     }}
                     hotSheetId={id ?? undefined}
+                    hideCompactFavorite={isSharedWorkspace}
+                    isHotSheetFavorite={
+                      isSharedWorkspace ? buyerHotSheetFavoriteIds.has(listing.id) : undefined
+                    }
                   />
                 ))}
               </div>
-              <p className="mt-3 text-center text-xs text-zinc-500">
-                {isSharedWorkspace
-                  ? criteriaMatchCount > listings.length
-                    ? `Showing ${listings.length} of ${criteriaMatchCount} listings matching criteria (buyer-hidden excluded)`
-                    : `Showing ${listings.length} listing${listings.length !== 1 ? "s" : ""}`
-                  : `Showing ${listings.length} of ${allListings.length} listings`}
-              </p>
             </>
           )}
         </div>
