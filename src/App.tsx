@@ -113,9 +113,6 @@ import BuyersList from "./pages/success-hub/BuyersList";
 import BuyerAccount from "./pages/success-hub/BuyerAccount";
 import ListingsList from "./pages/success-hub/ListingsList";
 import ListingPerformance from "./pages/success-hub/ListingPerformance";
-import CommunicationsHub from "./pages/success-hub/CommunicationsHub";
-
-
 // Legal pages
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -285,7 +282,7 @@ const App = () => (
                   <Route path="/success-hub/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
                   <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
                   <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
-                  <Route path="/communications" element={<RouteGuard requireRole="agent"><CommunicationsHub /></RouteGuard>} />
+                  <Route path="/communications" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
 
                   <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
                   <Route path="/agent/listings/drafts" element={<RouteGuard requireRole="agent"><DraftListings /></RouteGuard>} />
