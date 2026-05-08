@@ -10,15 +10,8 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
-import { agentPageTitleClass } from "@/lib/agentUi";
 import { cn } from "@/lib/utils";
-import {
-  buyerCollectionCardRoot,
-  buyerImageMosaicCell,
-  buyerImageMosaicEmpty,
-  buyerImageMosaicGrid,
-  buyerSectionCard,
-} from "@/lib/buyerUi";
+import { buyerCollectionCardRoot, buyerImageMosaicGrid, buyerSectionCard } from "@/lib/buyerUi";
 
 interface BuyerInfo {
   firstName: string;
@@ -36,6 +29,11 @@ interface LinkedHotSheet {
 }
 
 type InviteStatus = "accepted" | "pending" | "not_invited";
+
+/** AAC-style detail title: clear hierarchy, less visual weight than page default `text-3xl`. */
+const buyerDetailTitleClass = cn(
+  "text-xl font-semibold tracking-tight text-zinc-800 font-display leading-snug sm:text-[1.35rem]",
+);
 
 function PhotoCell({ src }: { src?: string }) {
   if (src) {
@@ -220,7 +218,7 @@ const HotSheetBuyerDetail = () => {
         <PageHeader
           title="Buyer Detail"
           backTo={backTo}
-          titleClassName={agentPageTitleClass}
+          titleClassName={buyerDetailTitleClass}
           className="mb-8"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -246,30 +244,28 @@ const HotSheetBuyerDetail = () => {
 
   return (
     <PageShell className="pb-8">
-      <PageHeader
-        title={displayName}
-        backTo={backTo}
-        titleClassName={cn(agentPageTitleClass, "font-display")}
-        className="mb-2 md:items-start"
-        actions={
-          <Button type="button" size="sm" className="h-9 shrink-0" onClick={() => setCreateHotSheetOpen(true)}>
-            New Hot Sheet
-          </Button>
-        }
-      />
+      <div className="mb-6 space-y-1.5">
+        <PageHeader
+          title={displayName}
+          backTo={backTo}
+          titleClassName={buyerDetailTitleClass}
+          className="mb-0 items-start"
+          actions={
+            <Button type="button" size="sm" className="mt-0.5 h-9 shrink-0" onClick={() => setCreateHotSheetOpen(true)}>
+              New Hot Sheet
+            </Button>
+          }
+        />
 
-      {/* TEMPORARY: remove after confirming which route renders in production */}
-      <p className="mb-3 rounded-md border-2 border-red-500 bg-red-50 px-2 py-1 text-sm font-bold text-red-700">
-        HOT SHEETS HEADER TEST — file: HotSheetBuyerDetail.tsx · route: /hot-sheets/buyer/:clientId
-      </p>
-
-      {/* Buyer info row */}
-      <div className="flex flex-wrap items-center gap-3 mb-8">
-        {buyer?.email && <span className="text-sm text-zinc-500">{buyer.email}</span>}
-        <Badge variant={status.variant} className="flex items-center gap-1.5">
-          {status.icon}
-          {status.label}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          {buyer?.email && (
+            <span className="text-sm leading-tight text-zinc-500">{buyer.email}</span>
+          )}
+          <Badge variant={status.variant} className="flex shrink-0 items-center gap-1.5">
+            {status.icon}
+            {status.label}
+          </Badge>
+        </div>
       </div>
 
       {/* Hot Sheet Collection Cards */}
