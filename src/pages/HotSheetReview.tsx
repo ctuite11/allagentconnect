@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, MapPin, RefreshCw, CheckCircle2, Clock, ChevronDown, ArrowLeft, Pencil, Info } from "lucide-react";
+import { Send, MapPin, RefreshCw, CheckCircle2, Clock, ChevronDown, ArrowLeft, Pencil } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
@@ -48,6 +48,8 @@ interface ReviewRecipient {
    * primary Send may enqueue a one-time dashboard/search invite email.
    */
   sendDashboardInvite: boolean;
+  /** Active agent–client relationship with a linked buyer account (they are already in search). */
+  buyerLinked: boolean;
 }
 
 function initialsFromName(name: string): string {
@@ -55,6 +57,13 @@ function initialsFromName(name: string): string {
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+/** Per-contact dashboard invite UX: accepted, pending invite elsewhere, or still needs first invite. */
+function recipientInviteStatus(r: ReviewRecipient): "accepted" | "sent" | "needs" {
+  if (r.inviteAccepted || r.buyerLinked) return "accepted";
+  if (!r.sendDashboardInvite) return "sent";
+  return "needs";
 }
 
 function CompactClientRecipientsStrip({
@@ -141,33 +150,46 @@ function CompactClientRecipientsStrip({
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:justify-end">
-              {r.inviteAccepted ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                  <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
-                  Invite Accepted
-                </span>
-              ) : (
-                <>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-zinc-200/90 bg-zinc-50 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600">
-                    <Clock className="h-3 w-3" />
-                    Pending
+              {(() => {
+                const st = recipientInviteStatus(r);
+                if (st === "accepted") {
+                  return (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
+                      <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
+                      Invite Accepted
+                    </span>
+                  );
+                }
+                if (st === "sent") {
+                  return (
+                    <>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-900">
+                        <Clock className="h-3 w-3" />
+                        Invite Sent
+                      </span>
+                      {r.resendTokenId && r.resendToken && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                          disabled={resendingId === r.clientId || inCooldown}
+                          onClick={() => handleResend(r)}
+                        >
+                          <RefreshCw
+                            className={`mr-1.5 h-3.5 w-3.5 ${resendingId === r.clientId ? "animate-spin" : ""}`}
+                          />
+                          {resendingId === r.clientId ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
+                        </Button>
+                      )}
+                    </>
+                  );
+                }
+                return (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-900">
+                    Needs Invite
                   </span>
-                  {r.resendTokenId && r.resendToken && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
-                      disabled={resendingId === r.clientId || inCooldown}
-                      onClick={() => handleResend(r)}
-                    >
-                      <RefreshCw
-                        className={`mr-1.5 h-3.5 w-3.5 ${resendingId === r.clientId ? "animate-spin" : ""}`}
-                      />
-                      {resendingId === r.clientId ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
-                    </Button>
-                  )}
-                </>
-              )}
+                );
+              })()}
             </div>
           </div>
         );
@@ -569,6 +591,7 @@ const HotSheetReview = () => {
                 resendTokenId: !hasAccepted && pick ? pick.id : undefined,
                 resendToken: !hasAccepted && pick ? pick.token : undefined,
                 sendDashboardInvite,
+                buyerLinked: buyerLinkedCrmIds.has(cid),
               });
             }
             setReviewRecipients(built);
@@ -1020,15 +1043,6 @@ if (comments && comments.length > 0) {
       setSending(false);
     }
   };
-  const getClientDisplay = () => {
-    if (!hotSheet?.criteria) return null;
-    
-    const criteria = hotSheet.criteria as any;
-    if (criteria.clientFirstName || criteria.clientLastName) {
-      return `${criteria.clientFirstName || ""} ${criteria.clientLastName || ""}`.trim();
-    }
-    return criteria.clientEmail || null;
-  };
 
   if (loading) {
     return (
@@ -1061,14 +1075,7 @@ if (comments && comments.length > 0) {
   }
 
   const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
-  const buyerNamesLabel =
-    reviewRecipients.length > 0
-      ? reviewRecipients.map((r) => r.displayName).join(", ")
-      : getClientDisplay() || "your contact";
-  const showDashboardInviteCopy =
-    reviewRecipients.length > 0
-      ? reviewRecipients.some((r) => r.sendDashboardInvite && !r.inviteAccepted)
-      : unacceptedCount > 0;
+  const maySendDashboardInviteToSomeRecipients = reviewRecipients.some((r) => r.sendDashboardInvite);
 
   return (
       <div className="pt-4 px-6 pb-6">
@@ -1132,17 +1139,6 @@ if (comments && comments.length > 0) {
               Edit
             </Button>
           </div>
-
-          {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) && (
-            <div className="mb-2 flex gap-2 rounded-lg border border-sky-200/90 bg-sky-50/90 px-3 py-2">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" aria-hidden />
-              <p className="text-xs leading-snug text-sky-950">
-                {showDashboardInviteCopy
-                  ? `Select listings below to send your first batch to ${buyerNamesLabel}. Send the listings along with an invitation to join your search.`
-                  : `Select listings below to send to ${buyerNamesLabel}.`}
-              </p>
-            </div>
-          )}
 
           {/* Results + controls (single row where space allows) */}
           <div className="mb-3 flex flex-col gap-2 sm:mb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
@@ -1208,11 +1204,7 @@ if (comments && comments.length > 0) {
                     disabled={sending || clientCount === 0}
                   >
                     <Send className="h-3.5 w-3.5" />
-                    {sending
-                      ? "Sending…"
-                      : showDashboardInviteCopy
-                        ? "Send Listings & Invite"
-                        : "Send Listings"}
+                    {sending ? "Sending…" : "Send Listings"}
                   </Button>
                 ) : !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
@@ -1346,19 +1338,18 @@ if (comments && comments.length > 0) {
       <AlertDialog open={confirmInviteOpen} onOpenChange={setConfirmInviteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {showDashboardInviteCopy ? "Send search invite without listings?" : "Send without selected listings?"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>Send without selected listings?</AlertDialogTitle>
             <AlertDialogDescription>
-              {showDashboardInviteCopy ? (
+              {maySendDashboardInviteToSomeRecipients ? (
                 <>
-                  You haven&apos;t selected listings to include yet. You can still send your one-time invitation to join your
-                  buyer search dashboard; listings can follow on the next send.
+                  You haven&apos;t selected listings yet. Contacts marked{" "}
+                  <span className="font-medium text-foreground">&quot;Needs Invite&quot;</span> may receive a one-time invitation to
+                  join your search when you continue. Invite status for each person is shown on their row above.
                 </>
               ) : (
                 <>
-                  There are current matches, but you haven&apos;t selected any listings. Send updates from this hot sheet once
-                  you&apos;ve made a selection if you prefer.
+                  There are matches, but no listings selected. Pick matches first so they&apos;re included in what goes out—or
+                  continue only if that&apos;s intentional.
                 </>
               )}
             </AlertDialogDescription>
@@ -1374,7 +1365,7 @@ if (comments && comments.length > 0) {
                 handleSendInvites();
               }}
             >
-              {showDashboardInviteCopy ? "Send Invite Anyway" : "Continue"}
+              Continue
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
