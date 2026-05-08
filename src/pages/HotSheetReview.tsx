@@ -255,7 +255,7 @@ const HotSheetReview = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
-  const backTo = (location.state as any)?.from || "/hot-sheets";
+  const originFrom = (location.state as any)?.from as string | undefined;
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
@@ -276,9 +276,12 @@ const HotSheetReview = () => {
   const [acceptedCount, setAcceptedCount] = useState(0);
   /** Buyer auth user id for mirroring listing comments into `/messages`; null if none linked */
   const [conversationRecipientBuyerId, setConversationRecipientBuyerId] = useState<string | null>(null);
+  /** CRM buyer id to return to buyer hot sheet list when applicable */
+  const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
 
   useEffect(() => {
     setConversationRecipientBuyerId(null);
+    setBuyerContextClientId(null);
   }, [id]);
 
   useEffect(() => {
@@ -390,6 +393,9 @@ const HotSheetReview = () => {
           .from("hot_sheet_clients")
           .select("client_id")
           .eq("hot_sheet_id", hotSheetData.id);
+        const fallbackCrmClientId =
+          (typeof hotSheetData.client_id === "string" && hotSheetData.client_id) ||
+          ((hscRelRows?.[0] as any)?.client_id ?? null);
         const crmIds = new Set<string>();
         for (const row of hscRelRows ?? []) {
           if (row.client_id) crmIds.add(row.client_id);
@@ -409,7 +415,12 @@ const HotSheetReview = () => {
               ? relList.find((r) => r.crm_client_id === primaryCrm)
               : relList[0];
           buyerAuthForConversationSync = chosen?.client_id ?? null;
+          setBuyerContextClientId((chosen?.crm_client_id as string | null) ?? fallbackCrmClientId);
+        } else {
+          setBuyerContextClientId(fallbackCrmClientId);
         }
+      } else {
+        setBuyerContextClientId(null);
       }
       setConversationRecipientBuyerId(buyerAuthForConversationSync);
 
@@ -973,7 +984,15 @@ if (comments && comments.length > 0) {
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate(backTo)}
+                onClick={() => {
+                  const preferBuyerFrom =
+                    typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
+                      ? originFrom
+                      : null;
+                  const buyerBack =
+                    !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
+                  navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
+                }}
                 className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
                 aria-label="Go back"
               >
@@ -1029,7 +1048,7 @@ if (comments && comments.length > 0) {
                   {getCriteriaDisplay().map((criterion, index) => (
                     <span
                       key={index}
-                      className="px-2 py-0.5 bg-muted/60 border border-border/60 text-muted-foreground rounded-md text-xs"
+                      className="inline-flex items-center rounded-full border border-zinc-200/80 bg-white px-2 py-0.5 text-[11px] font-medium leading-none text-zinc-600"
                     >
                       {criterion}
                     </span>
@@ -1106,9 +1125,9 @@ if (comments && comments.length > 0) {
                   <Send className="h-4 w-4 mr-2" />
                   {sending
                     ? "Sending…"
-                    : unacceptedCount > 0
-                    ? "Send Listings & Invite"
-                    : "Send Listings"}
+                    : unacceptedCount > 0 && acceptedCount === 0 && !conversationRecipientBuyerId
+                      ? "Send Listings & Invite"
+                      : "Send Listings"}
                 </Button>
               ) : !invitesSent && acceptedCount > 0 ? (
                 <DropdownMenu>
