@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ function CompactClientRecipientsStrip({
   agentName,
   agentUserId,
   onRefresh,
+  collaborativeMode,
 }: {
   recipients: ReviewRecipient[];
   hotSheetId: string;
@@ -80,6 +81,8 @@ function CompactClientRecipientsStrip({
   agentName: string;
   agentUserId: string;
   onRefresh: () => void;
+  /** Shared workspace — hide invite/resend affordances; neutral collaboration labels */
+  collaborativeMode?: boolean;
 }) {
   const [cooldownUntil, setCooldownUntil] = useState<Record<string, number>>({});
   const [resendingId, setResendingId] = useState<string | null>(null);
@@ -152,11 +155,11 @@ function CompactClientRecipientsStrip({
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:justify-end">
               {(() => {
                 const st = recipientInviteStatus(r);
-                if (st === "accepted") {
+                if (collaborativeMode || st === "accepted") {
                   return (
                     <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
                       <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
-                      Invite Accepted
+                      {collaborativeMode ? "In search" : "Invite Accepted"}
                     </span>
                   );
                 }
@@ -167,7 +170,7 @@ function CompactClientRecipientsStrip({
                         <Clock className="h-3 w-3" />
                         Invite Sent
                       </span>
-                      {r.resendTokenId && r.resendToken && (
+                      {!collaborativeMode && r.resendTokenId && r.resendToken && (
                         <Button
                           type="button"
                           variant="outline"
@@ -274,6 +277,15 @@ const HotSheetReview = () => {
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
   const [removedListingsOpen, setRemovedListingsOpen] = useState(false);
+  /** Total listings matching criteria (before buyer-hidden filter in shared workspace) */
+  const [criteriaMatchCount, setCriteriaMatchCount] = useState(0);
+
+  const isSharedWorkspace = useMemo(
+    () =>
+      reviewRecipients.length > 0 &&
+      reviewRecipients.every((r) => r.inviteAccepted || r.buyerLinked),
+    [reviewRecipients],
+  );
 
   useEffect(() => {
     setConversationRecipientBuyerId(null);
@@ -334,9 +346,11 @@ const HotSheetReview = () => {
   }, []);
 
   const fetchHotSheetAndListings = async () => {
+    let workspaceIsShared = false;
     try {
       setLoading(true);
       setReviewRecipients([]);
+      setCriteriaMatchCount(0);
 
       // Resolve current agent identity
       const { data: { user } } = await supabase.auth.getUser();
@@ -594,6 +608,8 @@ const HotSheetReview = () => {
                 buyerLinked: buyerLinkedCrmIds.has(cid),
               });
             }
+            workspaceIsShared =
+              built.length > 0 && built.every((r) => r.inviteAccepted || r.buyerLinked);
             setReviewRecipients(built);
           } catch (e) {
             console.warn("Token count computation failed:", e);
@@ -642,8 +658,22 @@ const HotSheetReview = () => {
         }));
       }
 
-      setListings(nextListings);
-      setAllListings(nextListings);
+      const fullCriteriaCount = nextListings.length;
+      let visibleListings = nextListings;
+      if (workspaceIsShared && hotSheetData?.id) {
+        const { data: deletedRows } = await supabase
+          .from("hot_sheet_listing_status")
+          .select("listing_id")
+          .eq("hot_sheet_id", hotSheetData.id)
+          .eq("status", "deleted");
+        const deletedIds = new Set((deletedRows ?? []).map((r: any) => String(r.listing_id)));
+        visibleListings = nextListings.filter((l) => !deletedIds.has(l.id));
+      }
+
+      setCriteriaMatchCount(fullCriteriaCount);
+      setListings(visibleListings);
+      setAllListings(workspaceIsShared ? visibleListings : nextListings);
+      setSelectedListings(new Set());
 
       // Fetch all chat messages for this hot sheet
 const { data: comments } = await supabase
@@ -667,6 +697,31 @@ if (comments && comments.length > 0) {
       setLoading(false);
     }
   };
+
+  const fetchHotSheetRef = useRef(fetchHotSheetAndListings);
+  fetchHotSheetRef.current = fetchHotSheetAndListings;
+
+  useEffect(() => {
+    if (!id || !isSharedWorkspace) return;
+    const channel = supabase
+      .channel(`hotsheet-listing-status-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "hot_sheet_listing_status",
+          filter: `hot_sheet_id=eq.${id}`,
+        },
+        () => {
+          fetchHotSheetRef.current();
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, isSharedWorkspace]);
 
   const sortedListings = [...listings].sort((a, b) => {
     switch (sortBy) {
@@ -1075,7 +1130,8 @@ if (comments && comments.length > 0) {
   }
 
   const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
-  const maySendDashboardInviteToSomeRecipients = reviewRecipients.some((r) => r.sendDashboardInvite);
+  const maySendDashboardInviteToSomeRecipients =
+    !isSharedWorkspace && reviewRecipients.some((r) => r.sendDashboardInvite);
   const backLinkLabel =
     (typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")) || buyerContextClientId
       ? "Back to buyer's hot sheets"
@@ -1102,9 +1158,14 @@ if (comments && comments.length > 0) {
               <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
               <span className="min-w-0 truncate">{backLinkLabel}</span>
             </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[1.75rem]">
+            <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
               Review matches
             </h1>
+            {isSharedWorkspace ? (
+              <p className="mt-1 max-w-2xl text-xs leading-snug text-zinc-500">
+                Shared workspace — matches and visibility follow the buyer dashboard (including buyer-hidden listings).
+              </p>
+            ) : null}
           </div>
 
           {agentUserId && id && (
@@ -1115,6 +1176,7 @@ if (comments && comments.length > 0) {
               agentName={agentDisplayName}
               agentUserId={agentUserId}
               onRefresh={fetchHotSheetAndListings}
+              collaborativeMode={isSharedWorkspace}
             />
           )}
 
@@ -1144,37 +1206,41 @@ if (comments && comments.length > 0) {
             </Button>
           </div>
 
-          {/* Results + controls (single row where space allows) */}
+          {/* Results + controls */}
           <div className="mb-3 flex flex-col gap-2 sm:mb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="text-sm font-semibold tracking-tight text-zinc-900">
                   Results ({listings.length})
                 </span>
-                <div className="hidden h-4 w-px bg-zinc-200 sm:block" />
-                <div className="flex flex-wrap items-center gap-2">
-                  <Checkbox
-                    id="select-all"
-                    checked={selectedListings.size === listings.length && listings.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                  <label htmlFor="select-all" className="cursor-pointer text-sm font-medium text-zinc-800">
-                    {selectedListings.size === listings.length && listings.length > 0
-                      ? `Unselect All (${listings.length} listings)`
-                      : `Select All (${listings.length} listings)`}
-                  </label>
-                </div>
-                {selectedListings.size > 0 && (
+                {!isSharedWorkspace && (
                   <>
-                    <div className="h-4 w-px bg-zinc-200" />
-                    <span className="text-sm font-medium text-zinc-700">{selectedListings.size} Selected</span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
-                      onClick={handleKeepSelected}
-                    >
-                      Keep Selected
-                    </Button>
+                    <div className="hidden h-4 w-px bg-zinc-200 sm:block" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Checkbox
+                        id="select-all"
+                        checked={selectedListings.size === listings.length && listings.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                      <label htmlFor="select-all" className="cursor-pointer text-sm font-medium text-zinc-800">
+                        {selectedListings.size === listings.length && listings.length > 0
+                          ? `Unselect All (${listings.length} listings)`
+                          : `Select All (${listings.length} listings)`}
+                      </label>
+                    </div>
+                    {selectedListings.size > 0 && (
+                      <>
+                        <div className="h-4 w-px bg-zinc-200" />
+                        <span className="text-sm font-medium text-zinc-700">{selectedListings.size} Selected</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                          onClick={handleKeepSelected}
+                        >
+                          Keep Selected
+                        </Button>
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -1190,7 +1256,7 @@ if (comments && comments.length > 0) {
                     <SelectItem value="price-low">Price: Low to High</SelectItem>
                   </SelectContent>
                 </Select>
-                {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
+                {!isSharedWorkspace && !invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                   <Button
                     type="button"
                     className="h-8 gap-1.5 rounded-md bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-sm hover:bg-[#0B46CC]"
@@ -1210,7 +1276,7 @@ if (comments && comments.length > 0) {
                     <Send className="h-3.5 w-3.5" />
                     {sending ? "Sending…" : "Send Listings"}
                   </Button>
-                ) : !invitesSent && acceptedCount > 0 ? (
+                ) : !isSharedWorkspace && !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -1256,7 +1322,7 @@ if (comments && comments.length > 0) {
             </Card>
           ) : (
             <>
-              {removedListings.length > 0 && (
+              {!isSharedWorkspace && removedListings.length > 0 && (
                 <Collapsible
                   open={removedListingsOpen}
                   onOpenChange={setRemovedListingsOpen}
@@ -1301,8 +1367,8 @@ if (comments && comments.length > 0) {
                     viewMode="compact"
                     showActions={false}
                     showCompactComments
-                    onSelect={toggleListing}
-                    isSelected={selectedListings.has(listing.id)}
+                    onSelect={isSharedWorkspace ? undefined : toggleListing}
+                    isSelected={isSharedWorkspace ? false : selectedListings.has(listing.id)}
                     chatMessages={messagesMap[listing.id] || []}
                     onNewMessage={handleNewMessage}
                     onOpenChat={() => {
@@ -1314,7 +1380,11 @@ if (comments && comments.length > 0) {
                 ))}
               </div>
               <p className="mt-3 text-center text-xs text-zinc-500">
-                Showing {listings.length} of {allListings.length} listings
+                {isSharedWorkspace
+                  ? criteriaMatchCount > listings.length
+                    ? `Showing ${listings.length} of ${criteriaMatchCount} listings matching criteria (buyer-hidden excluded)`
+                    : `Showing ${listings.length} listing${listings.length !== 1 ? "s" : ""}`
+                  : `Showing ${listings.length} of ${allListings.length} listings`}
               </p>
             </>
           )}
@@ -1338,42 +1408,44 @@ if (comments && comments.length > 0) {
         />
       )}
 
-      {/* Confirm Invite Modal */}
-      <AlertDialog open={confirmInviteOpen} onOpenChange={setConfirmInviteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Send without selected listings?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {maySendDashboardInviteToSomeRecipients ? (
-                <>
-                  You haven&apos;t selected listings yet. Contacts marked{" "}
-                  <span className="font-medium text-foreground">&quot;Needs Invite&quot;</span> may receive a one-time invitation to
-                  join your search when you continue. Invite status for each person is shown on their row above.
-                </>
-              ) : (
-                <>
-                  There are matches, but no listings selected. Pick matches first so they&apos;re included in what goes out—or
-                  continue only if that&apos;s intentional.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:justify-end">
-            <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0">
-              Go Back and Select Listings
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="h-8 rounded-md px-3 text-xs font-medium bg-[#0E56F5] hover:bg-[#0B46CC]"
-              onClick={() => {
-                setConfirmInviteOpen(false);
-                handleSendInvites();
-              }}
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Confirm send (invite flow only — not shared workspace) */}
+      {!isSharedWorkspace && (
+        <AlertDialog open={confirmInviteOpen} onOpenChange={setConfirmInviteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Send without selected listings?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {maySendDashboardInviteToSomeRecipients ? (
+                  <>
+                    You haven&apos;t selected listings yet. Contacts marked{" "}
+                    <span className="font-medium text-foreground">&quot;Needs Invite&quot;</span> may receive a one-time invitation to
+                    join your search when you continue. Invite status for each person is shown on their row above.
+                  </>
+                ) : (
+                  <>
+                    There are matches, but no listings selected. Pick matches first so they&apos;re included in what goes out—or
+                    continue only if that&apos;s intentional.
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2 sm:justify-end">
+              <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0">
+                Go Back and Select Listings
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="h-8 rounded-md px-3 text-xs font-medium bg-[#0E56F5] hover:bg-[#0B46CC]"
+                onClick={() => {
+                  setConfirmInviteOpen(false);
+                  handleSendInvites();
+                }}
+              >
+                Continue
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {hotSheet && (
         <EditHotsheetCriteriaDialog
