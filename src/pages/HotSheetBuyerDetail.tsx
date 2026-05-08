@@ -3,9 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Clock, AlertCircle, Home, Pencil } from "lucide-react";
+import { Home, Pencil } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -28,11 +27,9 @@ interface LinkedHotSheet {
   matchCount: number;
 }
 
-type InviteStatus = "accepted" | "pending" | "not_invited";
-
-/** AAC-style detail title: clear hierarchy, less visual weight than page default `text-3xl`. */
+/** Detail header scale — subdued vs default PageHeader. */
 const buyerDetailTitleClass = cn(
-  "text-xl font-semibold tracking-tight text-zinc-800 font-display leading-snug sm:text-[1.35rem]",
+  "text-lg font-semibold tracking-tight text-zinc-700 font-display leading-snug sm:text-xl",
 );
 
 function PhotoCell({ src }: { src?: string }) {
@@ -107,7 +104,6 @@ const HotSheetBuyerDetail = () => {
   const [loading, setLoading] = useState(true);
   const [buyer, setBuyer] = useState<BuyerInfo | null>(null);
   const [hotSheets, setHotSheets] = useState<LinkedHotSheet[]>([]);
-  const [inviteStatus, setInviteStatus] = useState<InviteStatus>("not_invited");
   const [editingHotSheet, setEditingHotSheet] = useState<{ id: string; criteria: any } | null>(null);
   const [createHotSheetOpen, setCreateHotSheetOpen] = useState(false);
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
@@ -139,10 +135,9 @@ const HotSheetBuyerDetail = () => {
         return;
       }
 
-      const [clientRes, hscRes, tokensRes] = await Promise.all([
+      const [clientRes, hscRes] = await Promise.all([
         supabase.from("clients").select("first_name, last_name, email, phone").eq("id", clientId!).maybeSingle(),
         supabase.from("hot_sheet_clients").select("hot_sheet_id").eq("client_id", clientId!),
-        supabase.from("share_tokens").select("payload, accepted_at").eq("agent_id", user.id),
       ]);
 
       if (clientRes.data) {
@@ -188,28 +183,14 @@ const HotSheetBuyerDetail = () => {
         }
 
         setHotSheets(result);
-      }
-
-      // Invite status
-      if (tokensRes.data) {
-        const clientTokens = tokensRes.data.filter(
-          (t: any) => t.payload?.type === "client_hotsheet_invite" && t.payload?.client_id === clientId
-        );
-        if (clientTokens.length === 0) setInviteStatus("not_invited");
-        else if (clientTokens.some((t: any) => t.accepted_at)) setInviteStatus("accepted");
-        else setInviteStatus("pending");
+      } else {
+        setHotSheets([]);
       }
     } catch (e) {
       console.error("Error fetching buyer data:", e);
     } finally {
       setLoading(false);
     }
-  };
-
-  const statusConfig: Record<InviteStatus, { label: string; icon: React.ReactNode; variant: "default" | "secondary" | "outline" }> = {
-    accepted: { label: "Accepted", icon: <CheckCircle2 className="h-3 w-3" />, variant: "default" },
-    pending: { label: "Pending", icon: <Clock className="h-3 w-3" />, variant: "secondary" },
-    not_invited: { label: "Not Invited", icon: <AlertCircle className="h-3 w-3" />, variant: "outline" },
   };
 
   if (loading) {
@@ -219,6 +200,7 @@ const HotSheetBuyerDetail = () => {
           title="Buyer Detail"
           backTo={backTo}
           titleClassName={buyerDetailTitleClass}
+          compactBack
           className="mb-8"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -240,32 +222,31 @@ const HotSheetBuyerDetail = () => {
     ? `${buyer.firstName} ${buyer.lastName}`.trim() || buyer.email || "Unknown Buyer"
     : "Unknown Buyer";
 
-  const status = statusConfig[inviteStatus];
-
   return (
     <PageShell className="pb-8">
-      <div className="mb-6 space-y-1.5">
+      <div className="mb-5 space-y-1">
         <PageHeader
           title={displayName}
           backTo={backTo}
           titleClassName={buyerDetailTitleClass}
-          className="mb-0 items-start"
+          compactBack
+          className="mb-0 items-start gap-3"
           actions={
-            <Button type="button" size="sm" className="mt-0.5 h-9 shrink-0" onClick={() => setCreateHotSheetOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-px h-7 shrink-0 rounded-md border-zinc-200/90 bg-white px-2.5 text-xs font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+              onClick={() => setCreateHotSheetOpen(true)}
+            >
               New Hot Sheet
             </Button>
           }
         />
 
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          {buyer?.email && (
-            <span className="text-sm leading-tight text-zinc-500">{buyer.email}</span>
-          )}
-          <Badge variant={status.variant} className="flex shrink-0 items-center gap-1.5">
-            {status.icon}
-            {status.label}
-          </Badge>
-        </div>
+        {buyer?.email ? (
+          <p className="text-xs font-normal leading-tight text-zinc-400">{buyer.email}</p>
+        ) : null}
       </div>
 
       {/* Hot Sheet Collection Cards */}
