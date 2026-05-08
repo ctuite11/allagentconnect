@@ -1076,31 +1076,35 @@ if (comments && comments.length > 0) {
 
   const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
   const maySendDashboardInviteToSomeRecipients = reviewRecipients.some((r) => r.sendDashboardInvite);
+  const backLinkLabel =
+    (typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")) || buyerContextClientId
+      ? "Back to buyer's hot sheets"
+      : "Back to hot sheets";
 
   return (
       <div className="pt-4 px-6 pb-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
-          {/* Header — compact; hot sheet name lives in criteria strip */}
-          <div className="mb-2 flex items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const preferBuyerFrom =
-                    typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
-                      ? originFrom
-                      : null;
-                  const buyerBack =
-                    !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
-                  navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
-                }}
-                className="rounded-md p-1.5 -ml-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <h1 className="truncate text-sm font-semibold tracking-tight text-zinc-600">Review matches</h1>
-            </div>
+          {/* Back link + page title — hot sheet name stays in criteria strip below */}
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => {
+                const preferBuyerFrom =
+                  typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
+                    ? originFrom
+                    : null;
+                const buyerBack =
+                  !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
+                navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
+              }}
+              className="group -ml-1.5 mb-2 inline-flex max-w-full items-center gap-1.5 rounded-md py-1 pl-1.5 pr-2 text-left text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="min-w-0 truncate">{backLinkLabel}</span>
+            </button>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[1.75rem]">
+              Review matches
+            </h1>
           </div>
 
           {agentUserId && id && (
