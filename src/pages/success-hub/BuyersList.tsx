@@ -232,8 +232,8 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         }
       }}
       className={cn(
-        "group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-zinc-100 bg-white px-5 py-4",
-        "transition-colors duration-150 hover:border-zinc-200",
+        "group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-zinc-200/90 bg-white px-5 py-4",
+        "transition-[box-shadow,border-color,transform] duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-[1px] hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
       )}
     >
       <div className="min-w-0">
@@ -253,7 +253,7 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
               : "bg-emerald-50 text-emerald-700 border border-emerald-200"
           )}
         >
-          {isPending ? "Pending Invite" : "Active"}
+          {isPending ? "Pending Invite" : "Invite Accepted"}
         </span>
         <span className="hidden sm:inline text-xs text-zinc-500 whitespace-nowrap">
           {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
