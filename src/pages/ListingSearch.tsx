@@ -182,7 +182,7 @@ const ListingSearch = () => {
           <PageHeader
             title="Listing Search"
             subtitle="Search and filter available listings"
-            className="mb-8"
+            className="mb-6"
           />
           
           <div className="sticky top-0 z-30 bg-white rounded-3xl border border-neutral-200 aac-shadow mb-4">

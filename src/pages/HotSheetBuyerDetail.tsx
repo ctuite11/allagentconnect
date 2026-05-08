@@ -4,7 +4,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Home, Pencil } from "lucide-react";
+import { Home, Pencil } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -27,10 +27,8 @@ interface LinkedHotSheet {
   matchCount: number;
 }
 
-/** Detail header scale — subdued vs default PageHeader. */
-const buyerDetailTitleClass = cn(
-  "text-lg font-semibold tracking-tight text-zinc-700 font-display leading-snug sm:text-xl",
-);
+/** Detail header scale — compact AAC standard. */
+const buyerDetailTitleClass = cn("text-xl font-semibold tracking-tight text-zinc-900");
 
 function PhotoCell({ src }: { src?: string }) {
   if (src) {
@@ -201,7 +199,7 @@ const HotSheetBuyerDetail = () => {
           backTo={backTo}
           titleClassName={buyerDetailTitleClass}
           compactBack
-          className="mb-8"
+          className="mb-6"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2].map((i) => (
@@ -223,37 +221,32 @@ const HotSheetBuyerDetail = () => {
     : "Unknown Buyer";
 
   const newHotSheetBtnClass =
-    "h-7 shrink-0 rounded-md border border-zinc-200/90 bg-white px-2.5 text-xs font-medium text-zinc-700 shadow-none hover:bg-zinc-50";
+    "h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50";
 
   return (
     <PageShell className="pb-8">
-      {/* Inline title + primary action share one row width (within PageShell max-w-6xl) — avoids stray right-edge float */}
-      <div className="mb-5 flex w-full min-w-0 items-start gap-1.5">
-        <button
-          type="button"
-          onClick={() => navigate(backTo)}
-          className="-ml-1 shrink-0 rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100/90 hover:text-zinc-700"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="min-w-0 flex-1 flex flex-col gap-1">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <h1 className={cn(buyerDetailTitleClass, "min-w-0 flex-1")}>{displayName}</h1>
+      <div className="mb-6">
+        <PageHeader
+          title={displayName}
+          backTo={backTo}
+          titleClassName={buyerDetailTitleClass}
+          compactBack
+          className="mb-1"
+          actions={
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className={cn(newHotSheetBtnClass, "self-start")}
+              className={newHotSheetBtnClass}
               onClick={() => setCreateHotSheetOpen(true)}
             >
               New Hot Sheet
             </Button>
-          </div>
-          {buyer?.email ? (
-            <p className="text-xs font-normal leading-tight text-zinc-400">{buyer.email}</p>
-          ) : null}
-        </div>
+          }
+        />
+        {buyer?.email ? (
+          <p className="text-sm font-normal text-zinc-500">{buyer.email}</p>
+        ) : null}
       </div>
 
       {/* Hot Sheet Collection Cards */}

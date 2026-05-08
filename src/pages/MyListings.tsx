@@ -383,21 +383,20 @@ function MyListingsView({
     <>
       {/* Header */}
       <AgentPageHeader
-        className="mb-8"
+        className="mb-6"
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
+        actions={
+          <Button
+            type="button"
+            onClick={() => onNewListing("new")}
+            className="h-8 gap-1.5 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Listing
+          </Button>
+        }
       />
-
-      {/* New Listing Button Row */}
-      <div className="mb-4 flex items-center gap-3">
-        <Button 
-          onClick={() => onNewListing("new")} 
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          New Listing
-        </Button>
-      </div>
 
       {/* Premium Filter Bar */}
       <div>
@@ -1184,7 +1183,7 @@ const MyListings = () => {
       <>
         <Seo title="My Listings" />
         <AgentAacPage className="pb-12">
-        <AgentPageHeader title="My Listings" subtitle="Create your first listing to get started." className="mb-8" />
+        <AgentPageHeader title="My Listings" subtitle="Create your first listing to get started." className="mb-6" />
         <AgentSectionCard className="p-12 text-center">
           <Plus className="mx-auto mb-4 h-16 w-16 text-neutral-400" />
           <h3 className="mb-2 text-xl font-semibold text-neutral-900">No listings yet</h3>

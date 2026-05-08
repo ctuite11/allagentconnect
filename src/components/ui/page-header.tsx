@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 interface PageHeaderProps {
   /** Page title */
   title: string;
+  /** Optional class names for the `<h1>` title (e.g. AAC premium scale) */
+  titleClassName?: string;
   /** Optional subtitle below title */
   subtitle?: string;
   /** 
@@ -20,6 +22,8 @@ interface PageHeaderProps {
   actions?: ReactNode;
   /** Optional icon to display before title */
   icon?: ReactNode;
+  /** Softer/smaller back control for compact detail headers */
+  compactBack?: boolean;
 }
 
 /**
@@ -35,11 +39,13 @@ interface PageHeaderProps {
  */
 export function PageHeader({ 
   title, 
+  titleClassName,
   subtitle, 
   backTo, 
   className,
   actions,
-  icon
+  icon,
+  compactBack = false,
 }: PageHeaderProps) {
   const navigate = useNavigate();
 
@@ -52,22 +58,26 @@ export function PageHeader({
   };
 
   return (
-    <div className={cn("flex items-center justify-between gap-4 mb-8", className)}>
-      <div className="flex items-center gap-2">
+    <div className={cn("mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4", className)}>
+      <div className={cn("flex items-center", compactBack ? "gap-1.5" : "gap-2")}>
         {/* Inline chevron-left back button - only shown when backTo is provided */}
         {backTo && (
           <button
             onClick={handleBack}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
+            className={cn(
+              "-ml-1 shrink-0 rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100/90 hover:text-zinc-700",
+              !compactBack && "text-zinc-500",
+            )}
             aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
         )}
         
         <div className="flex flex-col">
           <h1 className={cn(
-            "text-3xl font-semibold text-zinc-900 font-display tracking-tight",
+            "text-xl font-semibold text-zinc-900 tracking-tight",
+            titleClassName,
             icon && "flex items-center gap-3"
           )}>
             {icon}
@@ -81,7 +91,7 @@ export function PageHeader({
 
       {/* Right-side actions */}
       {actions && (
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:mt-0.5">
           {actions}
         </div>
       )}

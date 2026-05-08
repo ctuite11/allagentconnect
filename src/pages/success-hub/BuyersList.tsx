@@ -138,13 +138,13 @@ export default function BuyersList() {
         <AgentPageHeader
           title="My Buyers"
           subtitle="Manage buyer hot sheets, favorites, invites, and activity."
-          className="mb-8"
+          className="mb-6"
           actions={
             <Button
               onClick={() => setShowCreate(true)}
-              className="h-9 rounded-full px-4 shrink-0"
+              className="h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
             >
-              <UserPlus className="h-4 w-4 mr-2" />
+              <UserPlus className="mr-1.5 h-3.5 w-3.5" />
               New Buyer
             </Button>
           }

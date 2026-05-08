@@ -169,7 +169,7 @@ const HotSheets = ({
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:items-start">
         <div>
           <div className="min-w-0 space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Hot Sheets</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Hot Sheets</h1>
             <p className="text-sm text-gray-500">
               Track listings that matter most with real-time alerts based on your saved search criteria.
             </p>
@@ -177,12 +177,12 @@ const HotSheets = ({
           {showHeroCreate ? (
             <Button
               type="button"
-              className="mt-4 h-10 shrink-0 rounded-xl bg-[#0E56F5] px-6 text-sm font-semibold text-white hover:bg-[#0B46CC]"
+              className="mt-3 h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
               onClick={() =>
                 buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
               }
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
               Create Hot Sheet
             </Button>
           ) : null}

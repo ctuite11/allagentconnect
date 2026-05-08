@@ -255,6 +255,7 @@ const ClientNeedsDashboard = () => {
           <PageHeader
             title="Communications Center"
             subtitle="Agent-to-agent collaboration and deal flow"
+            className="mb-6"
           />
 
           <section>

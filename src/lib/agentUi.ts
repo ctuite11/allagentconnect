@@ -17,9 +17,9 @@ export {
 export const agentSectionCard =
   "bg-white rounded-2xl border border-zinc-100 shadow-none transition-colors duration-150";
 
-/** Page title — matches buyer dashboard / Hot Sheets hero title scale */
+/** Page title — compact AAC tool-first scale */
 export const agentPageTitleClass =
-  "text-2xl font-semibold tracking-tight text-neutral-900";
+  "text-xl font-semibold tracking-tight text-zinc-900";
 
 /** Subtitle under page title */
 export const agentPageSubtitleClass =
