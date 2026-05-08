@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, Image as ImageIcon, Bed, Bath, Maximize, Home, MapPin, Search, RefreshCw, CheckCircle2, Clock, ChevronDown, Activity, ArrowLeft, Pencil } from "lucide-react";
+import { Send, MapPin, RefreshCw, CheckCircle2, Clock, ChevronDown, ArrowLeft, Pencil, Info } from "lucide-react";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import {
   AlertDialog,
@@ -21,8 +20,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
-import { ShareListingDialog } from "@/components/ShareListingDialog";
-import { format } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,125 +29,66 @@ import {
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-// HotSheetSubscribersSection removed — sharing belongs in create/edit flow
-// ─── Pending Invites section ────────────────────────────────────────────────
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
-interface PendingInvite {
-  token: string;
-  token_id: string;
-  client_id: string | null;
-  client_email: string;
-  client_name: string;
-  sent_at: string | null;
-  accepted_at: string | null;
-  resending: boolean;
-  cooldownUntil: number | null; // epoch ms
+/** One row per `hot_sheet_clients` recipient for compact review strip. */
+interface ReviewRecipient {
+  clientId: string;
+  displayName: string;
+  email: string;
+  phone: string | null;
+  inviteAccepted: boolean;
+  /** Present when invite pending and a share token exists (for Resend). */
+  resendTokenId?: string;
+  resendToken?: string;
 }
 
-function PendingInvitesSection({
+function initialsFromName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+function CompactClientRecipientsStrip({
+  recipients,
   hotSheetId,
   hotSheetName,
   agentName,
   agentUserId,
+  onRefresh,
 }: {
+  recipients: ReviewRecipient[];
   hotSheetId: string;
   hotSheetName: string;
   agentName: string;
   agentUserId: string;
+  onRefresh: () => void;
 }) {
-  const [invites, setInvites] = useState<PendingInvite[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [cooldownUntil, setCooldownUntil] = useState<Record<string, number>>({});
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    // Fetch all share tokens for this hot sheet owned by this agent
-    const { data: tokens, error } = await supabase
-      .from("share_tokens")
-      .select("id, token, payload, accepted_at, created_at")
-      .eq("agent_id", agentUserId);
+  if (!recipients.length) return null;
 
-    if (error || !tokens) { setLoading(false); return; }
-
-    // Filter by hot_sheet_id in payload (JS-side per arch spec)
-    const matching = tokens.filter(
-      (t: any) =>
-        t.payload?.type === "client_hotsheet_invite" &&
-        t.payload?.hot_sheet_id === hotSheetId
-    );
-
-    // For each token, try to get the latest email_job created_at for cooldown
-    const results: PendingInvite[] = await Promise.all(
-      matching.map(async (t: any) => {
-        const clientEmail: string = t.payload?.client_email || "";
-
-        // Look up client name
-        let clientName = clientEmail;
-        if (t.payload?.client_id) {
-          const { data: c } = await supabase
-            .from("clients")
-            .select("first_name, last_name")
-            .eq("id", t.payload.client_id)
-            .maybeSingle();
-          if (c) clientName = `${c.first_name} ${c.last_name}`.trim() || clientEmail;
-        }
-
-        // Find most recent invite event for cooldown check (RLS-safe, replaces email_jobs)
-        const clientId = t.payload?.client_id || null;
-        let cooldownUntil: number | null = null;
-        if (clientId) {
-          const { data: lastEvent } = await supabase
-            .from("invite_events")
-            .select("created_at")
-            .eq("hot_sheet_id", hotSheetId)
-            .eq("client_id", clientId)
-            .in("event_type", ["email_enqueued", "invite_resent"])
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          const lastSentMs = lastEvent ? new Date(lastEvent.created_at).getTime() : null;
-          cooldownUntil = lastSentMs ? lastSentMs + 10 * 60 * 1000 : null;
-        }
-
-        return {
-          token: t.token,
-          token_id: t.id,
-          client_id: t.payload?.client_id || null,
-          client_email: clientEmail,
-          client_name: clientName,
-          sent_at: t.created_at,
-          accepted_at: t.accepted_at,
-          resending: false,
-          cooldownUntil,
-        };
-      })
-    );
-
-    setInvites(results);
-    setLoading(false);
-  }, [hotSheetId, agentUserId]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const handleResend = async (invite: PendingInvite) => {
-    setInvites((prev) =>
-      prev.map((i) => i.token_id === invite.token_id ? { ...i, resending: true } : i)
-    );
+  const handleResend = async (r: ReviewRecipient) => {
+    if (!r.resendTokenId || !r.resendToken) return;
+    setResendingId(r.clientId);
 
     const hotSheetLink =
       `${window.location.origin}/client-invite` +
-      `?invitation_token=${encodeURIComponent(invite.token)}` +
-      `&email=${encodeURIComponent(invite.client_email)}` +
+      `?invitation_token=${encodeURIComponent(r.resendToken)}` +
+      `&email=${encodeURIComponent(r.email)}` +
       `&agent_id=${encodeURIComponent(agentUserId)}` +
-      (invite.client_id ? `&client_id=${encodeURIComponent(invite.client_id)}` : "");
+      `&client_id=${encodeURIComponent(r.clientId)}`;
 
     const { error } = await supabase.functions.invoke("send-hot-sheet-invite", {
       body: {
-        invitedEmail: invite.client_email,
+        invitedEmail: r.email,
         inviterName: agentName,
         hotSheetName,
         hotSheetLink,
         hotSheetId,
-        tokenId: invite.token_id,
+        tokenId: r.resendTokenId,
         actorUserId: agentUserId,
         mode: "resend",
       },
@@ -159,68 +97,95 @@ function PendingInvitesSection({
     if (error) {
       toast.error("Failed to resend invite");
     } else {
-      toast.success(`Invite resent to ${invite.client_email}`);
+      toast.success(`Invite resent to ${r.email}`);
     }
 
-    // Set local cooldown regardless
-    const cooldownUntil = Date.now() + 2 * 60 * 1000;
-    setInvites((prev) =>
-      prev.map((i) =>
-        i.token_id === invite.token_id ? { ...i, resending: false, cooldownUntil } : i
-      )
-    );
+    setCooldownUntil((prev) => ({ ...prev, [r.clientId]: Date.now() + 2 * 60 * 1000 }));
+    setResendingId(null);
+    await onRefresh();
   };
 
-  if (loading) return <p className="text-sm text-muted-foreground">Loading invites…</p>;
-  if (invites.length === 0) return null;
-
   return (
-    <Card className="mb-6">
-      <CardHeader className="py-3 px-4">
-        <CardTitle className="text-sm">Client Invites</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-3 pt-0">
-        <div className="divide-y divide-border">
-          {invites.map((inv) => {
-            const isAccepted = !!inv.accepted_at;
-            const inCooldown = inv.cooldownUntil !== null && Date.now() < inv.cooldownUntil;
-            return (
-              <div key={inv.token_id} className="flex items-center justify-between py-2 gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-sm truncate">{inv.client_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{inv.client_email}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {isAccepted ? (
-                    <Badge variant="default" className="flex items-center gap-1 text-xs">
-                      <CheckCircle2 className="h-3 w-3" /> Accepted
-                    </Badge>
-                  ) : (
-                    <>
-                      <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                        <Clock className="h-3 w-3" /> Pending
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        className="h-8 px-3 text-xs font-medium rounded-md border-zinc-200 shadow-sm"
-                        disabled={inv.resending || inCooldown}
-                        onClick={() => handleResend(inv)}
-                      >
-                        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${inv.resending ? "animate-spin" : ""}`} />
-                        {inv.resending ? "Sending…" : inCooldown ? "Wait 10 min" : "Resend"}
-                      </Button>
-                    </>
-                  )}
-                </div>
+    <div className="mb-2 space-y-2">
+      {recipients.map((r) => {
+        const inCooldown = cooldownUntil[r.clientId] != null && Date.now() < cooldownUntil[r.clientId]!;
+        return (
+          <div
+            key={r.clientId}
+            className="flex flex-col gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700"
+                aria-hidden
+              >
+                {initialsFromName(r.displayName)}
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-zinc-900">{r.displayName}</p>
+                {r.email ? (
+                  <p className="truncate text-xs text-zinc-500">{r.email}</p>
+                ) : (
+                  <p className="text-xs text-zinc-400">No email on file</p>
+                )}
+                {r.phone ? (
+                  <p className="truncate text-xs text-zinc-400">{formatPhoneNumber(r.phone)}</p>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:justify-end">
+              {r.inviteAccepted ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
+                  <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
+                  Invite Accepted
+                </span>
+              ) : (
+                <>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-zinc-200/90 bg-zinc-50 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600">
+                    <Clock className="h-3 w-3" />
+                    Pending
+                  </span>
+                  {r.resendTokenId && r.resendToken && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                      disabled={resendingId === r.clientId || inCooldown}
+                      onClick={() => handleResend(r)}
+                    >
+                      <RefreshCw
+                        className={`mr-1.5 h-3.5 w-3.5 ${resendingId === r.clientId ? "animate-spin" : ""}`}
+                      />
+                      {resendingId === r.clientId ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
-// ────────────────────────────────────────────────────────────────────────────
+
+function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
+  const c = criteria ?? {};
+  const towns = c.cities || c.towns || [];
+  const scope =
+    towns.length > 0
+      ? towns.length > 4
+        ? `${towns.slice(0, 3).join(", ")} (+${towns.length - 3} more)`
+        : towns.join(", ")
+      : c.state
+        ? `All of ${c.state}`
+        : "No location filter";
+  return {
+    scope,
+    state: c.state ? String(c.state) : "—",
+    statuses: c.statuses?.length ? c.statuses.join(", ") : "—",
+  };
+}
 
 interface Listing {
   id: string;
@@ -278,10 +243,12 @@ const HotSheetReview = () => {
   const [conversationRecipientBuyerId, setConversationRecipientBuyerId] = useState<string | null>(null);
   /** CRM buyer id to return to buyer hot sheet list when applicable */
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
+  const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
 
   useEffect(() => {
     setConversationRecipientBuyerId(null);
     setBuyerContextClientId(null);
+    setReviewRecipients([]);
   }, [id]);
 
   useEffect(() => {
@@ -335,27 +302,10 @@ const HotSheetReview = () => {
     });
   }, []);
 
-  const buildSearchUrl = () => {
-    if (!hotSheet) return "";
-    const criteria = hotSheet.criteria as any;
-    const params = new URLSearchParams();
-    
-    if (criteria.statuses?.length) params.set("status", criteria.statuses.join(","));
-    if (criteria.propertyTypes?.length) params.set("type", criteria.propertyTypes.join(","));
-    if (criteria.state) params.set("state", criteria.state);
-    if (criteria.cities?.length) params.set("towns", criteria.cities.join("|"));
-    if (criteria.zipCode) params.set("zip", criteria.zipCode);
-    if (criteria.minPrice) params.set("minPrice", criteria.minPrice.toString());
-    if (criteria.maxPrice) params.set("maxPrice", criteria.maxPrice.toString());
-    if (criteria.bedrooms) params.set("bedrooms", criteria.bedrooms.toString());
-    if (criteria.bathrooms) params.set("bathrooms", criteria.bathrooms.toString());
-    
-    return `/search?${params.toString()}`;
-  };
-
   const fetchHotSheetAndListings = async () => {
     try {
       setLoading(true);
+      setReviewRecipients([]);
 
       // Resolve current agent identity
       const { data: { user } } = await supabase.auth.getUser();
@@ -436,7 +386,7 @@ const HotSheetReview = () => {
 
           const { data: clientsRows } = await supabase
             .from("clients")
-            .select("id, email")
+            .select("id, email, first_name, last_name, phone")
             .in("id", clientIds);
 
           const eligibleClientIds = (clientsRows ?? [])
@@ -463,7 +413,7 @@ const HotSheetReview = () => {
           try {
             const emailByClientId = new Map<string, string>();
             for (const c of clientsRows ?? []) {
-              if (c?.id && c?.email) emailByClientId.set(c.id, String(c.email).toLowerCase());
+              if (c?.id && c?.email) emailByClientId.set(String(c.id), String(c.email).toLowerCase());
             }
 
             const { data: stRows, error: stErr } = await supabase
@@ -476,7 +426,7 @@ const HotSheetReview = () => {
             const tokensForThisHotSheet = (stRows ?? []).filter((t: any) => {
               return (
                 t?.payload?.type === "client_hotsheet_invite" &&
-                t?.payload?.hot_sheet_id === hotSheetData.id
+                String(t?.payload?.hot_sheet_id ?? "") === String(hotSheetData.id)
               );
             });
 
@@ -487,9 +437,10 @@ const HotSheetReview = () => {
               const cid = (t as any)?.payload?.client_id ?? null;
               const email = (t as any)?.payload?.client_email ?? null;
               if (cid) {
-                const arr = tokensByClientId.get(cid) ?? [];
+                const key = String(cid);
+                const arr = tokensByClientId.get(key) ?? [];
                 arr.push(t);
-                tokensByClientId.set(cid, arr);
+                tokensByClientId.set(key, arr);
               }
               if (email) {
                 const key = String(email).toLowerCase();
@@ -505,10 +456,10 @@ const HotSheetReview = () => {
             for (const hscRow of hscRows) {
               const clientId = (hscRow as any)?.client_id ?? null;
               const clientEmail =
-                (clientId && emailByClientId.get(clientId)) ||
+                (clientId && emailByClientId.get(String(clientId))) ||
                 ((hscRow as any)?.client_email ? String((hscRow as any).client_email).toLowerCase() : null);
 
-              const byId = clientId ? (tokensByClientId.get(clientId) ?? []) : [];
+              const byId = clientId ? (tokensByClientId.get(String(clientId)) ?? []) : [];
               const byEmail = clientEmail ? (tokensByEmail.get(clientEmail) ?? []) : [];
               const tokens = [...byId, ...byEmail];
               const hasAccepted = tokens.some((t) => Boolean(t?.accepted_at));
@@ -519,16 +470,64 @@ const HotSheetReview = () => {
 
             setAcceptedCount(accepted);
             setUnacceptedCount(unaccepted);
+
+            const clientById = new Map((clientsRows ?? []).map((c: any) => [String(c.id), c]));
+
+            const mergeTokensForClient = (cid: string, emailKey: string | null) => {
+              const byId = tokensByClientId.get(cid) ?? [];
+              const byEm = emailKey ? (tokensByEmail.get(emailKey) ?? []) : [];
+              const uniq = new Map<string, any>();
+              for (const t of [...byId, ...byEm]) uniq.set(String((t as any).id), t);
+              return [...uniq.values()];
+            };
+
+            const pickPendingTokenRow = (rows: any[]): { id: string; token: string } | null => {
+              if (!rows?.length) return null;
+              const pend = rows.find((t: any) => !t.accepted_at);
+              const t = pend ?? rows[0];
+              if (!t?.id || !t?.token) return null;
+              return { id: String(t.id), token: String(t.token) };
+            };
+
+            const built: ReviewRecipient[] = [];
+            for (const hscRow of hscRows as any[]) {
+              const cid = hscRow?.client_id != null ? String(hscRow.client_id) : "";
+              if (!cid) continue;
+              const cRow = clientById.get(cid);
+              if (!cRow) continue;
+              const email = cRow.email ? String(cRow.email) : "";
+              const displayName =
+                `${cRow.first_name ?? ""} ${cRow.last_name ?? ""}`.trim() || email || "Contact";
+              const phone = cRow.phone != null && String(cRow.phone).trim() ? String(cRow.phone) : null;
+              const emailKey = email ? email.toLowerCase() : null;
+              const merged = mergeTokensForClient(cid, emailKey);
+              const hasAccepted = merged.some((t: any) => Boolean(t?.accepted_at));
+              const pick = pickPendingTokenRow(merged);
+              built.push({
+                clientId: cid,
+                displayName,
+                email,
+                phone,
+                inviteAccepted: hasAccepted,
+                resendTokenId: !hasAccepted && pick ? pick.id : undefined,
+                resendToken: !hasAccepted && pick ? pick.token : undefined,
+              });
+            }
+            setReviewRecipients(built);
           } catch (e) {
             console.warn("Token count computation failed:", e);
             setAcceptedCount(0);
             setUnacceptedCount(hscRows?.length ?? 0);
+            setReviewRecipients([]);
           }
         } else {
           setInvitesSent(false);
           setAcceptedCount(0);
           setUnacceptedCount(0);
+          setReviewRecipients([]);
         }
+      } else {
+        setReviewRecipients([]);
       }
 
       // Build query using unified search utility
@@ -920,60 +919,6 @@ if (comments && comments.length > 0) {
       setSending(false);
     }
   };
-
-
-  const getCriteriaDisplay = () => {
-    if (!hotSheet?.criteria) return [];
-    
-    const criteria = hotSheet.criteria as any;
-    const parts = [];
-
-    // Location: support both "cities" and "towns" keys
-    const towns = criteria.cities || criteria.towns || [];
-    if (towns.length > 0) {
-      const cityList = towns.length > 5
-        ? `${towns.slice(0, 5).join(", ")} (+${towns.length - 5} more)`
-        : towns.join(", ");
-      parts.push(`Location: ${cityList}`);
-    }
-    if (criteria.state) {
-      parts.push(`State: ${criteria.state}`);
-    }
-    if (criteria.county && criteria.county !== "all") {
-      parts.push(`County: ${criteria.county}`);
-    }
-    if (criteria.neighborhoods?.length > 0) {
-      parts.push(`Neighborhoods: ${criteria.neighborhoods.join(", ")}`);
-    }
-    if (criteria.zipCode) {
-      parts.push(`Zip: ${criteria.zipCode}`);
-    }
-    if (criteria.minPrice || criteria.maxPrice) {
-      const min = criteria.minPrice ? `$${Number(criteria.minPrice).toLocaleString()}` : "Any";
-      const max = criteria.maxPrice ? `$${Number(criteria.maxPrice).toLocaleString()}` : "Any";
-      parts.push(`Price: ${min} – ${max}`);
-    }
-    if (criteria.bedrooms) {
-      parts.push(`Beds: ${criteria.bedrooms}+`);
-    }
-    if (criteria.bathrooms) {
-      parts.push(`Baths: ${criteria.bathrooms}+`);
-    }
-    if (criteria.propertyTypes?.length > 0) {
-      parts.push(`Property: ${criteria.propertyTypes.join(", ")}`);
-    }
-    if (criteria.statuses?.length > 0) {
-      parts.push(`Status: ${criteria.statuses.join(", ")}`);
-    }
-    if (criteria.minSqft || criteria.maxSqft) {
-      const min = criteria.minSqft ? `${Number(criteria.minSqft).toLocaleString()}` : "Any";
-      const max = criteria.maxSqft ? `${Number(criteria.maxSqft).toLocaleString()}` : "Any";
-      parts.push(`Sqft: ${min} – ${max}`);
-    }
-
-    return parts;
-  };
-
   const getClientDisplay = () => {
     if (!hotSheet?.criteria) return null;
     
@@ -1014,13 +959,22 @@ if (comments && comments.length > 0) {
     );
   }
 
+  const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
+  const buyerNamesLabel =
+    reviewRecipients.length > 0
+      ? reviewRecipients.map((r) => r.displayName).join(", ")
+      : getClientDisplay() || "your contact";
+  const anyInviteStillPending =
+    reviewRecipients.length > 0 ? reviewRecipients.some((r) => !r.inviteAccepted) : unacceptedCount > 0;
+
   return (
-      <div className="pt-6 px-6 pb-6">
+      <div className="pt-4 px-6 pb-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
-            {/* Header */}
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-2">
+          {/* Header */}
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-2">
               <button
+                type="button"
                 onClick={() => {
                   const preferBuyerFrom =
                     typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
@@ -1030,181 +984,173 @@ if (comments && comments.length > 0) {
                     !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
                   navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
                 }}
-                className="p-1.5 -ml-1.5 rounded-md hover:bg-zinc-100 transition-colors text-zinc-600 hover:text-zinc-900"
+                className="rounded-md p-1.5 -ml-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-xl font-semibold">
-                <span className="text-neutral-800">Hotsheet Name: </span>
-                <span style={{ color: '#0E56F5' }}>{hotSheet.name}</span>
+              <h1 className="truncate text-xl font-semibold tracking-tight">
+                <span className="text-zinc-800">Hot Sheet: </span>
+                <span className="text-[#0E56F5]">{hotSheet.name}</span>
               </h1>
             </div>
           </div>
 
-          {/* Client Invites */}
           {agentUserId && id && (
-            <PendingInvitesSection
+            <CompactClientRecipientsStrip
+              recipients={reviewRecipients}
               hotSheetId={id}
               hotSheetName={hotSheet.name}
               agentName={agentDisplayName}
               agentUserId={agentUserId}
+              onRefresh={fetchHotSheetAndListings}
             />
           )}
 
-          {/* Search Criteria */}
-          <Card className="mb-8">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Search Criteria</CardTitle>
-              <Button
-                variant="outline"
-                onClick={() => setEditCriteriaOpen(true)}
-                className="h-8 rounded-md px-3 text-xs font-medium border-zinc-200 text-zinc-700 shadow-sm hover:bg-zinc-50 hover:text-zinc-900"
-              >
-                <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Edit
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                  <MapPin className="h-4 w-4" />
-                  <span className="font-medium">Scope:</span>
-                  {hotSheet.criteria.cities?.length > 0 ? (
-                    <span>{hotSheet.criteria.cities.join(", ")}</span>
-                  ) : hotSheet.criteria.state ? (
-                    <span>All of {hotSheet.criteria.state}</span>
-                  ) : (
-                    <span>No location filter</span>
-                  )}
-                </div>
-              </div>
-              {getCriteriaDisplay().length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                  {getCriteriaDisplay().map((criterion, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center rounded-full border border-zinc-200/80 bg-white px-2 py-0.5 text-[11px] font-medium leading-none text-zinc-600"
-                    >
-                      {criterion}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">All properties</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Helper text — pre-send state */}
-          {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) && (
-            <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
-              <p className="text-sm text-zinc-700">
-                You haven't shared any listings yet. Select listings below to send your first batch.
+          {/* Search criteria — single compact strip */}
+          <div className="mb-2 flex flex-col gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div className="flex min-w-0 flex-1 items-start gap-1.5 text-[11px] leading-snug text-zinc-600 sm:items-center">
+              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400 sm:mt-0" />
+              <p className="min-w-0">
+                <span className="font-semibold text-zinc-700">Scope:</span> {criteriaSummary.scope}
+                <span className="text-zinc-300"> · </span>
+                <span className="font-semibold text-zinc-700">State:</span> {criteriaSummary.state}
+                <span className="text-zinc-300"> · </span>
+                <span className="font-semibold text-zinc-700">Status:</span> {criteriaSummary.statuses}
               </p>
-              {unacceptedCount > 0 && (
-                <p className="text-xs text-zinc-500 mt-1">
-                  Your buyer will receive these listings along with an invitation to join.
-                </p>
-              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditCriteriaOpen(true)}
+              className="h-8 shrink-0 rounded-md border-zinc-200 px-3 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-50"
+            >
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Edit
+            </Button>
+          </div>
+
+          {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) && (
+            <div className="mb-2 flex gap-2 rounded-lg border border-sky-200/90 bg-sky-50/90 px-3 py-2">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" aria-hidden />
+              <p className="text-xs leading-snug text-sky-950">
+                {anyInviteStillPending
+                  ? `Select listings below to send your first batch to ${buyerNamesLabel}. They’ll receive these listings along with an invitation to join.`
+                  : `Select listings below to send to ${buyerNamesLabel}.`}
+              </p>
             </div>
           )}
 
-          {/* Controls */}
-          <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-3 mb-6">
-            <div className="flex flex-wrap items-center gap-3 min-w-0">
-              <Checkbox
-                id="select-all"
-                checked={selectedListings.size === listings.length && listings.length > 0}
-                onCheckedChange={toggleSelectAll}
-              />
-              <label htmlFor="select-all" className="cursor-pointer font-medium">
-                {selectedListings.size === listings.length && listings.length > 0
-                  ? `Unselect All (${listings.length} listings)`
-                  : `Select All (${listings.length} listings)`}
-              </label>
-              {selectedListings.size > 0 && (
-                <>
-                  <div className="h-4 w-px bg-border" />
-                  <span className="text-sm font-medium text-foreground">
-                    {selectedListings.size} Selected
-                  </span>
-                  <Button
-                    variant="outline"
-                    className="h-8 rounded-md px-3 text-xs font-medium border-zinc-200 shadow-sm"
-                    onClick={handleKeepSelected}
-                  >
-                    Keep Selected
-                  </Button>
-                </>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-8 w-full sm:w-[200px] text-xs rounded-md border-zinc-200 shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest to Oldest</SelectItem>
-                  <SelectItem value="oldest">Oldest to Newest</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                </SelectContent>
-              </Select>
-              {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
-                <Button
-                  className="h-8 rounded-md px-3 text-xs font-medium gap-1.5 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
-                  onClick={() => {
-                    if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
-                      setConfirmInviteOpen(true);
-                    } else {
-                      handleSendInvites();
-                    }
-                  }}
-                  disabled={sending || clientCount === 0}
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  {sending
-                    ? "Sending…"
-                    : unacceptedCount > 0 && acceptedCount === 0 && !conversationRecipientBuyerId
-                      ? "Send Listings & Invite"
-                      : "Send Listings"}
-                </Button>
-              ) : !invitesSent && acceptedCount > 0 ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+          {/* Results + controls (single row where space allows) */}
+          <div className="mb-3 flex flex-col gap-2 sm:mb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="text-sm font-semibold tracking-tight text-zinc-900">
+                  Results ({listings.length})
+                </span>
+                <div className="hidden h-4 w-px bg-zinc-200 sm:block" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedListings.size === listings.length && listings.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <label htmlFor="select-all" className="cursor-pointer text-sm font-medium text-zinc-800">
+                    {selectedListings.size === listings.length && listings.length > 0
+                      ? `Unselect All (${listings.length} listings)`
+                      : `Select All (${listings.length} listings)`}
+                  </label>
+                </div>
+                {selectedListings.size > 0 && (
+                  <>
+                    <div className="h-4 w-px bg-zinc-200" />
+                    <span className="text-sm font-medium text-zinc-700">{selectedListings.size} Selected</span>
                     <Button
+                      type="button"
                       variant="outline"
-                      disabled={sending}
-                      className="h-8 rounded-md px-3 text-xs font-medium gap-1.5 border-zinc-200 shadow-sm"
+                      className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                      onClick={handleKeepSelected}
                     >
-                      <Send className="h-3.5 w-3.5" />
-                      Notify Clients ({acceptedCount})
-                      <ChevronDown className="h-3.5 w-3.5" />
+                      Keep Selected
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleNotifyUpdate}>
-                      Send update (message only)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleNotifyWithMatches}>
-                      Send current matches
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
+                  </>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-8 w-full rounded-md border-zinc-200 text-xs shadow-sm sm:w-[200px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest to Oldest</SelectItem>
+                    <SelectItem value="oldest">Oldest to Newest</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  </SelectContent>
+                </Select>
+                {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
+                  <Button
+                    type="button"
+                    className="h-8 gap-1.5 rounded-md bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-sm hover:bg-[#0B46CC]"
+                    onClick={() => {
+                      if (
+                        listings.length > 0 &&
+                        selectedListings.size === 0 &&
+                        (unacceptedCount > 0 || clientCount > 0)
+                      ) {
+                        setConfirmInviteOpen(true);
+                      } else {
+                        handleSendInvites();
+                      }
+                    }}
+                    disabled={sending || clientCount === 0}
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    {sending
+                      ? "Sending…"
+                      : unacceptedCount > 0 &&
+                          acceptedCount === 0 &&
+                          !conversationRecipientBuyerId
+                        ? "Send Listings & Invite"
+                        : "Send Listings"}
+                  </Button>
+                ) : !invitesSent && acceptedCount > 0 ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={sending}
+                        className="h-8 gap-1.5 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        Notify Clients ({acceptedCount})
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleNotifyUpdate}>
+                        Send update (message only)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleNotifyWithMatches}>
+                        Send current matches
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
             </div>
-          </div>
 
-          {/* Listings Grid */}
           {listings.length === 0 ? (
-            <Card className="p-12">
-              <div className="text-center space-y-3">
-                <p className="text-muted-foreground font-medium">No listings match this hot sheet's criteria.</p>
-                <p className="text-sm text-muted-foreground">Try widening the price range, location, or property type.</p>
+            <Card className="rounded-xl border-zinc-200/90 p-10 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+              <div className="space-y-3 text-center">
+                <p className="font-medium text-muted-foreground">No listings match this hot sheet&apos;s criteria.</p>
+                <p className="text-sm text-muted-foreground">
+                  Try widening the price range, location, or property type.
+                </p>
                 <Button
+                  type="button"
                   variant="outline"
-                  className="h-8 rounded-md px-3 text-xs font-medium border-zinc-200 shadow-sm"
+                  className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
                   onClick={() => navigate("/hot-sheets")}
                 >
                   Edit Hot Sheet
@@ -1212,29 +1158,31 @@ if (comments && comments.length > 0) {
               </div>
             </Card>
           ) : (
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold tracking-tight text-zinc-900">Results</h2>
-              <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
-              {sortedListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  viewMode="compact"
-                  showActions={false}
-                  showCompactComments
-                  onSelect={toggleListing}
-                  isSelected={selectedListings.has(listing.id)}
-                  chatMessages={messagesMap[listing.id] || []}
-                  onNewMessage={handleNewMessage}
-                  onOpenChat={() => {
-                    setChatListingId(listing.id);
-                    setChatDrawerOpen(true);
-                  }}
-                  hotSheetId={id ?? undefined}
-                />
-              ))}
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-5">
+                {sortedListings.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    viewMode="compact"
+                    showActions={false}
+                    showCompactComments
+                    onSelect={toggleListing}
+                    isSelected={selectedListings.has(listing.id)}
+                    chatMessages={messagesMap[listing.id] || []}
+                    onNewMessage={handleNewMessage}
+                    onOpenChat={() => {
+                      setChatListingId(listing.id);
+                      setChatDrawerOpen(true);
+                    }}
+                    hotSheetId={id ?? undefined}
+                  />
+                ))}
               </div>
-            </div>
+              <p className="mt-3 text-center text-xs text-zinc-500">
+                Showing {listings.length} of {listings.length} listings
+              </p>
+            </>
           )}
         </div>
 
