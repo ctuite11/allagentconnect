@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Pencil, ArrowLeft, CheckCircle2, Clock } from "lucide-react";
+import { Home, Pencil, ArrowLeft, CheckCircle2, Clock, Plus } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -207,14 +207,14 @@ const HotSheetBuyerDetail = () => {
     return (
       <div className="pt-4 px-6 pb-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
-          <div className="mb-2 flex animate-pulse items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-md bg-zinc-100" />
-              <div className="h-4 w-28 rounded bg-zinc-100" />
-            </div>
-            <div className="h-8 w-28 rounded-md bg-zinc-100" />
+          <div className="mb-2 flex animate-pulse items-center gap-2">
+            <div className="h-9 w-9 rounded-md bg-zinc-100" />
+            <div className="h-4 w-28 rounded bg-zinc-100" />
           </div>
-          <div className="mb-3 h-[4.5rem] rounded-xl border border-zinc-200/60 bg-zinc-50" />
+          <div className="mb-3 space-y-2">
+            <div className="h-[4.5rem] rounded-xl border border-zinc-200/60 bg-zinc-50" />
+            <div className="h-8 w-40 animate-pulse rounded-md bg-zinc-100" />
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-50">
@@ -238,53 +238,63 @@ const HotSheetBuyerDetail = () => {
   return (
     <div className="pt-4 px-6 pb-6">
       <div className="mx-auto w-full max-w-[88rem] min-w-0">
-        {/* Header — aligned with HotSheetReview */}
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigate(backTo)}
-              className="rounded-md p-1.5 -ml-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="truncate text-sm font-semibold tracking-tight text-zinc-600">Hot sheets</h1>
-          </div>
-          <Button
+        {/* Header — back + title only (matches mockup) */}
+        <div className="mb-2 flex items-center gap-2">
+          <button
             type="button"
-            variant="outline"
-            className="h-8 shrink-0 rounded-md border-zinc-200 px-3 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-50"
-            onClick={() => setCreateHotSheetOpen(true)}
+            onClick={() => navigate(backTo)}
+            className="rounded-md p-1.5 -ml-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            aria-label="Go back"
           >
-            New Hot Sheet
-          </Button>
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="truncate text-sm font-semibold tracking-tight text-zinc-600">Hot sheets</h1>
         </div>
 
-        {/* Buyer row — recipient-strip rhythm */}
+        {/* Buyer card + New Hot Sheet (grouped — CTA directly under card, left-aligned) */}
         {buyer && relationshipStatus && (
-          <div className="mb-3 flex flex-col gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700"
-                aria-hidden
-              >
-                {initialsFromName(displayName)}
+          <div className="mb-3 w-full space-y-2">
+            <div className="flex flex-col gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700"
+                  aria-hidden
+                >
+                  {initialsFromName(displayName)}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-zinc-900">{displayName}</p>
+                  <p className="truncate text-xs text-zinc-500">
+                    {buyer.email && buyer.phone?.trim() ? (
+                      <>
+                        {buyer.email}
+                        <span className="text-zinc-300"> · </span>
+                        {formatPhoneNumber(buyer.phone)}
+                      </>
+                    ) : buyer.email ? (
+                      buyer.email
+                    ) : buyer.phone?.trim() ? (
+                      formatPhoneNumber(buyer.phone)
+                    ) : (
+                      <span className="text-zinc-400">No email on file</span>
+                    )}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-zinc-900">{displayName}</p>
-                {buyer.email ? (
-                  <p className="truncate text-xs text-zinc-500">{buyer.email}</p>
-                ) : (
-                  <p className="text-xs text-zinc-400">No email on file</p>
-                )}
-                {buyer.phone ? (
-                  <p className="truncate text-xs text-zinc-400">{formatPhoneNumber(buyer.phone)}</p>
-                ) : null}
+              <div className="flex shrink-0 items-center justify-end sm:justify-end">
+                <RelationshipStatusPill status={relationshipStatus} />
               </div>
             </div>
-            <div className="flex shrink-0 items-center justify-end">
-              <RelationshipStatusPill status={relationshipStatus} />
+            <div className="flex w-full justify-start">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 shrink-0 gap-1.5 rounded-md border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-50"
+                onClick={() => setCreateHotSheetOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                New Hot Sheet
+              </Button>
             </div>
           </div>
         )}
