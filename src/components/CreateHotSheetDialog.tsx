@@ -164,7 +164,6 @@ export function CreateHotSheetDialog({
   const [saleCriteriaOpen, setSaleCriteriaOpen] = useState(false);
   
   // Notification settings
-  const [notifyClient, setNotifyClient] = useState(true);
   const [notifyAgent, setNotifyAgent] = useState(true);
   const [notificationSchedule, setNotificationSchedule] = useState("immediately");
 
@@ -172,6 +171,8 @@ export function CreateHotSheetDialog({
   const [criteriaOpen, setCriteriaOpen] = useState(true);
   const [addressOpen, setAddressOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(true);
+  /** Prevents duplicate submissions from the confirm dialog firing twice in quick succession. */
+  const createInFlightRef = useRef(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [townsOpen, setTownsOpen] = useState(false);
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
@@ -362,8 +363,7 @@ export function CreateHotSheetDialog({
         : (loadedState || "MA");
       setState(normalizedState);
       
-      // Load notification settings
-      setNotifyClient(data.notify_client_email);
+      // Notification settings — client match emails implied when contacts are linked
       setNotifyAgent(data.notify_agent_email);
       setNotificationSchedule(data.notification_schedule);
 
@@ -818,19 +818,6 @@ export function CreateHotSheetDialog({
     }
   };
 
-  const enqueuePostCreateNotifications = (createdHotSheetId: string) => {
-    void supabase.functions
-      .invoke("process-hot-sheet", {
-        body: {
-          hotSheetId: createdHotSheetId,
-          sendInitialBatch: true,
-        },
-      })
-      .catch((notificationError) => {
-        console.warn("Failed to enqueue post-create hot sheet notifications", notificationError);
-      });
-  };
-
   const handleUpdateHotSheet = async () => {
     if (!hotSheetId) {
       toast.error("Failed to update hot sheet");
@@ -854,6 +841,7 @@ export function CreateHotSheetDialog({
           name: trimmedName,
           criteria,
           updated_at: new Date().toISOString(),
+          notify_client_email: true,
         })
         .eq("id", hotSheetId)
         .select("id, name, criteria");
@@ -897,6 +885,9 @@ export function CreateHotSheetDialog({
       return;
     }
 
+    if (createInFlightRef.current) return;
+    createInFlightRef.current = true;
+
     try {
       setSaving(true);
 
@@ -911,7 +902,7 @@ export function CreateHotSheetDialog({
             name: hotSheetName,
             criteria,
             is_active: true,
-            notify_client_email: notifyClient,
+            notify_client_email: true,
             notify_agent_email: notifyAgent,
             notification_schedule: notificationSchedule,
           })
@@ -959,9 +950,6 @@ export function CreateHotSheetDialog({
         toast.success("Hot sheet created");
         window.localStorage.removeItem(`aac:hotsheet:draft:${userId}:new`);
 
-        // Queue initial notifications in the background; do not block user navigation.
-        enqueuePostCreateNotifications(createdHotSheet.id);
-
         resetDialogState();
         onOpenChange(false);
         onSuccess(createdHotSheet.id);
@@ -970,6 +958,7 @@ export function CreateHotSheetDialog({
       console.error("Error creating hot sheet:", error);
       toast.error(error?.message ? `Failed to create hot sheet: ${error.message}` : "Failed to create hot sheet");
     } finally {
+      createInFlightRef.current = false;
       setSaving(false);
     }
   };
@@ -1170,7 +1159,7 @@ export function CreateHotSheetDialog({
                 </div>
               ) : (
                 <div className="rounded-md border border-dashed border-neutral-300 p-4 text-sm text-muted-foreground">
-                  <p>Add friends or family to receive matching listings by email.</p>
+                  <p>Add a contact—they’ll receive your hot sheet invitations and match emails when you send from the review screen.</p>
                 </div>
               )}
 
@@ -1842,18 +1831,6 @@ export function CreateHotSheetDialog({
                         </Label>
                       </div>
 
-                      {clientId && (
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="notify-client"
-                            checked={notifyClient}
-                            onCheckedChange={(checked) => setNotifyClient(checked as boolean)}
-                          />
-                          <Label htmlFor="notify-client" className="cursor-pointer">
-                            Send notifications to friends or family
-                          </Label>
-                        </div>
-                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -1886,11 +1863,11 @@ export function CreateHotSheetDialog({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 rounded-xl border border-zinc-200/80 bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+          <div className="flex gap-2 rounded-xl border border-zinc-200/80 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <Button
               type="button"
               variant="outline"
-              className="flex-1"
+              className="flex-1 h-8 rounded-md px-3 text-xs font-medium border-zinc-200 bg-white shadow-sm hover:bg-zinc-50"
               onClick={() => {
                 onOpenChange(false);
                 resetForm();
@@ -1902,7 +1879,7 @@ export function CreateHotSheetDialog({
             <Button 
               onClick={handleValidateAndShowConfirmation} 
               disabled={saving}
-              className="flex-1"
+              className="flex-1 h-8 rounded-md px-3 text-xs font-medium gap-1.5 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
             >
               {saving ? (
                 <>
@@ -1963,7 +1940,11 @@ export function CreateHotSheetDialog({
                 <p className="text-sm font-semibold text-foreground mb-2">Notifications</p>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p><span className="font-medium">Agent:</span> {notifyAgent ? "Enabled" : "Disabled"}</p>
-                  {clientId && <p><span className="font-medium">Friends / family:</span> {notifyClient ? "Enabled" : "Disabled"}</p>}
+                  {selectedClients.length > 0 && (
+                    <p className="text-muted-foreground">
+                      Contacts on this sheet receive invitations and listing emails when you send from the review screen.
+                    </p>
+                  )}
                   <p><span className="font-medium">Schedule:</span> {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}</p>
                 </div>
               </div>
@@ -1978,9 +1959,14 @@ export function CreateHotSheetDialog({
             )}
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCreate}>
+          <AlertDialogFooter className="gap-2 sm:justify-end">
+            <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="h-8 rounded-md px-3 text-xs font-medium bg-[#0E56F5] hover:bg-[#0B46CC]"
+              onClick={handleCreate}
+            >
               Confirm & Create
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -2003,11 +1989,11 @@ export function CreateHotSheetDialog({
             {clientPhone && <p className="text-sm"><span className="font-medium">Phone:</span> {clientPhone}</p>}
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleAddClientWithoutSaving}>
+          <AlertDialogFooter className="gap-2 sm:justify-end">
+            <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0" onClick={handleAddClientWithoutSaving}>
               No
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleCreateClient} disabled={creatingClient}>
+            <AlertDialogAction className="h-8 rounded-md px-3 text-xs font-medium" onClick={handleCreateClient} disabled={creatingClient}>
               {creatingClient ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

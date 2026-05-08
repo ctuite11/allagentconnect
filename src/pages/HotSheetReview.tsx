@@ -202,7 +202,7 @@ function PendingInvitesSection({
                       </Badge>
                       <Button
                         variant="outline"
-                        size="sm"
+                        className="h-8 px-3 text-xs font-medium rounded-md border-zinc-200 shadow-sm"
                         disabled={inv.resending || inCooldown}
                         onClick={() => handleResend(inv)}
                       >
@@ -669,12 +669,8 @@ if (comments && comments.length > 0) {
           .in("id", recipientClientIds),
         supabase
           .from("share_tokens")
-          .select("id, token, payload")
-          .eq("agent_id", user.id)
-          .contains("payload", {
-            type: "client_hotsheet_invite",
-            hot_sheet_id: hotSheet.id,
-          }),
+          .select("id, token, payload, accepted_at")
+          .eq("agent_id", user.id),
       ]);
 
       const agentName = agentProfileRes.data
@@ -692,30 +688,53 @@ if (comments && comments.length > 0) {
         }
       }
 
-      // Map existing tokens by client_id for O(1) lookup (JS-side per arch spec)
-      const existingTokenByClientId = new Map<string, { id: string; token: string }>();
-      for (const t of (existingTokensRes.data ?? [])) {
+      /** Pick a pending token when available; Postgres JSON containment filters are unreliable vs UUID shapes. */
+      type SheetInviteToken = { id: string; token: string; accepted_at: string | null };
+      const tokensByClientId = new Map<string, SheetInviteToken[]>();
+      const hotSheetIdNorm = String(hotSheet.id);
+      for (const t of existingTokensRes.data ?? []) {
         const payload = t.payload as Record<string, unknown> | null;
-        const cid = typeof payload?.client_id === "string" ? payload.client_id : null;
-        if (cid) existingTokenByClientId.set(cid, { id: t.id, token: t.token });
+        if (payload?.type !== "client_hotsheet_invite") continue;
+        if (String(payload.hot_sheet_id ?? "") !== hotSheetIdNorm) continue;
+        const cid = typeof payload.client_id === "string" ? payload.client_id : null;
+        if (!cid) continue;
+        const row: SheetInviteToken = {
+          id: String(t.id),
+          token: String(t.token ?? ""),
+          accepted_at: t.accepted_at != null ? String(t.accepted_at) : null,
+        };
+        const arr = tokensByClientId.get(cid) ?? [];
+        arr.push(row);
+        tokensByClientId.set(cid, arr);
       }
+      const pickTokenForInvite = (rows: SheetInviteToken[]): SheetInviteToken | null => {
+        if (!rows?.length) return null;
+        const pending = rows.find((r) => !r.accepted_at);
+        return pending ?? rows[0] ?? null;
+      };
 
       // ── 3) Build invite list (create tokens for clients that don't have one) ─
       const invitePromises: Promise<any>[] = [];
-      let skippedCount = 0;
+      let skippedNoEmail = 0;
+      let skippedTokenInsert = 0;
+      let skippedAcceptedInvite = 0;
       let resendCount = 0;
-      let freshCount = 0;
 
       for (const clientId of recipientClientIds) {
         const clientData = clientMap.get(clientId);
-        if (!clientData?.email) { skippedCount++; continue; }
+        if (!clientData?.email) { skippedNoEmail++; continue; }
 
         let tokenId: string;
         let finalToken: string;
         let mode: "initial" | "resend";
 
-        const existing = existingTokenByClientId.get(clientId);
-        if (existing) {
+        const existing = pickTokenForInvite(tokensByClientId.get(clientId) ?? []);
+        if (existing?.accepted_at) {
+          skippedAcceptedInvite++;
+          console.log(`[handleSendInvites] Skipping invite enqueue — token already accepted for client ${clientId}`);
+          continue;
+        }
+        if (existing && !existing.accepted_at) {
           // Token already exists → send as resend so the email actually goes out.
           tokenId = existing.id;
           finalToken = existing.token;
@@ -744,14 +763,13 @@ if (comments && comments.length > 0) {
 
           if (tokenError) {
             console.error(`[handleSendInvites] Token insert error for ${clientId}:`, tokenError);
-            skippedCount++;
+            skippedTokenInsert++;
             continue;
           }
 
           tokenId = newTokenRow.id;
           finalToken = newTokenRow.token ?? token;
           mode = "initial";
-          freshCount++;
 
           // Audit log (fire-and-forget — non-critical)
           supabase.from("invite_events").insert({
@@ -803,8 +821,26 @@ if (comments && comments.length > 0) {
         );
       }
 
+      const recipientsWithEmail = recipientClientIds.filter((cid) => clientMap.has(cid)).length;
+
       if (invitePromises.length === 0) {
-        // No emails were attempted — do NOT show success.
+        if (recipientsWithEmail === 0) {
+          toast.error("No clients with valid emails found.");
+          return;
+        }
+        if (skippedAcceptedInvite > 0 && skippedAcceptedInvite >= recipientsWithEmail) {
+          toast.info(
+            "Everyone on this hot sheet has already accepted the invitation. Use Notify to send listing updates.",
+          );
+          await fetchHotSheetAndListings();
+          return;
+        }
+        if (skippedTokenInsert > 0) {
+          toast.error(
+            "Could not prepare invitations for one or more contacts. Check the console and try again.",
+          );
+          return;
+        }
         toast.error("No clients with valid emails found.");
         return;
       }
@@ -829,6 +865,7 @@ if (comments && comments.length > 0) {
           (resendCount > 0 ? ` — ${resendCount} resend${resendCount !== 1 ? "s" : ""}` : "") +
           ")",
       );
+      await fetchHotSheetAndListings();
     } catch (e: any) {
       console.error("[HotSheetReview] handleSendInvites error", e);
       toast.error(e?.message ?? "Failed to send invites");
@@ -1021,9 +1058,8 @@ if (comments && comments.length > 0) {
               <CardTitle>Search Criteria</CardTitle>
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => setEditCriteriaOpen(true)}
-                className="rounded-full h-8 px-3 border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                className="h-8 rounded-md px-3 text-xs font-medium border-zinc-200 text-zinc-700 shadow-sm hover:bg-zinc-50 hover:text-zinc-900"
               >
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />
                 Edit
@@ -1093,7 +1129,11 @@ if (comments && comments.length > 0) {
                   <span className="text-sm font-medium text-foreground">
                     {selectedListings.size} Selected
                   </span>
-                  <Button size="sm" onClick={handleKeepSelected}>
+                  <Button
+                    variant="outline"
+                    className="h-8 rounded-md px-3 text-xs font-medium border-zinc-200 shadow-sm"
+                    onClick={handleKeepSelected}
+                  >
                     Keep Selected
                   </Button>
                 </>
@@ -1101,7 +1141,7 @@ if (comments && comments.length > 0) {
             </div>
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="h-8 w-full sm:w-[200px] text-xs rounded-md border-zinc-200 shadow-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1113,6 +1153,7 @@ if (comments && comments.length > 0) {
               </Select>
               {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                 <Button
+                  className="h-8 rounded-md px-3 text-xs font-medium gap-1.5 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
                   onClick={() => {
                     if (listings.length > 0 && selectedListings.size === 0 && (unacceptedCount > 0 || clientCount > 0)) {
                       setConfirmInviteOpen(true);
@@ -1122,7 +1163,7 @@ if (comments && comments.length > 0) {
                   }}
                   disabled={sending || clientCount === 0}
                 >
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="h-3.5 w-3.5" />
                   {sending
                     ? "Sending…"
                     : unacceptedCount > 0 && acceptedCount === 0 && !conversationRecipientBuyerId
@@ -1132,10 +1173,14 @@ if (comments && comments.length > 0) {
               ) : !invitesSent && acceptedCount > 0 ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" disabled={sending}>
-                      <Send className="h-4 w-4 mr-2" />
+                    <Button
+                      variant="outline"
+                      disabled={sending}
+                      className="h-8 rounded-md px-3 text-xs font-medium gap-1.5 border-zinc-200 shadow-sm"
+                    >
+                      <Send className="h-3.5 w-3.5" />
                       Notify Clients ({acceptedCount})
-                      <ChevronDown className="h-4 w-4 ml-2" />
+                      <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -1157,13 +1202,19 @@ if (comments && comments.length > 0) {
               <div className="text-center space-y-3">
                 <p className="text-muted-foreground font-medium">No listings match this hot sheet's criteria.</p>
                 <p className="text-sm text-muted-foreground">Try widening the price range, location, or property type.</p>
-                <Button variant="outline" size="sm" onClick={() => navigate("/hot-sheets")}>
+                <Button
+                  variant="outline"
+                  className="h-8 rounded-md px-3 text-xs font-medium border-zinc-200 shadow-sm"
+                  onClick={() => navigate("/hot-sheets")}
+                >
                   Edit Hot Sheet
                 </Button>
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold tracking-tight text-zinc-900">Results</h2>
+              <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
               {sortedListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
@@ -1182,6 +1233,7 @@ if (comments && comments.length > 0) {
                   hotSheetId={id ?? undefined}
                 />
               ))}
+              </div>
             </div>
           )}
         </div>
@@ -1213,9 +1265,17 @@ if (comments && comments.length > 0) {
               There are current matches, but you haven't selected any listings to include. You can still invite the client to view matches after accepting.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Go Back and Select Listings</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setConfirmInviteOpen(false); handleSendInvites(); }}>
+          <AlertDialogFooter className="gap-2 sm:justify-end">
+            <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0">
+              Go Back and Select Listings
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="h-8 rounded-md px-3 text-xs font-medium bg-[#0E56F5] hover:bg-[#0B46CC]"
+              onClick={() => {
+                setConfirmInviteOpen(false);
+                handleSendInvites();
+              }}
+            >
               Send Invite Anyway
             </AlertDialogAction>
           </AlertDialogFooter>

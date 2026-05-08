@@ -103,12 +103,13 @@ const handler = async (req: Request): Promise<Response> => {
           });
         }
 
-        // Must be unaccepted
+        // Invite email is not applicable once accepted; treat as success so UI batch sends don’t hard-fail.
         if (tokenRow.accepted_at || tokenRow.accepted_by_user_id) {
-          return new Response(JSON.stringify({ error: "Token already accepted" }), {
-            status: 409,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          });
+          console.log("[send-hot-sheet-invite] Skipping resend — token already accepted", { tokenId });
+          return new Response(
+            JSON.stringify({ success: true, skipped: true, reason: "already_accepted" }),
+            { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+          );
         }
       }
     }

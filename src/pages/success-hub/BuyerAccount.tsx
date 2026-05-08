@@ -209,7 +209,6 @@ export default function BuyerAccount() {
             },
           ]}
           onSuccess={(hsId) => {
-            toast.success("Hot Sheet created");
             setCreateHsOpen(false);
             mirror.refresh();
             navigate(`/hot-sheets/${hsId}/review`);

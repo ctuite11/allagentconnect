@@ -332,7 +332,6 @@ const HotSheetBuyerDetail = () => {
             },
           ]}
           onSuccess={(hotSheetId) => {
-            toast.success("Hot Sheet created");
             setCreateHotSheetOpen(false);
             fetchBuyerData();
             navigate(`/hot-sheets/${hotSheetId}/review`);
