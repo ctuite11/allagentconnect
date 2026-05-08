@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Clock, AlertCircle, Home, MapPin, Pencil } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, Home, Pencil } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
+import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
+import { agentPageTitleClass } from "@/lib/agentUi";
+import { cn } from "@/lib/utils";
 import {
   buyerCollectionCardRoot,
   buyerImageMosaicCell,
@@ -20,6 +24,7 @@ interface BuyerInfo {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string | null;
 }
 
 interface LinkedHotSheet {
@@ -106,6 +111,8 @@ const HotSheetBuyerDetail = () => {
   const [hotSheets, setHotSheets] = useState<LinkedHotSheet[]>([]);
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>("not_invited");
   const [editingHotSheet, setEditingHotSheet] = useState<{ id: string; criteria: any } | null>(null);
+  const [createHotSheetOpen, setCreateHotSheetOpen] = useState(false);
+  const [agentUserId, setAgentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (clientId) fetchBuyerData();
@@ -116,6 +123,7 @@ const HotSheetBuyerDetail = () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setAgentUserId(user.id);
 
       // Guard: if this buyer no longer has an active/pending relationship
       // with this agent, redirect away from the active workspace.
@@ -134,7 +142,7 @@ const HotSheetBuyerDetail = () => {
       }
 
       const [clientRes, hscRes, tokensRes] = await Promise.all([
-        supabase.from("clients").select("first_name, last_name, email").eq("id", clientId!).maybeSingle(),
+        supabase.from("clients").select("first_name, last_name, email, phone").eq("id", clientId!).maybeSingle(),
         supabase.from("hot_sheet_clients").select("hot_sheet_id").eq("client_id", clientId!),
         supabase.from("share_tokens").select("payload, accepted_at").eq("agent_id", user.id),
       ]);
@@ -144,6 +152,7 @@ const HotSheetBuyerDetail = () => {
           firstName: clientRes.data.first_name || "",
           lastName: clientRes.data.last_name || "",
           email: clientRes.data.email || "",
+          phone: clientRes.data.phone ?? null,
         });
       }
 
@@ -208,7 +217,12 @@ const HotSheetBuyerDetail = () => {
   if (loading) {
     return (
       <PageShell>
-        <PageHeader title="Buyer Detail" backTo={backTo} className="mb-8" />
+        <PageHeader
+          title="Buyer Detail"
+          backTo={backTo}
+          titleClassName={agentPageTitleClass}
+          className="mb-8"
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2].map((i) => (
             <div key={i} className="rounded-2xl border border-zinc-200 bg-zinc-50 animate-pulse">
@@ -232,10 +246,25 @@ const HotSheetBuyerDetail = () => {
 
   return (
     <PageShell className="pb-8">
-      <PageHeader title={displayName} backTo={backTo} className="mb-2" />
+      <PageHeader
+        title={displayName}
+        backTo={backTo}
+        titleClassName={cn(agentPageTitleClass, "font-display")}
+        className="mb-2 md:items-start"
+        actions={
+          <Button type="button" size="sm" className="h-9 shrink-0" onClick={() => setCreateHotSheetOpen(true)}>
+            New Hot Sheet
+          </Button>
+        }
+      />
+
+      {/* TEMPORARY: remove after confirming which route renders in production */}
+      <p className="mb-3 rounded-md border-2 border-red-500 bg-red-50 px-2 py-1 text-sm font-bold text-red-700">
+        HOT SHEETS HEADER TEST — file: HotSheetBuyerDetail.tsx · route: /hot-sheets/buyer/:clientId
+      </p>
 
       {/* Buyer info row */}
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex flex-wrap items-center gap-3 mb-8">
         {buyer?.email && <span className="text-sm text-zinc-500">{buyer.email}</span>}
         <Badge variant={status.variant} className="flex items-center gap-1.5">
           {status.icon}
@@ -303,6 +332,32 @@ const HotSheetBuyerDetail = () => {
           onUpdate={() => {
             fetchBuyerData();
             setEditingHotSheet(null);
+          }}
+        />
+      )}
+
+      {agentUserId && clientId && buyer && (
+        <CreateHotSheetDialog
+          open={createHotSheetOpen}
+          onOpenChange={setCreateHotSheetOpen}
+          userId={agentUserId}
+          clientId={clientId}
+          clientName={displayName}
+          lockedToClient
+          preSelectedClients={[
+            {
+              id: clientId,
+              first_name: buyer.firstName,
+              last_name: buyer.lastName,
+              email: buyer.email,
+              phone: buyer.phone ?? null,
+            },
+          ]}
+          onSuccess={(hotSheetId) => {
+            toast.success("Hot Sheet created");
+            setCreateHotSheetOpen(false);
+            fetchBuyerData();
+            navigate(`/hot-sheets/${hotSheetId}/review`);
           }}
         />
       )}
