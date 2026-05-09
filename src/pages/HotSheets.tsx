@@ -180,20 +180,28 @@ const HotSheets = ({
     return (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
       {/*
-        One grid so the CTA can sit in row 2 col 1 on large screens (below headline; aligned with left column),
-        and on small screens the visual order is: title → statuses → CTA → connected panel (order-3 / order-4).
+        Mobile: title → statuses → CTA → panel (orders 1–4).
+        lg: one row, columns stretch to the tallest; left column flex justify-between so the CTA rides the
+        bottom of the column — balances against center + right without adding extra vertical grid gap height.
       */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:grid-rows-[auto_auto] lg:items-start">
-        <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1">
-          <div className="space-y-1">
-            <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Hot Sheets</h1>
-            <p className="text-sm text-gray-500">
-              Track listings that matter most with real-time alerts based on your saved search criteria.
-            </p>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:grid-rows-1 lg:items-stretch lg:gap-x-5 lg:gap-y-0">
+        <div className="max-lg:contents lg:col-start-1 lg:row-start-1 lg:flex lg:min-h-0 lg:w-full lg:flex-col lg:justify-between lg:items-start lg:self-stretch lg:pt-0.5">
+          <div className="order-1 min-w-0 lg:min-h-0">
+            <div className="space-y-1.5">
+              <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Hot Sheets</h1>
+              <p className="text-sm leading-snug text-gray-500">
+                Track listings that matter most with real-time alerts based on your saved search criteria.
+              </p>
+            </div>
           </div>
+          {showHeroCreate ? (
+            <div className="order-3 flex shrink-0 justify-start lg:order-none lg:pb-0.5">
+              {heroCreateButton}
+            </div>
+          ) : null}
         </div>
 
-        <div className="order-2 grid grid-cols-2 gap-2.5 sm:gap-3 lg:col-start-2 lg:row-start-1">
+        <div className="order-2 grid grid-cols-2 gap-2.5 sm:gap-3 lg:col-start-2 lg:row-start-1 lg:self-start">
           {/* LOCKED UI — do not restyle without design approval
            * Matches AAC premium system (Dashboard-aligned) */}
           {heroStatusItems.map((item) => (
@@ -207,13 +215,7 @@ const HotSheets = ({
           ))}
         </div>
 
-        {showHeroCreate ? (
-          <div className="order-3 flex justify-start lg:col-start-1 lg:row-start-2 lg:pt-1">
-            {heroCreateButton}
-          </div>
-        ) : null}
-
-        <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-none lg:col-start-3 lg:row-start-1 lg:row-span-2 lg:self-start">
+        <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-none lg:col-start-3 lg:row-start-1 lg:self-start">
           <p className={DASH_SECTION_TITLE}>Connected to your agent</p>
           <p className={`mt-1 ${DASH_SECTION_DESC}`}>
             Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
