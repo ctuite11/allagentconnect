@@ -4114,6 +4114,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      hot_sheet_has_shared_workspace_recipients: {
+        Args: { p_hot_sheet_id: string }
+        Returns: boolean
+      }
       is_buyer_workspace_member: {
         Args: { p_workspace_id: string }
         Returns: boolean
