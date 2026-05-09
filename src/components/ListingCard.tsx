@@ -866,7 +866,7 @@ const ListingCard = ({
                   </button>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  DOM {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
+                  DOM {daysOnMarket}
                 </p>
               </div>
             )}
