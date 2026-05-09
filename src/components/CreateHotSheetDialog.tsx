@@ -29,6 +29,11 @@ import {
 } from "@/lib/hotSheetCriteriaCore";
 import { formatTownSelectionLabel, normalizeTownSelections, toggleTownSelection } from "@/lib/townSelection";
 import { HOT_SHEET_FILTER_STATUSES, PROPERTY_TYPES as STATUS_PROPERTY_TYPES } from "@/constants/status";
+import { cn } from "@/lib/utils";
+
+/** Nested cards in this dialog — keep white surface and subtle shadow (override global Card lift). */
+const HS_DIALOG_CARD =
+  "!shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:!translate-y-0 hover:!shadow-[0_1px_3px_rgba(0,0,0,0.06)] rounded-xl border-neutral-200";
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -1032,50 +1037,64 @@ export function CreateHotSheetDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {editMode ? "Edit Hot Sheet" : "Create Hot Sheet"}{clientName ? ` for ${clientName}` : ""}
+      <DialogContent className="max-h-[min(92dvh,900px)] w-[calc(100%-1.25rem)] max-w-3xl gap-0 overflow-y-auto border border-neutral-200 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)] sm:w-full sm:max-h-[90vh] sm:rounded-xl sm:p-5 sm:gap-4">
+        <DialogHeader className="space-y-2 pb-2 text-left sm:pb-3">
+          <DialogTitle className="text-lg font-semibold tracking-tight text-neutral-900">
+            {editMode ? "Edit hot sheet" : "Create hot sheet"}
+            {clientName ? (
+              <span className="font-normal text-neutral-500"> · {clientName}</span>
+            ) : null}
           </DialogTitle>
-          <DialogDescription>
-            Set up search criteria and notification preferences for automatic listing alerts
+          <DialogDescription className="text-[13px] leading-snug text-neutral-500">
+            Set criteria and contacts. Invites and listing sends run from the hot sheet review screen.
           </DialogDescription>
-          <div className="mt-2 p-3 bg-white border border-neutral-200 rounded-md">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">Matching Listings:</span>
+          <div className="mt-3 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-[13px] font-medium text-neutral-700">Match preview</span>
               {loadingCount ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-[#0E56F5]" />
-                  <span className="text-sm text-muted-foreground">Searching...</span>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-neutral-500" aria-hidden />
+                  <span className="text-[13px] text-neutral-500">Updating count…</span>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-[#0E56F5]">
-                  {matchingListingsCount} {matchingListingsCount === 1 ? "property" : "properties"}
+                <span className="tabular-nums text-[15px] font-semibold text-neutral-900">
+                  {matchingListingsCount} {matchingListingsCount === 1 ? "listing" : "listings"}
                 </span>
               )}
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           {/* Hot Sheet Name */}
           <div className="space-y-2">
             {editMode && (
               <div className="flex justify-end">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={handleUpdateHotSheet}
                   disabled={saving}
-                  className="text-xs font-medium text-[#0E56F5] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-7 border-neutral-200 px-2.5 text-[11px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50/90 disabled:opacity-50"
                 >
-                  Save
-                </button>
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    "Save name & criteria"
+                  )}
+                </Button>
               </div>
             )}
-            <Label htmlFor="name">Hot Sheet Name <span className="text-[#0E56F5]">*</span></Label>
+            <Label htmlFor="name" className="text-[13px] font-medium text-neutral-800">
+              Hot sheet name <span className="text-neutral-500">*</span>
+            </Label>
             <Input
               id="name"
-              placeholder="e.g., Downtown Condos under $500k"
+              placeholder="e.g., Downtown condos under $500k"
               value={hotSheetName}
               onChange={(e) => {
                 setHotSheetName(e.target.value);
@@ -1084,47 +1103,52 @@ export function CreateHotSheetDialog({
                 }
               }}
               maxLength={100}
-              className={errors.hotSheetName ? "border-destructive" : ""}
+              className={cn(
+                "h-9 border-neutral-200 text-sm focus-visible:ring-2 focus-visible:ring-neutral-300/40 focus-visible:ring-offset-2",
+                errors.hotSheetName && "border-destructive",
+              )}
             />
             {errors.hotSheetName && (
-              <p className="text-sm text-destructive">{errors.hotSheetName}</p>
+              <p className="text-[13px] text-destructive">{errors.hotSheetName}</p>
             )}
           </div>
 
           {/* Contact Information */}
-          <Card className="border border-zinc-200">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <CardTitle className="text-base">
-                  Contact Information <span className="text-[#0E56F5]">*</span>
+          <Card className={cn("border", HS_DIALOG_CARD)}>
+            <CardHeader className="space-y-2 p-4 pb-3 sm:p-5 sm:pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <CardTitle className="text-[15px] font-semibold leading-snug text-neutral-900">
+                  Contacts <span className="font-normal text-neutral-500">*</span>
                 </CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {!lockedToClient && (
                     <Button
                       type="button"
-                     className="shadow-sm"
+                      variant="outline"
                       size="sm"
+                      className="h-8 border-neutral-200 px-2.5 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                       onClick={() => setShowClientPicker(true)}
                     >
-                      <UserPlus className="mr-1.5 h-4 w-4" />
-                      {selectedClients.length > 0 ? "Select / Change Contact" : "Add Contact"}
+                      <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                      {selectedClients.length > 0 ? "Change contact" : "Add contact"}
                     </Button>
                   )}
                   {selectedClients.length > 0 && (
                     <Button
                       type="button"
-                      className="shadow-sm"
+                      variant="outline"
                       size="sm"
+                      className="h-8 border-neutral-200 px-2.5 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                       onClick={() => setShowClientPicker(true)}
                     >
-                      <UserPlus className="mr-1.5 h-4 w-4" />
-                      Add Another Contact
+                      <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                      Add another
                     </Button>
                   )}
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
               {selectedClients.length > 0 ? (
                 <div className="space-y-2">
                   <Label>Selected Contacts</Label>
@@ -1182,13 +1206,13 @@ export function CreateHotSheetDialog({
                       }}
                     />
                     {showClientDropdown && clientSearchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
                         {clientSearchResults.map((client) => (
                           <button
                             key={client.id}
                             type="button"
                             onClick={() => handleSelectClient(client)}
-                            className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b last:border-b-0"
+                            className="w-full border-b border-neutral-100 px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-neutral-50/90 last:border-b-0"
                           >
                             <div className="font-medium text-sm">{client.first_name} {client.last_name}</div>
                             <div className="text-xs text-muted-foreground">{client.email}</div>
@@ -1326,24 +1350,26 @@ export function CreateHotSheetDialog({
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card className={`border ${criteriaOpen ? 'border-zinc-200/80' : 'border-zinc-200/80'}`}>
+            <Card className={cn("border", HS_DIALOG_CARD)}>
               <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
-                  <CardTitle className="text-base">Search Criteria</CardTitle>
-                  {criteriaOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                <CardHeader className="flex cursor-pointer flex-row items-center justify-between p-4 pb-3 hover:bg-neutral-50/80 sm:p-5 sm:pb-3">
+                  <CardTitle className="text-[15px] font-semibold text-neutral-900">Search criteria</CardTitle>
+                  {criteriaOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
                   {/* Unified Location section */}
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${townsOpen ? 'border-zinc-200/80' : 'border-zinc-200/80'}`}>
+                      <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
                         <div className="space-y-1 text-left">
-                          <Label className="text-sm font-semibold uppercase cursor-pointer">Location</Label>
-                          <p className="text-xs text-zinc-500">{locationSummary}</p>
+                          <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                            Location
+                          </Label>
+                          <p className="text-xs text-neutral-500">{locationSummary}</p>
                         </div>
-                        {townsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {townsOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
@@ -1352,7 +1378,10 @@ export function CreateHotSheetDialog({
                           <div className="space-y-2">
                             <Label htmlFor="state" className="text-sm font-semibold">State</Label>
                             <Select value={state} onValueChange={setState}>
-                              <SelectTrigger id="state" className="bg-white">
+                              <SelectTrigger
+                                id="state"
+                                className="h-9 border-neutral-200 bg-white text-sm focus-visible:ring-2 focus-visible:ring-neutral-300/35 focus-visible:ring-offset-2"
+                              >
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -1368,7 +1397,10 @@ export function CreateHotSheetDialog({
                           <div className="space-y-2">
                             <Label htmlFor="county" className="text-sm font-semibold">County</Label>
                             <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                              <SelectTrigger id="county" className="bg-white">
+                              <SelectTrigger
+                                id="county"
+                                className="h-9 border-neutral-200 bg-white text-sm focus-visible:ring-2 focus-visible:ring-neutral-300/35 focus-visible:ring-offset-2"
+                              >
                                 <SelectValue placeholder="All Counties" />
                               </SelectTrigger>
                               <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -1424,7 +1456,7 @@ export function CreateHotSheetDialog({
                                 <button
                                   type="button"
                                   onClick={selectAllTowns}
-                                  className="w-full text-left px-2 py-1.5 text-sm font-semibold hover:bg-muted rounded mb-1 border-b pb-2"
+                                  className="mb-2 w-full rounded-md border-b border-neutral-200 px-2 py-2 text-left text-[13px] font-semibold transition-colors hover:bg-neutral-50/90"
                                 >
                                   {selectedCountyId === "all" 
                                     ? `✓ Add All Towns from All Counties` 
@@ -1472,14 +1504,14 @@ export function CreateHotSheetDialog({
                                 selectedCities.map((city) => (
                                   <div
                                     key={city}
-                                    className="group flex items-center justify-between gap-2 rounded-xl border border-zinc-200/80 bg-zinc-50/70 px-3 py-2 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-colors hover:bg-zinc-100/70"
+                                    className="group flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300"
                                   >
-                                    <span className="truncate font-medium text-zinc-700">{formatTownSelectionLabel(city)}</span>
+                                    <span className="truncate font-medium text-neutral-800">{formatTownSelectionLabel(city)}</span>
                                     <button
                                       type="button"
                                       onClick={() => toggleCity(city)}
                                       aria-label={`Remove ${formatTownSelectionLabel(city)}`}
-                                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-zinc-400 transition-colors hover:text-zinc-700"
+                                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-neutral-400 transition-colors hover:text-neutral-700"
                                     >
                                       <X className="h-3.5 w-3.5" />
                                     </button>
@@ -1506,10 +1538,11 @@ export function CreateHotSheetDialog({
                               placeholder="e.g. Northborough, Worcester, Boston"
                               className="text-sm flex-1"
                             />
-                            <Button 
-                              type="button" 
+                            <Button
+                              type="button"
+                              variant="outline"
                               onClick={handleAddMultipleTowns}
-                              className="px-4 text-sm"
+                              className="h-9 shrink-0 border-neutral-200 px-4 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                             >
                               Add
                             </Button>
@@ -1522,20 +1555,20 @@ export function CreateHotSheetDialog({
                   {/* Property Type - Collapsed by default */}
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200/80">
-                        <Label className="text-sm font-semibold uppercase cursor-pointer">
-                          Property Type
+                      <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
+                        <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                          Property type
                           {propertyTypes.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-zinc-500">
+                            <span className="ml-2 text-xs font-normal text-neutral-500">
                               ({propertyTypes.length} selected)
                             </span>
                           )}
                         </Label>
-                        {propertyTypeOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
+                        {propertyTypeOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto mt-2">
+                      <div className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-3">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="pt-select-all"
@@ -1571,20 +1604,20 @@ export function CreateHotSheetDialog({
                   {/* Status - Collapsed by default */}
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200/80">
-                        <Label className="text-sm font-semibold uppercase cursor-pointer">
+                      <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
+                        <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
                           Status
                           {statuses.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-zinc-500">
+                            <span className="ml-2 text-xs font-normal text-neutral-500">
                               ({statuses.length} selected)
                             </span>
                           )}
                         </Label>
-                        {statusOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
+                        {statusOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="space-y-2 border rounded-md p-3 max-h-64 overflow-y-auto mt-2">
+                      <div className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-3">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="st-select-all"
@@ -1809,15 +1842,15 @@ export function CreateHotSheetDialog({
 
           {!hideNotificationSettings && (
             <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-              <Card className="border border-zinc-200">
+              <Card className={cn("border", HS_DIALOG_CARD)}>
                 <CollapsibleTrigger className="w-full">
-                  <CardHeader className="pb-3 flex flex-row items-center justify-between cursor-pointer hover:bg-muted/30">
-                    <CardTitle className="text-base">Notification Settings</CardTitle>
-                    {notificationsOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
+                  <CardHeader className="flex cursor-pointer flex-row items-center justify-between p-4 pb-3 hover:bg-neutral-50/80 sm:p-5 sm:pb-3">
+                    <CardTitle className="text-[15px] font-semibold text-neutral-900">Notifications</CardTitle>
+                    {notificationsOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                   </CardHeader>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -1862,11 +1895,11 @@ export function CreateHotSheetDialog({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 rounded-xl border border-zinc-200/80 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:gap-2">
             <Button
               type="button"
               variant="outline"
-              className="flex-1 h-8 rounded-md px-3 text-xs font-medium border-zinc-200 bg-white shadow-sm hover:bg-zinc-50"
+              className="h-9 flex-1 rounded-md border-neutral-200 bg-white px-3 text-[13px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 disabled:opacity-50"
               onClick={() => {
                 onOpenChange(false);
                 resetForm();
@@ -1875,10 +1908,11 @@ export function CreateHotSheetDialog({
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleValidateAndShowConfirmation} 
+            <Button
+              type="button"
+              onClick={handleValidateAndShowConfirmation}
               disabled={saving}
-              className="flex-1 h-8 rounded-md px-3 text-xs font-medium gap-1.5 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
+              className="h-9 flex-1 gap-1.5 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {saving ? (
                 <>
@@ -1900,11 +1934,13 @@ export function CreateHotSheetDialog({
 
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Review Hot Sheet Details</AlertDialogTitle>
-            <AlertDialogDescription>
-              Please review the criteria below before creating your hot sheet.
+        <AlertDialogContent className="max-h-[min(90dvh,640px)] w-[calc(100%-1.25rem)] max-w-2xl gap-4 overflow-y-auto border border-neutral-200 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:rounded-xl">
+          <AlertDialogHeader className="space-y-2 text-left">
+            <AlertDialogTitle className="text-lg font-semibold text-neutral-900">
+              Review & confirm
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px] leading-snug text-neutral-500">
+              Double-check contacts and criteria before saving.
             </AlertDialogDescription>
           </AlertDialogHeader>
           
@@ -1921,7 +1957,7 @@ export function CreateHotSheetDialog({
               {selectedClients.length > 0 ? (
                 <div className="space-y-2">
                   {selectedClients.map((client) => (
-                    <div key={client.id} className="text-sm text-muted-foreground p-2 bg-muted/30 rounded">
+                    <div key={client.id} className="rounded-lg border border-neutral-200 bg-white p-2.5 text-[13px] text-neutral-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                       <p><span className="font-medium">Name:</span> {client.first_name} {client.last_name}</p>
                       <p><span className="font-medium">Email:</span> {client.email}</p>
                       {client.phone && <p><span className="font-medium">Phone:</span> {formatPhoneNumber(client.phone)}</p>}
@@ -1950,20 +1986,21 @@ export function CreateHotSheetDialog({
             )}
 
             {matchingListingsCount > 0 && (
-              <div className="bg-secondary p-3 rounded-md">
-                <p className="text-sm font-medium text-primary">
-                  {matchingListingsCount} {matchingListingsCount === 1 ? "property currently matches" : "properties currently match"} these criteria
+              <div className="rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <p className="text-[13px] font-medium text-neutral-800">
+                  {matchingListingsCount}{" "}
+                  {matchingListingsCount === 1 ? "listing matches" : "listings match"} these criteria
                 </p>
               </div>
             )}
           </div>
 
           <AlertDialogFooter className="gap-2 sm:justify-end">
-            <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0">
+            <AlertDialogCancel className="mt-0 h-9 rounded-md border-neutral-200 px-3 text-[13px] font-medium hover:bg-neutral-50/90">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="h-8 rounded-md px-3 text-xs font-medium bg-[#0E56F5] hover:bg-[#0B46CC]"
+              className="h-9 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2"
               onClick={handleCreate}
             >
               Confirm & Create
@@ -1974,25 +2011,34 @@ export function CreateHotSheetDialog({
 
       {/* Create Contact Dialog */}
       <AlertDialog open={showCreateClientDialog} onOpenChange={setShowCreateClientDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Save this contact to your contacts list?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This contact will be added to the hot sheet. Would you also like to save them as a permanent contact?
+        <AlertDialogContent className="border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:rounded-xl">
+          <AlertDialogHeader className="text-left">
+            <AlertDialogTitle className="text-lg font-semibold text-neutral-900">
+              Save to contacts?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px] leading-snug text-neutral-500">
+              This person will be on the hot sheet. Also save them to your CRM contacts?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
-          <div className="space-y-2 my-4 p-4 bg-muted rounded-md">
+
+          <div className="my-4 space-y-2 rounded-lg border border-neutral-200 bg-white p-4 text-[13px] text-neutral-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <p className="text-sm"><span className="font-medium">Name:</span> {clientFirstName} {clientLastName}</p>
             <p className="text-sm"><span className="font-medium">Email:</span> {clientEmail}</p>
             {clientPhone && <p className="text-sm"><span className="font-medium">Phone:</span> {clientPhone}</p>}
           </div>
 
           <AlertDialogFooter className="gap-2 sm:justify-end">
-            <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0" onClick={handleAddClientWithoutSaving}>
+            <AlertDialogCancel
+              className="mt-0 h-9 rounded-md border-neutral-200 px-3 text-[13px] font-medium hover:bg-neutral-50/90"
+              onClick={handleAddClientWithoutSaving}
+            >
               No
             </AlertDialogCancel>
-            <AlertDialogAction className="h-8 rounded-md px-3 text-xs font-medium" onClick={handleCreateClient} disabled={creatingClient}>
+            <AlertDialogAction
+              className="h-9 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2"
+              onClick={handleCreateClient}
+              disabled={creatingClient}
+            >
               {creatingClient ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
@@ -194,24 +194,28 @@ export function EditHotsheetCriteriaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Search Criteria</DialogTitle>
-          <DialogDescription>
-            Update the search filters for this hotsheet
+      <DialogContent className="max-h-[min(92dvh,900px)] w-[calc(100%-1.25rem)] max-w-4xl gap-0 overflow-y-auto border border-neutral-200 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)] sm:w-full sm:max-h-[90vh] sm:rounded-xl sm:p-5 sm:gap-4">
+        <DialogHeader className="space-y-2 pb-2 text-left sm:pb-3">
+          <DialogTitle className="text-lg font-semibold tracking-tight text-neutral-900">
+            Edit search criteria
+          </DialogTitle>
+          <DialogDescription className="text-[13px] leading-snug text-neutral-500">
+            Update location, property type, status, and numeric filters. Changes apply when you save.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_6px_20px_rgba(15,23,42,0.05)]">
+        <div className="space-y-5 rounded-xl border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:space-y-6 sm:p-5">
           {/* Unified Location section */}
           <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
             <CollapsibleTrigger className="w-full">
-              <div className={`flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border ${townsOpen ? 'border-zinc-200/80' : 'border-zinc-200/80'}`}>
+              <div className={`flex items-center justify-between cursor-pointer hover:bg-neutral-50/80 p-3 rounded-md border ${townsOpen ? 'border-neutral-200' : 'border-neutral-200'}`}>
                 <div className="space-y-1 text-left">
-                  <Label className="text-sm font-semibold uppercase cursor-pointer">Location</Label>
-                  <p className="text-xs text-zinc-500">{locationSummary}</p>
+                  <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                    Location
+                  </Label>
+                  <p className="text-xs text-neutral-500">{locationSummary}</p>
                 </div>
-                {townsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {townsOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -220,7 +224,10 @@ export function EditHotsheetCriteriaDialog({
                   <div className="space-y-2">
                     <Label htmlFor="edit-state" className="text-sm font-semibold">State</Label>
                     <Select value={state} onValueChange={setState}>
-                      <SelectTrigger id="edit-state" className="bg-white">
+                      <SelectTrigger
+                        id="edit-state"
+                        className="h-9 bg-white text-sm border-neutral-200 focus:ring-neutral-300/35 focus-visible:ring-2 focus-visible:ring-neutral-300/35 focus-visible:ring-offset-2"
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -236,7 +243,10 @@ export function EditHotsheetCriteriaDialog({
                   <div className="space-y-2">
                     <Label htmlFor="edit-county" className="text-sm font-semibold">County</Label>
                     <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                      <SelectTrigger id="edit-county" className="bg-white">
+                      <SelectTrigger
+                        id="edit-county"
+                        className="h-9 bg-white text-sm border-neutral-200 focus:ring-neutral-300/35 focus-visible:ring-2 focus-visible:ring-neutral-300/35 focus-visible:ring-offset-2"
+                      >
                         <SelectValue placeholder="All Counties" />
                       </SelectTrigger>
                       <SelectContent className="bg-popover z-50 max-h-[300px]">
@@ -273,7 +283,7 @@ export function EditHotsheetCriteriaDialog({
                       onChange={(e) => setCitySearch(e.target.value)}
                       className="text-sm"
                     />
-                    <div className="border border-zinc-200/80 rounded-md bg-white max-h-60 overflow-y-auto p-2 relative z-10">
+                    <div className="border border-neutral-200 rounded-md bg-white max-h-60 overflow-y-auto p-2 relative z-10">
                       <TownsPicker
                         towns={townsList}
                         selectedTowns={selectedCities}
@@ -308,21 +318,21 @@ export function EditHotsheetCriteriaDialog({
                         </Button>
                       )}
                     </div>
-                    <div className="border border-zinc-200/80 rounded-md p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
+                    <div className="border border-neutral-200 rounded-md p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
                       {selectedCities.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No towns selected</p>
                       ) : (
                         selectedCities.map((city) => (
                           <div
                             key={city}
-                            className="group flex items-center justify-between gap-2 rounded-xl border border-zinc-200/80 bg-zinc-50/70 px-3 py-2 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-colors hover:bg-zinc-100/70"
+                            className="group flex items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-neutral-50/70 px-3 py-2 text-sm shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-colors hover:bg-neutral-100/70"
                           >
-                            <span className="truncate font-medium text-zinc-700">{formatTownSelectionLabel(city)}</span>
+                            <span className="truncate font-medium text-neutral-700">{formatTownSelectionLabel(city)}</span>
                             <button
                               type="button"
                               onClick={() => toggleCity(city)}
                               aria-label={`Remove ${formatTownSelectionLabel(city)}`}
-                              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-zinc-400 transition-colors hover:text-zinc-700"
+                              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-neutral-400 transition-colors hover:text-neutral-700"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -339,19 +349,19 @@ export function EditHotsheetCriteriaDialog({
           {/* Property Type */}
           <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
             <CollapsibleTrigger className="w-full">
-              <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200/80">
+              <div className="flex items-center justify-between cursor-pointer hover:bg-neutral-50/80 p-3 rounded-md border border-neutral-200">
                 <Label className="text-sm font-semibold uppercase cursor-pointer">
                   Property Type
                   {propertyTypes.length > 0 && (
-                    <span className="ml-2 text-xs font-normal text-zinc-500">({propertyTypes.length} selected)</span>
+                    <span className="ml-2 text-xs font-normal text-neutral-500">({propertyTypes.length} selected)</span>
                   )}
                 </Label>
-                {propertyTypeOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
+                {propertyTypeOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-                <div className="space-y-2 border border-zinc-200/80 rounded-md p-3 max-h-64 overflow-y-auto mt-2">
-                <div className="flex items-center space-x-2">
+                <div className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-3">
+                  <div className="flex items-center space-x-2">
                   <Checkbox
                     id="edit-pt-select-all"
                     checked={propertyTypes.length === propertyTypeOptions.length}
@@ -379,19 +389,19 @@ export function EditHotsheetCriteriaDialog({
           {/* Status */}
           <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
             <CollapsibleTrigger className="w-full">
-              <div className="flex items-center justify-between cursor-pointer hover:bg-muted/30 p-3 rounded-md border border-zinc-200/80">
+              <div className="flex items-center justify-between cursor-pointer hover:bg-neutral-50/80 p-3 rounded-md border border-neutral-200">
                 <Label className="text-sm font-semibold uppercase cursor-pointer">
                   Status
                   {statuses.length > 0 && (
-                    <span className="ml-2 text-xs font-normal text-zinc-500">({statuses.length} selected)</span>
+                    <span className="ml-2 text-xs font-normal text-neutral-500">({statuses.length} selected)</span>
                   )}
                 </Label>
-                {statusOpen ? <ChevronUp className="h-4 w-4 text-[#0E56F5]" /> : <ChevronDown className="h-4 w-4 text-[#0E56F5]" />}
+                {statusOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-                <div className="space-y-2 border border-zinc-200/80 rounded-md p-3 max-h-64 overflow-y-auto mt-2">
-                <div className="flex items-center space-x-2">
+                <div className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-3">
+                  <div className="flex items-center space-x-2">
                   <Checkbox
                     id="edit-st-select-all"
                     checked={statuses.length === statusOptions.length}
@@ -474,12 +484,29 @@ export function EditHotsheetCriteriaDialog({
           </div>
         </div>
 
-        <div className="flex gap-3 rounded-xl border border-zinc-200/80 bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+        <div className="mt-1 flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:mt-2 sm:flex-row sm:gap-3">
+          <Button
+            variant="outline"
+            type="button"
+            className="h-9 flex-1 rounded-md border-neutral-200 bg-white text-[13px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300 hover:bg-neutral-50/90"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
-          <Button className="flex-1" onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save Changes"}
+          <Button
+            type="button"
+            className="h-9 flex-1 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              "Save changes"
+            )}
           </Button>
         </div>
       </DialogContent>
