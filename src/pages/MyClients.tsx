@@ -32,6 +32,7 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import { Badge } from "@/components/ui/badge";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 // Helper function for title case display (safe transform, doesn't modify stored data)
 const toTitleCase = (str: string) => {
@@ -73,6 +74,8 @@ const MyClients = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  /** True when the last fetch failed and left no cached rows (avoids showing empty state on error). */
+  const [clientsLoadError, setClientsLoadError] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -151,6 +154,7 @@ const MyClients = () => {
   const fetchClients = async (userId: string) => {
     try {
       setLoading(true);
+      setClientsLoadError(false);
       const { data, error } = await supabase
         .from("clients_with_relationship_status" as any)
         .select("*")
@@ -162,6 +166,7 @@ const MyClients = () => {
     } catch (error: any) {
       console.error("Error fetching clients:", error);
       toast.error("Failed to load clients");
+      setClientsLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -653,14 +658,14 @@ const MyClients = () => {
           <AgentPageHeader
             title="My Contacts"
             subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
-            className="mb-8"
+            className="mb-5"
           />
-          <div className="mb-6 flex flex-wrap gap-3">
-            <Skeleton className="h-10 w-36 rounded-lg bg-neutral-100" />
-            <Skeleton className="h-10 w-40 rounded-lg bg-neutral-100" />
-            <Skeleton className="ml-auto h-10 w-[min(100%,20rem)] rounded-lg bg-neutral-100 md:max-w-md" />
+          <div className="mb-5 flex flex-wrap gap-2">
+            <Skeleton className="h-9 w-32 rounded-lg bg-neutral-100" />
+            <Skeleton className="h-9 w-36 rounded-lg bg-neutral-100" />
+            <Skeleton className="ml-auto h-9 w-[min(100%,20rem)] rounded-lg bg-neutral-100 md:max-w-md" />
           </div>
-          <AgentSectionCard className="p-0 overflow-hidden">
+          <AgentSectionCard className="overflow-hidden border border-neutral-200 p-0 shadow-sm">
             <div className="border-b border-neutral-100 px-6 py-3">
               <div className="flex gap-4">
                 {[1, 2, 3, 4, 5, 6].map((col) => (
@@ -682,6 +687,42 @@ const MyClients = () => {
     );
   }
 
+  if (!loading && clientsLoadError && clients.length === 0 && user) {
+    return (
+      <TooltipProvider>
+        <Seo
+          title="Contacts | All Agent Connect"
+          description="Manage clients, contacts, and relationship workflows inside All Agent Connect."
+          canonical="https://allagentconnect.com/my-clients"
+          noindex
+        />
+        <AgentAacPage className="pb-12">
+          <AgentPageHeader
+            title="My Contacts"
+            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
+            className="mb-5"
+          />
+          <AgentSectionCard className="border border-neutral-200 p-8 shadow-sm">
+            <div className="space-y-4 text-center">
+              <p className="font-medium text-neutral-900">Couldn&apos;t load contacts</p>
+              <p className="text-sm text-neutral-600">
+                Check your connection and try again. If the problem continues, refresh the page.
+              </p>
+              <Button
+                size="sm"
+                type="button"
+                onClick={() => fetchClients(user.id)}
+                className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+              >
+                Try again
+              </Button>
+            </div>
+          </AgentSectionCard>
+        </AgentAacPage>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <Seo
@@ -694,27 +735,36 @@ const MyClients = () => {
         <AgentPageHeader
           title="My Contacts"
           subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
-          className="mb-8"
+          className="mb-5"
         />
 
           {/* Action Buttons - Primary left, utilities right */}
           {/* Action Buttons - Two-row layout: CTAs top, Search/Filters bottom */}
-          <div className="mb-4 flex flex-col gap-4">
+          <div className="mb-4 flex flex-col gap-3">
             {/* Row 1: Primary CTA left, utilities right */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               {/* Primary CTA - Add Contact */}
               <Dialog open={addDialogOpen} onOpenChange={(open) => {
               setAddDialogOpen(open);
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button onClick={handleAddClient}>
+                <Button
+                  size="sm"
+                  onClick={handleAddClient}
+                  className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Contact
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-white border border-zinc-200 rounded-2xl shadow-lg w-[min(92vw,500px)] max-h-[85vh] flex flex-col overflow-hidden p-0">
-                <DialogHeader className="px-6 py-5 border-b border-zinc-200">
+              <DialogContent
+                className={cn(
+                  "flex max-h-[85vh] w-[min(92vw,500px)] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white p-0 shadow-md",
+                  "[&_input:focus-visible]:border-neutral-300 [&_input:focus-visible]:ring-2 [&_input:focus-visible]:ring-zinc-400/30",
+                )}
+              >
+                <DialogHeader className="border-b border-neutral-200 px-6 py-5">
                   <DialogTitle className="text-xl font-semibold text-zinc-900">{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
                   <DialogDescription className="text-sm text-zinc-500">
                     {editingClient ? "Update contact information" : "Add a new contact to your roster"}
@@ -799,11 +849,16 @@ const MyClients = () => {
                     </Select>
                   </div>
 
-                  <div className="sticky bottom-0 bg-white border-t border-zinc-200 -mx-6 -mb-5 px-6 py-4 flex justify-end gap-3 mt-6">
-                    <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
+                  <div className="-mx-6 -mb-5 mt-6 flex justify-end gap-2 border-t border-neutral-200 bg-white px-6 py-3">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={saving}>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={saving}
+                      className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                    >
                       {saving ? "Saving..." : editingClient ? "Update" : "Add Contact"}
                     </Button>
                   </div>
@@ -812,27 +867,31 @@ const MyClients = () => {
             </Dialog>
 
               {/* Secondary utilities - right side */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex flex-wrap gap-2">
                 {clients.length > 0 && (
                   <>
                     {selectedClients.size > 0 && (
-                      <Button onClick={handleBulkEmail}>
+                      <Button
+                        size="sm"
+                        onClick={handleBulkEmail}
+                        className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                      >
                         <Send className="h-4 w-4 mr-2" />
                         Send Email ({selectedClients.size})
                       </Button>
                     )}
-                    <Button variant="outline" onClick={() => setAnalyticsDialogOpen(true)}>
-                      <Mail className="h-4 w-4 mr-2 text-primary" />
+                    <Button variant="outline" size="sm" onClick={() => setAnalyticsDialogOpen(true)}>
+                      <Mail className="h-4 w-4 mr-2 text-neutral-600" />
                       Email Analytics
                     </Button>
-                    <Button variant="outline" onClick={handleExportCSV}>
-                      <Download className="h-4 w-4 mr-2 text-primary" />
+                    <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                      <Download className="h-4 w-4 mr-2 text-neutral-600" />
                       Export CSV
                     </Button>
                   </>
                 )}
-                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2 text-primary" />
+                <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2 text-neutral-600" />
                   Import CSV
                 </Button>
               </div>
@@ -840,12 +899,16 @@ const MyClients = () => {
           </div>
 
           {clients.length === 0 ? (
-            <AgentSectionCard className="p-8">
+            <AgentSectionCard className="border border-neutral-200 p-8 shadow-sm">
               <div className="py-4 text-center">
-                <User className="mx-auto mb-3 h-12 w-12 text-[#0E56F5]" />
+                <User className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
                 <h3 className="mb-1 text-lg font-semibold text-neutral-900">No contacts yet</h3>
                 <p className="mb-5 text-sm text-neutral-500">Add your first contact to start managing their property search</p>
-                <Button onClick={handleAddClient}>
+                <Button
+                  size="sm"
+                  onClick={handleAddClient}
+                  className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add First Contact
                 </Button>
@@ -853,11 +916,11 @@ const MyClients = () => {
             </AgentSectionCard>
           ) : (
             <>
-               <AgentSectionCard className="mb-4 overflow-hidden p-0">
-                <div className="p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 flex-1">
-                    <div className="relative flex-1 min-w-[200px] max-w-[480px]" ref={autocompleteRef}>
+               <AgentSectionCard className="mb-4 overflow-hidden border border-neutral-200 p-0 shadow-sm">
+                <div className="space-y-4 p-4 sm:p-6">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                    <div className="min-w-0 flex-1 space-y-3">
+                    <div className="relative w-full max-w-[480px]" ref={autocompleteRef}>
                       <Input
                         ref={searchInputRef}
                         placeholder="Search contacts by name, email, phone, or type..."
@@ -877,13 +940,13 @@ const MyClients = () => {
                             setShowAutocomplete(false);
                           }
                         }}
-                        className="pl-10"
+                        className="pl-10 focus-visible:ring-zinc-400/30"
                       />
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" />
+                      <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                       
                       {/* Typeahead Autocomplete Dropdown */}
                       {showAutocomplete && searchTerm.length >= 2 && filteredClients.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden">
+                        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md">
                           <Command className="bg-white">
                             <CommandList>
                               <CommandGroup heading="Quick Jump">
@@ -917,8 +980,9 @@ const MyClients = () => {
                         </div>
                       )}
                     </div>
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                     <Select value={clientTypeFilter} onValueChange={setClientTypeFilter}>
-                      <SelectTrigger className="w-[180px] bg-white border-zinc-200">
+                      <SelectTrigger className="h-9 w-full min-w-[10rem] border-neutral-200 bg-white sm:w-[168px]">
                         <SelectValue placeholder="Filter by type" />
                       </SelectTrigger>
                       <SelectContent className="z-50">
@@ -935,7 +999,7 @@ const MyClients = () => {
                       </SelectContent>
                     </Select>
                     <Select value={relationshipFilter} onValueChange={setRelationshipFilter}>
-                      <SelectTrigger className="w-[180px] bg-white border-zinc-200">
+                      <SelectTrigger className="h-9 w-full min-w-[10rem] border-neutral-200 bg-white sm:w-[168px]">
                         <SelectValue placeholder="Relationship" />
                       </SelectTrigger>
                       <SelectContent className="z-50">
@@ -946,8 +1010,8 @@ const MyClients = () => {
                       </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="w-[200px] bg-white border-zinc-200">
-                        <span className="text-sm text-zinc-900">Sort by</span>
+                      <SelectTrigger className="h-9 w-full min-w-[10rem] border-neutral-200 bg-white sm:w-[188px]">
+                        <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent className="z-50">
                         <SelectItem value="name">Name</SelectItem>
@@ -956,13 +1020,14 @@ const MyClients = () => {
                       </SelectContent>
                     </Select>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-zinc-600">Per page:</span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 border-t border-neutral-100 pt-3 xl:border-t-0 xl:pt-0">
+                      <span className="text-sm text-neutral-600">Per page:</span>
                       <Select value={itemsPerPage.toString()} onValueChange={(value) => {
                         setItemsPerPage(Number(value));
                         setCurrentPage(1);
                       }}>
-                        <SelectTrigger className="w-[80px] bg-white border-zinc-200">
+                        <SelectTrigger className="h-9 w-[76px] border-neutral-200 bg-white">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="z-50">
@@ -974,13 +1039,13 @@ const MyClients = () => {
                       </Select>
                     </div>
                   </div>
-                  <div className="mt-2">
+                  <div className="mt-1 space-y-0.5">
                     {(searchTerm || clientTypeFilter !== "all" || relationshipFilter !== "all") && (
-                      <p className="text-sm text-zinc-600">
+                      <p className="text-sm text-neutral-600">
                         Found {filteredClients.length} of {clients.length} contacts
                       </p>
                     )}
-                    <p className="text-sm text-zinc-600">
+                    <p className="text-sm text-neutral-600">
                       {sortedClients.length === 1 
                         ? "Showing 1 of 1 contact"
                         : `Showing ${startIndex + 1}–${Math.min(endIndex, sortedClients.length)} of ${sortedClients.length} contacts`
@@ -991,44 +1056,53 @@ const MyClients = () => {
 
               {/* Bulk Action Bar - appears when contacts are selected */}
               {selectedClients.size > 0 && (
-                <div className="flex items-center gap-3 py-3 px-4 rounded-xl mb-4 border border-zinc-100 bg-white">
-                  <span className="text-sm text-zinc-600 font-medium">
+                <div className="mx-4 mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 shadow-sm sm:mx-6">
+                  <span className="text-sm font-medium text-neutral-700">
                     {selectedClients.size} contact{selectedClients.size > 1 ? 's' : ''} selected
                   </span>
-                  <Separator orientation="vertical" className="h-4" />
+                  <Separator orientation="vertical" className="h-4 bg-neutral-200" />
                   <Button variant="outline" size="sm" onClick={handleBulkCreateHotSheet}>
-                    <ListPlus className="h-4 w-4 mr-2 text-blue-500" />
+                    <ListPlus className="mr-2 h-4 w-4 text-neutral-600" />
                     Create Hot Sheet
                   </Button>
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setBulkRemoveDialogOpen(true)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Remove
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedClients(new Set())}>
+                  <Button variant="ghost" size="sm" className="text-neutral-600" onClick={() => setSelectedClients(new Set())}>
                     Clear selection
                   </Button>
                 </div>
               )}
 
               {filteredClients.length === 0 ? (
-                <div className="border border-zinc-100 rounded-2xl p-12 bg-white">
+                <div className="mx-4 mb-6 rounded-xl border border-neutral-200 bg-white p-10 shadow-sm sm:mx-6">
                   <div className="text-center">
-                    <User className="h-16 w-16 mx-auto mb-4 text-blue-500" />
-                    <h3 className="text-xl font-semibold text-zinc-900 mb-2">No contacts found</h3>
-                    <p className="text-zinc-600 mb-6">
-                      Try adjusting your search criteria
+                    <User className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
+                    <h3 className="mb-2 text-lg font-semibold text-neutral-900">No contacts found</h3>
+                    <p className="mb-6 text-sm text-neutral-600">
+                      Try adjusting your search or filters
                     </p>
-                    <Button variant="outline" onClick={() => setSearchTerm("")}>
-                      Clear Search
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setClientTypeFilter("all");
+                        setRelationshipFilter("all");
+                      }}
+                    >
+                      Clear filters
                     </Button>
                   </div>
                 </div>
               ) : (
                 <>
-                <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-white">
+                <div className="mx-4 mb-4 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm sm:mx-6">
+                  <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="border-b border-zinc-100">
-                      <TableRow className="border-b-0">
+                    <TableHeader className="border-b border-neutral-100 bg-neutral-50/80">
+                      <TableRow className="border-b-0 hover:bg-transparent">
                       <TableHead className="w-12">
                           {(() => {
                             const allOnPageSelected = paginatedClients.length > 0 && paginatedClients.every(client => selectedClients.has(client.id));
@@ -1063,7 +1137,7 @@ const MyClients = () => {
                       {paginatedClients.map((client) => (
                     <TableRow 
                       key={client.id} 
-                      className="cursor-pointer hover:bg-zinc-50 transition-colors"
+                      className="cursor-pointer transition-colors hover:bg-neutral-50/90 focus-within:bg-neutral-50/90"
                       onClick={() => openContactDrawer(client)}
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
@@ -1075,18 +1149,18 @@ const MyClients = () => {
                       <TableCell className="font-medium">
                         {toTitleCase(client.first_name)} {toTitleCase(client.last_name)}
                         {(client as any).source === 'network' && (
-                          <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200 text-[10px]">AAC Member</Badge>
+                          <Badge variant="outline" className="ml-2 border-neutral-200 bg-neutral-100 text-[10px] text-neutral-700">AAC Member</Badge>
                         )}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3 text-blue-500" />
+                            <Mail className="h-3 w-3 shrink-0 text-neutral-400" />
                             {client.email}
                           </div>
                           {client.phone && (
-                            <div className="flex items-center gap-2 text-sm text-zinc-500">
-                              <Phone className="h-3 w-3 text-blue-500" />
+                            <div className="flex items-center gap-2 text-sm text-neutral-600">
+                              <Phone className="h-3 w-3 shrink-0 text-neutral-400" />
                               {formatPhoneNumber(client.phone)}
                             </div>
                           )}
@@ -1099,7 +1173,7 @@ const MyClients = () => {
                       </TableCell>
                       <TableCell>
                         {client.relationship_status === "active" && (
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">Active</Badge>
+                          <Badge variant="outline" className="border-neutral-200 bg-neutral-100 text-[10px] text-neutral-800">Active</Badge>
                         )}
                         {client.relationship_status === "ended" && (
                           <Badge variant="outline" className="bg-zinc-100 text-zinc-500 border-zinc-200 text-[10px]">Ended</Badge>
@@ -1129,7 +1203,7 @@ const MyClients = () => {
                                   handleEditClient(client);
                                 }}
                               >
-                                <Edit className="h-4 w-4 text-zinc-400 group-hover:text-emerald-600 transition-colors" />
+                                <Edit className="h-4 w-4 text-neutral-400 transition-colors group-hover:text-neutral-700" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent sideOffset={8}>
@@ -1172,7 +1246,7 @@ const MyClients = () => {
                                     handleAddToBuyers(client);
                                   }}
                                 >
-                                  <UserPlus className="h-4 w-4 text-zinc-400 group-hover:text-emerald-600 transition-colors" />
+                                  <UserPlus className="h-4 w-4 text-neutral-400 transition-colors group-hover:text-neutral-700" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent sideOffset={8}>
@@ -1205,10 +1279,11 @@ const MyClients = () => {
                   ))}
                 </TableBody>
               </Table>
-              
+              </div>
+
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex justify-center mt-4">
+                <div className="flex justify-center border-t border-neutral-100 px-4 pb-4 pt-3">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
@@ -1261,7 +1336,7 @@ const MyClients = () => {
               
               {/* Low-contact helper text */}
               {clients.length > 0 && clients.length <= 3 && (
-                <p className="text-sm text-zinc-400 mt-4 text-center">
+                <p className="mt-4 text-center text-sm text-neutral-500">
                   Add contacts to start sending personalized Hot Sheets and private deal alerts.
                 </p>
               )}
