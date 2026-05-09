@@ -144,6 +144,11 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.6" },
         },
+        /** AAC monogram loader — soft opacity drift, no rotation */
+        "aac-monogram-breathe": {
+          "0%, 100%": { opacity: "0.38" },
+          "50%": { opacity: "0.94" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -153,6 +158,7 @@ export default {
         "scale-in": "scale-in 0.5s ease-out forwards",
         "slide-in": "slide-in 0.6s ease-out forwards",
         "glow": "glow 2s ease-in-out infinite",
+        "aac-monogram-breathe": "aac-monogram-breathe 2.5s ease-in-out infinite",
       },
     },
   },
