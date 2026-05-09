@@ -99,6 +99,27 @@ function normalizeStatus(eventType: string): string {
   }
 }
 
+function extractSubject(
+  evt: Record<string, unknown>,
+  data: Record<string, unknown>,
+): string | null {
+  if (typeof data.subject === "string") return data.subject;
+
+  const dataEmail = (data as { email?: unknown }).email;
+  if (dataEmail && typeof dataEmail === "object" && dataEmail !== null) {
+    const maybe = (dataEmail as { subject?: unknown }).subject;
+    if (typeof maybe === "string") return maybe;
+  }
+
+  const evtData = (evt as { data?: unknown }).data;
+  if (evtData && typeof evtData === "object" && evtData !== null) {
+    const maybe = (evtData as { subject?: unknown }).subject;
+    if (typeof maybe === "string") return maybe;
+  }
+
+  return null;
+}
+
 // Order of "advancement" — webhook events can arrive out-of-order; we only
 // overwrite delivery_status if the new status represents progress (or terminal).
 const STATUS_RANK: Record<string, number> = {
@@ -180,6 +201,7 @@ Deno.serve(async (req) => {
       : null;
 
   const normalized = normalizeStatus(eventType);
+  const subject = extractSubject(evt, data);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -228,25 +250,30 @@ Deno.serve(async (req) => {
   }
 
   // Always log the raw webhook into email_events for audit, even if unmatched.
-  // job_id is required (NOT NULL) — if we couldn't resolve, skip the insert
-  // and rely on the Edge Function logs as the audit trail.
-  if (jobId) {
-    const { error: evtErr } = await supabase.from("email_events").insert({
-      job_id: jobId,
-      event: normalized,
-      detail: {
-        provider_event_type: eventType,
-        raw: evt,
-      },
-      provider_message_id: providerMessageId,
-      recipient_email: recipient,
-      provider_event_at: createdAt,
-      source: "resend_webhook",
-    });
-    if (evtErr) {
-      console.error("[resend-webhook] email_events insert failed:", evtErr);
-    }
-  } else {
+  const { error: evtErr } = await supabase.from("email_events").insert({
+    job_id: jobId,
+    event: normalized,
+    detail: {
+      provider_event_type: eventType,
+      raw: evt,
+    },
+    provider_message_id: providerMessageId,
+    recipient_email: recipient,
+    provider_event_at: createdAt,
+    source: "resend_webhook",
+
+    // Explicit webhook tracking fields.
+    resend_email_id: providerMessageId,
+    event_type: eventType,
+    recipient: recipient,
+    subject,
+    raw_payload: evt,
+  });
+  if (evtErr) {
+    console.error("[resend-webhook] email_events insert failed:", evtErr);
+  }
+
+  if (!jobId) {
     console.log(
       `[resend-webhook] Unmatched event ${eventType} message_id=${providerMessageId} recipient=${recipient}`,
     );

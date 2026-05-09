@@ -74,6 +74,14 @@ Deno.serve(async (req) => {
       recipient_email: recipient,
       provider_event_at: new Date().toISOString(),
       source: "worker",
+      resend_email_id: providerMessageId,
+      event_type: event,
+      recipient,
+      subject:
+        typeof detail.subject === "string"
+          ? (detail.subject as string)
+          : null,
+      raw_payload: detail,
     });
 
     if (error) {
