@@ -6,13 +6,13 @@ export type AacMonogramLoaderProps = {
   message?: string;
   hideMessage?: boolean;
   className?: string;
-  /** Monogram Tailwind classes (defaults to neutral for white / light gray backgrounds) */
+  /** Monogram Tailwind classes (defaults to AAC green `#16A34A`) */
   monogramClassName?: string;
   variant?: "fullscreen" | "section" | "inline";
 };
 
 /**
- * AAC command-square monogram with a slow opacity pulse (no spin, no house mark).
+ * AAC command-square monogram with slow linear rotation plus a soft opacity breathe (no house mark).
  * Use for full-page and major-section loading; keep button-level UI on `Loader2` when tiny.
  */
 export function AacMonogramLoader({
@@ -36,8 +36,15 @@ export function AacMonogramLoader({
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="animate-aac-monogram-breathe text-neutral-800">
-        <AACMonogram className={cn("h-8 w-8 sm:h-9 sm:w-9", monogramClassName)} />
+      <div
+        className="inline-flex origin-center animate-aac-monogram-spin"
+        aria-hidden
+      >
+        <div className="animate-aac-monogram-breathe">
+          <AACMonogram
+            className={cn("h-8 w-8 sm:h-9 sm:w-9 text-[#16A34A]", monogramClassName)}
+          />
+        </div>
       </div>
       {!hideMessage && message ? (
         <p className="max-w-sm text-center text-sm text-neutral-500">{message}</p>

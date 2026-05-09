@@ -144,10 +144,15 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.6" },
         },
-        /** AAC monogram loader — soft opacity drift, no rotation */
+        /** AAC monogram loader — soft opacity drift (pairs with spin in `AacMonogramLoader`) */
         "aac-monogram-breathe": {
           "0%, 100%": { opacity: "0.38" },
           "50%": { opacity: "0.94" },
+        },
+        /** AAC monogram loader — one full turn, steady linear (premium, not spinner-fast) */
+        "aac-monogram-spin": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
         },
       },
       animation: {
@@ -159,6 +164,7 @@ export default {
         "slide-in": "slide-in 0.6s ease-out forwards",
         "glow": "glow 2s ease-in-out infinite",
         "aac-monogram-breathe": "aac-monogram-breathe 2.5s ease-in-out infinite",
+        "aac-monogram-spin": "aac-monogram-spin 3.5s linear infinite",
       },
     },
   },
