@@ -180,13 +180,13 @@ const HotSheets = ({
     return (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
       {/*
-        Mobile: title → statuses → CTA → panel (orders 1–4).
-        lg: one row, columns stretch to the tallest; left column flex justify-between so the CTA rides the
-        bottom of the column — balances against center + right without adding extra vertical grid gap height.
+        Mobile: title → statuses → CTA → panel (max-lg:order-* on left children only).
+        lg: left column flex justify-between (title+desc top, CTA bottom); center lg:self-center; no mobile order on lg.
       */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:grid-rows-1 lg:items-stretch lg:gap-x-5 lg:gap-y-0">
         <div className="max-lg:contents lg:col-start-1 lg:row-start-1 lg:flex lg:min-h-0 lg:w-full lg:flex-col lg:justify-between lg:items-start lg:self-stretch lg:pt-0.5">
-          <div className="order-1 min-w-0 lg:min-h-0">
+          {/* order-* only for mobile grid stacking; at lg, document order = title → CTA (avoid order-0 above order-1 flex flip) */}
+          <div className="max-lg:order-1 min-w-0 lg:min-h-0">
             <div className="space-y-1.5">
               <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Hot Sheets</h1>
               <p className="text-sm leading-snug text-gray-500">
@@ -195,13 +195,13 @@ const HotSheets = ({
             </div>
           </div>
           {showHeroCreate ? (
-            <div className="order-3 flex shrink-0 justify-start lg:order-none lg:pb-0.5">
+            <div className="max-lg:order-3 flex shrink-0 justify-start lg:pb-0.5">
               {heroCreateButton}
             </div>
           ) : null}
         </div>
 
-        <div className="order-2 grid grid-cols-2 gap-2.5 sm:gap-3 lg:col-start-2 lg:row-start-1 lg:self-start">
+        <div className="order-2 grid grid-cols-2 gap-2.5 sm:gap-3 lg:col-start-2 lg:row-start-1 lg:self-center">
           {/* LOCKED UI — do not restyle without design approval
            * Matches AAC premium system (Dashboard-aligned) */}
           {heroStatusItems.map((item) => (
