@@ -13,6 +13,7 @@ import {
 } from "@/components/communication-center/HotSheetCriteriaBuilder";
 import { PageShell } from "@/components/layout/PageShell";
 import { DEFAULT_HOT_SHEET_CRITERIA, toCriteriaPayload } from "@/lib/hotSheetCriteriaCore";
+import { formatCriteriaDisplayLabel } from "@/lib/formatCriteriaDisplay";
 import { aacStyles } from "@/ui/aacStyles";
 
 const defaultCriteria: HotSheetCriteriaFormValue = { ...DEFAULT_HOT_SHEET_CRITERIA };
@@ -57,9 +58,7 @@ export default function ClientCreateHotsheetNew() {
       parts.push(criteria.cities[0]);
     }
     if (criteria.propertyTypes && criteria.propertyTypes.length > 0) {
-      parts.push(
-        criteria.propertyTypes[0].replace("_", " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
-      );
+      parts.push(formatCriteriaDisplayLabel(criteria.propertyTypes[0]));
     }
     if (criteria.maxPrice && !criteria.hasNoMax) {
       const maxPrice = parseFloat(criteria.maxPrice);

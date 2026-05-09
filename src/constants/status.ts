@@ -1,4 +1,4 @@
-import { humanizeSnakeCase } from "@/lib";
+import { humanizeSnakeCase } from "@/lib/format";
 
 /**
  * STATUS SYSTEM — SINGLE SOURCE OF TRUTH

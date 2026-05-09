@@ -18,7 +18,7 @@ import { AddFriendDialog } from "@/components/AddFriendDialog";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import { LISTING_STATUS_LABELS } from "@/constants/status";
+import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import {
   buyerMarketListingTileMediaWrap,
   buyerPageMain,
@@ -723,7 +723,7 @@ const ClientHotsheetPage = () => {
                   <div className="col-span-2 md:col-span-4">
                     <span className="text-muted-foreground">Property Types:</span>{" "}
                     <span className="font-semibold">
-                      {criteria.propertyTypes.map((t: string) => t.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())).join(", ")}
+                      {formatCriteriaDisplayLabels(criteria.propertyTypes as string[])}
                     </span>
                   </div>
                 )}
@@ -731,7 +731,7 @@ const ClientHotsheetPage = () => {
                   <div className="col-span-2 md:col-span-4">
                     <span className="text-muted-foreground">Statuses:</span>{" "}
                     <span className="font-semibold">
-                      {criteria.statuses.map((s: string) => LISTING_STATUS_LABELS[s] || s.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())).join(", ")}
+                      {formatCriteriaDisplayLabels(criteria.statuses as string[])}
                     </span>
                   </div>
                 )}

@@ -33,6 +33,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
 import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
+import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
@@ -202,7 +203,7 @@ function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; 
   return {
     scope,
     state: c.state ? String(c.state) : "—",
-    statuses: c.statuses?.length ? c.statuses.join(", ") : "—",
+    statuses: c.statuses?.length ? formatCriteriaDisplayLabels(c.statuses as string[]) : "—",
   };
 }
 

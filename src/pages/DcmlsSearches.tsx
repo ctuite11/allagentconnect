@@ -8,6 +8,7 @@ import { Bell, Flame, Plus, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 
 const HOT_SHEET_HELP =
   "Your personalized live listing feed. Get alerted when matching homes hit the network.";
@@ -30,7 +31,10 @@ const summarizeCriteria = (c: any): string => {
     parts.push(c.towns.slice(0, 3).join(", ") + (c.towns.length > 3 ? "…" : ""));
   }
   if (Array.isArray(c.propertyTypes) && c.propertyTypes.length > 0) {
-    parts.push(c.propertyTypes.join(", "));
+    parts.push(formatCriteriaDisplayLabels(c.propertyTypes));
+  }
+  if (Array.isArray(c.statuses) && c.statuses.length > 0) {
+    parts.push(formatCriteriaDisplayLabels(c.statuses));
   }
   if (c.maxPrice) parts.push(`Up to $${(Number(c.maxPrice) / 1000).toFixed(0)}k`);
   if (c.bedrooms) parts.push(`${c.bedrooms}+ bd`);

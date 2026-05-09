@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import { Flame, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatCriteriaDisplayLabel } from "@/lib/formatCriteriaDisplay";
 
 const HOT_SHEET_HELP =
   "Your personalized live listing feed. Get alerted when matching homes hit the network.";
@@ -42,7 +43,7 @@ const DcmlsHotSheetNew = () => {
     const parts: string[] = [];
     if (criteria.towns?.length) parts.push(criteria.towns[0]);
     if (criteria.propertyTypes?.length) {
-      parts.push(criteria.propertyTypes[0].replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()));
+      parts.push(formatCriteriaDisplayLabel(criteria.propertyTypes[0]));
     }
     if (criteria.maxPrice) parts.push(`under $${(parseFloat(criteria.maxPrice) / 1000).toFixed(0)}k`);
     return parts.join(" ") || "My Hot Sheet";

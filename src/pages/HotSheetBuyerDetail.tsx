@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { buyerCollectionCardRoot, buyerImageMosaicGrid, buyerSectionCard } from "@/lib/buyerUi";
 import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
+import { formatCriteriaDisplayLabel, formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 
 interface BuyerInfo {
   firstName: string;
@@ -65,8 +66,12 @@ function CriteriaPills({ criteria }: { criteria: any }) {
 
   if (criteria.propertyTypes?.length) {
     const types = criteria.propertyTypes as string[];
-    const label = types.length === 1 ? types[0] : `${types.length} types`;
+    const label = types.length === 1 ? formatCriteriaDisplayLabel(types[0]) : `${types.length} types`;
     pills.push(label);
+  }
+
+  if (criteria.statuses?.length) {
+    pills.push(formatCriteriaDisplayLabels(criteria.statuses as string[]));
   }
 
   if (criteria.sqftMin) pills.push(`${criteria.sqftMin.toLocaleString()}+ sqft`);

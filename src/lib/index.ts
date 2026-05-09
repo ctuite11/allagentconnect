@@ -6,6 +6,7 @@
  */
 
 export * from "./format";
+export * from "./formatCriteriaDisplay";
 export * from "./phoneFormat";
 export * from "./brandColors";
 export * from "./google-address";

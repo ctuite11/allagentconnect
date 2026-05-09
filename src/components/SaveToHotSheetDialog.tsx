@@ -15,6 +15,7 @@ import { X, Search, UserPlus, Users, Filter, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { formatCriteriaDisplayLabel, formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 
 interface Client {
   id: string;
@@ -323,13 +324,13 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
     const items: string[] = [];
     
     if (currentSearch?.propertyTypes?.length) {
-      items.push(`Types: ${currentSearch.propertyTypes.join(", ")}`);
+      items.push(`Types: ${formatCriteriaDisplayLabels(currentSearch.propertyTypes)}`);
     } else if (currentSearch?.property_type) {
-      items.push(`Type: ${currentSearch.property_type}`);
+      items.push(`Type: ${formatCriteriaDisplayLabel(currentSearch.property_type)}`);
     }
     
     if (currentSearch?.statuses?.length) {
-      items.push(`Status: ${currentSearch.statuses.join(", ")}`);
+      items.push(`Status: ${formatCriteriaDisplayLabels(currentSearch.statuses)}`);
     }
     
     if (currentSearch?.cities?.length) {
