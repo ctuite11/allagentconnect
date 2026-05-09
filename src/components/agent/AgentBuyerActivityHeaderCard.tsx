@@ -120,7 +120,7 @@ function MetricsToolbar({
                     : it.key === "v"
                       ? "text-sky-600"
                       : it.key === "f"
-                        ? (it.iconClass ?? "text-rose-500 stroke-rose-500")
+                        ? ((it as { iconClass?: string }).iconClass ?? "text-rose-500 stroke-rose-500")
                         : it.key === "h"
                           ? it.kind === "text"
                             ? "text-violet-600"
