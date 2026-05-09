@@ -152,7 +152,7 @@ function CompactClientRecipientsStrip({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                    className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
                     disabled={resendingId === r.clientId || inCooldown}
                     onClick={() => handleResend(r)}
                   >
@@ -174,6 +174,7 @@ function CompactClientRecipientsStrip({
         return (
           <AgentBuyerActivityHeaderCard
             key={r.clientId}
+            className="transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
             displayName={r.displayName}
             email={r.email}
             phone={r.phone}
@@ -1130,12 +1131,25 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="pt-6 px-6 pb-6">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="h-10 w-64 rounded-xl bg-muted animate-pulse mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="min-h-[50vh] bg-white pt-6 px-4 pb-12 sm:px-6">
+        <div className="mx-auto w-full max-w-[88rem] space-y-5">
+          <div className="space-y-2">
+            <div className="h-5 w-40 rounded-md bg-neutral-100 animate-pulse" />
+            <div className="h-7 w-48 max-w-[min(24rem,100%)] rounded-md bg-neutral-100 animate-pulse" />
+          </div>
+          <div className="h-28 rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-4">
+            <div className="mb-3 h-4 w-2/5 max-w-xs rounded-md bg-neutral-100 animate-pulse" />
+            <div className="h-3.5 w-full max-w-xl rounded-md bg-neutral-50 animate-pulse" />
+          </div>
+          <div className="h-16 rounded-xl border border-neutral-200 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="h-full w-full max-w-2xl rounded-md bg-neutral-50 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
+              <div
+                key={i}
+                className="aspect-[4/5] rounded-2xl border border-neutral-200 bg-neutral-50/80 animate-pulse shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+              />
             ))}
           </div>
         </div>
@@ -1145,14 +1159,20 @@ if (comments && comments.length > 0) {
 
   if (!hotSheet) {
     return (
-      <div className="pt-6 px-6 pb-6">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-muted-foreground">Hot sheet not found</p>
-            <Button onClick={() => navigate("/hot-sheets")} className="mt-4">
-              Back to Hot Sheets
-            </Button>
-          </div>
+      <div className="min-h-[40vh] bg-white px-4 py-10 sm:px-6">
+        <div className="mx-auto flex max-w-lg flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white px-6 py-10 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <p className="text-sm font-semibold text-neutral-900">Hot sheet not found</p>
+          <p className="mt-2 text-sm leading-relaxed text-neutral-500">
+            It may have been removed or this link may be outdated.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-6 h-9 rounded-md border-neutral-200 px-4 text-xs font-medium shadow-sm transition-colors duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
+            onClick={() => navigate("/hot-sheets")}
+          >
+            Back to Hot Sheets
+          </Button>
         </div>
       </div>
     );
@@ -1167,10 +1187,10 @@ if (comments && comments.length > 0) {
       : "Back to hot sheets";
 
   return (
-      <div className="pt-4 px-6 pb-6">
+      <div className="min-h-[50vh] bg-white pt-4 px-4 pb-10 sm:px-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
-          {/* Back link + page title — hot sheet name stays in criteria strip below */}
-          <div className="mb-3">
+          {/* Back link + page title */}
+          <header className="mb-4">
             <button
               type="button"
               onClick={() => {
@@ -1182,15 +1202,25 @@ if (comments && comments.length > 0) {
                   !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
                 navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
               }}
-              className="group -ml-1 mb-2 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
+              className="group -ml-1 mb-3 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-[13px] font-medium text-neutral-600 transition-colors duration-200 hover:text-neutral-900"
             >
-              <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-zinc-900" aria-hidden />
+              <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-neutral-900" aria-hidden />
               <span className="min-w-0 truncate">{backLinkLabel}</span>
             </button>
-            <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
-              {isSharedWorkspace ? "Buyer Activity" : "Review matches"}
-            </h1>
-          </div>
+            <div className="flex flex-col gap-1 border-b border-neutral-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+              <div className="min-w-0">
+                <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
+                  {isSharedWorkspace ? "Buyer activity" : "Review matches"}
+                </h1>
+                <p className="mt-1 truncate text-[13px] text-neutral-500" title={hotSheet.name}>
+                  {hotSheet.name}
+                </p>
+              </div>
+              <span className="shrink-0 text-[11px] font-medium tabular-nums text-neutral-400 sm:mb-0.5">
+                {id ? formatHotSheetRef(id) : ""}
+              </span>
+            </div>
+          </header>
 
           {agentUserId && id && (
             <CompactClientRecipientsStrip
@@ -1207,48 +1237,60 @@ if (comments && comments.length > 0) {
             />
           )}
 
-          {/* Search criteria — single compact strip */}
-          <div className="mb-2 flex flex-col gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <div className="flex min-w-0 flex-1 items-start gap-1.5 text-[11px] leading-snug text-zinc-600 sm:items-center">
-              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400 sm:mt-0" />
-              <p className="min-w-0">
-                <span className="font-semibold text-zinc-700">Hot Sheet Name:</span>{" "}
-                <span className="text-zinc-800">{hotSheet.name}</span>
-                <span className="text-zinc-300"> · </span>
-                <span className="font-semibold text-zinc-700">Scope:</span> {criteriaSummary.scope}
-                <span className="text-zinc-300"> · </span>
-                <span className="font-semibold text-zinc-700">State:</span> {criteriaSummary.state}
-                <span className="text-zinc-300"> · </span>
-                <span className="font-semibold text-zinc-700">Status:</span> {criteriaSummary.statuses}
-              </p>
+          {/* Search criteria */}
+          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-4 sm:py-3.5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-2">
+                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">Search criteria</p>
+                    <p className="text-[13px] leading-snug text-neutral-700">
+                      <span className="font-medium text-neutral-800">Scope</span>{" "}
+                      <span className="text-neutral-600">{criteriaSummary.scope}</span>
+                      <span className="mx-2 text-neutral-200" aria-hidden>
+                        ·
+                      </span>
+                      <span className="font-medium text-neutral-800">State</span>{" "}
+                      <span className="tabular-nums text-neutral-600">{criteriaSummary.state}</span>
+                      <span className="mx-2 text-neutral-200" aria-hidden>
+                        ·
+                      </span>
+                      <span className="font-medium text-neutral-800">Status</span>{" "}
+                      <span className="text-neutral-600">{criteriaSummary.statuses}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditCriteriaOpen(true)}
+                className="h-8 shrink-0 self-start rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80 sm:self-center"
+              >
+                <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                Edit criteria
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setEditCriteriaOpen(true)}
-              className="h-8 shrink-0 rounded-md border-zinc-200 px-3 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-50"
-            >
-              <Pencil className="mr-1.5 h-3.5 w-3.5" />
-              Edit
-            </Button>
           </div>
 
           {/* Results + controls */}
-          <div className="mb-3 flex flex-col gap-2 sm:mb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="text-sm font-semibold tracking-tight text-zinc-900">
-                  Results ({listings.length})
+          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 sm:px-0.5">
+                <span className="text-[13px] font-semibold tracking-tight text-neutral-900">
+                  Matches <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
                 </span>
                 {!isSharedWorkspace && (
                   <>
-                    <div className="hidden h-4 w-px bg-zinc-200 sm:block" />
+                    <div className="hidden h-4 w-px bg-neutral-200 sm:block" />
                     <div className="flex flex-wrap items-center gap-2">
                       <Checkbox
                         id="select-all"
                         checked={selectedListings.size === listings.length && listings.length > 0}
                         onCheckedChange={toggleSelectAll}
                       />
-                      <label htmlFor="select-all" className="cursor-pointer text-sm font-medium text-zinc-800">
+                      <label htmlFor="select-all" className="cursor-pointer text-[13px] font-medium text-neutral-800">
                         {selectedListings.size === listings.length && listings.length > 0
                           ? `Unselect All (${listings.length} listings)`
                           : `Select All (${listings.length} listings)`}
@@ -1256,12 +1298,12 @@ if (comments && comments.length > 0) {
                     </div>
                     {selectedListings.size > 0 && (
                       <>
-                        <div className="h-4 w-px bg-zinc-200" />
-                        <span className="text-sm font-medium text-zinc-700">{selectedListings.size} Selected</span>
+                        <div className="h-4 w-px bg-neutral-200" />
+                        <span className="tabular-nums text-[13px] font-medium text-neutral-700">{selectedListings.size} selected</span>
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                          className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90"
                           onClick={handleKeepSelected}
                         >
                           Keep Selected
@@ -1271,9 +1313,9 @@ if (comments && comments.length > 0) {
                   </>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+              <div className="flex flex-wrap items-center gap-2 px-1 sm:justify-end sm:px-0.5">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-8 w-full rounded-md border-zinc-200 text-xs shadow-sm sm:w-[200px]">
+                  <SelectTrigger className="h-8 w-full rounded-md border-neutral-200 bg-white text-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300 focus-visible:ring-neutral-300/40 focus-visible:ring-offset-2 sm:w-[200px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1286,7 +1328,7 @@ if (comments && comments.length > 0) {
                 {!isSharedWorkspace && !invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                   <Button
                     type="button"
-                    className="h-8 gap-1.5 rounded-md bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-sm hover:bg-[#0B46CC]"
+                    className="h-8 gap-1.5 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-[12px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors duration-200 hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/60 focus-visible:ring-offset-2"
                     onClick={() => {
                       if (
                         listings.length > 0 &&
@@ -1310,7 +1352,7 @@ if (comments && comments.length > 0) {
                         type="button"
                         variant="outline"
                         disabled={sending}
-                        className="h-8 gap-1.5 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                        className="h-8 gap-1.5 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/80"
                       >
                         <Send className="h-3.5 w-3.5" />
                         Notify Clients ({acceptedCount})
@@ -1329,22 +1371,36 @@ if (comments && comments.length > 0) {
                 ) : null}
               </div>
             </div>
+          </div>
 
           {listings.length === 0 ? (
-            <Card className="rounded-xl border-zinc-200/90 p-10 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-              <div className="space-y-3 text-center">
-                <p className="font-medium text-muted-foreground">No listings match this hot sheet&apos;s criteria.</p>
-                <p className="text-sm text-muted-foreground">
-                  Try widening the price range, location, or property type.
+            <Card className="rounded-xl border border-neutral-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-10">
+              <div className="mx-auto max-w-md space-y-4 text-center">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                  <MapPin className="h-4 w-4 text-neutral-400" aria-hidden />
+                </div>
+                <p className="text-sm font-semibold text-neutral-900">No listings match yet</p>
+                <p className="text-[13px] leading-relaxed text-neutral-500">
+                  Broaden location, status, price, or property type in Search criteria—or open your Hot Sheets list.
                 </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
-                  onClick={() => navigate("/hot-sheets")}
-                >
-                  Edit Hot Sheet
-                </Button>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
+                    onClick={() => setEditCriteriaOpen(true)}
+                  >
+                    Adjust criteria
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
+                    onClick={() => navigate("/hot-sheets")}
+                  >
+                    All hot sheets
+                  </Button>
+                </div>
               </div>
             </Card>
           ) : (
@@ -1353,29 +1409,29 @@ if (comments && comments.length > 0) {
                 <Collapsible
                   open={removedListingsOpen}
                   onOpenChange={setRemovedListingsOpen}
-                  className="mb-3 rounded-lg border border-zinc-200/90 bg-zinc-50/50"
+                  className="mb-4 rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                 >
-                  <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-zinc-700 hover:bg-zinc-100/80 rounded-lg">
+                  <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium text-neutral-800 transition-colors duration-200 hover:bg-neutral-50/80">
                     <ChevronDown
-                      className={cn("h-4 w-4 shrink-0 text-zinc-500 transition-transform", removedListingsOpen && "rotate-180")}
+                      className={cn("h-4 w-4 shrink-0 text-neutral-500 transition-transform", removedListingsOpen && "rotate-180")}
                     />
                     Removed listings ({removedListings.length})
-                    <span className="truncate font-normal text-zinc-500">— restore if removed by mistake</span>
+                    <span className="truncate font-normal text-neutral-500">— restore if removed by mistake</span>
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="border-t border-zinc-200/80 px-3 py-2">
+                  <CollapsibleContent className="border-t border-neutral-200 px-3 py-2">
                     <ul className="max-h-48 space-y-2 overflow-y-auto">
                       {removedListings.map((l) => (
                         <li
                           key={l.id}
-                          className="flex items-center justify-between gap-2 rounded-md border border-zinc-200/60 bg-white px-2 py-1.5 text-xs"
+                          className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200/90 bg-white px-2 py-2 text-[11px] transition-all duration-200 ease-out hover:border-neutral-300 hover:shadow-sm"
                         >
-                          <span className="min-w-0 truncate text-zinc-700">
+                          <span className="min-w-0 truncate text-neutral-700">
                             {l.address}, {l.city}
                           </span>
                           <Button
                             type="button"
                             variant="outline"
-                            className="h-7 shrink-0 rounded-md px-2 text-[11px] font-medium border-zinc-200"
+                            className="h-7 shrink-0 rounded-md border-neutral-200 bg-white px-2 text-[11px] font-medium transition-colors duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
                             onClick={() => restoreListing(l.id)}
                           >
                             Restore
@@ -1458,7 +1514,7 @@ if (comments && comments.length > 0) {
                 Go Back and Select Listings
               </AlertDialogCancel>
               <AlertDialogAction
-                className="h-8 rounded-md px-3 text-xs font-medium bg-[#0E56F5] hover:bg-[#0B46CC]"
+                className="h-8 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#0B46CC]"
                 onClick={() => {
                   setConfirmInviteOpen(false);
                   handleSendInvites();
