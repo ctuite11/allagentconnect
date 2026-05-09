@@ -9,6 +9,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
 
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -95,12 +96,18 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-2 rounded-md">
+        <Button size="sm" className={cn("gap-2 rounded-lg", triggerClassName)}>
           <Mail className="h-4 w-4" />
           {buttonText}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        className={cn(
+          "rounded-2xl border-neutral-200/90 sm:max-w-[500px]",
+          "[&_input]:focus-visible:border-neutral-900 [&_input]:focus-visible:ring-1 [&_input]:focus-visible:ring-neutral-300/80",
+          "[&_textarea]:focus-visible:border-neutral-900 [&_textarea]:focus-visible:ring-1 [&_textarea]:focus-visible:ring-neutral-300/80",
+        )}
+      >
         <DialogHeader>
           <DialogTitle>Contact {agentName}</DialogTitle>
           <DialogDescription>
@@ -170,12 +177,17 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
             <p className="text-xs text-muted-foreground">{formData.message.length}/1000</p>
           </div>
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" size="sm" className="border-neutral-200" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Sending..." : "Send Message"}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={loading}
+              className="bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50"
+            >
+              {loading ? "Sending…" : "Send message"}
             </Button>
           </div>
         </form>

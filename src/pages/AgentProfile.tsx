@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, 
-  Star, 
+import {
+  ArrowLeft,
+  Star,
   Quote,
   Phone,
   Mail,
@@ -15,45 +15,18 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  Download,
-  MessageSquare
+  MessageSquare,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import AACMonogram from "@/components/ui/AACMonogram";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { Seo } from "@/components/Seo";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
-
-const generateVCard = (agent: AgentProfileData) => {
-  const vcard = [
-    'BEGIN:VCARD',
-    'VERSION:3.0',
-    `FN:${agent.first_name} ${agent.last_name}`,
-    `N:${agent.last_name};${agent.first_name};;;`,
-    `EMAIL:${agent.email}`,
-    agent.cell_phone ? `TEL;TYPE=CELL:${agent.cell_phone}` : '',
-    agent.office_phone ? `TEL;TYPE=WORK:${agent.office_phone}` : '',
-    agent.title ? `TITLE:${agent.title}` : '',
-    agent.company ? `ORG:${agent.company}` : '',
-    agent.office_address ? `ADR;TYPE=WORK:;;${agent.office_address};;;;` : '',
-    agent.social_links?.website ? `URL:${agent.social_links.website}` : '',
-    agent.social_links?.linkedin ? `X-SOCIALPROFILE;TYPE=linkedin:${agent.social_links.linkedin}` : '',
-    'END:VCARD'
-  ].filter(line => line).join('\n');
-  
-  const blob = new Blob([vcard], { type: 'text/vcard' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${agent.first_name}_${agent.last_name}.vcf`;
-  link.click();
-  window.URL.revokeObjectURL(url);
-};
 
 interface AgentProfileData {
   id: string;
@@ -191,13 +164,42 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   };
 
   if (loading) {
-    return <AacMonogramLoader variant="section" message="Loading agent…" className="min-h-[60vh]" />;
+    return (
+      <div className="min-h-screen bg-white pb-16" aria-busy="true" role="status">
+        <span className="sr-only">Loading agent profile…</span>
+        <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
+          <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
+          <div className="mt-6 flex flex-col gap-6 border-b border-neutral-200/90 pb-8 sm:flex-row sm:items-start sm:gap-8">
+            <Skeleton className="mx-auto h-[112px] w-[112px] shrink-0 rounded-2xl bg-neutral-100 sm:mx-0 md:h-[120px] md:w-[120px]" />
+            <div className="min-w-0 flex-1 space-y-3">
+              <Skeleton className="h-8 max-w-md rounded-md bg-neutral-100" />
+              <Skeleton className="h-4 w-48 rounded-md bg-neutral-100" />
+              <Skeleton className="h-4 w-56 rounded-md bg-neutral-100" />
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Skeleton className="h-9 w-[8.5rem] rounded-lg bg-neutral-100" />
+                <Skeleton className="h-9 w-[9rem] rounded-lg bg-neutral-100" />
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 space-y-3 border-b border-neutral-200/90 py-8">
+            <Skeleton className="h-3 w-20 rounded bg-neutral-100" />
+            <Skeleton className="h-5 max-w-xs rounded-md bg-neutral-100" />
+            <Skeleton className="h-20 max-w-2xl rounded-lg bg-neutral-100" />
+          </div>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-[220px] rounded-2xl bg-neutral-100" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!agent) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <p className="text-sm text-muted-foreground">Agent not found</p>
+      <div className="flex min-h-[40vh] items-center justify-center bg-white px-5">
+        <p className="text-center text-[13px] text-neutral-600">Agent not found.</p>
       </div>
     );
   }
@@ -221,7 +223,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const agentProfileUrl = `${getPublicOrigin()}/agent/${agent.aac_id || agent.id}`;
 
   return (
-    <div className="flex-1 bg-background min-h-screen">
+    <div className="min-h-screen flex-1 bg-white">
       <Seo
         title={`${agentFullName} — ${agent.title || "Realtor"} at ${agent.company || "All Agent Connect"}`}
         description={agent.bio?.substring(0, 155) || `${agentFullName} is a real estate professional on All Agent Connect.`}
@@ -240,268 +242,260 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         }}
       />
       {/* Back nav */}
-      <div className="max-w-6xl mx-auto px-8 pt-6">
+      <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
         <button
+          type="button"
           onClick={() => navigate(publicMode ? "/our-agents" : "/our-members")}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="-ml-1 inline-flex items-center gap-1.5 rounded-md py-1 pl-1 pr-2 text-[13px] text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {publicMode ? "Back to Agents" : "Back to Network"}
+          <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+          {publicMode ? "Back to agents" : "Back to network"}
         </button>
       </div>
 
-      {/* ─── Hero Section ─── */}
-      <div className="max-w-6xl mx-auto px-8 pt-12 pb-10">
-        {/* Row 1: Photo + Identity + Logo */}
-        <div className="flex items-center gap-6">
-          {/* Photo */}
-          <div className="relative flex-shrink-0">
+      {/* Hero */}
+      <div className="mx-auto max-w-6xl border-b border-neutral-200/90 px-5 pb-8 pt-6 md:px-8 md:pb-10 md:pt-8">
+        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+          <div className="relative shrink-0">
             {agent.headshot_url ? (
               <img
                 src={agent.headshot_url}
                 alt={`${agent.first_name} ${agent.last_name}`}
-                className="w-[120px] h-[120px] rounded-lg object-cover border border-border/50 shadow-sm"
+                className="h-[112px] w-[112px] rounded-2xl border border-neutral-200/90 object-cover shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:h-[120px] md:w-[120px]"
               />
             ) : (
-              <div className="w-[120px] h-[120px] rounded-lg bg-primary flex flex-col items-center justify-center gap-1.5 shadow-sm border border-border/50">
-                <AACMonogram className="w-10 h-10 text-primary-foreground" />
-                <span className="text-base font-bold text-primary-foreground tracking-tight">
-                  {agent.first_name[0]}{agent.last_name[0]}
+              <div className="flex h-[112px] w-[112px] flex-col items-center justify-center rounded-2xl border border-neutral-200/90 bg-neutral-100 md:h-[120px] md:w-[120px]">
+                <UserRound className="h-12 w-12 text-neutral-300" strokeWidth={1.25} aria-hidden />
+                <span className="mt-1 text-xs font-semibold tracking-tight text-neutral-500">
+                  {agent.first_name?.[0]}
+                  {agent.last_name?.[0]}
                 </span>
               </div>
             )}
-            {isOnline && (
-              <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background ring-2 ring-aacSuccess/20" />
-            )}
+            {isOnline ? (
+              <span
+                className="absolute bottom-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white"
+                aria-label="Online"
+              />
+            ) : null}
           </div>
 
-          {/* Identity */}
-          <div className="flex flex-col justify-center min-w-0 pt-1">
-            <h1 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
+          <div className="min-w-0 flex-1 text-center sm:text-left">
+            <h1 className="text-xl font-semibold tracking-tight text-neutral-900 md:text-2xl">
               {agent.first_name} {agent.last_name}
             </h1>
-
-            {agent.title && (
-              <p className="text-base text-muted-foreground mt-1.5">
-                {agent.title}
+            {agent.title ? (
+              <p className="mt-1 text-[15px] text-neutral-600">{agent.title}</p>
+            ) : null}
+            {agent.company || agent.aac_id ? (
+              <p className="mt-1 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-[13px] text-neutral-500 sm:justify-start">
+                {agent.company ? <span>{agent.company}</span> : null}
+                {agent.company && agent.aac_id ? <span className="text-neutral-300">·</span> : null}
+                {agent.aac_id ? (
+                  <span className="font-mono text-xs text-neutral-400">{agent.aac_id}</span>
+                ) : null}
               </p>
-            )}
+            ) : null}
 
-            {(agent.company || agent.aac_id) && (
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground/70 mt-1">
-                {agent.company && <span>{agent.company}</span>}
-                {agent.company && agent.aac_id && <span className="text-muted-foreground/30">·</span>}
-                {agent.aac_id && (
-                  <>
-                    <span className="w-1 h-1 rounded-full bg-aacSuccess" />
-                    <span className="font-mono text-xs text-muted-foreground/50">{agent.aac_id}</span>
-                  </>
-                )}
-              </p>
-            )}
-          </div>
-        </div>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <ContactAgentProfileDialog
+                agentId={agent.id}
+                agentName={`${agent.first_name} ${agent.last_name}`}
+                agentEmail={agent.email}
+                buttonText={`Email ${agent.first_name}`}
+                triggerClassName="border border-neutral-200 bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] hover:bg-neutral-800"
+              />
 
-        {/* Row 2: Buttons + Metadata aligned under photo */}
-        <div className="mt-4 flex flex-col items-start gap-5" style={{ paddingLeft: 0 }}>
-          <div className="flex items-center gap-2">
-            <ContactAgentProfileDialog
-              agentId={agent.id}
-              agentName={`${agent.first_name} ${agent.last_name}`}
-              agentEmail={agent.email}
-              buttonText={`Email ${agent.first_name}`}
-            />
-
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-md"
-              disabled={isStartingChat}
-              onClick={async () => {
-                if (!user?.id) {
-                  navigate("/auth");
-                  return;
-                }
-                if (!agent.id) return;
-                setIsStartingChat(true);
-                try {
-                  const convoId = await findOrCreateConversation(user.id, agent.id);
-                  if (convoId) navigate(`/messages/${convoId}`);
-                } catch (e) {
-                  toast.error("Could not start conversation");
-                } finally {
-                  setIsStartingChat(false);
-                }
-              }}
-            >
-              <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-              Send a Message
-            </Button>
-          </div>
-
-          {contactItems.length > 0 && (
-            <div className="flex items-center flex-wrap gap-x-1 gap-y-1 text-sm text-muted-foreground">
-              {contactItems.map((item, i) => (
-                <span key={i} className="flex items-center">
-                  {i > 0 && <span className="mx-2 text-border">·</span>}
-                  <a
-                    href={item.href}
-                    target={item.icon === Globe ? "_blank" : undefined}
-                    rel={item.icon === Globe ? "noopener noreferrer" : undefined}
-                    className="flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
-                  >
-                    <item.icon className="h-3.5 w-3.5 text-primary/70" />
-                    {item.label}
-                  </a>
-                </span>
-              ))}
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-lg border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                disabled={isStartingChat}
+                onClick={async () => {
+                  if (!user?.id) {
+                    navigate("/auth");
+                    return;
+                  }
+                  if (!agent.id) return;
+                  setIsStartingChat(true);
+                  try {
+                    const convoId = await findOrCreateConversation(user.id, agent.id);
+                    if (convoId) navigate(`/messages/${convoId}`);
+                  } catch (e) {
+                    toast.error("Could not start conversation");
+                  } finally {
+                    setIsStartingChat(false);
+                  }
+                }}
+              >
+                <MessageSquare className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                Message
+              </Button>
             </div>
-          )}
+
+            {contactItems.length > 0 ? (
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-0 gap-y-2 text-[13px] text-neutral-600 sm:justify-start">
+                {contactItems.map((item, i) => (
+                  <span key={i} className="flex items-center">
+                    {i > 0 ? <span className="mx-2 text-neutral-300">·</span> : null}
+                    <a
+                      href={item.href}
+                      target={item.icon === Globe ? "_blank" : undefined}
+                      rel={item.icon === Globe ? "noopener noreferrer" : undefined}
+                      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm text-neutral-600 outline-none transition-colors hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                    >
+                      <item.icon className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
+                      {item.label}
+                    </a>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
-      {/* ─── Content Sections ─── */}
-      <div className="max-w-6xl mx-auto px-8 pb-16">
-
+      {/* Content */}
+      <div className="mx-auto max-w-6xl px-5 pb-16 pt-2 md:px-8">
         {/* About */}
         {agent.bio && (
-          <section className="border-t border-border/50 py-10">
-            <div className="grid md:grid-cols-[200px_1fr] gap-6">
-              <div>
-                <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.15em]">About</p>
-                <h2 className="text-lg font-semibold text-foreground mt-1 leading-snug">
-                  Get to Know<br />{agent.first_name}
+          <section className="border-t border-neutral-200/90 py-8 md:py-10">
+            <div className="grid gap-6 md:grid-cols-[minmax(0,11rem)_1fr] md:gap-10">
+              <div className="md:pt-0.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">About</p>
+                <h2 className="mt-1 text-base font-semibold leading-snug tracking-tight text-neutral-900">
+                  About {agent.first_name}
                 </h2>
               </div>
-              <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-wrap max-w-xl">
-                {agent.bio}
-              </p>
+              <p className="max-w-2xl whitespace-pre-wrap text-[15px] leading-relaxed text-neutral-700">{agent.bio}</p>
             </div>
 
-            {/* Social icons */}
-            {activeSocials.length > 0 && (
-              <div className="flex items-center justify-center gap-3 mt-8">
+            {activeSocials.length > 0 ? (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2 md:justify-start">
                 {activeSocials.map(({ key, icon: Icon }) => (
                   <a
                     key={key}
-                    href={agent.social_links![key as keyof typeof agent.social_links]}
+                    href={agent.social_links![key as keyof typeof agent.social_links] as string}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200/90 bg-white text-neutral-600 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors hover:border-neutral-300 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4" aria-hidden />
                   </a>
                 ))}
               </div>
-            )}
+            ) : null}
 
-            {/* Company logo */}
-            {agent.logo_url && (
-              <div className="flex justify-center mt-6">
-                <img
-                  src={agent.logo_url}
-                  alt="Company logo"
-                  className="h-8 max-w-[160px] object-contain opacity-25"
-                />
+            {agent.logo_url ? (
+              <div className="mt-8 flex justify-center md:justify-start">
+                <div className="rounded-xl border border-neutral-200/90 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                  <img src={agent.logo_url} alt="" className="h-8 max-w-[160px] object-contain" />
+                </div>
               </div>
-            )}
+            ) : null}
           </section>
         )}
 
         {/* Testimonials */}
-        {testimonials.length > 0 && (
-          <section className="border-t border-border/50 py-10">
-            <div className="text-center mb-8">
-              <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.15em]">Testimonials</p>
-              <h2 className="text-xl font-semibold text-foreground mt-1">What Clients Are Saying</h2>
+        {testimonials.length > 0 ? (
+          <section className="border-t border-neutral-200/90 py-8 md:py-10">
+            <div className="mb-6 text-center md:mb-8 md:text-left">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Testimonials</p>
+              <h2 className="mt-1 text-base font-semibold tracking-tight text-neutral-900 md:text-lg">
+                What clients say
+              </h2>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {testimonials.slice(0, 6).map((testimonial) => (
                 <div
                   key={testimonial.id}
-                  className="rounded-xl border border-border bg-white p-5 relative"
+                  className="relative rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color] hover:border-neutral-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
                 >
-                  <Quote className="h-5 w-5 text-primary/15 mb-3" />
-                  {testimonial.rating && (
-                    <div className="flex gap-0.5 mb-3">
+                  <Quote className="mb-3 h-5 w-5 text-neutral-200" aria-hidden />
+                  {testimonial.rating ? (
+                    <div className="mb-3 flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           className={`h-3.5 w-3.5 ${
                             i < testimonial.rating!
-                              ? "text-amber-500 fill-amber-500"
-                              : "text-muted-foreground/20"
+                              ? "fill-amber-500 text-amber-500"
+                              : "text-neutral-200"
                           }`}
+                          aria-hidden
                         />
                       ))}
                     </div>
-                  )}
-                  <p className="text-[14px] text-muted-foreground leading-relaxed">
-                    "{testimonial.testimonial_text}"
-                  </p>
-                  <p className="mt-3 text-[13px] font-semibold text-foreground">
-                    — {testimonial.client_name}
-                  </p>
-                  {testimonial.client_title && (
-                    <p className="text-xs text-muted-foreground">{testimonial.client_title}</p>
-                  )}
+                  ) : null}
+                  <p className="text-[14px] leading-relaxed text-neutral-600">&ldquo;{testimonial.testimonial_text}&rdquo;</p>
+                  <p className="mt-3 text-[13px] font-semibold text-neutral-900">— {testimonial.client_name}</p>
+                  {testimonial.client_title ? (
+                    <p className="text-xs text-neutral-500">{testimonial.client_title}</p>
+                  ) : null}
                 </div>
               ))}
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* Listings */}
-        <section className="border-t border-border/50 py-10">
-          <div className="text-center mb-8">
-            <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.15em]">Featured Properties</p>
-            <h2 className="text-xl font-semibold text-foreground mt-1">Current Listings</h2>
+        <section className="border-t border-neutral-200/90 py-8 md:py-10">
+          <div className="mb-6 text-center md:mb-8 md:text-left">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Listings</p>
+            <h2 className="mt-1 text-base font-semibold tracking-tight text-neutral-900 md:text-lg">Active listings</h2>
           </div>
 
           {listings.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center">
-              No active listings.{" "}
+            <p className="text-center text-[13px] text-neutral-600">
+              No active listings right now.{" "}
               <button
+                type="button"
                 onClick={() => navigate(publicMode ? "/browse" : "/listing-search")}
-                className="text-primary hover:underline"
+                className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 transition-colors hover:decoration-neutral-900"
               >
                 Browse all listings
               </button>
             </p>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
               {listings.map((listing) => (
                 <Card
                   key={listing.id}
-                  className="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group"
+                  role="link"
+                  tabIndex={0}
+                  className="group cursor-pointer overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-px hover:border-neutral-300/90 hover:shadow-[0_6px_20px_rgba(0,0,0,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
                   onClick={() => navigate(`/property/${listing.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/property/${listing.id}`);
+                    }
+                  }}
                 >
                   <div className="relative h-44 overflow-hidden">
                     <img
                       src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : "/placeholder.svg"}
                       alt={listing.address}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                     />
-                    <div className="absolute top-3 left-3">
-                      <Badge className="bg-primary text-primary-foreground text-xs font-semibold shadow-sm">
+                    <div className="absolute left-3 top-3">
+                      <Badge className="border-0 bg-neutral-900 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
                         ${listing.price.toLocaleString()}
                       </Badge>
                     </div>
-                    <Badge className="absolute top-3 right-3 bg-white/90 text-foreground text-[10px] border-0 shadow-sm">
-                      {listing.listing_type === "for_sale" ? "For Sale" : "For Rent"}
+                    <Badge className="absolute right-3 top-3 border border-neutral-200/80 bg-white/95 text-[10px] font-medium text-neutral-800 shadow-sm backdrop-blur-sm">
+                      {listing.listing_type === "for_sale" ? "For sale" : "For rent"}
                     </Badge>
                   </div>
                   <CardContent className="p-4">
-                    <p className="font-semibold text-foreground text-sm truncate">
-                      {listing.address}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="truncate text-sm font-semibold text-neutral-900">{listing.address}</p>
+                    <p className="mt-0.5 text-xs text-neutral-500">
                       {listing.city}, {listing.state} {listing.zip_code}
                     </p>
-                    <div className="flex gap-3 text-xs text-muted-foreground mt-2 pt-2 border-t border-border/40">
-                      {listing.bedrooms && <span>{listing.bedrooms} bed</span>}
-                      {listing.bathrooms && <span>{listing.bathrooms} bath</span>}
-                      {listing.square_feet && <span>{listing.square_feet.toLocaleString()} sqft</span>}
+                    <div className="mt-2 flex gap-3 border-t border-neutral-100 pt-2 text-xs tabular-nums text-neutral-600">
+                      {listing.bedrooms ? <span>{listing.bedrooms} bed</span> : null}
+                      {listing.bathrooms ? <span>{listing.bathrooms} bath</span> : null}
+                      {listing.square_feet ? <span>{listing.square_feet.toLocaleString()} sqft</span> : null}
                     </div>
                   </CardContent>
                 </Card>
