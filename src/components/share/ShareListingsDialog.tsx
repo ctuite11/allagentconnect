@@ -36,6 +36,14 @@ export type Recipient = {
   email: string;
 };
 
+export type ContactSearchResult = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string | null;
+};
+
 export type ShareListingsDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -48,6 +56,9 @@ export type ShareListingsDialogProps = {
   // Contact search
   contactQuery: string;
   setContactQuery: (v: string) => void;
+  contactResults?: ContactSearchResult[];
+  showContactDropdown?: boolean;
+  onSelectContact?: (contact: ContactSearchResult) => void;
 
   // Manual mode
   manualMode: boolean;
@@ -98,6 +109,9 @@ export function ShareListingsDialog({
 
   contactQuery,
   setContactQuery,
+  contactResults = [],
+  showContactDropdown = false,
+  onSelectContact,
 
   manualMode,
   setManualMode,
@@ -270,6 +284,31 @@ export function ShareListingsDialog({
                 className="pl-9 rounded-xl bg-white border-neutral-300 text-foreground"
                 autoFocus
               />
+              {showContactDropdown && contactResults.length > 0 && (
+                <div className="absolute z-20 mt-2 max-h-56 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white shadow-lg">
+                  {contactResults.map((contact) => {
+                    const fullName = `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || contact.email;
+                    return (
+                      <button
+                        key={contact.id}
+                        type="button"
+                        onClick={() => onSelectContact?.(contact)}
+                        className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-neutral-50 transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium text-foreground">{fullName}</div>
+                          <div className="truncate text-xs text-muted-foreground">{contact.email}</div>
+                        </div>
+                        {contact.phone ? (
+                          <div className="ml-3 shrink-0 text-xs text-muted-foreground">
+                            {formatPhoneNumber(contact.phone)}
+                          </div>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">

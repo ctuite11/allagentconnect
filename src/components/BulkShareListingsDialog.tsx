@@ -273,6 +273,9 @@ export function BulkShareListingsDialog({
         listingPreview={listingPreview}
         contactQuery={clientSearch}
         setContactQuery={setClientSearch}
+        contactResults={clientResults}
+        showContactDropdown={showClientDropdown}
+        onSelectContact={handleSelectClient}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
         recipientName={recipientName}
