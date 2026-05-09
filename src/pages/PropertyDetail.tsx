@@ -53,7 +53,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { buildDisplayAddress } from "@/lib/utils";
+import { buildDisplayAddress, cn } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
@@ -589,18 +589,20 @@ const PropertyDetail = () => {
   };
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen neutralSpinner />;
   }
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background pt-20">
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="py-8">
-              <p className="text-center text-muted-foreground">Listing not found</p>
-              <div className="flex justify-center mt-4">
-                <Button onClick={() => navigate("/")}>Back to Home</Button>
+      <div className="min-h-screen bg-white pt-16 sm:pt-20">
+        <div className="mx-auto max-w-lg px-4 py-10">
+          <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <CardContent className="space-y-4 py-10">
+              <p className="text-center text-[15px] text-neutral-600">Listing not found</p>
+              <div className="flex justify-center">
+                <Button variant="outline" className="border-neutral-200" onClick={() => navigate("/")}>
+                  Back to Home
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -624,8 +626,15 @@ const PropertyDetail = () => {
   const compensationDisplay = getCompensationDisplay();
   const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
+  /** Premium neutral section shell (matches listing search results). */
+  const detailSurface =
+    "rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
+  const detailTitle =
+    "flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900";
+  const detailTitleIcon = "h-5 w-5 shrink-0 text-neutral-600";
+
   return (
-    <div className="min-h-screen bg-background pt-0">
+    <div className="min-h-screen bg-white pt-0">
       <Seo
         title={`${listing.address}, ${listing.city}, ${listing.state}`}
         description={
@@ -660,12 +669,15 @@ const PropertyDetail = () => {
 
 
       <main className="flex-1">
-        {/* Dark top toolbar — matches sidebar aesthetic */}
-        <div className="bg-zinc-900 w-full">
-          <div className="mx-auto max-w-6xl px-4 py-3">
-            <div className="flex items-center gap-1.5">
-              <AACMonogram className="w-7 h-7 text-emerald-500" />
-              <span className="text-[15px] font-extrabold tracking-tight text-white" style={{ fontFamily: "Manrope, sans-serif" }}>
+        {/* Slim brand strip — neutral (listing detail premium shell) */}
+        <div className="w-full border-b border-neutral-200 bg-white">
+          <div className="mx-auto max-w-6xl px-4 py-2.5 sm:py-3">
+            <div className="flex items-center gap-2">
+              <AACMonogram className="h-6 w-6 text-neutral-700 sm:h-7 sm:w-7" />
+              <span
+                className="text-[14px] font-semibold tracking-tight text-neutral-900 sm:text-[15px]"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
                 Direct Connect MLS
               </span>
             </div>
@@ -702,7 +714,7 @@ const PropertyDetail = () => {
               }
               navigate("/client/dashboard");
             }}
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-2 text-[13px] font-medium text-neutral-500 underline-offset-4 transition-colors hover:text-neutral-800 hover:underline focus-visible:outline-none focus-visible:ring-0 focus-visible:underline focus-visible:text-neutral-900"
             aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
           >
             <span>{label}</span>
@@ -715,13 +727,13 @@ const PropertyDetail = () => {
         <div className="mx-auto max-w-6xl px-4 pb-2">
           <div className="lg:w-[68%] pr-2">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold text-foreground tracking-tight">
-                <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
+              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold tracking-tight text-neutral-900">
+                <MapPin className="relative top-px h-4 w-4 shrink-0 text-neutral-500" />
                 {buildDisplayAddress(listing as any)}
               </h1>
               <div className="text-right">
-                <p className="text-lg font-bold text-foreground">
-                  ${listing?.price?.toLocaleString() ?? '—'}
+                <p className="text-lg font-bold tracking-tight text-neutral-900">
+                  ${listing?.price?.toLocaleString() ?? "—"}
                 </p>
               </div>
             </div>
@@ -735,7 +747,7 @@ const PropertyDetail = () => {
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
             <div className="lg:w-[68%]">
               <div className="relative pb-6">
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]">
+                <div className="relative h-[380px] overflow-hidden rounded-xl border border-neutral-200 shadow-[0_4px_24px_rgba(0,0,0,0.07)] sm:h-[480px] sm:rounded-2xl lg:h-[560px]">
                   <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                     {activeMediaTab === 'photos' && (
@@ -794,17 +806,17 @@ const PropertyDetail = () => {
                       <>
                         <button
                           onClick={handlePrevPhoto}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                          className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:left-4 sm:h-11 sm:w-11"
                           aria-label="Previous photo"
                         >
-                          <ChevronLeft className="w-6 h-6" />
+                          <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
                         <button
                           onClick={handleNextPhoto}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                          className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:right-4 sm:h-11 sm:w-11"
                           aria-label="Next photo"
                         >
-                          <ChevronRight className="w-6 h-6" />
+                          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
                       </>
                     )}
@@ -821,10 +833,10 @@ const PropertyDetail = () => {
                     {activeMediaTab === 'photos' && (
                       <button
                         onClick={handleExpandGallery}
-                        className="absolute bottom-20 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all backdrop-blur-sm"
+                        className="absolute bottom-[4.75rem] right-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:bottom-[5rem] sm:right-4 sm:h-10 sm:w-10"
                         aria-label="Expand gallery"
                       >
-                        <Expand className="w-5 h-5" />
+                        <Expand className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                     )}
                   </div>
@@ -833,13 +845,13 @@ const PropertyDetail = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:h-11 sm:w-11"
                         aria-label="Share property"
                       >
-                        <Share2 className="w-6 h-6" />
+                        <Share2 className="h-5 w-5 sm:h-5 sm:w-5" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuContent align="end" className="w-48 border-neutral-200 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
                       <DropdownMenuItem onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
                         Facebook
                       </DropdownMenuItem>
@@ -864,15 +876,20 @@ const PropertyDetail = () => {
               </div>
 
               {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
-              <div className="flex items-center justify-between gap-2 mt-6">
-                <div className="flex items-center gap-2">
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-2 sm:mt-6">
+                <div className="flex flex-wrap items-center gap-1.5">
                 <Button
                   variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleMediaTabChange('photos')}
-                  className="rounded-full"
+                  className={cn(
+                    "h-8 rounded-lg px-3 text-[13px] font-medium shadow-none",
+                    activeMediaTab === 'photos'
+                      ? "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-900 hover:text-white"
+                      : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
+                  )}
                 >
-                  <Images className="w-4 h-4 mr-2" />
+                  <Images className="mr-1.5 h-3.5 w-3.5" />
                   Photos
                 </Button>
                 {listing.video_url && (
@@ -880,9 +897,14 @@ const PropertyDetail = () => {
                     variant={activeMediaTab === 'video' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleMediaTabChange('video')}
-                    className="rounded-full"
+                    className={cn(
+                      "h-8 rounded-lg px-3 text-[13px] font-medium shadow-none",
+                      activeMediaTab === 'video'
+                        ? "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-900 hover:text-white"
+                        : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
+                    )}
                   >
-                    <Video className="w-4 h-4 mr-2" />
+                    <Video className="mr-1.5 h-3.5 w-3.5" />
                     Video
                   </Button>
                 )}
@@ -891,9 +913,9 @@ const PropertyDetail = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(listing.virtual_tour_url!, '_blank', 'noopener,noreferrer')}
-                    className="rounded-full"
+                    className="h-8 rounded-lg border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-none hover:bg-neutral-50"
                   >
-                    <Maximize2 className="w-4 h-4 mr-2" />
+                    <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
                     3D Tour
                   </Button>
                 )}
@@ -902,9 +924,9 @@ const PropertyDetail = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(listing.property_website_url!, '_blank', 'noopener,noreferrer')}
-                    className="rounded-full"
+                    className="h-8 rounded-lg border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-none hover:bg-neutral-50"
                   >
-                    <Globe className="w-4 h-4 mr-2" />
+                    <Globe className="mr-1.5 h-3.5 w-3.5" />
                     Website
                   </Button>
                 )}
@@ -915,35 +937,35 @@ const PropertyDetail = () => {
               {/* ========== STATS ROW ========== */}
               <div className="mt-4">
                 {/* Stats - first content block below media */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 pb-2 border-b">
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-neutral-100 pb-2">
                   {listing.bedrooms && (
                     <div className="flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bedrooms}</span>
-                      <span className="text-xs text-muted-foreground">Beds</span>
+                      <Bed className="h-4 w-4 text-neutral-500" />
+                      <span className="font-semibold text-neutral-900">{listing.bedrooms}</span>
+                      <span className="text-xs text-neutral-600">Beds</span>
                     </div>
                   )}
                   {listing.bathrooms && (
                     <div className="flex items-center gap-1">
-                      <Bath className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.bathrooms}</span>
-                      <span className="text-xs text-muted-foreground">Baths</span>
+                      <Bath className="h-4 w-4 text-neutral-500" />
+                      <span className="font-semibold text-neutral-900">{listing.bathrooms}</span>
+                      <span className="text-xs text-neutral-600">Baths</span>
                     </div>
                   )}
                   {listing.square_feet && (
                     <div className="flex items-center gap-1">
-                      <Square className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">{listing.square_feet.toLocaleString()}</span>
-                      <span className="text-xs text-muted-foreground">Sq Ft</span>
+                      <Square className="h-4 w-4 text-neutral-500" />
+                      <span className="font-semibold text-neutral-900">{listing.square_feet.toLocaleString()}</span>
+                      <span className="text-xs text-neutral-600">Sq Ft</span>
                     </div>
                   )}
                   {listing?.square_feet && listing.square_feet > 0 && (
                     <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-foreground">
+                      <DollarSign className="h-4 w-4 text-neutral-500" />
+                      <span className="font-semibold text-neutral-900">
                         ${Math.round(listing.price / listing.square_feet).toLocaleString()}
                       </span>
-                      <span className="text-xs text-muted-foreground">/sf</span>
+                      <span className="text-xs text-neutral-600">/sf</span>
                     </div>
                   )}
                 </div>
@@ -956,13 +978,13 @@ const PropertyDetail = () => {
             <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
 
               {/* Primary Consumer CTAs */}
-              <Card className="rounded-3xl shadow-md border-2">
-                <CardContent className="p-5 space-y-3">
-                  <h3 className="text-base font-semibold">Take the next step</h3>
+              <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                <CardContent className="space-y-2.5 p-4">
+                  <h3 className="text-sm font-semibold text-neutral-900">Take the next step</h3>
 
                   <Button
-                    size="lg"
-                    className="w-full"
+                    size="sm"
+                    className="h-9 w-full bg-neutral-900 text-[13px] font-medium text-white hover:bg-neutral-800"
                     onClick={() => setContactDialogOpen(true)}
                   >
                     Contact Agent
@@ -973,13 +995,13 @@ const PropertyDetail = () => {
                     listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
                     triggerLabel="Request a Showing"
                     triggerVariant="outline"
-                    triggerClassName="w-full"
+                    triggerClassName="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
                   />
 
                   <Button
-                    size="lg"
+                    size="sm"
                     variant="outline"
-                    className="w-full"
+                    className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
                     onClick={() => setContactDialogOpen(true)}
                   >
                     Ask a Question
@@ -987,9 +1009,9 @@ const PropertyDetail = () => {
 
                   <FavoriteButton
                     listingId={listing.id}
-                    size="lg"
-                    variant="secondary"
-                    className="w-full"
+                    size="sm"
+                    variant="outline"
+                    className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
                     labels={{
                       signIn: "Sign In to Save Home",
                       default: "Save Home",
@@ -1010,23 +1032,23 @@ const PropertyDetail = () => {
               
               {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
-                <Card className="rounded-3xl shadow-md border-2">
-                  <CardContent className="p-5 space-y-4">
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-4 p-4">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${agentProfile.first_name} ${agentProfile.last_name}`}
                         headshotUrl={agentProfile.headshot_url ?? null}
                         userId={agentProfile.id}
                         size="xl"
-                        avatarClassName="w-16 h-16 border-2 border-border"
-                        fallbackClassName="bg-muted"
+                        avatarClassName="h-16 w-16 border border-neutral-200"
+                        fallbackClassName="bg-neutral-800 text-white"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing Agent</p>
-                        <p className="font-bold text-lg leading-tight">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Listing Agent</p>
+                        <p className="text-lg font-bold leading-tight text-neutral-900">
                           {agentProfile.first_name} {agentProfile.last_name}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-neutral-600">
                           {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
                         </p>
                       </div>
@@ -1036,29 +1058,29 @@ const PropertyDetail = () => {
                       {agentProfile.cell_phone && (
                         <a
                           href={`tel:${agentProfile.cell_phone}`}
-                          className="flex items-center gap-2.5 hover:text-primary transition"
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
                         >
-                          <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
-                          <span className="text-muted-foreground text-xs ml-auto">Mobile</span>
+                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
                         </a>
                       )}
                       {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
                         <a
                           href={`tel:${agentProfile.phone}`}
-                          className="flex items-center gap-2.5 hover:text-primary transition"
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
                         >
-                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
-                          <span className="text-muted-foreground text-xs ml-auto">Office</span>
+                          <span className="ml-auto text-xs text-neutral-500">Office</span>
                         </a>
                       )}
                       {agentProfile.email && (
                         <a
                           href={`mailto:${agentProfile.email}`}
-                          className="flex items-center gap-2.5 hover:text-primary transition"
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
                         >
-                          <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium truncate">{agentProfile.email}</span>
                         </a>
                       )}
@@ -1067,9 +1089,9 @@ const PropertyDetail = () => {
                           href={agentProfile.social_links.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2.5 text-primary hover:underline"
+                          className="flex items-center gap-2.5 text-neutral-700 underline-offset-2 hover:text-neutral-900 hover:underline"
                         >
-                          <Globe className="w-4 h-4 flex-shrink-0" />
+                          <Globe className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">Website</span>
                         </a>
                       )}
@@ -1085,7 +1107,8 @@ const PropertyDetail = () => {
                     {canMessageListingAgent && (
                       <Button
                         variant="outline"
-                        className="w-full mt-2 gap-2 disabled:opacity-60 disabled:pointer-events-none"
+                        size="sm"
+                        className="mt-2 h-9 w-full gap-2 rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50 disabled:pointer-events-none disabled:opacity-60"
                         onClick={handleMessageListingAgent}
                         disabled={isStartingChat}
                         aria-busy={isStartingChat}
@@ -1103,10 +1126,10 @@ const PropertyDetail = () => {
               )}
               
               {/* Brokerage Strip - SECONDARY (below agent) */}
-              <Card className="rounded-2xl shadow-sm border">
+              <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white">
                       <img
                         src={agentLogo}
                         alt={`${agentProfile?.company || 'Brokerage'} logo`}
@@ -1117,8 +1140,8 @@ const PropertyDetail = () => {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Listing courtesy of</p>
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">Listing courtesy of</p>
+                      <p className="truncate text-sm font-medium text-neutral-900">
                         {agentProfile?.company || "Brokerage"}
                       </p>
                     </div>
@@ -1128,24 +1151,24 @@ const PropertyDetail = () => {
 
               {/* ========== AGENT QUICK ACTIONS (stays in sidebar) ========== */}
               {isAgentView && (
-                <Card className="rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                  <CardContent className="py-4 px-4 space-y-2">
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-1.5 px-3 py-3">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
-                      className="w-full justify-start gap-2"
+                      className="h-8 w-full justify-start gap-2 rounded-lg border-neutral-200 text-[13px] shadow-none hover:bg-neutral-50"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="h-3.5 w-3.5" />
                       Edit Listing
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handlePreviewClientView}
-                      className="w-full justify-start gap-2"
+                      className="h-8 w-full justify-start gap-2 rounded-lg border-neutral-200 text-[13px] shadow-none hover:bg-neutral-50"
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="h-3.5 w-3.5" />
                       Preview Client View
                     </Button>
                     <Button
@@ -1155,9 +1178,9 @@ const PropertyDetail = () => {
                         const el = document.getElementById('agent-tools-section');
                         el?.scrollIntoView({ behavior: 'smooth' });
                       }}
-                      className="w-full justify-start gap-2"
+                      className="h-8 w-full justify-start gap-2 rounded-lg border-neutral-200 text-[13px] shadow-none hover:bg-neutral-50"
                     >
-                      <Activity className="w-4 h-4" />
+                      <Activity className="h-3.5 w-3.5" />
                       View Agent Tools
                     </Button>
                   </CardContent>
@@ -1182,20 +1205,20 @@ const PropertyDetail = () => {
                 const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
                 
                 return (
-                  <Card className="rounded-3xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <FileText className="w-5 h-5" />
+                  <Card className={detailSurface}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className={detailTitle}>
+                        <FileText className={detailTitleIcon} />
                         About this home
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-sm leading-relaxed text-foreground space-y-4">
+                    <CardContent className="space-y-4 text-sm leading-relaxed text-neutral-800">
                       <p className="whitespace-pre-wrap">{visibleText}</p>
                       {isLong && (
                         <button
                           type="button"
                           onClick={() => setDescriptionExpanded(v => !v)}
-                          className="text-primary font-medium text-sm"
+                          className="text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-0"
                         >
                           {descriptionExpanded ? 'Read less' : 'Read more'}
                         </button>
@@ -1206,14 +1229,14 @@ const PropertyDetail = () => {
                         const cleaned = cleanBrokerComments(listing.broker_comments);
                         if (!cleaned) return null;
                         return (
-                          <div className="mt-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 p-3">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className="text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                          <div className="mt-4 rounded-lg border border-amber-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                            <div className="mb-1.5 flex items-center gap-2">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-amber-900">
                                 Broker Remarks
                               </span>
-                              <Badge variant="outline" className="text-xs">Agent Only</Badge>
+                              <Badge variant="outline" className="border-neutral-200 text-xs">Agent Only</Badge>
                             </div>
-                            <p className="text-sm text-orange-900 dark:text-orange-100 whitespace-pre-wrap">
+                            <p className="whitespace-pre-wrap text-sm text-neutral-700">
                               {cleaned}
                             </p>
                           </div>
@@ -1229,13 +1252,14 @@ const PropertyDetail = () => {
                 listing={listing} 
                 agent={agentProfile}
                 isAgentView={isAgentView}
+                premiumNeutralSurfaces
               />
 
               {/* Public Record Insights (server-side ATTOM enrichment with graceful fallback) */}
-              <Card className="rounded-3xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Info className="w-5 h-5" />
+              <Card className={detailSurface}>
+                <CardHeader className="pb-2">
+                  <CardTitle className={detailTitle}>
+                    <Info className={detailTitleIcon} />
                     Public Record Insights
                   </CardTitle>
                 </CardHeader>
@@ -1312,7 +1336,7 @@ const PropertyDetail = () => {
                   )}
 
                   {attomData && Array.isArray(attomData.saleHistory) && attomData.saleHistory.length > 0 && (
-                    <div className="mt-4 pt-4 border-t">
+                    <div className="mt-4 border-t border-neutral-100 pt-4">
                       <h4 className="text-sm font-semibold mb-2">Sale History</h4>
                       <div className="space-y-2">
                         {attomData.saleHistory.slice(0, 3).map((item, index) => (
@@ -1333,10 +1357,10 @@ const PropertyDetail = () => {
 
               {/* Price & Tax History */}
               {(priceHistory.length > 0 || typeof listing.annual_property_tax === "number" || typeof listing.tax_assessment_value === "number") && (
-                <Card className="rounded-3xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Calendar className="w-5 h-5" />
+                <Card className={detailSurface}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className={detailTitle}>
+                      <Calendar className={detailTitleIcon} />
                       Price & Tax History
                     </CardTitle>
                   </CardHeader>
@@ -1374,10 +1398,10 @@ const PropertyDetail = () => {
 
               {/* Location / Neighborhood */}
               {(listing.latitude || listing.longitude || listing.neighborhood || (attomData && attomData.neighborhood) || listing.walk_score_data) && (
-                <Card className="rounded-3xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <MapPin className="w-5 h-5" />
+                <Card className={detailSurface}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className={detailTitle}>
+                      <MapPin className={detailTitleIcon} />
                       Location & Neighborhood
                     </CardTitle>
                   </CardHeader>
@@ -1419,10 +1443,10 @@ const PropertyDetail = () => {
 
               {/* Similar Homes */}
               {similarHomes.length > 0 && (
-                <Card className="rounded-3xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Home className="w-5 h-5" />
+                <Card className={detailSurface}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className={detailTitle}>
+                      <Home className={detailTitleIcon} />
                       Similar homes
                     </CardTitle>
                   </CardHeader>
@@ -1440,19 +1464,19 @@ const PropertyDetail = () => {
                             key={home.id}
                             type="button"
                             onClick={() => navigate(`/property/${home.id}`)}
-                            className="text-left rounded-xl border overflow-hidden hover:shadow-sm transition-shadow"
+                            className="overflow-hidden rounded-lg border border-neutral-200 bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color] hover:border-neutral-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
                           >
-                            <div className="h-32 bg-muted overflow-hidden">
+                            <div className="h-32 overflow-hidden bg-neutral-100">
                               {firstPhoto ? (
                                 <img src={firstPhoto} alt={home.address} className="w-full h-full object-cover" />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">No photo</div>
+                                <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">No photo</div>
                               )}
                             </div>
-                            <div className="p-3 space-y-1">
-                              <p className="font-semibold text-sm line-clamp-1">${home.price.toLocaleString()}</p>
-                              <p className="text-xs text-muted-foreground line-clamp-1">{home.address}</p>
-                              <p className="text-xs text-muted-foreground">
+                            <div className="space-y-1 p-3">
+                              <p className="line-clamp-1 text-sm font-semibold text-neutral-900">${home.price.toLocaleString()}</p>
+                              <p className="line-clamp-1 text-xs text-neutral-600">{home.address}</p>
+                              <p className="text-xs text-neutral-600">
                                 {home.bedrooms ?? "-"} bd • {home.bathrooms ?? "-"} ba • {home.square_feet ? `${home.square_feet.toLocaleString()} sqft` : "-"}
                               </p>
                             </div>
@@ -1469,37 +1493,40 @@ const PropertyDetail = () => {
             <div className="space-y-6">
               {/* Buyer Agent Compensation - Client View Only (single line with info popup) */}
               {!isAgentView && compensationDisplay && (
-                <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
-                  <CardContent className="py-3 px-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                      <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                <Card className="rounded-xl border border-emerald-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <DollarSign className="h-4 w-4 shrink-0 text-emerald-700" />
+                      <span className="text-sm font-medium text-neutral-900">
                         Buyer Agent Compensation: {compensationDisplay} (paid by seller)
                       </span>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <button className="text-emerald-600 hover:text-emerald-800 ml-auto">
-                            <HelpCircle className="w-4 h-4" />
+                          <button
+                            type="button"
+                            className="ml-auto rounded-md p-1 text-emerald-800 transition-colors hover:bg-emerald-50/80 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-0"
+                          >
+                            <HelpCircle className="h-4 w-4" />
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md">
+                        <DialogContent className="max-w-md border-neutral-200">
                           <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <DollarSign className="w-5 h-5 text-emerald-600" />
+                            <DialogTitle className="flex items-center gap-2 text-neutral-900">
+                              <DollarSign className="h-5 w-5 text-emerald-700" />
                               Buyer Agent Compensation
                             </DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                          <div className="space-y-3 py-4 text-sm text-neutral-600">
                             <p>
-                              This compensation is <strong className="text-foreground">paid by the seller</strong> and 
+                              This compensation is <strong className="text-neutral-900">paid by the seller</strong> and 
                               offered to buyer agents who bring qualified buyers.
                             </p>
                             <p>
-                              <strong className="text-foreground">Is this negotiable?</strong><br />
+                              <strong className="text-neutral-900">Is this negotiable?</strong><br />
                               Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
                             </p>
                             <p>
-                              <strong className="text-foreground">Note:</strong> Actual compensation may vary based on 
+                              <strong className="text-neutral-900">Note:</strong> Actual compensation may vary based on 
                               your buyer representation agreement. Ask your agent about their fee structure.
                             </p>
                           </div>
@@ -1529,27 +1556,28 @@ const PropertyDetail = () => {
           <div id="agent-tools-section" className="mx-auto max-w-6xl px-4 pb-8">
             <div className="border-t pt-6 mt-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-muted-foreground" />
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
+                  <Activity className="h-5 w-5 text-neutral-500" />
                   Agent Tools
-                  <Badge variant="outline" className="ml-2 text-xs">Internal Only</Badge>
+                  <Badge variant="outline" className="ml-2 border-neutral-200 text-xs">Internal Only</Badge>
                 </h2>
                 {/* Views & Matches grouped with Broadcast */}
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 text-sm">
+                  <div className="flex items-center gap-3 text-sm text-neutral-700">
                     <span className="flex items-center gap-1">
-                      <Eye className="w-4 h-4 text-primary" />
-                      <strong>{stats.views}</strong> Views
+                      <Eye className="h-4 w-4 text-neutral-500" />
+                      <strong className="text-neutral-900">{stats.views}</strong> Views
                     </span>
                     <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4 text-primary" />
-                      <strong>{stats.matches}</strong> Matches
+                      <Users className="h-4 w-4 text-neutral-500" />
+                      <strong className="text-neutral-900">{stats.matches}</strong> Matches
                     </span>
                   </div>
                   <Button
                     size="sm"
+                    variant="outline"
                     disabled
-                    className="px-4 opacity-50 cursor-not-allowed"
+                    className="cursor-not-allowed border-neutral-200 px-3 opacity-50 shadow-none"
                     title="Coming soon in Communications Center"
                   >
                     <Send className="w-4 h-4 mr-2" />
@@ -1560,38 +1588,41 @@ const PropertyDetail = () => {
 
             {/* Buyer Agent Compensation - Green Box (moved up) */}
             {compensationDisplay && (
-              <Card className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                    <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+              <Card className="mt-4 rounded-xl border border-emerald-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                <CardContent className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DollarSign className="h-4 w-4 shrink-0 text-emerald-700" />
+                    <span className="text-sm font-medium text-neutral-900">
                       Buyer Agent Compensation: {compensationDisplay} (paid by seller)
                     </span>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <button className="text-emerald-600 hover:text-emerald-800 ml-auto">
-                          <HelpCircle className="w-4 h-4" />
+                        <button
+                          type="button"
+                          className="ml-auto rounded-md p-1 text-emerald-800 transition-colors hover:bg-emerald-50/80 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-0"
+                        >
+                          <HelpCircle className="h-4 w-4" />
                         </button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-md">
+                      <DialogContent className="max-w-md border-neutral-200">
                         <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            <DollarSign className="w-5 h-5 text-emerald-600" />
+                          <DialogTitle className="flex items-center gap-2 text-neutral-900">
+                            <DollarSign className="h-5 w-5 text-emerald-700" />
                             Buyer Agent Compensation
                           </DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                        <div className="space-y-3 py-4 text-sm text-neutral-600">
                           <p>
-                            This compensation is <strong className="text-foreground">paid by the seller</strong> and 
+                            This compensation is <strong className="text-neutral-900">paid by the seller</strong> and 
                             offered to buyer agents who bring qualified buyers.
                           </p>
                           <p>
-                            <strong className="text-foreground">Is this negotiable?</strong><br />
+                            <strong className="text-neutral-900">Is this negotiable?</strong><br />
                             Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
                           </p>
                           {listing.commission_notes && (
-                            <p className="bg-muted p-2 rounded text-foreground/80">
-                              <strong>Notes:</strong> {listing.commission_notes}
+                            <p className="rounded-md border border-neutral-200 bg-neutral-50 p-2 text-neutral-800">
+                              <strong className="text-neutral-900">Notes:</strong> {listing.commission_notes}
                             </p>
                           )}
                         </div>
@@ -1602,13 +1633,13 @@ const PropertyDetail = () => {
               </Card>
             )}
             
-            {/* 50/50 Two-Column Layout - Equal Height Cards */}
+            {/* Agent-only: Showing + disclosures (two-column) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                 {/* LEFT COLUMN (Blue): Showing Instructions */}
-                <Card className="rounded-2xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 h-full">
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <CardTitle className="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
-                      <KeyRound className="w-4 h-4" />
+                <Card className={cn(detailSurface, "h-full")}>
+                  <CardHeader className="px-4 pb-2 pt-4">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+                      <KeyRound className="h-4 w-4 text-neutral-600" />
                       Showing Instructions
                     </CardTitle>
                   </CardHeader>
@@ -1651,10 +1682,10 @@ const PropertyDetail = () => {
                 </Card>
 
                 {/* RIGHT COLUMN (Yellow): Disclosures, Exclusions, Listing Agreement, Firm Remarks */}
-                <Card className="rounded-2xl border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 h-full">
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <CardTitle className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-100">
-                      <FileText className="w-4 h-4" />
+                <Card className={cn(detailSurface, "h-full")}>
+                  <CardHeader className="px-4 pb-2 pt-4">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+                      <FileText className="h-4 w-4 text-neutral-600" />
                       Disclosures, Exclusions & Listing Agreement
                     </CardTitle>
                   </CardHeader>
@@ -1693,7 +1724,7 @@ const PropertyDetail = () => {
                     {listing.documents && Array.isArray(listing.documents) && listing.documents.length > 0 && (
                       <div className="pt-2 border-t">
                         <p className="text-xs font-semibold text-muted-foreground mb-1">Documents:</p>
-                        <p className="text-primary">{listing.documents.length} document(s) available</p>
+                        <p className="font-medium text-neutral-800">{listing.documents.length} document(s) available</p>
                       </div>
                     )}
                     {/* Firm Remarks - cleaned & deduplicated, agent only */}

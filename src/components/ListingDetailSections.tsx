@@ -4,11 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Home, DollarSign, Building2, FileText, Calendar, Info } from "lucide-react";
 import { cleanBrokerComments } from "@/lib/listingFieldParsers";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
+import { cn } from "@/lib/utils";
 
 interface ListingDetailSectionsProps {
   listing: any;
   agent?: any;
   isAgentView: boolean;
+  /** AAC listing detail `/property/:id`: white cards + neutral typography (omit on consumer pages). */
+  premiumNeutralSurfaces?: boolean;
 }
 
 // Helper to format empty/null fields with placeholder
@@ -18,7 +21,12 @@ export const formatField = (value: any): string => {
   return String(value);
 };
 
-export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDetailSectionsProps) => {
+export const ListingDetailSections = ({
+  listing,
+  agent,
+  isAgentView,
+  premiumNeutralSurfaces = false,
+}: ListingDetailSectionsProps) => {
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [showAllPropertyDetails, setShowAllPropertyDetails] = useState(false);
   const [showAllTaxInfo, setShowAllTaxInfo] = useState(false);
@@ -26,12 +34,27 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
   const FEATURES_LIMIT = 16;
   const DETAIL_ROWS_LIMIT = 6;
 
+  const sectionCard = premiumNeutralSurfaces
+    ? "rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+    : "rounded-3xl";
+  const sectionTitleIcon = premiumNeutralSurfaces ? "text-neutral-600" : "text-primary";
+  const sectionTitle = premiumNeutralSurfaces
+    ? "flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900"
+    : "flex items-center gap-2 text-lg";
+  const accentLink = premiumNeutralSurfaces
+    ? "text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-0"
+    : "text-primary font-medium text-sm";
+  const bulletDot = premiumNeutralSurfaces ? "bg-neutral-400" : "bg-primary/60";
+  const detailLabelMuted = premiumNeutralSurfaces ? "text-neutral-600" : "text-muted-foreground";
+  const detailRowBorder = premiumNeutralSurfaces ? "border-b border-neutral-100 last:border-0" : "border-b last:border-0";
+  const valueText = premiumNeutralSurfaces ? "font-medium text-right text-neutral-900" : "font-medium text-right text-foreground";
+
   const DetailRow = ({ label, value }: { label: string; value: any }) => {
     if (!value && value !== 0) return null;
     return (
-      <div className="flex justify-between py-2 border-b last:border-0">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium text-right text-foreground">{value}</span>
+      <div className={cn("flex justify-between py-2", detailRowBorder)}>
+        <span className={detailLabelMuted}>{label}</span>
+        <span className={valueText}>{value}</span>
       </div>
     );
   };
@@ -182,22 +205,29 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
   return (
     <>
       {/* Property Features - Bullet Points, Two Columns - OPEN BY DEFAULT */}
-      <Card className="rounded-3xl">
+      <Card className={sectionCard}>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Info className="w-5 h-5 text-primary" />
+          <CardTitle className={sectionTitle}>
+            <Info className={cn("h-5 w-5 shrink-0", sectionTitleIcon)} />
             Property Features
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 pb-5">
           {features.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No features listed</p>
+            <p className={cn("text-sm", premiumNeutralSurfaces ? "text-neutral-600" : "text-muted-foreground")}>
+              No features listed
+            </p>
           ) : (
             <>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-foreground">
+              <ul
+                className={cn(
+                  "grid grid-cols-1 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2",
+                  premiumNeutralSurfaces ? "text-neutral-800" : "text-foreground",
+                )}
+              >
                 {displayedFeatures.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/60 flex-shrink-0" />
+                    <span className={cn("mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full", bulletDot)} />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -206,7 +236,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
                 <button
                   type="button"
                   onClick={() => setShowAllFeatures(v => !v)}
-                  className="text-primary font-medium text-sm mt-3"
+                  className={cn(accentLink, "mt-3")}
                 >
                   {showAllFeatures ? 'Show less' : `Show ${features.length - FEATURES_LIMIT} more`}
                 </button>
@@ -218,10 +248,10 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
 
       {/* Property Details - OPEN BY DEFAULT */}
       {propertyDetailRows.length > 0 && (
-        <Card className="rounded-3xl">
+        <Card className={sectionCard}>
         <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Home className="w-5 h-5 text-primary" />
+            <CardTitle className={sectionTitle}>
+              <Home className={cn("h-5 w-5 shrink-0", sectionTitleIcon)} />
               Property Details
             </CardTitle>
           </CardHeader>
@@ -235,7 +265,7 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
               <button
                 type="button"
                 onClick={() => setShowAllPropertyDetails(v => !v)}
-                className="text-primary font-medium text-sm mt-3"
+                className={cn(accentLink, "mt-3")}
               >
                 {showAllPropertyDetails ? 'Show less' : `Show ${propertyDetailRows.length - DETAIL_ROWS_LIMIT} more`}
               </button>
@@ -246,10 +276,10 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
 
       {/* Additional Property Details (Condo/Multi-Family/Commercial) - OPEN BY DEFAULT */}
       {(listing.condo_details || listing.multi_family_details || listing.commercial_details) && (
-        <Card className="rounded-3xl">
+        <Card className={sectionCard}>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Building2 className="w-5 h-5 text-primary" />
+            <CardTitle className={sectionTitle}>
+              <Building2 className={cn("h-5 w-5 shrink-0", sectionTitleIcon)} />
               Additional Property Details
             </CardTitle>
           </CardHeader>
@@ -295,10 +325,10 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
 
       {/* Tax Information - OPEN BY DEFAULT */}
       {taxInfoRows.length > 0 && (
-        <Card className="rounded-3xl">
+        <Card className={sectionCard}>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <DollarSign className="w-5 h-5 text-primary" />
+            <CardTitle className={sectionTitle}>
+              <DollarSign className={cn("h-5 w-5 shrink-0", sectionTitleIcon)} />
               Tax Information
             </CardTitle>
           </CardHeader>
@@ -314,10 +344,10 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
 
       {/* Market Information - OPEN BY DEFAULT */}
       {marketInfoRows.length > 0 && (
-        <Card className="rounded-3xl">
+        <Card className={sectionCard}>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="w-5 h-5 text-primary" />
+            <CardTitle className={sectionTitle}>
+              <Calendar className={cn("h-5 w-5 shrink-0", sectionTitleIcon)} />
               Market Information
             </CardTitle>
           </CardHeader>
@@ -336,16 +366,36 @@ export const ListingDetailSections = ({ listing, agent, isAgentView }: ListingDe
         const cleaned = cleanBrokerComments(listing.broker_comments);
         if (!cleaned) return null;
         return (
-          <Card className="rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
+          <Card
+            className={
+              premiumNeutralSurfaces
+                ? "rounded-xl border border-amber-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+                : "rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"
+            }
+          >
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base text-orange-900 dark:text-orange-100">
-                <FileText className="w-5 h-5" />
+              <CardTitle
+                className={cn(
+                  "flex items-center gap-2 text-base",
+                  premiumNeutralSurfaces ? "text-neutral-900" : "text-orange-900 dark:text-orange-100",
+                )}
+              >
+                <FileText className={cn("h-5 w-5 shrink-0", premiumNeutralSurfaces && "text-amber-700")} />
                 Firm Remarks
-                <Badge variant="outline" className="ml-2 text-xs">Agent Only</Badge>
+                <Badge variant="outline" className="ml-2 text-xs border-neutral-200">
+                  Agent Only
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm whitespace-pre-wrap text-foreground/90">{cleaned}</p>
+              <p
+                className={cn(
+                  "whitespace-pre-wrap text-sm",
+                  premiumNeutralSurfaces ? "text-neutral-700" : "text-foreground/90",
+                )}
+              >
+                {cleaned}
+              </p>
             </CardContent>
           </Card>
         );
