@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ChevronLeft, Trash2, Upload } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
+import { AacMonogramLoader } from '@/components/AacMonogramLoader';
 import { PageHeader } from '@/components/ui/page-header';
 import { Seo } from '@/components/Seo';
 
@@ -251,11 +252,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen pt-24">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <AacMonogramLoader variant="section" message="Loading…" className="min-h-screen pt-24" />;
   }
 
   return (

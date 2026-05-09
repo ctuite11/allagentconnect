@@ -38,6 +38,7 @@ import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 import { Pill, type PillVariant } from "@/components/ui/pill";
 import { Seo } from "@/components/Seo";
@@ -794,9 +795,7 @@ export default function AdminApprovals() {
 
         {/* Agent Cards */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
-          </div>
+          <AacMonogramLoader variant="section" message="Loading agents…" className="py-12 sm:py-14" />
         ) : agents.length === 0 ? (
           <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

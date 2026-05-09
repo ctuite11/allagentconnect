@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Store, TrendingUp, Eye, MousePointer, Plus, AlertCircle } from "lucide-react";
+import { Store, TrendingUp, Eye, MousePointer, Plus, AlertCircle } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -100,11 +101,7 @@ const VendorDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col pt-20">
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </div>
+      <AacMonogramLoader variant="section" message="Loading…" className="min-h-screen pt-20" />
     );
   }
 

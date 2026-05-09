@@ -9,6 +9,7 @@ import {
   mapAgentClientFavoriteRpcToListingCard,
   type AgentClientFavoriteRpcRow,
 } from "@/components/success-hub/listingCardAdapter";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 export default function AgentClientFavorites() {
   const { buyerId, clientId } = useParams<{ buyerId?: string; clientId?: string }>();
@@ -122,9 +123,7 @@ export default function AgentClientFavorites() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
-          </div>
+          <AacMonogramLoader variant="section" message="Loading…" className="min-h-[28vh]" />
         ) : error ? null : count > 0 ? (
           <div className={SUCCESS_HUB_LISTINGS_GRID}>
             {favorites.map((row) => (

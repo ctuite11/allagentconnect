@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 const ShareLinkHandler = () => {
   const { token } = useParams<{ token: string }>();
@@ -68,14 +68,7 @@ const ShareLinkHandler = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="mt-4 text-muted-foreground">Validating link...</p>
-      </div>
-    </div>
-  );
+  return <AacMonogramLoader variant="fullscreen" message="Validating link…" />;
 };
 
 export default ShareLinkHandler;

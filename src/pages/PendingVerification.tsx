@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, CheckCircle2 } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { authDebug, getAgentStatus } from "@/lib/authDebug";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 import { AGENT_STATUS } from "@/constants/status";
@@ -278,7 +279,7 @@ const PendingVerification = () => {
                 You're approved.
               </h1>
               <p className="text-zinc-600 text-base mb-6">Taking you in…</p>
-              <Loader2 className="h-5 w-5 animate-spin text-zinc-400 mx-auto" />
+              <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-2" />
             </div>
           </div>
         </main>

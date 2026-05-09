@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { format, differenceInDays, isPast, addDays } from "date-fns";
 import { Home, Users, Clock, RefreshCw, Calendar, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 interface SellerSubmission {
   id: string;
@@ -135,11 +136,7 @@ export default function SellerDashboard() {
     : 0;
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Loading…" className="bg-slate-50" />;
   }
 
   if (!submission) {

@@ -4,7 +4,8 @@ import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ChevronRight, Clock, UserPlus, Loader2 } from "lucide-react";
+import { CheckCircle2, ChevronRight, Clock, UserPlus } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
@@ -219,9 +220,7 @@ export default function BuyersList() {
 
           {/* List */}
           {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-            </div>
+            <AacMonogramLoader variant="section" message="Loading buyers…" className="py-14" />
           ) : filtered.length === 0 ? (
             <EmptyState
               hasAny={buyers.length > 0}

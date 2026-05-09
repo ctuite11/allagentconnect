@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Loader2, Mail, Phone, UserX } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 
 const ClientAgentSettings = () => {
@@ -98,14 +99,7 @@ const ClientAgentSettings = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-muted-foreground">Loading your settings...</p>
-        </div>
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Loading your settings…" />;
   }
 
   return (

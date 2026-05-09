@@ -58,6 +58,7 @@ import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -2943,12 +2944,12 @@ const AddListing = () => {
 
   if (loading || isLoadingListing) {
     return (
-      <div className="flex items-center justify-center min-h-screen flex-col gap-4">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="text-muted-foreground">
-          {isLoadingListing ? 'Loading listing data...' : 'Checking authentication...'}
-        </p>
-      </div>
+      <AacMonogramLoader
+        variant="fullscreen"
+        message={
+          isLoadingListing ? "Loading listing data…" : "Checking authentication…"
+        }
+      />
     );
   }
 

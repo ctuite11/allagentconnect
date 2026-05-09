@@ -40,6 +40,7 @@ import { ArrowLeft, MapPin, BedDouble, Bath, Ruler, Heart, Check } from "lucide-
 import { toast } from "sonner";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 interface Listing {
   id: string;
@@ -904,8 +905,8 @@ const Favorites = ({
         <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
           <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
             <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}>
-              <div className="h-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
+              <div className="flex h-full items-center justify-center">
+                <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
               </div>
             </section>
             <section className={`${buyerFavoritesSplitPane} h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col`}>
@@ -919,13 +920,7 @@ const Favorites = ({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-white pt-20">
-        <main className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <p className="text-muted-foreground">Loading favorites...</p>
-          </div>
-        </main>
-      </div>
+      <AacMonogramLoader variant="fullscreen" message="Loading favorites..." className="bg-white pt-20" />
     );
   }
 
@@ -951,11 +946,7 @@ const Favorites = ({
           <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
             <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
               <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]`}>
-                {loading ? (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
-                  </div>
-                ) : displayListingRecords.length > 0 ? (
+                {displayListingRecords.length > 0 ? (
                   <div className="h-full">
                       <PropertyMap
                       listings={propertyMapListings}

@@ -13,6 +13,7 @@ import AACMonogram from "@/components/ui/AACMonogram";
 import { cn } from "@/lib/utils";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -760,11 +761,7 @@ const Auth = () => {
 
   // Loading state while checking session
   if (checkingSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
-        <Loader2 className="h-8 w-8 animate-spin text-neutral-900" />
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Checking your session…" />;
   }
 
   // Session mismatch interstitial - shows when user is signed in as a different email
@@ -820,11 +817,7 @@ const Auth = () => {
     
     // Still loading agent status
     if (agentStatus === null) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-white px-4">
-          <Loader2 className="h-8 w-8 animate-spin text-neutral-900" />
-        </div>
-      );
+      return <AacMonogramLoader variant="fullscreen" message="Loading…" />;
     }
     
     return (

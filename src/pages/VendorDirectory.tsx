@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, ExternalLink, Phone, Mail, Globe } from "lucide-react";
+import { Search, ExternalLink, Phone, Mail, Globe } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { toast } from "sonner";
 
 const businessTypes = [
@@ -89,11 +90,7 @@ const VendorDirectory = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Loading vendors…" className="pt-20" />;
   }
 
   return (

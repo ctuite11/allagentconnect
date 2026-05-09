@@ -8,12 +8,13 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
-  Users, Globe, ArrowLeft, Loader2, Mail, Phone, MapPin, 
+  Users, Globe, ArrowLeft, Mail, Phone, MapPin, 
   Linkedin, Facebook, Twitter, Instagram, Download, Star, 
   Home, Building2, DollarSign
 } from "lucide-react";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 const generateTeamVCard = (team: any, members: any[]) => {
   const primaryContact = members.find(m => m.role === 'owner')?.agent_profiles || members[0]?.agent_profiles;
@@ -160,9 +161,7 @@ const TeamProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background pt-20">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+        <AacMonogramLoader variant="section" message="Loading team…" className="min-h-[60vh]" />
       </div>
     );
   }

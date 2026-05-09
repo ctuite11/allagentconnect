@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
-import { Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { z } from "zod";
 import { PageHeader } from "@/components/ui/page-header";
 import { LISTING_STATUS } from "@/constants/status";
@@ -412,9 +413,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
         <section className="pt-8 pb-16">
           <div className="mx-auto w-full max-w-[1200px] px-6">
             {loading || authLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
+              <AacMonogramLoader variant="section" message="Loading agents…" className="py-12 sm:py-14" />
             ) : filteredAgents.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">

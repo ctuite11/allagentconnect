@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Heart } from "lucide-react";
 import FavoriteButton from "@/components/FavoriteButton";
 import { humanizeSnakeCase } from "@/lib/format";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 interface Favorite {
   id: string;
@@ -62,11 +63,7 @@ export default function ClientFavoritesPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Loading favorites…" className="pt-20" />;
   }
 
   return (

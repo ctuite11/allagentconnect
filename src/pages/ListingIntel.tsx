@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CalendarIcon, Mail } from "lucide-react";
+import { CalendarIcon, Mail } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { toast } from "sonner";
 import { US_STATES } from "@/data/usStatesCountiesData";
 import { format } from "date-fns";
@@ -123,8 +124,8 @@ const ListingIntel = () => {
 
   if (loading) {
     return (
-      <AgentAacPage className="flex min-h-[40vh] flex-1 flex-col items-center justify-center pb-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <AgentAacPage className="pb-12">
+        <AacMonogramLoader variant="section" message="Loading…" />
       </AgentAacPage>
     );
   }

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft, 
-  Loader2, 
   Star, 
   Quote,
   Phone,
@@ -27,6 +26,7 @@ import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { Seo } from "@/components/Seo";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
 
 const generateVCard = (agent: AgentProfileData) => {
@@ -191,11 +191,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AacMonogramLoader variant="section" message="Loading agent…" className="min-h-[60vh]" />;
   }
 
   if (!agent) {
