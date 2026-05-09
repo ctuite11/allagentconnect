@@ -252,6 +252,20 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Spam complaints → mark recipient(s) as fully unsubscribed.
+  if (normalized === "complained" && recipient) {
+    const emails = recipient.split(",").map((s) => s.trim()).filter(Boolean);
+    for (const em of emails) {
+      const { error: unsubErr } = await supabase
+        .from("email_unsubscribes")
+        .upsert(
+          { email: em, category: "all", source: "complaint" },
+          { onConflict: "email_lower,category", ignoreDuplicates: true },
+        );
+      if (unsubErr) console.error("[resend-webhook] complaint unsubscribe failed:", unsubErr);
+    }
+  }
+
   return json({
     ok: true,
     event: eventType,
