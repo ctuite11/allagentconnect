@@ -7,6 +7,7 @@ import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { buyerMessagingPanel } from "@/lib/buyerUi";
 
 interface MessagingWorkspaceProps {
@@ -40,7 +41,7 @@ class MessagingWorkspaceErrorBoundary extends React.Component<
             <p className="text-sm text-zinc-700">{this.state.error.message}</p>
             <button
               type="button"
-              className="text-sm text-primary underline"
+              className="text-sm font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
               onClick={() => window.location.reload()}
             >
               Reload page
@@ -76,9 +77,8 @@ function MessagingWorkspaceContent({
   const buyerMode = isBuyerMode;
   const agentMode = isAgentMode || !buyerMode;
 
-  const panelShellClass = buyerMode
-    ? buyerMessagingPanel
-    : "flex flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-none";
+  /** Aligned with buyer messaging + dashboard preview cards: white tile, subtle border/shadow */
+  const panelShellClass = buyerMessagingPanel;
 
   const safeThreads = Array.isArray(threads) ? threads : [];
 
@@ -92,36 +92,43 @@ function MessagingWorkspaceContent({
             : "flex min-h-0 flex-1 flex-col bg-[#FFFFFF]"
         }
       >
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-6 pb-10 pt-6 md:px-8">
-          <div className="mx-auto flex min-h-0 w-fit max-w-full flex-1 flex-col">
-            {buyerMode && (
-              <div className="mb-5 shrink-0">
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-4 pb-10 pt-5 sm:px-6 md:px-8 md:pt-6">
+          <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col">
+            {!buyerMode ? (
+              <AgentPageHeader
+                title="Messages"
+                subtitle="Conversation threads with clients and colleagues — same rhythm as inbox cards on Success Hub."
+                className="mb-4 shrink-0 md:mb-5"
+              />
+            ) : null}
+            {buyerMode ? (
+              <div className="mb-4 shrink-0 md:mb-5">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="mb-5 gap-2 text-muted-foreground hover:text-foreground"
+                  className="mb-4 gap-2 text-zinc-500 hover:bg-zinc-100/90 hover:text-zinc-900"
                   type="button"
                   onClick={() => navigate("/client/dashboard")}
                 >
                   ← Back to Dashboard
                 </Button>
-                <div className="space-y-1.5">
-                  <h1 className="text-2xl font-semibold text-zinc-900">Messages</h1>
-                  <p className="text-sm text-zinc-500">
+                <div className="space-y-1">
+                  <h1 className="text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl">Messages</h1>
+                  <p className="text-[13px] leading-snug text-zinc-500">
                     Stay in touch with your agent and keep everything about your home search in one place.
                   </p>
                 </div>
               </div>
-            )}
+            ) : null}
 
             <div
               className={
                 buyerMode
-                  ? "mx-auto flex h-[calc(100dvh-3.5rem-9rem)] min-h-[420px] w-fit flex-1 gap-5"
-                  : "mx-auto flex min-h-0 h-[calc(100vh-2rem)] w-fit flex-1 gap-5"
+                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 lg:h-[calc(100dvh-3.5rem-12rem)] lg:min-h-[420px] lg:flex-row lg:gap-5"
+                  : "flex min-h-0 w-full flex-1 flex-col gap-4 md:min-h-[min(560px,calc(100vh-11rem))] md:flex-row md:gap-5"
               }
             >
-              <div className={`h-full min-h-0 w-[320px] flex-none ${buyerMessagingPanel}`}>
+              <div className={`flex h-[min(42dvh,360px)] min-h-[240px] w-full shrink-0 flex-none md:h-full md:min-h-0 md:w-[320px] ${buyerMessagingPanel}`}>
                 <ConversationsList
                   threads={safeThreads}
                   threadsLoading={Boolean(threadsLoading)}
@@ -140,7 +147,7 @@ function MessagingWorkspaceContent({
               </div>
 
               <div
-                className={`h-full min-h-0 w-[560px] max-w-[560px] flex-none ${panelShellClass}`}
+                className={`flex min-h-[min(52dvh,420px)] w-full flex-1 flex-col md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none ${panelShellClass}`}
               >
                 <ConversationPanel
                   conversationId={selectedConversationId}

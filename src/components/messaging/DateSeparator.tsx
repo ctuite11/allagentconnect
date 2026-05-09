@@ -11,10 +11,10 @@ export function DateSeparator({ date }: DateSeparatorProps) {
   else label = format(date, "MMMM d, yyyy");
 
   return (
-    <div className="mx-auto my-2 flex w-full max-w-[520px] items-center gap-3">
-      <div className="h-px flex-1 bg-zinc-300" />
-      <span className="whitespace-nowrap text-[12px] font-medium text-zinc-500">{label}</span>
-      <div className="h-px flex-1 bg-zinc-300" />
+    <div className="mx-auto my-3 flex w-full max-w-[520px] items-center gap-3">
+      <div className="h-px flex-1 bg-neutral-200/90" />
+      <span className="whitespace-nowrap text-[11px] font-medium uppercase tracking-wide text-zinc-400">{label}</span>
+      <div className="h-px flex-1 bg-neutral-200/90" />
     </div>
   );
 }

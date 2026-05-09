@@ -85,14 +85,15 @@ export function ConversationsList({
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Header */}
-      <div className="flex-shrink-0 p-4 pb-3">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[15px] font-semibold text-zinc-900 tracking-[-0.01em]">
-              {heading}
-            </h2>
+      <div className="flex-shrink-0 border-b border-neutral-100 p-4 pb-3">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{heading}</h2>
             {totalUnread > 0 && (
-              <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold leading-none">
+              <span
+                className="inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-[#16A34A] px-1.5 text-[10px] font-bold leading-none text-white shadow-none"
+                aria-label={`${totalUnread} unread threads`}
+              >
                 {totalUnread > 99 ? "99+" : totalUnread}
               </span>
             )}
@@ -101,64 +102,82 @@ export function ConversationsList({
             <button
               type="button"
               onClick={onNewMessage}
-              className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:bg-zinc-100 rounded-lg transition-colors px-2 py-1.5 text-[13px] font-semibold"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-zinc-700 shadow-none transition-colors hover:border-neutral-300 hover:bg-zinc-50/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
               title="New chat"
             >
-              <SquarePen className="w-4 h-4" />
-              <span>New Chat</span>
+              <SquarePen className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+              <span className="hidden sm:inline">New</span>
             </button>
           )}
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
           <input
-            type="text"
+            type="search"
+            autoComplete="off"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={searchPlaceholder}
-            className="w-full h-9 rounded-full bg-zinc-100 border-0 pl-9 pr-3 text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+            className="h-9 w-full rounded-xl border border-neutral-200 bg-white pl-9 pr-3 text-[13px] text-zinc-900 shadow-none placeholder:text-zinc-400 transition-colors focus:border-neutral-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
           />
         </div>
       </div>
 
       {/* Thread list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
         {loading ? (
-          <div className="p-4 space-y-1">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-3.5">
-                <Skeleton className="w-10 h-10 rounded-full" />
-                <div className="flex-1">
-                  <Skeleton className="h-3.5 w-24 mb-2" />
-                  <Skeleton className="h-3 w-36" />
+          <div className="space-y-2 px-1">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-xl border border-neutral-100 bg-white px-3 py-3 shadow-sm"
+              >
+                <Skeleton className="h-10 w-10 shrink-0 rounded-full bg-zinc-100" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-[min(140px,50%)] rounded-md bg-zinc-100" />
+                  <Skeleton className="h-3 w-[min(200px,75%)] rounded-md bg-zinc-100/90" />
                 </div>
               </div>
             ))}
           </div>
         ) : inboxFetchError ? (
-          <div className="p-8 text-center space-y-3">
-            <p className="text-[13px] text-zinc-600 whitespace-pre-wrap break-words">{inboxFetchError}</p>
+          <div className="space-y-3 p-8 text-center">
+            <p className="whitespace-pre-wrap break-words text-[13px] leading-snug text-zinc-600">{inboxFetchError}</p>
             {onRetryInbox ? (
               <button
                 type="button"
                 onClick={() => onRetryInbox()}
-                className="text-[13px] font-semibold text-primary hover:underline"
+                className="text-[13px] font-semibold text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
               >
                 Try again
               </button>
             ) : null}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-[13px] text-zinc-400">
-              {search ? "No matching messages" : emptyStateLabel}
-            </p>
+          <div className="rounded-xl border border-dashed border-neutral-200 px-4 py-10 text-center">
+            <p className="text-[13px] font-medium text-zinc-700">{search ? "No matching threads" : emptyStateLabel}</p>
+            {search ? (
+              <p className="mt-1 text-[12px] text-zinc-500">Try a different name or keyword.</p>
+            ) : (
+              <p className="mt-1 text-[12px] text-zinc-500">Start a new chat from the button above.</p>
+            )}
           </div>
         ) : (
           filtered.map((thread) => {
             const isSelected = thread.id === selectedId;
+            const listingLine =
+              thread.listingId && addressCache[thread.listingId]
+                ? addressCache[thread.listingId]
+                : null;
+            const contextLabel = thread.listingId
+              ? listingLine
+                ? `Listing · ${listingLine}`
+                : "Listing conversation"
+              : thread.buyerNeedId
+                ? "Client need thread"
+                : null;
             return (
               <div
                 key={thread.id}
@@ -176,9 +195,10 @@ export function ConversationsList({
                     });
                 }}
                 className={cn(
-                  "mx-2 my-0.5 flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 transition-all duration-200 ease-out",
+                  "outline-none mb-1.5 flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 transition-all duration-200 ease-out last:mb-0",
+                  "focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
                   isSelected
-                    ? "border border-neutral-200 border-l-4 border-l-primary bg-neutral-50 shadow-sm"
+                    ? "border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-neutral-200/80"
                     : buyerMessagingThreadRow
                 )}
               >
@@ -200,13 +220,13 @@ export function ConversationsList({
                     >
                       {thread.otherUserName}
                     </span>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-shrink-0 items-center gap-2">
                       {thread.unreadCount > 0 && (
-                        <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-2 py-0.5 rounded-full bg-emerald-500 text-white text-xs font-bold leading-none">
+                        <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#16A34A] px-2 py-0.5 text-[10px] font-bold leading-none text-white shadow-none">
                           {thread.unreadCount > 99 ? "99+" : thread.unreadCount}
                         </span>
                       )}
-                      <span className="text-[11px] text-zinc-400 tabular-nums">
+                      <span className="text-[11px] tabular-nums text-zinc-400">
                         {formatDistanceToNow(new Date(thread.lastMessageAt), {
                           addSuffix: false,
                         })}
@@ -216,7 +236,7 @@ export function ConversationsList({
                   {thread.lastMessagePreview && (
                     <p
                       className={cn(
-                        "text-[12px] truncate leading-snug",
+                        "truncate text-[12px] leading-snug",
                         thread.isUnread ? "text-zinc-600" : "text-zinc-400"
                       )}
                     >
@@ -225,6 +245,11 @@ export function ConversationsList({
                         : `You: ${thread.lastMessagePreview}`}
                     </p>
                   )}
+                  {contextLabel ? (
+                    <p className="mt-1 truncate text-[11px] leading-snug text-zinc-400" title={contextLabel}>
+                      {contextLabel}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             );

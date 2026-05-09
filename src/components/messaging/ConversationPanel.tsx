@@ -54,13 +54,13 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
   if (!conversationId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-        <MessageSquare className="w-12 h-12 text-zinc-200 mb-4" />
-        <h3 className="text-lg font-semibold text-zinc-900 mb-1">
-          Select a conversation
-        </h3>
-        <p className="text-sm text-zinc-400">
-          Choose a conversation from the left to keep chatting
+      <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 text-center md:py-14">
+        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200 bg-white shadow-sm">
+          <MessageSquare className="h-7 w-7 text-zinc-300" strokeWidth={1.5} />
+        </div>
+        <h3 className="text-[15px] font-semibold tracking-tight text-zinc-900">Select a conversation</h3>
+        <p className="mt-2 max-w-[280px] text-[13px] leading-snug text-zinc-500">
+          Pick a thread from your inbox to read and reply — or start a new chat.
         </p>
       </div>
     );
@@ -68,22 +68,32 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
   if (loading) {
     return (
-      <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-        <div className="shrink-0 border-b border-zinc-200 px-3 py-2">
-          <div className="flex w-full items-center gap-2.5">
-            <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-            <Skeleton className="h-6 w-40" />
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-white">
+        <div className="shrink-0 border-b border-neutral-200/90 px-4 py-3">
+          <div className="flex w-full items-center gap-3">
+            <Skeleton className="h-11 w-11 shrink-0 rounded-full bg-zinc-100" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-[min(240px,60%)] rounded-md bg-zinc-100" />
+              <Skeleton className="h-3 w-[min(160px,45%)] rounded-md bg-zinc-100/90" />
+            </div>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-3 pb-3 pt-2">
-          <div className="w-full space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="mt-3 space-y-2 first:mt-0">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-56" />
+        <div className="min-h-0 flex-1 overflow-y-auto bg-white px-4 pb-4 pt-3">
+          <div className="mx-auto w-full max-w-[520px] space-y-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="mx-auto h-3 w-24 rounded-full bg-zinc-100 sm:mx-0" />
+                <div className={`flex ${i % 2 ? "justify-end" : "justify-start"}`}>
+                  <Skeleton
+                    className={`rounded-2xl bg-zinc-100 ${i % 2 ? "h-14 w-[72%]" : "ml-[46px] h-14 w-[78%]"}`}
+                  />
+                </div>
               </div>
             ))}
           </div>
+        </div>
+        <div className="shrink-0 border-t border-neutral-200/90 px-3 py-3">
+          <Skeleton className="h-11 w-full rounded-xl bg-zinc-100" />
         </div>
       </div>
     );
@@ -91,11 +101,12 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
   if (notFound) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-        <p className="text-zinc-500 mb-3">Conversation not found</p>
+      <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 text-center">
+        <p className="mb-4 text-[13px] font-medium text-zinc-700">Conversation not found</p>
         <button
+          type="button"
           onClick={() => navigate(from ?? "/agent-dashboard")}
-          className="text-sm text-primary hover:underline"
+          className="text-[13px] font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
         >
           Go back
         </button>
@@ -105,27 +116,27 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
 
   if (fetchError) {
     return (
-      <div className="flex h-full min-h-0 w-full flex-1 flex-col">
-        <div className="shrink-0 border-b border-zinc-200 px-3 py-2">
-          <div className="flex w-full items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-zinc-900 truncate">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-white">
+        <div className="shrink-0 border-b border-neutral-200/90 px-4 py-3">
+          <div className="flex w-full items-center justify-between gap-3">
+            <h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight text-zinc-900">
               {details?.otherUserName ?? "Conversation"}
             </h2>
             <button
-              onClick={() => navigate(from ?? "/agent-dashboard")}
-              className="p-2 -mr-2 hover:bg-zinc-100 rounded-lg transition-colors text-zinc-400 hover:text-zinc-600"
               type="button"
+              onClick={() => navigate(from ?? "/agent-dashboard")}
+              className="shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
         </div>
-        <div className="flex flex-1 flex-col items-center justify-center px-8 py-10 text-center">
-          <p className="text-sm text-zinc-600 mb-3 max-w-md">{fetchError}</p>
+        <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 text-center">
+          <p className="mb-4 max-w-md text-[13px] leading-snug text-zinc-600">{fetchError}</p>
           <button
             type="button"
             onClick={() => void refetch()}
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-[13px] font-semibold text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
           >
             Try again
           </button>
@@ -163,9 +174,9 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   return (
     <div className="flex min-h-0 h-full w-full flex-1 flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-zinc-200 px-4 py-2">
+      <div className="shrink-0 border-b border-neutral-200/90 px-4 py-3">
         <div className="flex w-full items-center justify-between gap-4">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <UserAvatar
               name={details?.otherUserName ?? ""}
               headshotUrl={details?.otherUserHeadshotUrl ?? null}
@@ -174,23 +185,28 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
               isOnline={isOnline}
             />
             <div className="min-w-0">
-              <h2 className="text-[15px] font-semibold text-zinc-900 tracking-[-0.01em] truncate">
-                {details?.otherUserName}
-              </h2>
-              {contextLabel && (
-                <span className="text-[12px] text-zinc-400 truncate block">
-                  {contextLabel}
-                </span>
-              )}
+              <div className="flex min-w-0 flex-wrap items-center gap-2 gap-y-1">
+                <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+                  {details?.otherUserName}
+                </h2>
+                {details ? (
+                  <span className="inline-flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
+                    {details.otherUserIsAgent ? "AAC agent" : "Client"}
+                  </span>
+                ) : null}
+              </div>
+              {contextLabel ? (
+                <span className="mt-1 block truncate text-[12px] leading-snug text-zinc-500">{contextLabel}</span>
+              ) : null}
               {details?.otherUserId && (
-                <span className="flex items-center gap-1.5 mt-0.5">
+                <span className="mt-1 flex items-center gap-1.5">
                   {isOnline ? (
                     <>
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
-                      <span className="text-[11px] text-emerald-600 font-medium">Online</span>
+                      <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#22C55E]" />
+                      <span className="text-[11px] font-medium text-[#15803d]">Online</span>
                     </>
                   ) : lastSeenAt ? (
-                    <span className="text-[11px] text-zinc-400">
+                    <span className="text-[11px] text-zinc-500">
                       Active {formatDistanceToNow(new Date(lastSeenAt), { addSuffix: true })}
                     </span>
                   ) : null}
@@ -201,19 +217,22 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
           <button
             type="button"
             onClick={() => navigate(from ?? "/agent-dashboard")}
-            className="p-2 -mr-2 hover:bg-zinc-100 rounded-lg transition-colors text-zinc-400 hover:text-zinc-600"
+            className="-mr-1 shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" aria-hidden />
           </button>
         </div>
       </div>
 
       {/* Thread */}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-zinc-50 px-3 pb-3 pt-2">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-2">
         <div className="mx-auto w-full max-w-[520px]">
           {messages.length === 0 ? (
-            <div className="py-10 text-center text-sm text-zinc-400">
-              No messages yet. Send the first message when you are ready.
+            <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-12 text-center">
+              <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
+              <p className="mt-2 text-[12px] leading-snug text-zinc-500">
+                Say hello below — first messages set the tone for this thread.
+              </p>
             </div>
           ) : (
             threadElements
