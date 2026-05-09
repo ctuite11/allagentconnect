@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Loader2, Home, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, ChevronDown, ChevronUp } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 export interface PropertyTypeData {
   propertyTypes: string[];
@@ -104,7 +105,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
         </CardContent>
       </Card>
     );

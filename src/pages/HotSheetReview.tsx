@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Send, MapPin, RefreshCw, CheckCircle2, Clock, ChevronDown, ArrowLeft, Pencil } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import {
   AlertDialog,
@@ -1131,28 +1132,8 @@ if (comments && comments.length > 0) {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] bg-white pt-6 px-4 pb-12 sm:px-6">
-        <div className="mx-auto w-full max-w-[88rem] space-y-5">
-          <div className="space-y-2">
-            <div className="h-5 w-40 rounded-md bg-neutral-100 animate-pulse" />
-            <div className="h-7 w-48 max-w-[min(24rem,100%)] rounded-md bg-neutral-100 animate-pulse" />
-          </div>
-          <div className="h-28 rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-4">
-            <div className="mb-3 h-4 w-2/5 max-w-xs rounded-md bg-neutral-100 animate-pulse" />
-            <div className="h-3.5 w-full max-w-xl rounded-md bg-neutral-50 animate-pulse" />
-          </div>
-          <div className="h-16 rounded-xl border border-neutral-200 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <div className="h-full w-full max-w-2xl rounded-md bg-neutral-50 animate-pulse" />
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="aspect-[4/5] rounded-2xl border border-neutral-200 bg-neutral-50/80 animate-pulse shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-              />
-            ))}
-          </div>
-        </div>
+      <div className="min-h-[55vh] bg-white px-4 pb-16 pt-8 sm:px-6">
+        <AacMonogramLoader variant="section" className="min-h-[48vh]" message="Loading hot sheet..." />
       </div>
     );
   }

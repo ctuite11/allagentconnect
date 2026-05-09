@@ -32,6 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -836,20 +837,8 @@ const HotSheets = ({
           noindex
         />
         {renderHotSheetsHero()}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse rounded-2xl border border-zinc-100 bg-white shadow-none">
-              <div className="aspect-[4/3] bg-zinc-100 rounded-t-2xl" />
-              <div className="p-4 space-y-3">
-                <div className="h-5 bg-zinc-200 rounded w-2/3" />
-                <div className="h-4 bg-zinc-100 rounded w-1/3" />
-                <div className="flex gap-2 mt-3">
-                  <div className="h-8 w-8 rounded-full bg-zinc-200" />
-                  <div className="h-8 w-8 rounded-full bg-zinc-200" />
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="flex justify-center py-12">
+          <AacMonogramLoader variant="section" className="min-h-[220px] py-0" message="Loading hot sheets..." />
         </div>
       </PageShell>
     );

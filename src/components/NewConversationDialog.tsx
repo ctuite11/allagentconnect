@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Send, Search, User, Loader2, Building2, MessageSquare } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { useNavigate } from "react-router-dom";
@@ -384,8 +385,8 @@ export function NewConversationDialog({
                   />
                 </div>
                 {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                  <div className="flex items-center justify-center py-6">
+                    <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
                   </div>
                 ) : (
                   <ScrollArea className="max-h-[220px]">

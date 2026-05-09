@@ -1,4 +1,5 @@
 import AgentMarketplaceCard from "./AgentMarketplaceCard";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 interface Agent {
   id: string;
@@ -24,14 +25,7 @@ interface AgentMarketplaceGridProps {
 
 const AgentMarketplaceGrid = ({ agents, loading }: AgentMarketplaceGridProps) => {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center space-y-3">
-          <div className="h-8 w-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading agents...</p>
-        </div>
-      </div>
-    );
+    return <AacMonogramLoader variant="section" message="Loading agents…" className="py-16 sm:py-20" />;
   }
 
   if (agents.length === 0) {

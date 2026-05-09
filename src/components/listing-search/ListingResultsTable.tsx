@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 interface Listing {
   id: string;
@@ -66,11 +66,7 @@ const ListingResultsTable = ({
 }: ListingResultsTableProps) => {
   if (loading) {
     return (
-      <div className="space-y-2.5 pt-2 sm:space-y-3">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full rounded-lg border border-neutral-100 bg-neutral-100 sm:h-16" />
-        ))}
-      </div>
+      <AacMonogramLoader variant="section" className="min-h-[280px] pt-4" message="Loading results..." />
     );
   }
 

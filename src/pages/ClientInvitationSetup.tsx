@@ -10,6 +10,7 @@ import { CheckCircle2, Loader2, Check, ShieldCheck, Heart, Flame, MessageSquare,
 import { setPrimaryAgentId } from "@/utils/agentTracking";
 import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 const ClientInvitationSetup = () => {
   const [searchParams] = useSearchParams();
@@ -330,14 +331,7 @@ const ClientInvitationSetup = () => {
   };
 
   if (isValidatingToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-7 w-7 animate-spin mx-auto text-zinc-400" />
-          <p className="text-sm text-zinc-500">Validating invitation…</p>
-        </div>
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Validating invitation…" />;
   }
 
   if (!tokenValid) {

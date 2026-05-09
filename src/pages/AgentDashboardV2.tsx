@@ -9,6 +9,7 @@ import {
   BuyersTable,
   MatchesOpportunities,
 } from "@/components/agent-dashboard-v2";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 /**
  * Agent Dashboard V2 — parallel redesign.
@@ -20,12 +21,8 @@ const AgentDashboardV2 = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 bg-zinc-50 p-8">
-        <div className="space-y-4 animate-pulse max-w-[1200px]">
-          <div className="h-16 rounded-xl bg-zinc-200" />
-          <div className="h-8 rounded-lg bg-zinc-200 w-2/3" />
-          <div className="h-64 rounded-xl bg-zinc-200" />
-        </div>
+      <div className="flex flex-1 items-center justify-center bg-white p-8">
+        <AacMonogramLoader variant="section" className="min-h-[50vh]" message="Loading dashboard..." />
       </div>
     );
   }

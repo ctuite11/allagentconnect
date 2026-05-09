@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Heart, Bell, User, MapPin, Home, Search, Calendar, LogOut } from "lucide-react";
+import { Heart, Bell, User, MapPin, Home, Search, Calendar, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import NotificationSettings from "@/components/NotificationSettings";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 const ConsumerDashboard = () => {
   const navigate = useNavigate();
@@ -81,11 +82,7 @@ const ConsumerDashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Loading your dashboard..." />;
   }
 
   return (

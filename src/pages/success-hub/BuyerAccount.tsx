@@ -10,6 +10,7 @@ import { ClientDashboardView } from "@/components/buyer/ClientDashboardView";
 import { buyerPageShell } from "@/lib/buyerUi";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { toast } from "sonner";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 /** Same US display helper as `ClientDashboard` — keeps hero agent phone formatting aligned. */
 function formatUsPhoneForDisplay(raw: string | null | undefined): { display: string; telHref: string } | null {
@@ -84,9 +85,8 @@ export default function BuyerAccount() {
 
   if (!user?.id || mirror.loading) {
     return (
-      <div className={`flex flex-col items-center justify-center gap-3 ${buyerPageShell}`}>
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-        <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+      <div className={`flex flex-col items-center justify-center ${buyerPageShell}`}>
+        <AacMonogramLoader variant="section" className="min-h-[45vh]" message="Loading dashboard..." />
       </div>
     );
   }

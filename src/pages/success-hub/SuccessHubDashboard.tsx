@@ -1,5 +1,5 @@
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Button } from "@/components/ui/button";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
 import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
@@ -97,19 +97,8 @@ function SuccessHubDashboardBody() {
 
   if (loading) {
     return (
-      <AgentAacPage className="space-y-6 pb-10">
-        <Skeleton className="h-28 w-full rounded-2xl border border-zinc-100 bg-white" />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-2xl border border-zinc-100 bg-white" />
-          ))}
-        </div>
-        <Skeleton className="min-h-[160px] w-full rounded-2xl border border-zinc-100 bg-white" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[60%_40%] lg:gap-6">
-          <Skeleton className="h-64 min-h-0 rounded-2xl border border-zinc-100 bg-white" />
-          <Skeleton className="h-64 min-h-0 rounded-2xl border border-zinc-100 bg-white" />
-        </div>
-        <Skeleton className="min-h-[140px] w-full rounded-2xl border border-zinc-100 bg-white" />
+      <AgentAacPage className="flex min-h-[50vh] items-center justify-center pb-10">
+        <AacMonogramLoader variant="section" className="min-h-[45vh]" message="Loading workspace..." />
       </AgentAacPage>
     );
   }

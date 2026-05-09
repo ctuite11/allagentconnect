@@ -5,7 +5,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { MapPin, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { US_STATES } from "@/data/usStatesCountiesData";
@@ -170,7 +171,7 @@ const GeographicPreferencesManager = ({
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
         </CardContent>
       </Card>
     );

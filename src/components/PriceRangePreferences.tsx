@@ -6,7 +6,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
+import { DollarSign, ChevronDown, ChevronUp } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { z } from "zod";
 
 export interface PriceRangeData {
@@ -285,7 +286,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
         </CardContent>
       </Card>
     );

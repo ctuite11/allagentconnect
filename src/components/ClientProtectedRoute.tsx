@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -31,11 +32,7 @@ export function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
 
   // Show loading state while auth or role data is being fetched
   if (loading || roleLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" />;
   }
 
   // No session = not logged in, redirect to consumer auth

@@ -36,6 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 const BED_PRESETS: Array<{ label: string; bedrooms: string }> = [
   { label: "Any", bedrooms: "" },
@@ -1220,8 +1221,12 @@ export default function BuyerMapSearch() {
         <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
           <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
             {loading ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0E56F5]" />
+              <div className="flex h-full items-center justify-center bg-white">
+                <AacMonogramLoader
+                  variant="inline"
+                  className="gap-2"
+                  message="Loading listings..."
+                />
               </div>
             ) : !shouldUseLiveMap ? (
               <div className="h-full flex items-center justify-center px-8 bg-gradient-to-b from-zinc-50 to-white">

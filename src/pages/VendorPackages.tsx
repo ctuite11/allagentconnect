@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check } from "lucide-react";
+import { Check } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { toast } from "sonner";
 
 const VendorPackages = () => {
@@ -91,11 +92,7 @@ const VendorPackages = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Loading packages…" className="pt-20" />;
   }
 
   return (

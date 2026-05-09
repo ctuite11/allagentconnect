@@ -28,6 +28,7 @@ import {
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import PropertyMap from "@/components/PropertyMap";
 import { buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 const rentMonthlyPriceLabels = {
   minOptions: [{ value: "", label: "No min" }, ...RENT_PRICE_STEP_VALUES.map((v) => ({ value: String(v), label: `$${v.toLocaleString()}` }))],
@@ -717,8 +718,8 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
           <div className="max-w-[1800px] mx-auto w-full">
             {loading ? (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0E56F5]" />
+              <div className="flex min-h-[400px] items-center justify-center">
+                <AacMonogramLoader variant="section" className="min-h-[320px]" message="Loading results..." />
               </div>
             ) : listings.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[400px] text-center">

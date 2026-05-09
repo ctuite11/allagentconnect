@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
-import { Loader2 } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { useNavigate } from "react-router-dom";
 
 interface Agent {
@@ -123,7 +123,7 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listin
     return (
       <Card>
         <CardContent className="flex items-center justify-center p-8">
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
         </CardContent>
       </Card>
     );

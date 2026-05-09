@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type ComponentProps } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate, useMatch } from "react-router-dom";
 import Footer from "@/components/Footer";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -524,8 +525,8 @@ const ClientHotsheetPage = () => {
   if (loading) {
     return (
       <div className={`flex min-h-screen flex-col bg-white ${contentTopClass}`}>
-        <main className="flex-1 flex items-center justify-center px-4">
-          <p className="text-muted-foreground text-lg">Loading your saved search...</p>
+        <main className="flex flex-1 items-center justify-center px-4">
+          <AacMonogramLoader variant="section" className="min-h-[50vh]" message="Loading your saved search..." />
         </main>
         {!hidePublicFooter && <Footer />}
       </div>

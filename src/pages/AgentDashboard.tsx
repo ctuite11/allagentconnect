@@ -18,6 +18,7 @@ import { DASHBOARD_FILTER_STATUSES, LISTING_STATUS_LABELS } from "@/constants/st
 import { humanizeSnakeCase } from "@/lib/format";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { Seo } from "@/components/Seo";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 interface Listing {
   id: string;
   address: string;
@@ -421,9 +422,7 @@ const AgentDashboard = () => {
     }, 100);
   };
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>;
+    return <AacMonogramLoader variant="fullscreen" />;
   }
   const listingTypes = [{
     title: "For Sale",

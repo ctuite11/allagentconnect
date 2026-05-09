@@ -223,11 +223,7 @@ const PendingVerification = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
-      </div>
-    );
+    return <AacMonogramLoader variant="fullscreen" message="Loading…" />;
   }
 
   // Fatal error screen

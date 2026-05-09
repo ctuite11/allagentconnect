@@ -589,7 +589,7 @@ const PropertyDetail = () => {
   };
 
   if (loading) {
-    return <LoadingScreen neutralSpinner />;
+    return <LoadingScreen />;
   }
 
   if (!listing) {

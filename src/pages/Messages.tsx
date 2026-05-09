@@ -4,7 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, ArrowLeft, User, Plus, Building2 } from "lucide-react";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { PageShell } from "@/components/layout/PageShell";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -92,19 +92,7 @@ export default function Messages() {
         </div>
 
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={cn(panelCardClass, "p-4")}>
-                <div className="flex items-center gap-3">
-                  <Skeleton className="w-10 h-10 rounded-full" />
-                  <div className="flex-1">
-                    <Skeleton className="h-4 w-32 mb-2" />
-                    <Skeleton className="h-3 w-48" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <AacMonogramLoader variant="section" className="min-h-[240px]" message="Loading messages..." />
         ) : threads.length === 0 ? (
           <div className={cn(panelCardClass, "p-8 text-center")}>
             <MessageSquare className="w-12 h-12 text-zinc-300 mx-auto mb-4" />

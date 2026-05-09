@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface County {
@@ -137,7 +137,7 @@ const CountyPreferencesManager = ({ agentId }: CountyPreferencesManagerProps) =>
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
         </CardContent>
       </Card>
     );

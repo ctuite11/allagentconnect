@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UserPlus, LogIn } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 export default function AcceptBuyerWorkspaceInvite() {
   const [searchParams] = useSearchParams();
@@ -69,13 +70,12 @@ export default function AcceptBuyerWorkspaceInvite() {
 
   if (status === "loading" || status === "accepting") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">
-            {status === "accepting" ? "Joining workspace..." : "Loading..."}
-          </p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <AacMonogramLoader
+          variant="section"
+          className="min-h-[40vh]"
+          message={status === "accepting" ? "Joining workspace..." : "Loading..."}
+        />
       </div>
     );
   }

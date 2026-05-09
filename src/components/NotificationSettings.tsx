@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Bell, Check } from "lucide-react";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { toast } from "sonner";
 
 const NotificationSettings = () => {
@@ -82,8 +83,9 @@ const NotificationSettings = () => {
   if (loading) {
     return (
       <Card className="aac-card border border-neutral-200">
-        <CardContent className="py-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+        <CardContent className="py-10">
+          <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-1 py-0" />
+          <p className="mt-3 text-center text-sm text-muted-foreground">Loading notification settings…</p>
         </CardContent>
       </Card>
     );

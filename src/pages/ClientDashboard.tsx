@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Heart, Search, Sparkles, MessageSquare, Loader2 } from "lucide-react";
+import { Heart, Search, Sparkles, MessageSquare } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buyerPageShell, buyerPrimaryCta as primaryCtaClass } from "@/lib/buyerUi";
 import { ClientDashboardView } from "@/components/buyer/ClientDashboardView";
+import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
@@ -544,11 +545,14 @@ export default function ClientDashboard() {
 
   if (loading) {
     return (
-      <div className={`flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 ${buyerPageShell}`}>
-        <Loader2 className="h-7 w-7 animate-spin text-neutral-400" aria-hidden />
-        <p className="max-w-xs text-center text-[13px] leading-relaxed text-neutral-500">
-          {relationshipHydrating ? "Connecting your inviting agent…" : "Loading your dashboard…"}
-        </p>
+      <div className={`flex min-h-[50vh] flex-col items-center justify-center px-4 ${buyerPageShell}`}>
+        <AacMonogramLoader
+          variant="section"
+          className="min-h-[40vh]"
+          message={
+            relationshipHydrating ? "Connecting your inviting agent…" : "Loading your dashboard…"
+          }
+        />
       </div>
     );
   }
