@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { agentSectionTitle } from "@/lib/agentUi";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,12 +30,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw, Trash2 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
 import { format, differenceInDays } from "date-fns";
-import listingIcon from "@/assets/listing-creation-icon.png";
 import { US_STATES, getCountiesForState } from "@/data/usStatesCountiesData";
 // ZIP code data imports removed — AddListing uses simple text input now
 import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities";
@@ -71,6 +71,10 @@ const STATE_ABBREVIATIONS: Record<string, string> = {
 };
 
 const ATTOM_ENABLED = false;
+
+/** Neutral focus rings on this surface (avoid primary/blue chrome on inputs & select chevrons). */
+const addListingFormChrome =
+  "[&_input]:focus-visible:border-zinc-900 [&_input]:focus-visible:ring-1 [&_input]:focus-visible:ring-zinc-300/80 [&_input]:focus-visible:shadow-none [&_textarea]:focus-visible:border-zinc-900 [&_textarea]:focus-visible:ring-1 [&_textarea]:focus-visible:ring-zinc-300/80 [&_textarea]:shadow-none [&_button[role=combobox]_svg]:text-zinc-500";
 
 interface FileWithPreview {
   file: File;
@@ -2946,11 +2950,7 @@ const AddListing = () => {
     return (
       <>
         <Seo title="Add Listing" />
-        <div
-          className="min-h-0 bg-[#FFFFFF] pb-12 pt-6"
-          aria-busy="true"
-          role="status"
-        >
+        <div className="min-h-0 bg-white pb-10 pt-5" aria-busy="true" role="status">
           <span className="sr-only">
             {isLoadingListing ? "Loading listing data…" : "Preparing listing form…"}
           </span>
@@ -2980,108 +2980,90 @@ const AddListing = () => {
   return (
     <>
       <Seo title="Add Listing" />
-      <div className="min-h-0 bg-[#FFFFFF] pb-12 pt-6">
-      <div className="container mx-auto px-4 py-8">
+      <div className="min-h-0 bg-white pb-10 pt-5">
+      <div className="container mx-auto px-4 py-6">
         <div className="max-w-5xl mx-auto">
-          {/* Header Section */}
-          <div className="mb-4">
-            {/* Back button - inline chevron style */}
-            <div className="flex items-center gap-2 mb-4">
-              <button
-                onClick={() => navigate(location.state?.from || "/agent/listings")}
-                className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-sm text-muted-foreground mb-2">Hello. Bonjour. Hola. 你好. Ciao</p>
-            <div className="flex items-center gap-4 mb-4">
-              <PageTitle>
-                <span className="text-primary">Gotcha,</span> Let's Help You Add a Listing
-              </PageTitle>
-              <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
-            </div>
-            <p className="text-muted-foreground">
-              Hovering over your Dashboard within the Menu will give you easy access to your Account. 
-              If you have to walk away from your Listing use Save as Draft.
-            </p>
-            {/* Signed in indicator - shows which agent is logged in */}
-            {user?.email && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Signed in as: <span className="font-medium">{user.email}</span>
-              </p>
-            )}
-          </div>
+          <AgentPageHeader
+            title={listingId ? "Edit listing" : "Add listing"}
+            subtitle="Hello — bonjour — hola. Set pricing and location, add media and disclosures, then publish. Use Save Draft if you step away; open Dashboard from the Menu for your account."
+            backTo={(location.state as { from?: string } | undefined)?.from || ROUTES.MY_LISTINGS}
+            actions={
+              user?.email ? (
+                <span className="max-w-[14rem] truncate text-xs text-neutral-500 sm:max-w-xs" title={user.email}>
+                  Signed in as <span className="font-medium text-zinc-700">{user.email}</span>
+                </span>
+              ) : null
+            }
+          />
 
           {/* DCMLS Publish Decision - Prominent Control Right After Header */}
-          <div className="mb-6 border-b pb-6">
-            <div className="bg-white dark:bg-slate-950 border rounded-lg p-6">
+          <div className="mb-5 border-b border-zinc-200/80 pb-5">
+            <div className="rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <div className="flex items-start justify-between gap-6">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-2">Publish to DCMLS?</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <div className="min-w-0 flex-1">
+                  <h3 className={`${agentSectionTitle} mb-1`}>Publish to DCMLS?</h3>
+                  <p className="mb-4 text-sm text-neutral-500">
                     This is a required decision. Choose whether to publish this listing to the DCMLS system for wider distribution.
                   </p>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md hover:bg-muted transition-colors">
+                  <div className="flex flex-wrap gap-x-6 gap-y-2">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-zinc-50">
                       <input
                         type="radio"
                         name="show_on_dcmls"
                         value="yes"
                         checked={formData.show_on_dcmls === true}
                         onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: true }))}
-                        className="w-4 h-4"
+                        className="h-4 w-4 accent-zinc-900"
                       />
-                      <span className="font-medium text-foreground">Yes, publish to DCMLS</span>
+                      <span className="font-medium text-zinc-900">Yes, publish to DCMLS</span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md hover:bg-muted transition-colors">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-zinc-50">
                       <input
                         type="radio"
                         name="show_on_dcmls"
                         value="no"
                         checked={formData.show_on_dcmls === false}
                         onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: false }))}
-                        className="w-4 h-4"
+                        className="h-4 w-4 accent-zinc-900"
                       />
-                      <span className="font-medium text-foreground">No, keep as internal only</span>
+                      <span className="font-medium text-zinc-900">No, keep as internal only</span>
                     </label>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    ℹ️ Published listings are visible to external DCMLS consumers. Internal-only listings are for AAC agents only.
+                  <p className="mt-3 text-xs text-neutral-500">
+                    Published listings are visible to external DCMLS consumers. Internal-only listings are for AAC agents only.
                   </p>
                 </div>
-                <div className="flex items-center justify-center w-20 h-20 rounded-lg bg-muted/50">
-                  <Lock className="w-10 h-10 text-muted-foreground/50" />
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-zinc-200/90 bg-white shadow-[inset_0_1px_0_rgba(0,0,0,0.03)]">
+                  <Lock className="h-7 w-7 text-zinc-300" aria-hidden />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Action Buttons - Sticky Top Bar */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-8 -mx-4 px-4 py-4">
-            <div className="flex gap-4 items-center">
-              <div className="flex-1 flex items-center gap-2">
+          <div className="-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm supports-[backdrop-filter]:bg-white/90">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 {autoSaving && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Auto-saving...</span>
+                  <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                    <span>Auto-saving…</span>
                   </div>
                 )}
                 {!autoSaving && lastAutoSave && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
                     <span>Last saved {lastAutoSave.toLocaleTimeString()}</span>
                   </div>
                 )}
                 {!autoSaving && !lastAutoSave && hasUnsavedChanges && (
-                  <div className="flex items-center gap-2 text-sm text-amber-600">
-                    <AlertCircle className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 text-xs text-amber-800">
+                    <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
                     <span>Unsaved changes</span>
                   </div>
                 )}
               </div>
-              
+
               {/* Edit mode: Preview + Save Changes only */}
               {listingId ? (
                 <>
@@ -3090,13 +3072,13 @@ const AddListing = () => {
                       <AlertDialogTrigger asChild>
                         <Button
                           variant="destructive"
-                          size="lg"
+                          size="sm"
                           type="button"
                           disabled={deletingDraft || submitting || autoSaving}
-                          className="gap-2"
+                          className="gap-1.5"
                         >
-                          <Trash2 className="w-5 h-5" />
-                          {deletingDraft ? "Deleting..." : "Delete Draft"}
+                          <Trash2 className="h-4 w-4 shrink-0" />
+                          {deletingDraft ? "Deleting…" : "Delete Draft"}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -3119,37 +3101,37 @@ const AddListing = () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    onClick={() => window.open(`/listing/${listingId}`, '_blank')} 
-                    type="button" 
-                    className="gap-2"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/listing/${listingId}`, "_blank")}
+                    type="button"
+                    className="gap-1.5 border-zinc-200"
                   >
-                    <Eye className="w-5 h-5" />
+                    <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
-                  <Button 
-                    variant="default" 
-                    size="lg" 
-                    onClick={() => handleSaveChanges()} 
-                    type="button" 
-                    disabled={submitting || autoSaving} 
-                    className="gap-2"
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleSaveChanges()}
+                    type="button"
+                    disabled={submitting || autoSaving}
+                    className="gap-1.5"
                   >
                     {autoSaving ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Saving...
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                        Saving…
                       </>
                     ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                       <>
-                        <Upload className="w-5 h-5" />
+                        <Upload className="h-4 w-4 shrink-0" />
                         Publish
                       </>
                     ) : (
                       <>
-                        <Save className="w-5 h-5" />
+                        <Save className="h-4 w-4 shrink-0" />
                         {backendStatusRef.current === "draft" ? "Save Draft" : "Save Changes"}
                       </>
                     )}
@@ -3158,17 +3140,33 @@ const AddListing = () => {
               ) : (
                 /* Create mode: Save Draft, Preview, Publish */
                 <>
-                  <Button variant="outline" size="lg" onClick={() => handleSaveDraft(false)} type="button" disabled={submitting || autoSaving} className="gap-2">
-                    <Save className="w-5 h-5" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSaveDraft(false)}
+                    type="button"
+                    disabled={submitting || autoSaving}
+                    className="gap-1.5 border-zinc-200"
+                  >
+                    <Save className="h-4 w-4 shrink-0" />
                     Save Draft
                   </Button>
-                  <Button variant="outline" size="lg" onClick={handlePreview} type="button" className="gap-2">
-                    <Eye className="w-5 h-5" />
+                  <Button variant="outline" size="sm" onClick={handlePreview} type="button" className="gap-1.5 border-zinc-200">
+                    <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
-                  <Button variant="default" size="lg" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-2">
-                    <Upload className="w-5 h-5" />
-                    {submitting ? "Publishing..." : "Publish"}
+                  <Button variant="default" size="sm" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-1.5">
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                        Publishing…
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 shrink-0" />
+                        Publish
+                      </>
+                    )}
                   </Button>
                 </>
               )}
@@ -3177,12 +3175,16 @@ const AddListing = () => {
 
           {/* Validation Summary */}
           {validationErrors.length > 0 && (
-            <Alert variant="destructive" ref={validationSummaryRef} className="mb-4">
+            <Alert
+              variant="destructive"
+              ref={validationSummaryRef}
+              className="mb-4 border-red-200 bg-white text-red-900 shadow-none [&>svg]:text-red-600"
+            >
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Please complete the following required fields:</AlertTitle>
               <AlertDescription>
-                <ul className="list-disc pl-4 mt-2 space-y-1">
-                  {validationErrors.map(err => (
+                <ul className="mt-2 list-disc space-y-1 pl-4">
+                  {validationErrors.map((err) => (
                     <li key={err.field}>{err.label} is required</li>
                   ))}
                 </ul>
@@ -3191,13 +3193,13 @@ const AddListing = () => {
           )}
 
           {/* Form Card */}
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-2xl font-bold mb-6">Listing Details</h2>
+          <Card className="border-zinc-200/95">
+            <CardContent className={cn("pt-6", addListingFormChrome)}>
+              <h2 className={cn(agentSectionTitle, "mb-5")}>Listing details</h2>
               
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
                 {/* Status & Type Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-zinc-100 pb-6">
                   <div className="space-y-2">
                     <Label htmlFor="status">Status *</Label>
                     <Select 
@@ -3272,7 +3274,7 @@ const AddListing = () => {
                 </div>
 
                 {/* Date Section - shown for all statuses */}
-                <div className={`grid grid-cols-1 ${formData.status === "coming_soon" ? "md:grid-cols-3" : "md:grid-cols-2"} gap-4 border-b pb-6`}>
+                <div className={`grid grid-cols-1 ${formData.status === "coming_soon" ? "md:grid-cols-3" : "md:grid-cols-2"} gap-4 border-b border-zinc-100 pb-6`}>
                   <div className="space-y-2">
                     <Label htmlFor="list_date">AAC List Date</Label>
                     <Input
@@ -3286,7 +3288,7 @@ const AddListing = () => {
                     </p>
                   </div>
                   {formData.status === "coming_soon" && (
-                    <div className={cn("space-y-2", hasFieldError("go_live_date") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                    <div className={cn("space-y-2", hasFieldError("go_live_date") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                       <Label htmlFor="go_live_date">On MLS Date *</Label>
                       <Input
                         id="go_live_date"
@@ -3319,8 +3321,8 @@ const AddListing = () => {
 
                 {/* Address Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-lg font-semibold">Property Location</Label>
+                  <div className="flex items-center justify-between gap-3">
+                    <Label className={agentSectionTitle}>Property location</Label>
                     {/* Manual ATTOM lookup button - always available */}
                     <Button
                       type="button"
@@ -3347,25 +3349,25 @@ const AddListing = () => {
                   {/* ATTOM Verification Status - context-aware */}
                   {/* Show green success ONLY if: verified, not stale, AND not a condo missing unit */}
                   {publicRecordStatus === 'success' && !isAttomVerificationStale && !isCondoMissingUnit && (
-                    <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded text-green-700 text-sm dark:bg-green-950/30 dark:border-green-800 dark:text-green-300">
-                      <CheckCircle2 className="h-4 w-4" />
+                    <div className="flex items-center gap-2 rounded-lg border border-emerald-200/90 bg-white p-2.5 text-sm text-emerald-900 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)]">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
                       <span>Public record data loaded successfully.</span>
                     </div>
                   )}
                   
                   {/* Condo missing unit number warning - prompt user to enter unit */}
                   {isCondoMissingUnit && (
-                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
-                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex items-start gap-2 rounded-lg border border-amber-200/90 bg-white p-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)]">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
                       <span>Unit number required to retrieve condo records. Please enter the unit number below.</span>
                     </div>
                   )}
                   
                   {/* Stale verification warning - Condo switch specific */}
                   {isAttomVerificationStale && isSwitchedToCondo && !isCondoMissingUnit && (
-                    <div className="flex items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex flex-col gap-3 rounded-lg border border-amber-200/90 bg-white p-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)] sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
                         <span>Condo selected — please re-verify address to load unit-level data.</span>
                       </div>
                       <Button
@@ -3374,7 +3376,7 @@ const AddListing = () => {
                         size="sm"
                         onClick={handleManualAttomLookup}
                         disabled={!ATTOM_ENABLED || autoFillLoading}
-                        className="flex-shrink-0 border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                        className="shrink-0 border-zinc-200 text-amber-900 hover:bg-zinc-50"
                       >
                         <RefreshCw className="h-3 w-3 mr-1" />
                         Re-verify
@@ -3384,9 +3386,9 @@ const AddListing = () => {
                   
                   {/* Stale verification warning - General field change */}
                   {isAttomVerificationStale && !isSwitchedToCondo && !isCondoMissingUnit && (
-                    <div className="flex items-center justify-between gap-2 p-3 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex flex-col gap-3 rounded-lg border border-amber-200/90 bg-white p-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)] sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
                         <span>Address fields changed — verification data may be outdated.</span>
                       </div>
                       <Button
@@ -3395,7 +3397,7 @@ const AddListing = () => {
                         size="sm"
                         onClick={handleManualAttomLookup}
                         disabled={!ATTOM_ENABLED || autoFillLoading}
-                        className="flex-shrink-0 border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                        className="shrink-0 border-zinc-200 text-amber-900 hover:bg-zinc-50"
                       >
                         <RefreshCw className="h-3 w-3 mr-1" />
                         Re-verify
@@ -3405,7 +3407,7 @@ const AddListing = () => {
                   
                   {/* Street Address + Unit # */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3", hasFieldError("address") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                    <div className={cn("space-y-2", (formData.property_type === 'condo' || formData.property_type === 'apartment') ? "sm:col-span-2" : "sm:col-span-3", hasFieldError("address") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                       <Label htmlFor="address">Street Address *</Label>
                       <AddressAutocomplete
                         value={formData.address}
@@ -3500,7 +3502,7 @@ const AddListing = () => {
 
                   {/* Row 2: City + State */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className={cn("space-y-2", hasFieldError("city") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                    <div className={cn("space-y-2", hasFieldError("city") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                       <Label htmlFor="city">City/Town *</Label>
                       <Input
                         id="city"
@@ -3514,7 +3516,7 @@ const AddListing = () => {
                         required
                       />
                     </div>
-                    <div className={cn("space-y-2", hasFieldError("state") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                    <div className={cn("space-y-2", hasFieldError("state") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                       <Label htmlFor="state">State *</Label>
                       <Select
                         value={selectedState}
@@ -3549,7 +3551,7 @@ const AddListing = () => {
                     
                     return (
                       <div className={cn("grid grid-cols-1 gap-4", showNeighborhoods ? "md:grid-cols-3" : "md:grid-cols-2")}>
-                        <div className={cn("space-y-2", hasFieldError("zip_code") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                        <div className={cn("space-y-2", hasFieldError("zip_code") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                           <Label htmlFor="zip_code">ZIP Code *</Label>
                           <Input
                             id="zip_code"
@@ -3563,7 +3565,7 @@ const AddListing = () => {
                             required
                           />
                         </div>
-                        <div className={cn("space-y-2", hasFieldError("county") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                        <div className={cn("space-y-2", hasFieldError("county") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                           <Label>County {selectedState === "MA" && "*"}</Label>
                           {!selectedState || availableCounties.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
@@ -3634,11 +3636,13 @@ const AddListing = () => {
                 </div>
 
                 {/* Price Section */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-lg font-semibold">{formData.listing_type === "for_rent" ? "Pricing & Deposits" : "Pricing"}</Label>
+                <div className="space-y-4 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>
+                    {formData.listing_type === "for_rent" ? "Pricing & deposits" : "Pricing"}
+                  </Label>
                   {formData.listing_type === "for_sale" ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className={cn("space-y-2", hasFieldError("price") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                      <div className={cn("space-y-2", hasFieldError("price") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                         <Label htmlFor="price">Listing Price <span className="text-xs font-normal text-muted-foreground">(or enter Price Range)</span></Label>
                         <FormattedInput
                           id="price"
@@ -3698,7 +3702,7 @@ const AddListing = () => {
                     <div className="space-y-4">
                       {/* Monthly Rent + Rental Fee */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className={cn("space-y-2", hasFieldError("monthly_rent") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-2")}>
+                        <div className={cn("space-y-2", hasFieldError("monthly_rent") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
                           <Label htmlFor="monthly_rent">Monthly Rent *</Label>
                           <FormattedInput
                             id="monthly_rent"
@@ -3772,7 +3776,7 @@ const AddListing = () => {
                 </div>
 
                 {/* Property Details */}
-                <div className="space-y-4 border-t pt-6">
+                <div className="space-y-4 border-t border-zinc-100 pt-6">
                   <Label className="text-lg font-semibold">Property Details</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
@@ -3828,8 +3832,8 @@ const AddListing = () => {
                 </div>
 
                 {/* Tax Information Section */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Tax Information</Label>
+                <div className="space-y-4 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>Tax Information</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="annual_property_tax">Taxes</Label>
@@ -3886,8 +3890,8 @@ const AddListing = () => {
 
                 {/* Multi-Family FOR SALE Fields */}
                 {formData.listing_type === "for_sale" && formData.property_type === "multi_family" && (
-                  <div className="space-y-6 border-t pt-6">
-                    <Label className="text-xl font-semibold">Multi-Family Building Details</Label>
+                  <div className="space-y-6 border-t border-zinc-100 pt-6">
+                    <Label className={agentSectionTitle}>Multi-Family Building Details</Label>
                     
                     {/* Number of Units */}
                     <div className="space-y-2 max-w-xs">
@@ -3905,7 +3909,7 @@ const AddListing = () => {
 
                     {/* Building Totals */}
                     <div className="space-y-4">
-                      <Label className="text-lg font-medium">Building Totals</Label>
+                      <Label className={agentSectionTitle}>Building Totals</Label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="total_rooms">Total Rooms</Label>
@@ -3972,7 +3976,7 @@ const AddListing = () => {
 
                     {/* Laundry */}
                     <div className="space-y-4">
-                      <Label className="text-lg font-medium">Laundry</Label>
+                      <Label className={agentSectionTitle}>Laundry</Label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {[
                           { key: 'coin_op', label: 'Coin-Op Laundry' },
@@ -4005,7 +4009,7 @@ const AddListing = () => {
                     {/* Unit Mix */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label className="text-lg font-medium">Unit Mix</Label>
+                        <Label className={agentSectionTitle}>Unit Mix</Label>
                         <Button
                           type="button"
                           variant="outline"
@@ -4028,7 +4032,7 @@ const AddListing = () => {
 
                       <div className="space-y-3">
                         {units.map((unit, index) => (
-                          <Card key={index} className="p-4">
+                          <Card key={index} className="rounded-xl border-zinc-200/95 p-4">
                             <div className="grid grid-cols-5 gap-3 items-end">
                               <div className="space-y-2">
                                 <Label htmlFor={`unit_${index}_number`}>Unit #</Label>
@@ -4119,7 +4123,7 @@ const AddListing = () => {
 
                 {/* Rental Features & Details Section - Only for rentals */}
                 {formData.listing_type === "for_rent" && (
-                  <div className="space-y-4 border-t pt-6">
+                  <div className="space-y-4 border-t border-zinc-100 pt-6">
                     <Label className="text-lg font-semibold">Rental Features & Details</Label>
 
                     {/* Private Outdoor Space (multi-select) */}
@@ -4237,7 +4241,7 @@ const AddListing = () => {
 
                     {/* Rental Features (utility inclusions only) */}
                     <div className="space-y-2">
-                      <Label className="text-base font-medium">Rental Features</Label>
+                      <Label className={agentSectionTitle}>Rental Features</Label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Heat Included", "Hot Water Included", "Electricity Included", "Internet Included", "No Smoking", "Short-Term Considered"].map((amenity) => (
                           <div key={amenity} className="flex items-center space-x-2">
@@ -4263,12 +4267,12 @@ const AddListing = () => {
                 )}
 
                 {/* Property Features - Unified Section */}
-                <div className="space-y-6 border-t pt-6">
-                  <Label className="text-xl font-semibold">Property Features</Label>
+                <div className="space-y-6 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>Property Features</Label>
                   
                   {/* Basic Features */}
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Basic Features</Label>
+                    <Label className={agentSectionTitle}>Basic Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {[
                         'Hardwood floors', 'Granite countertops', 'Stainless appliances',
@@ -4298,7 +4302,7 @@ const AddListing = () => {
 
                   {/* Interior Features */}
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Interior Features</Label>
+                    <Label className={agentSectionTitle}>Interior Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {["Air Conditioning", "Window AC", "Ceiling Fans", "Wood Stove", "High Ceilings", "Walk-In Closet", "Pantry", "Sunroom", "Bonus Room / Office", "Wet Bar", "Sauna", "Central Vacuum", "Skylights", "Mudroom", "In-Home Laundry"].map((feature) => (
                         <div key={feature} className="flex items-center space-x-2">
@@ -4323,7 +4327,7 @@ const AddListing = () => {
 
                   {/* Exterior Features */}
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Exterior Features</Label>
+                    <Label className={agentSectionTitle}>Exterior Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {["Deck", "Patio", "Porch", "Balcony", "Fenced Yard", "Private Yard", "Garden Area", "Sprinkler System", "Outdoor Shower", "Pool", "Hot Tub", "Shed", "Gazebo", "Fire Pit", "Outdoor Kitchen", "Greenhouse", "Boat Dock (or Dock Rights)"].map((feature) => (
                         <div key={feature} className="flex items-center space-x-2">
@@ -4349,7 +4353,7 @@ const AddListing = () => {
                   {/* Community Features - Only for condo and multi_family */}
                   {(formData.property_type === "condo" || formData.property_type === "multi_family") && (
                     <div className="space-y-3">
-                      <Label className="text-base font-medium">Community Features</Label>
+                      <Label className={agentSectionTitle}>Community Features</Label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Elevator", "Storage", "Roof Deck", "Fitness Center", "Clubhouse / Community Room", "Bike Storage", "Security System", "On-Site Management", "Concierge", "Dog Park", "Trash Removal", "Snow Removal", "Professional Landscaping", "EV Charging", "Package Room", "Common Laundry"].map((feature) => (
                           <div key={feature} className="flex items-center space-x-2">
@@ -4375,7 +4379,7 @@ const AddListing = () => {
 
                   {/* Location Features */}
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Location Features</Label>
+                    <Label className={agentSectionTitle}>Location Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {["Public Transportation", "Walk/Jog Trails", "Public Park", "Playground", "Water View", "Waterfront", "Beach Access", "Marina", "Golf Course", "University Nearby", "Public School Nearby", "Private School Nearby", "Shopping Nearby", "Highway Access"].map((feature) => (
                         <div key={feature} className="flex items-center space-x-2">
@@ -4412,8 +4416,8 @@ const AddListing = () => {
 
                   {/* Multi-Family Features - Only show for multi_family */}
                   {formData.property_type === "multi_family" && (
-                    <div className="space-y-3 border-t pt-6">
-                      <Label className="text-base font-medium">Multi-Family Features</Label>
+                    <div className="space-y-3 border-t border-zinc-100 pt-6">
+                      <Label className={agentSectionTitle}>Multi-Family Features</Label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {["Coin-Op Laundry", "Separate Utilities", "Owner's Unit", "Long-Term Tenant Opportunity", "Strong Rental History", "Lockable Storage Units", "Shared Yard", "Shared Patio/Deck"].map((feature) => (
                           <div key={feature} className="flex items-center space-x-2">
@@ -4439,8 +4443,8 @@ const AddListing = () => {
                 </div>
 
                 {/* Parking Section */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Parking</Label>
+                <div className="space-y-4 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>Parking</Label>
                   
                   {/* # of Parking Spaces */}
                   <div className="space-y-2 max-w-xs">
@@ -4457,7 +4461,7 @@ const AddListing = () => {
 
                   {/* Parking Features */}
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Parking Features</Label>
+                    <Label className={agentSectionTitle}>Parking Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {["Assigned", "Deeded", "Off-Street", "On-Street", "Tandem", "Valet", "Carport", "Covered", "Uncovered", "Guest Parking"].map((feature) => (
                         <div key={feature} className="flex items-center space-x-2">
@@ -4493,7 +4497,7 @@ const AddListing = () => {
                   </div>
 
                   {/* # of Garage Spaces */}
-                  <div className="space-y-2 max-w-xs border-t pt-4">
+                  <div className="space-y-2 max-w-xs border-t border-zinc-100 pt-4">
                     <Label htmlFor="garage_spaces"># of Garage Spaces</Label>
                     <Input
                       id="garage_spaces"
@@ -4507,7 +4511,7 @@ const AddListing = () => {
 
                   {/* Garage Features */}
                   <div className="space-y-3">
-                    <Label className="text-base font-medium">Garage Features</Label>
+                    <Label className={agentSectionTitle}>Garage Features</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {["Attached", "Detached", "Heated", "Under", "Oversized", "Electric Door", "Storage Above", "EV Charger"].map((feature) => (
                         <div key={feature} className="flex items-center space-x-2">
@@ -4543,21 +4547,21 @@ const AddListing = () => {
                   </div>
 
                   {/* Total Parking (computed) */}
-                  <div className="space-y-2 max-w-xs border-t pt-4">
+                  <div className="space-y-2 max-w-xs border-t border-zinc-100 pt-4">
                     <Label htmlFor="total_parking">Total Parking</Label>
                     <Input
                       id="total_parking"
                       type="number"
                       readOnly
-                      className="bg-muted"
+                      className="border-zinc-200 bg-zinc-50 text-zinc-800"
                       value={(Number(formData.parking_spaces) || 0) + (Number(formData.garage_spaces) || 0) || ""}
                     />
                   </div>
                 </div>
 
                 {/* Disclosures - Simplified */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Disclosures</Label>
+                <div className="space-y-4 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>Disclosures</Label>
                   
                   {/* Lead Paint (multi-select) */}
                   <div className="space-y-2">
@@ -4606,9 +4610,9 @@ const AddListing = () => {
                 </div>
 
                 {/* Listing Agreement Type */}
-                <div className="space-y-2 border-t pt-6">
-                  <Label className="text-xl font-semibold">Listing Agreement</Label>
-                  <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "ring-2 ring-destructive/50 bg-destructive/5 rounded-md p-3")}>
+                <div className="space-y-2 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>Listing Agreement</Label>
+                  <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-3 shadow-none")}>
                     <Label>
                       Type of Listing Agreement <span className="text-destructive">*</span>
                     </Label>
@@ -4648,8 +4652,8 @@ const AddListing = () => {
 
                 {/* Buyer Agent Compensation - For Sale only */}
                 {formData.listing_type === "for_sale" && (
-                  <div className="space-y-4 border-t pt-6">
-                    <Label className="text-xl font-semibold">Buyer Agent Compensation</Label>
+                  <div className="space-y-4 border-t border-zinc-100 pt-6">
+                    <Label className={agentSectionTitle}>Buyer Agent Compensation</Label>
                     <p className="text-sm text-muted-foreground -mt-2">Offered from the seller</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
@@ -4710,8 +4714,8 @@ const AddListing = () => {
                 )}
 
                 {/* Showing Instructions */}
-                <div className="space-y-4 border-t pt-6">
-                  <Label className="text-xl font-semibold">Showing Instructions</Label>
+                <div className="space-y-4 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>Showing Instructions</Label>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="showing_instructions">Instructions</Label>
@@ -4754,7 +4758,7 @@ const AddListing = () => {
 
 
                 {/* Additional Notes */}
-                <div className="space-y-2 border-t pt-6">
+                <div className="space-y-2 border-t border-zinc-100 pt-6">
                   <Label htmlFor="additional_notes">Additional Notes</Label>
                   <Textarea
                     id="additional_notes"
@@ -4766,12 +4770,12 @@ const AddListing = () => {
                 </div>
 
                 {/* Media & Documents */}
-                <div className="space-y-6 border-t pt-6">
-                  <Label className="text-xl font-semibold">Media & Documents</Label>
+                <div className="space-y-6 border-t border-zinc-100 pt-6">
+                  <Label className={agentSectionTitle}>Media & Documents</Label>
                   
                   {/* Property Links */}
                   <div className="space-y-4">
-                    <Label className="text-lg font-medium">Property Links</Label>
+                    <Label className={agentSectionTitle}>Property Links</Label>
                     <div className="grid grid-cols-1 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="property_website_url">Property Website URL</Label>
@@ -4861,28 +4865,30 @@ const AddListing = () => {
                   {/* Property Photos - Auto-Navigate to Management Page */}
                   {/* Photos Section */}
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <Label className="text-lg font-medium">Property Photos</Label>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <Label className={agentSectionTitle}>Property Photos</Label>
+                        <p className="mt-1 text-sm text-muted-foreground">
                           Upload and manage photos on a dedicated page.
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => document.getElementById('photo-upload')?.click()}
+                          size="sm"
+                          className="border-zinc-200"
+                          onClick={() => document.getElementById("photo-upload")?.click()}
                           disabled={isUploadingPhotos}
                         >
                           {isUploadingPhotos ? (
                             <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Uploading...
+                              <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                              Uploading…
                             </>
                           ) : (
                             <>
-                              <Upload className="w-4 h-4 mr-2" />
+                              <Upload className="mr-2 h-4 w-4 shrink-0" aria-hidden />
                               Upload Photos
                             </>
                           )}
@@ -4890,6 +4896,8 @@ const AddListing = () => {
                         <Button
                           type="button"
                           variant="outline"
+                          size="sm"
+                          className="border-zinc-200"
                           onClick={handleNavigateToManagePhotos}
                           disabled={isUploadingPhotos}
                         >
@@ -4911,19 +4919,19 @@ const AddListing = () => {
                     {/* Display existing photos */}
                     {photos.length > 0 ? (
                       <div className="space-y-3">
-                        <p className="text-sm font-medium text-primary">
+                        <p className="text-sm font-medium text-zinc-900">
                           {photos.length} photo{photos.length !== 1 ? 's' : ''} uploaded
                         </p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {photos.slice(0, 4).map((photo, index) => (
-                            <div key={photo.id} className="relative aspect-video rounded-lg overflow-hidden border">
+                            <div key={photo.id} className="relative aspect-video overflow-hidden rounded-lg border border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                               <img 
                                 src={photo.preview || photo.url} 
                                 alt={`Photo ${index + 1}`}
                                 className="w-full h-full object-cover"
                               />
                               {index === 0 && (
-                                <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                                <span className="absolute left-1 top-1 rounded bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white shadow-sm">
                                   Main
                                 </span>
                               )}
@@ -4945,20 +4953,24 @@ const AddListing = () => {
 
                   {/* Floor Plans */}
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-lg font-medium">Floor Plans</Label>
-                      <div className="flex gap-2">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <Label className={agentSectionTitle}>Floor Plans</Label>
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => document.getElementById('floorplan-upload')?.click()}
+                          size="sm"
+                          className="border-zinc-200"
+                          onClick={() => document.getElementById("floorplan-upload")?.click()}
                         >
-                          <Upload className="w-4 h-4 mr-2" />
+                          <Upload className="mr-2 h-4 w-4 shrink-0" aria-hidden />
                           Upload Floor Plans
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
+                          size="sm"
+                          className="border-zinc-200"
                           onClick={handleNavigateToManageFloorPlans}
                         >
                           Manage Floor Plans
@@ -4976,12 +4988,12 @@ const AddListing = () => {
                     {floorPlans.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {floorPlans.map((plan) => (
-                          <div key={plan.id} className="relative group border rounded-lg overflow-hidden">
+                          <div key={plan.id} className="group relative overflow-hidden rounded-lg border border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                             {plan.preview ? (
                               <img src={plan.preview} alt="Floor plan" className="w-full h-40 object-cover" />
                             ) : (
-                              <div className="w-full h-40 bg-muted flex items-center justify-center">
-                                <FileText className="w-12 h-12 text-muted-foreground" />
+                              <div className="flex h-40 w-full items-center justify-center bg-zinc-50">
+                                <FileText className="h-10 w-10 text-zinc-400" aria-hidden />
                               </div>
                             )}
                             <button
@@ -4999,14 +5011,16 @@ const AddListing = () => {
 
                   {/* Documents */}
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-lg font-medium">Documents</Label>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <Label className={agentSectionTitle}>Documents</Label>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => document.getElementById('document-upload')?.click()}
+                        size="sm"
+                        className="border-zinc-200 sm:shrink-0"
+                        onClick={() => document.getElementById("document-upload")?.click()}
                       >
-                        <Upload className="w-4 h-4 mr-2" />
+                        <Upload className="mr-2 h-4 w-4 shrink-0" aria-hidden />
                         Upload Documents
                       </Button>
                     </div>
@@ -5024,7 +5038,7 @@ const AddListing = () => {
                           Select the document type for each uploaded file
                         </p>
                         {documents.map((doc) => (
-                          <div key={doc.id} className="space-y-2 p-3 border rounded-lg">
+                          <div key={doc.id} className="space-y-2 rounded-lg border border-zinc-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3 flex-1">
                                 <FileText className="w-5 h-5 text-muted-foreground" />
@@ -5104,7 +5118,7 @@ const AddListing = () => {
           <div className="flex-1 overflow-auto">
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full">
-                <thead className="bg-muted">
+                <thead className="border-b border-zinc-200 bg-zinc-50/90">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium">Address</th>
                     <th className="px-4 py-3 text-left text-sm font-medium">City</th>
@@ -5115,7 +5129,7 @@ const AddListing = () => {
                 </thead>
                 <tbody>
                   {attomResults.map((record, index) => (
-                    <tr key={record.attom_id || index} className="border-t hover:bg-muted/50">
+                    <tr key={record.attom_id || index} className="border-t border-zinc-100 transition-colors hover:bg-zinc-50/80">
                       <td className="px-4 py-3 text-sm">{record.address || '—'}</td>
                       <td className="px-4 py-3 text-sm">{record.city || '—'}</td>
                       <td className="px-4 py-3 text-sm">{record.owner || '—'}</td>
@@ -5152,7 +5166,7 @@ const AddListing = () => {
                 We found this property in public records:
               </p>
 
-              <div className="font-medium text-base bg-muted p-3 rounded-md">
+              <div className="rounded-lg border border-zinc-200/90 bg-white p-3 text-base font-medium text-zinc-900 shadow-[inset_0_1px_0_rgba(0,0,0,0.03)]">
                 <p>{`${attomPendingRecord.address || formData.address}${formData.unit_number ? ` #${formData.unit_number}` : ''}`}</p>
                 <p>{`${attomPendingRecord.city || formData.city}, ${attomPendingRecord.state || formData.state} ${attomPendingRecord.zip || formData.zip_code}`}</p>
               </div>
