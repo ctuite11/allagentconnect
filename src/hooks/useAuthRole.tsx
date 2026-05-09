@@ -1,4 +1,13 @@
-import { useEffect, useState, useRef } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveUserRole } from "@/lib/resolveUserRole";
 import type { ResolvedRole } from "@/lib/resolveUserRole";
@@ -6,7 +15,7 @@ import type { User } from "@supabase/supabase-js";
 
 type Role = ResolvedRole | null;
 
-interface AuthRoleState {
+export interface AuthRoleState {
   user: User | null;
   role: Role;
   loading: boolean;
@@ -14,7 +23,29 @@ interface AuthRoleState {
   isVerifiedAgent: boolean;
 }
 
+const AuthRoleContext = createContext<AuthRoleState | null>(null);
+
+/**
+ * Single subscriber to Supabase auth + role resolution — mount once at app root.
+ * Prevents duplicate session/role flashes when many routes/components consumed auth separately.
+ */
+export function AuthRoleProvider({ children }: { children: ReactNode }) {
+  const state = useAuthRoleStore();
+  return <AuthRoleContext.Provider value={state}>{children}</AuthRoleContext.Provider>;
+}
+
+/** Auth + role snapshot (shared singleton via `AuthRoleProvider`). */
 export function useAuthRole(): AuthRoleState {
+  const ctx = useContext(AuthRoleContext);
+  if (!ctx) {
+    throw new Error(
+      "[useAuthRole] Wrap the app with <AuthRoleProvider> (inside BrowserRouter near App root).",
+    );
+  }
+  return ctx;
+}
+
+function useAuthRoleStore(): AuthRoleState {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -22,9 +53,8 @@ export function useAuthRole(): AuthRoleState {
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
 
-  async function loadRoleForUser(userId: string) {
+  const loadRoleForUser = useCallback(async (userId: string) => {
     let result = await resolveUserRole(userId);
-    // Transient RPC hiccups would flash role → null → buyer; retry once before dropping role.
     if (result.role === "unknown") {
       await new Promise((r) => setTimeout(r, 200));
       result = await resolveUserRole(userId);
@@ -33,14 +63,16 @@ export function useAuthRole(): AuthRoleState {
     setRole(nextRole);
     setIsAdmin(result.role === "admin");
     setIsVerifiedAgent(result.is_verified_agent);
-  }
+  }, []);
 
   useEffect(() => {
     async function initialLoad() {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
       if (error || !user) {
-        // Stale/invalid session — purge and reset
         try {
           await supabase.auth.signOut();
         } catch (e) {
@@ -61,12 +93,13 @@ export function useAuthRole(): AuthRoleState {
       initialLoadDone.current = true;
     }
 
-    initialLoad();
+    void initialLoad();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!initialLoadDone.current) return;
 
-      /** Only wipe local user on explicit sign-out. Other events sometimes race with null `session`. */
       if (event === "SIGNED_OUT") {
         setUser(null);
         setRole(null);
@@ -80,13 +113,15 @@ export function useAuthRole(): AuthRoleState {
         setUser(newUser);
         void loadRoleForUser(newUser.id);
       }
-      // Else: do not clear user on non-SIGNED_OUT events — transient null sessions would blank the dashboard.
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadRoleForUser]);
 
-  return { user, role, loading, isAdmin, isVerifiedAgent };
+  return useMemo(
+    () => ({ user, role, loading, isAdmin, isVerifiedAgent }),
+    [user, role, loading, isAdmin, isVerifiedAgent],
+  );
 }

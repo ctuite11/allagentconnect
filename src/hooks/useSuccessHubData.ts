@@ -178,10 +178,15 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
 
   const mountedRef = useRef(true);
   const loadIdRef = useRef(0);
+  /** Tracks whether we ever persisted a hydrated summary — avoids full blocking reload on silent refetches. */
+  const summaryHydratedRef = useRef<boolean>(false);
 
   const loadAll = useCallback(async () => {
     const myLoadId = ++loadIdRef.current;
-    setLoading(true);
+    const blockingFirstHydration = !summaryHydratedRef.current;
+    if (blockingFirstHydration) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -753,12 +758,14 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
       };
 
       if (mountedRef.current && loadIdRef.current === myLoadId) {
+        summaryHydratedRef.current = true;
         setSummary(nextSummary);
       }
     } catch (e: any) {
       if (!mountedRef.current || loadIdRef.current !== myLoadId) return;
       console.error("[SuccessHubData] Fatal load error:", e);
       setError(e?.message ?? "Failed to load Success Hub data");
+      summaryHydratedRef.current = false;
       setSummary(null);
     } finally {
       if (mountedRef.current && loadIdRef.current === myLoadId) {

@@ -87,7 +87,7 @@ function formatRelativeTime(value?: string | null) {
 
 export default function DraftListings() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuthRole();
+  const { user } = useAuthRole();
   const [listings, setListings] = useState<DraftListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "list">("list");
@@ -152,7 +152,7 @@ export default function DraftListings() {
     setListingToDelete(null);
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return <LoadingScreen message="Loading drafts..." />;
   }
 

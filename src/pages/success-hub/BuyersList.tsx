@@ -5,7 +5,7 @@ import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronRight, Clock, UserPlus } from "lucide-react";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
@@ -29,6 +29,16 @@ interface BuyerRow {
 
 type FilterKey = "all" | "active" | "pending";
 
+function BuyersRowsSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="space-y-3" aria-hidden>
+      {Array.from({ length: count }).map((_, i) => (
+        <Skeleton key={i} className="h-[84px] w-full rounded-2xl bg-zinc-100/90" />
+      ))}
+    </div>
+  );
+}
+
 export default function BuyersList() {
   const navigate = useNavigate();
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
@@ -37,8 +47,8 @@ export default function BuyersList() {
   const [createdBuyer, setCreatedBuyer] = useState<CreatedBuyer | null>(null);
   const [filter, setFilter] = useState<FilterKey>("all");
 
-  const loadBuyers = async () => {
-    setLoading(true);
+  const loadBuyers = async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -218,9 +228,12 @@ export default function BuyersList() {
             })}
           </div>
 
-          {/* List */}
+          {/* List — section skeleton (no extra full-route monogram after auth) */}
           {loading ? (
-            <AacMonogramLoader variant="section" message="Loading buyers…" className="py-14" />
+            <div className="relative py-4" role="status" aria-live="polite" aria-busy="true">
+              <span className="sr-only">Loading buyers…</span>
+              <BuyersRowsSkeleton />
+            </div>
           ) : filtered.length === 0 ? (
             <EmptyState
               hasAny={buyers.length > 0}
@@ -252,7 +265,7 @@ export default function BuyersList() {
         open={showCreate}
         onOpenChange={setShowCreate}
         onSuccess={(created) => {
-          loadBuyers();
+          void loadBuyers({ silent: true });
           if (created) setCreatedBuyer(created);
         }}
       />

@@ -1,6 +1,6 @@
 import React from "react";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
 import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
@@ -39,6 +39,56 @@ function SectionHeader({
       >
         {actionLabel}
       </button>
+    </div>
+  );
+}
+
+/** In-shell placeholder — keeps sidebar + layout stable; avoids a second full-page monogram. */
+function WorkspaceSkeletonRails() {
+  return (
+    <div className="space-y-6" aria-busy="true" role="status" aria-live="polite">
+      <span className="sr-only">Loading workspace…</span>
+      <div className="rounded-2xl border border-zinc-200/90 bg-white px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <Skeleton className="h-8 w-56 rounded-md bg-zinc-100" />
+        <Skeleton className="mt-3 h-3.5 max-w-xl rounded-md bg-zinc-100" />
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start">
+          <Skeleton className="h-16 w-16 shrink-0 rounded-full bg-zinc-100" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-40 rounded-md bg-zinc-100" />
+            <Skeleton className="h-3 w-52 rounded-md bg-zinc-100" />
+          </div>
+        </div>
+      </div>
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+          >
+            <Skeleton className="h-4 w-4 rounded bg-zinc-100" />
+            <Skeleton className="mt-3 h-7 w-10 rounded-md bg-zinc-100" />
+            <Skeleton className="mt-2 h-3 w-24 rounded-md bg-zinc-100" />
+            <Skeleton className="mt-2 h-3 w-28 rounded-md bg-zinc-100" />
+          </div>
+        ))}
+      </section>
+      <div className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <Skeleton className="h-[120px] w-full rounded-xl bg-zinc-100/90" />
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[60%_40%]">
+        <div className="rounded-2xl border border-zinc-100 bg-white p-5">
+          <Skeleton className="h-4 w-32 rounded-md bg-zinc-100" />
+          <Skeleton className="mt-8 h-[200px] w-full rounded-xl bg-zinc-100/90" />
+        </div>
+        <div className="rounded-2xl border border-zinc-100 bg-white p-5">
+          <Skeleton className="h-4 w-28 rounded-md bg-zinc-100" />
+          <Skeleton className="mt-8 h-[200px] w-full rounded-xl bg-zinc-100/90" />
+        </div>
+      </div>
+      <div className="rounded-2xl border border-zinc-100 bg-white p-5">
+        <Skeleton className="h-4 w-36 rounded-md bg-zinc-100" />
+        <Skeleton className="mt-4 h-[140px] w-full rounded-xl bg-zinc-100/90" />
+      </div>
     </div>
   );
 }
@@ -95,14 +145,6 @@ function SuccessHubDashboardBody() {
   const safeListings = listings ?? [];
   const safeCommunications = communications ?? [];
 
-  if (loading) {
-    return (
-      <AgentAacPage className="flex min-h-[50vh] items-center justify-center pb-10">
-        <AacMonogramLoader variant="section" className="min-h-[45vh]" message="Loading workspace..." />
-      </AgentAacPage>
-    );
-  }
-
   return (
     <AgentAacPage className="space-y-6 pb-10">
       {error ? (
@@ -115,23 +157,30 @@ function SuccessHubDashboardBody() {
         </AgentSectionCard>
       ) : null}
 
-      <SuccessHubHero summary={summary} />
-      <SuccessHubStatRow summary={summary} />
+      {loading ? <WorkspaceSkeletonRails /> : null}
 
-      <AgentSectionCard className="p-5">
-        <MarketActivityRow />
-      </AgentSectionCard>
+      {!loading ? <SuccessHubHero summary={summary} /> : null}
+      {!loading ? <SuccessHubStatRow summary={summary} /> : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[60%_40%] lg:items-stretch">
-        <AgentSectionCard className="flex min-h-0 flex-col p-5">
-          <DashboardBuyersTable buyers={safeBuyers} />
+      {!loading ? (
+        <AgentSectionCard className="p-5">
+          <MarketActivityRow />
         </AgentSectionCard>
+      ) : null}
 
-        <AgentSectionCard className="flex min-h-0 flex-col p-5">
-          <DashboardCommunications conversations={safeCommunications} compact inboxPreview />
-        </AgentSectionCard>
-      </div>
+      {!loading ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[60%_40%] lg:items-stretch">
+          <AgentSectionCard className="flex min-h-0 flex-col p-5">
+            <DashboardBuyersTable buyers={safeBuyers} />
+          </AgentSectionCard>
 
+          <AgentSectionCard className="flex min-h-0 flex-col p-5">
+            <DashboardCommunications conversations={safeCommunications} compact inboxPreview />
+          </AgentSectionCard>
+        </div>
+      ) : null}
+
+      {!loading ? (
       <AgentSectionCard className="p-5">
         {safeListings.length > 0 ? (
           <>
@@ -191,6 +240,7 @@ function SuccessHubDashboardBody() {
           </>
         )}
       </AgentSectionCard>
+      ) : null}
     </AgentAacPage>
   );
 }

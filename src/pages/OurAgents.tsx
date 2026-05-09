@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuthRole } from "@/hooks/useAuthRole";
 import AgentPhotoTile from "@/components/agent-directory/AgentPhotoTile";
 import AgentDirectoryFilters from "@/components/agent-directory/AgentDirectoryFilters";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { z } from "zod";
 import { PageHeader } from "@/components/ui/page-header";
 import { LISTING_STATUS } from "@/constants/status";
@@ -66,8 +65,7 @@ const OurAgents = ({
   isBuyerMode = false,
 }: OurAgentsProps) => {
   const navigate = useNavigate();
-  const { user, role, loading: authLoading } = useAuthRole();
-  
+
   const [agents, setAgents] = useState<EnrichedAgent[]>([]);
   const [counties, setCounties] = useState<County[]>([]);
   const [loading, setLoading] = useState(true);
@@ -412,8 +410,22 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
         {/* Agent Grid */}
         <section className="pt-8 pb-16">
           <div className="mx-auto w-full max-w-[1200px] px-6">
-            {loading || authLoading ? (
-              <AacMonogramLoader variant="section" message="Loading agents…" className="py-12 sm:py-14" />
+            {loading ? (
+              <div
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+                className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4 py-12"
+              >
+                <span className="sr-only">Loading agents…</span>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-3">
+                    <Skeleton className="h-32 w-32 shrink-0 rounded-xl bg-zinc-100/90" />
+                    <Skeleton className="h-4 w-[70%] max-w-[10rem] rounded-md bg-zinc-100/90" />
+                    <Skeleton className="h-3 w-[85%] max-w-[11rem] rounded-md bg-zinc-100/80" />
+                  </div>
+                ))}
+              </div>
             ) : filteredAgents.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-muted-foreground">

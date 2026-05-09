@@ -129,7 +129,7 @@ import MessagingWorkspace from "./pages/MessagingWorkspace";
 import BuyerMessagingWorkspace from "./pages/BuyerMessagingWorkspace";
 import PublicAgentProfile from "./pages/PublicAgentProfile";
 import Footer from "./components/Footer";
-import { useAuthRole } from "./hooks/useAuthRole";
+import { AuthRoleProvider, useAuthRole } from "./hooks/useAuthRole";
 import { LoadingScreen } from "./components/LoadingScreen";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
@@ -233,6 +233,7 @@ const App = () => (
       <HelmetProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
+            <AuthRoleProvider>
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
@@ -394,6 +395,7 @@ const App = () => (
               </Routes>
               <CookieConsent />
             </>
+            </AuthRoleProvider>
           </TooltipProvider>
         </ThemeProvider>
       </HelmetProvider>

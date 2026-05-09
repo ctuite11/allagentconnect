@@ -31,6 +31,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Seo } from "@/components/Seo";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Helper function for title case display (safe transform, doesn't modify stored data)
 const toTitleCase = (str: string) => {
@@ -640,15 +641,44 @@ const MyClients = () => {
 
   if (loading) {
     return (
-      <AgentAacPage className="flex min-h-[40vh] flex-1 flex-col items-center justify-center space-y-0 pb-12">
+      <TooltipProvider>
         <Seo
           title="Contacts | All Agent Connect"
           description="Manage clients, contacts, and relationship workflows inside All Agent Connect."
           canonical="https://allagentconnect.com/my-clients"
           noindex
         />
-        <p className="text-sm text-neutral-500">Loading contacts...</p>
-      </AgentAacPage>
+        <AgentAacPage className="pb-12" role="status" aria-live="polite" aria-busy="true">
+          <span className="sr-only">Loading contacts…</span>
+          <AgentPageHeader
+            title="My Contacts"
+            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
+            className="mb-8"
+          />
+          <div className="mb-6 flex flex-wrap gap-3">
+            <Skeleton className="h-10 w-36 rounded-lg bg-neutral-100" />
+            <Skeleton className="h-10 w-40 rounded-lg bg-neutral-100" />
+            <Skeleton className="ml-auto h-10 w-[min(100%,20rem)] rounded-lg bg-neutral-100 md:max-w-md" />
+          </div>
+          <AgentSectionCard className="p-0 overflow-hidden">
+            <div className="border-b border-neutral-100 px-6 py-3">
+              <div className="flex gap-4">
+                {[1, 2, 3, 4, 5, 6].map((col) => (
+                  <Skeleton key={col} className="h-4 flex-1 max-w-[7rem] rounded bg-neutral-100" />
+                ))}
+              </div>
+            </div>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((row) => (
+              <div
+                key={row}
+                className="flex items-center gap-4 border-b border-neutral-50 px-6 py-3 last:border-b-0"
+              >
+                <Skeleton className="h-9 w-full max-w-xl rounded-md bg-neutral-50" />
+              </div>
+            ))}
+          </AgentSectionCard>
+        </AgentAacPage>
+      </TooltipProvider>
     );
   }
 
