@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Eye, Heart, Layers, MessageSquare, Target } from "lucide-react";
+import { Building2, Eye, FileText, Heart, Layers, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { cn } from "@/lib/utils";
@@ -19,9 +19,12 @@ function initialsFromDisplayName(name: string): string {
 function MetricsToolbar({
   metrics,
   loading,
+  hotSheetRef,
 }: {
   metrics: BuyerActivityMetrics | null;
   loading: boolean;
+  /** When set (e.g. hot sheet review), show “Hot Sheet #” code instead of buyer-wide sheet count */
+  hotSheetRef?: string | null;
 }) {
   if (loading) {
     return (
@@ -39,12 +42,52 @@ function MetricsToolbar({
     messages: 0,
   };
 
-  const items: { key: string; icon: typeof Target; label: string; value: number }[] = [
-    { key: "m", icon: Target, label: "Matches", value: m.matches },
-    { key: "v", icon: Eye, label: "Views", value: m.views },
-    { key: "f", icon: Heart, label: "Buyer favorites", value: m.favorites },
-    { key: "h", icon: Layers, label: "Hot sheets", value: m.hotSheets },
-    { key: "msg", icon: MessageSquare, label: "Messages", value: m.messages },
+  const showSheetCode = hotSheetRef != null && String(hotSheetRef).trim() !== "";
+
+  type MetricItem =
+    | {
+        key: string;
+        kind: "number";
+        icon: typeof Building2;
+        label: string;
+        value: number;
+        iconClass?: string;
+      }
+    | {
+        key: string;
+        kind: "text";
+        icon: typeof FileText;
+        label: string;
+        value: string;
+      };
+
+  const items: MetricItem[] = [
+    { key: "m", kind: "number", icon: Building2, label: "Matches", value: m.matches },
+    { key: "v", kind: "number", icon: Eye, label: "Views", value: m.views },
+    {
+      key: "f",
+      kind: "number",
+      icon: Heart,
+      label: "Buyer Favorites",
+      value: m.favorites,
+      iconClass: "fill-rose-500 text-rose-500 stroke-rose-500",
+    },
+    showSheetCode
+      ? {
+          key: "h",
+          kind: "text",
+          icon: FileText,
+          label: "Hot Sheet #",
+          value: String(hotSheetRef).trim(),
+        }
+      : {
+          key: "h",
+          kind: "number",
+          icon: Layers,
+          label: "Hot sheets",
+          value: m.hotSheets,
+        },
+    { key: "msg", kind: "number", icon: MessageSquare, label: "Messages", value: m.messages },
   ];
 
   return (
@@ -56,11 +99,22 @@ function MetricsToolbar({
         <span key={it.key} className="inline-flex items-center">
           {i > 0 ? <span className="mx-2 h-3 w-px shrink-0 bg-zinc-200/90" aria-hidden /> : null}
           <span
-            className="inline-flex items-center gap-1 text-[11px] font-medium tabular-nums text-zinc-600"
+            className={cn(
+              "inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600",
+              it.kind === "number" && "tabular-nums",
+            )}
             title={it.label}
           >
-            <it.icon className="h-3.5 w-3.5 shrink-0 text-zinc-400" strokeWidth={2} aria-hidden />
-            {it.value.toLocaleString()}
+            <it.icon
+              className={cn(
+                "h-3.5 w-3.5 shrink-0",
+                it.kind === "number" && (it.iconClass ?? "text-zinc-400"),
+                it.kind === "text" && "text-zinc-400",
+              )}
+              strokeWidth={2}
+              aria-hidden
+            />
+            {it.kind === "number" ? it.value.toLocaleString() : it.value}
           </span>
         </span>
       ))}
@@ -81,6 +135,8 @@ export type AgentBuyerActivityHeaderCardProps = {
   metricsLoading?: boolean;
   trailing?: ReactNode;
   className?: string;
+  /** Current hot sheet code on review pages; omit on buyer-wide views (shows sheet count instead). */
+  hotSheetRef?: string | null;
 };
 
 /**
@@ -95,6 +151,7 @@ export function AgentBuyerActivityHeaderCard({
   metricsLoading: metricsLoadingProp,
   trailing,
   className,
+  hotSheetRef,
 }: AgentBuyerActivityHeaderCardProps) {
   /** Parent supplies metrics when `metrics` is passed (including `null`). Omit `metrics` to fetch internally. */
   const controlled = metricsProp !== undefined;
@@ -161,7 +218,7 @@ export function AgentBuyerActivityHeaderCard({
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:justify-end">{trailing}</div>
         ) : null}
       </div>
-      <MetricsToolbar metrics={metrics} loading={loading} />
+      <MetricsToolbar metrics={metrics} loading={loading} hotSheetRef={hotSheetRef} />
     </div>
   );
 }

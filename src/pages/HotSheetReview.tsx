@@ -32,6 +32,7 @@ import {
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
+import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
@@ -70,6 +71,7 @@ function CompactClientRecipientsStrip({
   collaborativeMode,
   recipientActivity,
   recipientActivityLoading,
+  hotSheetRef,
 }: {
   recipients: ReviewRecipient[];
   hotSheetId: string;
@@ -81,6 +83,8 @@ function CompactClientRecipientsStrip({
   collaborativeMode?: boolean;
   recipientActivity: Record<string, BuyerActivityMetrics>;
   recipientActivityLoading: boolean;
+  /** Display code for current sheet (e.g. HS-1002) on metrics row */
+  hotSheetRef: string;
 }) {
   const [cooldownUntil, setCooldownUntil] = useState<Record<string, number>>({});
   const [resendingId, setResendingId] = useState<string | null>(null);
@@ -176,6 +180,7 @@ function CompactClientRecipientsStrip({
             metrics={recipientActivity[r.clientId] ?? null}
             metricsLoading={recipientActivityLoading}
             trailing={trailing}
+            hotSheetRef={hotSheetRef}
           />
         );
       })}
@@ -1197,6 +1202,7 @@ if (comments && comments.length > 0) {
               collaborativeMode={isSharedWorkspace}
               recipientActivity={recipientActivity}
               recipientActivityLoading={recipientActivityLoading}
+              hotSheetRef={formatHotSheetRef(id)}
             />
           )}
 
