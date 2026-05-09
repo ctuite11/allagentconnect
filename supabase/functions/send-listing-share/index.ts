@@ -47,71 +47,18 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Listing not found');
     }
 
-    // Build listing details HTML
+    // Resolve photo URL (same logic as before, just for the variables payload)
     const photos = listing.photos || [];
-    const primaryPhoto = Array.isArray(photos) && photos.length > 0 
-      ? (typeof photos[0] === 'string' ? photos[0] : photos[0]?.url || '') 
+    const primaryPhoto = Array.isArray(photos) && photos.length > 0
+      ? (typeof photos[0] === 'string' ? photos[0] : (photos[0] as any)?.url || '')
       : '';
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #0F172A; color: white; padding: 20px; text-align: center; }
-          .listing-image { width: 100%; height: auto; margin: 20px 0; }
-          .listing-details { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
-          .detail-row { margin: 10px 0; }
-          .price { font-size: 24px; font-weight: bold; color: #0F172A; }
-          .agent-info { background: #e3f2fd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #2196F3; }
-          .message { background: #fff; padding: 15px; margin: 20px 0; border-left: 4px solid #4CAF50; }
-          .button { display: inline-block; background: #2196F3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 20px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Property Shared With You</h1>
-          </div>
-          
-          ${primaryPhoto ? `<img src="${primaryPhoto}" alt="Property Photo" class="listing-image" />` : ''}
-          
-          <div class="listing-details">
-            <div class="price">$${listing.price?.toLocaleString()}</div>
-            <div class="detail-row"><strong>Address:</strong> ${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}</div>
-            ${listing.bedrooms ? `<div class="detail-row"><strong>Bedrooms:</strong> ${listing.bedrooms}</div>` : ''}
-            ${listing.bathrooms ? `<div class="detail-row"><strong>Bathrooms:</strong> ${listing.bathrooms}</div>` : ''}
-            ${listing.square_feet ? `<div class="detail-row"><strong>Square Feet:</strong> ${listing.square_feet.toLocaleString()}</div>` : ''}
-            ${listing.property_type ? `<div class="detail-row"><strong>Property Type:</strong> ${listing.property_type.replace(/_/g, ' ')}</div>` : ''}
-            ${listing.year_built ? `<div class="detail-row"><strong>Year Built:</strong> ${listing.year_built}</div>` : ''}
-            ${listing.description ? `<div class="detail-row"><strong>Description:</strong><br/>${listing.description}</div>` : ''}
-          </div>
-
-          ${message ? `
-            <div class="message">
-              <strong>Personal Message:</strong><br/>
-              ${message}
-            </div>
-          ` : ''}
-
-          <div class="agent-info">
-            <h3>Your Agent Contact Information</h3>
-            <div><strong>Name:</strong> ${agentName}</div>
-            <div><strong>Email:</strong> ${agentEmail}</div>
-            ${agentPhone ? `<div><strong>Phone:</strong> ${agentPhone}</div>` : ''}
-          </div>
-
-          <p>Interested in this property? Contact ${agentName} using the information above to schedule a viewing or ask questions.</p>
-        </div>
-      </body>
-      </html>
-    `;
+    const appUrl = Deno.env.get('APP_URL') || 'https://allagentconnect.com';
+    const listingUrl = `${appUrl}/listings/${listingId}`;
 
     console.log(`[send-listing-share] Enqueuing job for ${recipientEmail}`);
 
-    // Enqueue job instead of sending directly
+    // Enqueue job — rendered server-side via the AAC unified template (renderEmailTemplate)
     const { error: insertError } = await supabase
       .from('email_jobs')
       .insert({
@@ -120,15 +67,28 @@ const handler = async (req: Request): Promise<Response> => {
           template: 'listing-share',
           to: recipientEmail,
           subject: `Property Shared: ${listing.address}`,
-          html: htmlContent,
           reply_to: agentEmail,
           variables: {
             recipientName,
             agentName,
             agentEmail,
             agentPhone,
-            listingAddress: listing.address,
             message,
+            listingUrl,
+            listing: {
+              address: listing.address,
+              city: listing.city,
+              state: listing.state,
+              zipCode: listing.zip_code,
+              price: listing.price,
+              bedrooms: listing.bedrooms,
+              bathrooms: listing.bathrooms,
+              squareFeet: listing.square_feet,
+              propertyType: listing.property_type,
+              yearBuilt: listing.year_built,
+              description: listing.description,
+              photoUrl: primaryPhoto,
+            },
           },
         },
       });
