@@ -519,10 +519,9 @@ const ListingSearchResults = () => {
                         {displayedListings.map((listing) => (
                           <ListingCard
                             key={listing.id}
-                            listing={listingRowForMapCompactGrid(listing)}
+                            listing={listing}
                             viewMode="compact"
                             showActions={false}
-                            hideMlsMeta
                             agentInfo={null}
                             showCompactComments={false}
                             hideCompactFavorite
