@@ -4043,6 +4043,10 @@ export type Database = {
         Args: { p_listing_id: string }
         Returns: undefined
       }
+      delete_pending_buyer_hot_sheet: {
+        Args: { p_crm_client_id: string; p_hot_sheet_id: string }
+        Returns: Json
+      }
       email_jobs_claim: {
         Args: { p_limit: number }
         Returns: {
