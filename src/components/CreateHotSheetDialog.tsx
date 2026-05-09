@@ -1026,7 +1026,6 @@ export function CreateHotSheetDialog({
     setHeatingTypes([]);
     setCoolingTypes([]);
     setGreenFeatures([]);
-    setNotifyClient(true);
     setNotifyAgent(true);
     setNotificationSchedule("immediately");
   };
