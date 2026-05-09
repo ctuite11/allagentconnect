@@ -65,6 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
         payload: {
           provider: 'resend',
           template: 'listing-share',
+          category: 'listing_shares',
           to: recipientEmail,
           subject: `Property Shared: ${listing.address}`,
           reply_to: agentEmail,
