@@ -12,6 +12,8 @@ interface BulkShareListingsDialogProps {
   listingCount: number;
   /** Merged onto the toolbar trigger for density alignment (e.g. agent search results). */
   triggerClassName?: string;
+  /** Use `outline` for neutral AAC toolbars (e.g. listing results); default fills primary. */
+  triggerVariant?: "default" | "outline";
 }
 
 interface Client {
@@ -37,6 +39,7 @@ export function BulkShareListingsDialog({
   listingIds,
   listingCount,
   triggerClassName,
+  triggerVariant = "default",
 }: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -257,7 +260,7 @@ export function BulkShareListingsDialog({
   return (
     <>
       <Button
-        variant="default"
+        variant={triggerVariant}
         size="sm"
         className={cn(triggerClassName)}
         onClick={() => setOpen(true)}

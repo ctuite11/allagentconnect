@@ -546,7 +546,7 @@ const ListingCard = ({
       if (isNewStatus) {
         return {
           text: "NEW LISTING",
-          color: "bg-[#0E56F5]",
+          color: "bg-neutral-900",
           iconType: "sparkles" as const
         };
       }
@@ -560,7 +560,7 @@ const ListingCard = ({
           if (daysSinceActive <= 7) {
             return {
               text: "NEW LISTING",
-              color: "bg-[#0E56F5]",
+              color: "bg-neutral-900",
               iconType: "sparkles" as const
             };
           }
@@ -742,7 +742,7 @@ const ListingCard = ({
                     }}
                     className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors ${
                       isSelected
-                        ? "bg-[#0E56F5] border-[#0E56F5]"
+                        ? "border-neutral-900 bg-neutral-900"
                         : "border-zinc-300 bg-white"
                     }`}
                     title="Keep in shortlist for this visit"
@@ -1318,18 +1318,24 @@ const ListingCard = ({
   const listingIdLabel = formatListingIdLabel(listing);
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
+    <Card
+      className={cn(
+        "cursor-pointer overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-[box-shadow,border-color] hover:border-neutral-300 hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)]",
+        isSelected && "border-neutral-400 ring-1 ring-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
+      )}
+      onClick={() => navigate(`/property/${listing.id}`)}
+    >
       {/* Photo Container with scrolling */}
-      <div className="relative aspect-[4/3] group">
+      <div className="group relative aspect-[4/3]">
         {currentPhoto ? (
           <img 
             src={currentPhoto} 
             alt={listing.address} 
-            className="w-full h-full object-cover" 
+            className="h-full w-full object-cover" 
           />
         ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <Home className="w-12 h-12 text-muted-foreground" />
+          <div className="flex h-full w-full items-center justify-center bg-neutral-100">
+            <Home className="h-12 w-12 text-neutral-400" />
           </div>
         )}
         
@@ -1353,8 +1359,8 @@ const ListingCard = ({
                   onSelect(listing.id);
                 }
               }}
-              className={`w-5 h-5 shrink-0 rounded-[2px] border shadow-sm cursor-pointer transition-colors flex items-center justify-center ${
-                isSelected ? "bg-[#0E56F5] border-[#0E56F5]" : "bg-white border-zinc-300"
+              className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors ${
+                isSelected ? "border-neutral-900 bg-neutral-900" : "border-zinc-300 bg-white"
               }`}
               title="Keep in shortlist for this visit"
               aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
@@ -1417,7 +1423,7 @@ const ListingCard = ({
           {/* Left Column - Address */}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 shrink-0 text-[#047857]" aria-hidden />
+              <MapPin className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
               <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
                 {(() => {
                   // Extract just the street address (first part before any comma)
@@ -1441,34 +1447,34 @@ const ListingCard = ({
           
           {/* Right Column - Price (stacked, right-aligned) */}
           <div className="text-right flex-shrink-0">
-            <div className="text-lg font-bold text-primary">
+            <div className="text-lg font-bold text-neutral-900">
               {displayPrice}
             </div>
             {pricePerSqft && (
-              <div className="text-xs text-muted-foreground mt-0.5">
+              <div className="mt-0.5 text-xs text-neutral-600">
                 ${pricePerSqft}/sqft
               </div>
             )}
           </div>
         </div>
 
-        {/* Beds, Baths, SqFt Row with Blue Icons */}
-        <div className="flex gap-4 mb-2 text-base font-semibold text-foreground">
+        {/* Beds, Baths, SqFt */}
+        <div className="mb-2 flex gap-4 text-base font-semibold text-neutral-900">
           {listing.bedrooms !== null && (
             <div className="flex items-center gap-1.5">
-              <Bed className="w-5 h-5 text-primary" />
+              <Bed className="h-5 w-5 text-neutral-500" />
               <span>{listing.bedrooms}</span>
             </div>
           )}
           {listing.bathrooms !== null && (
             <div className="flex items-center gap-1.5">
-              <Bath className="w-5 h-5 text-primary" />
+              <Bath className="h-5 w-5 text-neutral-500" />
               <span>{listing.bathrooms}</span>
             </div>
           )}
           {listing.square_feet !== null && (
             <div className="flex items-center gap-1.5">
-              <Home className="w-5 h-5 text-primary" />
+              <Home className="h-5 w-5 text-neutral-500" />
               <span>{listing.square_feet.toLocaleString()}</span>
             </div>
           )}
@@ -1500,19 +1506,19 @@ const ListingCard = ({
         )}
 
         {/* Divider */}
-        <div className="border-t border-border my-3" />
+        <div className="my-3 border-t border-neutral-100" />
 
         {/* Agent Section */}
         {agentProfile ? (
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 flex-shrink-0">
               <AvatarImage src={agentProfile.headshot_url || undefined} alt={`${agentProfile.first_name} ${agentProfile.last_name}`} />
-              <AvatarFallback className="bg-primary">
-                <svg viewBox="0 0 34 34" className="w-5 h-5 text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z"/><path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z"/><path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z"/><path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z"/><path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z"/></svg>
+              <AvatarFallback className="bg-neutral-800 text-white">
+                <svg viewBox="0 0 34 34" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z"/><path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z"/><path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z"/><path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z"/><path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z"/></svg>
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-foreground truncate">
+              <div className="truncate text-sm font-medium text-foreground">
                 {agentProfile.first_name} {agentProfile.last_name}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1535,8 +1541,8 @@ const ListingCard = ({
         ) : agentInfo ? (
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 flex-shrink-0">
-              <AvatarFallback className="bg-primary">
-                <svg viewBox="0 0 34 34" className="w-5 h-5 text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z"/><path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z"/><path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z"/><path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z"/><path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z"/></svg>
+              <AvatarFallback className="bg-neutral-800 text-white">
+                <svg viewBox="0 0 34 34" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z"/><path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z"/><path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z"/><path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z"/><path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z"/></svg>
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
@@ -1550,8 +1556,8 @@ const ListingCard = ({
         ) : (
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 flex-shrink-0">
-              <AvatarFallback className="bg-primary">
-                <svg viewBox="0 0 34 34" className="w-5 h-5 text-white" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z"/><path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z"/><path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z"/><path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z"/><path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z"/></svg>
+              <AvatarFallback className="bg-neutral-800 text-white">
+                <svg viewBox="0 0 34 34" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M22.6667 11.3333H11.3333V22.6667H22.6667V11.3333Z"/><path d="M2.83333 26.9167C2.83333 29.2542 4.74583 31.1667 7.08333 31.1667C9.42083 31.1667 11.3333 29.2542 11.3333 26.9167V22.6667H7.08333C4.74583 22.6667 2.83333 24.5792 2.83333 26.9167Z"/><path d="M7.08333 2.83333C4.74583 2.83333 2.83333 4.74583 2.83333 7.08333C2.83333 9.42083 4.74583 11.3333 7.08333 11.3333H11.3333V7.08333C11.3333 4.74583 9.42083 2.83333 7.08333 2.83333Z"/><path d="M31.1667 7.08333C31.1667 4.74583 29.2542 2.83333 26.9167 2.83333C24.5792 2.83333 22.6667 4.74583 22.6667 7.08333V11.3333H26.9167C29.2542 11.3333 31.1667 9.42083 31.1667 7.08333Z"/><path d="M26.9167 22.6667H22.6667V26.9167C22.6667 29.2542 24.5792 31.1667 26.9167 31.1667C29.2542 31.1667 31.1667 29.2542 31.1667 26.9167C31.1667 24.5792 29.2542 22.6667 26.9167 22.6667Z"/></svg>
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

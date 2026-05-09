@@ -291,17 +291,17 @@ const ListingSearchResults = () => {
   };
 
   const renderToolbarTitleRow = () => (
-    <div className="flex items-center py-2.5">
-      <div className="flex items-center gap-2.5">
+    <div className="flex items-center py-2 sm:py-2.5">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
         <button
           type="button"
           onClick={handleBackToSearch}
-          className="-ml-1 rounded-md p-1 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          className="-ml-1 rounded-md p-1 text-neutral-600 transition-colors duration-200 hover:bg-neutral-50 hover:text-neutral-900"
           aria-label="Go back"
         >
-          <ArrowLeft className="h-[18px] w-[18px]" />
+          <ArrowLeft className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" />
         </button>
-        <h1 className="text-sm font-semibold tracking-tight text-zinc-900">Edit Search</h1>
+        <h1 className="text-[13px] font-semibold tracking-tight text-neutral-900 sm:text-sm">Edit search</h1>
       </div>
     </div>
   );
@@ -309,13 +309,13 @@ const ListingSearchResults = () => {
   /** Top strip in results container: Results on left, View + Sort on right. */
   const renderResultsTopStrip = (variant: "page" | "column") => {
     const compact = variant === "column";
-    const labelClass = compact ? "text-[11px] font-medium text-zinc-500" : "text-[13px] text-zinc-500";
+    const labelClass = compact ? "text-[11px] font-medium text-neutral-500" : "text-[13px] text-neutral-500";
     const toggleBtnClass = compact
-      ? "h-[22px] min-w-[2.25rem] rounded px-1.5 text-[11px] font-medium whitespace-nowrap leading-none transition-colors"
-      : "h-7 min-w-[2.5rem] rounded-md px-2.5 text-[13px] font-medium transition-colors leading-none";
+      ? "h-[22px] min-w-[2.25rem] rounded-[4px] px-1.5 text-[11px] font-medium whitespace-nowrap leading-none transition-colors duration-200 ease-out"
+      : "h-7 min-w-[2.5rem] rounded-md px-2.5 text-[13px] font-medium leading-none transition-colors duration-200 ease-out";
     const toggleWrapClass = compact
-      ? "inline-flex rounded-md border border-zinc-200/85 bg-white p-[2px] shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)]"
-      : "inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]";
+      ? "inline-flex rounded-md border border-neutral-200 bg-white p-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+      : "inline-flex rounded-lg border border-neutral-200 bg-white p-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
 
     const showViewToggle = !loading && displayedListings.length > 0;
 
@@ -325,7 +325,7 @@ const ListingSearchResults = () => {
           className="flex w-full items-center justify-between gap-3"
           aria-label="Results summary and controls"
         >
-          <p className={cn("min-w-0 truncate font-medium text-zinc-900", compact ? "text-sm" : "text-[13px]")}>
+          <p className={cn("min-w-0 truncate font-medium text-neutral-900 tabular-nums", compact ? "text-sm" : "text-[13px]")}>
             {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
           </p>
           <div className="flex min-w-0 shrink-0 justify-end">
@@ -339,8 +339,8 @@ const ListingSearchResults = () => {
                     className={cn(
                       toggleBtnClass,
                       resultsView === "map"
-                        ? "bg-zinc-900 text-white shadow-sm"
-                        : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900",
+                        ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                        : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
                     )}
                   >
                     Map
@@ -351,8 +351,8 @@ const ListingSearchResults = () => {
                     className={cn(
                       toggleBtnClass,
                       resultsView === "list"
-                        ? "bg-zinc-900 text-white shadow-sm"
-                        : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900",
+                        ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                        : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
                     )}
                   >
                     List
@@ -370,17 +370,17 @@ const ListingSearchResults = () => {
   const renderResultsActionsRow = (variant: "page" | "column") => {
     const compact = variant === "column";
     const actionBtnClass = compact
-      ? "h-7 shrink-0 whitespace-nowrap rounded-md border border-zinc-300/85 bg-white px-2 text-[11px] font-medium text-zinc-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-zinc-400/90 hover:bg-zinc-50"
-      : "h-8 px-3 text-[13px] font-medium rounded-lg border border-zinc-300 bg-white text-zinc-700 transition-colors hover:bg-zinc-50 hover:border-zinc-400";
+      ? "h-7 shrink-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90"
+      : "h-8 rounded-lg border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90";
     const actionIconClass = compact
-      ? "mr-0.5 h-3 w-3 shrink-0 !text-[hsl(221,92%,51%)]"
-      : "mr-1 h-3.5 w-3.5 shrink-0 !text-[hsl(221,92%,51%)]";
+      ? "mr-0.5 h-3 w-3 shrink-0 text-neutral-600 [&_svg]:text-neutral-600"
+      : "mr-1 h-3.5 w-3.5 shrink-0 text-neutral-600 [&_svg]:text-neutral-600";
     const shareTriggerClass = compact
-      ? "h-7 shrink-0 whitespace-nowrap rounded-md px-2 text-[11px] font-medium [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3"
-      : "h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:mr-1 [&_svg]:size-3.5";
+      ? "h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600"
+      : "h-8 gap-0 rounded-lg border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 [&_svg]:mr-1 [&_svg]:size-3.5 [&_svg]:text-neutral-600";
     const sortTriggerClass = compact
-      ? "h-7 w-[min(100%,118px)] min-w-[7rem] rounded-md border-zinc-300/85 bg-white px-2 text-[11px] font-medium shadow-[0_1px_2px_rgba(15,23,42,0.05)] focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0"
-      : "h-8 w-[136px] rounded-lg border-zinc-300 bg-white px-2.5 text-[13px] focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0";
+      ? "h-7 w-[min(100%,118px)] min-w-[7rem] rounded-md border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45 focus-visible:ring-offset-2"
+      : "h-8 w-[136px] rounded-lg border-neutral-200 bg-white px-2.5 text-[13px] text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45 focus-visible:ring-offset-2";
 
     return (
       <div className="w-full">
@@ -426,6 +426,7 @@ const ListingSearchResults = () => {
               <BulkShareListingsDialog
                 listingIds={Array.from(selectedRows)}
                 listingCount={selectedRows.size}
+                triggerVariant="outline"
                 triggerClassName={shareTriggerClass}
               />
             )}
@@ -435,7 +436,7 @@ const ListingSearchResults = () => {
               <SelectTrigger className={sortTriggerClass}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="rounded-lg border border-zinc-200 bg-white">
+              <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
                 <SelectItem value="date_new">Date (New)</SelectItem>
                 <SelectItem value="date_old">Date (Old)</SelectItem>
                 <SelectItem value="price_high">Price (High)</SelectItem>
@@ -451,22 +452,22 @@ const ListingSearchResults = () => {
   const renderAgentToolbarFull = () => (
     <>
       {renderToolbarTitleRow()}
-      <div className="border-t border-zinc-100 pt-2">
+      <div className="border-t border-neutral-100 pt-2">
         {renderResultsTopStrip("page")}
       </div>
-      <div className="border-t border-zinc-100 pt-2 pb-2">
+      <div className="border-t border-neutral-100 pb-2 pt-2">
         {renderResultsActionsRow("page")}
       </div>
     </>
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-white pt-6">
+    <div className="flex min-h-screen flex-col bg-white pt-4 sm:pt-5">
       <main className="flex-1">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-5">
           {!showMapSplit && (
             <div
-              className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 px-5"
+              className="sticky top-0 z-20 border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
               aria-label="Agent listing search toolbar"
             >
               {renderAgentToolbarFull()}
@@ -474,7 +475,7 @@ const ListingSearchResults = () => {
           )}
           {showMapSplit && (
             <div
-              className="border-b border-zinc-200 bg-white px-5"
+              className="border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
               aria-label="Agent listing search header"
             >
               {renderToolbarTitleRow()}
@@ -488,10 +489,10 @@ const ListingSearchResults = () => {
             selectedListingIds={Array.from(selectedRows)}
           />
 
-          <section className="bg-transparent px-5 pb-6 pt-0">
+          <section className="bg-transparent pb-6 pt-0">
             {showMapSplit ? (
-              <div className="mt-4 flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-                <section className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem] lg:self-start">
+              <div className="mt-3 flex h-auto min-h-0 flex-col-reverse gap-3 sm:mt-4 sm:gap-4 lg:grid lg:h-[calc(100dvh-7.25rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+                <section className="h-[48dvh] min-h-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:h-[52dvh] lg:sticky lg:top-[5.5rem] lg:h-full lg:min-h-0 lg:self-start">
                   <div className="h-full">
                     <PropertyMap
                       listings={displayedListings}
@@ -504,16 +505,16 @@ const ListingSearchResults = () => {
                   </div>
                 </section>
 
-                <section className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full">
-                  <div className="shrink-0 border-b border-zinc-200/60 bg-white px-5 py-2.5 sm:px-6">
+                <section className="flex h-auto min-h-0 max-lg:min-h-[48vh] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:h-full lg:min-h-0">
+                  <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
                     {renderResultsTopStrip("column")}
                   </div>
-                  <div className="shrink-0 border-b border-zinc-100/90 bg-white px-5 py-2.5 sm:px-6">
+                  <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
                     {renderResultsActionsRow("column")}
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
-                    <div className="px-5 py-4 sm:px-6">
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <div className="px-3 py-3 sm:px-5 sm:py-4">
+                      <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
                         {displayedListings.map((listing) => (
                           <ListingCard
                             key={listing.id}

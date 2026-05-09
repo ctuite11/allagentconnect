@@ -240,7 +240,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.list_office}</span>
             {listing.list_office_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 text-primary" />{formatPhoneNumber(listing.list_office_phone)}
+                <Phone className="mr-0.5 inline h-2.5 w-2.5 text-neutral-500" />{formatPhoneNumber(listing.list_office_phone)}
               </span>
             )}
           </div>
@@ -251,7 +251,7 @@ export const SearchListingCard = ({
             <span className={valueClass}>{listing.agent_name}</span>
             {listing.agent_phone && (
               <span className={`${labelClass} ml-2`}>
-                <Phone className="h-2.5 w-2.5 inline mr-0.5 text-primary" />{formatPhoneNumber(listing.agent_phone)}
+                <Phone className="mr-0.5 inline h-2.5 w-2.5 text-neutral-500" />{formatPhoneNumber(listing.agent_phone)}
               </span>
             )}
             {!compact && listing.agent_email && (
@@ -260,7 +260,7 @@ export const SearchListingCard = ({
             {listing.agent_id && (
               <button
                 onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                className="ml-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/70 hover:underline underline-offset-2 transition-colors"
+                className="ml-3 inline-flex items-center gap-1 text-xs font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline"
               >
                 <Mail className="h-3 w-3" />
                 {!compact && "Contact"}
@@ -276,27 +276,27 @@ export const SearchListingCard = ({
     <>
       {/* ══ DESKTOP (md+) — MLS-style two-column card ═══════════════════ */}
       <div
-        className={`hidden md:block overflow-hidden cursor-pointer rounded-2xl border bg-card will-change-transform transition-all duration-200 aac-shadow ${
+        className={cn(
+          "relative hidden cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-200 ease-out will-change-[box-shadow,border-color,transform] md:block",
           isSelected
-            ? "border-primary/40 ring-1 ring-primary/20 shadow-sm"
-            : "border-border hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:border-zinc-300 hover:-translate-y-[1px]"
-        }`}
+            ? "border-neutral-400 ring-1 ring-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            : "hover:-translate-y-px hover:border-neutral-300 hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)]",
+        )}
         onClick={handleCardClick}
       >
         <div className="flex items-start p-5 gap-6">
           {/* ── LEFT COLUMN: Photo + Utility strip ──────────────────────── */}
           <div className="flex-shrink-0 w-64">
             {/* A. Photo */}
-            <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl bg-muted">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-neutral-100">
               <DcmlsBadge listing={listing} />
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-                  className={`absolute left-2.5 top-2.5 z-10 h-5 w-5 rounded border shadow-sm flex items-center justify-center transition-colors ${
-                    isSelected
-                      ? "bg-accent border-accent"
-                      : "bg-white border-zinc-300"
-                  }`}
+                  className={cn(
+                    "absolute left-2.5 top-2.5 z-10 flex h-5 w-5 items-center justify-center rounded border shadow-sm transition-colors",
+                    isSelected ? "border-neutral-900 bg-neutral-900" : "border-neutral-300 bg-white",
+                  )}
                   aria-label="Select listing"
                 >
                   {isSelected && <Check className="h-3 w-3 text-white" />}
@@ -308,7 +308,7 @@ export const SearchListingCard = ({
                 <img src={photoUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Home className="w-10 h-10 text-muted-foreground/40" />
+                  <Home className="h-10 w-10 text-neutral-400" />
                 </div>
               )}
               {allPhotos.length > 1 && (
@@ -337,13 +337,13 @@ export const SearchListingCard = ({
             {/* B. Utility icon strip under photo */}
             <div className="flex items-center gap-3.5 mt-2.5 px-0.5">
               {photoCount > 0 && (
-                 <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
-                   <Camera className="h-4 w-4 text-primary" /> {photoCount}
+                 <span className="flex items-center gap-1 text-sm text-neutral-600">
+                   <Camera className="h-4 w-4 text-neutral-500" /> {photoCount}
                  </span>
               )}
               {docCount > 0 && (
-                 <span className="flex items-center gap-1 text-sm text-muted-foreground/80">
-                   <FileText className="h-4 w-4 text-primary" /> {docCount}
+                 <span className="flex items-center gap-1 text-sm text-neutral-600">
+                   <FileText className="h-4 w-4 text-neutral-500" /> {docCount}
                  </span>
               )}
               {listing.virtual_tour_url && (
@@ -352,9 +352,9 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                   className="flex items-center gap-1 text-sm text-muted-foreground/80 font-medium hover:text-muted-foreground transition-colors"
+                   className="flex items-center gap-1 text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-800"
                  >
-                   <Video className="h-4 w-4 text-primary" /> Tour
+                   <Video className="h-4 w-4 text-neutral-500" /> Tour
                 </a>
               )}
               {!listing.virtual_tour_url && listing.video_url && (
@@ -363,9 +363,9 @@ export const SearchListingCard = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                   className="flex items-center gap-1 text-sm text-muted-foreground/80 font-medium hover:text-muted-foreground transition-colors"
+                   className="flex items-center gap-1 text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-800"
                  >
-                   <Video className="h-4 w-4 text-primary" /> Video
+                   <Video className="h-4 w-4 text-neutral-500" /> Video
                 </a>
               )}
             </div>
@@ -396,17 +396,17 @@ export const SearchListingCard = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="hover:text-primary transition-colors"
+                    className="transition-colors hover:text-neutral-800"
                   >
                     {listing.address}{unitNumber ? `, #${unitNumber}` : ""}
                   </a>
                 </h3>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                  <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
+                <div className="mt-1 flex items-center gap-1.5 text-xs text-neutral-600">
+                  <MapPin className="h-3 w-3 flex-shrink-0 text-neutral-500" />
                   <span>{listing.city}, {listing.state} {listing.zip_code}</span>
                   {listing.neighborhood && (
                     <>
-                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-neutral-400">·</span>
                       <span>{listing.neighborhood}</span>
                     </>
                   )}
@@ -415,30 +415,30 @@ export const SearchListingCard = ({
 
               {/* CENTER: Status */}
               <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                <span className="text-xs text-muted-foreground">Status:</span>
+                <span className="text-xs text-neutral-600">Status:</span>
                 <ListingStatusBadge status={listing.status} size="sm" />
               </div>
 
               {/* RIGHT: Price + details */}
               <div className="text-right">
-                <div className="text-base font-bold text-primary">{displayPrice}</div>
+                <div className="text-base font-bold text-neutral-900">{displayPrice}</div>
                 {pricePerSqFt && (
-                  <div className="text-xs text-muted-foreground mt-0.5">${pricePerSqFt}/sqft</div>
+                  <div className="mt-0.5 text-xs text-neutral-600">${pricePerSqFt}/sqft</div>
                 )}
                 {listing.list_date && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
+                  <div className="mt-0.5 text-xs text-neutral-600">
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
                 )}
                 {daysOnMarket > 0 && (
-                  <div className="text-xs text-muted-foreground mt-0.5">{daysOnMarket} DOM</div>
+                  <div className="mt-0.5 text-xs text-neutral-600">{daysOnMarket} DOM</div>
                 )}
               </div>
             </div>
 
             {/* SECTION 2 — Structured facts grid */}
             {facts.length > 0 && (
-              <div className="grid grid-cols-4 gap-x-8 gap-y-2 mt-4 pt-3.5 border-t border-border/40">
+              <div className="mt-4 grid grid-cols-4 gap-x-8 gap-y-2 border-t border-neutral-100 pt-3.5">
                 {facts.map((f) => (
                   <div key={f.label} className="text-xs">
                     <span className="text-zinc-500">{f.label}:</span>{" "}
@@ -459,16 +459,16 @@ export const SearchListingCard = ({
 
             {/* SECTION 3 — Remarks preview */}
             {listing.description && (
-              <div className="mt-4 text-sm leading-relaxed text-muted-foreground/80 line-clamp-3">
+              <div className="mt-4 line-clamp-3 text-sm leading-relaxed text-neutral-600">
                 {listing.description}
               </div>
             )}
 
             {/* Open house banner */}
             {nextOpenHouse && (
-              <div className="mt-3.5 flex items-center gap-1.5 text-xs py-2 px-3 rounded-lg bg-accent-soft border border-accent-muted/60">
-                <Calendar className="h-3.5 w-3.5 text-accent" />
-                <span className="text-accent font-medium">
+              <div className="mt-3.5 flex items-center gap-1.5 rounded-lg border border-emerald-200/80 bg-emerald-50/80 px-3 py-2 text-xs">
+                <Calendar className="h-3.5 w-3.5 text-emerald-700" />
+                <span className="font-medium text-emerald-900">
                   Open House: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
                 </span>
               </div>
@@ -485,34 +485,37 @@ export const SearchListingCard = ({
         )}
       </div>
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
-      <Card className={`md:hidden overflow-hidden transition-shadow cursor-pointer ${
-        isSelected
-          ? "border-primary/40 ring-1 ring-primary/20 shadow-sm"
-          : "hover:shadow-md hover:border-zinc-300"
-      }`} onClick={handleCardClick}>
+      <Card
+        className={cn(
+          "cursor-pointer overflow-hidden border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-[box-shadow,border-color] md:hidden",
+          isSelected
+            ? "ring-1 ring-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border-neutral-400"
+            : "hover:border-neutral-300 hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)]",
+        )}
+        onClick={handleCardClick}
+      >
         <div className="p-4">
           <div className="flex gap-3">
             <div className="relative flex-shrink-0">
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-                  className={`absolute left-2 top-2 z-10 h-5 w-5 rounded border shadow-sm flex items-center justify-center transition-colors ${
-                    isSelected
-                      ? "bg-accent border-accent"
-                      : "bg-white border-zinc-300"
-                  }`}
+                  className={cn(
+                    "absolute left-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded border shadow-sm transition-colors",
+                    isSelected ? "border-neutral-900 bg-neutral-900" : "border-neutral-300 bg-white",
+                  )}
                   aria-label="Select listing"
                 >
                   {isSelected && <Check className="h-3 w-3 text-white" />}
                 </button>
               )}
-              <div className="relative h-[75px] w-[100px] overflow-hidden rounded bg-muted">
+              <div className="relative h-[75px] w-[100px] overflow-hidden rounded-md bg-neutral-100">
                 <DcmlsBadge listing={listing} />
                 {photoUrl ? (
                   <img src={photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
-                    <Home className="w-6 h-6 text-muted-foreground" />
+                    <Home className="h-6 w-6 text-neutral-400" />
                   </div>
                 )}
                 {photoCount > 0 && (
@@ -526,7 +529,7 @@ export const SearchListingCard = ({
               <h3 className="text-sm font-semibold text-foreground truncate">
                 {listing.address}{unitNumber ? `, #${unitNumber}` : ""}
               </h3>
-              <div className="flex items-center text-xs text-muted-foreground mt-0.5">
+              <div className="mt-0.5 flex items-center text-xs text-neutral-600">
                 <MapPin className="w-3 h-3 mr-0.5" />
                 {listing.city}, {listing.state} {listing.zip_code}
               </div>
@@ -553,17 +556,17 @@ export const SearchListingCard = ({
             </div>
           </div>
 
-          <div className="mt-3 border-t border-border pt-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-base font-bold text-primary">{displayPrice}</span>
-              {pricePerSqFt && <span className="text-xs text-muted-foreground">${pricePerSqFt}/sqft</span>}
-              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+          <div className="mt-3 border-t border-neutral-100 pt-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-base font-bold text-neutral-900">{displayPrice}</span>
+              {pricePerSqFt && <span className="text-xs text-neutral-600">${pricePerSqFt}/sqft</span>}
+              <span className="flex items-center gap-1 text-sm text-neutral-600">
                 <Bed className="h-3.5 w-3.5" /> {listing.bedrooms ?? "-"}
               </span>
-              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1 text-sm text-neutral-600">
                 <Bath className="h-3.5 w-3.5" /> {listing.bathrooms ?? "-"}
               </span>
-              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1 text-sm text-neutral-600">
                 <Home className="h-3.5 w-3.5" /> {listing.square_feet?.toLocaleString() ?? "-"} sqft
               </span>
             </div>
@@ -576,7 +579,7 @@ export const SearchListingCard = ({
           )}
 
           {listing.year_built && (
-            <div className="mt-1.5 text-[11px] text-muted-foreground truncate">
+            <div className="mt-1.5 truncate text-[11px] text-neutral-600">
               Built {listing.year_built}
               {listing.total_parking_spaces ? ` · ${listing.total_parking_spaces} pkg` : ""}
             </div>
@@ -592,30 +595,30 @@ export const SearchListingCard = ({
           )}
 
           {listing.list_date && (
-            <div className="mt-1 text-[11px] text-muted-foreground">
+            <div className="mt-1 text-[11px] text-neutral-600">
               Listed {format(new Date(listing.list_date), "MM/dd/yy")}
             </div>
           )}
 
           {(listing.list_office || listing.agent_name) && (
-            <div className="mt-2.5 border-t border-border pt-2.5">
+            <div className="mt-2.5 border-t border-neutral-100 pt-2.5">
               <AttributionRow compact />
             </div>
           )}
 
-          <div className="mt-3 flex items-center justify-end gap-3 border-t border-border pt-3">
+          <div className="mt-3 flex items-center justify-end gap-3 border-t border-neutral-100 pt-3">
             <button
               onClick={(e) => { e.stopPropagation(); navigate(`/property/${listing.id}`, { state: { from: fromPath } }); }}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-primary"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600 transition hover:text-neutral-900"
             >
               <ExternalLink className="h-4 w-4" /> View
             </button>
             {listing.agent_id && (
               <button
                 onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-primary"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600 transition hover:text-neutral-900"
               >
-                <Mail className="h-4 w-4 text-primary" /> Contact
+                <Mail className="h-4 w-4 text-neutral-500" /> Contact
               </button>
             )}
           </div>

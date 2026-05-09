@@ -66,9 +66,9 @@ const ListingResultsTable = ({
 }: ListingResultsTableProps) => {
   if (loading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2.5 pt-2 sm:space-y-3">
         {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full bg-muted" />
+          <Skeleton key={i} className="h-14 w-full rounded-lg border border-neutral-100 bg-neutral-100 sm:h-16" />
         ))}
       </div>
     );
@@ -76,17 +76,17 @@ const ListingResultsTable = ({
 
   if (listings.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center py-20">
-        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-8 py-10 text-center">
-          <p className="text-base font-medium text-zinc-900">No listings found</p>
-          <p className="text-sm text-zinc-500 mt-1">Try adjusting your search filters</p>
+      <div className="flex flex-1 items-center justify-center px-4 py-14 sm:py-20">
+        <div className="max-w-md rounded-xl border border-dashed border-neutral-200 bg-white px-8 py-9 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <p className="text-[15px] font-semibold text-neutral-900">No listings found</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">Try widening location, status, price, or other filters.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5 sm:space-y-3">
       {listings.map((listing) => (
         <SearchListingCard
           key={listing.id}
