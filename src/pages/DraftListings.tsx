@@ -6,7 +6,7 @@ import { formatDistanceToNow, differenceInDays } from "date-fns";
 
 import PageShell from "@/components/layout/PageShell";
 import { CardSurface } from "@/components/ui/CardSurface";
-import { LoadingScreen } from "@/components/LoadingScreen";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Grid, List as ListIcon, Plus, Pencil, Trash2, FileText, X, AlertTriangle } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { LISTING_TYPE_LABELS } from "@/constants/status";
@@ -153,7 +153,33 @@ export default function DraftListings() {
   };
 
   if (loading) {
-    return <LoadingScreen message="Loading drafts..." />;
+    return (
+      <PageShell>
+        <div aria-busy="true" role="status">
+        <span className="sr-only">Loading drafts…</span>
+        <Seo title="Draft Listings" />
+        <PageHeader title="Drafts" subtitle="Manage your saved drafts." />
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Skeleton className="h-10 w-[140px] rounded-lg bg-zinc-100" />
+          <Skeleton className="h-9 w-[180px] rounded-lg bg-zinc-100" />
+        </div>
+        <div className="space-y-4">
+          {[0, 1, 2, 3].map((i) => (
+            <CardSurface key={i} className="p-4">
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <Skeleton className="h-32 w-full shrink-0 rounded-lg bg-zinc-100 sm:w-44" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-5 w-[min(100%,320px)] rounded-md bg-zinc-100" />
+                  <Skeleton className="h-4 w-[min(100%,200px)] rounded-md bg-zinc-100" />
+                  <Skeleton className="h-4 w-full max-w-md rounded-md bg-zinc-100" />
+                </div>
+              </div>
+            </CardSurface>
+          ))}
+        </div>
+        </div>
+      </PageShell>
+    );
   }
 
   const renderAgeBadge = (updatedAt: string) => {

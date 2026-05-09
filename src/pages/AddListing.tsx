@@ -58,7 +58,7 @@ import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -2944,12 +2944,36 @@ const AddListing = () => {
 
   if (loading || isLoadingListing) {
     return (
-      <AacMonogramLoader
-        variant="fullscreen"
-        message={
-          isLoadingListing ? "Loading listing data…" : "Checking authentication…"
-        }
-      />
+      <>
+        <Seo title="Add Listing" />
+        <div
+          className="min-h-0 bg-[#FFFFFF] pb-12 pt-6"
+          aria-busy="true"
+          role="status"
+        >
+          <span className="sr-only">
+            {isLoadingListing ? "Loading listing data…" : "Preparing listing form…"}
+          </span>
+          <div className="container mx-auto px-4 py-8">
+            <div className="mx-auto max-w-5xl space-y-6">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-10 rounded-md bg-zinc-100" />
+              </div>
+              <Skeleton className="h-4 w-64 max-w-[90%] rounded-md bg-zinc-100" />
+              <div className="flex flex-wrap items-start gap-4">
+                <Skeleton className="h-12 min-w-0 flex-1 rounded-lg bg-zinc-100 sm:max-w-xl" />
+                <Skeleton className="h-16 w-16 shrink-0 rounded-lg bg-zinc-100" />
+              </div>
+              <Skeleton className="h-24 w-full rounded-xl bg-zinc-100" />
+              <Skeleton className="h-[min(52vh,440px)] w-full rounded-xl bg-zinc-100" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Skeleton className="h-32 rounded-xl bg-zinc-100" />
+                <Skeleton className="h-32 rounded-xl bg-zinc-100" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 

@@ -7,7 +7,7 @@ import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { CardSurface } from "@/components/ui/CardSurface";
-import { LoadingScreen } from "@/components/LoadingScreen";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig, isComingSoon } from "@/constants/status";
@@ -143,6 +143,43 @@ function formatAddressWithUnit(listing: Listing): string {
     return `${baseAddress} #${unit.replace(/^#/, '')}, ${city}`;
   }
   return `${baseAddress}, ${city}`;
+}
+
+/** In-shell placeholder while listings fetch — keeps sidebar + avoids a second full-viewport monogram. */
+function MyListingsSkeleton() {
+  return (
+    <AgentAacPage className="pb-12" aria-busy="true" role="status">
+      <span className="sr-only">Loading your listings…</span>
+      <div className="mb-6 space-y-3">
+        <Skeleton className="h-9 w-[220px] max-w-[80%] rounded-md bg-zinc-100" />
+        <Skeleton className="h-4 max-w-xl rounded-md bg-zinc-100" />
+      </div>
+      <div className="mb-6 flex gap-2 overflow-hidden">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-9 w-[88px] shrink-0 rounded-full bg-zinc-100" />
+        ))}
+      </div>
+      <div className="mt-6 space-y-4">
+        {[0, 1, 2].map((i) => (
+          <CardSurface key={i} className="p-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Skeleton className="h-36 w-full shrink-0 rounded-lg bg-zinc-100 sm:w-40" />
+              <div className="min-w-0 flex-1 space-y-3">
+                <Skeleton className="h-5 w-[min(100%,420px)] rounded-md bg-zinc-100" />
+                <Skeleton className="h-4 w-[min(100%,280px)] rounded-md bg-zinc-100" />
+                <Skeleton className="h-4 w-[min(100%,360px)] rounded-md bg-zinc-100" />
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Skeleton className="h-8 w-24 rounded-md bg-zinc-100" />
+                  <Skeleton className="h-8 w-28 rounded-md bg-zinc-100" />
+                  <Skeleton className="h-8 w-20 rounded-md bg-zinc-100" />
+                </div>
+              </div>
+            </div>
+          </CardSurface>
+        ))}
+      </div>
+    </AgentAacPage>
+  );
 }
 
 /**
@@ -1175,7 +1212,12 @@ const MyListings = () => {
   }
 
   if (loading) {
-    return <LoadingScreen message="Loading your listings..." />;
+    return (
+      <>
+        <Seo title="My Listings" />
+        <MyListingsSkeleton />
+      </>
+    );
   }
 
   if (listings.length === 0) {

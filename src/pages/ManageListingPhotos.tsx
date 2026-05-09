@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ChevronLeft, Trash2, Upload } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
-import { AacMonogramLoader } from '@/components/AacMonogramLoader';
+import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/ui/page-header';
 import { Seo } from '@/components/Seo';
 
@@ -252,7 +252,24 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   };
 
   if (loading) {
-    return <AacMonogramLoader variant="section" message="Loading…" className="min-h-screen pt-24" />;
+    return (
+      <div className="container mx-auto max-w-7xl space-y-6 p-6 pt-20" aria-busy="true" role="status">
+        <span className="sr-only">Loading…</span>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1 space-y-3">
+            <Skeleton className="h-8 w-[min(100%,260px)] rounded-md bg-zinc-100" />
+            <Skeleton className="h-4 w-[min(100%,420px)] rounded-md bg-zinc-100" />
+          </div>
+          <Skeleton className="h-10 w-[128px] shrink-0 rounded-md bg-zinc-100" />
+        </div>
+        <Skeleton className="h-[72px] w-full rounded-lg bg-zinc-100" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="aspect-[4/3] w-full rounded-xl bg-zinc-100" />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

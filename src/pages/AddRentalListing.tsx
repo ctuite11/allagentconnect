@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, ArrowLeft, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home } from "lucide-react";
 import { z } from "zod";
 import { bostonNeighborhoods, bostonNeighborhoodsWithAreas } from "@/data/bostonNeighborhoods";
@@ -687,7 +687,23 @@ const AddRentalListing = () => {
   };
 
   if (loading) {
-    return <AacMonogramLoader variant="fullscreen" message="Loading…" />;
+    return (
+      <div className="min-h-0 bg-background pt-24" aria-busy="true" role="status">
+        <span className="sr-only">Loading rental listing form…</span>
+        <div className="container mx-auto px-4 py-8">
+          <div className="mx-auto max-w-5xl space-y-6">
+            <Skeleton className="h-4 w-48 rounded-md bg-zinc-100" />
+            <div className="flex flex-wrap items-center gap-4">
+              <Skeleton className="h-12 flex-1 rounded-lg bg-zinc-100 sm:max-w-xl" />
+              <Skeleton className="h-16 w-16 shrink-0 rounded-lg bg-zinc-100" />
+            </div>
+            <Skeleton className="h-[120px] w-full rounded-xl bg-zinc-100" />
+            <Skeleton className="h-14 w-full rounded-lg bg-zinc-100" />
+            <Skeleton className="h-[min(48vh,400px)] w-full rounded-xl bg-zinc-100" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

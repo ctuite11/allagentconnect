@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Check } from "lucide-react";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { toast } from "sonner";
 
 const VendorPackages = () => {
@@ -92,7 +92,25 @@ const VendorPackages = () => {
   };
 
   if (loading) {
-    return <AacMonogramLoader variant="fullscreen" message="Loading packages…" className="pt-20" />;
+    return (
+      <div className="container mx-auto px-4 py-8 pt-20" aria-busy="true" role="status">
+        <span className="sr-only">Loading packages…</span>
+        <div className="mb-12 space-y-4 text-center">
+          <Skeleton className="mx-auto h-10 w-[min(100%,340px)] rounded-lg bg-zinc-100" />
+          <Skeleton className="mx-auto h-6 w-[min(100%,480px)] max-w-2xl rounded-md bg-zinc-100" />
+        </div>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-zinc-100 bg-white p-6 shadow-none">
+              <Skeleton className="h-6 w-32 rounded-md bg-zinc-100" />
+              <Skeleton className="mt-4 h-4 w-full rounded-md bg-zinc-100" />
+              <Skeleton className="mt-2 h-4 w-[85%] rounded-md bg-zinc-100" />
+              <Skeleton className="mt-6 h-10 w-full rounded-lg bg-zinc-100" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

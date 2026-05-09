@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, ExternalLink, Phone, Mail, Globe } from "lucide-react";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 const businessTypes = [
@@ -90,7 +90,29 @@ const VendorDirectory = () => {
   };
 
   if (loading) {
-    return <AacMonogramLoader variant="fullscreen" message="Loading vendors…" className="pt-20" />;
+    return (
+      <div className="container mx-auto px-4 py-8 pt-20" aria-busy="true" role="status">
+        <span className="sr-only">Loading vendors…</span>
+        <div className="mb-8 space-y-3">
+          <Skeleton className="h-10 w-[280px] max-w-[90%] rounded-lg bg-zinc-100" />
+          <Skeleton className="h-6 w-[min(100%,420px)] rounded-md bg-zinc-100" />
+        </div>
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Skeleton className="h-11 w-full rounded-md bg-zinc-100" />
+          <Skeleton className="h-11 w-full rounded-md bg-zinc-100" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="rounded-xl border bg-card p-6 shadow-sm">
+              <Skeleton className="h-7 w-[70%] rounded-md bg-zinc-100" />
+              <Skeleton className="mt-4 h-4 w-full rounded-md bg-zinc-100" />
+              <Skeleton className="mt-2 h-4 w-[90%] rounded-md bg-zinc-100" />
+              <Skeleton className="mt-6 h-9 w-full rounded-lg bg-zinc-100" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Loader2, Mail, Phone, UserX } from "lucide-react";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 
 const ClientAgentSettings = () => {
@@ -99,7 +99,25 @@ const ClientAgentSettings = () => {
   };
 
   if (loading) {
-    return <AacMonogramLoader variant="fullscreen" message="Loading your settings…" />;
+    return (
+      <div className="flex min-h-0 flex-col bg-white pt-20" aria-busy="true" role="status">
+        <span className="sr-only">Loading your settings…</span>
+        <main className="flex-1 bg-white">
+          <div className="container mx-auto px-4 py-8">
+            <div className="mx-auto max-w-2xl space-y-6">
+              <Skeleton className="h-10 w-[200px] rounded-md bg-zinc-100" />
+              <Skeleton className="h-4 w-[min(100%,360px)] rounded-md bg-zinc-100" />
+              <div className="rounded-xl border border-zinc-100 bg-card p-6 shadow-sm">
+                <Skeleton className="h-7 w-[min(100%,240px)] rounded-md bg-zinc-100" />
+                <Skeleton className="mt-4 h-4 w-full rounded-md bg-zinc-100" />
+                <Skeleton className="mt-2 h-4 w-[92%] rounded-md bg-zinc-100" />
+                <Skeleton className="mt-8 h-10 w-full rounded-lg bg-zinc-100 sm:max-w-xs" />
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (

@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, Bell, User, MapPin, Home, Search, Calendar, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import NotificationSettings from "@/components/NotificationSettings";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ConsumerDashboard = () => {
   const navigate = useNavigate();
@@ -82,7 +82,33 @@ const ConsumerDashboard = () => {
   };
 
   if (loading) {
-    return <AacMonogramLoader variant="fullscreen" message="Loading your dashboard..." />;
+    return (
+      <div className="min-h-0 bg-background pt-20" aria-busy="true" role="status">
+        <span className="sr-only">Loading your dashboard…</span>
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-16 w-16 shrink-0 rounded-full bg-zinc-100" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-[min(100%,260px)] rounded-md bg-zinc-100" />
+                <Skeleton className="h-4 w-[min(100%,200px)] rounded-md bg-zinc-100" />
+              </div>
+            </div>
+            <Skeleton className="h-10 w-[120px] shrink-0 rounded-md bg-zinc-100 sm:ml-auto" />
+          </div>
+          <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-28 rounded-xl bg-zinc-100" />
+            ))}
+          </div>
+          <Skeleton className="mb-8 h-[200px] w-full rounded-xl bg-zinc-100" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-[260px] rounded-xl bg-zinc-100" />
+            <Skeleton className="h-[260px] rounded-xl bg-zinc-100" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
