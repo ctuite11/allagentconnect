@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Pencil, ArrowLeft, CheckCircle2, Clock, Plus } from "lucide-react";
+import { Home, Pencil, ArrowLeft, CheckCircle2, Clock, Plus, Trash2 } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -11,6 +11,16 @@ import { buyerCollectionCardRoot, buyerImageMosaicGrid, buyerSectionCard } from 
 import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { formatCriteriaDisplayLabel, formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BuyerInfo {
   firstName: string;
@@ -25,6 +35,8 @@ interface LinkedHotSheet {
   criteria: any;
   photos: string[];
   matchCount: number;
+  /** Pending-only: safe to offer agent delete (RPC re-validates). */
+  canDeletePending: boolean;
 }
 
 function PhotoCell({ src }: { src?: string }) {
@@ -122,6 +134,8 @@ const HotSheetBuyerDetail = () => {
   const [createHotSheetOpen, setCreateHotSheetOpen] = useState(false);
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [buyerActivityMetrics, setBuyerActivityMetrics] = useState<BuyerActivityMetrics | null>(null);
+  const [pendingDeleteSheet, setPendingDeleteSheet] = useState<LinkedHotSheet | null>(null);
+  const [deletingHotSheet, setDeletingHotSheet] = useState(false);
 
   useEffect(() => {
     if (clientId) fetchBuyerData();
@@ -137,7 +151,7 @@ const HotSheetBuyerDetail = () => {
 
       const { data: rel } = await supabase
         .from("client_agent_relationships")
-        .select("status")
+        .select("status, client_id")
         .eq("agent_id", user.id)
         .or(`crm_client_id.eq.${clientId},client_id.eq.${clientId}`)
         .in("status", ["active", "pending"])
@@ -150,6 +164,8 @@ const HotSheetBuyerDetail = () => {
       }
 
       setRelationshipStatus(rel.status === "pending" ? "pending" : "active");
+      const buyerWorkspaceLinked =
+        rel.status === "active" && rel.client_id != null;
 
       const [clientRes, hscRes] = await Promise.all([
         supabase.from("clients").select("first_name, last_name, email, phone").eq("id", clientId!).maybeSingle(),
@@ -168,6 +184,30 @@ const HotSheetBuyerDetail = () => {
       if (hscRes.data?.length) {
         const hsIds = hscRes.data.map((r: any) => r.hot_sheet_id);
         const { data: hsData } = await supabase.from("hot_sheets").select("id, name, criteria").in("id", hsIds);
+
+        const acceptedHotSheetIdsForClient = new Set<string>();
+        if (!buyerWorkspaceLinked) {
+          const emailLower = clientRes.data?.email
+            ? String(clientRes.data.email).trim().toLowerCase()
+            : "";
+          const { data: tokenRows, error: tokenErr } = await supabase
+            .from("share_tokens")
+            .select("payload, accepted_at")
+            .eq("agent_id", user.id);
+          if (!tokenErr && tokenRows?.length) {
+            for (const row of tokenRows) {
+              const p = row.payload as Record<string, unknown> | null;
+              if (!p || String(p.type ?? "") !== "client_hotsheet_invite" || !row.accepted_at) continue;
+              const hsId = p.hot_sheet_id != null ? String(p.hot_sheet_id) : "";
+              if (!hsId) continue;
+              const cid = p.client_id != null ? String(p.client_id) : "";
+              const cem = p.client_email != null ? String(p.client_email).trim().toLowerCase() : "";
+              const matchesCrmBuyer =
+                cid === clientId || (!!emailLower && cem === emailLower);
+              if (matchesCrmBuyer) acceptedHotSheetIdsForClient.add(hsId);
+            }
+          }
+        }
 
         const result: LinkedHotSheet[] = [];
         for (const hs of hsData || []) {
@@ -190,7 +230,16 @@ const HotSheetBuyerDetail = () => {
           } catch (e) {
             console.error("Error fetching matches for", hs.id, e);
           }
-          result.push({ id: hs.id, name: hs.name, criteria: hs.criteria, photos, matchCount: matchCount.value });
+          const canDeletePending =
+            !buyerWorkspaceLinked && !acceptedHotSheetIdsForClient.has(String(hs.id));
+          result.push({
+            id: hs.id,
+            name: hs.name,
+            criteria: hs.criteria,
+            photos,
+            matchCount: matchCount.value,
+            canDeletePending,
+          });
         }
 
         setHotSheets(result);
@@ -204,6 +253,27 @@ const HotSheetBuyerDetail = () => {
       console.error("Error fetching buyer data:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const confirmDeletePendingHotSheet = async () => {
+    if (!pendingDeleteSheet || !clientId) return;
+    setDeletingHotSheet(true);
+    try {
+      const { error } = await supabase.rpc("delete_pending_buyer_hot_sheet", {
+        p_hot_sheet_id: pendingDeleteSheet.id,
+        p_crm_client_id: clientId,
+      });
+      if (error) throw error;
+      toast.success("Unaccepted hot sheet removed.");
+      setPendingDeleteSheet(null);
+      await fetchBuyerData();
+    } catch (e: unknown) {
+      console.error(e);
+      const msg = e && typeof e === "object" && "message" in e ? String((e as { message: string }).message) : "";
+      toast.error(msg || "Could not delete this hot sheet.");
+    } finally {
+      setDeletingHotSheet(false);
     }
   };
 
@@ -293,17 +363,33 @@ const HotSheetBuyerDetail = () => {
                 onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
                 className={`relative ${buyerCollectionCardRoot} rounded-xl border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]`}
               >
-                <button
-                  type="button"
-                  aria-label="Edit hot sheet"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
-                  }}
-                  className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200/90 bg-white shadow-sm transition-colors hover:bg-zinc-50"
-                >
-                  <Pencil className="h-3.5 w-3.5 text-zinc-700" />
-                </button>
+                <div className="absolute top-2 right-2 z-10 flex gap-1">
+                  {hs.canDeletePending ? (
+                    <button
+                      type="button"
+                      aria-label="Delete unaccepted hot sheet"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPendingDeleteSheet(hs);
+                      }}
+                      className="flex h-8 items-center justify-center gap-1 rounded-md border border-red-200/90 bg-white px-2 text-xs font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      Delete
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    aria-label="Edit hot sheet"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
+                    }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-zinc-200/90 bg-white shadow-sm transition-colors hover:bg-zinc-50"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-zinc-700" />
+                  </button>
+                </div>
 
                 <div className={buyerImageMosaicGrid}>
                   <PhotoCell src={hs.photos[0]} />
@@ -363,6 +449,38 @@ const HotSheetBuyerDetail = () => {
             }}
           />
         )}
+
+        <AlertDialog
+          open={!!pendingDeleteSheet}
+          onOpenChange={(open) => {
+            if (!open && deletingHotSheet) return;
+            if (!open) setPendingDeleteSheet(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete unaccepted hot sheet?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This permanently removes <strong className="font-medium text-foreground">{pendingDeleteSheet?.name}</strong> because
+                the buyer has not accepted this hot sheet yet (no accepted invite, not in shared workspace).
+                Accepted hot sheets cannot be deleted here. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deletingHotSheet}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deletingHotSheet}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void confirmDeletePendingHotSheet();
+                }}
+              >
+                {deletingHotSheet ? "Deleting…" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
