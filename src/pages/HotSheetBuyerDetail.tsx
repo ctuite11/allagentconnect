@@ -7,8 +7,9 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
-import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { buyerCollectionCardRoot, buyerImageMosaicGrid, buyerSectionCard } from "@/lib/buyerUi";
+import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
+import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 
 interface BuyerInfo {
   firstName: string;
@@ -23,13 +24,6 @@ interface LinkedHotSheet {
   criteria: any;
   photos: string[];
   matchCount: number;
-}
-
-function initialsFromName(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
 }
 
 function PhotoCell({ src }: { src?: string }) {
@@ -122,6 +116,7 @@ const HotSheetBuyerDetail = () => {
   const [editingHotSheet, setEditingHotSheet] = useState<{ id: string; criteria: any } | null>(null);
   const [createHotSheetOpen, setCreateHotSheetOpen] = useState(false);
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
+  const [buyerActivityMetrics, setBuyerActivityMetrics] = useState<BuyerActivityMetrics | null>(null);
 
   useEffect(() => {
     if (clientId) fetchBuyerData();
@@ -130,6 +125,7 @@ const HotSheetBuyerDetail = () => {
   const fetchBuyerData = async () => {
     try {
       setLoading(true);
+      setBuyerActivityMetrics(null);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setAgentUserId(user.id);
@@ -196,6 +192,9 @@ const HotSheetBuyerDetail = () => {
       } else {
         setHotSheets([]);
       }
+
+      const activity = await fetchBuyerActivityMetrics(supabase, clientId!);
+      setBuyerActivityMetrics(activity);
     } catch (e) {
       console.error("Error fetching buyer data:", e);
     } finally {
@@ -254,37 +253,15 @@ const HotSheetBuyerDetail = () => {
         {/* Buyer card + New Hot Sheet (grouped — CTA directly under card, left-aligned) */}
         {buyer && relationshipStatus && (
           <div className="mb-3 w-full space-y-2">
-            <div className="flex flex-col gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700"
-                  aria-hidden
-                >
-                  {initialsFromName(displayName)}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-zinc-900">{displayName}</p>
-                  <p className="truncate text-xs text-zinc-500">
-                    {buyer.email && buyer.phone?.trim() ? (
-                      <>
-                        {buyer.email}
-                        <span className="text-zinc-300"> · </span>
-                        {formatPhoneNumber(buyer.phone)}
-                      </>
-                    ) : buyer.email ? (
-                      buyer.email
-                    ) : buyer.phone?.trim() ? (
-                      formatPhoneNumber(buyer.phone)
-                    ) : (
-                      <span className="text-zinc-400">No email on file</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center justify-end sm:justify-end">
-                <RelationshipStatusPill status={relationshipStatus} />
-              </div>
-            </div>
+            <AgentBuyerActivityHeaderCard
+              displayName={displayName}
+              email={buyer.email}
+              phone={buyer.phone ?? null}
+              crmClientId={clientId!}
+              metrics={buyerActivityMetrics}
+              metricsLoading={buyerActivityMetrics === null}
+              trailing={<RelationshipStatusPill status={relationshipStatus} />}
+            />
             <div className="flex w-full justify-start">
               <Button
                 type="button"

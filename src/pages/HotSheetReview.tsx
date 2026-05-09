@@ -31,7 +31,8 @@ import {
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
+import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
 interface ReviewRecipient {
@@ -52,13 +53,6 @@ interface ReviewRecipient {
   buyerLinked: boolean;
 }
 
-function initialsFromName(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
-}
-
 /** Per-contact dashboard invite UX: accepted, pending invite elsewhere, or still needs first invite. */
 function recipientInviteStatus(r: ReviewRecipient): "accepted" | "sent" | "needs" {
   if (r.inviteAccepted || r.buyerLinked) return "accepted";
@@ -74,6 +68,8 @@ function CompactClientRecipientsStrip({
   agentUserId,
   onRefresh,
   collaborativeMode,
+  recipientActivity,
+  recipientActivityLoading,
 }: {
   recipients: ReviewRecipient[];
   hotSheetId: string;
@@ -83,6 +79,8 @@ function CompactClientRecipientsStrip({
   onRefresh: () => void;
   /** Shared workspace — hide invite/resend affordances; neutral collaboration labels */
   collaborativeMode?: boolean;
+  recipientActivity: Record<string, BuyerActivityMetrics>;
+  recipientActivityLoading: boolean;
 }) {
   const [cooldownUntil, setCooldownUntil] = useState<Record<string, number>>({});
   const [resendingId, setResendingId] = useState<string | null>(null);
@@ -128,73 +126,57 @@ function CompactClientRecipientsStrip({
     <div className="mb-2 space-y-2">
       {recipients.map((r) => {
         const inCooldown = cooldownUntil[r.clientId] != null && Date.now() < cooldownUntil[r.clientId]!;
-        return (
-          <div
-            key={r.clientId}
-            className="flex flex-col gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700"
-                aria-hidden
-              >
-                {initialsFromName(r.displayName)}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-zinc-900">{r.displayName}</p>
-                {r.email ? (
-                  <p className="truncate text-xs text-zinc-500">{r.email}</p>
-                ) : (
-                  <p className="text-xs text-zinc-400">No email on file</p>
+        const trailing = (() => {
+          const st = recipientInviteStatus(r);
+          if (collaborativeMode || st === "accepted") {
+            return (
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
+                <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
+                {collaborativeMode ? "In search" : "Invite Accepted"}
+              </span>
+            );
+          }
+          if (st === "sent") {
+            return (
+              <>
+                <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-900">
+                  <Clock className="h-3 w-3" />
+                  Invite Sent
+                </span>
+                {!collaborativeMode && r.resendTokenId && r.resendToken && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
+                    disabled={resendingId === r.clientId || inCooldown}
+                    onClick={() => handleResend(r)}
+                  >
+                    <RefreshCw
+                      className={`mr-1.5 h-3.5 w-3.5 ${resendingId === r.clientId ? "animate-spin" : ""}`}
+                    />
+                    {resendingId === r.clientId ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
+                  </Button>
                 )}
-                {r.phone ? (
-                  <p className="truncate text-xs text-zinc-400">{formatPhoneNumber(r.phone)}</p>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:justify-end">
-              {(() => {
-                const st = recipientInviteStatus(r);
-                if (collaborativeMode || st === "accepted") {
-                  return (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                      <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
-                      {collaborativeMode ? "In search" : "Invite Accepted"}
-                    </span>
-                  );
-                }
-                if (st === "sent") {
-                  return (
-                    <>
-                      <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-900">
-                        <Clock className="h-3 w-3" />
-                        Invite Sent
-                      </span>
-                      {!collaborativeMode && r.resendTokenId && r.resendToken && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-8 rounded-md border-zinc-200 px-3 text-xs font-medium shadow-sm"
-                          disabled={resendingId === r.clientId || inCooldown}
-                          onClick={() => handleResend(r)}
-                        >
-                          <RefreshCw
-                            className={`mr-1.5 h-3.5 w-3.5 ${resendingId === r.clientId ? "animate-spin" : ""}`}
-                          />
-                          {resendingId === r.clientId ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
-                        </Button>
-                      )}
-                    </>
-                  );
-                }
-                return (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-900">
-                    Needs Invite
-                  </span>
-                );
-              })()}
-            </div>
-          </div>
+              </>
+            );
+          }
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-900">
+              Needs Invite
+            </span>
+          );
+        })();
+        return (
+          <AgentBuyerActivityHeaderCard
+            key={r.clientId}
+            displayName={r.displayName}
+            email={r.email}
+            phone={r.phone}
+            crmClientId={r.clientId}
+            metrics={recipientActivity[r.clientId] ?? null}
+            metricsLoading={recipientActivityLoading}
+            trailing={trailing}
+          />
         );
       })}
     </div>
@@ -276,6 +258,8 @@ const HotSheetReview = () => {
   /** CRM buyer id to return to buyer hot sheet list when applicable */
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
+  const [recipientActivity, setRecipientActivity] = useState<Record<string, BuyerActivityMetrics>>({});
+  const [recipientActivityLoading, setRecipientActivityLoading] = useState(false);
   const [removedListingsOpen, setRemovedListingsOpen] = useState(false);
   /** Buyer hot-sheet saves — read-only hearts on shared workspace cards */
   const [buyerHotSheetFavoriteIds, setBuyerHotSheetFavoriteIds] = useState<Set<string>>(new Set());
@@ -291,8 +275,35 @@ const HotSheetReview = () => {
     setConversationRecipientBuyerId(null);
     setBuyerContextClientId(null);
     setReviewRecipients([]);
+    setRecipientActivity({});
+    setRecipientActivityLoading(false);
     setRemovedListingsOpen(false);
   }, [id]);
+
+  useEffect(() => {
+    if (!reviewRecipients.length) {
+      setRecipientActivity({});
+      setRecipientActivityLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setRecipientActivityLoading(true);
+    (async () => {
+      const results = await Promise.all(
+        reviewRecipients.map((r) => fetchBuyerActivityMetrics(supabase, r.clientId)),
+      );
+      if (cancelled) return;
+      const next: Record<string, BuyerActivityMetrics> = {};
+      reviewRecipients.forEach((r, i) => {
+        next[r.clientId] = results[i];
+      });
+      setRecipientActivity(next);
+      setRecipientActivityLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [reviewRecipients]);
 
   useEffect(() => {
     if (id) {
@@ -1184,6 +1195,8 @@ if (comments && comments.length > 0) {
               agentUserId={agentUserId}
               onRefresh={fetchHotSheetAndListings}
               collaborativeMode={isSharedWorkspace}
+              recipientActivity={recipientActivity}
+              recipientActivityLoading={recipientActivityLoading}
             />
           )}
 
