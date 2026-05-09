@@ -20,11 +20,14 @@ function MetricsToolbar({
   metrics,
   loading,
   hotSheetRef,
+  tintToolbarIcons,
 }: {
   metrics: BuyerActivityMetrics | null;
   loading: boolean;
   /** When set (e.g. hot sheet review), show “Hot Sheet #” code instead of buyer-wide sheet count */
   hotSheetRef?: string | null;
+  /** My Buyers-style row: muted color per metric icon instead of plain grey. */
+  tintToolbarIcons?: boolean;
 }) {
   if (loading) {
     return (
@@ -107,11 +110,25 @@ function MetricsToolbar({
           >
             <it.icon
               className={cn(
-                "h-3.5 w-3.5 shrink-0",
-                it.kind === "number" && (it.iconClass ?? "text-zinc-400"),
-                it.kind === "text" && "text-zinc-400",
+                "h-3.5 w-3.5 shrink-0 stroke-[2]",
+                !tintToolbarIcons
+                  ? it.kind === "number"
+                    ? (it.iconClass ?? "text-zinc-400")
+                    : "text-zinc-400"
+                  : it.key === "m"
+                    ? "text-emerald-600"
+                    : it.key === "v"
+                      ? "text-sky-600"
+                      : it.key === "f"
+                        ? (it.iconClass ?? "text-rose-500 stroke-rose-500")
+                        : it.key === "h"
+                          ? it.kind === "text"
+                            ? "text-violet-600"
+                            : "text-indigo-600"
+                          : it.key === "msg"
+                            ? "text-blue-600"
+                            : "text-zinc-400",
               )}
-              strokeWidth={2}
               aria-hidden
             />
             {it.kind === "number" ? it.value.toLocaleString() : it.value}
@@ -137,6 +154,8 @@ export type AgentBuyerActivityHeaderCardProps = {
   className?: string;
   /** Current hot sheet code on review pages; omit on buyer-wide views (shows sheet count instead). */
   hotSheetRef?: string | null;
+  /** Color per metric icon (My Buyers rows); omit elsewhere for neutral grey toolbar. */
+  metricsToolbarTintIcons?: boolean;
 };
 
 /**
@@ -152,6 +171,7 @@ export function AgentBuyerActivityHeaderCard({
   trailing,
   className,
   hotSheetRef,
+  metricsToolbarTintIcons,
 }: AgentBuyerActivityHeaderCardProps) {
   /** Parent supplies metrics when `metrics` is passed (including `null`). Omit `metrics` to fetch internally. */
   const controlled = metricsProp !== undefined;
@@ -162,9 +182,11 @@ export function AgentBuyerActivityHeaderCard({
   useEffect(() => {
     if (controlled) return;
     let cancelled = false;
+    const forClientId = crmClientId;
     setInternalLoading(true);
-    (async () => {
-      const m = await fetchBuyerActivityMetrics(supabase, crmClientId);
+    setInternalMetrics(null);
+    void (async () => {
+      const m = await fetchBuyerActivityMetrics(supabase, forClientId);
       if (!cancelled) {
         setInternalMetrics(m);
         setInternalLoading(false);
@@ -218,7 +240,12 @@ export function AgentBuyerActivityHeaderCard({
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:justify-end">{trailing}</div>
         ) : null}
       </div>
-      <MetricsToolbar metrics={metrics} loading={loading} hotSheetRef={hotSheetRef} />
+      <MetricsToolbar
+        metrics={metrics}
+        loading={loading}
+        hotSheetRef={hotSheetRef}
+        tintToolbarIcons={metricsToolbarTintIcons}
+      />
     </div>
   );
 }

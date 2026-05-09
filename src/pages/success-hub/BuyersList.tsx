@@ -4,12 +4,17 @@ import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus, Loader2 } from "lucide-react";
+import { CheckCircle2, ChevronRight, Clock, UserPlus, Loader2 } from "lucide-react";
+import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
 import { Seo } from "@/components/Seo";
 import { cn } from "@/lib/utils";
+import {
+  fetchBuyerActivityMetrics,
+  type BuyerActivityMetrics,
+} from "@/lib/fetchBuyerActivityMetrics";
 
 interface BuyerRow {
   clientId: string;
@@ -17,7 +22,8 @@ interface BuyerRow {
   email: string;
   phone?: string | null;
   status: string;
-  hotSheetCount: number;
+  /** AAC buyer account linked (shared workspace / “in search”). */
+  buyerWorkspaceLinked: boolean;
 }
 
 type FilterKey = "all" | "active" | "pending";
@@ -59,26 +65,20 @@ export default function BuyersList() {
         .filter(Boolean) as string[];
       const allCrmIds = [...new Set([...authClientIds, ...crmClientIds])];
 
-      const [clientsRes, hscRes] = await Promise.all([
-        supabase
-          .from("clients")
-          .select("id,first_name,last_name,email,phone")
-          .in("id", allCrmIds),
-        supabase
-          .from("hot_sheet_clients")
-          .select("client_id,hot_sheet_id")
-          .in("client_id", allCrmIds),
-      ]);
+      const { data: clientsData, error: clientsErr } = await supabase
+        .from("clients")
+        .select("id,first_name,last_name,email,phone")
+        .in("id", allCrmIds);
 
-      const clientMap = new Map<string, any>();
-      for (const c of (clientsRes.data ?? [])) {
-        clientMap.set(c.id, c);
+      if (clientsErr) {
+        console.error("Error loading clients for buyers:", clientsErr);
+        setBuyers([]);
+        return;
       }
 
-      const hsCountMap = new Map<string, number>();
-      for (const row of (hscRes.data ?? []) as any[]) {
-        const cid = String(row.client_id);
-        hsCountMap.set(cid, (hsCountMap.get(cid) ?? 0) + 1);
+      const clientMap = new Map<string, any>();
+      for (const c of (clientsData ?? [])) {
+        clientMap.set(c.id, c);
       }
 
       const rows: BuyerRow[] = relationships.map((r: any) => {
@@ -86,13 +86,15 @@ export default function BuyersList() {
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
         if (!c) return null;
         const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
+        const buyerWorkspaceLinked =
+          String(r.status) === "active" && r.client_id != null && String(r.client_id).trim() !== "";
         return {
           clientId: c.id,
           name,
           email: c?.email ?? "",
           phone: c?.phone ?? null,
           status: r.status,
-          hotSheetCount: hsCountMap.get(c.id) ?? 0,
+          buyerWorkspaceLinked,
         };
       }).filter(Boolean) as BuyerRow[];
 
@@ -118,6 +120,46 @@ export default function BuyersList() {
     if (filter === "all") return buyers;
     return buyers.filter((b) => b.status === filter);
   }, [buyers, filter]);
+
+  /** Per-CRM aggregates — keyed only by buyer `clients.id`; one map entry per buyer, never shared. */
+  const buyerMetricFingerprint = useMemo(() => {
+    const ids = [...new Set(buyers.map((b) => b.clientId))];
+    ids.sort();
+    return ids.join("|");
+  }, [buyers]);
+
+  const [metricsByClientId, setMetricsByClientId] = useState<Record<string, BuyerActivityMetrics>>({});
+
+  useEffect(() => {
+    if (loading) {
+      setMetricsByClientId({});
+      return;
+    }
+    if (buyers.length === 0 || buyerMetricFingerprint === "") {
+      setMetricsByClientId({});
+      return;
+    }
+
+    let cancelled = false;
+    const ids = buyerMetricFingerprint.split("|").filter(Boolean);
+
+    void (async () => {
+      const pairs = await Promise.all(
+        ids.map(async (id) => {
+          const m = await fetchBuyerActivityMetrics(supabase, id);
+          return [id, m] as const;
+        }),
+      );
+      if (cancelled) return;
+      const next: Record<string, BuyerActivityMetrics> = {};
+      for (const [id, m] of pairs) next[id] = m;
+      setMetricsByClientId(next);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [buyerMetricFingerprint, buyers.length, loading]);
 
   const filterPills: { key: FilterKey; label: string }[] = [
     { key: "all", label: `All${counts.all ? ` · ${counts.all}` : ""}` },
@@ -187,14 +229,21 @@ export default function BuyersList() {
               onCreate={() => setShowCreate(true)}
             />
           ) : (
-            <div className="flex flex-col gap-2">
-              {filtered.map((b) => (
-                <BuyerCard
-                  key={b.clientId}
-                  buyer={b}
-                  onOpen={() => navigate(`/success-hub/buyers/${b.clientId}`)}
-                />
-              ))}
+            <div className="flex flex-col gap-3">
+              {filtered.map((b) => {
+                const metricsForBuyer = metricsByClientId[b.clientId];
+                const buyerMetricsStillLoading =
+                  buyerMetricFingerprint !== "" && !(b.clientId in metricsByClientId);
+                return (
+                  <BuyerCard
+                    key={b.clientId}
+                    buyer={b}
+                    buyerMetricsLoading={buyerMetricsStillLoading}
+                    metrics={metricsForBuyer ?? null}
+                    onOpen={() => navigate(`/success-hub/buyers/${b.clientId}`)}
+                  />
+                );
+              })}
             </div>
           )}
         </AgentSectionCard>
@@ -220,8 +269,17 @@ export default function BuyersList() {
   );
 }
 
-function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
-  const isPending = buyer.status === "pending";
+function BuyerCard({
+  buyer,
+  metrics,
+  buyerMetricsLoading,
+  onOpen,
+}: {
+  buyer: BuyerRow;
+  metrics: BuyerActivityMetrics | null;
+  buyerMetricsLoading: boolean;
+  onOpen: () => void;
+}) {
   return (
     <div
       role="button"
@@ -234,35 +292,58 @@ function BuyerCard({ buyer, onOpen }: { buyer: BuyerRow; onOpen: () => void }) {
         }
       }}
       className={cn(
-        "group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-zinc-200/90 bg-white px-5 py-4",
-        "transition-[box-shadow,border-color,transform] duration-150 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-[1px] hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
+        "group flex cursor-pointer items-stretch gap-3 rounded-2xl border border-zinc-200/90 bg-white p-4 pl-5",
+        "shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-150",
+        "hover:-translate-y-px hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
       )}
+      aria-label={`Open buyer ${buyer.name}`}
     >
-      <div className="min-w-0">
-        <p className="text-base font-semibold text-zinc-900 truncate">{buyer.name}</p>
-        <p className="text-sm text-zinc-500 mt-0.5 truncate">{buyer.email}</p>
-        {buyer.phone && (
-          <p className="text-xs text-zinc-400 truncate">{buyer.phone}</p>
-        )}
+      <div className="min-w-0 flex-1">
+        <AgentBuyerActivityHeaderCard
+          key={buyer.clientId}
+          displayName={buyer.name}
+          email={buyer.email}
+          phone={buyer.phone ?? null}
+          crmClientId={buyer.clientId}
+          metrics={metrics}
+          metricsLoading={buyerMetricsLoading}
+          metricsToolbarTintIcons
+          className="rounded-none border-0 bg-transparent px-0 py-0 shadow-none"
+          trailing={<BuyerRowStatusPill buyer={buyer} />}
+        />
       </div>
-
-      <div className="flex items-center gap-3 shrink-0">
-        <span
-          className={cn(
-            "inline-flex items-center h-6 px-2 rounded-full text-xs font-medium",
-            isPending
-              ? "bg-amber-50 text-amber-700 border border-amber-200"
-              : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-          )}
-        >
-          {isPending ? "Pending Invite" : "Invite Accepted"}
-        </span>
-        <span className="hidden sm:inline whitespace-nowrap text-sm font-normal tracking-tight text-zinc-600">
-          {buyer.hotSheetCount} hot sheet{buyer.hotSheetCount !== 1 ? "s" : ""}
-        </span>
-        <ChevronRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-0.5" />
+      <div className="flex shrink-0 items-center justify-center self-center">
+        <ChevronRight
+          className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-0.5"
+          aria-hidden
+        />
       </div>
     </div>
+  );
+}
+
+function BuyerRowStatusPill({ buyer }: { buyer: BuyerRow }) {
+  if (buyer.status === "pending") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-900">
+        <Clock className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+        Pending Invite
+      </span>
+    );
+  }
+  if (buyer.buyerWorkspaceLinked) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
+        <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+        Searching
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
+      <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+      Invite Accepted
+    </span>
   );
 }
 
