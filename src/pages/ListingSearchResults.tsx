@@ -291,7 +291,7 @@ const ListingSearchResults = () => {
   };
 
   const renderToolbarTitleRow = () => (
-    <div className="flex items-center justify-between py-2.5">
+    <div className="flex items-center py-2.5">
       <div className="flex items-center gap-2.5">
         <button
           type="button"
@@ -303,9 +303,6 @@ const ListingSearchResults = () => {
         </button>
         <h1 className="text-sm font-semibold tracking-tight text-zinc-900">Edit Search</h1>
       </div>
-      <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-[13px] font-medium leading-tight text-zinc-700">
-        {loading ? "…" : displayedListings.length} listings found
-      </span>
     </div>
   );
 
