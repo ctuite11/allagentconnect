@@ -25,6 +25,8 @@ import { LISTING_STATUS, isComingSoon } from "@/constants/status";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { resolveListedByAttribution } from "@/lib/listingListedBy";
+import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
+import { cn } from "@/lib/utils";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -210,6 +212,8 @@ export const SearchListingCard = ({
     }
   };
 
+  const listingIdLabel = formatListingIdLabel(listing);
+
   // ── Facts grid data ─────────────────────────────────────────────────────
   const facts: { label: string; value: string }[] = [];
   if (propertyStyle) facts.push({ label: "Style", value: humanize(String(propertyStyle)) });
@@ -374,18 +378,17 @@ export const SearchListingCard = ({
             <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-6">
               {/* LEFT: ID + Address */}
               <div className="min-w-0">
-                {listing.listing_number && (
-                  <a
-                    href={`/property/${listing.id}`}
+                {listingIdLabel && (
+                  <button
+                    type="button"
                     onClick={(e) => {
-                      e.preventDefault();
                       e.stopPropagation();
-                      navigate(`/property/${listing.id}`, { state: { from: fromPath } });
+                      handleCardClick();
                     }}
-                    className="text-primary text-xs font-semibold hover:underline underline-offset-2 transition-colors"
+                    className={cn(LISTING_ID_NAV_CLASS, "text-xs font-semibold text-left")}
                   >
-                    L-{String(listing.listing_number ?? '').replace(/^L-/i, '')}
-                  </a>
+                    {listingIdLabel}
+                  </button>
                 )}
                 <h3 className="text-sm font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
                   <a
@@ -529,8 +532,17 @@ export const SearchListingCard = ({
               </div>
               <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                 <ListingStatusBadge status={listing.status} size="sm" />
-                {listing.listing_number && (
-                  <span className="text-[11px] font-mono text-muted-foreground">#{listing.listing_number}</span>
+                {listingIdLabel && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCardClick();
+                    }}
+                    className={cn(LISTING_ID_NAV_CLASS, "text-[11px] font-mono")}
+                  >
+                    {listingIdLabel}
+                  </button>
                 )}
                 {daysOnMarket > 0 && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">

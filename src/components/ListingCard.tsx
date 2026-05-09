@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { buildDisplayAddress, cn, propertyTypeToEnum } from "@/lib/utils";
+import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
 import {
@@ -70,6 +71,8 @@ interface ListingCardProps {
     created_at?: string;
     active_date?: string | null;
     listing_number?: string | null;
+    /** When true, card shows MLS# … instead of ID# L-… */
+    publish_to_dcmls?: boolean;
     is_relisting?: boolean;
     original_listing_id?: string | null;
     condo_details?: any;
@@ -697,6 +700,7 @@ const ListingCard = ({
       }
       navigate(`/property/${listing.id}`);
     };
+    const compactIdLabel = formatListingIdLabel(listing);
 
     const hasCommentThread = Boolean((chatMessages && chatMessages.length > 0) || clientComment);
     const legacyCommentRowSignals = Boolean(onOpenChat || hasCommentThread || agentInfo);
@@ -850,9 +854,18 @@ const ListingCard = ({
             </p>
             {!hideMlsMeta && (
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">
-                  ID# {listing.listing_number}
-                </p>
+                {compactIdLabel && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openListingDetail();
+                    }}
+                    className={cn(LISTING_ID_NAV_CLASS, "block w-full text-xs text-right")}
+                  >
+                    {compactIdLabel}
+                  </button>
+                )}
                 <p className="text-xs text-muted-foreground">
                   DOM {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'}
                 </p>
@@ -1146,6 +1159,10 @@ const ListingCard = ({
         openHouseBanner={openHouseBanner}
         nextOpenHouse={nextOpenHouse}
         dateDisplay={listing.created_at ? format(new Date(listing.created_at), "MM/dd/yy") : null}
+        onListingNumberClick={() => {
+          sessionStorage.setItem('fromAgentDashboard', 'true');
+          navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
+        }}
         listedByLine={
           listedByAttribution ? (
             <p className="truncate text-[12px] font-normal text-neutral-500" title={`Listed by: ${listedByAttribution}`}>
@@ -1299,6 +1316,7 @@ const ListingCard = ({
   const pricePerSqft = listing.square_feet && listing.square_feet > 0 
     ? Math.round(listing.price / listing.square_feet) 
     : null;
+  const listingIdLabel = formatListingIdLabel(listing);
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/property/${listing.id}`)}>
@@ -1467,17 +1485,17 @@ const ListingCard = ({
         )}
 
         {/* Listing Number - blue and clickable */}
-        {listing.listing_number && (
+        {listingIdLabel && (
           <div className="text-sm mb-3">
             <button
               type="button"
-              className="text-primary font-mono font-medium hover:underline"
+              className={cn(LISTING_ID_NAV_CLASS, "text-sm font-mono font-medium")}
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/property/${listing.id}`);
               }}
             >
-              #{listing.listing_number}
+              {listingIdLabel}
             </button>
           </div>
         )}

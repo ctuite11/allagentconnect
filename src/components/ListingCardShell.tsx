@@ -15,7 +15,7 @@
  * All behavioral differences go through the slot props.
  */
 
-import { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import DcmlsBadge from "@/components/DcmlsBadge";
+import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
+import { cn } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -145,6 +147,9 @@ export interface ListingCardShellProps {
 
   /** Card click handler */
   onClick?: () => void;
+
+  /** Listing ID / MLS# opens detail (same destination as card); use stopPropagation inside handler */
+  onListingNumberClick?: (e: MouseEvent) => void;
 }
 
 // ── Banner Icon ──────────────────────────────────────────────────────────────
@@ -189,8 +194,10 @@ export function ListingCardShell({
   hidePhotoBanners = false,
   hideActionsCol = false,
   onClick,
+  onListingNumberClick,
 }: ListingCardShellProps) {
 
+  const listingIdLabel = formatListingIdLabel(listing);
   const isProminent = statsVariant === "prominent";
   const statsIconClass = isProminent ? "w-4 h-4 inline mr-0.5 text-primary" : "w-3 h-3 inline mr-0.5";
   const statsTextClass = isProminent ? "flex gap-4 text-sm text-foreground mb-3" : "flex gap-2 text-xs text-muted-foreground mb-3";
@@ -278,9 +285,23 @@ export function ListingCardShell({
 
             {/* Info row: listing number + DOM + extras */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-              {listing.listing_number && <span>Listing #{listing.listing_number}</span>}
+              {listingIdLabel &&
+                (onListingNumberClick ? (
+                  <button
+                    type="button"
+                    className={cn(LISTING_ID_NAV_CLASS, "text-xs")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onListingNumberClick(e);
+                    }}
+                  >
+                    {listingIdLabel}
+                  </button>
+                ) : (
+                  <span>{listingIdLabel}</span>
+                ))}
               {infoRowExtra}
-              {!hideDOMBadge && listing.listing_number && daysOnMarket > 0 && <span>•</span>}
+              {!hideDOMBadge && listingIdLabel && daysOnMarket > 0 && <span>•</span>}
               {!hideDOMBadge && daysOnMarket > 0 && (
                 <Badge variant="outline" className="text-xs">
                   {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
