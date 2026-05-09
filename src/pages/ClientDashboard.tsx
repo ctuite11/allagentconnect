@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Heart, Search, Sparkles, MessageSquare } from "lucide-react";
+import { Heart, Search, Sparkles, MessageSquare, Loader2 } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
@@ -544,10 +544,10 @@ export default function ClientDashboard() {
 
   if (loading) {
     return (
-      <div className={`flex flex-col items-center justify-center gap-3 ${buyerPageShell}`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-sm text-muted-foreground">
-          {relationshipHydrating ? "Connecting your inviting agent..." : "Loading your dashboard..."}
+      <div className={`flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 ${buyerPageShell}`}>
+        <Loader2 className="h-7 w-7 animate-spin text-neutral-400" aria-hidden />
+        <p className="max-w-xs text-center text-[13px] leading-relaxed text-neutral-500">
+          {relationshipHydrating ? "Connecting your inviting agent…" : "Loading your dashboard…"}
         </p>
       </div>
     );
@@ -579,16 +579,20 @@ export default function ClientDashboard() {
 
       {/* End Relationship Dialog */}
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>End relationship?</AlertDialogTitle>
-            <AlertDialogDescription>
+        <AlertDialogContent className="border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:rounded-xl">
+          <AlertDialogHeader className="text-left">
+            <AlertDialogTitle className="text-lg font-semibold text-neutral-900">End relationship?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px] leading-snug text-neutral-500">
               You will still have access to your dashboard using Direct Connect MLS.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>No, cancel</AlertDialogCancel>
-            <Button type="button" className={`h-9 px-5 ${primaryCtaClass}`} onClick={() => void handleEndRelationship()}>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="h-9 border-neutral-200 text-[13px] hover:bg-neutral-50/90">No, cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              className={`h-9 border border-[#0B46CC]/20 px-5 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.08)] focus-visible:ring-2 focus-visible:ring-neutral-400/50 focus-visible:ring-offset-2 ${primaryCtaClass}`}
+              onClick={() => void handleEndRelationship()}
+            >
               Yes, end relationship
             </Button>
           </AlertDialogFooter>
@@ -601,10 +605,13 @@ export default function ClientDashboard() {
           if (!open && !hotSheetDeleteLoading) setHotSheetDeleteId(null);
         }}
       >
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this hot sheet for everyone?</AlertDialogTitle>
-            <AlertDialogDescription>
+        <AlertDialogContent
+          className="border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:rounded-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <AlertDialogHeader className="text-left">
+            <AlertDialogTitle className="text-lg font-semibold text-neutral-900">Delete this hot sheet for everyone?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px] leading-relaxed text-neutral-500">
               This removes{" "}
               <strong className="font-medium text-foreground">
                 {hotSheets.find((s) => s.id === hotSheetDeleteId)?.name ?? "this hot sheet"}
@@ -613,8 +620,10 @@ export default function ClientDashboard() {
               no longer see it on your activity. Cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={hotSheetDeleteLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="h-9 border-neutral-200 text-[13px] hover:bg-neutral-50/90" disabled={hotSheetDeleteLoading}>
+              Cancel
+            </AlertDialogCancel>
             <Button
               type="button"
               variant="destructive"

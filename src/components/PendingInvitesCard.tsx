@@ -120,8 +120,9 @@ export function PendingInvitesCard() {
   return (
     <SectionCard
       title="Shared With"
-      icon={<Users />}
+      icon={<Users className="text-neutral-500" />}
       description="People you've invited to your home search"
+      className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[border-color,box-shadow] hover:!translate-y-0 hover:border-neutral-300 hover:!shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
     >
       <div className="space-y-3">
         {invites.map((invite) => {
@@ -146,10 +147,8 @@ export function PendingInvitesCard() {
                     {status === "accepted" ? "Joined" : status === "expired" ? "Expired" : "Pending"}
                   </Badge>
                 </div>
-                {name && (
-                  <p className="text-xs text-muted-foreground truncate">{invite.buyer_email}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-0.5">
+                {name && <p className="truncate text-xs text-neutral-500">{invite.buyer_email}</p>}
+                <p className="mt-0.5 text-xs text-neutral-400">
                   Sent {new Date(invite.created_at).toLocaleDateString()}
                 </p>
               </div>
@@ -192,7 +191,7 @@ export function PendingInvitesCard() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs gap-1.5"
+                    className="h-8 gap-1.5 border-neutral-200 text-xs shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                     onClick={() => handleResend(invite.id, true)}
                     disabled={isResending}
                     title="Resend and extend invite by 30 days"

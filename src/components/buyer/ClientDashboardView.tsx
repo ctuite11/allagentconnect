@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import {
@@ -17,7 +17,6 @@ import {
   buyerDashboardHotSheetMediaWrap as unifiedHotFavMediaWrap,
   buyerMarketListingTileBody as listingPreviewBody,
   buyerMarketListingTileMediaWrap as listingPreviewMediaWrap,
-  buyerOutlineSecondary as outlineSecondaryClass,
   buyerPreviewCardInteractive as dashboardPreviewTileInteractive,
   buyerPreviewGrid as previewGridClass,
   buyerPreviewSectionContent as previewSectionContentClass,
@@ -35,7 +34,6 @@ import {
   buyerTileTitle as dashTileTitleClass,
   buyerPageMain,
   buyerPageShell,
-  buyerPageStack,
 } from "@/lib/buyerUi";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
@@ -143,7 +141,7 @@ export interface ClientDashboardViewProps {
 }
 
 const buyerHeaderSoftBtn =
-  "h-9 rounded-full border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-none transition-colors hover:bg-zinc-50";
+  "h-8 rounded-full border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-4";
 
 function getPrimaryPhotoUrl(photos: unknown): string {
   if (!photos) return "/placeholder.svg";
@@ -247,16 +245,16 @@ export function ClientDashboardView({
     <div className={buyerPageShell}>
       {topBanner}
       <main className={buyerPageMain}>
-        <div className={buyerPageStack}>
-          <section className={`${aacCardShell} p-5 md:p-6`}>
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-              <div className="min-w-0 flex-1 space-y-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <h1 className="text-2xl font-semibold text-zinc-950">{buyerDisplayName.trim()}</h1>
+        <div className="space-y-6 md:space-y-7">
+          <section className={`${aacCardShell} p-4 md:p-5 lg:p-6`}>
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+              <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+                  <h1 className="text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">{buyerDisplayName.trim()}</h1>
                   {buyerPresenceOnline ? (
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-sm text-neutral-500">Online</span>
+                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-200/90 bg-emerald-50/80 px-2 py-0.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-600 ring-2 ring-emerald-100" title="Online" />
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-800">Online</span>
                     </div>
                   ) : null}
                 </div>
@@ -286,17 +284,17 @@ export function ClientDashboardView({
                     ) : null}
                   </div>
                 ) : null}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {buyerEmail?.trim() ? (
                     <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
                       <a href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}>
-                        <Mail className="mr-2 h-4 w-4" />
+                        <Mail className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" aria-hidden />
                         Email
                       </a>
                     </Button>
                   ) : null}
                   <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} onClick={goMessages}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <MessageSquare className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" aria-hidden />
                     Message
                   </Button>
                   {showBuyerSelfServiceChrome ? (
@@ -307,7 +305,7 @@ export function ClientDashboardView({
                       className={buyerHeaderSoftBtn}
                       onClick={() => setAddFriendOpen?.(true)}
                     >
-                      <UserPlus className="mr-2 h-4 w-4" />
+                      <UserPlus className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" aria-hidden />
                       Add a Friend
                     </Button>
                   ) : null}
@@ -320,31 +318,31 @@ export function ClientDashboardView({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className={`absolute right-0 top-2 z-10 h-9 w-9 shrink-0 rounded-full bg-white lg:top-0 ${outlineSecondaryClass}`}
+                    className={`absolute right-0 top-2 z-10 h-8 w-8 shrink-0 rounded-full border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2 lg:top-0 lg:h-9 lg:w-9`}
                     aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
                     onClick={goMessagesIcon}
                   >
-                    <MessageSquare className="h-4 w-4 text-gray-700" />
+                    <MessageSquare className="h-[15px] w-[15px] text-neutral-700 sm:h-4 sm:w-4" aria-hidden />
                     {unreadCount > 0 ? (
-                      <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+                      <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full border border-white bg-rose-600 px-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     ) : null}
                   </Button>
-                  <div className="flex flex-col items-center gap-2 pr-11 lg:pr-12">
+                  <div className="flex flex-col items-center gap-2 pr-10 sm:pr-11 lg:pr-12">
                     <div className="flex max-w-full items-start gap-3">
-                      <Avatar className="h-16 w-16 shrink-0 ring-1 ring-gray-200">
+                      <Avatar className="h-[60px] w-[60px] shrink-0 border border-neutral-200 ring-0 sm:h-16 sm:w-16">
                         <AvatarImage src={agent.headshot_url || ""} />
-                        <AvatarFallback className="text-sm font-medium text-gray-600">
+                        <AvatarFallback className="text-sm font-medium text-neutral-600">
                           {agent.first_name[0]}
                           {agent.last_name[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
-                        <p className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                        <p className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
                           {agentPresenceOnline ? (
                             <span
-                              className="h-2 w-2 shrink-0 rounded-full bg-[#50C878]"
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600 ring-2 ring-emerald-100"
                               title="Recently active"
                               aria-label="Recently active"
                             />
@@ -353,15 +351,15 @@ export function ClientDashboardView({
                             {agent.first_name} {agent.last_name}
                           </span>
                         </p>
-                        {agent.company ? <p className="text-xs text-gray-500">{agent.company}</p> : null}
+                        {agent.company ? <p className="text-[11px] text-neutral-500 sm:text-xs">{agent.company}</p> : null}
                         {agentPhoneFmt ? (
-                          <a href={agentPhoneFmt.telHref} className="block text-sm text-gray-800 hover:underline">
+                          <a href={agentPhoneFmt.telHref} className="block text-[13px] text-neutral-800 hover:underline">
                             {agentPhoneFmt.display}
                           </a>
                         ) : null}
                         <a
                           href={`mailto:${agent.email}`}
-                          className="block break-all text-xs leading-snug text-gray-600 hover:underline"
+                          className="block break-all text-[11px] leading-snug text-neutral-600 hover:underline sm:text-xs"
                         >
                           {agent.email}
                         </a>
@@ -372,7 +370,7 @@ export function ClientDashboardView({
                         type="button"
                         variant="outline"
                         size="sm"
-                        className={`h-9 shrink-0 whitespace-nowrap rounded-md px-3 text-xs sm:text-sm ${outlineSecondaryClass}`}
+                        className="h-8 shrink-0 whitespace-nowrap rounded-full border-neutral-200 bg-white px-2.5 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-3 sm:text-[13px]"
                         onClick={() => {
                           window.location.href = `mailto:${agent.email}`;
                         }}
@@ -385,7 +383,7 @@ export function ClientDashboardView({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-9 shrink-0 whitespace-nowrap rounded-md border border-red-200/80 bg-white px-2.5 text-xs text-red-700 shadow-sm transition-shadow duration-200 hover:bg-red-50 hover:shadow-sm sm:px-3 sm:text-sm"
+                          className="h-8 shrink-0 whitespace-nowrap rounded-full border border-red-200/90 bg-white px-2.5 text-[11px] font-medium text-red-800 transition-colors duration-200 hover:bg-red-50/90 sm:h-9 sm:px-3 sm:text-[12px]"
                           onClick={() => setShowEndDialog?.(true)}
                         >
                           <UserX className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
@@ -399,7 +397,7 @@ export function ClientDashboardView({
             </div>
           </section>
 
-          <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {stats.map(({ label, value, icon: Icon, subtle }) => (
               <div
                 key={label}
@@ -411,20 +409,20 @@ export function ClientDashboardView({
                   e.preventDefault();
                   statNavigate(label);
                 }}
-                className={`${aacCardInteractive} p-5 md:p-6`}
+                className={`${aacCardInteractive} p-4 md:p-5`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Icon className="h-4 w-4 text-[hsl(160_84%_39%)]" />
+                  <Icon className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden strokeWidth={2} />
                 </div>
-                <div className="mt-2 text-xl font-semibold tracking-tight text-gray-900">{value}</div>
-                <div className="mt-1 text-sm font-medium text-gray-500">{label}</div>
-                {subtle ? <div className="mt-2 text-xs text-gray-400">{subtle}</div> : null}
+                <div className="mt-2 text-lg font-semibold tracking-tight text-neutral-900 tabular-nums sm:text-xl">{value}</div>
+                <div className="mt-0.5 text-[13px] font-medium text-neutral-600">{label}</div>
+                {subtle ? <div className="mt-2 text-[11px] leading-snug text-neutral-400">{subtle}</div> : null}
               </div>
             ))}
           </section>
 
-          <section className="space-y-8">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section className="space-y-6 md:space-y-7">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
               <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
                   <CardHeader className={previewSectionHeaderClass}>
@@ -471,8 +469,8 @@ export function ClientDashboardView({
                         })}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                        <p className={`max-w-md ${dashSectionDescClass}`}>
+                      <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center">
+                        <p className={`${dashSectionDescClass}`}>
                           No hot sheets yet. Create one from Hot Sheets for alerts, or ask your agent to share one.
                         </p>
                       </div>
@@ -536,7 +534,7 @@ export function ClientDashboardView({
                                     {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                                   </p>
                                   <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
-                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
                                     <span className="min-w-0 truncate">{listing.address}</span>
                                   </p>
                                   <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
@@ -550,13 +548,13 @@ export function ClientDashboardView({
                           })}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                        <p className={`max-w-sm ${dashSectionDescClass}`}>No favorites yet.</p>
+                      <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center">
+                        <p className={`${dashSectionDescClass}`}>No favorites yet.</p>
                         {variant === "buyer" || !crmBuyerId ? (
                           <button
                             type="button"
                             onClick={() => navigate(paths.favoritesEmptySearch)}
-                            className="text-sm font-medium text-[#0E56F5] hover:underline"
+                            className={`${dashboardPreviewViewAllCtaClass} font-medium`}
                           >
                             Search →
                           </button>
@@ -623,7 +621,7 @@ export function ClientDashboardView({
                                   {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                                 </p>
                                 <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
-                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
                                   <span className="min-w-0 truncate">{listing.address}</span>
                                 </p>
                                 <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
@@ -666,25 +664,21 @@ export function ClientDashboardView({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                    <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center">
                       <p className={dashSectionDescClass}>No listings to show yet.</p>
-                      <button
-                        type="button"
-                        onClick={() => navigate(paths.marketSearch)}
-                        className={dashboardPreviewViewAllCtaClass}
-                      >
+                      <button type="button" onClick={() => navigate(paths.marketSearch)} className={dashboardPreviewViewAllCtaClass}>
                         Search →
                       </button>
                     </div>
                   )}
                   {isDcmlsHost() ? (
-                    <p className={`mt-4 text-center ${dashSectionDescClass}`}>
+                    <p className={`mt-4 text-center text-[12px] leading-snug text-neutral-500`}>
                       Listings shown may include homes published on{" "}
                       <a
                         href="https://directconnectmls.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-gray-500 underline-offset-2 hover:underline"
+                        className="font-medium text-neutral-600 underline-offset-2 hover:underline"
                       >
                         directconnectmls.com
                       </a>
