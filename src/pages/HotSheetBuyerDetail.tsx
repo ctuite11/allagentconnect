@@ -265,13 +265,13 @@ const HotSheetBuyerDetail = () => {
         p_crm_client_id: clientId,
       });
       if (error) throw error;
-      toast.success("Unaccepted hot sheet removed.");
+      toast.success("Pending invite removed.");
       setPendingDeleteSheet(null);
       await fetchBuyerData();
     } catch (e: unknown) {
       console.error(e);
       const msg = e && typeof e === "object" && "message" in e ? String((e as { message: string }).message) : "";
-      toast.error(msg || "Could not delete this hot sheet.");
+      toast.error(msg || "Could not remove this invite.");
     } finally {
       setDeletingHotSheet(false);
     }
@@ -367,7 +367,7 @@ const HotSheetBuyerDetail = () => {
                   {hs.canDeletePending ? (
                     <button
                       type="button"
-                      aria-label="Delete unaccepted hot sheet"
+                      aria-label="Remove pending hot sheet invite"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPendingDeleteSheet(hs);
@@ -375,7 +375,7 @@ const HotSheetBuyerDetail = () => {
                       className="flex h-8 items-center justify-center gap-1 rounded-md border border-red-200/90 bg-white px-2 text-xs font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50"
                     >
                       <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      Delete
+                      Remove invite
                     </button>
                   ) : null}
                   <button
@@ -459,11 +459,13 @@ const HotSheetBuyerDetail = () => {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete unaccepted hot sheet?</AlertDialogTitle>
+              <AlertDialogTitle>Remove pending hot sheet invite?</AlertDialogTitle>
               <AlertDialogDescription>
-                This permanently removes <strong className="font-medium text-foreground">{pendingDeleteSheet?.name}</strong> because
-                the buyer has not accepted this hot sheet yet (no accepted invite, not in shared workspace).
-                Accepted hot sheets cannot be deleted here. This action cannot be undone.
+                This removes only the{" "}
+                <strong className="font-medium text-foreground">pending</strong> invite and link for{" "}
+                <strong className="font-medium text-foreground">{pendingDeleteSheet?.name ?? "this saved search"}</strong>.
+                Use this before the buyer accepts or joins the sheet in workspace — it does not delete an accepted/shared hot sheet group.
+                This cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -476,7 +478,7 @@ const HotSheetBuyerDetail = () => {
                   void confirmDeletePendingHotSheet();
                 }}
               >
-                {deletingHotSheet ? "Deleting…" : "Delete"}
+                {deletingHotSheet ? "Removing…" : "Remove invite"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -138,6 +138,8 @@ export interface ClientDashboardViewProps {
   mirrorManagementActions?: ReactNode;
   /** CRM `clients.id` for agent mirror — used for favorites deep links and mirror-only copy. */
   crmBuyerId?: string | null;
+  /** Buyer self-service — opens parent delete confirmation (ignored for agent variant). */
+  onRequestDeleteHotSheet?: (sheetId: string) => void;
 }
 
 const buyerHeaderSoftBtn =
@@ -209,6 +211,7 @@ export function ClientDashboardView({
   buyerPresenceOnline = false,
   mirrorManagementActions,
   crmBuyerId = null,
+  onRequestDeleteHotSheet,
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
@@ -458,6 +461,11 @@ export function ClientDashboardView({
                                 e.preventDefault();
                                 navigate(viewPath);
                               }}
+                              onDeleteClick={
+                                variant === "buyer" && onRequestDeleteHotSheet
+                                  ? () => onRequestDeleteHotSheet(sheet.id)
+                                  : undefined
+                              }
                             />
                           );
                         })}

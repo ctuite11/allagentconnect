@@ -1,5 +1,5 @@
-import type { KeyboardEvent } from "react";
-import { Eye } from "lucide-react";
+import type { KeyboardEvent, MouseEvent } from "react";
+import { Eye, Trash2 } from "lucide-react";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import {
   buyerDashboardHotFavTileBody,
@@ -85,6 +85,8 @@ export interface BuyerHotSheetPreviewCardProps {
   linkedAgentName?: string | null;
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent<HTMLElement>) => void;
+  /** Buyer self-service — compact delete control (stops card navigation). */
+  onDeleteClick?: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
 /**
@@ -99,6 +101,7 @@ export function BuyerHotSheetPreviewCard({
   linkedAgentName,
   onClick,
   onKeyDown,
+  onDeleteClick,
 }: BuyerHotSheetPreviewCardProps) {
   const agentAttribution =
     typeof linkedAgentName === "string" ? linkedAgentName.trim() : "";
@@ -112,13 +115,27 @@ export function BuyerHotSheetPreviewCard({
     : buyerDashboardHotSheetMediaWrap;
 
   return (
-    <article
-      role="button"
-      tabIndex={0}
-      className={rootClass}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
-    >
+    <div className="relative h-full min-h-0">
+      {onDeleteClick ? (
+        <button
+          type="button"
+          aria-label="Delete hot sheet"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteClick(e);
+          }}
+          className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-md border border-red-200/90 bg-white text-red-600 shadow-sm transition-colors hover:bg-red-50"
+        >
+          <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        </button>
+      ) : null}
+      <article
+        role="button"
+        tabIndex={0}
+        className={rootClass}
+        onClick={onClick}
+        onKeyDown={onKeyDown}
+      >
       <div className={mediaWrapClass}>
         {isHotSheetsPage ? (
           <HotSheetPageMosaic photoUrls={photoUrls} />
@@ -151,5 +168,6 @@ export function BuyerHotSheetPreviewCard({
         </div>
       )}
     </article>
+    </div>
   );
 }
