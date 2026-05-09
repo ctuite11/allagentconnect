@@ -35,14 +35,13 @@ export function CommunicationsPanel({ conversations }: CommunicationsPanelProps)
         </button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        {topConversations.map((conv, i) => (
+      <div className="rounded-xl border border-neutral-200 bg-white p-2 space-y-1.5 overflow-hidden">
+        {topConversations.map((conv) => (
           <button
             key={conv.conversation_id}
+            type="button"
             onClick={() => navigate("/client-needs")}
-            className={`w-full text-left px-5 py-4 hover:bg-muted/50 transition-colors flex items-start gap-3 ${
-              i < topConversations.length - 1 ? "border-b border-border" : ""
-            }`}
+            className="w-full text-left px-4 py-3 rounded-xl flex items-start gap-3 bg-white border border-transparent transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
           >
             <Avatar className="h-8 w-8 shrink-0 mt-0.5">
               {conv.other_headshot_url && (

@@ -440,8 +440,6 @@ const ListingSearchResults = () => {
                 <SelectItem value="date_old">Date (Old)</SelectItem>
                 <SelectItem value="price_high">Price (High)</SelectItem>
                 <SelectItem value="price_low">Price (Low)</SelectItem>
-                <SelectItem value="sqft">Square Feet</SelectItem>
-                <SelectItem value="beds">Bedrooms</SelectItem>
               </SelectContent>
             </Select>
           </div>

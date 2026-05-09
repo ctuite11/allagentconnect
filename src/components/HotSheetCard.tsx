@@ -35,7 +35,7 @@ export const HotSheetCard = ({
       key={`${src}-${index}`}
       src={src}
       alt={`${name} listing preview ${index + 1}`}
-      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+      className="h-full w-full object-cover"
       loading="lazy"
       referrerPolicy="no-referrer"
     />
@@ -71,7 +71,7 @@ export const HotSheetCard = ({
   return (
     <div
       onClick={handleCardClick}
-      className="group cursor-pointer overflow-hidden rounded-[22px] border border-zinc-200 bg-card shadow-[var(--aac-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-200 hover:shadow-[var(--aac-shadow-hover)]"
+      className="cursor-pointer overflow-hidden rounded-[22px] border border-neutral-200 bg-white shadow-sm transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
     >
       <div className="aspect-[4/3] overflow-hidden bg-muted">
         {renderPhotoPreview()}

@@ -56,10 +56,10 @@ export default function CommunicationsHub() {
             {mockMessages.map((t) => (
               <Card
                 key={t.threadId}
-                className={`cursor-pointer border bg-white shadow-none transition-colors ${
+                className={`cursor-pointer border bg-white shadow-none transition-all duration-200 ease-out ${
                   selectedThread === t.threadId
                     ? "border-[#0E56F5]"
-                    : "border-zinc-100 hover:border-zinc-200"
+                    : "border-neutral-200 hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
                 }`}
                 onClick={() => setSelectedThread(t.threadId)}
               >

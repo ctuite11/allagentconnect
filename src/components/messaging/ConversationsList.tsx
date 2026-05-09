@@ -7,6 +7,7 @@ import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "./UserAvatar";
+import { buyerMessagingThreadRow } from "@/lib/buyerUi";
 import { cn } from "@/lib/utils";
 
 interface ConversationsListProps {
@@ -175,10 +176,10 @@ export function ConversationsList({
                     });
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 cursor-pointer transition-all",
+                  "mx-2 my-0.5 flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 transition-all duration-200 ease-out",
                   isSelected
-                    ? "bg-zinc-100 border-l-4 border-l-primary"
-                    : "border-l-4 border-l-transparent hover:bg-zinc-100"
+                    ? "border border-neutral-200 border-l-4 border-l-primary bg-neutral-50 shadow-sm"
+                    : buyerMessagingThreadRow
                 )}
               >
                 <UserAvatar

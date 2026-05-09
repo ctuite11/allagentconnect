@@ -25,7 +25,7 @@ export const buyerSectionCard =
  * only Hot Sheet *collages* use `BuyerHotSheetPreviewCard` — do not interchange.
  */
 export const buyerPreviewCardBase =
-  "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-[2px] hover:shadow-md";
+  "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm cursor-pointer transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md";
 
 /** Interactive preview (keyboard focus ring) — cursor on base tile; rings here only */
 export const buyerPreviewCardInteractive = `${buyerPreviewCardBase} outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
@@ -55,10 +55,10 @@ export const buyerMarketListingTileBody =
   "flex flex-col gap-1.5 px-4 pb-3 pt-3 text-left";
 
 /** Stat tiles on dashboard */
-export const buyerStatCardInteractive = `${buyerSectionCard} cursor-pointer transition-all duration-150 hover:-translate-y-[1px] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
+export const buyerStatCardInteractive = `${buyerSectionCard} cursor-pointer transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
 
 /** Agent success-hub / collection card (image + body, hover lift) */
-export const buyerCollectionCardRoot = `${buyerSectionCard} cursor-pointer will-change-transform transition-all duration-200 hover:shadow-lg hover:-translate-y-[1px] focus-within:shadow-lg overflow-hidden`;
+export const buyerCollectionCardRoot = `${buyerSectionCard} cursor-pointer transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md focus-within:border-neutral-300 focus-within:shadow-md overflow-hidden`;
 
 /** Typography */
 export const buyerSectionTitle = "text-[15px] font-semibold text-neutral-900";
@@ -117,6 +117,10 @@ export const buyerImageMosaicEmpty =
 /** Messages — list + conversation panels */
 export const buyerMessagingPanel =
   "bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col";
+
+/** Conversation / inbox list row — white tile, subtle desktop hover */
+export const buyerMessagingThreadRow =
+  "rounded-xl border border-transparent bg-white transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md";
 
 /** Favorites split view (map + list panes) */
 export const buyerFavoritesSplitPane =

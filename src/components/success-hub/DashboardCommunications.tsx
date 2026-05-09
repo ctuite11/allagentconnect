@@ -58,13 +58,13 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-zinc-100 bg-white">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-white">
         {conversations.length === 0 ? (
           <div className={`text-center text-sm text-neutral-500 ${compact || inboxPreview ? "py-4" : "py-8"}`}>
             No messages yet.
           </div>
         ) : inboxPreview ? (
-          <ul className="max-h-[420px] divide-y divide-zinc-100 overflow-y-auto overscroll-contain">
+          <ul className="max-h-[420px] space-y-1 overflow-y-auto overscroll-contain px-2 py-2">
             {rows.map((c) => {
               const snippet = snippetFromPreview(c.last_message_preview);
               const truncated =
@@ -72,7 +72,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
               return (
                 <li
                   key={c.conversation_id}
-                  className="flex cursor-pointer gap-2.5 bg-white px-3 py-2 transition-colors hover:bg-zinc-50/80"
+                  className="flex cursor-pointer gap-2.5 rounded-xl border border-transparent bg-white px-3 py-2 transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
                   onClick={() =>
                     navigate(`/messages/${c.conversation_id}`, {
                       state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
@@ -115,11 +115,11 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
             })}
           </ul>
         ) : (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="space-y-1 px-2 py-2">
             {rows.map((c) => (
               <li
                 key={c.conversation_id}
-                className={`flex cursor-pointer items-center gap-2.5 bg-white transition-colors hover:bg-neutral-50/50 md:gap-3 ${compact ? "px-3 py-2" : "px-4 py-3"}`}
+                className={`flex cursor-pointer items-center gap-2.5 rounded-xl border border-transparent bg-white transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md md:gap-3 ${compact ? "px-3 py-2" : "px-4 py-3"}`}
                 onClick={() =>
                   navigate(`/messages/${c.conversation_id}`, {
                     state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },

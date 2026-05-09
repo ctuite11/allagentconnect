@@ -120,7 +120,7 @@ function HotSheetRow({
     : null;
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
+    <div className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-3 transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md">
       {/* Indicator dot */}
       <div className="mt-1 shrink-0">
         {hasPending ? (
@@ -434,7 +434,7 @@ export default function NetworkIntelligence() {
             {loading ? (
               <ModuleSkeleton />
             ) : (
-              <div className="rounded-2xl border border-border bg-card px-5 py-2">
+              <div className="rounded-2xl border border-neutral-200 bg-white px-3 py-2 space-y-2">
                 {(summary?.activeHotSheets ?? []).length === 0 ? (
                   <div className="py-8 text-center">
                     <p className="text-sm text-muted-foreground">

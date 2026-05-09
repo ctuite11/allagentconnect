@@ -11,8 +11,10 @@ import { cn } from "@/lib/utils";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
 import { Seo } from "@/components/Seo";
 
-const cardClass =
-  "bg-white rounded-2xl border border-zinc-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
+const panelCardClass =
+  "bg-white rounded-2xl border border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
+
+const threadRowCardClass = `${panelCardClass} cursor-pointer transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md`;
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -92,7 +94,7 @@ export default function Messages() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className={cn(cardClass, "p-4")}>
+              <div key={i} className={cn(panelCardClass, "p-4")}>
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-10 h-10 rounded-full" />
                   <div className="flex-1">
@@ -104,7 +106,7 @@ export default function Messages() {
             ))}
           </div>
         ) : threads.length === 0 ? (
-          <div className={cn(cardClass, "p-8 text-center")}>
+          <div className={cn(panelCardClass, "p-8 text-center")}>
             <MessageSquare className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-zinc-700 mb-2">No messages yet</h3>
             <p className="text-zinc-500 text-sm mb-4">
@@ -125,8 +127,8 @@ export default function Messages() {
               <div
                 key={thread.id}
                 className={cn(
-                  cardClass,
-                  "cursor-pointer hover:bg-zinc-50 transition-colors p-4",
+                  threadRowCardClass,
+                  "p-4",
                   thread.isUnread && "border-l-4 border-l-emerald-500"
                 )}
                 onClick={() => navigate(`/messages/${thread.id}`, { state: { from: "/messages", fromLabel: "Back to Messages" } })}
