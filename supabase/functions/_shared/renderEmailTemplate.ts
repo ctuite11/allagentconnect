@@ -5,6 +5,74 @@
 
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 
+/* ------------------------------------------------------------------ */
+/*  Shared helpers for Share Listings emails                           */
+/* ------------------------------------------------------------------ */
+
+function fmtPrice(n: unknown): string {
+  const num = typeof n === "number" ? n : Number(n);
+  if (!Number.isFinite(num) || num <= 0) return "Price upon request";
+  return `$${Math.round(num).toLocaleString()}`;
+}
+
+function resolvePhotoUrl(photos: unknown): string {
+  if (!Array.isArray(photos) || photos.length === 0) return "";
+  const first = photos[0] as any;
+  if (typeof first === "string") return first;
+  if (first && typeof first === "object") return first.url || first.publicUrl || "";
+  return "";
+}
+
+function renderListingShareCard(listing: any): string {
+  const photoUrl = listing.photoUrl || resolvePhotoUrl(listing.photos);
+  const address = listing.address || "";
+  const cityLine = [listing.city, listing.state].filter(Boolean).join(", ") +
+    (listing.zipCode || listing.zip_code ? ` ${listing.zipCode || listing.zip_code}` : "");
+  const meta: string[] = [];
+  if (listing.bedrooms) meta.push(`${listing.bedrooms} bd`);
+  if (listing.bathrooms) meta.push(`${listing.bathrooms} ba`);
+  const sqft = listing.squareFeet ?? listing.square_feet;
+  if (sqft) meta.push(`${Number(sqft).toLocaleString()} sq ft`);
+  const propertyType = (listing.propertyType ?? listing.property_type ?? "").toString().replace(/_/g, " ");
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#ffffff;">
+      ${photoUrl ? `<tr><td><img src="${photoUrl}" alt="${address}" style="display:block;width:100%;max-height:280px;object-fit:cover;border:0;outline:none;text-decoration:none;" /></td></tr>` : ""}
+      <tr><td style="padding:16px 18px;">
+        <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${fmtPrice(listing.price)}</p>
+        <p style="margin:0 0 4px;font-size:15px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${address}</p>
+        ${cityLine.trim() ? `<p style="margin:0 0 10px;font-size:14px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${cityLine}</p>` : ""}
+        ${meta.length ? `<p style="margin:0;font-size:13px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${meta.join("&nbsp;&nbsp;·&nbsp;&nbsp;")}</p>` : ""}
+        ${propertyType ? `<p style="margin:6px 0 0;font-size:12px;color:#64748b;text-transform:capitalize;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${propertyType}</p>` : ""}
+      </td></tr>
+    </table>`;
+}
+
+function renderAgentContactBlock(opts: { agentName: string; agentEmail: string; agentPhone?: string }): string {
+  const { agentName, agentEmail, agentPhone } = opts;
+  const rows: string[] = [];
+  rows.push(`<tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Name</td><td style="padding:4px 0 4px 12px;font-weight:600;color:#0f172a;font-size:14px;">${agentName}</td></tr>`);
+  rows.push(`<tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Email</td><td style="padding:4px 0 4px 12px;color:#0E56F5;font-size:14px;"><a href="mailto:${agentEmail}" style="color:#0E56F5;text-decoration:none;">${agentEmail}</a></td></tr>`);
+  if (agentPhone) {
+    rows.push(`<tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Phone</td><td style="padding:4px 0 4px 12px;font-weight:600;color:#0f172a;font-size:14px;">${agentPhone}</td></tr>`);
+  }
+  return `
+    <div style="margin:24px 0 0;padding:16px 18px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;">
+      <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#0f172a;text-transform:uppercase;letter-spacing:0.04em;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Your Agent</p>
+      <table role="presentation" cellspacing="0" cellpadding="0" style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${rows.join("")}</table>
+    </div>`;
+}
+
+function renderPersonalMessage(message?: string): string {
+  if (!message) return "";
+  const safe = String(message).replace(/\n/g, "<br>");
+  return `
+    <div style="margin:0 0 20px;padding:14px 16px;background:#f8fafc;border-left:3px solid #0E56F5;border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#0E56F5;text-transform:uppercase;letter-spacing:0.04em;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Personal Message</p>
+      <p style="margin:0;font-size:14px;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${safe}</p>
+    </div>`;
+}
+
 export function renderEmailTemplate(
   template: string,
   variables: Record<string, any>,
@@ -13,17 +81,61 @@ export function renderEmailTemplate(
 
   switch (template) {
     case "listing-share":
+    {
+      const recipientName = variables.recipientName || "there";
+      const agentName = variables.agentName || "Your agent";
+      const agentEmail = variables.agentEmail || "";
+      const agentPhone = variables.agentPhone || "";
+      const listing = variables.listing || variables;
+      const description = listing.description ? String(listing.description) : "";
+      const yearBuilt = listing.yearBuilt ?? listing.year_built;
+      const card = renderListingShareCard(listing);
+      const detailRows: string[] = [];
+      if (yearBuilt) detailRows.push(`<tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Year Built</td><td style="padding:4px 0 4px 12px;font-weight:600;color:#0f172a;font-size:14px;">${yearBuilt}</td></tr>`);
+      const detailsBlock = detailRows.length
+        ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${detailRows.join("")}</table>`
+        : "";
+      const descBlock = description
+        ? `<p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">${description.replace(/\n/g, "<br>")}</p>`
+        : "";
+
       return buildAacEmail({
-        headline: "Property Shared With You",
+        headline: "A Property Has Been Shared With You",
+        preheader: `${agentName} shared ${listing.address || "a property"} with you`,
         body: `
-          ${variables.photoUrl ? `<img src="${variables.photoUrl}" alt="Property" style="width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin:0 0 16px;" />` : ""}
-          <p style="margin:0 0 8px;"><strong>Address:</strong> ${variables.address}</p>
-          <p style="margin:0 0 8px;"><strong>Price:</strong> ${variables.price}</p>
-          ${variables.bedrooms ? `<p style="margin:0 0 8px;"><strong>Bedrooms:</strong> ${variables.bedrooms}</p>` : ""}
-          ${variables.bathrooms ? `<p style="margin:0 0 8px;"><strong>Bathrooms:</strong> ${variables.bathrooms}</p>` : ""}
-          ${variables.message ? `<p style="margin:0 0 8px;"><strong>Message:</strong> ${variables.message}</p>` : ""}
-          <p style="margin:12px 0 0;">Contact ${variables.agentName} at ${variables.agentEmail} for more information.</p>`,
+          <p style="margin:0 0 14px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 18px;">${agentName} thought you might be interested in this property:</p>
+          ${card}
+          ${detailsBlock}
+          ${descBlock}
+          ${renderPersonalMessage(variables.message)}
+          ${renderAgentContactBlock({ agentName, agentEmail, agentPhone })}`,
+        ctaLabel: variables.listingUrl ? "View Property" : undefined,
+        ctaUrl: variables.listingUrl,
       });
+    }
+
+    case "bulk-listing-share":
+    {
+      const recipientName = variables.recipientName || "there";
+      const agentName = variables.agentName || "Your agent";
+      const agentEmail = variables.agentEmail || "";
+      const agentPhone = variables.agentPhone || "";
+      const listings: any[] = Array.isArray(variables.listings) ? variables.listings : [];
+      const count = variables.listingCount || listings.length;
+      const cardsHtml = listings.map(renderListingShareCard).join("");
+
+      return buildAacEmail({
+        headline: count === 1 ? "A Property Has Been Shared With You" : "Properties Shared With You",
+        preheader: `${agentName} shared ${count} ${count === 1 ? "property" : "properties"} with you`,
+        body: `
+          <p style="margin:0 0 14px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 18px;">${agentName} wants to share ${count} ${count === 1 ? "property" : "properties"} with you that may interest you:</p>
+          ${renderPersonalMessage(variables.message)}
+          ${cardsHtml}
+          ${renderAgentContactBlock({ agentName, agentEmail, agentPhone })}`,
+      });
+    }
 
     case "hot-sheet-alert":
       return buildAacEmail({
