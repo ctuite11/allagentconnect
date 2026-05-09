@@ -21,6 +21,7 @@ import { buyerPageShell, buyerPrimaryCta as primaryCtaClass } from "@/lib/buyerU
 import { ClientDashboardView } from "@/components/buyer/ClientDashboardView";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
+import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { loadBuyerGenericFavorites } from "@/lib/loadBuyerFavorites";
 import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
@@ -395,28 +396,15 @@ export default function ClientDashboard() {
     const id = hotSheetDeleteId;
     setHotSheetDeleteLoading(true);
 
-    const { error: clientsError } = await supabase
-      .from("hot_sheet_clients")
-      .delete()
-      .eq("hot_sheet_id", id);
-
-    if (clientsError) {
-      console.error("Delete hot_sheet_clients failed:", clientsError);
-      toast.error("Unable to delete this hot sheet.");
+    const { error: delErr } = await deleteHotSheetWithClientLinks(supabase, id);
+    if (delErr) {
+      console.error("Delete hot sheet failed:", delErr);
+      toast.error(delErr.message || "Unable to delete this hot sheet.");
       setHotSheetDeleteLoading(false);
       return;
     }
 
-    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", id);
-
-    if (sheetError) {
-      console.error("Delete hot_sheets failed:", sheetError);
-      toast.error("Unable to delete this hot sheet.");
-      setHotSheetDeleteLoading(false);
-      return;
-    }
-
-    toast.success("Hot sheet deleted");
+    toast.success("Hot sheet deleted for your group");
     setHotSheets((prev) => prev.filter((sheet) => sheet.id !== id));
     setHotSheetPreviewPhotosById((prev) => {
       const next = { ...prev };
@@ -586,6 +574,7 @@ export default function ClientDashboard() {
         showBuyerSelfServiceChrome
         setAddFriendOpen={setAddFriendOpen}
         setShowEndDialog={setShowEndDialog}
+        onRequestDeleteHotSheet={(sheetId) => setHotSheetDeleteId(sheetId)}
       />
 
       {/* End Relationship Dialog */}
@@ -614,8 +603,15 @@ export default function ClientDashboard() {
       >
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
-            <AlertDialogDescription>This will remove this hot sheet and its alerts.</AlertDialogDescription>
+            <AlertDialogTitle>Delete this hot sheet for everyone?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes{" "}
+              <strong className="font-medium text-foreground">
+                {hotSheets.find((s) => s.id === hotSheetDeleteId)?.name ?? "this hot sheet"}
+              </strong>{" "}
+              for the whole shared group — friends or family on the same sheet lose access too — and stops alerts. Your agent will
+              no longer see it on your activity. Cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={hotSheetDeleteLoading}>Cancel</AlertDialogCancel>

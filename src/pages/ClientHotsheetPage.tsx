@@ -9,10 +9,19 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { ArrowLeft, UserPlus, Plus } from "lucide-react";
+import { ArrowLeft, UserPlus, Plus, Trash2 } from "lucide-react";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import ListingCard from "@/components/ListingCard";
@@ -24,6 +33,7 @@ import {
   buyerPageMain,
   buyerPageShell,
 } from "@/lib/buyerUi";
+import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
 
 /** Row from `buildListingsQuery` with optional embed for “Listed by” */
 interface HotSheetListingRow {
@@ -89,6 +99,8 @@ const ClientHotsheetPage = () => {
   const [listingChatByListingId, setListingChatByListingId] = useState<Record<string, ChatMessage[]>>({});
   const [listingChatOpen, setListingChatOpen] = useState(false);
   const [listingChatListingId, setListingChatListingId] = useState<string | null>(null);
+  const [deleteHotSheetOpen, setDeleteHotSheetOpen] = useState(false);
+  const [deleteHotSheetBusy, setDeleteHotSheetBusy] = useState(false);
   const hidePublicFooter = isBuyerHotSheetByIdRoute || Boolean(currentUser);
 
   const handleListingChatMessage = useCallback((msg: ChatMessage) => {
@@ -471,6 +483,24 @@ const ClientHotsheetPage = () => {
     }
   };
 
+  const handleConfirmDeleteHotSheet = async () => {
+    const id = hotSheet?.id as string | undefined;
+    if (!id || deleteHotSheetBusy) return;
+    setDeleteHotSheetBusy(true);
+    try {
+      const { error } = await deleteHotSheetWithClientLinks(supabase, id);
+      if (error) {
+        toast.error(error.message || "Unable to delete this hot sheet.");
+        return;
+      }
+      toast.success("Hot sheet deleted for your group.");
+      setDeleteHotSheetOpen(false);
+      navigate("/hot-sheets", { replace: true });
+    } finally {
+      setDeleteHotSheetBusy(false);
+    }
+  };
+
   const handleSetupLogin = () => {
     // Close the login prompt
     setShowLoginPrompt(false);
@@ -654,6 +684,18 @@ const ClientHotsheetPage = () => {
                   >
                     Edit Search
                   </Button>
+                  {isBuyerHotSheetByIdRoute ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 border-red-200 text-red-600 hover:bg-red-50"
+                      onClick={() => setDeleteHotSheetOpen(true)}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                      Delete Hot Sheet
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             </CardHeader>
@@ -833,6 +875,35 @@ const ClientHotsheetPage = () => {
           }
         />
       ) : null}
+
+      <AlertDialog
+        open={deleteHotSheetOpen}
+        onOpenChange={(open) => {
+          if (!open && !deleteHotSheetBusy) setDeleteHotSheetOpen(false);
+        }}
+      >
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this hot sheet for everyone?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes <strong className="font-medium text-foreground">{hotSheet?.name ?? "this hot sheet"}</strong> for the
+              whole shared group — anyone on this sheet (friends, family, shared contacts) loses access — and stops alerts. Your
+              agent will no longer see it on your activity. Cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteHotSheetBusy}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteHotSheetBusy}
+              onClick={() => void handleConfirmDeleteHotSheet()}
+            >
+              {deleteHotSheetBusy ? "Deleting…" : "Delete"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {!hidePublicFooter && <Footer />}
     </div>

@@ -22,6 +22,16 @@ import {
   buyerPageStack,
 } from "@/lib/buyerUi";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
+import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -127,6 +137,8 @@ const HotSheets = ({
   const [buyerLoading, setBuyerLoading] = useState(true);
   const [buyerLinkedAgentName, setBuyerLinkedAgentName] = useState<string | null>(null);
   const [alertFrequency, setAlertFrequency] = useState<"instant" | "daily" | "weekly">("instant");
+  const [buyerDeleteTarget, setBuyerDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [buyerDeleteBusy, setBuyerDeleteBusy] = useState(false);
   const buyerMode = isBuyerMode;
 
   useEffect(() => {
@@ -435,6 +447,24 @@ const HotSheets = ({
     }
   };
 
+  const confirmDeleteBuyerHotSheet = async () => {
+    if (!buyerDeleteTarget) return;
+    setBuyerDeleteBusy(true);
+    try {
+      const { error } = await deleteHotSheetWithClientLinks(supabase, buyerDeleteTarget.id);
+      if (error) {
+        console.error("Buyer delete hot sheet failed:", error);
+        toast.error(error.message || "Unable to delete this hot sheet.");
+        return;
+      }
+      toast.success("Hot sheet deleted for your group.");
+      setBuyerDeleteTarget(null);
+      await loadBuyerHotSheets();
+    } finally {
+      setBuyerDeleteBusy(false);
+    }
+  };
+
   if (buyerMode) {
     return (
       <>
@@ -501,6 +531,7 @@ const HotSheets = ({
                             openBuyerHotSheet(sheet.id, token);
                           }
                         }}
+                        onDeleteClick={() => setBuyerDeleteTarget({ id: sheet.id, name: sheet.name })}
                       />
                     );
                   })}
@@ -508,6 +539,35 @@ const HotSheets = ({
               )}
           </div>
         </div>
+
+        <AlertDialog
+          open={Boolean(buyerDeleteTarget)}
+          onOpenChange={(open) => {
+            if (!open && !buyerDeleteBusy) setBuyerDeleteTarget(null);
+          }}
+        >
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this hot sheet for everyone?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You are removing <strong className="font-medium text-foreground">{buyerDeleteTarget?.name ?? "this hot sheet"}</strong>{" "}
+                for the whole shared group — anyone on this sheet (including friends or family your agent added) will lose access,
+                and alerts will stop. Your agent will no longer see this sheet on your activity. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={buyerDeleteBusy}>Cancel</AlertDialogCancel>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={buyerDeleteBusy}
+                onClick={() => void confirmDeleteBuyerHotSheet()}
+              >
+                {buyerDeleteBusy ? "Deleting…" : "Delete"}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </>
     );
   }
@@ -764,33 +824,6 @@ const HotSheets = ({
       console.error("Error deleting share:", error);
       toast.error("Failed to remove share");
     }
-  };
-
-  const handleDeleteHotSheet = async (hotSheetId: string) => {
-    if (!user?.id) return;
-    if (!confirm("Are you sure you want to delete this hot sheet?")) return;
-
-    const { error: clientsError } = await supabase
-      .from("hot_sheet_clients")
-      .delete()
-      .eq("hot_sheet_id", hotSheetId);
-
-    if (clientsError) {
-      console.error("Delete hot_sheet_clients failed:", clientsError);
-      toast.error("Failed to delete hot sheet");
-      return;
-    }
-
-    const { error: sheetError } = await supabase.from("hot_sheets").delete().eq("id", hotSheetId);
-
-    if (sheetError) {
-      console.error("Delete hot_sheets failed:", sheetError);
-      toast.error("Failed to delete hot sheet");
-      return;
-    }
-
-    toast.success("Hot sheet deleted");
-    await fetchData(user.id);
   };
 
   if (loading) {
