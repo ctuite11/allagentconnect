@@ -312,9 +312,6 @@ const ListingSearchResults = () => {
   /** Top strip in results container: Results on left, View + Sort on right. */
   const renderResultsTopStrip = (variant: "page" | "column") => {
     const compact = variant === "column";
-    const sortTriggerClass = compact
-      ? "h-7 w-[min(100%,118px)] min-w-[7rem] rounded-md border-zinc-300/85 bg-white px-2 text-[11px] font-medium shadow-[0_1px_2px_rgba(15,23,42,0.05)] focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0"
-      : "h-8 w-[136px] rounded-lg border-zinc-300 bg-white px-2.5 text-[13px] focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0";
     const labelClass = compact ? "text-[11px] font-medium text-zinc-500" : "text-[13px] text-zinc-500";
     const toggleBtnClass = compact
       ? "h-[22px] min-w-[2.25rem] rounded px-1.5 text-[11px] font-medium whitespace-nowrap leading-none transition-colors"
@@ -328,13 +325,13 @@ const ListingSearchResults = () => {
     return (
       <div className="w-full">
         <div
-          className="flex w-full flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between min-[520px]:gap-3"
+          className="flex w-full items-center justify-between gap-3"
           aria-label="Results summary and controls"
         >
           <p className={cn("min-w-0 truncate font-medium text-zinc-900", compact ? "text-sm" : "text-[13px]")}>
             {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
           </p>
-          <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 min-[520px]:w-auto min-[520px]:flex-row min-[520px]:flex-wrap min-[520px]:items-center min-[520px]:justify-end min-[520px]:gap-x-3 min-[520px]:gap-y-2">
+          <div className="flex min-w-0 shrink-0 justify-end">
             {showViewToggle && (
               <div className="flex min-w-0 items-center gap-1.5">
                 <span className={cn(labelClass, "whitespace-nowrap")}>View</span>
@@ -366,22 +363,6 @@ const ListingSearchResults = () => {
                 </div>
               </div>
             )}
-            <div className="flex min-w-0 items-center gap-1.5">
-              <span className={cn(labelClass, "whitespace-nowrap")}>Sort</span>
-              <Select value={sortSelectValue} onValueChange={handleSortSelect}>
-                <SelectTrigger className={sortTriggerClass}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-lg border border-zinc-200 bg-white">
-                  <SelectItem value="date_new">Date (New)</SelectItem>
-                  <SelectItem value="date_old">Date (Old)</SelectItem>
-                  <SelectItem value="price_high">Price (High)</SelectItem>
-                  <SelectItem value="price_low">Price (Low)</SelectItem>
-                  <SelectItem value="sqft">Square Feet</SelectItem>
-                  <SelectItem value="beds">Bedrooms</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </div>
       </div>
@@ -400,53 +381,73 @@ const ListingSearchResults = () => {
     const shareTriggerClass = compact
       ? "h-7 shrink-0 whitespace-nowrap rounded-md px-2 text-[11px] font-medium [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3"
       : "h-8 px-3 text-[13px] font-medium rounded-lg [&_svg]:mr-1 [&_svg]:size-3.5";
+    const sortTriggerClass = compact
+      ? "h-7 w-[min(100%,118px)] min-w-[7rem] rounded-md border-zinc-300/85 bg-white px-2 text-[11px] font-medium shadow-[0_1px_2px_rgba(15,23,42,0.05)] focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0"
+      : "h-8 w-[136px] rounded-lg border-zinc-300 bg-white px-2.5 text-[13px] focus:border-zinc-400 focus:outline-none focus:ring-0 focus:ring-offset-0";
 
     return (
       <div className="w-full">
         <div
-          className="flex w-full flex-wrap items-center gap-2"
+          className="flex w-full flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between"
           aria-label="Result actions"
         >
-          <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
-            <ListChecks className={actionIconClass} />
-            {selectedRows.size === displayedListings.length && displayedListings.length > 0
-              ? "Deselect All"
-              : "Select All"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={selectedRows.size === 0 && !showSelectedOnly}
-            onClick={handleKeepSelected}
-            className={cn(actionBtnClass, "disabled:opacity-50")}
-          >
-            <Check className={actionIconClass} />
-            {showSelectedOnly ? "Show All" : "Keep Selected"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (selectedRows.size === 0) {
-                toast.error("You haven't selected any properties", {
-                  description: "Select one or more properties from the results to save a hotsheet.",
-                });
-                return;
-              }
-              setHotSheetDialogOpen(true);
-            }}
-            className={actionBtnClass}
-          >
-            <FileSpreadsheet className={actionIconClass} />
-            Save as Hot Sheet
-          </Button>
-          {selectedRows.size > 0 && (
-            <BulkShareListingsDialog
-              listingIds={Array.from(selectedRows)}
-              listingCount={selectedRows.size}
-              triggerClassName={shareTriggerClass}
-            />
-          )}
+          <div className="flex min-w-0 w-full min-[520px]:w-auto min-[520px]:flex-1 flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
+              <ListChecks className={actionIconClass} />
+              {selectedRows.size === displayedListings.length && displayedListings.length > 0
+                ? "Deselect All"
+                : "Select All"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selectedRows.size === 0 && !showSelectedOnly}
+              onClick={handleKeepSelected}
+              className={cn(actionBtnClass, "disabled:opacity-50")}
+            >
+              <Check className={actionIconClass} />
+              {showSelectedOnly ? "Show All" : "Keep Selected"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (selectedRows.size === 0) {
+                  toast.error("You haven't selected any properties", {
+                    description: "Select one or more properties from the results to save a hotsheet.",
+                  });
+                  return;
+                }
+                setHotSheetDialogOpen(true);
+              }}
+              className={actionBtnClass}
+            >
+              <FileSpreadsheet className={actionIconClass} />
+              Save as Hot Sheet
+            </Button>
+            {selectedRows.size > 0 && (
+              <BulkShareListingsDialog
+                listingIds={Array.from(selectedRows)}
+                listingCount={selectedRows.size}
+                triggerClassName={shareTriggerClass}
+              />
+            )}
+          </div>
+          <div className="flex justify-end min-[520px]:justify-end">
+            <Select value={sortSelectValue} onValueChange={handleSortSelect}>
+              <SelectTrigger className={sortTriggerClass}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-lg border border-zinc-200 bg-white">
+                <SelectItem value="date_new">Date (New)</SelectItem>
+                <SelectItem value="date_old">Date (Old)</SelectItem>
+                <SelectItem value="price_high">Price (High)</SelectItem>
+                <SelectItem value="price_low">Price (Low)</SelectItem>
+                <SelectItem value="sqft">Square Feet</SelectItem>
+                <SelectItem value="beds">Bedrooms</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     );
@@ -528,6 +529,7 @@ const ListingSearchResults = () => {
                             agentInfo={null}
                             showCompactComments={false}
                             hideCompactFavorite
+                            isHotSheetFavorite={false}
                             compactDetailNavigateState={{
                               from: `/listing-results${search}`,
                             }}
