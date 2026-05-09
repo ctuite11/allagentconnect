@@ -131,6 +131,7 @@ import PublicAgentProfile from "./pages/PublicAgentProfile";
 import Footer from "./components/Footer";
 import { AuthRoleProvider, useAuthRole } from "./hooks/useAuthRole";
 import { LoadingScreen } from "./components/LoadingScreen";
+import { Skeleton } from "./components/ui/skeleton";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
@@ -165,7 +166,19 @@ function LegacyClientHotSheetRedirect() {
 
 function FavoritesEntry() {
   const { role, loading } = useAuthRole();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white" aria-busy="true">
+        <div className="border-b border-neutral-200 px-5 py-3 md:px-7">
+          <Skeleton className="h-8 w-[min(100%,20rem)] max-w-xl rounded-md bg-neutral-100" />
+        </div>
+        <div className="mx-auto grid w-full max-w-[1800px] flex-1 grid-cols-1 gap-4 p-5 md:p-7 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)]">
+          <Skeleton className="min-h-[45vh] rounded-2xl border border-neutral-100 bg-neutral-100 lg:min-h-[calc(100dvh-9rem)]" />
+          <Skeleton className="min-h-[38vh] rounded-2xl border border-neutral-100 bg-neutral-100 lg:min-h-[calc(100dvh-9rem)]" />
+        </div>
+      </div>
+    );
+  }
   if (role === "agent" || role === "admin") return <Navigate to="/my-favorites" replace />;
   if (role === "buyer") return <BuyerFavorites />;
   return <Navigate to="/auth" replace />;

@@ -36,11 +36,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, BedDouble, Bath, Ruler, Heart, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ArrowLeft, MapPin, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Listing {
   id: string;
@@ -876,41 +878,64 @@ const Favorites = ({
   };
 
   const buyerStickyHeader = (
-    <div className="sticky top-14 z-40 border-b border-zinc-200/50 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/84">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex flex-col gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-auto -ml-1 w-fit self-start px-2 py-1 text-sm text-zinc-600 hover:text-zinc-900"
-            onClick={() => navigate("/client/dashboard")}
-            aria-label="Back to Dashboard"
-          >
-            <span className="inline-flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4 shrink-0" />
-              <span>Back to Dashboard</span>
-            </span>
-          </Button>
-          <h1 className="text-lg font-semibold text-zinc-900">Your Favorite Homes</h1>
-          <p className="text-sm text-zinc-500">Homes you saved for quick access.</p>
+    <header className="sticky top-14 z-40 border-b border-neutral-200/90 bg-white">
+      <div className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/client/dashboard")}
+              className="-ml-1 rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
+              aria-label="Back to Dashboard"
+            >
+              <ArrowLeft className="h-[17px] w-[17px] shrink-0" aria-hidden />
+            </button>
+            <div className="min-w-0 space-y-0.5">
+              <h1 className="text-sm font-semibold tracking-tight text-neutral-900">Saved homes</h1>
+              <p className="text-[13px] leading-snug text-neutral-500">Listings you’ve saved across AAC.</p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 
   if (loading && buyerMode) {
     return (
       <div className="flex min-h-screen flex-col bg-white">
         {buyerStickyHeader}
-        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 md:px-7 py-3">
-          <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-            <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}>
-              <div className="flex h-full items-center justify-center">
-                <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
+        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7">
+          <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+            <section
+              className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}
+              aria-busy="true"
+            >
+              <div className="flex h-full flex-col gap-2 p-4">
+                <Skeleton className="h-9 w-full max-w-[12rem] rounded-md bg-neutral-100" />
+                <Skeleton className="min-h-[12rem] flex-1 rounded-lg bg-neutral-100" />
               </div>
             </section>
-            <section className={`${buyerFavoritesSplitPane} h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col`}>
-              <div className="p-4 flex-1 flex items-center justify-center text-sm text-zinc-500">Loading your saved homes…</div>
+            <section className={`${buyerFavoritesSplitPane} flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:h-full`}>
+              <div className="shrink-0 border-b border-neutral-200 px-4 py-2.5 sm:px-5">
+                <Skeleton className="h-5 w-32 rounded-md bg-neutral-100" />
+              </div>
+              <div className="min-h-0 flex-1 space-y-3 p-4 sm:p-5 lg:overflow-hidden">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Skeleton className="h-7 w-20 rounded-md bg-neutral-100" />
+                  <Skeleton className="h-7 w-24 rounded-md bg-neutral-100" />
+                  <Skeleton className="ml-auto h-8 w-[7.5rem] rounded-md bg-neutral-100 sm:ml-0" />
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="space-y-2 rounded-xl border border-neutral-200/90 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                      <Skeleton className="aspect-video w-full rounded-lg bg-neutral-100" />
+                      <Skeleton className="h-4 w-[85%] max-w-[14rem] rounded-md bg-neutral-100" />
+                      <Skeleton className="h-3 w-full max-w-[10rem] rounded bg-neutral-100" />
+                      <Skeleton className="h-3 w-24 rounded bg-neutral-100" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </section>
           </div>
         </main>
@@ -930,22 +955,29 @@ const Favorites = ({
         {buyerStickyHeader}
 
         {favorites.length === 0 ? (
-          <main className="mx-auto w-full max-w-7xl flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
-            <Card className="w-full max-w-lg bg-white rounded-2xl border border-zinc-200/80 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] p-8 md:p-10 text-center">
-              <div className="text-center">
-                <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">No favorite homes yet</h3>
-                <p className="text-muted-foreground mb-6">Start browsing homes and save the ones you want to revisit.</p>
-                <Button className="px-5 py-2 text-sm" onClick={() => navigate("/browse")}>
-                  Search homes
-                </Button>
-              </div>
+          <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-5 py-10 md:max-w-xl md:px-7">
+            <Card className="rounded-2xl border border-neutral-200/90 bg-white p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-10">
+              <Heart className="mx-auto mb-4 h-12 w-12 text-neutral-300" aria-hidden />
+              <h3 className="mb-2 text-base font-semibold tracking-tight text-neutral-900">No saved homes yet</h3>
+              <p className="mb-6 text-[13px] leading-snug text-neutral-500">
+                Save listings while you browse — they&apos;ll appear here with map pins for quick comparisons.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="bg-neutral-900 text-white hover:bg-neutral-800"
+                onClick={() => navigate("/client/search")}
+              >
+                Browse listings
+              </Button>
             </Card>
           </main>
         ) : (
-          <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-            <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-              <section className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]`}>
+          <main className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
+            <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+              <section
+                className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:sticky lg:top-[6.05rem] lg:h-full lg:min-h-0`}
+              >
                 {displayListingRecords.length > 0 ? (
                   <div className="h-full">
                       <PropertyMap
@@ -959,33 +991,50 @@ const Favorites = ({
                     />
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-white">
-                    <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
-                    <p className="text-sm text-zinc-600 max-w-md">
-                      No homes in the current list to show on the map.
+                  <div className="flex h-full flex-col items-center justify-center bg-white px-6 text-center">
+                    <MapPin className="mb-3 h-9 w-9 text-neutral-300" aria-hidden />
+                    <p className="max-w-sm text-[13px] leading-snug text-neutral-600">
+                      No homes in this view have map coordinates yet.
                     </p>
                   </div>
                 )}
               </section>
 
-              <section className={`${buyerFavoritesSplitPane} h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col`}>
-                <div className="shrink-0 border-b border-neutral-200 bg-white px-6 py-2.5">
-                  <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">
-                    Results: {displayListingRecords.length.toLocaleString()}
-                  </p>
+              <section className={`${buyerFavoritesSplitPane} flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:h-full`}>
+                <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-2.5 sm:px-5">
+                  <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between">
+                    <p className="text-sm font-semibold tabular-nums text-neutral-900">
+                      Results: {displayListingRecords.length.toLocaleString()}
+                    </p>
+                    <div className="w-full min-w-0 min-[520px]:w-auto min-[520px]:max-w-[11rem]">
+                      <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                        <SelectTrigger className="h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2">
+                          <SelectValue placeholder="Sort" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="newest">Newest</SelectItem>
+                          <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                          <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
+                <div
+                  className="min-h-0 flex-1 px-4 py-3 sm:px-5 [&_input]:focus-visible:border-neutral-900 [&_input]:focus-visible:ring-1 [&_input]:focus-visible:ring-neutral-300/80 [&_input]:shadow-none [&_textarea]:focus-visible:border-neutral-900 [&_textarea]:focus-visible:ring-1 [&_textarea]:focus-visible:ring-neutral-300/80"
+                  aria-label="Saved listings"
+                  role="region"
+                >
                   {displayFavorites.length > 0 && (
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
                         {visibleSelectionState.allVisible && (
                           <>
                             <Button
                               type="button"
                               size="sm"
                               variant="outline"
-                              className="h-7 rounded-md px-2.5 text-xs"
+                              className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
                               onClick={unselectAllVisible}
                             >
                               Unselect all
@@ -994,7 +1043,7 @@ const Favorites = ({
                               type="button"
                               size="sm"
                               variant="outline"
-                              className="h-7 rounded-md px-2.5 text-xs"
+                              className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
                               onClick={shareVisibleSelected}
                             >
                               Share selected
@@ -1003,30 +1052,33 @@ const Favorites = ({
                         )}
                         {visibleSelectionState.someVisible && (
                           <>
+                            {!showKeptOnly && (
+                              <>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                                  onClick={addAllVisible}
+                                >
+                                  Select all
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                                  onClick={() => setShowKeptOnly(true)}
+                                >
+                                  Keep selected only
+                                </Button>
+                              </>
+                            )}
                             <Button
                               type="button"
                               size="sm"
                               variant="outline"
-                              className="h-7 rounded-md px-2.5 text-xs"
-                              onClick={addAllVisible}
-                            >
-                              Select all
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={showKeptOnly ? "default" : "outline"}
-                              className="h-7 rounded-md px-2.5 text-xs"
-                              onClick={() => setShowKeptOnly(true)}
-                              aria-pressed={showKeptOnly}
-                            >
-                              Keep selected only
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="h-7 rounded-md px-2.5 text-xs"
+                              className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
                               onClick={shareVisibleSelected}
                             >
                               Share selected
@@ -1038,7 +1090,7 @@ const Favorites = ({
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 rounded-md px-2.5 text-xs"
+                            className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
                             onClick={addAllVisible}
                             disabled={displayListingRecords.length === 0}
                           >
@@ -1049,8 +1101,8 @@ const Favorites = ({
                           <Button
                             type="button"
                             size="sm"
-                            variant="default"
-                            className="h-7 rounded-md px-2.5 text-xs"
+                            variant="outline"
+                            className="h-7 rounded-md border-neutral-900 bg-neutral-900 px-2.5 text-xs font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-neutral-800"
                             onClick={() => setShowKeptOnly(false)}
                           >
                             Show all
@@ -1061,44 +1113,31 @@ const Favorites = ({
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 rounded-md px-2.5 text-xs text-red-700 border-red-200 hover:bg-red-50"
+                            className="h-7 rounded-md border-red-200 bg-white px-2.5 text-xs font-medium text-red-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-red-50"
                             onClick={() => setDeleteDialogOpen(true)}
                           >
-                            Delete selected
+                            Remove selected
                           </Button>
                         )}
-                      </div>
-                      <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
-                        <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                          <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
-                            <SelectValue placeholder="Sort" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="newest">Newest</SelectItem>
-                            <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                            <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
                     </div>
                   )}
 
                   {showKeptOnly && displayListingRecords.length === 0 ? (
-                    <div className="py-10 text-center text-sm text-zinc-500 px-3">
-                      <p>No kept homes in this view.</p>
+                    <div className="rounded-xl border border-dashed border-neutral-200/90 bg-white px-4 py-10 text-center">
+                      <p className="text-[13px] text-neutral-600">No homes match your current selection filter.</p>
                       <Button
                         type="button"
                         variant="outline"
-                        className="mt-3"
+                        className="mt-3 border-neutral-200"
                         size="sm"
                         onClick={() => setShowKeptOnly(false)}
                       >
-                        Show all
+                        Show all homes
                       </Button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      {displayFavorites.map((favorite, idx) => {
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {displayFavorites.map((favorite) => {
                         const listing = favorite.listings;
                         const isKept = sessionKeptListingIds.has(listing.id);
                         return (
@@ -1147,44 +1186,64 @@ const Favorites = ({
         )}
 
         {shareModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-2xl rounded-xl border border-zinc-200 bg-white p-4 shadow-xl">
-              <h3 className="text-base font-semibold text-zinc-900">Share selected listings</h3>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[1px]">
+            <div className="w-full max-w-2xl rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] sm:p-6">
+              <h3 className="text-sm font-semibold tracking-tight text-neutral-900">Share selected listings</h3>
               <div className="mt-3 space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="share-to-email">To email</Label>
+                  <Label htmlFor="share-to-email" className="text-xs text-neutral-600">
+                    To email
+                  </Label>
                   <Input
                     id="share-to-email"
                     type="email"
                     placeholder="name@example.com"
                     value={shareToEmail}
                     onChange={(e) => setShareToEmail(e.target.value)}
+                    className="focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="share-subject">Subject</Label>
+                  <Label htmlFor="share-subject" className="text-xs text-neutral-600">
+                    Subject
+                  </Label>
                   <Input
                     id="share-subject"
                     value={shareSubject}
                     onChange={(e) => setShareSubject(e.target.value)}
+                    className="focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="share-message">Message</Label>
+                  <Label htmlFor="share-message" className="text-xs text-neutral-600">
+                    Message
+                  </Label>
                   <Textarea
                     id="share-message"
-                    className="min-h-[180px]"
+                    className="min-h-[180px] focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
                     value={shareMessage}
                     onChange={(e) => setShareMessage(e.target.value)}
                   />
                 </div>
               </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setShareModalOpen(false)}>
+              <div className="mt-5 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-neutral-200"
+                  onClick={() => setShareModalOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="button" onClick={handleSendShareEmail} disabled={shareSending}>
-                  Send Email
+                <Button
+                  type="button"
+                  size="sm"
+                  className="bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50"
+                  onClick={handleSendShareEmail}
+                  disabled={shareSending}
+                >
+                  {shareSending ? "Sending…" : "Send email"}
                 </Button>
               </div>
             </div>
