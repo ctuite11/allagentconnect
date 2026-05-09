@@ -167,7 +167,7 @@ const HotSheets = ({
     const heroCreateButton = showHeroCreate ? (
       <Button
         type="button"
-        className="h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+        className="h-8 w-fit shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
         onClick={() =>
           buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
         }
@@ -179,18 +179,21 @@ const HotSheets = ({
 
     return (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:items-start">
-        <div>
-          <div className="min-w-0 space-y-1">
+      {/*
+        One grid so the CTA can sit in row 2 col 1 on large screens (below headline; aligned with left column),
+        and on small screens the visual order is: title → statuses → CTA → connected panel (order-3 / order-4).
+      */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:grid-rows-[auto_auto] lg:items-start">
+        <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1">
+          <div className="space-y-1">
             <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Hot Sheets</h1>
             <p className="text-sm text-gray-500">
               Track listings that matter most with real-time alerts based on your saved search criteria.
             </p>
           </div>
-          {!buyerMode && showHeroCreate ? <div className="mt-3">{heroCreateButton}</div> : null}
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="order-2 grid grid-cols-2 gap-2.5 sm:gap-3 lg:col-start-2 lg:row-start-1">
           {/* LOCKED UI — do not restyle without design approval
            * Matches AAC premium system (Dashboard-aligned) */}
           {heroStatusItems.map((item) => (
@@ -204,7 +207,13 @@ const HotSheets = ({
           ))}
         </div>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-3.5 shadow-none">
+        {showHeroCreate ? (
+          <div className="order-3 flex justify-start lg:col-start-1 lg:row-start-2 lg:pt-1">
+            {heroCreateButton}
+          </div>
+        ) : null}
+
+        <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-none lg:col-start-3 lg:row-start-1 lg:row-span-2 lg:self-start">
           <p className={DASH_SECTION_TITLE}>Connected to your agent</p>
           <p className={`mt-1 ${DASH_SECTION_DESC}`}>
             Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
@@ -249,14 +258,6 @@ const HotSheets = ({
             </div>
         </div>
       </div>
-
-      {buyerMode && showHeroCreate ? (
-        <div className="mt-5 grid grid-cols-1 gap-5 lg:mt-6 lg:grid-cols-[1.05fr_1.2fr_0.9fr]">
-          <div className="flex justify-start">{heroCreateButton}</div>
-          <div className="hidden lg:block" aria-hidden />
-          <div className="hidden lg:block" aria-hidden />
-        </div>
-      ) : null}
     </section>
     );
   };
