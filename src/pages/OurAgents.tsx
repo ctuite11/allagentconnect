@@ -261,7 +261,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
   const presenceMap = useAgentPresenceBatch(userIds);
 
   return (
-    <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 md:grid-cols-3 md:gap-x-8 lg:grid-cols-4 lg:gap-y-10">
       {agents.map((agent) => (
         <AgentPhotoTile
           key={agent.id}
@@ -364,7 +364,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-white">
       <Seo
         title={effectivePublicMode ? "Find an Agent | All Agent Connect" : "Agent Network | All Agent Connect"}
         description={effectivePublicMode
@@ -373,25 +373,33 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
         canonical={effectivePublicMode ? "https://allagentconnect.com/our-agents" : "https://allagentconnect.com/our-members"}
         noindex={!effectivePublicMode}
       />
-      <main className="flex-1 pb-12">
+      <main className="flex-1 pb-10">
         {/* Page Header + Search */}
-        <section className="border-b border-zinc-200 bg-white py-8">
-          <div className="mx-auto w-full max-w-[1200px] px-6">
+        <section className="border-b border-neutral-200/90 bg-white py-6 md:py-8">
+          <div className="mx-auto w-full max-w-[1200px] px-5 md:px-6">
             <PageHeader
               title={pageTitle}
               subtitle={pageSubtitle}
+              titleClassName="text-base font-semibold tracking-tight md:text-lg"
+              backTo={effectiveAgentMode ? "/agent-dashboard" : undefined}
+              compactBack
+              className="mb-0"
             />
-            
-            {/* Search Bar - Left Aligned */}
-            <div className="mt-6 max-w-xl">
+
+            {/* Search Bar */}
+            <div className="mt-5 max-w-xl">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden />
                 <Input
                   type="text"
-                  placeholder={effectivePublicMode ? "Search by name, city, or brokerage..." : "Search by name, company, city, or ZIP..."}
+                  placeholder={
+                    effectivePublicMode
+                      ? "Search by name, city, or brokerage..."
+                      : "Search by name, company, city, or ZIP..."
+                  }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-12 pl-12 pr-4 text-[15px] border-zinc-300 rounded-lg"
+                  className="h-10 rounded-lg border-neutral-200 bg-white pl-10 pr-3 text-sm shadow-none focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80 md:h-11 md:text-[15px]"
                 />
               </div>
             </div>
@@ -405,33 +413,35 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
           resultCount={filteredAgents.length}
           searchQuery={searchQuery}
           itemLabel="Agents"
+          loading={loading}
         />
 
         {/* Agent Grid */}
-        <section className="pt-8 pb-16">
-          <div className="mx-auto w-full max-w-[1200px] px-6">
+        <section className="pb-14 pt-6 md:pt-8">
+          <div className="mx-auto w-full max-w-[1200px] px-5 md:px-6">
             {loading ? (
-              <div
-                role="status"
-                aria-live="polite"
-                aria-busy="true"
-                className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3 lg:grid-cols-4 py-12"
-              >
+              <div role="status" aria-live="polite" aria-busy="true">
                 <span className="sr-only">Loading agents…</span>
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="flex flex-col items-center gap-3">
-                    <Skeleton className="h-32 w-32 shrink-0 rounded-xl bg-zinc-100/90" />
-                    <Skeleton className="h-4 w-[70%] max-w-[10rem] rounded-md bg-zinc-100/90" />
-                    <Skeleton className="h-3 w-[85%] max-w-[11rem] rounded-md bg-zinc-100/80" />
-                  </div>
-                ))}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 md:grid-cols-3 md:gap-x-8 lg:grid-cols-4 lg:gap-y-10">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="flex flex-col gap-3">
+                      <Skeleton className="aspect-[3/4] w-full rounded-2xl bg-neutral-100" />
+                      <Skeleton className="h-4 w-[78%] rounded-md bg-neutral-100" />
+                      <Skeleton className="h-3 w-[92%] rounded-md bg-neutral-100" />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : filteredAgents.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-muted-foreground">
+              <div className="rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-14 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                <p className="mx-auto max-w-md text-[13px] leading-snug text-neutral-600">
                   {searchQuery || selectedState || selectedCounties.length > 0
-                    ? effectivePublicMode ? "No agents matched your search." : "No agents found matching your criteria."
-                    : effectivePublicMode ? "No agents are available right now." : "No agents available at the moment."}
+                    ? effectivePublicMode
+                      ? "No agents matched your search."
+                      : "No agents found matching your criteria."
+                    : effectivePublicMode
+                      ? "No agents are available right now."
+                      : "No agents available at the moment."}
                 </p>
               </div>
             ) : (
@@ -440,18 +450,18 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
 
                 {/* Pagination Controls */}
                 {totalCount > PAGE_SIZE && (
-                  <div className="mt-8 flex items-center justify-center gap-4">
+                  <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="gap-1"
+                      className="gap-1 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                     >
                       <ChevronLeft className="h-4 w-4" />
                       Prev
                     </Button>
-                    <span className="text-sm text-zinc-600">
+                    <span className="text-[13px] tabular-nums text-neutral-600">
                       Page {page} of {Math.ceil(totalCount / PAGE_SIZE)}
                     </span>
                     <Button
@@ -459,7 +469,7 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
                       size="sm"
                       onClick={() => setPage((p) => p + 1)}
                       disabled={page * PAGE_SIZE >= totalCount}
-                      className="gap-1"
+                      className="gap-1 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                     >
                       Next
                       <ChevronRight className="h-4 w-4" />
@@ -473,20 +483,22 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
 
         {/* CTA Section — only on public routes */}
         {effectivePublicMode && (
-          <section className="bg-primary py-12 text-primary-foreground">
-            <div className="container mx-auto px-4 text-center">
-              <h2 className="mb-3 text-2xl font-bold">
-                Are You a Real Estate Agent?
+          <section className="border-t border-neutral-200/90 bg-white py-10 md:py-12">
+            <div className="mx-auto max-w-2xl px-5 text-center md:px-6">
+              <h2 className="mb-2 text-base font-semibold tracking-tight text-neutral-900 md:text-lg">
+                Are you a real estate agent?
               </h2>
-              <p className="mx-auto mb-6 max-w-2xl opacity-90">
+              <p className="mx-auto mb-6 max-w-xl text-[13px] leading-snug text-neutral-600">
                 Join All Agent Connect and connect with buyers actively searching for properties in your area.
               </p>
-              <button
-                className="inline-flex items-center justify-center rounded-md bg-white border border-neutral-200 px-6 py-2.5 text-sm font-medium text-foreground hover:bg-neutral-soft transition-colors"
+              <Button
+                type="button"
+                size="sm"
+                className="bg-neutral-900 text-white hover:bg-neutral-800"
                 onClick={() => navigate("/auth?mode=register")}
               >
-                Register as an Agent
-              </button>
+                Register as an agent
+              </Button>
             </div>
           </section>
         )}
@@ -500,11 +512,13 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
         setMessageDialogOpen(open);
         if (!open) setMessageAgent(null);
       }}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="rounded-2xl border-neutral-200/90 sm:max-w-[500px] [&_input]:focus-visible:border-neutral-900 [&_input]:focus-visible:ring-1 [&_input]:focus-visible:ring-neutral-300/80 [&_textarea]:focus-visible:border-neutral-900 [&_textarea]:focus-visible:ring-1 [&_textarea]:focus-visible:ring-neutral-300/80">
           <DialogHeader>
-            <DialogTitle>Contact {messageAgent?.first_name} {messageAgent?.last_name}</DialogTitle>
-            <DialogDescription>
-              Send a message to this agent about their services
+            <DialogTitle className="text-base font-semibold tracking-tight">
+              Contact {messageAgent?.first_name} {messageAgent?.last_name}
+            </DialogTitle>
+            <DialogDescription className="text-[13px] text-neutral-600">
+              Send a message to this agent about their services.
             </DialogDescription>
           </DialogHeader>
           {messageAgent && (
@@ -660,9 +674,14 @@ const MessageForm = ({ agentId, agentName, agentEmail, onSuccess }: MessageFormP
         <p className="text-xs text-muted-foreground">{formData.message.length}/1000</p>
       </div>
 
-      <div className="flex justify-end gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Sending..." : "Send Message"}
+      <div className="flex justify-end gap-2">
+        <Button
+          type="submit"
+          size="sm"
+          disabled={loading}
+          className="bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50"
+        >
+          {loading ? "Sending…" : "Send message"}
         </Button>
       </div>
     </form>
