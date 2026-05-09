@@ -1,66 +1,78 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { b64urlDecode, verifyOpen } from "../_shared/tracking.ts";
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// 1x1 transparent GIF
+const PIXEL = Uint8Array.from(
+  atob("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"),
+  (c) => c.charCodeAt(0),
+);
 
-// 1x1 transparent pixel
-const transparentPixel = new Uint8Array([
-  0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00,
-  0x01, 0x00, 0x80, 0x00, 0x00, 0xff, 0xff, 0xff,
-  0x00, 0x00, 0x00, 0x21, 0xf9, 0x04, 0x01, 0x00,
-  0x00, 0x00, 0x00, 0x2c, 0x00, 0x00, 0x00, 0x00,
-  0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02, 0x44,
-  0x01, 0x00, 0x3b,
-]);
-
-const handler = async (req: Request): Promise<Response> => {
-  try {
-    const url = new URL(req.url);
-    const emailSendId = url.searchParams.get("id");
-
-    if (!emailSendId) {
-      console.log("No email send ID provided");
-      return new Response(transparentPixel, {
-        headers: { "Content-Type": "image/gif" },
-      });
-    }
-
-    // Get user agent and IP
-    const userAgent = req.headers.get("user-agent") || "";
-    const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0] || 
-                      req.headers.get("x-real-ip") || "";
-
-    // Record the open
-    const { error } = await supabase.from("email_opens").insert({
-      email_send_id: emailSendId,
-      user_agent: userAgent,
-      ip_address: ipAddress,
-    });
-
-    if (error) {
-      console.error("Error recording email open:", error);
-    } else {
-      console.log(`Recorded email open for send ID: ${emailSendId}`);
-    }
-
-    // Always return the tracking pixel
-    return new Response(transparentPixel, {
-      headers: { 
-        "Content-Type": "image/gif",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
-      },
-    });
-  } catch (error: any) {
-    console.error("Error in track-email-open function:", error);
-    // Still return pixel even on error
-    return new Response(transparentPixel, {
-      headers: { "Content-Type": "image/gif" },
-    });
-  }
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "*",
 };
 
-serve(handler);
+function pixelResponse() {
+  return new Response(PIXEL, {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "image/gif",
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      "Pragma": "no-cache",
+      "Content-Length": String(PIXEL.byteLength),
+    },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Always return the pixel, even on errors — never break the email rendering.
+  try {
+    const url = new URL(req.url);
+    const jobId = url.searchParams.get("j") || "";
+    const r = url.searchParams.get("r") || "";
+    const t = url.searchParams.get("t") || "";
+    if (!jobId || !r || !t) return pixelResponse();
+
+    let recipientEmail = "";
+    try { recipientEmail = b64urlDecode(r); } catch { return pixelResponse(); }
+
+    const ok = await verifyOpen({ jobId, recipientEmail, category: "" }, t);
+    if (!ok) return pixelResponse();
+
+    const supa = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // De-dupe: skip if an open was recorded in the past hour.
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: recent } = await supa
+      .from("email_job_opens")
+      .select("id")
+      .eq("job_id", jobId)
+      .ilike("recipient_email", recipientEmail)
+      .gte("opened_at", oneHourAgo)
+      .limit(1);
+
+    if (!recent || recent.length === 0) {
+      const ua = req.headers.get("user-agent") || null;
+      const ip =
+        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        req.headers.get("x-real-ip") ||
+        null;
+      await supa.from("email_job_opens").insert({
+        job_id: jobId,
+        recipient_email: recipientEmail,
+        user_agent: ua,
+        ip_address: ip,
+      });
+    }
+  } catch (e) {
+    console.error("[track-email-open] error", e);
+  }
+
+  return pixelResponse();
+});

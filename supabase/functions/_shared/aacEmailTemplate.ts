@@ -20,10 +20,20 @@ interface AacEmailOptions {
   ctaUrl?: string;
   /** Hidden preheader text shown in inbox preview */
   preheader?: string;
+  /** Optional tracking + unsubscribe footer (marketing emails only) */
+  tracking?: {
+    pixelUrl?: string;
+    /** Wrapped redirector URL — replaces ctaUrl when provided */
+    wrappedCtaUrl?: string;
+    unsubscribeUrl?: string;
+    recipientEmail?: string;
+    categoryLabel?: string;
+  };
 }
 
 export function buildAacEmail(opts: AacEmailOptions): string {
-  const { headline, body, ctaLabel, ctaUrl, preheader } = opts;
+  const { headline, body, ctaLabel, preheader, tracking } = opts;
+  const ctaUrl = tracking?.wrappedCtaUrl || opts.ctaUrl;
 
   const preheaderHtml = preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(preheader)}</div>`
@@ -47,6 +57,17 @@ export function buildAacEmail(opts: AacEmailOptions): string {
           </div>
         </td></tr>
       </table>`
+    : "";
+
+  const pixelHtml = tracking?.pixelUrl
+    ? `<img src="${tracking.pixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;outline:none;" />`
+    : "";
+
+  const unsubHtml = tracking?.unsubscribeUrl
+    ? `<p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+         ${tracking.recipientEmail ? `Sent to <span style="color:rgba(255,255,255,0.6);">${escapeHtml(tracking.recipientEmail)}</span>. ` : ""}
+         <a href="${tracking.unsubscribeUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe${tracking.categoryLabel ? ` from ${escapeHtml(tracking.categoryLabel)}` : ""}</a>
+       </p>`
     : "";
 
   return `<!DOCTYPE html>
@@ -100,11 +121,13 @@ export function buildAacEmail(opts: AacEmailOptions): string {
           <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
             <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:rgba(255,255,255,0.35);text-decoration:underline;">Remove my account</a>
           </p>
+          ${unsubHtml}
         </td></tr>
 
       </table>
     </td></tr>
   </table>
+  ${pixelHtml}
 </body>
 </html>`;
 }

@@ -1737,6 +1737,114 @@ export type Database = {
             referencedRelation: "email_jobs_delivery_status"
             referencedColumns: ["job_id"]
           },
+          {
+            foreignKeyName: "email_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_job_engagement"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      email_job_clicks: {
+        Row: {
+          clicked_at: string
+          id: string
+          ip_address: string | null
+          job_id: string
+          recipient_email: string
+          url: string
+          user_agent: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          ip_address?: string | null
+          job_id: string
+          recipient_email: string
+          url: string
+          user_agent?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          ip_address?: string | null
+          job_id?: string
+          recipient_email?: string
+          url?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_job_clicks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_job_clicks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs_delivery_status"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "email_job_clicks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_job_engagement"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      email_job_opens: {
+        Row: {
+          id: string
+          ip_address: string | null
+          job_id: string
+          opened_at: string
+          recipient_email: string
+          user_agent: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          job_id: string
+          opened_at?: string
+          recipient_email: string
+          user_agent?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          job_id?: string
+          opened_at?: string
+          recipient_email?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_job_opens_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_job_opens_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs_delivery_status"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "email_job_opens_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_job_engagement"
+            referencedColumns: ["job_id"]
+          },
         ]
       }
       email_jobs: {
@@ -1890,6 +1998,30 @@ export type Database = {
           name?: string
           subject?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_unsubscribes: {
+        Row: {
+          category: string
+          email: string
+          email_lower: string
+          source: string
+          unsubscribed_at: string
+        }
+        Insert: {
+          category: string
+          email: string
+          email_lower?: string
+          source?: string
+          unsubscribed_at?: string
+        }
+        Update: {
+          category?: string
+          email?: string
+          email_lower?: string
+          source?: string
+          unsubscribed_at?: string
         }
         Relationships: []
       }
@@ -2442,6 +2574,13 @@ export type Database = {
             columns: ["email_job_id"]
             isOneToOne: false
             referencedRelation: "email_jobs_delivery_status"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "invite_events_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_job_engagement"
             referencedColumns: ["job_id"]
           },
           {
@@ -3980,6 +4119,51 @@ export type Database = {
           },
         ]
       }
+      v_email_job_engagement: {
+        Row: {
+          category: string | null
+          click_count: number | null
+          created_at: string | null
+          delivery_status: string | null
+          first_clicked_at: string | null
+          first_opened_at: string | null
+          job_id: string | null
+          open_count: number | null
+          template: string | null
+        }
+        Insert: {
+          category?: never
+          click_count?: never
+          created_at?: string | null
+          delivery_status?: string | null
+          first_clicked_at?: never
+          first_opened_at?: never
+          job_id?: string | null
+          open_count?: never
+          template?: never
+        }
+        Update: {
+          category?: never
+          click_count?: never
+          created_at?: string | null
+          delivery_status?: string | null
+          first_clicked_at?: never
+          first_opened_at?: never
+          job_id?: string | null
+          open_count?: never
+          template?: never
+        }
+        Relationships: []
+      }
+      v_email_unsubscribes_status: {
+        Row: {
+          categories: string[] | null
+          email: string | null
+          first_unsubscribed_at: string | null
+          last_unsubscribed_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       activate_agent_relationship:
@@ -4124,6 +4308,10 @@ export type Database = {
       }
       is_buyer_workspace_owner: {
         Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      is_email_unsubscribed: {
+        Args: { _category: string; _email: string }
         Returns: boolean
       }
       is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }

@@ -1,5 +1,13 @@
 import type { EmailJob } from "./emailTypes.ts";
 import { renderEmailTemplate } from "./renderEmailTemplate.ts";
+import {
+  buildClickUrl,
+  buildOpenPixelUrl,
+  buildUnsubUrl,
+  isMarketingCategory,
+  type TrackingContext,
+} from "./tracking.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 export async function sendEmail(
   job: EmailJob,
@@ -19,9 +27,48 @@ export async function sendEmail(
 
   if (toList.length === 0) throw new Error("No valid recipients");
 
-  const html =
-    job.payload.html ||
-    renderEmailTemplate(job.payload.template, job.payload.variables || {});
+  // Marketing emails (single recipient) get tracking + unsubscribe injected.
+  const category = (job.payload as { category?: string }).category;
+  const trackingEnabled =
+    isMarketingCategory(category) && toList.length === 1 && !job.payload.html;
+
+  let html: string;
+  let extraHeaders: Record<string, string> = {};
+
+  if (trackingEnabled) {
+    // Suppression check
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supa = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: suppressed } = await supa.rpc("is_email_unsubscribed", {
+      _email: toList[0],
+      _category: category!,
+    });
+    if (suppressed === true) {
+      // Mark as suppressed (return a synthetic id so the queue records success).
+      console.log(`[sendEmail] Suppressed ${toList[0]} for ${category}`);
+      return { providerMessageId: `suppressed:${category}` };
+    }
+
+    const ctx: TrackingContext = {
+      jobId: job.id,
+      recipientEmail: toList[0],
+      category: category!,
+    };
+
+    const rawHtml = renderEmailTemplate(job.payload.template, job.payload.variables || {});
+    html = await injectTracking(rawHtml, ctx);
+
+    const unsubUrl = await buildUnsubUrl(toList[0], category!);
+    extraHeaders = {
+      "List-Unsubscribe": `<${unsubUrl}>, <mailto:hello@allagentconnect.com?subject=unsubscribe>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+  } else {
+    html =
+      job.payload.html ||
+      renderEmailTemplate(job.payload.template, job.payload.variables || {});
+  }
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -35,6 +82,7 @@ export async function sendEmail(
       subject: job.payload.subject,
       html,
       reply_to: job.payload.reply_to,
+      headers: Object.keys(extraHeaders).length ? extraHeaders : undefined,
     }),
   });
 
@@ -52,4 +100,63 @@ export async function sendEmail(
       : null;
 
   return { providerMessageId };
+}
+
+/**
+ * Post-process AAC-rendered HTML to:
+ *  - wrap external http(s) hrefs through the click redirector,
+ *  - append the unsubscribe footer line inside the dark footer,
+ *  - inject the open-tracking pixel before </body>.
+ * Preserves mailto:, anchor links, tel:, and our own tracking URLs.
+ */
+async function injectTracking(html: string, ctx: TrackingContext): Promise<string> {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+  const FUNCTIONS_HOST = SUPABASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+
+  // 1. Wrap hrefs
+  const hrefRe = /href="(https?:\/\/[^"]+)"/g;
+  const matches = [...html.matchAll(hrefRe)];
+  const replacements = await Promise.all(
+    matches.map(async (m) => {
+      const url = m[1];
+      // Skip our own tracking endpoints, brand assets, and mail/tel.
+      if (
+        FUNCTIONS_HOST && url.includes(FUNCTIONS_HOST)
+      ) {
+        return { from: m[0], to: m[0] };
+      }
+      const wrapped = await buildClickUrl(ctx, url);
+      return { from: m[0], to: `href="${wrapped}"` };
+    }),
+  );
+  // Replace each unique original once via global replace (safe — every href tag is unique enough).
+  let out = html;
+  for (const r of replacements) {
+    if (r.from !== r.to) {
+      out = out.replace(r.from, r.to);
+    }
+  }
+
+  // 2. Append unsubscribe footer inside dark footer table cell
+  const unsubUrl = await buildUnsubUrl(ctx.recipientEmail, ctx.category);
+  const categoryLabel =
+    ctx.category === "listing_shares" ? "listing emails" :
+    ctx.category === "hot_sheet_alerts" ? "hot sheet alerts" :
+    "marketing emails";
+  const unsubBlock = `<p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Sent to <span style="color:rgba(255,255,255,0.6);">${ctx.recipientEmail}</span>. <a href="${unsubUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe from ${categoryLabel}</a></p>`;
+  // Insert just before the closing </td></tr> of the dark footer (first occurrence after "Remove my account").
+  const removeAcctIdx = out.indexOf("Remove my account");
+  if (removeAcctIdx >= 0) {
+    const closeIdx = out.indexOf("</td></tr>", removeAcctIdx);
+    if (closeIdx >= 0) {
+      out = out.slice(0, closeIdx) + unsubBlock + out.slice(closeIdx);
+    }
+  }
+
+  // 3. Inject pixel before </body>
+  const pixelUrl = await buildOpenPixelUrl(ctx);
+  const pixel = `<img src="${pixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;outline:none;" />`;
+  out = out.replace("</body>", `${pixel}</body>`);
+
+  return out;
 }

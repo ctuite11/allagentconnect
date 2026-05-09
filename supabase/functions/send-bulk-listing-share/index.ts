@@ -135,6 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
         payload: {
           provider: "resend",
           template: "bulk-listing-share",
+          category: "listing_shares",
           to: recipientEmail,
           subject: `${agentName} shared ${listings.length} property listing${listings.length > 1 ? 's' : ''} with you`,
           reply_to: agentEmail,
