@@ -1,17 +1,12 @@
 /**
- * Shared MLS / internal listing ID label for cards (AAC vs DCMLS).
+ * AAC-native listing reference for cards (`ID# L-1234`).
+ * Never emits MLS labeling or terminology in UI copy.
  */
-export function formatListingIdLabel(listing: {
-  listing_number?: string | null;
-  publish_to_dcmls?: boolean | null;
-}): string | null {
+export function formatListingIdLabel(listing: { listing_number?: string | null }): string | null {
   const raw = listing.listing_number;
   if (raw == null || String(raw).trim() === "") return null;
-  const trimmed = String(raw).trim();
-  if (listing.publish_to_dcmls === true) {
-    return `MLS# ${trimmed}`;
-  }
-  const tail = trimmed.replace(/^L-/i, "").trim();
+  const tail = String(raw).trim().replace(/^L-/i, "").trim();
+  if (tail === "") return null;
   return `ID# L-${tail}`;
 }
 

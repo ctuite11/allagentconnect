@@ -71,7 +71,6 @@ interface ListingCardProps {
     created_at?: string;
     active_date?: string | null;
     listing_number?: string | null;
-    /** When true, card shows MLS# … instead of ID# L-… */
     publish_to_dcmls?: boolean;
     is_relisting?: boolean;
     original_listing_id?: string | null;

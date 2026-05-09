@@ -2,8 +2,7 @@
  * ListingCardShell — Canonical desktop list-view layout.
  *
  * This is the SINGLE visual source of truth for horizontal listing cards.
- * Both ListingCard (agent management) and SearchListingCard (search results)
- * consume this shell and inject their own actions/metadata via slots.
+ * ListingCard (agent management) consumes this shell and injects actions/metadata via slots.
  *
  * Layout: Card → flex → [Photo w-40 h-40] + [grid-cols-12 info]
  *   Col 1-6: address, location, stats, metadataSlot
@@ -148,7 +147,7 @@ export interface ListingCardShellProps {
   /** Card click handler */
   onClick?: () => void;
 
-  /** Listing ID / MLS# opens detail (same destination as card); use stopPropagation inside handler */
+  /** AAC listing ID (`ID# L-…`) opens detail (same destination as card); use stopPropagation inside handler */
   onListingNumberClick?: (e: MouseEvent) => void;
 }
 
