@@ -8,12 +8,11 @@ import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { CardSurface } from "@/components/ui/CardSurface";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BarChart3, ChevronDown, Search, Trash2, FileText, MoreHorizontal } from "lucide-react";
+import { Plus, ChevronDown, Search, Trash2, MoreHorizontal } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, getStatusConfig, isComingSoon } from "@/constants/status";
+import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, isComingSoon } from "@/constants/status";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { OpenHouseDialog } from "@/components/OpenHouseDialog";
@@ -25,6 +24,7 @@ import { EmailShareModal } from "@/components/EmailShareModal";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
 
 // Managed statuses for My Listings controls (intentionally excludes BOM).
@@ -151,27 +151,33 @@ function MyListingsSkeleton() {
     <AgentAacPage className="pb-12" aria-busy="true" role="status">
       <span className="sr-only">Loading your listings…</span>
       <div className="mb-6 space-y-3">
-        <Skeleton className="h-9 w-[220px] max-w-[80%] rounded-md bg-zinc-100" />
-        <Skeleton className="h-4 max-w-xl rounded-md bg-zinc-100" />
+        <Skeleton className="h-9 w-[min(220px,85%)] rounded-md bg-neutral-100" />
+        <Skeleton className="h-4 max-w-xl rounded-md bg-neutral-100" />
       </div>
-      <div className="mb-6 flex gap-2 overflow-hidden">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-9 w-[88px] shrink-0 rounded-full bg-zinc-100" />
-        ))}
+      <div className="mb-6 rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <Skeleton className="h-9 w-full rounded-xl bg-neutral-100 lg:max-w-[220px]" />
+          <div className="flex flex-1 gap-2 overflow-hidden">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-9 w-[76px] shrink-0 rounded-full bg-neutral-100" />
+            ))}
+          </div>
+          <Skeleton className="h-9 w-[88px] shrink-0 self-end rounded-lg bg-neutral-100 lg:self-auto" />
+        </div>
       </div>
-      <div className="mt-6 space-y-4">
+      <div className="mt-2 space-y-4">
         {[0, 1, 2].map((i) => (
-          <CardSurface key={i} className="p-4">
+          <CardSurface key={i} className="p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Skeleton className="h-36 w-full shrink-0 rounded-lg bg-zinc-100 sm:w-40" />
+              <Skeleton className="aspect-[140/100] w-full shrink-0 rounded-xl bg-neutral-100 sm:h-[100px] sm:w-[140px]" />
               <div className="min-w-0 flex-1 space-y-3">
-                <Skeleton className="h-5 w-[min(100%,420px)] rounded-md bg-zinc-100" />
-                <Skeleton className="h-4 w-[min(100%,280px)] rounded-md bg-zinc-100" />
-                <Skeleton className="h-4 w-[min(100%,360px)] rounded-md bg-zinc-100" />
+                <Skeleton className="h-5 w-[min(100%,420px)] rounded-md bg-neutral-100" />
+                <Skeleton className="h-4 w-[min(100%,280px)] rounded-md bg-neutral-100" />
+                <Skeleton className="h-4 w-[min(100%,360px)] rounded-md bg-neutral-100" />
                 <div className="flex flex-wrap gap-2 pt-2">
-                  <Skeleton className="h-8 w-24 rounded-md bg-zinc-100" />
-                  <Skeleton className="h-8 w-28 rounded-md bg-zinc-100" />
-                  <Skeleton className="h-8 w-20 rounded-md bg-zinc-100" />
+                  <Skeleton className="h-8 w-24 rounded-md bg-neutral-100" />
+                  <Skeleton className="h-8 w-28 rounded-md bg-neutral-100" />
+                  <Skeleton className="h-8 w-20 rounded-md bg-neutral-100" />
                 </div>
               </div>
             </div>
@@ -420,71 +426,95 @@ function MyListingsView({
     <>
       {/* Header */}
       <AgentPageHeader
-        className="mb-6"
+        className="mb-5 md:mb-6"
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
         actions={
           <Button
             type="button"
+            variant="outline"
             onClick={() => onNewListing("new")}
-            className="h-8 gap-1.5 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+            className="h-9 gap-1.5 rounded-lg border-neutral-200 bg-white px-3.5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50/90 focus-visible:ring-zinc-300"
           >
-            <Plus className="h-3.5 w-3.5" />
-            New Listing
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            New listing
           </Button>
         }
       />
 
-      {/* Premium Filter Bar */}
-      <div>
-        <div className="flex items-center gap-3">
-          {/* Status pills (single row, horizontal scroll) */}
-          <div className="flex-1 overflow-x-auto scrollbar-none">
-            <div className="flex flex-nowrap gap-2 whitespace-nowrap">
-              {ALL_STATUSES.map((tab) => (
-                <button
-                  key={tab.value}
-                  onClick={() => toggleStatus(tab.value)}
-                  className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    selectedStatuses.has(tab.value)
-                      ? "border-[#0E56F5] bg-white text-[#0E56F5]"
-                      : "border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200 hover:text-zinc-900"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+      {/* Compact toolbar: search + status filters + sort (white shell, subtle shadow) */}
+      <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
+          <div className="relative w-full shrink-0 lg:max-w-[240px]">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search address, MLS #…"
+              autoComplete="off"
+              className="h-9 w-full rounded-xl border border-neutral-200 bg-white pl-9 pr-3 text-[13px] text-zinc-900 shadow-none outline-none placeholder:text-zinc-400 transition-colors focus:border-neutral-300 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+              aria-label="Search listings"
+            />
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-x-auto scrollbar-none">
+            <div className="flex w-max max-w-full flex-nowrap gap-1.5 pb-0.5 sm:gap-2">
+              {ALL_STATUSES.map((tab) => {
+                const on = selectedStatuses.has(tab.value);
+                return (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    onClick={() => toggleStatus(tab.value)}
+                    className={cn(
+                      "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium outline-none transition-colors",
+                      on
+                        ? "border-zinc-900 bg-white text-zinc-900 shadow-none"
+                        : "border-neutral-200 bg-white text-zinc-600 hover:border-neutral-300 hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
+                      on && "focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Right side: Clear + Sort + View toggle */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Clear link */}
-            {selectedStatuses.size > 0 && (
+          <div className="flex shrink-0 items-center justify-between gap-2 border-t border-neutral-100 pt-2 lg:border-0 lg:pt-0">
+            {selectedStatuses.size > 0 ? (
               <button
+                type="button"
                 onClick={clearStatusFilters}
-                className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors"
+                className="text-[13px] font-medium text-zinc-500 underline-offset-4 hover:text-zinc-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
               >
-                Clear
+                Clear filters
               </button>
+            ) : (
+              <span className="hidden text-[12px] text-zinc-400 lg:inline">Filter by status</span>
             )}
 
-            {/* Sort dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 rounded-lg border border-zinc-100 bg-white px-3 py-1.5 text-sm text-zinc-600 transition-colors hover:border-zinc-200 hover:text-zinc-900">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-[13px] font-medium text-zinc-700 shadow-none outline-none transition-colors hover:border-neutral-300 hover:bg-zinc-50/90 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                >
                   Sort
-                  <ChevronDown className="h-3.5 w-3.5" />
+                  <ChevronDown className="h-3.5 w-3.5 opacity-70" aria-hidden />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("date")}>Date (Newest){sortKey === "date" && " ✓"}</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("dom")}>DOM{sortKey === "dom" && " ✓"}</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("price")}>Price{sortKey === "price" && " ✓"}</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setSortKey("status")}>Status{sortKey === "status" && " ✓"}</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-44 rounded-xl border border-neutral-200 bg-white shadow-md">
+                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("date")}>Date (newest){sortKey === "date" ? " ✓" : ""}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("dom")}>Days on market{sortKey === "dom" ? " ✓" : ""}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("price")}>Price{sortKey === "price" ? " ✓" : ""}</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("status")}>Status{sortKey === "status" ? " ✓" : ""}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
           </div>
         </div>
       </div>
@@ -535,13 +565,13 @@ function MyListingsView({
 
       {/* Draft bulk-action toolbar */}
       {selectedStatuses.has("draft") && draftListings.length > 0 && (
-        <div className="mt-4 flex items-center gap-3 rounded-xl border border-zinc-100 bg-white px-4 py-2.5 shadow-none">
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <Checkbox
             checked={selectedDraftIds.size === draftListings.length}
             onCheckedChange={selectAllDrafts}
             aria-label="Select all drafts"
           />
-          <span className="text-sm text-muted-foreground">
+          <span className="text-[13px] text-zinc-600">
             {selectedDraftIds.size > 0
               ? `${selectedDraftIds.size} of ${draftListings.length} selected`
               : `Select all (${draftListings.length})`}
@@ -551,36 +581,38 @@ function MyListingsView({
             variant="destructive"
             size="sm"
             disabled={selectedDraftIds.size === 0}
+            className="h-8 gap-1.5 text-[13px] shadow-none"
             onClick={() => setShowBulkDeleteConfirm(true)}
           >
-            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-            Delete Selected
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
           </Button>
         </div>
       )}
 
       {/* Auto-draft notice when agent has only drafts */}
       {hasOnlyDrafts && selectedStatuses.has("draft") && (
-        <div className="mt-4 rounded-xl border border-zinc-100 bg-white px-4 py-3 text-sm text-foreground shadow-none">
-          Showing your drafts because you don't have any published listings yet. Continue editing a draft or{" "}
+        <div className="mt-3 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-[13px] leading-snug text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          Showing drafts because you don&apos;t have published listings yet.{" "}
           <button
-            className="text-[#0E56F5] underline hover:text-[#0B46CC]"
+            type="button"
+            className="font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
             onClick={() => onNewListing("new")}
           >
-            create a new listing
-          </button>.
+            Create a listing
+          </button>
+          .
         </div>
       )}
 
       {/* LIST VIEW */}
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-4">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
             const isEditing = editingId === l.id;
             const matchCount = l.hot_sheet_matches ?? 0;
             const views = l.listing_stats?.view_count ?? 0;
             const favorites = l.listing_stats?.save_count ?? 0;
-            const shares = l.listing_stats?.share_count ?? 0;
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
             const goLiveDate = formatDate(l.go_live_date);
@@ -592,7 +624,6 @@ function MyListingsView({
                   return new Date(`${e.date}T${e.end_time}`) > nowForToolbar;
                 })
               : [];
-            const hasOpenHouses = upcomingEvents.length > 0;
             const hasPublicOpenHouse = upcomingEvents.some((oh: any) => oh.event_type === "in_person");
             const hasBrokerTour = upcomingEvents.some((oh: any) => oh.event_type === "broker_tour");
             
@@ -600,126 +631,167 @@ function MyListingsView({
             const listDateObj = l.list_date ? new Date(l.list_date) : l.created_at ? new Date(l.created_at) : null;
             const dom = listDateObj ? Math.max(0, Math.floor((Date.now() - listDateObj.getTime()) / (1000 * 60 * 60 * 24))) : 0;
 
+            const rowActionCls =
+              "rounded-md px-1.5 py-0.5 text-[13px] font-medium text-zinc-600 outline-none transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2";
+
             return (
               <CardSurface
                 key={l.id}
                 interactive
-                className="relative p-4"
+                className="relative p-4 outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 md:p-5"
               >
-                {/* Draft checkbox for list view */}
-                {l.status === "draft" && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <Checkbox
-                      checked={selectedDraftIds.has(l.id)}
-                      onCheckedChange={() => toggleDraftSelection(l.id)}
-                      aria-label="Select draft"
-                    />
+                {/* Top: actions (wrap on mobile) + status / dates */}
+                <div className="mb-4 grid grid-cols-1 gap-4 border-b border-neutral-100 pb-4 md:grid-cols-[1fr,minmax(168px,auto)] md:items-start md:gap-6">
+                  <div className="flex min-w-0 flex-col gap-2">
+                    {l.status === "draft" && (
+                      <div className="-ml-0.5 flex items-center gap-2">
+                        <Checkbox
+                          checked={selectedDraftIds.has(l.id)}
+                          onCheckedChange={() => toggleDraftSelection(l.id)}
+                          aria-label="Select draft"
+                        />
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                          Include in bulk delete
+                        </span>
+                      </div>
+                    )}
+                    <div className="-mx-1 flex flex-wrap items-center gap-x-1 gap-y-1 md:gap-x-2">
+                      <button type="button" className={rowActionCls} onClick={() => onEdit(l.id)}>
+                        Edit
+                      </button>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <button type="button" className={rowActionCls} onClick={() => onPhotos(l.id)}>
+                        Photos
+                      </button>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <button
+                        type="button"
+                        className={`${rowActionCls} inline-flex items-center gap-1`}
+                        onClick={() => (hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l))}
+                      >
+                        <span aria-hidden>🎈</span>
+                        Open House
+                      </button>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <button
+                        type="button"
+                        className={`${rowActionCls} inline-flex items-center gap-1`}
+                        onClick={() => (hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l))}
+                      >
+                        <span aria-hidden>🚙</span>
+                        Broker tour
+                      </button>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <button type="button" className={rowActionCls} onClick={() => onMatches(l)}>
+                        Matches ({matchCount})
+                      </button>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <button type="button" className={rowActionCls} onClick={() => onEmail?.(l)}>
+                        Email
+                      </button>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <button type="button" className={rowActionCls} onClick={() => onSocialShare(l)}>
+                        Social
+                      </button>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-zinc-600">
+                        <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5 text-zinc-500">
+                          <path
+                            fill="currentColor"
+                            d="M8 2.75c3.73 0 6.7 2.2 7.95 5.25-1.25 3.05-4.22 5.25-7.95 5.25-3.73 0-6.7-2.2-7.95-5.25C1.3 4.95 4.27 2.75 8 2.75Z"
+                          />
+                          <circle cx="8" cy="8" r="2.15" fill="white" />
+                          <circle cx="8" cy="8" r="1.15" fill="currentColor" />
+                        </svg>
+                        <span className="text-[13px] font-semibold tabular-nums text-zinc-800">{views}</span>
+                      </span>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-zinc-600">
+                        <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5 text-zinc-500">
+                          <path
+                            fill="currentColor"
+                            d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z"
+                          />
+                        </svg>
+                        <span className="text-[13px] font-semibold tabular-nums text-zinc-800">{favorites}</span>
+                      </span>
+                      <span className="text-zinc-200" aria-hidden>
+                        ·
+                      </span>
+                      <button type="button" className={rowActionCls} onClick={() => onStats(l.id)}>
+                        Stats
+                      </button>
+                    </div>
                   </div>
-                )}
-                {/* Action row - tight, no vertical padding */}
-                <div className={`mb-3 flex justify-between items-start ${l.status === "draft" ? "ml-8" : ""}`}>
-                  <div className="flex items-center gap-2 text-sm leading-tight text-zinc-600">
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onEdit(l.id)}
-                    >
-                      Edit
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onPhotos(l.id)}
-                    >
-                      Photos
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="flex items-center gap-1 group"
-                      onClick={() => hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l)}
-                    >
-                      <span aria-hidden>🎈</span>
-                      <span className="group-hover:text-emerald-700 transition">Open House</span>
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="flex items-center gap-1 group"
-                      onClick={() => hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l)}
-                    >
-                      <span aria-hidden>🚙</span>
-                      <span className="group-hover:text-[#0E56F5] transition">Broker Tour</span>
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onMatches(l)}
-                    >
-                      Matches ({matchCount})
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onEmail?.(l)}
-                    >
-                      Email
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onSocialShare(l)}
-                    >
-                      Social
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 text-aac">
-                        <path fill="currentColor" d="M8 2.75c3.73 0 6.7 2.2 7.95 5.25-1.25 3.05-4.22 5.25-7.95 5.25-3.73 0-6.7-2.2-7.95-5.25C1.3 4.95 4.27 2.75 8 2.75Z" />
-                        <circle cx="8" cy="8" r="2.15" fill="hsl(var(--background))" />
-                        <circle cx="8" cy="8" r="1.15" fill="currentColor" />
-                      </svg>
-                      <span className="text-[13px] leading-none text-zinc-800 font-medium">{views}</span>
-                    </span>
-                    <span className="text-zinc-300">•</span>
-                    <span className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity">
-                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 fill-current text-destructive">
-                        <path d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z" />
-                      </svg>
-                      <span className="text-[13px] leading-none text-zinc-800 font-medium">{favorites}</span>
-                    </span>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      className="hover:text-emerald-700 transition"
-                      onClick={() => onStats(l.id)}
-                    >
-                      Stats
-                    </button>
-                  </div>
-                  {/* Right side - quiet metadata + overflow */}
-                   <div className="absolute top-4 right-4 z-10 text-right space-y-0.5">
-                     <ListingStatusBadge status={l.status} size="lg" />
-                       <div className="text-xs leading-tight"><span className="text-zinc-400">AAC List Date:</span> <span className="text-zinc-500">{listDate}</span></div>
-                     {isComingSoon(l.status) ? (
-                       <>
-                         {goLiveDate && <div className="text-xs leading-tight"><span className="text-zinc-400">On MLS Date:</span> <span className="text-zinc-500">{goLiveDate}</span></div>}
-                         {expDate && <div className="text-xs leading-tight"><span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span></div>}
-                       </>
-                     ) : (
-                       expDate && <div className="text-xs leading-tight"><span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span></div>
-                     )}
-                     <div className="text-xs leading-tight"><span className="text-zinc-400">DOM:</span> <span className="text-zinc-700 font-medium">{dom}</span></div>
+
+                  <div className="flex flex-row flex-wrap items-center justify-between gap-3 md:flex-col md:items-end md:justify-start md:text-right md:gap-1.5">
+                    <ListingStatusBadge status={l.status} size="lg" />
+                    <div className="min-w-[160px] space-y-1 text-[11px] leading-tight md:text-right">
+                      <div>
+                        <span className="text-zinc-400">AAC list · </span>
+                        <span className="text-zinc-600">{listDate}</span>
+                      </div>
+                      {isComingSoon(l.status) ? (
+                        <>
+                          {goLiveDate && (
+                            <div>
+                              <span className="text-zinc-400">On MLS · </span>
+                              <span className="text-zinc-600">{goLiveDate}</span>
+                            </div>
+                          )}
+                          {expDate && (
+                            <div>
+                              <span className="text-zinc-400">Expires · </span>
+                              <span className="text-zinc-600">{expDate}</span>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        expDate && (
+                          <div>
+                            <span className="text-zinc-400">Expires · </span>
+                            <span className="text-zinc-600">{expDate}</span>
+                          </div>
+                        )
+                      )}
+                      <div>
+                        <span className="text-zinc-400">DOM · </span>
+                        <span className="font-semibold text-zinc-800">{dom}</span>
+                      </div>
+                    </div>
                     {l.status === "draft" && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="mt-1 rounded p-1 text-zinc-400 transition-colors hover:text-zinc-600">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <button
+                            type="button"
+                            className="rounded-lg p-1.5 text-zinc-400 outline-none transition-colors hover:bg-zinc-50 hover:text-zinc-700 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 md:-mr-1"
+                          >
+                            <MoreHorizontal className="h-4 w-4" aria-hidden />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuContent align="end" className="w-44 rounded-xl border border-neutral-200 bg-white shadow-md">
                           <DropdownMenuItem
-                            className="cursor-pointer text-sm text-destructive focus:text-destructive"
+                            className="cursor-pointer text-[13px] text-red-700 focus:bg-red-50 focus:text-red-800"
                             onClick={() => setListingToDelete(l)}
                           >
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
-                            Delete Listing
+                            <Trash2 className="mr-2 h-3.5 w-3.5" aria-hidden />
+                            Delete listing
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -727,60 +799,62 @@ function MyListingsView({
                   </div>
                 </div>
 
-                {/* Content row - photo + info */}
-                <div className="relative flex items-start gap-4">
-                  {/* Photo - locked size */}
-                  <div className="h-[100px] w-[140px] shrink-0 cursor-pointer overflow-hidden rounded-xl border border-zinc-100 bg-white">
+                <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
+                  <button
+                    type="button"
+                    className="aspect-[140/100] w-full shrink-0 cursor-pointer overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-none transition-colors hover:border-neutral-300 sm:h-[100px] sm:w-[140px] sm:aspect-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                    onClick={() => onPreview(l.id)}
+                  >
                     <img
                       src={thumbnail || "/placeholder.svg"}
-                      alt={l.address}
-                      className="w-full h-full object-cover"
-                      onClick={() => onPreview(l.id)}
+                      alt={formatAddressWithUnit(l)}
+                      className="h-full w-full object-cover"
                     />
-                  </div>
+                  </button>
 
-                  {/* Center text stack */}
-                   {/* Status badge moved to right column */}
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    {/* Listing # + Status inline */}
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       {l.listing_number && (
-                        <button 
-                          className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer leading-none"
+                        <button
+                          type="button"
+                          className="text-[13px] font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
                           onClick={() => onPreview(l.id)}
                         >
                           #{l.listing_number}
                         </button>
                       )}
-                      {l.listing_type && (
+                      {l.listing_type ? (
                         <>
-                          <span className="text-zinc-300">•</span>
-                          <span className="inline-block rounded border border-zinc-100 bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#0E56F5]">
+                          {l.listing_number ? (
+                            <span className="text-zinc-200" aria-hidden>
+                              ·
+                            </span>
+                          ) : null}
+                          <span className="inline-flex rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
                             {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
                           </span>
                         </>
-                      )}
+                      ) : null}
                     </div>
-                    {/* Address */}
-                    <div className="font-semibold text-base text-zinc-900 truncate leading-tight">
-                      {formatAddressWithUnit(l)}
+                    <div className="text-base font-semibold leading-snug tracking-tight text-zinc-900">
+                      <span className="line-clamp-2">{formatAddressWithUnit(l)}</span>
                     </div>
-                    {/* Location + Neighborhood */}
-                    <div className="text-sm text-zinc-500 leading-tight">
-                      {l.state} {l.zip_code}{l.neighborhood ? ` · ${l.neighborhood}` : ''}
+                    <div className="text-[13px] leading-snug text-zinc-500">
+                      {l.state} {l.zip_code}
+                      {l.neighborhood ? ` · ${l.neighborhood}` : ""}
                     </div>
                     {/* Price */}
                     <div className="mt-1">
                        {isEditing ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <input
                               type="number"
-                              className="border border-zinc-200 rounded px-2 py-1 text-sm w-28 bg-white"
+                              className="h-9 w-28 rounded-lg border border-neutral-200 bg-white px-2.5 text-[13px] text-zinc-900 shadow-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
                               value={editPrice}
                               onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
                             />
                             <select
-                              className="border border-zinc-200 rounded px-2 py-1 bg-white capitalize text-xs"
+                              className="h-9 rounded-lg border border-neutral-200 bg-white px-2 text-[12px] capitalize text-zinc-900 shadow-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
                               value={editStatus}
                               onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
                             >
@@ -791,31 +865,35 @@ function MyListingsView({
                               ))}
                             </select>
                             <button
-                              className="px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+                              type="button"
+                              className="h-9 rounded-lg bg-zinc-900 px-3 text-[12px] font-semibold text-white shadow-none outline-none hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
                               onClick={saveQuickEdit}
                             >
                               Save
                             </button>
                             <button
-                              className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
+                              type="button"
+                              className="text-[12px] font-medium text-zinc-500 underline-offset-4 hover:text-zinc-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
                               onClick={cancelQuickEdit}
                             >
                               Cancel
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-sm font-medium text-zinc-900">${l.price.toLocaleString()}</span>
+                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
+                            <div className="flex shrink-0 flex-wrap items-baseline gap-2">
+                              <span className="text-[15px] font-semibold tabular-nums text-zinc-900">
+                                ${l.price.toLocaleString()}
+                              </span>
                               <button
-                                className="text-xs text-primary hover:text-primary/80 hover:underline"
+                                type="button"
+                                className="text-[12px] font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
                                 onClick={() => startQuickEdit(l)}
                                 title="Quick edit price and status"
                               >
-                                Quick Edit
+                                Quick edit
                               </button>
                             </div>
-                            <div className="w-8 shrink-0" />
                             {(() => {
                               const now = new Date();
                               const allEvents = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
@@ -835,7 +913,9 @@ function MyListingsView({
                               if (!hasEvents) return null;
 
                               return (
-                                <div className="min-w-0 space-y-0.5">
+                                <>
+                                <div className="hidden w-px shrink-0 self-stretch bg-neutral-100 sm:block" aria-hidden />
+                                <div className="min-w-0 flex-1 space-y-0.5">
                                   {openHouseEvent && (() => {
                                     const first = formatOpenHouseEvent(openHouseEvent);
                                     return (
@@ -847,14 +927,14 @@ function MyListingsView({
                                         )}
                                         <button
                                           type="button"
-                                          className="text-xs text-primary hover:text-primary/80 hover:underline ml-1 shrink-0"
+                                          className="ml-1 shrink-0 rounded px-1 text-[11px] font-semibold text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
                                           onClick={() => onViewOpenHouses(l)}
                                         >
                                           Edit
                                         </button>
                                         <button
                                           type="button"
-                                          className="text-xs text-red-600 hover:text-red-700 hover:underline shrink-0"
+                                          className="shrink-0 rounded px-1 text-[11px] font-semibold text-red-700 underline-offset-4 hover:text-red-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
                                           onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
                                         >
                                           Delete
@@ -873,14 +953,14 @@ function MyListingsView({
                                         )}
                                         <button
                                           type="button"
-                                          className="text-xs text-primary hover:text-primary/80 hover:underline ml-1 shrink-0"
+                                          className="ml-1 shrink-0 rounded px-1 text-[11px] font-semibold text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
                                           onClick={() => onViewOpenHouses(l)}
                                         >
                                           Edit
                                         </button>
                                         <button
                                           type="button"
-                                          className="text-xs text-red-600 hover:text-red-700 hover:underline shrink-0"
+                                          className="shrink-0 rounded px-1 text-[11px] font-semibold text-red-700 underline-offset-4 hover:text-red-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
                                           onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
                                         >
                                           Delete
@@ -889,6 +969,7 @@ function MyListingsView({
                                     );
                                   })()}
                                 </div>
+                                </>
                               );
                             })()}
                           </div>
@@ -902,7 +983,12 @@ function MyListingsView({
           })}
 
           {filteredListings.length === 0 && (
-            <div className="text-center text-zinc-500 text-sm py-10">No listings match your filters yet.</div>
+            <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-6 py-14 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+              <p className="text-[15px] font-semibold tracking-tight text-zinc-900">No listings match</p>
+              <p className="mt-2 max-w-md mx-auto text-[13px] leading-snug text-zinc-500">
+                Adjust status filters or clear your search to see inventory again.
+              </p>
+            </div>
           )}
         </div>
     </>
@@ -1225,14 +1311,23 @@ const MyListings = () => {
       <>
         <Seo title="My Listings" />
         <AgentAacPage className="pb-12">
-        <AgentPageHeader title="My Listings" subtitle="Create your first listing to get started." className="mb-6" />
-        <AgentSectionCard className="p-12 text-center">
-          <Plus className="mx-auto mb-4 h-16 w-16 text-neutral-400" />
-          <h3 className="mb-2 text-xl font-semibold text-neutral-900">No listings yet</h3>
-          <p className="mb-6 text-neutral-500">Create your first listing to get started.</p>
-          <Button onClick={() => handleNewListing("new")}>
+        <AgentPageHeader title="My Listings" subtitle="Publish on AAC — off-market through active." className="mb-5 md:mb-6" />
+        <AgentSectionCard className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-14">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200 bg-white shadow-sm">
+            <Plus className="h-8 w-8 text-zinc-400" strokeWidth={1.5} aria-hidden />
+          </div>
+          <h3 className="mb-2 text-[17px] font-semibold tracking-tight text-zinc-900 md:text-xl">No listings yet</h3>
+          <p className="mb-8 max-w-sm mx-auto text-[13px] leading-snug text-zinc-500">
+            Once you publish, your listings appear here — status filters match how you browse in search results.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleNewListing("new")}
+            className="h-10 rounded-lg border-neutral-200 bg-white px-5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50 focus-visible:ring-zinc-300"
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Create New Listing
+            Create listing
           </Button>
         </AgentSectionCard>
         </AgentAacPage>
