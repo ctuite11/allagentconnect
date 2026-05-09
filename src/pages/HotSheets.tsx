@@ -164,6 +164,19 @@ const HotSheets = ({
   const renderHotSheetsHero = () => {
     const showHeroCreate = buyerMode || (!loading && !!user);
 
+    const heroCreateButton = showHeroCreate ? (
+      <Button
+        type="button"
+        className="h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+        onClick={() =>
+          buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
+        }
+      >
+        <Plus className="mr-1.5 h-3.5 w-3.5" />
+        Create Hot Sheet
+      </Button>
+    ) : null;
+
     return (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:items-start">
@@ -174,18 +187,7 @@ const HotSheets = ({
               Track listings that matter most with real-time alerts based on your saved search criteria.
             </p>
           </div>
-          {showHeroCreate ? (
-            <Button
-              type="button"
-              className="mt-3 h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
-              onClick={() =>
-                buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
-              }
-            >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Create Hot Sheet
-            </Button>
-          ) : null}
+          {!buyerMode && showHeroCreate ? <div className="mt-3">{heroCreateButton}</div> : null}
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
@@ -247,6 +249,14 @@ const HotSheets = ({
             </div>
         </div>
       </div>
+
+      {buyerMode && showHeroCreate ? (
+        <div className="mt-5 grid grid-cols-1 gap-5 lg:mt-6 lg:grid-cols-[1.05fr_1.2fr_0.9fr]">
+          <div className="flex justify-start">{heroCreateButton}</div>
+          <div className="hidden lg:block" aria-hidden />
+          <div className="hidden lg:block" aria-hidden />
+        </div>
+      ) : null}
     </section>
     );
   };
