@@ -1,45 +1,67 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { b64urlDecode, verifyClick } from "../_shared/tracking.ts";
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-const handler = async (req: Request): Promise<Response> => {
-  try {
-    const url = new URL(req.url);
-    const emailSendId = url.searchParams.get("id");
-    const targetUrl = url.searchParams.get("url");
-
-    if (!emailSendId || !targetUrl) {
-      return new Response("Invalid request", { status: 400 });
-    }
-
-    // Get user agent and IP
-    const userAgent = req.headers.get("user-agent") || "";
-    const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0] || 
-                      req.headers.get("x-real-ip") || "";
-
-    // Record the click
-    const { error } = await supabase.from("email_clicks").insert({
-      email_send_id: emailSendId,
-      url: targetUrl,
-      user_agent: userAgent,
-      ip_address: ipAddress,
-    });
-
-    if (error) {
-      console.error("Error recording email click:", error);
-    } else {
-      console.log(`Recorded click for send ID: ${emailSendId}, URL: ${targetUrl}`);
-    }
-
-    // Redirect to the actual URL
-    return Response.redirect(targetUrl, 302);
-  } catch (error: any) {
-    console.error("Error in track-email-click function:", error);
-    return new Response("Error tracking click", { status: 500 });
-  }
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "*",
 };
 
-serve(handler);
+const FALLBACK_URL = "https://allagentconnect.com";
+
+function redirect(target: string) {
+  return new Response(null, {
+    status: 302,
+    headers: { ...corsHeaders, Location: target, "Cache-Control": "no-store" },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const url = new URL(req.url);
+    const jobId = url.searchParams.get("j") || "";
+    const r = url.searchParams.get("r") || "";
+    const u = url.searchParams.get("u") || "";
+    const t = url.searchParams.get("t") || "";
+    if (!jobId || !r || !u || !t) return redirect(FALLBACK_URL);
+
+    let recipientEmail = "";
+    try { recipientEmail = b64urlDecode(r); } catch { return redirect(FALLBACK_URL); }
+
+    // Validate the target URL is http(s) — never redirect to javascript:, data:, etc.
+    let target: URL;
+    try { target = new URL(u); } catch { return redirect(FALLBACK_URL); }
+    if (target.protocol !== "http:" && target.protocol !== "https:") {
+      return redirect(FALLBACK_URL);
+    }
+
+    const ok = await verifyClick({ jobId, recipientEmail, category: "" }, u, t);
+    if (!ok) return redirect(target.toString());
+
+    // Fire-and-forget click insert — don't block the redirect.
+    const supa = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const ua = req.headers.get("user-agent") || null;
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+    supa.from("email_job_clicks").insert({
+      job_id: jobId,
+      recipient_email: recipientEmail,
+      url: u,
+      user_agent: ua,
+      ip_address: ip,
+    }).then(({ error }) => {
+      if (error) console.error("[track-email-click] insert", error);
+    });
+
+    return redirect(target.toString());
+  } catch (e) {
+    console.error("[track-email-click] error", e);
+    return redirect(FALLBACK_URL);
+  }
+});
