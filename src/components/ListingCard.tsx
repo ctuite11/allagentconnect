@@ -23,7 +23,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { buildDisplayAddress, cn, propertyTypeToEnum } from "@/lib/utils";
-import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
+import {
+  formatListingIdLabel,
+  LISTING_ID_NAV_CLASS,
+  LISTING_ID_NAV_CLASS_SEARCH_SURFACE,
+} from "@/lib/listingIdDisplay";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
 import {
@@ -143,6 +147,10 @@ interface ListingCardProps {
   compactDetailNavigateState?: Record<string, unknown>;
   /** Agent MLS search / workflow: hide consumer favorite heart on compact cards only. */
   hideCompactFavorite?: boolean;
+  /**
+   * Listing Search Results (`/listing-results`): tone down listing-ID link (neutral utility, hover underline).
+   */
+  subtleListingIdLink?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -167,6 +175,7 @@ const ListingCard = ({
   compactAgentOwned = false,
   compactDetailNavigateState,
   hideCompactFavorite = false,
+  subtleListingIdLink = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
 
@@ -860,7 +869,10 @@ const ListingCard = ({
                       e.stopPropagation();
                       openListingDetail();
                     }}
-                    className={cn(LISTING_ID_NAV_CLASS, "block w-full text-xs text-right")}
+                    className={cn(
+                      subtleListingIdLink ? LISTING_ID_NAV_CLASS_SEARCH_SURFACE : LISTING_ID_NAV_CLASS,
+                      "block w-full text-xs text-right",
+                    )}
                   >
                     {compactIdLabel}
                   </button>

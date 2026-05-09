@@ -525,6 +525,7 @@ const ListingSearchResults = () => {
                             showCompactComments={false}
                             hideCompactFavorite
                             isHotSheetFavorite={false}
+                            subtleListingIdLink
                             compactDetailNavigateState={{
                               from: `/listing-results${search}`,
                             }}

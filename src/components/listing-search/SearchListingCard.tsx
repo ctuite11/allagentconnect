@@ -25,7 +25,7 @@ import { LISTING_STATUS, isComingSoon } from "@/constants/status";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { resolveListedByAttribution } from "@/lib/listingListedBy";
-import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
+import { formatListingIdLabel, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
 import { cn } from "@/lib/utils";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -542,7 +542,7 @@ export const SearchListingCard = ({
                       e.stopPropagation();
                       handleCardClick();
                     }}
-                    className={cn(LISTING_ID_NAV_CLASS, "text-[11px] font-mono")}
+                    className={cn(LISTING_ID_NAV_CLASS_SEARCH_SURFACE, "text-[11px] font-mono font-normal")}
                   >
                     {listingIdLabel}
                   </button>
