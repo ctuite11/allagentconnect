@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyMap from "@/components/PropertyMap";
-import FavoriteButton from "@/components/FavoriteButton";
 import {
   type ListingRecord,
   type AgentOfficeRecord,
@@ -41,7 +40,6 @@ import { ArrowLeft, MapPin, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Listing {
@@ -457,8 +455,13 @@ const Favorites = ({
     return sortedFavoritesWithListing.filter((fav) => selectedFavoriteIds.has(fav.id));
   }, [buyerMode, displayFavorites, sortedFavoritesWithListing, sessionKeptListingIds, selectedFavoriteIds]);
 
+  const listingRowsForMap: Favorite[] = useMemo(
+    () => (buyerMode ? displayFavorites : sortedFavoritesWithListing),
+    [buyerMode, displayFavorites, sortedFavoritesWithListing],
+  );
+
   const displayListingRecords: ListingRecord[] = useMemo(() => {
-    return displayFavorites
+    return listingRowsForMap
       .map((fav): ListingRecord | null => {
         const l = normalizeEmbeddedListing(fav);
         if (!l) return null;
@@ -484,7 +487,7 @@ const Favorites = ({
         };
       })
       .filter((r): r is ListingRecord => r != null);
-  }, [displayFavorites, officeByAgentId]);
+  }, [listingRowsForMap, officeByAgentId]);
 
   const propertyMapListings = useMemo(
     () => toPropertyMapListings(displayListingRecords),
@@ -544,10 +547,10 @@ const Favorites = ({
   };
 
   useEffect(() => {
-    if (!buyerMode || !selectedListingId) return;
+    if (!selectedListingId) return;
     const still = displayListingRecords.some((l) => l.id === selectedListingId);
     if (!still) setSelectedListingId(null);
-  }, [buyerMode, displayListingRecords, selectedListingId]);
+  }, [displayListingRecords, selectedListingId]);
 
   useEffect(() => {
     if (!import.meta.env.DEV || !buyerMode) return;
@@ -900,10 +903,36 @@ const Favorites = ({
     </header>
   );
 
-  if (loading && buyerMode) {
+  const genericFavoritesStickyHeader = (
+    <header className="sticky top-14 z-40 border-b border-neutral-200/90 bg-white">
+      <div className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/agent-dashboard")}
+              className="-ml-1 rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
+              aria-label="Back to agent dashboard"
+            >
+              <ArrowLeft className="h-[17px] w-[17px] shrink-0" aria-hidden />
+            </button>
+            <div className="min-w-0 space-y-0.5">
+              <h1 className="text-sm font-semibold tracking-tight text-neutral-900">Favorite listings</h1>
+              <p className="text-[13px] leading-snug text-neutral-500">
+                Your account favorites — map, refine, share, or remove selections.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+
+  if (loading) {
+    const headerEl = buyerMode ? buyerStickyHeader : genericFavoritesStickyHeader;
     return (
       <div className="flex min-h-screen flex-col bg-white">
-        {buyerStickyHeader}
+        {headerEl}
         <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7">
           <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
             <section
@@ -940,12 +969,6 @@ const Favorites = ({
           </div>
         </main>
       </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <AacMonogramLoader variant="fullscreen" message="Loading favorites..." className="bg-white pt-20" />
     );
   }
 
@@ -1292,40 +1315,83 @@ const Favorites = ({
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pt-14 md:pt-16">
-      <main className="flex-1">
-        <div className="mx-auto w-full max-w-7xl px-6 md:px-8 py-6 md:py-8">
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-[#111827]">My Favorites</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Manage your favorite properties so you don&apos;t lose track of them.
+    <div className="flex min-h-screen flex-col bg-white">
+      {genericFavoritesStickyHeader}
+
+      {favorites.length === 0 ? (
+        <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-5 py-10 md:max-w-xl md:px-7">
+          <Card className="rounded-2xl border border-neutral-200/90 bg-white p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-10">
+            <Heart className="mx-auto mb-4 h-12 w-12 text-neutral-300" aria-hidden />
+            <h3 className="mb-2 text-base font-semibold tracking-tight text-neutral-900">No favorites yet</h3>
+            <p className="mb-6 text-[13px] leading-snug text-neutral-500">
+              Save listings while you browse so you can revisit them anytime.
             </p>
-          </div>
+            <Button
+              type="button"
+              size="sm"
+              className="bg-neutral-900 text-white hover:bg-neutral-800"
+              onClick={() => navigate(isPublicMode ? "/" : "/browse")}
+            >
+              Browse properties
+            </Button>
+          </Card>
+        </main>
+      ) : (
+        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7">
+          <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+            <section
+              className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:sticky lg:top-[6.05rem] lg:h-full lg:min-h-0`}
+            >
+              {displayListingRecords.length > 0 ? (
+                <div className="h-full">
+                  <PropertyMap
+                    listings={propertyMapListings}
+                    highlightedListingId={hoveredListingId}
+                    selectedListingId={selectedListingId}
+                    onListingHover={setHoveredListingId}
+                    onListingSelect={handleMarkerSelect}
+                    fallbackCenter={BOSTON_DEFAULT_MAP_CENTER}
+                    fallbackZoom={11}
+                  />
+                </div>
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center bg-white px-6 text-center">
+                  <MapPin className="mb-3 h-9 w-9 text-neutral-300" aria-hidden />
+                  <p className="max-w-sm text-[13px] leading-snug text-neutral-600">
+                    No pins to show — coordinates may be missing on these listings.
+                  </p>
+                </div>
+              )}
+            </section>
 
-          <div>
-            <h2 className="text-sm font-medium text-gray-600 mt-6">Favorites ({favorites.length})</h2>
-          </div>
-
-          {favorites.length === 0 ? (
-            <Card className="bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(15,23,42,0.08)] p-8 md:p-10 text-center">
-              <div className="text-center">
-                <Heart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">No favorites yet</h3>
-                <p className="text-muted-foreground mb-6">Start browsing properties and save your favorites to keep track of them.</p>
-                <Button className="px-5 py-2 text-sm" onClick={() => navigate("/browse")}>
-                  Browse Properties
-                </Button>
+            <section className={`${buyerFavoritesSplitPane} flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:h-full`}>
+              <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-2.5 sm:px-5">
+                <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between">
+                  <p className="text-sm font-semibold tabular-nums text-neutral-900">
+                    Results: {displayListingRecords.length.toLocaleString()}
+                  </p>
+                  <div className="w-full min-w-0 min-[520px]:w-auto min-[520px]:max-w-[11rem]">
+                    <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+                      <SelectTrigger className="h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2">
+                        <SelectValue placeholder="Sort" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest</SelectItem>
+                        <SelectItem value="price_asc">Price low to high</SelectItem>
+                        <SelectItem value="price_desc">Price high to low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-            </Card>
-          ) : (
-            <div className="space-y-4 mt-5">
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
+
+              <div className="min-h-0 flex-1 px-4 py-3 sm:px-5 lg:overflow-y-auto">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="h-8 rounded-md px-2.5 text-xs"
+                    className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
                     onClick={() =>
                       setSelectedFavoriteIds((prev) =>
                         prev.size === sortedFavoritesWithListing.length
@@ -1339,116 +1405,133 @@ const Favorites = ({
                   <Button
                     type="button"
                     size="sm"
-                    className="h-8 rounded-md px-2.5 text-xs"
-                    onClick={shareVisibleSelected}
+                    variant="outline"
                     disabled={favoritesForShare.length === 0}
+                    className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50 disabled:pointer-events-none disabled:opacity-40"
+                    onClick={shareVisibleSelected}
                   >
                     Share selected
                   </Button>
-                  {favoritesForShare.length > 0 && (
+                  {favoritesForShare.length > 0 ? (
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="h-8 rounded-md px-2.5 text-xs text-red-700 border-red-200 hover:bg-red-50"
+                      className="h-7 rounded-md border-red-200 bg-white px-2.5 text-xs font-medium text-red-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-red-50"
                       onClick={() => setDeleteDialogOpen(true)}
                     >
-                      Delete selected
+                      Remove selected
                     </Button>
-                  )}
+                  ) : null}
                 </div>
-                <div className="w-44 min-w-0 shrink-0 sm:w-52">
-                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                    <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
-                      <SelectValue placeholder="Sort" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="newest">Newest</SelectItem>
-                      <SelectItem value="price_asc">Price low to high</SelectItem>
-                      <SelectItem value="price_desc">Price high to low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedFavoritesWithListing.map((favorite) => {
-                const listing = favorite.listings;
-                const isSelected = selectedFavoriteIds.has(favorite.id);
-                return (
-                  <div key={favorite.id} className="w-full">
-                    <ListingCard
-                      listing={listing}
-                      viewMode="compact"
-                      showActions={false}
-                      hideMlsMeta={isPublicMode || isBuyerMode}
-                      isFavorites
-                      onSelect={() => toggleSelectFavorite(favorite.id)}
-                      isSelected={isSelected}
-                      supplementalAgentProfile={
-                        listing.agent_id ? listedByProfileByAgentId.get(listing.agent_id) ?? null : null
-                      }
-                      showCompactComments={buyerMode && Boolean(favoritesHotSheetForComments)}
-                      chatMessages={favoritesChatMap[listing.id] ?? []}
-                      onNewMessage={handleFavoritesChatMessage}
-                      onOpenChat={
-                        buyerMode && favoritesHotSheetForComments
-                          ? () => {
-                              setFavoritesChatListingId(listing.id);
-                              setFavoritesChatOpen(true);
-                            }
-                          : undefined
-                      }
-                      hotSheetId={favoritesHotSheetForComments ?? undefined}
-                    />
-                  </div>
-                );
-              })}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {sortedFavoritesWithListing.map((favorite) => {
+                    const listing = favorite.listings;
+                    const isSelected = selectedFavoriteIds.has(favorite.id);
+                    return (
+                      <div
+                        key={favorite.id}
+                        ref={(el) => {
+                          cardRefs.current[listing.id] = el;
+                        }}
+                        onMouseEnter={() => setHoveredListingId(listing.id)}
+                        onMouseLeave={() => setHoveredListingId(null)}
+                        className="w-full"
+                      >
+                        <ListingCard
+                          listing={listing}
+                          viewMode="compact"
+                          showActions={false}
+                          hideMlsMeta={isPublicMode || isBuyerMode}
+                          isFavorites
+                          onSelect={() => toggleSelectFavorite(favorite.id)}
+                          isSelected={isSelected}
+                          supplementalAgentProfile={
+                            listing.agent_id ? listedByProfileByAgentId.get(listing.agent_id) ?? null : null
+                          }
+                          showCompactComments={buyerMode && Boolean(favoritesHotSheetForComments)}
+                          chatMessages={favoritesChatMap[listing.id] ?? []}
+                          onNewMessage={handleFavoritesChatMessage}
+                          onOpenChat={
+                            buyerMode && favoritesHotSheetForComments
+                              ? () => {
+                                  setFavoritesChatListingId(listing.id);
+                                  setFavoritesChatOpen(true);
+                                }
+                              : undefined
+                          }
+                          hotSheetId={favoritesHotSheetForComments ?? undefined}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      </main>
+            </section>
+          </div>
+        </main>
+      )}
 
       {shareModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-xl border border-zinc-200 bg-white p-4 shadow-xl">
-            <h3 className="text-base font-semibold text-zinc-900">Share selected listings</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[1px]">
+          <div className="w-full max-w-2xl rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] sm:p-6">
+            <h3 className="text-sm font-semibold tracking-tight text-neutral-900">Share selected listings</h3>
             <div className="mt-3 space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="share-to-email">To email</Label>
+                <Label htmlFor="share-to-email-generic" className="text-xs text-neutral-600">
+                  To email
+                </Label>
                 <Input
-                  id="share-to-email"
+                  id="share-to-email-generic"
                   type="email"
                   placeholder="name@example.com"
                   value={shareToEmail}
                   onChange={(e) => setShareToEmail(e.target.value)}
+                  className="focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="share-subject">Subject</Label>
+                <Label htmlFor="share-subject-generic" className="text-xs text-neutral-600">
+                  Subject
+                </Label>
                 <Input
-                  id="share-subject"
+                  id="share-subject-generic"
                   value={shareSubject}
                   onChange={(e) => setShareSubject(e.target.value)}
+                  className="focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="share-message">Message</Label>
+                <Label htmlFor="share-message-generic" className="text-xs text-neutral-600">
+                  Message
+                </Label>
                 <Textarea
-                  id="share-message"
-                  className="min-h-[180px]"
+                  id="share-message-generic"
+                  className="min-h-[180px] focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
                   value={shareMessage}
                   onChange={(e) => setShareMessage(e.target.value)}
                 />
               </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShareModalOpen(false)}>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-neutral-200"
+                onClick={() => setShareModalOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="button" onClick={handleSendShareEmail} disabled={shareSending}>
-                Send Email
+              <Button
+                type="button"
+                size="sm"
+                className="bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50"
+                onClick={handleSendShareEmail}
+                disabled={shareSending}
+              >
+                {shareSending ? "Sending…" : "Send email"}
               </Button>
             </div>
           </div>
