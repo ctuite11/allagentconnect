@@ -122,7 +122,7 @@ export function PendingInvitesCard() {
       title="Shared With"
       icon={<Users className="text-neutral-500" />}
       description="People you've invited to your home search"
-      className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[border-color,box-shadow] hover:!translate-y-0 hover:border-neutral-300 hover:!shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+      className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-[border-color,box-shadow] duration-150 hover:!translate-y-0 hover:border-neutral-300 hover:!shadow-md"
     >
       <div className="space-y-3">
         {invites.map((invite) => {
@@ -133,7 +133,7 @@ export function PendingInvitesCard() {
           return (
             <div
               key={invite.id}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+              className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">

@@ -17,9 +17,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { buyerPageShell, buyerPrimaryCta as primaryCtaClass } from "@/lib/buyerUi";
+import { buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
 import { ClientDashboardView } from "@/components/buyer/ClientDashboardView";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Seo } from "@/components/Seo";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
@@ -109,6 +110,8 @@ export default function ClientDashboard() {
   const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
   const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
   const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
+  /** True only when initial boot fails before identity is committed — full-page retry (partial fetch failures keep the dashboard). */
+  const [loadError, setLoadError] = useState(false);
 
   const { isOnline: agentPresenceOnline } = useAgentLastSeen(agent?.id);
 
@@ -194,50 +197,70 @@ export default function ClientDashboard() {
         return;
       }
 
-      const { data: profileRow } = await supabase
-        .from("profiles")
-        .select("first_name, last_name")
-        .eq("id", user.id)
-        .maybeSingle();
-      const first = sanitizeFirstName(profileRow?.first_name);
-      const lastRaw = profileRow?.last_name?.trim();
-      const last = lastRaw && !lastRaw.includes("@") ? lastRaw : null;
-      const firstFallback = await resolveBuyerGreetingName(
-        user.id,
-        user.email,
-        (user.user_metadata?.display_name as string | undefined) ?? null,
-      );
-      const firstLine = first ?? firstFallback;
-      const display = [firstLine, last].filter(Boolean).join(" ").trim();
-      setBuyerDisplayName(display || (user.email ?? ""));
-      setBuyerEmail(user.email ?? null);
+      setLoadError(false);
 
-      const cameFromInviteAcceptance = consumeInviteHandoffMarker();
-      if (cameFromInviteAcceptance) {
-        setRelationshipHydrating(true);
-      }
-
-      setCurrentUserId(user.id);
-
+      let identityReady = false;
       try {
-        const activeAgentId = await loadAgentRelationship(user.id);
-        await Promise.all([
-          loadBuyerHotSheetsForDashboard(user.id),
-          loadFavorites(user.id),
-          loadMarketListings(),
-        ]);
+        const { data: profileRow } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        const first = sanitizeFirstName(profileRow?.first_name);
+        const lastRaw = profileRow?.last_name?.trim();
+        const last = lastRaw && !lastRaw.includes("@") ? lastRaw : null;
+        const firstFallback = await resolveBuyerGreetingName(
+          user.id,
+          user.email,
+          (user.user_metadata?.display_name as string | undefined) ?? null,
+        );
+        const firstLine = first ?? firstFallback;
+        const display = [firstLine, last].filter(Boolean).join(" ").trim();
+        setBuyerDisplayName(display || (user.email ?? ""));
+        setBuyerEmail(user.email ?? null);
 
-        if (cameFromInviteAcceptance && !activeAgentId) {
-          await new Promise((resolve) => window.setTimeout(resolve, 1200));
-          await loadAgentRelationship(user.id);
-          await loadBuyerHotSheetsForDashboard(user.id);
+        const cameFromInviteAcceptance = consumeInviteHandoffMarker();
+        if (cameFromInviteAcceptance) {
+          setRelationshipHydrating(true);
         }
-      } finally {
-        setRelationshipHydrating(false);
+
+        setCurrentUserId(user.id);
+        identityReady = true;
+
+        try {
+          const activeAgentId = await loadAgentRelationship(user.id);
+          await Promise.all([
+            loadBuyerHotSheetsForDashboard(user.id),
+            loadFavorites(user.id),
+            loadMarketListings(),
+          ]);
+
+          if (cameFromInviteAcceptance && !activeAgentId) {
+            await new Promise((resolve) => window.setTimeout(resolve, 1200));
+            await loadAgentRelationship(user.id);
+            await loadBuyerHotSheetsForDashboard(user.id);
+          }
+        } finally {
+          setRelationshipHydrating(false);
+        }
+      } catch (bootErr: unknown) {
+        console.error("[ClientDashboard] dashboard boot failed:", bootErr);
+        if (!identityReady) {
+          setLoadError(true);
+          toast.error("Couldn't load your dashboard.");
+        } else {
+          toast.error("Some dashboard data couldn't load. You can refresh or try again later.");
+        }
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const retryDashboardLoad = () => {
+    setLoadError(false);
+    setLoading(true);
+    void checkAuth();
   };
 
   const loadAgentRelationship = async (userId: string) => {
@@ -545,20 +568,149 @@ export default function ClientDashboard() {
 
   if (loading) {
     return (
-      <div className={`flex min-h-[50vh] flex-col items-center justify-center px-4 ${buyerPageShell}`}>
-        <AacMonogramLoader
-          variant="section"
-          className="min-h-[40vh]"
-          message={
-            relationshipHydrating ? "Connecting your inviting agent…" : "Loading your dashboard…"
-          }
+      <>
+        <Seo
+          title="Dashboard | All Agent Connect"
+          description="Your saved homes, hot sheets, market activity, and agent updates in one place."
+          canonical="https://allagentconnect.com/client/dashboard"
+          noindex
         />
-      </div>
+        <div className={buyerPageShell}>
+          <main className={buyerPageMain}>
+            <div
+              className="space-y-6 md:space-y-7"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <span className="sr-only">
+                {relationshipHydrating
+                  ? "Connecting your inviting agent…"
+                  : "Loading your dashboard…"}
+              </span>
+
+              <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm md:p-6">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+                  <div className="min-w-0 flex-1 space-y-3">
+                    <Skeleton className="h-8 w-[min(100%,18rem)] rounded-md bg-neutral-100" />
+                    <Skeleton className="h-4 w-full max-w-md rounded-md bg-neutral-100" />
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Skeleton className="h-9 w-24 rounded-full bg-neutral-100" />
+                      <Skeleton className="h-9 w-28 rounded-full bg-neutral-100" />
+                      <Skeleton className="h-9 w-32 rounded-full bg-neutral-100" />
+                    </div>
+                  </div>
+                  <div className="flex w-full shrink-0 gap-3 lg:w-auto lg:max-w-[22rem]">
+                    <Skeleton className="h-16 w-16 shrink-0 rounded-full bg-neutral-100" />
+                    <div className="min-w-0 flex-1 space-y-2 pt-1">
+                      <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
+                      <Skeleton className="h-3 w-48 rounded-md bg-neutral-100" />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm md:p-5"
+                  >
+                    <Skeleton className="h-4 w-4 rounded bg-neutral-100" />
+                    <Skeleton className="mt-3 h-7 w-12 rounded-md bg-neutral-100" />
+                    <Skeleton className="mt-2 h-3 w-24 rounded-md bg-neutral-100" />
+                  </div>
+                ))}
+              </section>
+
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+                <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                  <div className="border-b border-neutral-100 px-5 pb-4 pt-5 md:px-6 md:pb-5">
+                    <Skeleton className="h-4 w-28 rounded-md bg-neutral-100" />
+                    <Skeleton className="mt-2 h-3 w-48 rounded-md bg-neutral-100" />
+                  </div>
+                  <div className="px-5 pb-6 pt-4 md:px-6">
+                    <Skeleton className="h-44 w-full rounded-xl bg-neutral-100" />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                  <div className="border-b border-neutral-100 px-5 pb-4 pt-5 md:px-6 md:pb-5">
+                    <Skeleton className="h-4 w-24 rounded-md bg-neutral-100" />
+                    <Skeleton className="mt-2 h-3 w-40 rounded-md bg-neutral-100" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 px-5 pb-6 pt-4 md:px-6">
+                    {[1, 2, 3].map((j) => (
+                      <Skeleton key={j} className="aspect-[4/5] w-full rounded-xl bg-neutral-100" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <section className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                <div className="border-b border-neutral-100 px-5 pb-4 pt-5 md:px-6 md:pb-5">
+                  <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
+                  <Skeleton className="mt-2 h-3 max-w-sm rounded-md bg-neutral-100" />
+                </div>
+                <div className="overflow-visible px-5 pb-6 pt-0 md:px-6">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {[1, 2, 3, 4].map((k) => (
+                      <div key={k} className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-sm">
+                        <Skeleton className="h-48 w-full rounded-none bg-neutral-100" />
+                        <div className="space-y-2 p-4">
+                          <Skeleton className="h-4 w-[75%] rounded-md bg-neutral-100" />
+                          <Skeleton className="h-3 w-full rounded-md bg-neutral-100" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </div>
+          </main>
+        </div>
+      </>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <>
+        <Seo
+          title="Dashboard | All Agent Connect"
+          description="Your saved homes, hot sheets, market activity, and agent updates in one place."
+          canonical="https://allagentconnect.com/client/dashboard"
+          noindex
+        />
+        <div className={buyerPageShell}>
+          <main className={buyerPageMain}>
+            <div className="mx-auto max-w-md rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm md:p-10">
+              <p className="text-sm font-medium text-neutral-900">Couldn&apos;t load your dashboard</p>
+              <p className="mt-2 text-sm text-neutral-600">
+                Check your connection and try again.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-5 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                onClick={() => void retryDashboardLoad()}
+              >
+                Try again
+              </Button>
+            </div>
+          </main>
+        </div>
+      </>
     );
   }
 
   return (
     <>
+      <Seo
+        title="Dashboard | All Agent Connect"
+        description="Your saved homes, hot sheets, market activity, and agent updates in one place."
+        canonical="https://allagentconnect.com/client/dashboard"
+        noindex
+      />
       <ClientDashboardView
         variant="buyer"
         navigate={navigate}
@@ -594,7 +746,7 @@ export default function ClientDashboard() {
             <AlertDialogCancel className="h-9 border-neutral-200 text-[13px] hover:bg-neutral-50/90">No, cancel</AlertDialogCancel>
             <Button
               type="button"
-              className={`h-9 border border-[#0B46CC]/20 px-5 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.08)] focus-visible:ring-2 focus-visible:ring-neutral-400/50 focus-visible:ring-offset-2 ${primaryCtaClass}`}
+              className="h-9 bg-neutral-900 px-5 text-[13px] text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
               onClick={() => void handleEndRelationship()}
             >
               Yes, end relationship
