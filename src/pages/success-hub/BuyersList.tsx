@@ -33,7 +33,7 @@ function BuyersRowsSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="space-y-3" aria-hidden>
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} className="h-[84px] w-full rounded-2xl bg-zinc-100/90" />
+        <Skeleton key={i} className="h-[84px] w-full rounded-xl border border-neutral-100 bg-neutral-100" />
       ))}
     </div>
   );
@@ -43,6 +43,8 @@ export default function BuyersList() {
   const navigate = useNavigate();
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
   const [loading, setLoading] = useState(true);
+  /** Last fetch failed with no buyer rows to show (avoid empty-state masking errors). */
+  const [loadError, setLoadError] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createdBuyer, setCreatedBuyer] = useState<CreatedBuyer | null>(null);
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -50,6 +52,7 @@ export default function BuyersList() {
   const loadBuyers = async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
     try {
+      setLoadError(false);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -62,6 +65,7 @@ export default function BuyersList() {
 
       if (relErr) {
         console.error("Error loading buyer relationships:", relErr);
+        setLoadError(true);
         return;
       }
 
@@ -84,6 +88,7 @@ export default function BuyersList() {
       if (clientsErr) {
         console.error("Error loading clients for buyers:", clientsErr);
         setBuyers([]);
+        setLoadError(true);
         return;
       }
 
@@ -112,6 +117,7 @@ export default function BuyersList() {
       setBuyers(rows);
     } catch (err) {
       console.error("Error loading buyers:", err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -191,23 +197,40 @@ export default function BuyersList() {
         <AgentPageHeader
           title="My Buyers"
           subtitle="Manage buyer hot sheets, favorites, invites, and activity."
-          className="mb-6"
+          className="mb-5"
         />
 
-        <div className="mb-4 flex items-center">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           <Button
             type="button"
+            size="sm"
             onClick={() => setShowCreate(true)}
-            className="h-8 shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+            className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
           >
             <UserPlus className="mr-1.5 h-3.5 w-3.5" />
             New Buyer
           </Button>
         </div>
 
-        <AgentSectionCard className="p-6">
+        {loadError && !loading && buyers.length === 0 ? (
+          <AgentSectionCard className="border-neutral-200 p-6 shadow-sm hover:border-neutral-200 hover:shadow-sm">
+            <p className="text-sm font-medium text-neutral-900">Couldn&apos;t load buyers</p>
+            <p className="mt-2 text-sm text-neutral-600">
+              Check your connection and try again.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              className="mt-4 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+              onClick={() => void loadBuyers()}
+            >
+              Try again
+            </Button>
+          </AgentSectionCard>
+        ) : (
+        <AgentSectionCard className="border-neutral-200 p-5 shadow-sm sm:p-6 hover:border-neutral-200 hover:shadow-sm">
           {/* Filter pills */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="mb-5 flex flex-wrap gap-2">
             {filterPills.map((pill) => {
               const active = filter === pill.key;
               return (
@@ -216,10 +239,10 @@ export default function BuyersList() {
                   type="button"
                   onClick={() => setFilter(pill.key)}
                   className={cn(
-                    "h-8 px-3.5 rounded-full text-sm font-medium transition-colors",
+                    "h-8 rounded-full px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
                     active
-                      ? "bg-zinc-900 text-white"
-                      : "border border-zinc-100 bg-white text-zinc-700 hover:border-zinc-200"
+                      ? "bg-neutral-900 text-white"
+                      : "border border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50/80"
                   )}
                 >
                   {pill.label}
@@ -259,6 +282,7 @@ export default function BuyersList() {
             </div>
           )}
         </AgentSectionCard>
+        )}
       </AgentAacPage>
 
       <CreateBuyerDialog
@@ -304,9 +328,10 @@ function BuyerCard({
         }
       }}
       className={cn(
-        "group flex cursor-pointer items-stretch gap-3 rounded-2xl border border-zinc-200/90 bg-white p-4 pl-5",
-        "shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-150",
-        "hover:-translate-y-px hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
+        "group flex cursor-pointer items-stretch gap-3 rounded-xl border border-neutral-200 bg-white p-4 pl-5",
+        "shadow-sm transition-[box-shadow,border-color,background-color] duration-150",
+        "hover:border-neutral-300 hover:bg-neutral-50/80 hover:shadow-md",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
       )}
       aria-label={`Open buyer ${buyer.name}`}
     >
@@ -319,14 +344,14 @@ function BuyerCard({
           crmClientId={buyer.clientId}
           metrics={metrics}
           metricsLoading={buyerMetricsLoading}
-          metricsToolbarTintIcons
+          avatarClassName="bg-neutral-200 text-neutral-800"
           className="rounded-none border-0 bg-transparent px-0 py-0 shadow-none"
           trailing={<BuyerRowStatusPill buyer={buyer} />}
         />
       </div>
       <div className="flex shrink-0 items-center justify-center self-center">
         <ChevronRight
-          className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-0.5"
+          className="h-4 w-4 text-neutral-400 transition-transform group-hover:translate-x-0.5 group-hover:text-neutral-600"
           aria-hidden
         />
       </div>
@@ -335,25 +360,33 @@ function BuyerCard({
 }
 
 function BuyerRowStatusPill({ buyer }: { buyer: BuyerRow }) {
+  const shell =
+    "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium";
   if (buyer.status === "pending") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-900">
-        <Clock className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+      <span
+        className={cn(shell, "border-neutral-200 bg-neutral-50 text-neutral-800")}
+      >
+        <Clock className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
         Pending Invite
       </span>
     );
   }
   if (buyer.buyerWorkspaceLinked) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-        <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+      <span
+        className={cn(shell, "border-neutral-200 bg-white text-neutral-900")}
+      >
+        <CheckCircle2 className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
         Searching
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-      <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+    <span
+      className={cn(shell, "border-neutral-200 bg-neutral-100 text-neutral-800")}
+    >
+      <CheckCircle2 className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
       Invite Accepted
     </span>
   );
@@ -370,11 +403,11 @@ function EmptyState({
 }) {
   if (hasAny) {
     return (
-      <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-5 py-8 text-center">
-        <p className="text-sm font-semibold text-zinc-900">
+      <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-5 py-8 text-center shadow-sm">
+        <p className="text-sm font-semibold text-neutral-900">
           No buyers in this view
         </p>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-neutral-600">
           Try a different filter to see {filter === "active" ? "pending" : "active"} buyers.
         </p>
       </div>
@@ -382,13 +415,18 @@ function EmptyState({
   }
 
   return (
-    <div className="rounded-2xl border border-dashed border-zinc-100 bg-white px-5 py-8 text-center">
-      <h2 className="text-sm font-semibold text-zinc-900">No buyers yet</h2>
-      <p className="mt-1 text-sm text-zinc-500">
+    <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-5 py-10 text-center shadow-sm">
+      <h2 className="text-sm font-semibold text-neutral-900">No buyers yet</h2>
+      <p className="mt-1 text-sm text-neutral-600">
         Create your first buyer to start building hot sheets and tracking activity.
       </p>
-      <Button onClick={onCreate} className="mt-5 h-9 rounded-full px-4">
-        <UserPlus className="h-4 w-4 mr-2" />
+      <Button
+        type="button"
+        size="sm"
+        onClick={onCreate}
+        className="mt-5 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+      >
+        <UserPlus className="mr-2 h-4 w-4" />
         New Buyer
       </Button>
     </div>

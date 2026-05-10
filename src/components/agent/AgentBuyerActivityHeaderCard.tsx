@@ -31,8 +31,8 @@ function MetricsToolbar({
 }) {
   if (loading) {
     return (
-      <div className="mt-2 border-t border-zinc-100 pt-2">
-        <div className="h-4 max-w-md animate-pulse rounded bg-zinc-100" />
+      <div className="mt-2 border-t border-neutral-100 pt-2">
+        <div className="h-4 max-w-md animate-pulse rounded bg-neutral-100" />
       </div>
     );
   }
@@ -73,7 +73,9 @@ function MetricsToolbar({
       icon: Heart,
       label: "Buyer Favorites",
       value: m.favorites,
-      iconClass: "fill-rose-500 text-rose-500 stroke-rose-500",
+      iconClass: tintToolbarIcons
+        ? "fill-rose-500 text-rose-500 stroke-rose-500"
+        : undefined,
     },
     showSheetCode
       ? {
@@ -95,12 +97,12 @@ function MetricsToolbar({
 
   return (
     <div
-      className="mt-2 flex flex-wrap items-center gap-x-0 gap-y-1 border-t border-zinc-100 pt-2"
+      className="mt-2 flex flex-wrap items-center gap-x-0 gap-y-1 border-t border-neutral-100 pt-2"
       aria-label="Buyer activity"
     >
       {items.map((it, i) => (
         <span key={it.key} className="inline-flex items-center">
-          {i > 0 ? <span className="mx-2 h-3 w-px shrink-0 bg-zinc-200/90" aria-hidden /> : null}
+          {i > 0 ? <span className="mx-2 h-3 w-px shrink-0 bg-neutral-200" aria-hidden /> : null}
           <span
             className={cn(
               "inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600",
@@ -145,6 +147,8 @@ export type AgentBuyerActivityHeaderCardProps = {
   phone?: string | null;
   /** CRM client id — loads metrics when parent does not supply `metrics` */
   crmClientId: string;
+  /** Override initials bubble (e.g. Success Hub My Buyers neutral chrome). */
+  avatarClassName?: string;
   /**
    * Parent-provided metrics (skips internal fetch). Pass `null` to show zeros while loading.
    */
@@ -166,6 +170,7 @@ export function AgentBuyerActivityHeaderCard({
   email,
   phone,
   crmClientId,
+  avatarClassName,
   metrics: metricsProp,
   metricsLoading: metricsLoadingProp,
   trailing,
@@ -226,7 +231,10 @@ export function AgentBuyerActivityHeaderCard({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700"
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+              avatarClassName ?? "bg-violet-100 text-violet-700",
+            )}
             aria-hidden
           >
             {initialsFromDisplayName(displayName)}
