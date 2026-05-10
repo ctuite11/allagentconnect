@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Heart, Layers, Users } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 /** Matches `BuyersList`: `navigate(\`/success-hub/buyers/${b.clientId}\`)` where id is `clients.id`. */
@@ -38,7 +39,10 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-neutral-900">Buyers</h3>
+          <h3 className="flex items-center gap-2 text-[15px] font-semibold text-neutral-900">
+            <Users className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+            Buyers
+          </h3>
           <p className="mt-0.5 text-xs leading-snug text-neutral-500">
             Name, phone, email, hot sheets, and favorites
           </p>
@@ -46,7 +50,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
         <button
           type="button"
           onClick={() => navigate("/success-hub/buyers")}
-          className="shrink-0 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+          className="shrink-0 rounded-sm text-sm font-medium text-indigo-600 underline-offset-2 transition-colors hover:text-indigo-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
         >
           View all →
         </button>
@@ -72,9 +76,18 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                       <div className="mt-0.5 space-y-0.5 text-[12px] text-neutral-500">
                         <p className="truncate">{formatPhone(b.phone)}</p>
                         <p className="truncate">{typeof b.email === "string" && b.email.trim() ? b.email.trim() : "—"}</p>
-                        <p className="text-[11px] text-neutral-600">
-                          <span className="tabular-nums font-medium">{b.hotSheetCount}</span> Hot Sheets ·{" "}
-                          <span className="tabular-nums font-medium">{b.favoriteCount}</span> Favorites
+                        <p className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] text-neutral-600">
+                          <span className="inline-flex items-center gap-0.5">
+                            <Layers className="h-3 w-3 text-amber-600" aria-hidden />
+                            <span className="tabular-nums font-medium text-neutral-700">{b.hotSheetCount}</span>
+                            <span className="text-neutral-500">Hot Sheets</span>
+                          </span>
+                          <span className="text-neutral-300">·</span>
+                          <span className="inline-flex items-center gap-0.5">
+                            <Heart className="h-3 w-3 fill-rose-500/15 text-rose-600" aria-hidden />
+                            <span className="tabular-nums font-medium text-neutral-700">{b.favoriteCount}</span>
+                            <span className="text-neutral-500">Favorites</span>
+                          </span>
                         </p>
                       </div>
                     </button>
@@ -91,10 +104,16 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                     <th className="px-2.5 py-1.5 text-left text-[11px] font-medium text-neutral-500">Phone</th>
                     <th className="px-2.5 py-1.5 text-left text-[11px] font-medium text-neutral-500">Email</th>
                     <th className="w-[5.5rem] px-1.5 py-1.5 text-center text-[11px] font-medium text-neutral-500">
-                      Hot Sheets
+                      <span className="inline-flex items-center justify-center gap-1">
+                        <Layers className="h-3 w-3 text-amber-600" aria-hidden />
+                        Hot Sheets
+                      </span>
                     </th>
                     <th className="w-24 px-1.5 py-1.5 text-center text-[11px] font-medium text-neutral-500">
-                      Favorites
+                      <span className="inline-flex items-center justify-center gap-1">
+                        <Heart className="h-3 w-3 fill-rose-500/15 text-rose-600" aria-hidden />
+                        Favorites
+                      </span>
                     </th>
                   </tr>
                 </thead>

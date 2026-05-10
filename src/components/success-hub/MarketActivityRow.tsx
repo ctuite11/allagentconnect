@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { LineChart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
@@ -146,7 +147,10 @@ export function MarketActivityRow() {
   const headerBlock = (
     <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">Market activity</h3>
+        <h3 className="flex items-center gap-2 text-[15px] font-semibold leading-snug text-neutral-900">
+          <LineChart className="h-4 w-4 shrink-0 text-teal-600" aria-hidden />
+          Market activity
+        </h3>
         <p className="mt-0.5 max-w-lg text-xs leading-snug text-neutral-500">
           Recent listings across AAC — tap a card for details.
         </p>
@@ -166,7 +170,10 @@ export function MarketActivityRow() {
       <div>
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">Market activity</h3>
+            <h3 className="flex items-center gap-2 text-[15px] font-semibold leading-snug text-neutral-900">
+              <LineChart className="h-4 w-4 shrink-0 text-teal-600" aria-hidden />
+              Market activity
+            </h3>
             <p className="mt-0.5 text-xs text-neutral-500">Loading recent listings…</p>
           </div>
         </div>

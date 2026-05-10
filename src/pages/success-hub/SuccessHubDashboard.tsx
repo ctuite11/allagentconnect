@@ -1,4 +1,5 @@
 import React from "react";
+import { Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
@@ -20,16 +21,21 @@ function SectionHeader({
   description,
   actionLabel,
   onAction,
+  leading,
 }: {
   title: string;
   description?: string;
   actionLabel: string;
   onAction: () => void;
+  leading?: React.ReactNode;
 }) {
   return (
     <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="min-w-0">
-        <h2 className={agentSectionTitle}>{title}</h2>
+        <h2 className={`${agentSectionTitle} inline-flex flex-wrap items-center gap-2`}>
+          {leading}
+          {title}
+        </h2>
         {description ? <p className={`mt-0.5 ${agentSectionDesc}`}>{description}</p> : null}
       </div>
       <button
@@ -196,7 +202,10 @@ function SuccessHubDashboardBody() {
           <>
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">My listings</h3>
+                <h3 className="flex items-center gap-2 text-[15px] font-semibold leading-snug text-neutral-900">
+                  <Home className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                  My listings
+                </h3>
                 <p className="mt-0.5 text-xs leading-snug text-neutral-500">
                   Your active AAC listings — views and engagement at a glance.
                 </p>
@@ -206,7 +215,7 @@ function SuccessHubDashboardBody() {
                 onClick={() => {
                   window.location.href = "/agent/listings";
                 }}
-                className="shrink-0 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+                className="shrink-0 rounded-sm text-sm font-medium text-emerald-700 underline-offset-2 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
               >
                 View all →
               </button>
@@ -230,6 +239,7 @@ function SuccessHubDashboardBody() {
               onAction={() => {
                 window.location.href = "/agent/listings/new";
               }}
+              leading={<Home className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />}
             />
             <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-4 text-center">
               <h3 className="text-sm font-semibold text-neutral-900">No active listings yet</h3>
