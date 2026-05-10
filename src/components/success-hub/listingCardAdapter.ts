@@ -64,6 +64,8 @@ export function mapMarketRowToListingCard(row: {
   photos: unknown;
   status: string;
   created_at: string;
+  active_date?: string | null;
+  listing_number?: string | null;
   agent_id: string;
   neighborhood?: string | null;
   /** Display brokerage once via listing attribution (avoid duplicate agentInfo + Listed by). */
@@ -84,6 +86,8 @@ export function mapMarketRowToListingCard(row: {
     status: row.status,
     photos: row.photos,
     created_at: row.created_at,
+    active_date: row.active_date ?? undefined,
+    listing_number: row.listing_number ?? undefined,
     agent_id: row.agent_id,
     neighborhood: row.neighborhood?.trim() || undefined,
     brokerage_name: broker || undefined,
@@ -122,6 +126,9 @@ export function mapSummaryListingToListingCard(
     square_feet: l.square_feet,
     status: l.status,
     photos: l.photos,
+    listing_number: typeof l.listing_number === "string" ? l.listing_number : undefined,
+    active_date: typeof l.active_date === "string" ? l.active_date : undefined,
+    created_at: typeof l.created_at === "string" ? l.created_at : undefined,
     brokerage_name: company || undefined,
     listing_agent_name: !company && fullName ? fullName : undefined,
     listing_stats: {

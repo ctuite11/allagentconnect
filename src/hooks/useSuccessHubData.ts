@@ -46,6 +46,9 @@ export interface SuccessHubSummary {
     view_count: number;
     showing_request_count: number;
     neighborhood?: string | null;
+    listing_number?: string | null;
+    created_at?: string | null;
+    active_date?: string | null;
   }>;
 
   hotSheets: Array<{
@@ -248,7 +251,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         supabase
           .from("listings")
           .select(
-            "id,address,city,state,zip_code,neighborhood,status,photos,price,updated_at,property_type,bedrooms,bathrooms,square_feet,listing_stats(view_count,showing_request_count)",
+            "id,address,city,state,zip_code,neighborhood,status,photos,price,updated_at,created_at,active_date,listing_number,property_type,bedrooms,bathrooms,square_feet,listing_stats(view_count,showing_request_count)",
           )
           .eq("agent_id", agentId)
           .in("status", ["active", "pending", "coming_soon", "off_market"])
@@ -391,6 +394,10 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           bathrooms: typeof l.bathrooms === "number" ? l.bathrooms : null,
           square_feet: typeof l.square_feet === "number" ? l.square_feet : null,
           neighborhood: typeof l.neighborhood === "string" ? l.neighborhood : null,
+          listing_number:
+            typeof (l as any).listing_number === "string" ? (l as any).listing_number : null,
+          created_at: typeof (l as any).created_at === "string" ? (l as any).created_at : null,
+          active_date: typeof (l as any).active_date === "string" ? (l as any).active_date : null,
           view_count: typeof stats?.view_count === "number" ? stats.view_count : 0,
           showing_request_count:
             typeof stats?.showing_request_count === "number"

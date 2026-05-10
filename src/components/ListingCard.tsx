@@ -1512,21 +1512,24 @@ const ListingCard = ({
           </p>
         )}
 
-        {/* Listing Number - blue and clickable */}
-        {listingIdLabel && (
-          <div className="text-sm mb-3">
-            <button
-              type="button"
-              className={cn(LISTING_ID_NAV_CLASS, "text-sm font-mono font-medium")}
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/property/${listing.id}`);
-              }}
-            >
-              {listingIdLabel}
-            </button>
-          </div>
-        )}
+        {/* Listing ID + DOM */}
+        <div className="mb-3 space-y-0.5">
+          {listingIdLabel ? (
+            <div className="text-sm">
+              <button
+                type="button"
+                className={cn(LISTING_ID_NAV_CLASS, "text-sm font-mono font-medium")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/property/${listing.id}`);
+                }}
+              >
+                {listingIdLabel}
+              </button>
+            </div>
+          ) : null}
+          <p className="text-xs text-muted-foreground">DOM {daysOnMarket}</p>
+        </div>
 
         {/* Divider */}
         <div className="my-3 border-t border-neutral-100" />

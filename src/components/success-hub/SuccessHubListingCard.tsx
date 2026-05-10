@@ -19,7 +19,7 @@ export function SuccessHubListingCard({ hideMlsMeta, className, ...rest }: Succe
         {...rest}
         viewMode="compact"
         showActions={false}
-        hideMlsMeta={hideMlsMeta ?? true}
+        hideMlsMeta={hideMlsMeta ?? false}
         isFavorites
       />
     </div>

@@ -26,6 +26,8 @@ interface MarketListingRow {
   photos: unknown;
   status: string;
   created_at: string;
+  active_date: string | null;
+  listing_number: string | null;
   agent_id: string;
   brokerage: string;
   neighborhood: string | null;
@@ -71,6 +73,8 @@ export function MarketActivityRow() {
       photos: row.photos,
       status: row.status,
       created_at: row.created_at,
+      active_date: typeof row.active_date === "string" ? row.active_date : null,
+      listing_number: typeof row.listing_number === "string" ? row.listing_number : null,
       agent_id: row.agent_id,
       brokerage: companyMap[row.agent_id] || "AAC Agent",
       neighborhood: typeof row.neighborhood === "string" ? row.neighborhood : null,
@@ -137,7 +141,7 @@ export function MarketActivityRow() {
             .select(`
               id, address, city, state, zip_code, price, property_type,
               bedrooms, bathrooms, square_feet, neighborhood,
-              photos, status, created_at, agent_id
+              photos, status, created_at, active_date, listing_number, agent_id
             `)
             .eq("id", newRow.id)
             .maybeSingle();
