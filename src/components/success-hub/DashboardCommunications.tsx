@@ -52,16 +52,18 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
         <button
           type="button"
           onClick={() => navigate("/messages")}
-          className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+          className="shrink-0 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
         >
           View all →
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         {conversations.length === 0 ? (
-          <div className={`text-center text-sm text-neutral-500 ${compact || inboxPreview ? "py-4" : "py-8"}`}>
-            No messages yet.
+          <div
+            className={`rounded-lg border border-dashed border-neutral-200 px-4 text-center text-sm text-neutral-500 ${compact || inboxPreview ? "py-6" : "py-10"}`}
+          >
+            No messages yet. Threads appear here when you start a conversation.
           </div>
         ) : inboxPreview ? (
           <ul className="max-h-[420px] space-y-1 overflow-y-auto overscroll-contain px-2 py-2">
@@ -72,7 +74,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
               return (
                 <li
                   key={c.conversation_id}
-                  className="flex cursor-pointer gap-2.5 rounded-xl border border-transparent bg-white px-3 py-2 transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
+                  className="flex cursor-pointer gap-2.5 rounded-lg border border-transparent bg-white px-3 py-2 transition-colors duration-150 hover:border-neutral-200 hover:bg-neutral-50/90"
                   onClick={() =>
                     navigate(`/messages/${c.conversation_id}`, {
                       state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
@@ -83,7 +85,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                     {c.other_headshot_url && (
                       <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
                     )}
-                    <AvatarFallback className="bg-[#50C878] text-[10px] font-medium text-white">
+                    <AvatarFallback className="bg-neutral-200 text-[10px] font-medium text-neutral-700">
                       {getInitials(c.other_name)}
                     </AvatarFallback>
                   </Avatar>
@@ -104,7 +106,10 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                         {truncated || "No preview yet."}
                       </p>
                       {c.is_unread ? (
-                        <Badge className="shrink-0 border-0 bg-[#50C878] px-1.5 py-0 text-[10px] font-semibold text-white hover:bg-[#45b56a]">
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 border-neutral-200 bg-neutral-100 px-1.5 py-0 text-[10px] font-semibold text-neutral-800"
+                        >
                           New
                         </Badge>
                       ) : null}
@@ -119,7 +124,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
             {rows.map((c) => (
               <li
                 key={c.conversation_id}
-                className={`flex cursor-pointer items-center gap-2.5 rounded-xl border border-transparent bg-white transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md md:gap-3 ${compact ? "px-3 py-2" : "px-4 py-3"}`}
+                className={`flex cursor-pointer items-center gap-2.5 rounded-lg border border-transparent bg-white transition-colors duration-150 hover:border-neutral-200 hover:bg-neutral-50/90 md:gap-3 ${compact ? "px-3 py-2" : "px-4 py-3"}`}
                 onClick={() =>
                   navigate(`/messages/${c.conversation_id}`, {
                     state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
@@ -130,7 +135,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                   {c.other_headshot_url && (
                     <AvatarImage src={c.other_headshot_url} alt={c.other_name ?? ""} />
                   )}
-                  <AvatarFallback className="bg-[#50C878] text-[10px] font-medium text-white md:text-xs">
+                  <AvatarFallback className="bg-neutral-200 text-[10px] font-medium text-neutral-700 md:text-xs">
                     {getInitials(c.other_name)}
                   </AvatarFallback>
                 </Avatar>
@@ -147,7 +152,10 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {c.is_unread && (
-                    <Badge className="border-0 bg-[#50C878] px-1 py-0 text-[9px] font-medium text-white hover:bg-[#45b56a] md:text-[10px]">
+                    <Badge
+                      variant="outline"
+                      className="border-neutral-200 bg-neutral-100 px-1 py-0 text-[9px] font-semibold text-neutral-800 md:text-[10px]"
+                    >
                       New
                     </Badge>
                   )}

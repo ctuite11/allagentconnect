@@ -46,15 +46,17 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
         <button
           type="button"
           onClick={() => navigate("/success-hub/buyers")}
-          className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+          className="shrink-0 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
         >
           View all →
         </button>
       </div>
 
-      <div className="max-h-[420px] overflow-y-auto overscroll-contain rounded-xl border border-zinc-100 bg-white">
+      <div className="max-h-[420px] overflow-y-auto overscroll-contain rounded-xl border border-neutral-200 bg-white shadow-sm">
         {buyers.length === 0 ? (
-          <div className="py-5 text-center text-sm text-neutral-500">No buyers yet.</div>
+          <div className="px-3 py-8 text-center text-sm text-neutral-500">
+            No buyers yet. Add contacts and relationships to see them here.
+          </div>
         ) : (
           <>
             <div className="md:hidden">
@@ -63,7 +65,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                   <li key={b.id}>
                     <button
                       type="button"
-                      className="w-full cursor-pointer px-3 py-2 text-left transition-colors duration-150 hover:bg-zinc-50/90 active:bg-zinc-50"
+                      className="w-full cursor-pointer px-3 py-2 text-left transition-colors duration-150 hover:bg-neutral-50/90 active:bg-neutral-50"
                       onClick={() => openBuyer(b.id)}
                     >
                       <span className="block truncate text-[13px] font-medium text-neutral-900">{displayName(b)}</span>
@@ -84,7 +86,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
             <div className="hidden md:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-100 bg-zinc-50/50">
+                  <tr className="border-b border-neutral-100 bg-neutral-50/80">
                     <th className="px-2.5 py-1.5 text-left text-[11px] font-medium text-neutral-500">Name</th>
                     <th className="px-2.5 py-1.5 text-left text-[11px] font-medium text-neutral-500">Phone</th>
                     <th className="px-2.5 py-1.5 text-left text-[11px] font-medium text-neutral-500">Email</th>
@@ -96,13 +98,13 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-neutral-100">
                   {buyers.map((b) => (
                     <tr
                       key={b.id}
                       role="button"
                       tabIndex={0}
-                      className="cursor-pointer bg-white outline-none transition-colors duration-150 hover:bg-zinc-50/90 focus-visible:bg-zinc-50/90 focus-visible:ring-2 focus-visible:ring-zinc-200 focus-visible:ring-inset"
+                      className="cursor-pointer bg-white outline-none transition-colors duration-150 hover:bg-neutral-50/90 focus-visible:bg-neutral-50/90 focus-visible:ring-2 focus-visible:ring-zinc-300/80 focus-visible:ring-inset"
                       onClick={() => openBuyer(b.id)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {

@@ -154,7 +154,7 @@ export function MarketActivityRow() {
       <button
         type="button"
         onClick={() => navigate("/browse")}
-        className="shrink-0 text-sm font-medium text-[#0E56F5] hover:underline"
+        className="shrink-0 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
       >
         Search
       </button>
@@ -183,14 +183,14 @@ export function MarketActivityRow() {
     return (
       <div className="min-w-0">
         {headerBlock}
-        <div className="rounded-xl border border-dashed border-zinc-100 bg-white px-4 py-4 text-center">
+        <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-4 text-center">
           <p className="text-sm text-neutral-600">No new market activity yet.</p>
           <button
             type="button"
             onClick={() => navigate("/browse")}
-            className="mt-2 text-sm font-medium text-[#0E56F5] hover:underline"
+            className="mt-2 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
           >
-            Search
+            Search listings
           </button>
         </div>
       </div>

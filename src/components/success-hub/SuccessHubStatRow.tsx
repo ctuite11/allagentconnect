@@ -3,7 +3,7 @@ import { Home, Layers, MessageSquare, Users } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 const shell =
-  "rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-150 hover:-translate-y-[1px] hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]";
+  "rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition-[box-shadow,border-color] duration-150 hover:border-neutral-300 hover:shadow-md";
 
 type SuccessHubStatRowProps = {
   summary: SuccessHubSummary;
@@ -69,9 +69,9 @@ export function SuccessHubStatRow({ summary }: SuccessHubStatRowProps) {
           key={key}
           type="button"
           onClick={onClick}
-          className={`${shell} text-left outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/30 focus-visible:ring-offset-2`}
+          className={`${shell} text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2`}
         >
-          <Icon className="h-4 w-4 text-[hsl(160_84%_39%)]" aria-hidden />
+          <Icon className="h-4 w-4 text-neutral-500" aria-hidden />
           <div className="mt-2 text-xl font-semibold tracking-tight text-neutral-900">{value}</div>
           <div className="mt-0.5 text-sm font-medium text-neutral-500">{label}</div>
           <div className="mt-1 text-xs text-neutral-400">{subtle}</div>
