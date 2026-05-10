@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import ListingCard from "@/components/ListingCard";
-import { BedDouble, Bath, MapPin, Search as SearchIcon, SlidersHorizontal, Ruler, ChevronDown } from "lucide-react";
+import { MapPin, Search as SearchIcon, SlidersHorizontal, ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { supabase } from "@/integrations/supabase/client";
 import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
@@ -19,7 +18,6 @@ import {
   salePriceStepValues,
 } from "@/lib/buyerSearchRentFilters";
 import { toast } from "sonner";
-import FavoriteButton from "@/components/FavoriteButton";
 import {
   type ListingRecord,
   type AgentOfficeRecord,
@@ -104,13 +102,13 @@ function buildQueryParams(criteria: SearchCriteria): URLSearchParams {
 }
 
 export default function BuyerMapSearch() {
-  const navigate = useNavigate();
   const [criteria, setCriteria] = useState<SearchCriteria>(() => ({
     ...defaultSaleToolbarCriteria(),
     ...parseCriteriaFromUrl(window.location.search),
   }));
   const [locationInput, setLocationInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   const [listings, setListings] = useState<ListingRecord[]>([]);
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
@@ -632,93 +630,99 @@ export default function BuyerMapSearch() {
     sessionStorage.setItem("buyer_last_search_url", url);
   }, [criteria]);
 
-  useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        setLoading(true);
+  const fetchListings = useCallback(async () => {
+    try {
+      setFetchError(false);
+      setLoading(true);
 
-        const queryParams: Parameters<typeof buildListingsQuery>[1] = {
-          listingType: criteria.listingType || "for_sale",
-          statuses: criteria.statuses,
-          propertyTypes: criteria.propertyTypes,
-          zipCode: criteria.zipCode,
-          state: criteria.state,
-          cities: criteria.towns,
-          neighborhoods: criteria.neighborhoods,
-        };
+      const queryParams: Parameters<typeof buildListingsQuery>[1] = {
+        listingType: criteria.listingType || "for_sale",
+        statuses: criteria.statuses,
+        propertyTypes: criteria.propertyTypes,
+        zipCode: criteria.zipCode,
+        state: criteria.state,
+        cities: criteria.towns,
+        neighborhoods: criteria.neighborhoods,
+      };
 
-        if (criteria.minPrice) queryParams.minPrice = parseFloat(criteria.minPrice);
-        if (criteria.maxPrice) queryParams.maxPrice = parseFloat(criteria.maxPrice);
-        if (criteria.bedrooms) queryParams.bedrooms = parseInt(criteria.bedrooms, 10);
-        if (criteria.bathrooms) queryParams.bathrooms = parseFloat(criteria.bathrooms);
-        if (criteria.minLivingArea) queryParams.minSqft = parseFloat(criteria.minLivingArea);
-        if (criteria.maxLivingArea) queryParams.maxSqft = parseFloat(criteria.maxLivingArea);
+      if (criteria.minPrice) queryParams.minPrice = parseFloat(criteria.minPrice);
+      if (criteria.maxPrice) queryParams.maxPrice = parseFloat(criteria.maxPrice);
+      if (criteria.bedrooms) queryParams.bedrooms = parseInt(criteria.bedrooms, 10);
+      if (criteria.bathrooms) queryParams.bathrooms = parseFloat(criteria.bathrooms);
+      if (criteria.minLivingArea) queryParams.minSqft = parseFloat(criteria.minLivingArea);
+      if (criteria.maxLivingArea) queryParams.maxSqft = parseFloat(criteria.maxLivingArea);
 
-        if (isDcmlsHost()) queryParams.dcmlsOnly = true;
+      if (isDcmlsHost()) queryParams.dcmlsOnly = true;
 
-        const { data, error } = await buildListingsQuery(supabase, queryParams).limit(250);
-        if (error) throw error;
+      const { data, error } = await buildListingsQuery(supabase, queryParams).limit(250);
+      if (error) throw error;
 
-        const baseListings = (data || []) as ListingRecord[];
-        const agentIds = Array.from(
-          new Set(baseListings.map((listing) => listing.agent_id).filter((id): id is string => Boolean(id)))
-        );
+      const baseListings = (data || []) as ListingRecord[];
+      const agentIds = Array.from(
+        new Set(baseListings.map((listing) => listing.agent_id).filter((id): id is string => Boolean(id)))
+      );
 
-        if (agentIds.length === 0) {
-          setListings(baseListings);
-          setSessionKeptIds(new Set());
-          setShowKeptOnly(false);
-          return;
-        }
-
-        const { data: agentOfficeRows, error: agentOfficeError } = await supabase
-          .from("agent_profiles")
-          .select("id, company, office_name")
-          .in("id", agentIds);
-
-        if (agentOfficeError) {
-          setListings(baseListings);
-          setSessionKeptIds(new Set());
-          setShowKeptOnly(false);
-          return;
-        }
-
-        const officeByAgentId = new Map(
-          ((agentOfficeRows || []) as AgentOfficeRecord[]).map((row) => [
-            row.id,
-            row.office_name?.trim() || row.company?.trim() || null,
-          ])
-        );
-
-        const hydratedListings = baseListings.map((listing) => {
-          const fallbackOffice = listing.agent_id ? officeByAgentId.get(listing.agent_id) || null : null;
-          return {
-            ...listing,
-            list_office: listing.list_office?.trim() || fallbackOffice,
-          };
-        });
-
-        setListings(hydratedListings);
+      if (agentIds.length === 0) {
+        setListings(baseListings);
         setSessionKeptIds(new Set());
         setShowKeptOnly(false);
-      } catch (error) {
-        console.error(error);
-        toast.error("Unable to load homes right now");
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchListings();
+      const { data: agentOfficeRows, error: agentOfficeError } = await supabase
+        .from("agent_profiles")
+        .select("id, company, office_name")
+        .in("id", agentIds);
+
+      if (agentOfficeError) {
+        setListings(baseListings);
+        setSessionKeptIds(new Set());
+        setShowKeptOnly(false);
+        return;
+      }
+
+      const officeByAgentId = new Map(
+        ((agentOfficeRows || []) as AgentOfficeRecord[]).map((row) => [
+          row.id,
+          row.office_name?.trim() || row.company?.trim() || null,
+        ])
+      );
+
+      const hydratedListings = baseListings.map((listing) => {
+        const fallbackOffice = listing.agent_id ? officeByAgentId.get(listing.agent_id) || null : null;
+        return {
+          ...listing,
+          list_office: listing.list_office?.trim() || fallbackOffice,
+        };
+      });
+
+      setListings(hydratedListings);
+      setSessionKeptIds(new Set());
+      setShowKeptOnly(false);
+    } catch (error) {
+      console.error(error);
+      setFetchError(true);
+      toast.error("Unable to load homes right now");
+    } finally {
+      setLoading(false);
+    }
   }, [criteria]);
 
+  useEffect(() => {
+    void fetchListings();
+  }, [fetchListings]);
+
+  const retryFetch = () => {
+    void fetchListings();
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-14 z-40 bg-white/92 backdrop-blur supports-[backdrop-filter]:bg-white/84">
-        <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7 pt-6 pb-3">
-            <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 md:gap-4">
+    <div className="flex min-h-screen flex-col bg-white">
+      <header className="sticky top-14 z-40 border-b border-neutral-200 bg-white">
+        <div className="mx-auto w-full max-w-[1800px] px-4 pt-4 pb-3 md:px-7 md:pt-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:flex-nowrap lg:gap-3">
               <div className="relative w-full max-w-[420px] min-w-0 shrink-0">
-                <SearchIcon className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <SearchIcon className="pointer-events-none h-4 w-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   value={locationInput}
                   onChange={(e) => setLocationInput(e.target.value)}
@@ -726,17 +730,23 @@ export default function BuyerMapSearch() {
                     if (e.key === "Enter") applyLocationInput();
                   }}
                   placeholder="City, neighborhood, or ZIP"
-                  className="pl-9 h-9 text-[13px] border-zinc-200/80 rounded-md"
+                  className="h-9 border-neutral-200 bg-white pl-9 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors focus-visible:ring-neutral-300/50"
                 />
               </div>
 
-              <div className="inline-flex h-9 items-center rounded-md border border-zinc-200/80 bg-zinc-50 p-0.5 ring-1 ring-zinc-100/90 shrink-0">
+              <div
+                className="inline-flex h-9 shrink-0 items-center rounded-lg border border-neutral-200 bg-white p-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                role="group"
+                aria-label="Listing type"
+              >
                 <button
-                  className={`h-8 min-w-[86px] px-3 rounded-[5px] inline-flex items-center justify-center text-[13px] font-semibold leading-none tracking-[0.01em] transition-all ${
+                  type="button"
+                  className={cn(
+                    "h-8 min-w-[86px] rounded-md px-3 text-[13px] font-semibold leading-none tracking-tight transition-colors duration-200 ease-out",
                     criteria.listingType === "for_sale"
-                      ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
-                      : "text-zinc-600 hover:text-zinc-900"
-                  }`}
+                      ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+                  )}
                   onClick={() =>
                     setCriteria((prev) => ({
                       ...prev,
@@ -750,11 +760,13 @@ export default function BuyerMapSearch() {
                   For Sale
                 </button>
                 <button
-                  className={`h-8 min-w-[86px] px-3 rounded-[5px] inline-flex items-center justify-center text-[13px] font-semibold leading-none tracking-[0.01em] transition-all ${
+                  type="button"
+                  className={cn(
+                    "h-8 min-w-[86px] rounded-md px-3 text-[13px] font-semibold leading-none tracking-tight transition-colors duration-200 ease-out",
                     criteria.listingType === "for_rent"
-                      ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
-                      : "text-zinc-600 hover:text-zinc-900"
-                  }`}
+                      ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+                  )}
                   onClick={() =>
                     setCriteria((prev) => ({
                       ...prev,
@@ -782,14 +794,17 @@ export default function BuyerMapSearch() {
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 min-w-[124px] rounded-md border-zinc-200/80 px-3 text-[12px] text-zinc-700 justify-between">
+                  <Button
+                    variant="outline"
+                    className="h-9 min-w-[124px] justify-between rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300 hover:bg-neutral-50/90"
+                  >
                     <span>{priceButtonLabel}</span>
-                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${priceOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform ${priceOpen ? "rotate-180" : ""}`} />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
-                  className="w-[500px] rounded-2xl border-zinc-200/80 bg-white p-6 shadow-[0_16px_48px_rgba(15,23,42,0.14)]"
+                  className="w-[500px] rounded-2xl border-neutral-200 bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
                       setPriceOpen(false);
@@ -801,12 +816,12 @@ export default function BuyerMapSearch() {
                   }}
                 >
                   {/* Header */}
-                  <p className="text-[11px] font-bold tracking-[0.08em] uppercase text-zinc-500 mb-1">
-                    {isRentSearch ? "MONTHLY RENT" : "LIST PRICE"}
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500">
+                    {isRentSearch ? "Monthly rent" : "List price"}
                   </p>
 
                   {/* Histogram + Slider container */}
-                  <div className="mt-4 rounded-xl border border-zinc-200/70 bg-zinc-50/50 px-4 py-4">
+                  <div className="mt-4 rounded-xl border border-neutral-200 bg-white px-4 py-4 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
                     <div className="flex h-6 items-center gap-1">
                       {sliderChips.map((chip) => {
                         const chipIndex = chip.ratio * Math.max(1, priceStepValues.length - 1);
@@ -814,9 +829,10 @@ export default function BuyerMapSearch() {
                         return (
                           <span
                             key={chip.key}
-                            className={`block h-2.5 flex-1 rounded-full ${
-                              active ? "bg-[#0E56F5] opacity-100" : "bg-zinc-300 opacity-45"
-                            }`}
+                            className={cn(
+                              "block h-2 flex-1 rounded-full transition-colors",
+                              active ? "bg-neutral-700" : "bg-neutral-200",
+                            )}
                           />
                         );
                       })}
@@ -838,13 +854,13 @@ export default function BuyerMapSearch() {
                         }}
                         className="relative flex w-full touch-none select-none items-center"
                       >
-                          <SliderPrimitive.Track className="relative h-[3px] w-full grow overflow-hidden rounded-full bg-zinc-200">
-                          <SliderPrimitive.Range className="absolute h-full bg-[#0E56F5]" />
+                          <SliderPrimitive.Track className="relative h-[3px] w-full grow overflow-hidden rounded-full bg-neutral-200">
+                          <SliderPrimitive.Range className="absolute h-full bg-neutral-700" />
                         </SliderPrimitive.Track>
-                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-[3px] border-[#0E56F5] bg-white shadow-[0_2px_8px_rgba(14,86,245,0.35)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5] focus-visible:ring-offset-1" />
-                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-[3px] border-[#0E56F5] bg-white shadow-[0_2px_8px_rgba(14,86,245,0.35)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5] focus-visible:ring-offset-1" />
+                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-neutral-700 bg-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/50 focus-visible:ring-offset-2" />
+                        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-neutral-700 bg-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/50 focus-visible:ring-offset-2" />
                       </SliderPrimitive.Root>
-                      <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-zinc-600">
+                      <div className="mt-2 flex items-center justify-between text-[11px] font-medium text-neutral-600">
                         {isRentSearch ? (
                           <>
                             <span>$500</span>
@@ -864,7 +880,7 @@ export default function BuyerMapSearch() {
                   <div className="mt-5">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex-1 space-y-1">
-                        <label className="text-[11px] font-medium text-zinc-500">Min price</label>
+                        <label className="text-[11px] font-medium text-neutral-500">Min price</label>
                         <Input
                           placeholder="No minimum"
                           value={priceFieldFocus.min ? priceDraft.min : formatCurrencyDraft(priceDraft.min, "min")}
@@ -874,11 +890,11 @@ export default function BuyerMapSearch() {
                             setPriceFieldFocus((prev) => ({ ...prev, min: false }));
                             normalizePriceDraft("min");
                           }}
-                          className="h-12 text-sm rounded-lg border-zinc-300"
+                          className="h-11 rounded-lg border-neutral-200 text-sm shadow-none focus-visible:ring-neutral-300/50"
                         />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <label className="text-[11px] font-medium text-zinc-500">Max price</label>
+                        <label className="text-[11px] font-medium text-neutral-500">Max price</label>
                         <Input
                           placeholder="No maximum"
                           value={priceFieldFocus.max ? priceDraft.max : formatCurrencyDraft(priceDraft.max, "max")}
@@ -888,10 +904,10 @@ export default function BuyerMapSearch() {
                             setPriceFieldFocus((prev) => ({ ...prev, max: false }));
                             normalizePriceDraft("max");
                           }}
-                          className="h-12 text-sm rounded-lg border-zinc-300"
+                          className="h-11 rounded-lg border-neutral-200 text-sm shadow-none focus-visible:ring-neutral-300/50"
                         />
                         {isMaxAtTop && !priceFieldFocus.max && (
-                          <p className="text-[10px] text-zinc-400">No maximum</p>
+                          <p className="text-[10px] text-neutral-400">No maximum</p>
                         )}
                       </div>
                     </div>
@@ -902,7 +918,7 @@ export default function BuyerMapSearch() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-11 flex-1 rounded-lg border-zinc-300 text-zinc-700 text-sm font-medium hover:bg-zinc-50"
+                      className="h-10 flex-1 rounded-lg border-neutral-200 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
                       onClick={() => {
                         setPriceDraft({ min: String(priceFloor), max: String(priceCeil) });
                         setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
@@ -913,7 +929,7 @@ export default function BuyerMapSearch() {
                     </Button>
                     <Button
                       type="button"
-                      className="h-11 flex-1 rounded-lg bg-[#0E56F5] hover:bg-[#0B46CC] text-sm font-semibold"
+                      className="h-10 flex-1 rounded-lg bg-neutral-900 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800"
                       onClick={applyPriceDraft}
                     >
                       Done
@@ -932,14 +948,17 @@ export default function BuyerMapSearch() {
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 min-w-[132px] rounded-md border-zinc-200/80 px-3 text-[12px] text-zinc-700 justify-between">
+                  <Button
+                    variant="outline"
+                    className="h-9 min-w-[132px] justify-between rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
+                  >
                     <span>{bedsBathsButtonLabel}</span>
-                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${bedsBathsOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform ${bedsBathsOpen ? "rotate-180" : ""}`} />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
-                  className="w-[340px] rounded-xl border-zinc-200 p-4"
+                  className="w-[340px] rounded-xl border-neutral-200 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
                       setBedsBathsOpen(false);
@@ -950,7 +969,7 @@ export default function BuyerMapSearch() {
                     }
                   }}
                 >
-                  <p className="text-sm font-semibold text-zinc-900">Number of Bedrooms</p>
+                  <p className="text-sm font-semibold text-neutral-900">Bedrooms</p>
                   <div className="mt-2 grid grid-cols-6 gap-1">
                     {BED_PRESETS.map((preset) => {
                       const selected = bedsBathsDraft.bedrooms === preset.bedrooms;
@@ -958,11 +977,12 @@ export default function BuyerMapSearch() {
                         <button
                           key={preset.label}
                           type="button"
-                          className={`h-8 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5] focus-visible:ring-offset-1 ${
+                          className={cn(
+                            "h-8 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/45 focus-visible:ring-offset-2",
                             selected
-                              ? "border-[#0E56F5] bg-white text-[#0E56F5]"
-                              : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"
-                          }`}
+                              ? "border-neutral-900 bg-white text-neutral-900"
+                              : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300",
+                          )}
                           onPointerDown={() => setBedsBathsDraft((prev) => ({ ...prev, bedrooms: preset.bedrooms }))}
                           onClick={() => setBedsBathsDraft((prev) => ({ ...prev, bedrooms: preset.bedrooms }))}
                         >
@@ -971,7 +991,7 @@ export default function BuyerMapSearch() {
                       );
                     })}
                   </div>
-                  <p className="mt-4 text-sm font-semibold text-zinc-900">Number of Bathrooms</p>
+                  <p className="mt-4 text-sm font-semibold text-neutral-900">Bathrooms</p>
                   <div className="mt-2 grid grid-cols-6 gap-1">
                     {BATH_PRESETS.map((option) => {
                       const selected =
@@ -981,11 +1001,12 @@ export default function BuyerMapSearch() {
                         <button
                           key={option}
                           type="button"
-                          className={`h-8 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5] focus-visible:ring-offset-1 ${
+                          className={cn(
+                            "h-8 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/45 focus-visible:ring-offset-2",
                             selected
-                              ? "border-[#0E56F5] bg-white text-[#0E56F5]"
-                              : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"
-                          }`}
+                              ? "border-neutral-900 bg-white text-neutral-900"
+                              : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300",
+                          )}
                           onPointerDown={() =>
                             setBedsBathsDraft((prev) => ({ ...prev, bathrooms: option === "Any" ? "" : option.replace("+", "") }))
                           }
@@ -1002,7 +1023,7 @@ export default function BuyerMapSearch() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-9 flex-1 transition-transform active:scale-[0.98]"
+                      className="h-9 flex-1 border-neutral-200"
                       onClick={() => {
                         setBedsBathsDraft({ bedrooms: "", bathrooms: "" });
                         setCriteria((prev) => ({ ...prev, bedrooms: "", bathrooms: "" }));
@@ -1013,7 +1034,7 @@ export default function BuyerMapSearch() {
                     </Button>
                     <Button
                       type="button"
-                      className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC] transition-transform active:scale-[0.98]"
+                      className="h-9 flex-1 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
                       onClick={applyBedsBathsDraft}
                     >
                       Apply
@@ -1033,14 +1054,17 @@ export default function BuyerMapSearch() {
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 min-w-[144px] rounded-md border-zinc-200/80 px-3 text-[12px] text-zinc-700 justify-between">
+                  <Button
+                    variant="outline"
+                    className="h-9 min-w-[144px] justify-between rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
+                  >
                     <span>{propertyTypeButtonLabel}</span>
-                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
-                  className="w-[320px] rounded-xl border-zinc-200 p-4"
+                  className="w-[320px] rounded-xl border-neutral-200 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
                       setPropertyTypeOpen(false);
@@ -1051,16 +1075,17 @@ export default function BuyerMapSearch() {
                     }
                   }}
                 >
-                  <p className="text-sm font-semibold text-zinc-900">Home Type</p>
+                  <p className="text-sm font-semibold text-neutral-900">Home type</p>
                   <div className="mt-2 space-y-2">
                     {PROPERTY_TYPE_OPTIONS.filter((type) => type !== "Any").map((type) => {
                       const checked = propertyTypesDraft.includes(type);
                       return (
                         <label
                           key={type}
-                          className={`flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-zinc-700 transition-colors active:bg-zinc-100 ${
-                            checked ? "bg-[#0E56F5]/5" : "hover:bg-zinc-50"
-                          }`}
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-50",
+                            checked && "bg-neutral-50 ring-1 ring-neutral-200/80",
+                          )}
                         >
                           <Checkbox
                             checked={checked}
@@ -1079,7 +1104,7 @@ export default function BuyerMapSearch() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-9 flex-1 transition-transform active:scale-[0.98]"
+                      className="h-9 flex-1 border-neutral-200"
                       onClick={() => {
                         setPropertyTypesDraft([]);
                         setCriteria((prev) => ({ ...prev, propertyTypes: [] }));
@@ -1090,7 +1115,7 @@ export default function BuyerMapSearch() {
                     </Button>
                     <Button
                       type="button"
-                      className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC] transition-transform active:scale-[0.98]"
+                      className="h-9 flex-1 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
                       onClick={applyPropertyTypesDraft}
                     >
                       Apply
@@ -1102,18 +1127,21 @@ export default function BuyerMapSearch() {
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 rounded-md border-zinc-200/80 text-[12px] text-zinc-700">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    More Filters
+                  <Button
+                    variant="outline"
+                    className="h-9 rounded-md border-neutral-200 bg-white text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
+                  >
+                    <SlidersHorizontal className="mr-2 h-4 w-4 text-neutral-600" />
+                    More filters
                     {activeFilterCount > 0 && (
-                      <Badge className="ml-2 bg-zinc-900 text-white hover:bg-zinc-900">{activeFilterCount}</Badge>
+                      <Badge className="ml-2 bg-neutral-900 text-[11px] font-medium text-white hover:bg-neutral-900">{activeFilterCount}</Badge>
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-[320px] p-4 rounded-xl border-zinc-200">
+                <PopoverContent align="end" className="w-[320px] rounded-xl border-neutral-200 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm font-semibold text-zinc-900">Bathrooms</p>
+                      <p className="text-sm font-semibold text-neutral-900">Bathrooms</p>
                       <Select
                         value={selectedBaths}
                         onValueChange={(value) => {
@@ -1123,7 +1151,7 @@ export default function BuyerMapSearch() {
                           }));
                         }}
                       >
-                        <SelectTrigger className="mt-2 h-9 border-zinc-200/80">
+                        <SelectTrigger className="mt-2 h-9 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus:ring-neutral-300/50">
                           <SelectValue placeholder="Baths" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1143,7 +1171,7 @@ export default function BuyerMapSearch() {
                     </div>
 
                     <div>
-                      <p className="text-sm font-semibold text-zinc-900">Status</p>
+                      <p className="text-sm font-semibold text-neutral-900">Status</p>
                       <div className="mt-2 space-y-2">
                         {[
                           { value: "coming_soon", label: "Coming Soon" },
@@ -1175,19 +1203,19 @@ export default function BuyerMapSearch() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-xs text-zinc-600">Min Sqft</Label>
+                        <Label className="text-xs text-neutral-600">Min sqft</Label>
                         <Input
                           value={criteria.minLivingArea || ""}
                           onChange={(e) => setCriteria((prev) => ({ ...prev, minLivingArea: e.target.value }))}
-                          className="h-9"
+                          className="h-9 border-neutral-200"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-zinc-600">Max Sqft</Label>
+                        <Label className="text-xs text-neutral-600">Max sqft</Label>
                         <Input
                           value={criteria.maxLivingArea || ""}
                           onChange={(e) => setCriteria((prev) => ({ ...prev, maxLivingArea: e.target.value }))}
-                          className="h-9"
+                          className="h-9 border-neutral-200"
                         />
                       </div>
                     </div>
@@ -1197,58 +1225,59 @@ export default function BuyerMapSearch() {
 
               <Button
                 variant="outline"
-                  className="h-9 rounded-md border-zinc-200/80 text-[12px] text-zinc-700"
+                className="h-9 rounded-md border-neutral-200 bg-white text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                 onClick={() => toast.info("Save search is coming soon")}
               >
-                Save Search
+                Save search
               </Button>
 
               <Button
                 variant="outline"
-                className="h-9 rounded-md border-zinc-200/80 text-[12px] text-zinc-700"
+                className="h-9 rounded-md border-neutral-200 bg-white text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                 type="button"
                 onClick={() =>
                   setCriteria(isRentSearch ? defaultRentToolbarCriteria() : defaultSaleToolbarCriteria())
                 }
               >
-                Clear Filters
+                Clear filters
               </Button>
             </div>
         </div>
-      </div>
+      </header>
 
-      <main className="mx-auto w-full max-w-[1800px] px-5 md:px-7 py-3">
-        <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
+      <main className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-3 md:px-7 md:py-4">
+        <div className="flex h-auto min-h-0 flex-col-reverse gap-3 sm:gap-4 lg:grid lg:h-[calc(100dvh-8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:gap-4">
+          <section
+            className={cn(
+              buyerFavoritesSplitPane,
+              "flex h-[50dvh] min-h-0 flex-col sm:h-[54dvh] lg:sticky lg:top-[6.25rem] lg:h-full lg:min-h-0 lg:self-start",
+            )}
+          >
             {loading ? (
-              <div className="flex h-full items-center justify-center bg-white">
-                <AacMonogramLoader
-                  variant="inline"
-                  className="gap-2"
-                  message="Loading listings..."
-                />
+              <div className="flex min-h-0 flex-1 flex-col gap-2 bg-white p-3">
+                <Skeleton className="h-8 w-full rounded-lg bg-neutral-100" />
+                <Skeleton className="min-h-0 flex-1 rounded-xl bg-neutral-100" />
+                <div className="flex shrink-0 gap-2 pt-1">
+                  <Skeleton className="h-9 flex-1 rounded-lg bg-neutral-100" />
+                  <Skeleton className="h-9 w-24 rounded-lg bg-neutral-100" />
+                </div>
               </div>
             ) : !shouldUseLiveMap ? (
-              <div className="h-full flex items-center justify-center px-8 bg-gradient-to-b from-zinc-50 to-white">
-                <div className="w-full max-w-md rounded-2xl border border-zinc-200/80 bg-white/80 shadow-[0_14px_32px_rgba(15,23,42,0.05)] px-6 py-7 text-center">
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200">
+              <div className="flex min-h-0 flex-1 items-center justify-center bg-white px-6 py-10">
+                <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white px-6 py-7 text-center shadow-sm">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 shadow-sm">
                     <MapPin className="h-5 w-5" />
                   </div>
-                  <p className="text-sm font-medium text-zinc-700">Map Preview Unavailable</p>
-                  <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-5">
+                  <p className="text-sm font-semibold text-neutral-900">Map unavailable</p>
+                  <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-neutral-500">
                   {mapsKeyAvailable && import.meta.env.DEV && isLocalDevHost
-                    ? "Listings are available now. Your current Google Maps key does not allow localhost, so the map is shown as a preview placeholder in local development."
-                    : "Listings are available now. Add a Google Maps key to enable the live map experience."}
+                    ? "Listings still load below. Your Google Maps key may not allow localhost in development."
+                    : "Listings still load below. Add a Google Maps API key to enable the live map."}
                   </p>
-                  <div className="mt-4 flex items-center justify-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
-                  </div>
                 </div>
               </div>
             ) : listings.length > 0 ? (
-              <div className="h-full">
+              <div className="h-full min-h-0 flex-1">
                 <PropertyMap
                   listings={displayListings}
                   highlightedListingId={hoveredListingId}
@@ -1258,39 +1287,65 @@ export default function BuyerMapSearch() {
                 />
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center px-8 bg-zinc-50/40">
-                <MapPin className="h-10 w-10 text-zinc-400 mb-3" />
-                <p className="text-sm text-zinc-600 max-w-md">
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center bg-white px-6 py-10 text-center">
+                <div className="max-w-md rounded-2xl border border-neutral-200 bg-white px-6 py-8 shadow-sm">
+                  <MapPin className="mx-auto mb-3 h-9 w-9 text-neutral-400" />
+                  <p className="text-[13px] leading-relaxed text-neutral-600">
                   {hasActiveFilters
-                    ? "No homes match your current filters. Try widening price or area to repopulate the map."
-                    : "Enter a location and set filters to begin exploring homes on the map."}
-                </p>
+                    ? "No homes match your filters on the map. Try widening price or area."
+                    : "Add a location or adjust filters to see homes on the map."}
+                  </p>
+                </div>
               </div>
             )}
           </section>
 
-          <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
-            <div className="shrink-0 border-b border-zinc-200/60 bg-white px-6 py-2.5">
-              <div className="flex flex-nowrap items-center justify-between gap-2 min-w-0">
-                <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900">
+          <section
+            className={cn(
+              buyerFavoritesSplitPane,
+              "flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:h-full lg:min-h-0",
+            )}
+          >
+            <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-2 sm:px-5 sm:py-2.5">
+              <div className="flex min-w-0 flex-nowrap items-center justify-between gap-2">
+                <p className="min-w-0 flex-1 truncate text-[13px] font-medium tabular-nums text-neutral-900">
                   {loading
                     ? "Results: —"
-                    : `Results: ${displayListings.length.toLocaleString()}`}
+                    : fetchError
+                      ? "Results: —"
+                      : `Results: ${displayListings.length.toLocaleString()}`}
                 </p>
               </div>
             </div>
 
-            <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
+            <div className="min-h-0 flex-1 px-4 py-3 sm:px-5 sm:py-4 lg:overflow-y-auto">
+              {fetchError && !loading && listings.length > 0 && (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                  <p className="min-w-0 text-[12px] leading-snug text-neutral-600">
+                    Couldn&apos;t refresh. Showing your previous results.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 shrink-0 border-neutral-200 text-[11px] font-medium"
+                    onClick={retryFetch}
+                  >
+                    Try again
+                  </Button>
+                </div>
+              )}
+
               {!loading && sortedListings.length > 0 && (
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className="mb-3 flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                     {visibleSelectionState.allVisible && (
                       <>
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="h-7 rounded-md px-2.5 text-xs"
+                          className="h-7 shrink-0 whitespace-nowrap rounded-md border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                           onClick={unselectAllVisible}
                         >
                           Unselect all
@@ -1299,7 +1354,7 @@ export default function BuyerMapSearch() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="h-7 rounded-md px-2.5 text-xs"
+                          className="h-7 shrink-0 whitespace-nowrap rounded-md border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                           onClick={shareVisibleSelected}
                         >
                           Share selected
@@ -1312,7 +1367,7 @@ export default function BuyerMapSearch() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="h-7 rounded-md px-2.5 text-xs"
+                          className="h-7 shrink-0 whitespace-nowrap rounded-md border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                           onClick={addAllVisible}
                         >
                           Select all
@@ -1321,7 +1376,12 @@ export default function BuyerMapSearch() {
                           type="button"
                           size="sm"
                           variant={showKeptOnly ? "default" : "outline"}
-                          className="h-7 rounded-md px-2.5 text-xs"
+                          className={cn(
+                            "h-7 shrink-0 whitespace-nowrap rounded-md px-2.5 text-[11px] font-medium",
+                            showKeptOnly
+                              ? "bg-neutral-900 text-white hover:bg-neutral-800"
+                              : "border-neutral-200 bg-white text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90",
+                          )}
                           onClick={() => setShowKeptOnly(true)}
                           aria-pressed={showKeptOnly}
                         >
@@ -1331,7 +1391,7 @@ export default function BuyerMapSearch() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="h-7 rounded-md px-2.5 text-xs"
+                          className="h-7 shrink-0 whitespace-nowrap rounded-md border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                           onClick={shareVisibleSelected}
                         >
                           Share selected
@@ -1343,7 +1403,7 @@ export default function BuyerMapSearch() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        className="h-7 rounded-md px-2.5 text-xs"
+                        className="h-7 shrink-0 whitespace-nowrap rounded-md border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 disabled:opacity-50"
                         onClick={addAllVisible}
                         disabled={displayListings.length === 0}
                       >
@@ -1354,8 +1414,7 @@ export default function BuyerMapSearch() {
                       <Button
                         type="button"
                         size="sm"
-                        variant="default"
-                        className="h-7 rounded-md px-2.5 text-xs"
+                        className="h-7 shrink-0 whitespace-nowrap rounded-md bg-neutral-900 px-2.5 text-[11px] font-medium text-white hover:bg-neutral-800"
                         onClick={() => setShowKeptOnly(false)}
                       >
                         Show all
@@ -1366,19 +1425,19 @@ export default function BuyerMapSearch() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        className="h-7 rounded-md px-2.5 text-xs"
+                        className="h-7 shrink-0 whitespace-nowrap rounded-md border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                         onClick={addSelectedListingsToFavorites}
                       >
-                        Add selected to favorites
+                        Add to favorites
                       </Button>
                     )}
                   </div>
-                  <div className="w-44 min-w-0 max-w-[55%] shrink-0 sm:w-48 sm:max-w-[50%]">
+                  <div className="w-full min-w-0 shrink-0 min-[480px]:w-44 min-[480px]:max-w-[50%]">
                     <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                      <SelectTrigger className="h-8 rounded-md border-zinc-200/80 text-xs">
+                      <SelectTrigger className="h-8 rounded-md border-neutral-200 bg-white text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus:ring-neutral-300/50">
                         <SelectValue placeholder="Sort" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-lg border-neutral-200 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
                         <SelectItem value="newest">Newest</SelectItem>
                         <SelectItem value="price_asc">Price: Low to High</SelectItem>
                         <SelectItem value="price_desc">Price: High to Low</SelectItem>
@@ -1388,18 +1447,50 @@ export default function BuyerMapSearch() {
                 </div>
               )}
               {loading ? (
-                <div className="py-10 text-center text-sm text-zinc-500">Loading listings...</div>
+                <div className="grid grid-cols-2 gap-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="space-y-2 rounded-xl border border-neutral-100 bg-white p-2">
+                      <Skeleton className="aspect-[4/3] w-full rounded-lg bg-neutral-100" />
+                      <Skeleton className="h-4 w-[85%] rounded-md bg-neutral-100" />
+                      <Skeleton className="h-3 w-[55%] rounded-md bg-neutral-100" />
+                    </div>
+                  ))}
+                </div>
+              ) : fetchError && listings.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-12 text-center shadow-sm">
+                  <p className="text-[13px] font-medium text-neutral-900">Couldn&apos;t load homes</p>
+                  <p className="mt-1 max-w-sm text-[13px] leading-relaxed text-neutral-500">
+                    Check your connection and try again.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="mt-5 h-8 rounded-md bg-neutral-900 px-4 text-[12px] font-medium text-white hover:bg-neutral-800"
+                    onClick={retryFetch}
+                  >
+                    Try again
+                  </Button>
+                </div>
               ) : sortedListings.length === 0 ? (
-                <div className="py-10 text-center text-sm text-zinc-500">No listings found for current filters.</div>
+                <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-12 text-center shadow-sm">
+                  <p className="text-[13px] text-neutral-600">No listings match your filters.</p>
+                  <p className="mt-1 text-[12px] text-neutral-500">Adjust location or price and search again.</p>
+                </div>
               ) : showKeptOnly && displayListings.length === 0 ? (
-                <div className="py-10 text-center text-sm text-zinc-500 px-3">
-                  <p>No kept homes in this view.</p>
-                  <Button type="button" variant="outline" className="mt-3" size="sm" onClick={() => setShowKeptOnly(false)}>
+                <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-10 text-center shadow-sm">
+                  <p className="text-[13px] text-neutral-600">No kept homes in this view.</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 h-8 border-neutral-200 text-[12px]"
+                    onClick={() => setShowKeptOnly(false)}
+                  >
                     Show all
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {displayListings.map((listing) => {
                     const isKept = sessionKeptIds.has(listing.id);
 
@@ -1431,8 +1522,8 @@ export default function BuyerMapSearch() {
 
       {shareModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-xl border border-zinc-200 bg-white p-4 shadow-xl">
-            <h3 className="text-base font-semibold text-zinc-900">Share selected listings</h3>
+          <div className="w-full max-w-2xl rounded-2xl border border-neutral-200 bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[15px] font-semibold text-neutral-900">Share selected listings</h3>
             <div className="mt-3 space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="share-to-email">To email</Label>
@@ -1463,11 +1554,16 @@ export default function BuyerMapSearch() {
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShareModalOpen(false)}>
+              <Button type="button" variant="outline" className="border-neutral-200" onClick={() => setShareModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="button" onClick={handleSendShareEmail} disabled={shareSending}>
-                Send Email
+              <Button
+                type="button"
+                className="bg-neutral-900 text-white hover:bg-neutral-800"
+                onClick={handleSendShareEmail}
+                disabled={shareSending}
+              >
+                Send email
               </Button>
             </div>
           </div>
