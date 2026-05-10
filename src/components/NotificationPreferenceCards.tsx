@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { aacStyles } from "@/ui/aacStyles";
+import { cn } from "@/lib/utils";
+
+const channelCard =
+  "cursor-pointer rounded-2xl border border-neutral-200 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-[border-color,box-shadow] duration-150 hover:border-neutral-300 hover:shadow-[0_4px_14px_rgba(0,0,0,0.06)]";
 
 interface NotificationPreferences {
   buyer_need: boolean;
@@ -148,15 +152,22 @@ export const NotificationPreferenceCards = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="h-[120px] rounded-2xl bg-zinc-100 animate-pulse"
-            />
-          ))}
-        </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-5 w-5 shrink-0 rounded-md bg-neutral-100" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-28 rounded-md bg-neutral-100" />
+                <Skeleton className="h-3 w-40 rounded-md bg-neutral-100" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <Skeleton className="h-8 w-20 rounded-full bg-neutral-100" />
+              <Skeleton className="h-6 w-24 rounded-full bg-neutral-100" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -172,14 +183,14 @@ export const NotificationPreferenceCards = () => {
             return (
               <div
                 key={card.key}
-                className={`${aacStyles.card} cursor-pointer hover:-translate-y-[1px]`}
+                className={channelCard}
                 onClick={() => setOpenDialog({ open: true, category: card.key, title: card.title })}
               >
                 {/* Top row: Icon + Title + Description */}
                 <div className="flex items-start gap-3">
-                  <IconComponent className="h-5 w-5 text-emerald-600/80" />
+                  <IconComponent className="h-5 w-5 shrink-0 text-neutral-600" />
                   <div className="min-w-0 flex-1">
-                    <h4 className={aacStyles.cardTitle}>{card.title}</h4>
+                    <h4 className={cn(aacStyles.cardTitle, "text-[15px] font-semibold")}>{card.title}</h4>
                     <p className={aacStyles.cardDesc}>{card.description}</p>
                   </div>
                 </div>
@@ -187,7 +198,11 @@ export const NotificationPreferenceCards = () => {
                 {/* Bottom row: Send + Active/Muted toggle */}
                 <div className="flex items-center justify-between mt-4">
                   <button
-                    className={aacStyles.neutralButton}
+                    type="button"
+                    className={cn(
+                      aacStyles.neutralButton,
+                      "rounded-full border-neutral-200 bg-white text-[13px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+                    )}
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
@@ -200,7 +215,12 @@ export const NotificationPreferenceCards = () => {
 
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1.5">
-                      <span className={card.active ? aacStyles.statusDotActive : aacStyles.statusDotMuted} />
+                      <span
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          card.active ? "bg-neutral-700" : "bg-neutral-300",
+                        )}
+                      />
                       <span className={card.active ? aacStyles.statusLabelActiveText : aacStyles.statusLabelMutedText}>
                         {card.active ? "Active" : "Muted"}
                       </span>
@@ -209,7 +229,7 @@ export const NotificationPreferenceCards = () => {
                       id={`receive-${card.key}`}
                       checked={card.active}
                       onCheckedChange={() => togglePreference(card.key)}
-                      className="data-[state=checked]:bg-primary"
+                      className="data-[state=checked]:bg-neutral-700"
                     />
                   </div>
                 </div>
@@ -222,10 +242,11 @@ export const NotificationPreferenceCards = () => {
         {anyEnabled && (
           <div className="flex justify-end mt-4">
             <button
+              type="button"
               onClick={deselectAllPreferences}
-              className={aacStyles.ghostButton}
+              className={cn(aacStyles.ghostButton, "rounded-md px-2 py-1.5 hover:bg-neutral-50")}
             >
-              Mute All
+              Mute all
             </button>
           </div>
         )}

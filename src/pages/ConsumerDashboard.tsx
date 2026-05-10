@@ -309,7 +309,10 @@ const ConsumerDashboard = () => {
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-4">
-            <h2 className="text-2xl font-bold mb-4">Notification Settings</h2>
+            <div className="mb-1">
+              <h2 className="text-[15px] font-semibold text-neutral-900">Notifications</h2>
+              <p className="mt-0.5 text-[13px] text-neutral-500">Email alerts for saved searches and homes</p>
+            </div>
             <NotificationSettings />
           </TabsContent>
 
