@@ -47,7 +47,7 @@ export function BuyerCollectionCard({
     <article
       role="button"
       tabIndex={0}
-      className={`${buyerCollectionCardRoot} flex min-h-[19rem] flex-col outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 md:min-h-[20rem]`}
+      className={`${buyerCollectionCardRoot} flex min-h-[19rem] flex-col outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 md:min-h-[20rem]`}
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -65,13 +65,13 @@ export function BuyerCollectionCard({
 
       <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
         <div className="min-w-0 shrink-0">
-          <h3 className="truncate text-lg font-semibold text-zinc-900">{clientName}</h3>
-          <div className="mt-2 flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
+          <h3 className="truncate text-lg font-semibold text-neutral-900">{clientName}</h3>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <p className="text-sm text-neutral-600">
               {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}
             </p>
-            <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
-              <Eye className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+            <div className="pointer-events-none flex shrink-0 items-center gap-1 text-sm font-medium text-neutral-700">
+              <Eye className="h-4 w-4 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
               <span>View</span>
             </div>
           </div>

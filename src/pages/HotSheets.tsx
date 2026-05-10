@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -140,6 +140,8 @@ const HotSheets = ({
   const [alertFrequency, setAlertFrequency] = useState<"instant" | "daily" | "weekly">("instant");
   const [buyerDeleteTarget, setBuyerDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [buyerDeleteBusy, setBuyerDeleteBusy] = useState(false);
+  /** Agent list: last fetch failed (clears list in catch). */
+  const [agentLoadError, setAgentLoadError] = useState(false);
   const buyerMode = isBuyerMode;
 
   useEffect(() => {
@@ -155,9 +157,9 @@ const HotSheets = ({
     window.localStorage.setItem(ALERT_FREQUENCY_STORAGE_KEY, alertFrequency);
   }, [alertFrequency, buyerMode]);
 
-  /** Hero / page sections: border only — no shadow so the white canvas beside panels stays clean. */
+  /** Hero / page sections — white surface, subtle border/shadow (matches polished agent surfaces). */
   const AAC_CARD_SHELL =
-    "bg-white rounded-2xl border border-neutral-200 shadow-none transition-colors duration-150";
+    "rounded-2xl border border-neutral-200 bg-white shadow-sm transition-colors duration-150";
   const DASH_SECTION_TITLE = buyerSectionTitleClass;
   const DASH_SECTION_DESC = buyerSectionDescClass;
 
@@ -180,7 +182,8 @@ const HotSheets = ({
     const heroCreateButton = showHeroCreate ? (
       <Button
         type="button"
-        className="h-8 w-fit shrink-0 rounded-md border border-zinc-200/90 bg-white px-3 text-sm font-medium text-zinc-700 shadow-none hover:bg-zinc-50"
+        size="sm"
+        className="h-9 w-fit shrink-0 bg-neutral-900 px-4 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
         onClick={() =>
           buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
         }
@@ -201,8 +204,8 @@ const HotSheets = ({
           {/* order-* only for mobile grid stacking; at lg, document order = title → CTA (avoid order-0 above order-1 flex flip) */}
           <div className="max-lg:order-1 min-w-0 lg:min-h-0">
             <div className="space-y-1.5">
-              <h1 className="text-xl font-semibold tracking-tight text-zinc-900">Hot Sheets</h1>
-              <p className="text-sm leading-snug text-gray-500">
+              <h1 className="text-xl font-semibold tracking-tight text-neutral-900">Hot Sheets</h1>
+              <p className="text-sm leading-snug text-neutral-600">
                 Track listings that matter most with real-time alerts based on your saved search criteria.
               </p>
             </div>
@@ -222,13 +225,13 @@ const HotSheets = ({
               key={item}
               className="flex items-center gap-2 text-[13px] font-medium text-neutral-700"
             >
-              <span className="w-2 h-2 rounded-full bg-[#50C878] shrink-0" aria-hidden />
+              <span className="h-2 w-2 shrink-0 rounded-full bg-neutral-400" aria-hidden />
               {item}
             </span>
           ))}
         </div>
 
-        <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-none lg:col-start-3 lg:row-start-1 lg:self-start">
+        <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm lg:col-start-3 lg:row-start-1 lg:self-start">
           <p className={DASH_SECTION_TITLE}>Connected to your agent</p>
           <p className={`mt-1 ${DASH_SECTION_DESC}`}>
             Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
@@ -236,14 +239,14 @@ const HotSheets = ({
 
 
             <p className={`mt-3.5 ${DASH_SECTION_TITLE}`}>Alert Frequency</p>
-            <div className="mt-2 inline-flex w-full rounded-lg border border-neutral-200 bg-white p-1">
+            <div className="mt-2 inline-flex w-full rounded-lg border border-neutral-200 bg-neutral-50/80 p-1">
               <button
                 type="button"
                 onClick={() => setAlertFrequency("instant")}
-                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors ${
+                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 ${
                   alertFrequency === "instant"
-                    ? "bg-[#0E56F5] text-white shadow-[0_4px_10px_rgba(14,86,245,0.28)]"
-                    : "text-zinc-600 hover:text-zinc-900"
+                    ? "bg-neutral-900 text-white shadow-sm"
+                    : "text-neutral-600 hover:bg-white/80 hover:text-neutral-900"
                 }`}
               >
                 Instant
@@ -251,10 +254,10 @@ const HotSheets = ({
               <button
                 type="button"
                 onClick={() => setAlertFrequency("daily")}
-                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors ${
+                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 ${
                   alertFrequency === "daily"
-                    ? "bg-[#0E56F5] text-white shadow-[0_4px_10px_rgba(14,86,245,0.28)]"
-                    : "text-zinc-600 hover:text-zinc-900"
+                    ? "bg-neutral-900 text-white shadow-sm"
+                    : "text-neutral-600 hover:bg-white/80 hover:text-neutral-900"
                 }`}
               >
                 Daily
@@ -262,10 +265,10 @@ const HotSheets = ({
               <button
                 type="button"
                 onClick={() => setAlertFrequency("weekly")}
-                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors ${
+                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 ${
                   alertFrequency === "weekly"
-                    ? "bg-[#0E56F5] text-white shadow-[0_4px_10px_rgba(14,86,245,0.28)]"
-                    : "text-zinc-600 hover:text-zinc-900"
+                    ? "bg-neutral-900 text-white shadow-sm"
+                    : "text-neutral-600 hover:bg-white/80 hover:text-neutral-900"
                 }`}
               >
                 Weekly
@@ -491,21 +494,18 @@ const HotSheets = ({
               {buyerLoading ? (
                 <section className="grid grid-cols-1 gap-5 bg-white md:grid-cols-2 lg:grid-cols-3">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-none">
-                      <div className="h-5 w-1/2 animate-pulse rounded bg-zinc-100" />
-                      <div className="mt-3 h-4 w-5/6 animate-pulse rounded bg-zinc-100" />
-                      <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-zinc-100" />
+                    <div key={i} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+                      <div className="h-5 w-1/2 animate-pulse rounded bg-neutral-100" />
+                      <div className="mt-3 h-4 w-5/6 animate-pulse rounded bg-neutral-100" />
+                      <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-neutral-100" />
                     </div>
                   ))}
                 </section>
               ) : buyerHotSheets.length === 0 ? (
-                <section className="rounded-2xl border border-neutral-100 bg-white px-6 py-6 sm:py-6 shadow-none">
+                <section className="rounded-2xl border border-neutral-200 bg-white px-6 py-8 shadow-sm sm:py-10">
                   <div className="mx-auto max-w-lg text-center">
-                    <div className="relative mx-auto mb-3 h-14 w-14">
-                      <div className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-[#0E56F5]/15 to-[#0E56F5]/5" />
-                      <div className="absolute inset-1.5 inline-flex items-center justify-center rounded-xl bg-white text-[#0E56F5] shadow-sm">
-                        <Search className="h-6 w-6" />
-                      </div>
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
+                      <Search className="h-6 w-6 text-neutral-500" />
                     </div>
                     <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">No Hot Sheets yet</h3>
                     <p className="mt-2 text-[13px] leading-snug text-neutral-500">
@@ -588,6 +588,7 @@ const HotSheets = ({
   const fetchData = async (userId: string) => {
     try {
       setLoading(true);
+      setAgentLoadError(false);
 
       // 1. Fetch hot sheets with clients and shares
       const { data: hsData, error } = await supabase
@@ -736,6 +737,9 @@ const HotSheets = ({
     } catch (error) {
       console.error("Error fetching hot sheets:", error);
       toast.error("Failed to load hot sheets");
+      setAgentLoadError(true);
+      setCollections([]);
+      setRawHotSheets([]);
     } finally {
       setLoading(false);
     }
@@ -829,16 +833,33 @@ const HotSheets = ({
 
   if (loading) {
     return (
-      <PageShell>
+      <PageShell className="pb-8">
         <Seo
           title="Hot Sheets | All Agent Connect"
           description="Review saved listing feeds, curated market opportunities, and client-focused inventory updates."
-          canonical="https://allagentconnect.com/hot-sheets"
+          canonical="https://allagentconnect.com/agent/hot-sheets"
           noindex
         />
-        {renderHotSheetsHero()}
-        <div className="flex justify-center py-12">
-          <AacMonogramLoader variant="section" className="min-h-[220px] py-0" message="Loading hot sheets..." />
+        <div className="mb-5">{renderHotSheetsHero()}</div>
+        <div
+          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span className="sr-only">Loading hot sheets…</span>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
+            >
+              <Skeleton className="h-48 w-full rounded-none bg-neutral-100 md:h-52" />
+              <div className="space-y-3 p-4">
+                <Skeleton className="h-6 w-[85%] max-w-[16rem] rounded-md bg-neutral-100" />
+                <Skeleton className="h-4 w-24 rounded-md bg-neutral-100" />
+              </div>
+            </div>
+          ))}
         </div>
       </PageShell>
     );
@@ -849,7 +870,7 @@ const HotSheets = ({
       <Seo
         title="Hot Sheets | All Agent Connect"
         description="Review saved listing feeds, curated market opportunities, and client-focused inventory updates."
-        canonical="https://allagentconnect.com/hot-sheets"
+        canonical="https://allagentconnect.com/agent/hot-sheets"
         noindex
       />
       <PageShell className="pb-8">
@@ -857,17 +878,32 @@ const HotSheets = ({
           {renderHotSheetsHero()}
         </div>
 
-        {collections.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-100 bg-white p-12 text-center shadow-none">
-            <Users className="h-16 w-16 mx-auto mb-4 text-zinc-300" />
-            <h3 className="text-xl font-semibold text-zinc-900 mb-2">No buyer hot sheets yet</h3>
-            <p className="mx-auto max-w-md text-zinc-500">
+        {agentLoadError ? (
+          <div className="rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm md:p-10">
+            <p className="text-sm font-medium text-neutral-900">Couldn&apos;t load hot sheets</p>
+            <p className="mt-2 text-sm text-neutral-600">
+              Check your connection and try again.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              className="mt-5 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+              onClick={() => user && void fetchData(user.id)}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : collections.length === 0 ? (
+          <div className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-sm md:p-12">
+            <Users className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
+            <h3 className="mb-2 text-lg font-semibold text-neutral-900">No buyer hot sheets yet</h3>
+            <p className="mx-auto max-w-md text-sm text-neutral-600">
               Create your first hot sheet to start curating listings for your buyers—use{" "}
-              <span className="font-medium text-zinc-700">Create Hot Sheet</span> at the top of this page.
+              <span className="font-medium text-neutral-800">Create Hot Sheet</span> at the top of this page.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 bg-[#FFFFFF] md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 bg-white md:grid-cols-2 lg:grid-cols-3">
             {collections.map((collection) => (
               <BuyerCollectionCard
                 key={collection.clientId}
@@ -886,7 +922,7 @@ const HotSheets = ({
         open={!!shareDialogOpen}
         onOpenChange={(open) => { if (!open) { setShareDialogOpen(null); setFriendEmail(""); } }}
       >
-        <DialogContent>
+        <DialogContent className="border-neutral-200 bg-white sm:rounded-xl">
           <DialogHeader>
             <DialogTitle>Share Hot Sheet</DialogTitle>
             <DialogDescription>Share this hot sheet with friends. They'll receive the same listing alerts.</DialogDescription>
@@ -901,8 +937,8 @@ const HotSheets = ({
                 <Label>Currently Shared With:</Label>
                 <div className="mt-2 space-y-2">
                   {rawHotSheets.find((s) => s.id === shareDialogOpen)?.hot_sheet_shares?.map((share) => (
-                    <div key={share.id} className="flex items-center justify-between p-2 bg-white border border-zinc-200 rounded">
-                      <span className="text-sm">{share.shared_with_email}</span>
+                    <div key={share.id} className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-2">
+                      <span className="text-sm text-neutral-800">{share.shared_with_email}</span>
                       <Button variant="ghost" size="sm" onClick={() => handleDeleteShare(share.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -911,9 +947,15 @@ const HotSheets = ({
                 </div>
               </div>
             ) : null}
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => { setShareDialogOpen(null); setFriendEmail(""); }}>Cancel</Button>
-              <Button onClick={() => shareDialogOpen && handleShareHotSheet(shareDialogOpen)} disabled={sharing || !friendEmail.trim()}>Share</Button>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" className="border-neutral-200" onClick={() => { setShareDialogOpen(null); setFriendEmail(""); }}>Cancel</Button>
+              <Button
+                className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                onClick={() => shareDialogOpen && handleShareHotSheet(shareDialogOpen)}
+                disabled={sharing || !friendEmail.trim()}
+              >
+                Share
+              </Button>
             </div>
           </div>
         </DialogContent>
