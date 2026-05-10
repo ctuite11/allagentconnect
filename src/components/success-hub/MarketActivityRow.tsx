@@ -6,6 +6,11 @@ import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
 import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+
+/** Matches listing-search compact share trigger (neutral AAC). */
+const MARKET_ACTIVITY_SHARE_TRIGGER =
+  "h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 disabled:pointer-events-none disabled:opacity-40 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600";
 
 interface MarketListingRow {
   id: string;
@@ -33,6 +38,23 @@ export function MarketActivityRow() {
   const [listings, setListings] = useState<MarketListingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectedListingIds = Array.from(selectedIds);
+  const selectedCount = selectedListingIds.length;
 
   const parseListing = useCallback((row: any, companyMap: Record<string, string>): MarketListingRow => {
     return {
@@ -208,9 +230,42 @@ export function MarketActivityRow() {
     <div className="min-w-0">
       {headerBlock}
 
+      <div
+        className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+        role="toolbar"
+        aria-label="Market activity selection"
+      >
+        <span className="text-[11px] text-neutral-500">
+          {selectedCount > 0 ? `${selectedCount} selected` : "Select listings to share"}
+        </span>
+        <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
+          {selectedCount > 0 ? (
+            <button
+              type="button"
+              className="rounded-sm px-1.5 py-0.5 text-[11px] font-medium text-neutral-600 underline-offset-2 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+              onClick={clearSelection}
+            >
+              Clear
+            </button>
+          ) : null}
+          <BulkShareListingsDialog
+            listingIds={selectedListingIds}
+            listingCount={selectedCount}
+            triggerVariant="outline"
+            triggerClassName={MARKET_ACTIVITY_SHARE_TRIGGER}
+            onSuccessfulShare={clearSelection}
+          />
+        </div>
+      </div>
+
       <div className={SUCCESS_HUB_LISTINGS_GRID}>
         {listings.map((listing) => (
-          <SuccessHubListingCard key={listing.id} listing={mapMarketRowToListingCard(listing)} />
+          <SuccessHubListingCard
+            key={listing.id}
+            listing={mapMarketRowToListingCard(listing)}
+            onSelect={(id) => toggleSelection(id)}
+            isSelected={selectedIds.has(listing.id)}
+          />
         ))}
       </div>
     </div>

@@ -14,6 +14,8 @@ interface BulkShareListingsDialogProps {
   triggerClassName?: string;
   /** Use `outline` for neutral AAC toolbars (e.g. listing results); default fills primary. */
   triggerVariant?: "default" | "outline";
+  /** Called after listings are shared successfully via `send-bulk-listing-share` (selection can clear in parent). */
+  onSuccessfulShare?: () => void;
 }
 
 interface Client {
@@ -40,6 +42,7 @@ export function BulkShareListingsDialog({
   listingCount,
   triggerClassName,
   triggerVariant = "default",
+  onSuccessfulShare,
 }: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -241,6 +244,7 @@ export function BulkShareListingsDialog({
 
       toast.success(`Successfully shared ${listingCount} listing${listingCount > 1 ? 's' : ''}`);
       setOpen(false);
+      onSuccessfulShare?.();
     } catch (error) {
       console.error("Error sharing listings:", error);
       toast.error("Failed to share listings");
@@ -260,10 +264,12 @@ export function BulkShareListingsDialog({
   return (
     <>
       <Button
+        type="button"
         variant={triggerVariant}
         size="sm"
         className={cn(triggerClassName)}
-        onClick={() => setOpen(true)}
+        disabled={listingCount === 0}
+        onClick={() => listingCount > 0 && setOpen(true)}
       >
         <Share2 className="mr-2 h-4 w-4" />
         Share Selected ({listingCount})
