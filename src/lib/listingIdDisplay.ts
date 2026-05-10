@@ -10,15 +10,14 @@ export function formatListingIdLabel(listing: { listing_number?: string | null }
   return `ID# L-${tail}`;
 }
 
-/** Tailwind classes for inline listing-ID navigation (matches AAC blue link pattern). */
-export const LISTING_ID_NAV_CLASS =
-  "inline p-0 m-0 bg-transparent border-0 shadow-none rounded-none font-inherit text-[#0E56F5] cursor-pointer hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
-
 /**
- * Neutral utility-link treatment for Listing Search Results only (compact grid + MLS list rows).
- * Use with `ListingCard` `subtleListingIdLink` prop, or on `SearchListingCard` directly.
+ * Inline listing-ID control — always AAC blue (`#0E56F5`) on every card/surface for consistency.
+ * Hover darkens slightly; focus ring is neutral (no blue glow).
  */
-export const LISTING_ID_NAV_CLASS_SEARCH_SURFACE =
-  "inline m-0 cursor-pointer rounded-none border-0 bg-transparent p-0 font-inherit text-neutral-500 shadow-none " +
-  "no-underline underline-offset-2 transition-colors hover:text-neutral-700 hover:underline " +
-  "focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:text-neutral-700 focus-visible:underline";
+export const LISTING_ID_NAV_CLASS =
+  "inline p-0 m-0 bg-transparent border-0 shadow-none rounded-none font-inherit " +
+  "text-[#0E56F5] cursor-pointer hover:text-[#0B46CC] hover:underline " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-1";
+
+/** @deprecated Alias of `LISTING_ID_NAV_CLASS` — same AAC blue everywhere (search, hub, grids). */
+export const LISTING_ID_NAV_CLASS_SEARCH_SURFACE = LISTING_ID_NAV_CLASS;
