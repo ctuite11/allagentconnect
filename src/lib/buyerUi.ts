@@ -25,7 +25,7 @@ export const buyerSectionCard =
  * only Hot Sheet *collages* use `BuyerHotSheetPreviewCard` — do not interchange.
  */
 export const buyerPreviewCardBase =
-  "relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm cursor-pointer transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md";
+  "relative w-full cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white text-left shadow-sm transition-[border-color,box-shadow] duration-150 hover:border-neutral-300 hover:shadow-md";
 
 /** Interactive preview (keyboard focus ring) — cursor on base tile; rings here only */
 export const buyerPreviewCardInteractive = `${buyerPreviewCardBase} outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
@@ -55,10 +55,10 @@ export const buyerMarketListingTileBody =
   "flex flex-col gap-1.5 px-4 pb-3 pt-3 text-left";
 
 /** Stat tiles on dashboard */
-export const buyerStatCardInteractive = `${buyerSectionCard} cursor-pointer transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2`;
+export const buyerStatCardInteractive = `${buyerSectionCard} cursor-pointer transition-[border-color,box-shadow] duration-150 hover:border-neutral-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2`;
 
-/** Agent success-hub / collection card (image + body, hover lift) */
-export const buyerCollectionCardRoot = `${buyerSectionCard} cursor-pointer transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md focus-within:border-neutral-300 focus-within:shadow-md overflow-hidden`;
+/** Agent success-hub / collection card (image + body, subtle hover) */
+export const buyerCollectionCardRoot = `${buyerSectionCard} cursor-pointer overflow-hidden transition-[border-color,box-shadow] duration-150 hover:border-neutral-300 hover:shadow-md focus-within:border-neutral-300 focus-within:shadow-md`;
 
 /** Typography */
 export const buyerSectionTitle = "text-[15px] font-semibold text-neutral-900";
@@ -100,7 +100,7 @@ export const buyerPreviewSectionHeaderRow =
 
 /** Hot Sheets / Favorites / Market activity — inline secondary links in section headers. */
 export const buyerDashboardPreviewViewAllCta =
-  "shrink-0 text-[13px] font-normal leading-normal tracking-normal text-[#0E56F5] hover:underline";
+  "shrink-0 rounded-sm text-[13px] font-medium leading-normal tracking-normal text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2";
 
 export const buyerPreviewSectionTitleWrap = "min-w-0 space-y-1";
 
@@ -120,7 +120,7 @@ export const buyerMessagingPanel =
 
 /** Conversation / inbox list row — white tile, subtle desktop hover */
 export const buyerMessagingThreadRow =
-  "rounded-xl border border-transparent bg-white transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md";
+  "rounded-xl border border-transparent bg-white transition-[border-color,box-shadow] duration-150 hover:border-neutral-300 hover:shadow-md";
 
 /** Favorites split view (map + list panes) */
 export const buyerFavoritesSplitPane =

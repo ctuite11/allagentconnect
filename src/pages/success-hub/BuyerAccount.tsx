@@ -7,10 +7,12 @@ import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerCli
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useBuyerWorkspaceMirror } from "@/hooks/useBuyerWorkspaceMirror";
 import { ClientDashboardView } from "@/components/buyer/ClientDashboardView";
-import { buyerPageShell } from "@/lib/buyerUi";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { toast } from "sonner";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Seo } from "@/components/Seo";
 
 /** Same US display helper as `ClientDashboard` — keeps hero agent phone formatting aligned. */
 function formatUsPhoneForDisplay(raw: string | null | undefined): { display: string; telHref: string } | null {
@@ -27,6 +29,48 @@ function formatUsPhoneForDisplay(raw: string | null | undefined): { display: str
     display: `(${core.slice(0, 3)}) ${core.slice(3, 6)}-${core.slice(6)}`,
     telHref: `tel:+1${core}`,
   };
+}
+
+function BuyerWorkspaceSkeleton() {
+  return (
+    <AgentAacPage className="pb-12">
+      <span className="sr-only">Loading buyer workspace…</span>
+      <div className="space-y-6" role="status" aria-busy="true" aria-live="polite">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm md:p-6">
+          <Skeleton className="h-8 w-48 max-w-full rounded-md bg-neutral-100" />
+          <Skeleton className="mt-3 h-4 w-full max-w-md rounded-md bg-neutral-100" />
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Skeleton className="h-9 w-24 rounded-lg bg-neutral-100" />
+            <Skeleton className="h-9 w-28 rounded-lg bg-neutral-100" />
+            <Skeleton className="h-9 w-28 rounded-lg bg-neutral-100" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+              <Skeleton className="h-4 w-4 rounded bg-neutral-100" />
+              <Skeleton className="mt-3 h-8 w-12 rounded-md bg-neutral-100" />
+              <Skeleton className="mt-2 h-3 w-20 rounded-md bg-neutral-100" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <Skeleton className="h-4 w-28 rounded-md bg-neutral-100" />
+            <Skeleton className="mt-6 h-40 w-full rounded-lg bg-neutral-100" />
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <Skeleton className="h-4 w-24 rounded-md bg-neutral-100" />
+            <Skeleton className="mt-6 h-40 w-full rounded-lg bg-neutral-100" />
+          </div>
+        </div>
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
+          <Skeleton className="mt-4 h-32 w-full rounded-lg bg-neutral-100" />
+        </div>
+      </div>
+    </AgentAacPage>
+  );
 }
 
 export default function BuyerAccount() {
@@ -51,11 +95,9 @@ export default function BuyerAccount() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
-  const [messagingBusy, setMessagingBusy] = useState(false);
 
   const handleGeneralMessage = async () => {
     if (!user?.id || !mirror.client?.agent_user_id) return;
-    setMessagingBusy(true);
     try {
       const convoId = await findOrCreateConversation(user.id, mirror.client.agent_user_id);
       if (convoId) {
@@ -65,8 +107,6 @@ export default function BuyerAccount() {
       }
     } catch {
       toast.error("Could not open conversation.");
-    } finally {
-      setMessagingBusy(false);
     }
   };
 
@@ -85,28 +125,56 @@ export default function BuyerAccount() {
 
   if (!user?.id || mirror.loading) {
     return (
-      <div className={`flex flex-col items-center justify-center ${buyerPageShell}`}>
-        <AacMonogramLoader variant="section" className="min-h-[45vh]" message="Loading dashboard..." />
-      </div>
+      <>
+        <Seo
+          title="Buyer workspace | All Agent Connect"
+          description="View buyer activity, hot sheets, and favorites in All Agent Connect."
+          canonical={
+            buyerId ? `https://allagentconnect.com/success-hub/buyers/${buyerId}` : undefined
+          }
+          noindex
+        />
+        <BuyerWorkspaceSkeleton />
+      </>
     );
   }
 
   if (!mirror.client) {
     return (
-      <div className={`flex flex-col items-center justify-center gap-4 px-4 ${buyerPageShell}`}>
-        <p className="text-center text-sm text-muted-foreground">Buyer not found or you do not have access.</p>
-        <Button variant="outline" asChild>
-          <Link to="/success-hub/buyers">Back to buyers</Link>
-        </Button>
-      </div>
+      <>
+        <Seo
+          title="Buyer workspace | All Agent Connect"
+          description="View buyer activity, hot sheets, and favorites in All Agent Connect."
+          noindex
+        />
+        <AgentAacPage className="pb-12">
+          <AgentSectionCard className="border-neutral-200 p-8 text-center shadow-sm hover:border-neutral-200 hover:shadow-sm">
+            <p className="text-sm font-medium text-neutral-900">
+              Buyer not found or you don&apos;t have access.
+            </p>
+            <Button variant="outline" size="sm" className="mt-5 border-neutral-200 shadow-sm" asChild>
+              <Link to="/success-hub/buyers">Back to buyers</Link>
+            </Button>
+          </AgentSectionCard>
+        </AgentAacPage>
+      </>
     );
   }
 
   const client = mirror.client;
   const buyerPhoneFmt = formatUsPhoneForDisplay(client.phone);
 
+  const mirrorActionBtn =
+    "h-9 rounded-lg border-neutral-200 px-3 text-sm font-medium text-neutral-800 shadow-sm hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-zinc-400/40";
+
   return (
     <>
+      <Seo
+        title={`${capitalizedName || "Buyer"} | All Agent Connect`}
+        description="Agent view of buyer activity, hot sheets, favorites, and market previews."
+        canonical={`https://allagentconnect.com/success-hub/buyers/${buyerId ?? ""}`}
+        noindex
+      />
       <ClientDashboardView
         variant="agent"
         navigate={navigate}
@@ -133,7 +201,7 @@ export default function BuyerAccount() {
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 rounded-full border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-none transition-colors hover:bg-zinc-50"
+              className={mirrorActionBtn}
               onClick={() => setEditOpen(true)}
             >
               Edit buyer
@@ -142,7 +210,7 @@ export default function BuyerAccount() {
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 rounded-full border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 shadow-none transition-colors hover:bg-zinc-50"
+              className={mirrorActionBtn}
               onClick={() => setRemoveOpen(true)}
             >
               Remove buyer
@@ -165,9 +233,9 @@ export default function BuyerAccount() {
           favoritesEmptySearch: "/search",
         }}
         topBanner={
-          <div className="border-b border-gray-200 bg-white px-4 py-3 md:px-6">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2">
-              <Button variant="ghost" size="sm" asChild className="-ml-2 text-gray-600">
+          <div className="border-b border-neutral-200 bg-white px-6 py-3 md:px-8">
+            <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2">
+              <Button variant="ghost" size="sm" asChild className="-ml-1 h-9 text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900">
                 <Link to="/success-hub/buyers">← Back to buyers</Link>
               </Button>
             </div>

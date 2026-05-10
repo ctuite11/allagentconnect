@@ -252,20 +252,25 @@ export function ClientDashboardView({
                 <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                   <h1 className="text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">{buyerDisplayName.trim()}</h1>
                   {buyerPresenceOnline ? (
-                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-200/90 bg-emerald-50/80 px-2 py-0.5">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-600 ring-2 ring-emerald-100" title="Online" />
-                      <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-800">Online</span>
+                    <div className="flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5">
+                      <span
+                        className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-500 ring-2 ring-neutral-100"
+                        title="Online"
+                      />
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-700">
+                        Online
+                      </span>
                     </div>
                   ) : null}
                 </div>
                 {variant === "agent" && (buyerEmail?.trim() || buyerPhoneFmt) ? (
-                  <div className="flex flex-col gap-1.5 text-xs text-zinc-500">
+                  <div className="flex flex-col gap-1.5 text-xs text-neutral-600">
                     {buyerEmail?.trim() ? (
                       <span className="flex min-w-0 items-center gap-2">
-                        <Mail className="h-3.5 w-3.5 shrink-0 text-zinc-400" aria-hidden />
+                        <Mail className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
                         <a
                           href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
-                          className="min-w-0 truncate text-zinc-600 hover:text-zinc-900 hover:underline"
+                          className="min-w-0 truncate text-neutral-700 transition-colors hover:text-neutral-900 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
                         >
                           {buyerEmail.trim()}
                         </a>
@@ -273,10 +278,10 @@ export function ClientDashboardView({
                     ) : null}
                     {buyerPhoneFmt ? (
                       <span className="flex items-center gap-2">
-                        <Phone className="h-3.5 w-3.5 shrink-0 text-zinc-400" aria-hidden />
+                        <Phone className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
                         <a
                           href={buyerPhoneFmt.telHref}
-                          className="text-zinc-600 hover:text-zinc-900 hover:underline"
+                          className="text-neutral-700 transition-colors hover:text-neutral-900 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
                         >
                           {buyerPhoneFmt.display}
                         </a>
@@ -324,7 +329,7 @@ export function ClientDashboardView({
                   >
                     <MessageSquare className="h-[15px] w-[15px] text-neutral-700 sm:h-4 sm:w-4" aria-hidden />
                     {unreadCount > 0 ? (
-                      <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full border border-white bg-rose-600 px-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
+                      <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full border border-white bg-neutral-900 px-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     ) : null}
@@ -342,7 +347,7 @@ export function ClientDashboardView({
                         <p className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
                           {agentPresenceOnline ? (
                             <span
-                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600 ring-2 ring-emerald-100"
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-500 ring-2 ring-neutral-100"
                               title="Recently active"
                               aria-label="Recently active"
                             />
