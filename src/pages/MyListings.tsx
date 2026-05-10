@@ -605,7 +605,7 @@ function MyListingsView({
         </div>
       )}
 
-      {/* LIST VIEW */}
+      {/* LIST VIEW — listing card layout restored to pre-audit design */}
       <div className="mt-5 space-y-4">
           {filteredListings.map((l) => {
             const thumbnail = getThumbnailUrl(l);
@@ -616,9 +616,8 @@ function MyListingsView({
             const listDate = formatDate(l.list_date) || formatDate(l.created_at);
             const expDate = formatDate(l.expiration_date);
             const goLiveDate = formatDate(l.go_live_date);
-            // Filter out past events for toolbar button logic
             const nowForToolbar = new Date();
-            const upcomingEvents = Array.isArray(l.open_houses) 
+            const upcomingEvents = Array.isArray(l.open_houses)
               ? (l.open_houses as any[]).filter((e: any) => {
                   if (!e?.date || !e?.end_time) return true;
                   return new Date(`${e.date}T${e.end_time}`) > nowForToolbar;
@@ -626,172 +625,130 @@ function MyListingsView({
               : [];
             const hasPublicOpenHouse = upcomingEvents.some((oh: any) => oh.event_type === "in_person");
             const hasBrokerTour = upcomingEvents.some((oh: any) => oh.event_type === "broker_tour");
-            
-            // Calculate Days on Market
+
             const listDateObj = l.list_date ? new Date(l.list_date) : l.created_at ? new Date(l.created_at) : null;
             const dom = listDateObj ? Math.max(0, Math.floor((Date.now() - listDateObj.getTime()) / (1000 * 60 * 60 * 24))) : 0;
 
-            const rowActionCls =
-              "rounded-md px-1.5 py-0.5 text-[13px] font-medium text-zinc-600 outline-none transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2";
-
             return (
-              <CardSurface
-                key={l.id}
-                interactive
-                className="relative p-4 outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 md:p-5"
-              >
-                {/* Top: actions (wrap on mobile) + status / dates */}
-                <div className="mb-4 grid grid-cols-1 gap-4 border-b border-neutral-100 pb-4 md:grid-cols-[1fr,minmax(168px,auto)] md:items-start md:gap-6">
-                  <div className="flex min-w-0 flex-col gap-2">
-                    {l.status === "draft" && (
-                      <div className="-ml-0.5 flex items-center gap-2">
-                        <Checkbox
-                          checked={selectedDraftIds.has(l.id)}
-                          onCheckedChange={() => toggleDraftSelection(l.id)}
-                          aria-label="Select draft"
-                        />
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-                          Include in bulk delete
-                        </span>
-                      </div>
-                    )}
-                    <div className="-mx-1 flex flex-wrap items-center gap-x-1 gap-y-1 md:gap-x-2">
-                      <button type="button" className={rowActionCls} onClick={() => onEdit(l.id)}>
-                        Edit
-                      </button>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <button type="button" className={rowActionCls} onClick={() => onPhotos(l.id)}>
-                        Photos
-                      </button>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <button
-                        type="button"
-                        className={`${rowActionCls} inline-flex items-center gap-1`}
-                        onClick={() => (hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l))}
-                      >
-                        <span aria-hidden>🎈</span>
-                        Open House
-                      </button>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <button
-                        type="button"
-                        className={`${rowActionCls} inline-flex items-center gap-1`}
-                        onClick={() => (hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l))}
-                      >
-                        <span aria-hidden>🚙</span>
-                        Broker tour
-                      </button>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <button type="button" className={rowActionCls} onClick={() => onMatches(l)}>
-                        Matches ({matchCount})
-                      </button>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <button type="button" className={rowActionCls} onClick={() => onEmail?.(l)}>
-                        Email
-                      </button>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <button type="button" className={rowActionCls} onClick={() => onSocialShare(l)}>
-                        Social
-                      </button>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-zinc-600">
-                        <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5 text-zinc-500">
-                          <path
-                            fill="currentColor"
-                            d="M8 2.75c3.73 0 6.7 2.2 7.95 5.25-1.25 3.05-4.22 5.25-7.95 5.25-3.73 0-6.7-2.2-7.95-5.25C1.3 4.95 4.27 2.75 8 2.75Z"
-                          />
-                          <circle cx="8" cy="8" r="2.15" fill="white" />
-                          <circle cx="8" cy="8" r="1.15" fill="currentColor" />
-                        </svg>
-                        <span className="text-[13px] font-semibold tabular-nums text-zinc-800">{views}</span>
-                      </span>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-zinc-600">
-                        <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5 text-zinc-500">
-                          <path
-                            fill="currentColor"
-                            d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z"
-                          />
-                        </svg>
-                        <span className="text-[13px] font-semibold tabular-nums text-zinc-800">{favorites}</span>
-                      </span>
-                      <span className="text-zinc-200" aria-hidden>
-                        ·
-                      </span>
-                      <button type="button" className={rowActionCls} onClick={() => onStats(l.id)}>
-                        Stats
-                      </button>
-                    </div>
+              <CardSurface key={l.id} interactive className="relative p-4">
+                {l.status === "draft" && (
+                  <div className="absolute left-4 top-4 z-10">
+                    <Checkbox
+                      checked={selectedDraftIds.has(l.id)}
+                      onCheckedChange={() => toggleDraftSelection(l.id)}
+                      aria-label="Select draft"
+                    />
+                  </div>
+                )}
+                <div className={`mb-3 flex items-start justify-between ${l.status === "draft" ? "ml-8" : ""}`}>
+                  <div className="flex flex-wrap items-center gap-2 text-sm leading-tight text-zinc-600">
+                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onEdit(l.id)}>
+                      Edit
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onPhotos(l.id)}>
+                      Photos
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      type="button"
+                      className="group flex items-center gap-1"
+                      onClick={() => (hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l))}
+                    >
+                      <span aria-hidden>🎈</span>
+                      <span className="transition group-hover:text-emerald-700">Open House</span>
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      type="button"
+                      className="group flex items-center gap-1"
+                      onClick={() => (hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l))}
+                    >
+                      <span aria-hidden>🚙</span>
+                      <span className="transition group-hover:text-[#0E56F5]">Broker Tour</span>
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onMatches(l)}>
+                      Matches ({matchCount})
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onEmail?.(l)}>
+                      Email
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onSocialShare(l)}>
+                      Social
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <span className="inline-flex items-center gap-1 transition-opacity hover:opacity-80">
+                      <svg viewBox="0 0 16 16" aria-hidden className="h-4 w-4 text-aac">
+                        <path fill="currentColor" d="M8 2.75c3.73 0 6.7 2.2 7.95 5.25-1.25 3.05-4.22 5.25-7.95 5.25-3.73 0-6.7-2.2-7.95-5.25C1.3 4.95 4.27 2.75 8 2.75Z" />
+                        <circle cx="8" cy="8" r="2.15" fill="hsl(var(--background))" />
+                        <circle cx="8" cy="8" r="1.15" fill="currentColor" />
+                      </svg>
+                      <span className="text-[13px] font-medium leading-none text-zinc-800">{views}</span>
+                    </span>
+                    <span className="text-zinc-300">•</span>
+                    <span className="inline-flex items-center gap-1 transition-opacity hover:opacity-80">
+                      <svg viewBox="0 0 16 16" aria-hidden className="h-4 w-4 fill-current text-destructive">
+                        <path d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z" />
+                      </svg>
+                      <span className="text-[13px] font-medium leading-none text-zinc-800">{favorites}</span>
+                    </span>
+                    <span className="text-zinc-300">•</span>
+                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onStats(l.id)}>
+                      Stats
+                    </button>
                   </div>
 
-                  <div className="flex flex-row flex-wrap items-center justify-between gap-3 md:flex-col md:items-end md:justify-start md:text-right md:gap-1.5">
+                  <div className="absolute right-4 top-4 z-10 space-y-0.5 text-right">
                     <ListingStatusBadge status={l.status} size="lg" />
-                    <div className="min-w-[160px] space-y-1 text-[11px] leading-tight md:text-right">
-                      <div>
-                        <span className="text-zinc-400">AAC list · </span>
-                        <span className="text-zinc-600">{listDate}</span>
-                      </div>
-                      {isComingSoon(l.status) ? (
-                        <>
-                          {goLiveDate && (
-                            <div>
-                              <span className="text-zinc-400">On MLS · </span>
-                              <span className="text-zinc-600">{goLiveDate}</span>
-                            </div>
-                          )}
-                          {expDate && (
-                            <div>
-                              <span className="text-zinc-400">Expires · </span>
-                              <span className="text-zinc-600">{expDate}</span>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        expDate && (
-                          <div>
-                            <span className="text-zinc-400">Expires · </span>
-                            <span className="text-zinc-600">{expDate}</span>
+                    <div className="text-xs leading-tight">
+                      <span className="text-zinc-400">AAC List Date:</span>{" "}
+                      <span className="text-zinc-500">{listDate}</span>
+                    </div>
+                    {isComingSoon(l.status) ? (
+                      <>
+                        {goLiveDate && (
+                          <div className="text-xs leading-tight">
+                            <span className="text-zinc-400">On MLS Date:</span>{" "}
+                            <span className="text-zinc-500">{goLiveDate}</span>
                           </div>
-                        )
-                      )}
-                      <div>
-                        <span className="text-zinc-400">DOM · </span>
-                        <span className="font-semibold text-zinc-800">{dom}</span>
-                      </div>
+                        )}
+                        {expDate && (
+                          <div className="text-xs leading-tight">
+                            <span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      expDate && (
+                        <div className="text-xs leading-tight">
+                          <span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span>
+                        </div>
+                      )
+                    )}
+                    <div className="text-xs leading-tight">
+                      <span className="text-zinc-400">DOM:</span>{" "}
+                      <span className="font-medium text-zinc-700">{dom}</span>
                     </div>
                     {l.status === "draft" && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
                             type="button"
-                            className="rounded-lg p-1.5 text-zinc-400 outline-none transition-colors hover:bg-zinc-50 hover:text-zinc-700 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 md:-mr-1"
+                            className="mt-1 rounded p-1 text-zinc-400 transition-colors hover:text-zinc-600"
                           >
-                            <MoreHorizontal className="h-4 w-4" aria-hidden />
+                            <MoreHorizontal className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44 rounded-xl border border-neutral-200 bg-white shadow-md">
+                        <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuItem
-                            className="cursor-pointer text-[13px] text-red-700 focus:bg-red-50 focus:text-red-800"
+                            className="cursor-pointer text-sm text-destructive focus:text-destructive"
                             onClick={() => setListingToDelete(l)}
                           >
-                            <Trash2 className="mr-2 h-3.5 w-3.5" aria-hidden />
-                            Delete listing
+                            <Trash2 className="mr-2 h-3.5 w-3.5" />
+                            Delete Listing
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -799,184 +756,178 @@ function MyListingsView({
                   </div>
                 </div>
 
-                <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
-                  <button
-                    type="button"
-                    className="aspect-[140/100] w-full shrink-0 cursor-pointer overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-none transition-colors hover:border-neutral-300 sm:h-[100px] sm:w-[140px] sm:aspect-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-                    onClick={() => onPreview(l.id)}
-                  >
+                <div className="relative flex items-start gap-4">
+                  <div className="h-[100px] w-[140px] shrink-0 cursor-pointer overflow-hidden rounded-xl border border-zinc-100 bg-white">
                     <img
                       src={thumbnail || "/placeholder.svg"}
-                      alt={formatAddressWithUnit(l)}
+                      alt={l.address}
                       className="h-full w-full object-cover"
+                      onClick={() => onPreview(l.id)}
                     />
-                  </button>
+                  </div>
 
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <div className="flex items-center gap-2">
                       {l.listing_number && (
                         <button
                           type="button"
-                          className="text-[13px] font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                          className="cursor-pointer text-xs leading-none text-primary hover:text-primary/80 hover:underline"
                           onClick={() => onPreview(l.id)}
                         >
                           #{l.listing_number}
                         </button>
                       )}
-                      {l.listing_type ? (
+                      {l.listing_type && (
                         <>
-                          {l.listing_number ? (
-                            <span className="text-zinc-200" aria-hidden>
-                              ·
-                            </span>
-                          ) : null}
-                          <span className="inline-flex rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
+                          <span className="text-zinc-300">•</span>
+                          <span className="inline-block rounded border border-zinc-100 bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#0E56F5]">
                             {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
                           </span>
                         </>
-                      ) : null}
+                      )}
                     </div>
-                    <div className="text-base font-semibold leading-snug tracking-tight text-zinc-900">
-                      <span className="line-clamp-2">{formatAddressWithUnit(l)}</span>
+                    <div className="truncate text-base font-semibold leading-tight text-zinc-900">
+                      {formatAddressWithUnit(l)}
                     </div>
-                    <div className="text-[13px] leading-snug text-zinc-500">
+                    <div className="text-sm leading-tight text-zinc-500">
                       {l.state} {l.zip_code}
                       {l.neighborhood ? ` · ${l.neighborhood}` : ""}
                     </div>
-                    {/* Price */}
                     <div className="mt-1">
-                       {isEditing ? (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <input
-                              type="number"
-                              className="h-9 w-28 rounded-lg border border-neutral-200 bg-white px-2.5 text-[13px] text-zinc-900 shadow-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-                              value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                            />
-                            <select
-                              className="h-9 rounded-lg border border-neutral-200 bg-white px-2 text-[12px] capitalize text-zinc-900 shadow-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-                              value={editStatus}
-                              onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                            >
-                              {ALL_STATUSES.map((tab) => (
-                                <option key={tab.value} value={tab.value}>
-                                  {tab.label}
-                                </option>
-                              ))}
-                            </select>
+                      {isEditing ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="number"
+                            className="w-28 rounded border border-zinc-200 bg-white px-2 py-1 text-sm"
+                            value={editPrice}
+                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                          />
+                          <select
+                            className="rounded border border-zinc-200 bg-white px-2 py-1 text-xs capitalize"
+                            value={editStatus}
+                            onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
+                          >
+                            {ALL_STATUSES.map((tab) => (
+                              <option key={tab.value} value={tab.value}>
+                                {tab.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground hover:bg-primary/90"
+                            onClick={saveQuickEdit}
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
+                            onClick={cancelQuickEdit}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="text-sm font-medium text-zinc-900">${l.price.toLocaleString()}</span>
                             <button
                               type="button"
-                              className="h-9 rounded-lg bg-zinc-900 px-3 text-[12px] font-semibold text-white shadow-none outline-none hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
-                              onClick={saveQuickEdit}
+                              className="text-xs text-primary hover:text-primary/80 hover:underline"
+                              onClick={() => startQuickEdit(l)}
+                              title="Quick edit price and status"
                             >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              className="text-[12px] font-medium text-zinc-500 underline-offset-4 hover:text-zinc-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-                              onClick={cancelQuickEdit}
-                            >
-                              Cancel
+                              Quick Edit
                             </button>
                           </div>
-                        ) : (
-                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
-                            <div className="flex shrink-0 flex-wrap items-baseline gap-2">
-                              <span className="text-[15px] font-semibold tabular-nums text-zinc-900">
-                                ${l.price.toLocaleString()}
-                              </span>
-                              <button
-                                type="button"
-                                className="text-[12px] font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-                                onClick={() => startQuickEdit(l)}
-                                title="Quick edit price and status"
-                              >
-                                Quick edit
-                              </button>
-                            </div>
-                            {(() => {
-                              const now = new Date();
-                              const allEvents = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
-                              // Filter out past events (safety net while backend cleans up every 15 min)
-                              const events = allEvents.filter((e: any) => {
-                                if (!e?.date || !e?.end_time) return true;
-                                return new Date(`${e.date}T${e.end_time}`) > now;
-                              });
-                              const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
-                              const openHouseEvent = openHouseIndex >= 0 ? events[openHouseIndex] : null;
-                              const openHouseCount = events.filter((e: any) => e?.event_type !== "broker_tour").length;
-                              const brokerTourIndex = events.findIndex((e: any) => e?.event_type === "broker_tour");
-                              const brokerTourEvent = brokerTourIndex >= 0 ? events[brokerTourIndex] : null;
-                              const brokerTourCount = events.filter((e: any) => e?.event_type === "broker_tour").length;
-                              const hasEvents = openHouseEvent || brokerTourEvent;
+                          <div className="w-8 shrink-0" />
+                          {(() => {
+                            const now = new Date();
+                            const allEvents = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
+                            const events = allEvents.filter((e: any) => {
+                              if (!e?.date || !e?.end_time) return true;
+                              return new Date(`${e.date}T${e.end_time}`) > now;
+                            });
+                            const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
+                            const openHouseEvent = openHouseIndex >= 0 ? events[openHouseIndex] : null;
+                            const openHouseCount = events.filter((e: any) => e?.event_type !== "broker_tour").length;
+                            const brokerTourIndex = events.findIndex((e: any) => e?.event_type === "broker_tour");
+                            const brokerTourEvent = brokerTourIndex >= 0 ? events[brokerTourIndex] : null;
+                            const brokerTourCount = events.filter((e: any) => e?.event_type === "broker_tour").length;
+                            const hasEvents = openHouseEvent || brokerTourEvent;
 
-                              if (!hasEvents) return null;
+                            if (!hasEvents) return null;
 
-                              return (
-                                <>
-                                <div className="hidden w-px shrink-0 self-stretch bg-neutral-100 sm:block" aria-hidden />
-                                <div className="min-w-0 flex-1 space-y-0.5">
-                                  {openHouseEvent && (() => {
-                                    const first = formatOpenHouseEvent(openHouseEvent);
-                                    return (
-                                      <div className="flex items-center gap-1.5 text-sm text-zinc-600 min-w-0">
-                                        <span aria-hidden className="shrink-0">🎈</span>
-                                        <span className="truncate">Open House • {first.dateLabel} • {first.timeLabel}</span>
-                                        {openHouseCount > 1 && (
-                                          <span className="text-zinc-400 text-xs shrink-0">+{openHouseCount - 1} more</span>
-                                        )}
-                                        <button
-                                          type="button"
-                                          className="ml-1 shrink-0 rounded px-1 text-[11px] font-semibold text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
-                                          onClick={() => onViewOpenHouses(l)}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="shrink-0 rounded px-1 text-[11px] font-semibold text-red-700 underline-offset-4 hover:text-red-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
-                                          onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
-                                        >
-                                          Delete
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
-                                  {brokerTourEvent && (() => {
-                                    const first = formatOpenHouseEvent(brokerTourEvent);
-                                    return (
-                                      <div className="flex items-center gap-1.5 text-sm text-zinc-600 min-w-0">
-                                        <span aria-hidden className="shrink-0">🚙</span>
-                                        <span className="truncate">Broker Tour • {first.dateLabel} • {first.timeLabel}</span>
-                                        {brokerTourCount > 1 && (
-                                          <span className="text-zinc-400 text-xs shrink-0">+{brokerTourCount - 1} more</span>
-                                        )}
-                                        <button
-                                          type="button"
-                                          className="ml-1 shrink-0 rounded px-1 text-[11px] font-semibold text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
-                                          onClick={() => onViewOpenHouses(l)}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="shrink-0 rounded px-1 text-[11px] font-semibold text-red-700 underline-offset-4 hover:text-red-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
-                                          onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
-                                        >
-                                          Delete
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
-                                </div>
-                                </>
-                              );
-                            })()}
-                          </div>
-                        )}
-                     </div>
+                            return (
+                              <div className="min-w-0 space-y-0.5">
+                                {openHouseEvent && (() => {
+                                  const first = formatOpenHouseEvent(openHouseEvent);
+                                  return (
+                                    <div className="flex min-w-0 items-center gap-1.5 text-sm text-zinc-600">
+                                      <span aria-hidden className="shrink-0">
+                                        🎈
+                                      </span>
+                                      <span className="truncate">
+                                        Open House • {first.dateLabel} • {first.timeLabel}
+                                      </span>
+                                      {openHouseCount > 1 && (
+                                        <span className="shrink-0 text-xs text-zinc-400">+{openHouseCount - 1} more</span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        className="ml-1 shrink-0 text-xs text-primary hover:text-primary/80 hover:underline"
+                                        onClick={() => onViewOpenHouses(l)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="shrink-0 text-xs text-red-600 hover:text-red-700 hover:underline"
+                                        onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
+                                {brokerTourEvent && (() => {
+                                  const first = formatOpenHouseEvent(brokerTourEvent);
+                                  return (
+                                    <div className="flex min-w-0 items-center gap-1.5 text-sm text-zinc-600">
+                                      <span aria-hidden className="shrink-0">
+                                        🚙
+                                      </span>
+                                      <span className="truncate">
+                                        Broker Tour • {first.dateLabel} • {first.timeLabel}
+                                      </span>
+                                      {brokerTourCount > 1 && (
+                                        <span className="shrink-0 text-xs text-zinc-400">+{brokerTourCount - 1} more</span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        className="ml-1 shrink-0 text-xs text-primary hover:text-primary/80 hover:underline"
+                                        onClick={() => onViewOpenHouses(l)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="shrink-0 text-xs text-red-600 hover:text-red-700 hover:underline"
+                                        onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
                   </div>
-
                 </div>
               </CardSurface>
             );
