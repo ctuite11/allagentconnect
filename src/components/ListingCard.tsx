@@ -14,6 +14,7 @@ import { ReverseProspectDialog } from "./ReverseProspectDialog";
 import MarketInsightsDialog from "./MarketInsightsDialog";
 import ContactAgentDialog from "./ContactAgentDialog";
 import FavoriteButton from "./FavoriteButton";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import { ListingAttribution } from "./ListingAttribution";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -178,6 +179,8 @@ const ListingCard = ({
   subtleListingIdLink = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
+  const { role } = useAuthRole();
+  const suppressFavoriteHeartChrome = role === "agent" || role === "admin";
 
   const rowProfile = (listing as { agent_profile?: ListedByAgentProfile }).agent_profile;
   const listedByFromProfiles = resolveListedByAttribution(listing as ListedBySource, rowProfile ?? supplementalAgentProfile);
@@ -718,7 +721,9 @@ const ListingCard = ({
     const totalPhotos = getTotalPhotos();
     const compactPhotoUrl = compactAgentOwned ? getPhotoByIndex(0) : getPhotoByIndex(currentPhotoIndex);
     const showCarouselArrows = !compactAgentOwned && totalPhotos > 1;
-    
+    const showFavoriteChrome =
+      !suppressFavoriteHeartChrome && (isHotSheetFavorite || !hideCompactFavorite);
+
     return <Card
         className="flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm transition-[box-shadow,border-color] hover:border-zinc-200 hover:shadow-md"
         onClick={openListingDetail}
@@ -729,7 +734,7 @@ const ListingCard = ({
             <div
               className={cn(
                 "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-2 pt-2",
-                isHotSheetFavorite || !hideCompactFavorite ? "justify-between" : "justify-start"
+                showFavoriteChrome ? "justify-between" : "justify-start"
               )}
             >
               <div className="pointer-events-auto flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center">
@@ -769,7 +774,7 @@ const ListingCard = ({
                   </div>
                 ) : null}
               </div>
-              {(isHotSheetFavorite || !hideCompactFavorite) && (
+              {showFavoriteChrome && (
                 <div
                   className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
                   onClick={(e) => e.stopPropagation()}
