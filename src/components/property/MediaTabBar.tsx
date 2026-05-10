@@ -19,6 +19,8 @@ export interface MediaTabBarProps {
   className?: string;
   /** Renders after Photos / Video / 3D Tour / Website (e.g. share control) */
   trailing?: ReactNode;
+  /** Consumer-style tabs: neutral active state (no primary blue) */
+  neutralTone?: boolean;
 }
 
 /**
@@ -33,9 +35,20 @@ export function MediaTabBar({
   hasWebsite,
   className,
   trailing,
+  neutralTone = false,
 }: MediaTabBarProps) {
   const variantFor = (tab: MediaTab) =>
-    active === tab ? "default" : "outline";
+    neutralTone ? "outline" : active === tab ? "default" : "outline";
+
+  const toneTab = (tab: MediaTab) =>
+    neutralTone
+      ? cn(
+          "rounded-full border-neutral-200 text-[13px] font-medium",
+          active === tab
+            ? "!border-neutral-900 !bg-neutral-900 !text-white hover:!bg-neutral-800"
+            : "bg-white text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50",
+        )
+      : "rounded-full";
 
   return (
     <div className={cn(propertyMediaTabsRow, className)}>
@@ -43,9 +56,9 @@ export function MediaTabBar({
         variant={variantFor("photos")}
         size="sm"
         onClick={() => onChange("photos")}
-        className="rounded-full"
+        className={toneTab("photos")}
       >
-        <Images className="w-4 h-4 mr-2" />
+        <Images className="mr-2 h-4 w-4" />
         Photos
       </Button>
       {hasVideo && (
@@ -53,9 +66,9 @@ export function MediaTabBar({
           variant={variantFor("video")}
           size="sm"
           onClick={() => onChange("video")}
-          className="rounded-full"
+          className={toneTab("video")}
         >
-          <Video className="w-4 h-4 mr-2" />
+          <Video className="mr-2 h-4 w-4" />
           Video
         </Button>
       )}
@@ -64,9 +77,9 @@ export function MediaTabBar({
           variant={variantFor("tour")}
           size="sm"
           onClick={() => onChange("tour")}
-          className="rounded-full"
+          className={toneTab("tour")}
         >
-          <Maximize2 className="w-4 h-4 mr-2" />
+          <Maximize2 className="mr-2 h-4 w-4" />
           3D Tour
         </Button>
       )}
@@ -75,9 +88,9 @@ export function MediaTabBar({
           variant={variantFor("website")}
           size="sm"
           onClick={() => onChange("website")}
-          className="rounded-full"
+          className={toneTab("website")}
         >
-          <Globe className="w-4 h-4 mr-2" />
+          <Globe className="mr-2 h-4 w-4" />
           Website
         </Button>
       )}

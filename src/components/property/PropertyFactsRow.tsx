@@ -18,6 +18,8 @@ interface PropertyFactsRowProps {
   className?: string;
   /** Spacing / wrapper above the stats row (default mt-4) */
   containerClassName?: string;
+  /** Override icon color (e.g. consumer detail neutral icons) */
+  iconClassName?: string;
 }
 
 /**
@@ -32,7 +34,9 @@ export function PropertyFactsRow({
   daysOnMarket,
   className,
   containerClassName,
+  iconClassName,
 }: PropertyFactsRowProps) {
+  const iconCls = cn(propertyFactIcon, iconClassName);
   const pricePerSqft =
     price && squareFeet && squareFeet > 0
       ? Math.round(price / squareFeet)
@@ -50,14 +54,14 @@ export function PropertyFactsRow({
         )}
         {bathrooms != null && bathrooms > 0 && (
           <div className={propertyFactItem}>
-            <Bath className={propertyFactIcon} />
+            <Bath className={iconCls} />
             <span className={propertyFactValue}>{bathrooms}</span>
             <span className={propertyFactLabel}>Baths</span>
           </div>
         )}
         {squareFeet != null && squareFeet > 0 && (
           <div className={propertyFactItem}>
-            <Square className={propertyFactIcon} />
+            <Square className={iconCls} />
             <span className={propertyFactValue}>
               {squareFeet.toLocaleString()}
             </span>
@@ -66,7 +70,7 @@ export function PropertyFactsRow({
         )}
         {pricePerSqft != null && (
           <div className={propertyFactItem}>
-            <DollarSign className={propertyFactIcon} />
+            <DollarSign className={iconCls} />
             <span className={propertyFactValue}>
               ${pricePerSqft.toLocaleString()}
             </span>
@@ -75,7 +79,7 @@ export function PropertyFactsRow({
         )}
         {daysOnMarket != null && (
           <div className={propertyFactItem}>
-            <Calendar className={propertyFactIcon} />
+            <Calendar className={iconCls} />
             <span className={propertyFactValue}>{daysOnMarket}</span>
             <span className={propertyFactLabel}>DOM</span>
           </div>

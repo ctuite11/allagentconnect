@@ -31,7 +31,7 @@ export function PropertyHeader({
       <div className={cn(propertyMediaCol, "pr-2")}>
         <div className={propertyHeaderRow}>
           <h1 className={propertyAddressH1}>
-            <MapPin className="w-4 h-4 text-emerald-500 shrink-0 relative top-[1px]" />
+            <MapPin className="relative top-[1px] h-4 w-4 shrink-0 text-neutral-500" />
             {address}
           </h1>
           <div className="text-right">

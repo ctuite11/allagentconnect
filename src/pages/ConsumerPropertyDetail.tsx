@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -33,7 +33,6 @@ import {
   ChevronRight,
   Video,
   Globe,
-  Maximize2,
   Expand,
   DollarSign,
   Building2,
@@ -62,6 +61,7 @@ import {
   propertyRailStack,
   propertyHeroMedia,
 } from "@/components/property/propertyTokens";
+import { cn } from "@/lib/utils";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 // ContactAgentDialog removed — buyer CTA is in-app messaging only
 import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
@@ -90,6 +90,50 @@ function asStickyAgentId(id: string | null | undefined): StickyAgentId | null {
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
+/** Section shell aligned with polished browse / favorites surfaces */
+const consumerSectionCard =
+  "rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
+
+function ConsumerPropertyDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto max-w-6xl px-4 pb-3 pt-5">
+        <Skeleton className="h-5 w-40 rounded-md bg-neutral-100" />
+      </div>
+      <div className={cn(propertyPageContainer, "pb-6")}>
+        <div className={cn("flex flex-col", propertyHeroGap, "lg:flex-row")}>
+          <div className={cn(propertyMediaCol, "space-y-4")}>
+            <Skeleton className="h-[280px] w-full rounded-2xl bg-neutral-100 sm:h-[360px] lg:h-[440px]" />
+            <div className="flex flex-wrap gap-2">
+              <Skeleton className="h-9 w-[5.5rem] rounded-full bg-neutral-100" />
+              <Skeleton className="h-9 w-[5.5rem] rounded-full bg-neutral-100" />
+              <Skeleton className="ml-auto h-9 w-24 rounded-full bg-neutral-100" />
+            </div>
+            <Skeleton className="h-14 w-full max-w-xl rounded-lg bg-neutral-100" />
+          </div>
+          <div className={cn(propertyRailCol, propertyRailStack)}>
+            <Skeleton className="h-72 rounded-2xl bg-neutral-100" />
+            <Skeleton className="h-24 rounded-2xl bg-neutral-100" />
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <Skeleton className="h-48 rounded-2xl bg-neutral-100" />
+            <Skeleton className="h-64 rounded-2xl bg-neutral-100" />
+            <Skeleton className="h-56 rounded-2xl bg-neutral-100" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-40 rounded-2xl bg-neutral-100" />
+            <Skeleton className="h-32 rounded-2xl bg-neutral-100" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface AgentProfile {
   id: string;
   first_name: string;
@@ -114,6 +158,7 @@ const ConsumerPropertyDetail = () => {
   const [listing, setListing] = useState<any | null>(null);
   const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
@@ -134,7 +179,7 @@ const ConsumerPropertyDetail = () => {
 
       const userId = data?.user?.id;
       if (!userId) {
-        navigate("/login");
+        navigate("/auth");
         return;
       }
 
@@ -177,46 +222,52 @@ const ConsumerPropertyDetail = () => {
   // Track listing view
   useListingView(id);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("listings")
-          .select("*")
-          .eq("id", id)
+  const loadListing = useCallback(async () => {
+    if (!id) return;
+    try {
+      setLoadError(false);
+      setLoading(true);
+      setAgentProfile(null);
+
+      const { data, error } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        setListing(null);
+        return;
+      }
+
+      setListing({
+        ...data,
+        photos: Array.isArray(data.photos) ? (data.photos as any[]) : [],
+      });
+
+      if (data.agent_id) {
+        const { data: profile } = await supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url, logo_url, social_links")
+          .eq("id", data.agent_id)
           .maybeSingle();
 
-        if (error) throw error;
-
-        if (data) {
-          setListing({
-            ...data,
-            photos: Array.isArray(data.photos) ? data.photos as any[] : [],
-          });
-
-          // Fetch agent profile
-          if (data.agent_id) {
-            const { data: profile } = await supabase
-              .from("agent_profiles")
-              .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url, logo_url, social_links")
-              .eq("id", data.agent_id)
-              .maybeSingle();
-
-            if (profile) {
-              setAgentProfile(profile as AgentProfile);
-            }
-          }
-        }
-      } catch (error: any) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load property details");
-      } finally {
-        setLoading(false);
+        setAgentProfile(profile ? (profile as AgentProfile) : null);
+      } else {
+        setAgentProfile(null);
       }
-    };
-
-    if (id) fetchData();
+    } catch (error: unknown) {
+      console.error("Error fetching data:", error);
+      setLoadError(true);
+      setListing(null);
+      setAgentProfile(null);
+      toast.error("Failed to load property details");
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    void loadListing();
+  }, [loadListing]);
 
   const handlePrevPhoto = () => {
     if (listing?.photos && listing.photos.length > 0) {
@@ -260,20 +311,51 @@ const ConsumerPropertyDetail = () => {
     return `$${listing.commission_rate.toLocaleString()}`;
   };
 
-  if (loading) return <LoadingScreen />;
+  if (loading) {
+    return <ConsumerPropertyDetailSkeleton />;
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-4 py-16 text-center">
+          <div className="w-full rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+            <p className="text-[15px] font-semibold text-neutral-900">Couldn&apos;t load this listing</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
+              Check your connection and try again.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                className="bg-neutral-900 text-white hover:bg-neutral-800"
+                onClick={() => void loadListing()}
+              >
+                Try again
+              </Button>
+              <Button type="button" size="sm" variant="outline" className="border-neutral-200" onClick={() => navigate("/browse")}>
+                Browse homes
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!listing) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="py-8">
-              <p className="text-center text-muted-foreground">Listing not found</p>
-              <div className="flex justify-center mt-4">
-                <Button onClick={() => navigate("/browse")}>Back to Search</Button>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen bg-white">
+        <div className="mx-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center px-4 py-16 text-center">
+          <div className="w-full rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+            <p className="text-[15px] font-semibold text-neutral-900">Listing not found</p>
+            <p className="mt-2 text-[13px] text-neutral-500">It may have been removed or the link is incorrect.</p>
+            <div className="mt-6 flex justify-center">
+              <Button type="button" className="bg-neutral-900 text-white hover:bg-neutral-800" onClick={() => navigate("/browse")}>
+                Back to search
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -301,44 +383,44 @@ const ConsumerPropertyDetail = () => {
 
   const buyerCompensationCard =
     compensationDisplay && (
-      <Card className="rounded-2xl border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20">
-        <CardContent className="py-2.5 px-3.5">
+      <Card className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        <CardContent className="px-3.5 py-2.5">
           <div className="flex items-start gap-2">
-            <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-emerald-800 dark:text-emerald-200">
-              Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+            <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-neutral-800">
+              Buyer agent compensation: {compensationDisplay} (paid by seller)
             </span>
             <Dialog>
               <DialogTrigger asChild>
                 <button
                   type="button"
-                  className="shrink-0 text-emerald-600 hover:text-emerald-800"
+                  className="shrink-0 rounded-md text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
                 >
-                  <HelpCircle className="w-4 h-4" />
+                  <HelpCircle className="h-4 w-4" />
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md border-neutral-200 bg-white">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-600" />
-                    Buyer Agent Compensation
+                  <DialogTitle className="flex items-center gap-2 text-neutral-900">
+                    <DollarSign className="h-5 w-5 text-neutral-600" />
+                    Buyer agent compensation
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-3 py-4 text-sm text-muted-foreground">
+                <div className="space-y-3 py-4 text-sm text-neutral-600">
                   <p>
                     This compensation is{" "}
-                    <strong className="text-foreground">paid by the seller</strong> and offered
-                    to buyer agents who bring qualified buyers.
+                    <strong className="text-neutral-900">paid by the seller</strong> and offered to
+                    buyer agents who bring qualified buyers.
                   </p>
                   <p>
-                    <strong className="text-foreground">Is this negotiable?</strong>
+                    <strong className="text-neutral-900">Is this negotiable?</strong>
                     <br />
                     Yes, compensation terms may be negotiable. Discuss with the listing agent for
                     details.
                   </p>
                   <p>
-                    <strong className="text-foreground">Note:</strong> Actual compensation may
-                    vary based on your buyer representation agreement. Ask your agent about their
-                    fee structure.
+                    <strong className="text-neutral-900">Note:</strong> Actual compensation may
+                    vary based on your buyer representation agreement. Ask your agent about their fee
+                    structure.
                   </p>
                 </div>
               </DialogContent>
@@ -349,7 +431,7 @@ const ConsumerPropertyDetail = () => {
     );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -396,7 +478,7 @@ const ConsumerPropertyDetail = () => {
                 const lastSearch = sessionStorage.getItem("buyer_last_search_url");
                 navigate(lastSearch || "/browse");
               }}
-              className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground px-1.5 py-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
+              className="-ml-1.5 inline-flex items-center rounded-md px-1.5 py-1.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
               aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
             >
               {backLabel}
@@ -419,7 +501,12 @@ const ConsumerPropertyDetail = () => {
 
             {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
             <div className={propertyMediaCol}>
-              <div className={propertyHeroMedia}>
+              <div
+                className={cn(
+                  propertyHeroMedia,
+                  "h-[280px] shadow-md ring-1 ring-neutral-200/90 sm:h-[360px] lg:h-[440px]",
+                )}
+              >
                 <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                   {activeMediaTab === "photos" && (
@@ -525,11 +612,17 @@ const ConsumerPropertyDetail = () => {
                 hasVideo={!!listing.video_url}
                 hasTour={!!listing.virtual_tour_url}
                 hasWebsite={!!listing.property_website_url}
+                neutralTone
                 trailing={
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="rounded-full" aria-label="Share property">
-                        <Share2 className="w-4 h-4 mr-2" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full border-neutral-200 bg-white text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                        aria-label="Share property"
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
                         Share
                       </Button>
                     </DropdownMenuTrigger>
@@ -605,6 +698,7 @@ const ConsumerPropertyDetail = () => {
                 daysOnMarket={daysOnMarket}
                 containerClassName="!mt-9"
                 className="!mt-0 border-b-0 pb-0"
+                iconClassName="!text-neutral-600"
               />
             </div>
 
@@ -613,23 +707,23 @@ const ConsumerPropertyDetail = () => {
 
               {/* Your Agent Card (attribution masking) */}
               {stickyAgentProfile ? (
-                <Card className="rounded-3xl shadow-md border-2">
-                  <CardContent className="p-5 space-y-4">
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
+                  <CardContent className="space-y-4 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`}
                         headshotUrl={stickyAgentProfile.headshot_url ?? null}
                         userId={stickyAgentProfile.id}
                         size="xl"
-                        avatarClassName="w-16 h-16 border-2 border-border"
-                        fallbackClassName="bg-muted"
+                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Your Agent</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Your agent</p>
                         <p className="font-bold text-lg leading-tight">
                           {stickyAgentProfile.first_name} {stickyAgentProfile.last_name}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-neutral-600">
                           {stickyAgentProfile.title || 'Realtor'} · {stickyAgentProfile.company || "Brokerage"}
                         </p>
                       </div>
@@ -637,28 +731,33 @@ const ConsumerPropertyDetail = () => {
 
                     <div className="space-y-2.5 text-sm">
                       {stickyAgentProfile.cell_phone && (
-                        <a href={`tel:${stickyAgentProfile.cell_phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
-                          <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <a href={`tel:${stickyAgentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(stickyAgentProfile.cell_phone)}</span>
-                          <span className="text-muted-foreground text-xs ml-auto">Mobile</span>
+                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
                         </a>
                       )}
                       {stickyAgentProfile.phone && stickyAgentProfile.phone !== stickyAgentProfile.cell_phone && (
-                        <a href={`tel:${stickyAgentProfile.phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
-                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <a href={`tel:${stickyAgentProfile.phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(stickyAgentProfile.phone)}</span>
-                          <span className="text-muted-foreground text-xs ml-auto">Office</span>
+                          <span className="ml-auto text-xs text-neutral-500">Office</span>
                         </a>
                       )}
                       {stickyAgentProfile.email && (
-                        <a href={`mailto:${stickyAgentProfile.email}`} className="flex items-center gap-2.5 hover:text-primary transition">
-                          <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <a href={`mailto:${stickyAgentProfile.email}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium truncate">{stickyAgentProfile.email}</span>
                         </a>
                       )}
                       {stickyAgentProfile.social_links?.website && (
-                        <a href={stickyAgentProfile.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-primary hover:underline">
-                          <Globe className="w-4 h-4 flex-shrink-0" />
+                        <a
+                          href={stickyAgentProfile.social_links.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 font-medium text-neutral-800 underline-offset-2 hover:text-neutral-900 hover:underline"
+                        >
+                          <Globe className="h-4 w-4 shrink-0 text-neutral-600" />
                           <span className="font-medium">Website</span>
                         </a>
                       )}
@@ -669,7 +768,7 @@ const ConsumerPropertyDetail = () => {
                     <div className="grid gap-2">
                       <Button
                         size="lg"
-                        className="w-full gap-2"
+                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
                         onClick={() => handleMessageAgent(stickyAgentId)}
                       >
                         <MessageSquare className="h-5 w-5" />
@@ -677,7 +776,7 @@ const ConsumerPropertyDetail = () => {
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full gap-2"
+                        className="w-full gap-2 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
                         onClick={() => setEmailDialogOpen(true)}
                       >
                         <Mail className="h-4 w-4" />
@@ -695,23 +794,23 @@ const ConsumerPropertyDetail = () => {
                   </CardContent>
                 </Card>
               ) : agentProfile ? (
-                <Card className="rounded-3xl shadow-md border-2">
-                  <CardContent className="p-5 space-y-4">
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
+                  <CardContent className="space-y-4 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${agentProfile.first_name} ${agentProfile.last_name}`}
                         headshotUrl={agentProfile.headshot_url ?? null}
                         userId={agentProfile.id}
                         size="xl"
-                        avatarClassName="w-16 h-16 border-2 border-border"
-                        fallbackClassName="bg-muted"
+                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing Agent</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
                         <p className="font-bold text-lg leading-tight">
                           {agentProfile.first_name} {agentProfile.last_name}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-neutral-600">
                           {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
                         </p>
                       </div>
@@ -719,28 +818,33 @@ const ConsumerPropertyDetail = () => {
 
                     <div className="space-y-2.5 text-sm">
                       {agentProfile.cell_phone && (
-                        <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
-                          <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
-                          <span className="text-muted-foreground text-xs ml-auto">Mobile</span>
+                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
                         </a>
                       )}
                       {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
-                        <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 hover:text-primary transition">
-                          <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
-                          <span className="text-muted-foreground text-xs ml-auto">Office</span>
+                          <span className="ml-auto text-xs text-neutral-500">Office</span>
                         </a>
                       )}
                       {agentProfile.email && (
-                        <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-2.5 hover:text-primary transition">
-                          <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium truncate">{agentProfile.email}</span>
                         </a>
                       )}
                       {agentProfile.social_links?.website && (
-                        <a href={agentProfile.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-primary hover:underline">
-                          <Globe className="w-4 h-4 flex-shrink-0" />
+                        <a
+                          href={agentProfile.social_links.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 font-medium text-neutral-800 underline-offset-2 hover:text-neutral-900 hover:underline"
+                        >
+                          <Globe className="h-4 w-4 shrink-0 text-neutral-600" />
                           <span className="font-medium">Website</span>
                         </a>
                       )}
@@ -749,7 +853,7 @@ const ConsumerPropertyDetail = () => {
                     <div className="grid gap-2">
                       <Button
                         size="lg"
-                        className="w-full gap-2"
+                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
                         onClick={() => handleMessageAgent(agentProfile.id)}
                       >
                         <MessageSquare className="h-5 w-5" />
@@ -759,15 +863,15 @@ const ConsumerPropertyDetail = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="rounded-3xl shadow-md border-2">
-                  <CardContent className="p-5 space-y-4">
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
+                  <CardContent className="space-y-4 p-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                        <HelpCircle className="w-8 h-8 text-muted-foreground" />
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-sm">
+                        <HelpCircle className="h-8 w-8 text-neutral-400" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Need help?</p>
-                        <p className="font-bold text-lg leading-tight">Contact support</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Need help?</p>
+                        <p className="text-lg font-bold leading-tight text-neutral-900">Contact support</p>
                       </div>
                     </div>
                   </CardContent>
@@ -814,15 +918,16 @@ const ConsumerPropertyDetail = () => {
                 return (
                   <SectionWrapper
                     title="Overview"
-                    icon={<FileText className="w-5 h-5" />}
+                    icon={<FileText className="h-5 w-5 text-neutral-600" />}
                     contentClassName="space-y-4"
+                    className={consumerSectionCard}
                   >
-                    <p className="whitespace-pre-wrap">{visibleText}</p>
+                    <p className="whitespace-pre-wrap text-neutral-800">{visibleText}</p>
                     {isLong && (
                       <button
                         type="button"
                         onClick={() => setDescriptionExpanded(v => !v)}
-                        className="text-primary font-medium text-sm"
+                        className="text-sm font-medium text-neutral-900 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
                       >
                         {descriptionExpanded ? 'Read less' : 'Read more'}
                       </button>
@@ -836,13 +941,14 @@ const ConsumerPropertyDetail = () => {
                 listing={listing}
                 agent={agentProfile}
                 isAgentView={false}
+                premiumNeutralSurfaces
               />
 
               {/* Listing agent attribution — represented buyers only.
                   Sticky agent is the primary contact; this is muted,
                   no link, no contact details, no hover. */}
               {stickyAgentProfile && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
-                <p className="text-xs text-muted-foreground/80 px-1">
+                <p className="px-1 text-xs text-neutral-500">
                   Listing courtesy of {agentProfile.first_name} {agentProfile.last_name}
                   {agentProfile.company ? ` • ${agentProfile.company}` : ""}
                 </p>
@@ -851,7 +957,8 @@ const ConsumerPropertyDetail = () => {
               {/* Map */}
               <SectionWrapper
                 title="Location"
-                icon={<MapPin className="h-5 w-5" />}
+                icon={<MapPin className="h-5 w-5 text-neutral-600" />}
+                className={consumerSectionCard}
               >
                 <PropertyMap
                   address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
@@ -874,28 +981,28 @@ const ConsumerPropertyDetail = () => {
 
               {/* ATTOM Property Data */}
               {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
-                <SectionWrapper title="Property Data" contentClassName="space-y-2">
+                <SectionWrapper title="Property Data" contentClassName="space-y-2" className={consumerSectionCard}>
                   {listing.attom_data.property_type && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Property Type:</span>
+                      <span className="text-neutral-600">Property Type:</span>
                       <span className="font-semibold">{listing.attom_data.property_type}</span>
                     </div>
                   )}
                   {listing.attom_data.stories && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Stories:</span>
+                      <span className="text-neutral-600">Stories:</span>
                       <span className="font-semibold">{listing.attom_data.stories}</span>
                     </div>
                   )}
                   {listing.attom_data.parking_spaces && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Parking Spaces:</span>
+                      <span className="text-neutral-600">Parking Spaces:</span>
                       <span className="font-semibold">{listing.attom_data.parking_spaces}</span>
                     </div>
                   )}
                   {listing.attom_data.zoning && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Zoning:</span>
+                      <span className="text-neutral-600">Zoning:</span>
                       <span className="font-semibold">{listing.attom_data.zoning}</span>
                     </div>
                   )}
@@ -906,8 +1013,9 @@ const ConsumerPropertyDetail = () => {
               {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
                 <SectionWrapper
                   title="Nearby Schools"
-                  icon={<GraduationCap className="h-5 w-5" />}
+                  icon={<GraduationCap className="h-5 w-5 text-neutral-600" />}
                   contentClassName="space-y-3"
+                  className={consumerSectionCard}
                 >
                   {listing.schools_data.schools.slice(0, 5).map((school: any, index: number) => (
                     <div key={index} className="pb-3 border-b last:border-0 last:pb-0">
@@ -915,7 +1023,7 @@ const ConsumerPropertyDetail = () => {
                         <h4 className="font-semibold text-sm">{school.name}</h4>
                         {school.rating && <Badge variant="secondary">{school.rating}/10</Badge>}
                       </div>
-                      <p className="text-xs text-muted-foreground">{school.level} • {school.distance} mi</p>
+                      <p className="text-xs text-neutral-500">{school.level} • {school.distance} mi</p>
                     </div>
                   ))}
                 </SectionWrapper>
@@ -925,23 +1033,24 @@ const ConsumerPropertyDetail = () => {
               {listing.walk_score_data && (
                 <SectionWrapper
                   title="Walk Score"
-                  icon={<Footprints className="h-5 w-5" />}
+                  icon={<Footprints className="h-5 w-5 text-neutral-600" />}
                   contentClassName="space-y-3"
+                  className={consumerSectionCard}
                 >
                   {listing.walk_score_data.walkscore && (
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm">Walk Score</span>
-                        <span className="text-2xl font-bold text-primary">{listing.walk_score_data.walkscore}</span>
+                        <span className="text-2xl font-bold tabular-nums text-neutral-900">{listing.walk_score_data.walkscore}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">{listing.walk_score_data.description}</p>
+                      <p className="text-xs text-neutral-500">{listing.walk_score_data.description}</p>
                     </div>
                   )}
                   {listing.walk_score_data.transit && (
                     <div className="pt-2 border-t">
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Transit Score</span>
-                        <span className="text-xl font-bold">{listing.walk_score_data.transit.score}</span>
+                        <span className="text-xl font-bold tabular-nums text-neutral-900">{listing.walk_score_data.transit.score}</span>
                       </div>
                     </div>
                   )}
@@ -949,7 +1058,7 @@ const ConsumerPropertyDetail = () => {
                     <div className="pt-2 border-t">
                       <div className="flex justify-between items-center">
                         <span className="text-sm">Bike Score</span>
-                        <span className="text-xl font-bold">{listing.walk_score_data.bike.score}</span>
+                        <span className="text-xl font-bold tabular-nums text-neutral-900">{listing.walk_score_data.bike.score}</span>
                       </div>
                     </div>
                   )}
