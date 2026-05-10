@@ -872,8 +872,8 @@ const ListingCard = ({
               {displayPrice}
             </p>
             {!hideMlsMeta && (
-              <div className="text-right">
-                {compactIdLabel && (
+              <div className="flex flex-col items-end gap-0.5 text-right">
+                {compactIdLabel ? (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -881,16 +881,15 @@ const ListingCard = ({
                       openListingDetail();
                     }}
                     className={cn(
-                      subtleListingIdLink ? LISTING_ID_NAV_CLASS_SEARCH_SURFACE : LISTING_ID_NAV_CLASS,
-                      "block w-full text-xs text-right",
+                      subtleListingIdLink
+                        ? cn(LISTING_ID_NAV_CLASS_SEARCH_SURFACE, "block w-full text-xs")
+                        : cn(LISTING_ID_NAV_CLASS, "block w-full text-xs text-[#0E56F5] hover:text-[#0B46CC] hover:underline"),
                     )}
                   >
                     {compactIdLabel}
                   </button>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  DOM {daysOnMarket}
-                </p>
+                ) : null}
+                <p className="text-xs text-muted-foreground">DOM {daysOnMarket}</p>
               </div>
             )}
           </div>
@@ -1512,21 +1511,22 @@ const ListingCard = ({
           </p>
         )}
 
-        {/* Listing ID + DOM */}
-        <div className="mb-3 space-y-0.5">
+        {/* AAC blue listing ID above DOM */}
+        <div className="mb-3 flex flex-col gap-0.5">
           {listingIdLabel ? (
-            <div className="text-sm">
-              <button
-                type="button"
-                className={cn(LISTING_ID_NAV_CLASS, "text-sm font-mono font-medium")}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/property/${listing.id}`);
-                }}
-              >
-                {listingIdLabel}
-              </button>
-            </div>
+            <button
+              type="button"
+              className={cn(
+                LISTING_ID_NAV_CLASS,
+                "block text-left text-sm font-mono font-medium text-[#0E56F5] hover:text-[#0B46CC]",
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/property/${listing.id}`);
+              }}
+            >
+              {listingIdLabel}
+            </button>
           ) : null}
           <p className="text-xs text-muted-foreground">DOM {daysOnMarket}</p>
         </div>
