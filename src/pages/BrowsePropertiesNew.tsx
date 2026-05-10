@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
@@ -27,8 +27,9 @@ import {
 } from "@/lib/buyerSearchRentFilters";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import PropertyMap from "@/components/PropertyMap";
-import { buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { buyerFavoritesSplitPane, buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const rentMonthlyPriceLabels = {
   minOptions: [{ value: "", label: "No min" }, ...RENT_PRICE_STEP_VALUES.map((v) => ({ value: String(v), label: `$${v.toLocaleString()}` }))],
@@ -37,13 +38,22 @@ const rentMonthlyPriceLabels = {
 
 function BrowseResultsViewToggle({ value, onChange }: { value: "map" | "list"; onChange: (v: "map" | "list") => void }) {
   return (
-    <div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-50/80 p-[3px]">
+    <div
+      className="inline-flex rounded-lg border border-neutral-200 bg-white p-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+      role="group"
+      aria-label="Results view"
+    >
       {(["map", "list"] as const).map((v) => (
         <button
           key={v}
           type="button"
           onClick={() => onChange(v)}
-          className={`h-7 rounded-md px-3 text-[13px] font-medium transition-colors ${value === v ? "bg-zinc-900 text-white shadow-sm" : "text-zinc-600 hover:text-zinc-900"}`}
+          className={cn(
+            "h-7 rounded-md px-3 text-[13px] font-medium transition-colors duration-200 ease-out",
+            value === v
+              ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+              : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+          )}
         >
           {v === "map" ? "Map" : "List"}
         </button>
@@ -87,6 +97,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const navigate = useNavigate();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   const [agentMap, setAgentMap] = useState<Record<string, { fullName: string; company?: string | null }>>({});
   const [user, setUser] = useState<any>(null);
   const [resultsView, setResultsView] = useState<"map" | "list">("map");
@@ -156,11 +167,6 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     sessionStorage.setItem("buyer_last_search_url", searchUrl);
   }, [criteria]);
 
-  // Fetch listings when criteria changes
-  useEffect(() => {
-    fetchListings();
-  }, [criteria]);
-
   // Rental toolbar is residential-rentals only (ignore property type changes from embedded advanced search).
   useEffect(() => {
     if (criteria.listingType !== "for_rent") return;
@@ -169,8 +175,9 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     setCriteria((prev) => ({ ...prev, propertyTypes: ["residential_rental"] }));
   }, [criteria.listingType, criteria.propertyTypes]);
 
-  const fetchListings = async () => {
+  const fetchListings = useCallback(async () => {
     try {
+      setFetchError(false);
       setLoading(true);
 
       // Convert SearchCriteria to buildListingsQuery format with proper types
@@ -218,12 +225,18 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
       setListings(data || []);
     } catch (error: any) {
+      setFetchError(true);
       toast.error("Failed to load properties");
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [criteria, forceBuyer]);
+
+  // Fetch listings when criteria changes
+  useEffect(() => {
+    void fetchListings();
+  }, [fetchListings]);
 
   const buildQueryParams = () => {
     const params = new URLSearchParams();
@@ -349,17 +362,25 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
   const dcmls = !forceBuyer && isDcmlsHost();
 
+  const retryFetch = () => {
+    void fetchListings();
+  };
+
+  const outlineFilterBtn = cn(
+    "h-9 rounded-md border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300 hover:bg-neutral-50/90",
+  );
+
   return (
-    <div className={`flex flex-col ${forceBuyer ? buyerPageShell : "min-h-screen"} ${dcmls ? "" : "pt-20"}`}>
+    <div className={cn("flex flex-col bg-white", forceBuyer ? buyerPageShell : "min-h-screen", !dcmls && "pt-20")}>
       {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
 
-      <main className={forceBuyer ? "flex-1 bg-white" : "flex-1 bg-background"}>
-        <div className={forceBuyer ? buyerPageMain : "container mx-auto px-4 py-8"}>
+      <main className="flex-1 bg-white">
+        <div className={forceBuyer ? buyerPageMain : "container mx-auto max-w-[1800px] px-4 py-6 md:px-6 md:py-8"}>
           {/* Header — hidden in buyer mode */}
           {!forceBuyer && (
-            <div className="mb-6">
+            <div className="mb-5 md:mb-6">
               <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
-              <p className="text-muted-foreground">
+              <p className="text-[13px] leading-relaxed text-neutral-500 md:text-sm">
                 {dcmls
                   ? "Off-market and coming-soon listings shared by network agents"
                   : "Advanced search with comprehensive filters"}
@@ -367,10 +388,10 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
             </div>
           )}
 
-          <div className="mb-6 rounded-2xl border border-zinc-200/80 bg-white p-3">
-            <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 md:gap-4">
+          <div className="mb-5 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm md:mb-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:flex-nowrap lg:gap-3">
               <div className="relative w-full max-w-[420px] min-w-0 shrink-0">
-                <Search className="h-4 w-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                 <Input
                   value={locationInput}
                   onChange={(e) => setLocationInput(e.target.value)}
@@ -378,19 +399,23 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                     if (e.key === "Enter") applyLocationInput();
                   }}
                   placeholder="City, neighborhood, or ZIP"
-                  className="pl-9 h-9 text-[13px] border-zinc-200 rounded-full"
+                  className="h-9 rounded-lg border-neutral-200 bg-white pl-9 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-visible:ring-neutral-300/50"
                 />
               </div>
 
               <div
-                className={`inline-flex h-9 items-center rounded-full border border-zinc-200 p-0.5 shrink-0 ${forceBuyer ? "bg-white" : "bg-zinc-50"}`}
+                className="inline-flex h-9 shrink-0 items-center rounded-lg border border-neutral-200 bg-white p-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                role="group"
+                aria-label="Listing type"
               >
                 <button
-                  className={`h-8 min-w-[86px] px-3 rounded-full inline-flex items-center justify-center text-[13px] font-semibold transition-all ${
+                  type="button"
+                  className={cn(
+                    "h-8 min-w-[86px] rounded-md px-3 text-[13px] font-semibold transition-colors duration-200 ease-out",
                     criteria.listingType === "for_sale"
-                      ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
-                      : "text-zinc-600 hover:text-zinc-900"
-                  }`}
+                      ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+                  )}
                   onClick={() =>
                     setCriteria((prev) => ({
                       ...prev,
@@ -404,11 +429,13 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                   For Sale
                 </button>
                 <button
-                  className={`h-8 min-w-[86px] px-3 rounded-full inline-flex items-center justify-center text-[13px] font-semibold transition-all ${
+                  type="button"
+                  className={cn(
+                    "h-8 min-w-[86px] rounded-md px-3 text-[13px] font-semibold transition-colors duration-200 ease-out",
                     criteria.listingType === "for_rent"
-                      ? "bg-[#0E56F5] text-white shadow-[0_3px_8px_rgba(14,86,245,0.32)]"
-                      : "text-zinc-600 hover:text-zinc-900"
-                  }`}
+                      ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+                  )}
                   onClick={() =>
                     setCriteria((prev) => ({
                       ...prev,
@@ -433,23 +460,23 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
-                    {priceButtonLabel}
-                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${priceOpen ? "rotate-180" : ""}`} />
+                  <Button variant="outline" className={cn(outlineFilterBtn, "min-w-[124px] justify-between")}>
+                    <span>{priceButtonLabel}</span>
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform ${priceOpen ? "rotate-180" : ""}`} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="start" className="w-[320px] rounded-xl border-zinc-200 p-4">
+                <PopoverContent align="start" className="w-[320px] rounded-xl border-neutral-200 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
                   {isRentSearch ? (
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Monthly rent</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500">Monthly rent</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <Label className="text-xs text-zinc-600">Minimum</Label>
+                          <Label className="text-xs text-neutral-600">Minimum</Label>
                           <Select
                             value={priceDraft.min === "" ? "none-m" : priceDraft.min}
                             onValueChange={(v) => setPriceDraft((prev) => ({ ...prev, min: v === "none-m" ? "" : v }))}
                           >
-                            <SelectTrigger className="h-9 border-zinc-200">
+                            <SelectTrigger className="h-9 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus:ring-neutral-300/50">
                               <SelectValue placeholder="Minimum" />
                             </SelectTrigger>
                             <SelectContent>
@@ -462,12 +489,12 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                           </Select>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs text-zinc-600">Maximum</Label>
+                          <Label className="text-xs text-neutral-600">Maximum</Label>
                           <Select
                             value={priceDraft.max === "" ? "none-x" : priceDraft.max}
                             onValueChange={(v) => setPriceDraft((prev) => ({ ...prev, max: v === "none-x" ? "" : v }))}
                           >
-                            <SelectTrigger className="h-9 border-zinc-200">
+                            <SelectTrigger className="h-9 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus:ring-neutral-300/50">
                               <SelectValue placeholder="Maximum" />
                             </SelectTrigger>
                             <SelectContent>
@@ -484,7 +511,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-9 flex-1"
+                          className="h-9 flex-1 border-neutral-200"
                           onClick={() => {
                             setPriceDraft({ min: "", max: "" });
                             setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
@@ -493,7 +520,11 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                         >
                           Reset
                         </Button>
-                        <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPriceDraft}>
+                        <Button
+                          type="button"
+                          className="h-9 flex-1 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                          onClick={applyPriceDraft}
+                        >
                           Apply
                         </Button>
                       </div>
@@ -502,21 +533,21 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <Label className="text-xs text-zinc-600">Min</Label>
+                          <Label className="text-xs text-neutral-600">Min</Label>
                           <Input
                             value={priceDraft.min}
                             onChange={(e) => setPriceDraft((prev) => ({ ...prev, min: e.target.value.replace(/[^\d]/g, "") }))}
                             placeholder="No min"
-                            className="h-9"
+                            className="h-9 border-neutral-200"
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs text-zinc-600">Max</Label>
+                          <Label className="text-xs text-neutral-600">Max</Label>
                           <Input
                             value={priceDraft.max}
                             onChange={(e) => setPriceDraft((prev) => ({ ...prev, max: e.target.value.replace(/[^\d]/g, "") }))}
                             placeholder="No max"
-                            className="h-9"
+                            className="h-9 border-neutral-200"
                           />
                         </div>
                       </div>
@@ -524,7 +555,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-9 flex-1"
+                          className="h-9 flex-1 border-neutral-200"
                           onClick={() => {
                             setPriceDraft({ min: "", max: "" });
                             setCriteria((prev) => ({ ...prev, minPrice: "", maxPrice: "" }));
@@ -533,7 +564,11 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                         >
                           Reset
                         </Button>
-                        <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPriceDraft}>
+                        <Button
+                          type="button"
+                          className="h-9 flex-1 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                          onClick={applyPriceDraft}
+                        >
                           Apply
                         </Button>
                       </div>
@@ -552,40 +587,42 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 }}
               >
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
-                    {bedsBathsButtonLabel}
-                    <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${bedsBathsOpen ? "rotate-180" : ""}`} />
+                  <Button variant="outline" className={cn(outlineFilterBtn, "min-w-[132px] justify-between")}>
+                    <span>{bedsBathsButtonLabel}</span>
+                    <ChevronDown className={`ml-2 h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform ${bedsBathsOpen ? "rotate-180" : ""}`} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="start" className="w-[360px] rounded-xl border-zinc-200 p-4">
-                  <p className="text-sm font-semibold text-zinc-900">Bedrooms</p>
+                <PopoverContent align="start" className="w-[360px] rounded-xl border-neutral-200 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+                  <p className="text-sm font-semibold text-neutral-900">Bedrooms</p>
                   <div className="mt-2 grid grid-cols-6 gap-1">
                     {BED_PRESETS.map((preset) => (
                       <button
                         key={preset.label}
                         type="button"
-                        className={`h-8 rounded-full border text-xs font-medium ${
+                        className={cn(
+                          "h-8 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/45 focus-visible:ring-offset-2",
                           bedsBathsDraft.bedrooms === preset.value
-                            ? "border-[#0E56F5] text-[#0E56F5]"
-                            : "border-zinc-200 text-zinc-700"
-                        }`}
+                            ? "border-neutral-900 text-neutral-900"
+                            : "border-neutral-200 text-neutral-700 hover:border-neutral-300",
+                        )}
                         onClick={() => setBedsBathsDraft((prev) => ({ ...prev, bedrooms: preset.value }))}
                       >
                         {preset.label}
                       </button>
                     ))}
                   </div>
-                  <p className="mt-4 text-sm font-semibold text-zinc-900">Bathrooms</p>
+                  <p className="mt-4 text-sm font-semibold text-neutral-900">Bathrooms</p>
                   <div className="mt-2 grid grid-cols-6 gap-1">
                     {BATH_PRESETS.map((preset) => (
                       <button
                         key={preset.label}
                         type="button"
-                        className={`h-8 rounded-full border text-xs font-medium ${
+                        className={cn(
+                          "h-8 rounded-full border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/45 focus-visible:ring-offset-2",
                           bedsBathsDraft.bathrooms === preset.value
-                            ? "border-[#0E56F5] text-[#0E56F5]"
-                            : "border-zinc-200 text-zinc-700"
-                        }`}
+                            ? "border-neutral-900 text-neutral-900"
+                            : "border-neutral-200 text-neutral-700 hover:border-neutral-300",
+                        )}
                         onClick={() => setBedsBathsDraft((prev) => ({ ...prev, bathrooms: preset.value }))}
                       >
                         {preset.label}
@@ -596,7 +633,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-9 flex-1"
+                      className="h-9 flex-1 border-neutral-200"
                       onClick={() => {
                         setBedsBathsDraft({ bedrooms: "", bathrooms: "" });
                         setCriteria((prev) => ({ ...prev, bedrooms: "", bathrooms: "" }));
@@ -605,7 +642,11 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                     >
                       Reset
                     </Button>
-                    <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyBedsBathsDraft}>
+                    <Button
+                      type="button"
+                      className="h-9 flex-1 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                      onClick={applyBedsBathsDraft}
+                    >
                       Apply
                     </Button>
                   </div>
@@ -623,17 +664,23 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                   }}
                 >
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] font-medium text-zinc-700`}>
-                      {propertyTypeButtonLabel}
-                      <ChevronDown className={`ml-2 h-3.5 w-3.5 text-zinc-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
+                    <Button variant="outline" className={cn(outlineFilterBtn, "min-w-[144px] justify-between")}>
+                      <span>{propertyTypeButtonLabel}</span>
+                      <ChevronDown className={`ml-2 h-3.5 w-3.5 shrink-0 text-neutral-500 transition-transform ${propertyTypeOpen ? "rotate-180" : ""}`} />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="start" className="w-[320px] rounded-xl border-zinc-200 p-4">
+                  <PopoverContent align="start" className="w-[320px] rounded-xl border-neutral-200 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
                     <div className="space-y-2">
                       {INLINE_PROPERTY_TYPES.map((type) => {
                         const checked = propertyTypesDraft.includes(type.value);
                         return (
-                          <label key={type.value} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-zinc-700 hover:bg-zinc-50">
+                          <label
+                            key={type.value}
+                            className={cn(
+                              "flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-50",
+                              checked && "bg-neutral-50 ring-1 ring-neutral-200/80",
+                            )}
+                          >
                             <Checkbox
                               checked={checked}
                               onCheckedChange={() => {
@@ -651,7 +698,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-9 flex-1"
+                        className="h-9 flex-1 border-neutral-200"
                         onClick={() => {
                           setPropertyTypesDraft([]);
                           setCriteria((prev) => ({ ...prev, propertyTypes: [] }));
@@ -660,7 +707,11 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                       >
                         Reset
                       </Button>
-                      <Button type="button" className="h-9 flex-1 bg-[#0E56F5] hover:bg-[#0B46CC]" onClick={applyPropertyTypesDraft}>
+                      <Button
+                        type="button"
+                        className="h-9 flex-1 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                        onClick={applyPropertyTypesDraft}
+                      >
                         Apply
                       </Button>
                     </div>
@@ -670,17 +721,17 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] text-zinc-700`}>
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    More Filters
+                  <Button variant="outline" className={cn(outlineFilterBtn, "justify-start gap-0")}>
+                    <SlidersHorizontal className="mr-2 h-4 w-4 text-neutral-600" />
+                    More filters
                     {activeFilterCount > 0 && (
-                      <Badge className="ml-2 bg-zinc-900 text-white hover:bg-zinc-900">{activeFilterCount}</Badge>
+                      <Badge className="ml-2 bg-neutral-900 text-[11px] font-medium text-white hover:bg-neutral-900">{activeFilterCount}</Badge>
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-[560px] overflow-y-auto">
+                <SheetContent side="right" className="w-full border-neutral-200 sm:max-w-[560px] overflow-y-auto bg-white">
                   <SheetHeader>
-                    <SheetTitle>More Filters</SheetTitle>
+                    <SheetTitle className="text-neutral-900">More filters</SheetTitle>
                   </SheetHeader>
                   <div className="mt-4">
                     <UnifiedPropertySearch
@@ -695,52 +746,112 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                 </SheetContent>
               </Sheet>
 
-              <Button
-                variant="outline"
-                className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-3" : "px-4"} text-[13px] text-zinc-700`}
-                onClick={() => toast.info("Save search is coming soon")}
-              >
-                Save Search
+              <Button variant="outline" className={outlineFilterBtn} onClick={() => toast.info("Save search is coming soon")}>
+                Save search
               </Button>
 
               <Button
                 variant="outline"
                 type="button"
-                className={`h-9 rounded-full border-zinc-200 ${forceBuyer ? "px-4" : "px-5"} text-[13px] text-zinc-700`}
+                className={outlineFilterBtn}
                 onClick={() =>
                   setCriteria(isRentSearch ? defaultRentToolbarCriteria() : defaultSaleToolbarCriteria())
                 }
               >
-                Clear Filters
+                Clear filters
               </Button>
             </div>
           </div>
 
-          <div className="max-w-[1800px] mx-auto w-full">
+          <div className="mx-auto w-full max-w-[1800px]">
+            {fetchError && !loading && listings.length > 0 && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <p className="min-w-0 text-[12px] leading-snug text-neutral-600">
+                  Couldn&apos;t refresh results. Showing the previous list.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 shrink-0 border-neutral-200 text-[11px] font-medium"
+                  onClick={retryFetch}
+                >
+                  Try again
+                </Button>
+              </div>
+            )}
+
             {loading ? (
-              <div className="flex min-h-[400px] items-center justify-center">
-                <AacMonogramLoader variant="section" className="min-h-[320px]" message="Loading results..." />
+              <div className="flex min-h-[min(420px,70dvh)] flex-col gap-3 sm:gap-4 lg:grid lg:h-[calc(100dvh-14rem)] lg:min-h-[380px] lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:gap-4">
+                <section className={cn(buyerFavoritesSplitPane, "flex h-[46dvh] min-h-0 flex-col sm:h-[50dvh] lg:h-full")}>
+                  <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
+                    <Skeleton className="h-8 w-full rounded-lg bg-neutral-100" />
+                    <Skeleton className="min-h-0 flex-1 rounded-xl bg-neutral-100" />
+                    <div className="flex shrink-0 gap-2 pt-1">
+                      <Skeleton className="h-9 flex-1 rounded-lg bg-neutral-100" />
+                      <Skeleton className="h-9 w-24 rounded-lg bg-neutral-100" />
+                    </div>
+                  </div>
+                </section>
+                <section className={cn(buyerFavoritesSplitPane, "flex min-h-[280px] flex-1 flex-col p-4 lg:min-h-0")}>
+                  <div className="mb-3 flex items-center justify-between gap-2 border-b border-neutral-100 pb-3">
+                    <Skeleton className="h-5 w-32 rounded-md bg-neutral-100" />
+                    <Skeleton className="h-7 w-[5.5rem] rounded-lg bg-neutral-100" />
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="space-y-2 rounded-xl border border-neutral-100 bg-white p-2">
+                        <Skeleton className="aspect-[4/3] w-full rounded-lg bg-neutral-100" />
+                        <Skeleton className="h-4 w-[85%] rounded-md bg-neutral-100" />
+                        <Skeleton className="h-3 w-[55%] rounded-md bg-neutral-100" />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            ) : fetchError && listings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-14 text-center shadow-sm">
+                <p className="text-[15px] font-semibold text-neutral-900">Couldn&apos;t load properties</p>
+                <p className="mt-1 max-w-sm text-[13px] leading-relaxed text-neutral-500">
+                  Check your connection and try again.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="mt-6 h-8 rounded-md bg-neutral-900 px-4 text-[12px] font-medium text-white hover:bg-neutral-800"
+                  onClick={retryFetch}
+                >
+                  Try again
+                </Button>
               </div>
             ) : listings.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-                <Search className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No properties found</h3>
-                <p className="text-muted-foreground">Try adjusting your search filters</p>
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-white px-6 py-14 text-center shadow-sm">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-400 shadow-sm">
+                  <Search className="h-5 w-5" />
+                </div>
+                <h3 className="text-[15px] font-semibold text-neutral-900">No properties match</h3>
+                <p className="mt-1 max-w-md text-[13px] leading-relaxed text-neutral-500">
+                  Try a different location or widen your filters.
+                </p>
               </div>
             ) : (
               <>
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">Results</span>
-                    <span className="text-base font-semibold text-zinc-900">{listings.length} Homes</span>
-                  </div>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+                  <p className="text-[13px] font-medium tabular-nums text-neutral-900">
+                    Results: {listings.length.toLocaleString()}
+                  </p>
                   <BrowseResultsViewToggle value={resultsView} onChange={setResultsView} />
                 </div>
 
                 {resultsView === "map" ? (
-                  <div className="flex flex-col-reverse gap-4 h-auto min-h-0 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:h-[calc(100dvh-7.8rem)] lg:min-h-0">
-                    <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0 lg:sticky lg:top-[6.05rem]">
-                      <div className="h-full">
+                  <div className="flex h-auto min-h-0 flex-col-reverse gap-3 sm:gap-4 lg:grid lg:h-[calc(100dvh-12rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none lg:gap-4">
+                    <section
+                      className={cn(
+                        buyerFavoritesSplitPane,
+                        "flex h-[50dvh] min-h-0 flex-col overflow-hidden sm:h-[54dvh] lg:sticky lg:top-24 lg:h-full lg:min-h-0 lg:self-start",
+                      )}
+                    >
+                      <div className="min-h-0 flex-1">
                         <PropertyMap
                           listings={listings}
                           onListingClick={(listingId) => navigate(`/property/${listingId}`)}
@@ -748,9 +859,14 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                       </div>
                     </section>
 
-                    <section className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden h-auto min-h-0 max-lg:min-h-[50vh] lg:min-h-0 lg:h-full flex flex-col">
-                      <div className="px-6 py-4 min-h-0 flex-1 lg:overflow-y-auto">
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <section
+                      className={cn(
+                        buyerFavoritesSplitPane,
+                        "flex h-auto min-h-0 max-lg:min-h-[48vh] flex-col lg:h-full lg:min-h-0",
+                      )}
+                    >
+                      <div className="min-h-0 flex-1 px-4 py-4 sm:px-5 lg:overflow-y-auto">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-2">
                           {listings.map((listing) => (
                             <ListingCard
                               key={listing.id}
@@ -772,9 +888,9 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                     </section>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.07)] overflow-hidden">
-                    <div className="p-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className={cn(buyerFavoritesSplitPane, "overflow-hidden")}>
+                    <div className="p-5 sm:p-6">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                         {listings.map((listing) => (
                           <ListingCard
                             key={listing.id}
