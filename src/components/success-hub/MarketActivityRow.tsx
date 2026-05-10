@@ -231,31 +231,27 @@ export function MarketActivityRow() {
       {headerBlock}
 
       <div
-        className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+        className="mb-3 flex flex-wrap items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
         role="toolbar"
         aria-label="Market activity selection"
       >
-        <span className="text-[11px] text-neutral-500">
-          {selectedCount > 0 ? `${selectedCount} selected` : "Select listings to share"}
-        </span>
-        <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
-          {selectedCount > 0 ? (
-            <button
-              type="button"
-              className="rounded-sm px-1.5 py-0.5 text-[11px] font-medium text-neutral-600 underline-offset-2 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-              onClick={clearSelection}
-            >
-              Clear
-            </button>
-          ) : null}
-          <BulkShareListingsDialog
-            listingIds={selectedListingIds}
-            listingCount={selectedCount}
-            triggerVariant="outline"
-            triggerClassName={MARKET_ACTIVITY_SHARE_TRIGGER}
-            onSuccessfulShare={clearSelection}
-          />
-        </div>
+        <BulkShareListingsDialog
+          listingIds={selectedListingIds}
+          listingCount={selectedCount}
+          triggerVariant="outline"
+          triggerClassName={MARKET_ACTIVITY_SHARE_TRIGGER}
+          triggerLabel="Share selected"
+          onSuccessfulShare={clearSelection}
+        />
+        {selectedCount > 0 ? (
+          <button
+            type="button"
+            className="h-7 shrink-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300 hover:bg-neutral-50/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+            onClick={clearSelection}
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
 
       <div className={SUCCESS_HUB_LISTINGS_GRID}>
@@ -263,6 +259,7 @@ export function MarketActivityRow() {
           <SuccessHubListingCard
             key={listing.id}
             listing={mapMarketRowToListingCard(listing)}
+            compactSelectionAccent="aacGreen"
             onSelect={(id) => toggleSelection(id)}
             isSelected={selectedIds.has(listing.id)}
           />

@@ -152,6 +152,8 @@ interface ListingCardProps {
    * Listing Search Results (`/listing-results`): tone down listing-ID link (neutral utility, hover underline).
    */
   subtleListingIdLink?: boolean;
+  /** Compact `onSelect` checkbox checked colors; `aacGreen` = Success Hub market activity (#16A34A). */
+  compactSelectionAccent?: "default" | "aacGreen";
 }
 const ListingCard = ({
   listing,
@@ -177,6 +179,7 @@ const ListingCard = ({
   compactDetailNavigateState,
   hideCompactFavorite = false,
   subtleListingIdLink = false,
+  compactSelectionAccent = "default",
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const { role } = useAuthRole();
@@ -754,11 +757,14 @@ const ListingCard = ({
                         onSelect(listing.id);
                       }
                     }}
-                    className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors ${
+                    className={cn(
+                      "flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors",
                       isSelected
-                        ? "border-neutral-900 bg-neutral-900"
-                        : "border-zinc-300 bg-white"
-                    }`}
+                        ? compactSelectionAccent === "aacGreen"
+                          ? "border-[#16A34A] bg-[#16A34A]"
+                          : "border-neutral-900 bg-neutral-900"
+                        : "border-zinc-300 bg-white",
+                    )}
                     title="Keep in shortlist for this visit"
                     aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
                   >

@@ -16,6 +16,8 @@ interface BulkShareListingsDialogProps {
   triggerVariant?: "default" | "outline";
   /** Called after listings are shared successfully via `send-bulk-listing-share` (selection can clear in parent). */
   onSuccessfulShare?: () => void;
+  /** Replaces default `Share Selected (n)` button label when set. */
+  triggerLabel?: string;
 }
 
 interface Client {
@@ -43,6 +45,7 @@ export function BulkShareListingsDialog({
   triggerClassName,
   triggerVariant = "default",
   onSuccessfulShare,
+  triggerLabel,
 }: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -272,7 +275,7 @@ export function BulkShareListingsDialog({
         onClick={() => listingCount > 0 && setOpen(true)}
       >
         <Share2 className="mr-2 h-4 w-4" />
-        Share Selected ({listingCount})
+        {triggerLabel ?? `Share Selected (${listingCount})`}
       </Button>
 
       <ShareListingsDialog
