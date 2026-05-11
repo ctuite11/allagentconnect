@@ -413,7 +413,7 @@ export const SearchListingCard = ({
 
             {/* SECTION 2 — Structured facts grid */}
             {facts.length > 0 && (
-              <div className="mt-4 grid grid-cols-4 gap-x-8 gap-y-2 border-t border-neutral-100 pt-3.5">
+              <div className="mt-5 grid grid-cols-4 gap-x-8 gap-y-2 border-t border-neutral-100 pt-3.5">
                 {facts.map((f) => (
                   <div key={f.label} className="text-xs">
                     <span className="text-zinc-500">{f.label}:</span>{" "}
@@ -526,7 +526,7 @@ export const SearchListingCard = ({
             </div>
           </div>
 
-          <div className="mt-3 border-t border-neutral-100 pt-3">
+          <div className="mt-4 border-t border-neutral-100 pt-3">
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-base font-bold text-neutral-900">{displayPrice}</span>
               {pricePerSqFt && <span className="text-xs text-neutral-600">${pricePerSqFt}/sqft</span>}

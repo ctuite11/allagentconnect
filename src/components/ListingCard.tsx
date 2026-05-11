@@ -870,11 +870,11 @@ const ListingCard = ({
           </div>
 
           <div className="flex min-w-0 cursor-pointer items-start gap-1.5" onClick={openListingDetail}>
-            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
+            <MapPin className="mt-1 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
             <p className="min-h-[2.25rem] min-w-0 flex-1 break-words text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
           </div>
 
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
             {listing.bedrooms ? (
               <div className="flex items-center gap-1">
                 <Bed className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
@@ -1414,11 +1414,11 @@ const ListingCard = ({
 
       <CardContent className="p-3">
         {/* Address & Price Section - Two Column Grid */}
-        <div className="grid grid-cols-[1fr_auto] gap-x-3 mb-2">
+        <div className="grid grid-cols-[1fr_auto] gap-x-3 mb-3">
           {/* Left Column - Address */}
           <div className="min-w-0">
             <div className="flex min-w-0 items-start gap-1.5">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+              <MapPin className="mt-1 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
               <h3 className="min-h-[2.25rem] min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
                 {listingCardStreetHeading(listing)}
               </h3>

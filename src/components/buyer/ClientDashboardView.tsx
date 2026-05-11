@@ -539,7 +539,7 @@ export function ClientDashboardView({
                                     {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                                   </p>
                                   <p className={`flex min-w-0 items-start gap-1 ${dashTileAddressClass}`}>
-                                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
+                                    <MapPin className="mt-1 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
                                     <span className="min-w-0 break-words">{listing.address}</span>
                                   </p>
                                   <p className={`flex min-w-0 items-start gap-1 ${dashTileSecondaryClass}`}>
@@ -634,7 +634,7 @@ export function ClientDashboardView({
                                     {listing.city}, {listing.state}
                                   </span>
                                 </p>
-                                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
+                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
                                   {listing.bedrooms ? (
                                     <div className="flex items-center gap-1">
                                       <Bed className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />

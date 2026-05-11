@@ -257,7 +257,7 @@ export function ListingCardShell({
           <div className="col-span-6 flex flex-col">
             {addressSlot || (
               <>
-                <h3 className="mb-1 min-h-[2.25rem] break-words text-sm font-semibold">
+                <h3 className="mb-1.5 min-h-[2.25rem] break-words text-sm font-semibold">
                   {listingCardStreetHeading(listing)}
                 </h3>
                 <div className="flex items-center text-muted-foreground text-xs mb-2">
@@ -293,7 +293,7 @@ export function ListingCardShell({
             </div>
 
             {/* Stats row: bed/bath/sqft + extras */}
-            <div className={statsTextClass}>
+            <div className={cn(statsTextClass, "mt-1")}>
               {listing.bedrooms != null && (
                 <span><Bed className={statsIconClass} />{listing.bedrooms}</span>
               )}
