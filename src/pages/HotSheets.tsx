@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Users, Search, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Bell, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
@@ -505,7 +505,7 @@ const HotSheets = ({
                 <section className="rounded-2xl border border-neutral-200 bg-white px-6 py-8 shadow-sm sm:py-10">
                   <div className="mx-auto max-w-lg text-center">
                     <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
-                      <Search className="h-6 w-6 text-neutral-500" />
+                      <Bell className="h-6 w-6 text-neutral-500" />
                     </div>
                     <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">No Hot Sheets yet</h3>
                     <p className="mt-2 text-[13px] leading-snug text-neutral-500">
@@ -895,7 +895,7 @@ const HotSheets = ({
           </div>
         ) : collections.length === 0 ? (
           <div className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-sm md:p-12">
-            <Users className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
+            <Bell className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
             <h3 className="mb-2 text-lg font-semibold text-neutral-900">No buyer hot sheets yet</h3>
             <p className="mx-auto max-w-md text-sm text-neutral-600">
               Create your first hot sheet to start curating listings for your buyers—use{" "}

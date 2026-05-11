@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
-import { Flame, Info } from "lucide-react";
+import { Bell, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCriteriaDisplayLabel } from "@/lib/formatCriteriaDisplay";
 
@@ -127,7 +127,7 @@ const DcmlsHotSheetNew = () => {
         <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-12 md:py-16">
           <div className="mb-10">
             <div className="inline-flex items-center gap-2 mb-3">
-              <Flame className="w-4 h-4 text-foreground/70" />
+              <Bell className="w-4 h-4 text-foreground/70" />
               <span className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-medium">
                 Hot Sheet
               </span>

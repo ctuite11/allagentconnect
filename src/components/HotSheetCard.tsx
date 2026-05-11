@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Home } from "lucide-react";
+import { Eye, Bell } from "lucide-react";
 
 interface HotSheetCardProps {
   id: string;
@@ -46,7 +46,7 @@ export const HotSheetCard = ({
       return (
         <div className="flex h-full w-full items-center justify-center bg-muted">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card shadow-sm">
-            <Home className="h-6 w-6 text-muted-foreground" />
+            <Bell className="h-6 w-6 text-muted-foreground" />
           </div>
         </div>
       );
