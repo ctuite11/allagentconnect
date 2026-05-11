@@ -120,6 +120,17 @@ const listingSchema = z.object({
   { message: "Price Range Min must be <= Price Range Max.", path: ["price_range_min"] }
 );
 
+/**
+ * Map Add Listing form `status` → `listings.status` values allowed by `chk_listing_status`.
+ * UI uses {@link LISTING_STATUS.NEW} ("new") for "New (Active)"; the DB stores `active`.
+ */
+function addListingFormStatusToDbStatus(formStatus: string): string {
+  const key = (formStatus || "").trim().toLowerCase();
+  if (key === LISTING_STATUS.NEW || key === "new") return LISTING_STATUS.ACTIVE;
+  if (key === LISTING_STATUS.CANCELED || key === "canceled") return LISTING_STATUS.CANCELLED;
+  return key;
+}
+
 const AddListing = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -2096,8 +2107,8 @@ const AddListing = () => {
       // Agent - from verified session, not cached state
       agent_id: agentId,
       
-      // Status & Type
-      status: overrideStatus || formData.status,
+      // Status & Type (DB check constraint — never persist UI-only aliases like "new")
+      status: addListingFormStatusToDbStatus(overrideStatus || formData.status),
       listing_type: formData.listing_type,
       property_type: formData.property_type || null,
       
@@ -2845,8 +2856,8 @@ const AddListing = () => {
           }
         }
 
-        // Track status changes
-        const newStatus = formData.status;
+        // Track status changes (log persisted DB status, not UI-only values like "new")
+        const newStatus = listingData.status;
         if (originalStatusRef.current !== null && originalStatusRef.current !== newStatus) {
           try {
             const { data: userData } = await supabase.auth.getUser();
@@ -2891,11 +2902,11 @@ const AddListing = () => {
               note: "Initial listing price",
             });
 
-            // Log status history
+            // Log status history (match row written to `listings`)
             await supabase.from("listing_status_history").insert({
               listing_id: resultListingId,
               old_status: null,
-              new_status: formData.status,
+              new_status: listingData.status,
               changed_by: currentUserId,
               notes: isRelisting && originalListingId
                 ? `Cloned from ${originalListingId}`
