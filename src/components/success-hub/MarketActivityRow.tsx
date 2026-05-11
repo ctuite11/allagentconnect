@@ -19,6 +19,8 @@ interface MarketListingRow {
   state: string;
   zip_code: string;
   price: number | null;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   property_type: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -71,6 +73,8 @@ export function MarketActivityRow() {
       state: row.state,
       zip_code: typeof row.zip_code === "string" ? row.zip_code : "",
       price: row.price,
+      price_range_min: typeof row.price_range_min === "number" ? row.price_range_min : null,
+      price_range_max: typeof row.price_range_max === "number" ? row.price_range_max : null,
       property_type: row.property_type ?? null,
       bedrooms: typeof row.bedrooms === "number" ? row.bedrooms : null,
       bathrooms: typeof row.bathrooms === "number" ? row.bathrooms : null,
@@ -159,7 +163,7 @@ export function MarketActivityRow() {
           const { data } = await supabase
             .from("listings")
             .select(`
-              id, address, city, state, zip_code, price, property_type,
+              id, address, city, state, zip_code, price, price_range_min, price_range_max, property_type,
               bedrooms, bathrooms, square_feet, neighborhood,
               photos, status, created_at, active_date, listing_number, unit_number, condo_details,
               agent_id

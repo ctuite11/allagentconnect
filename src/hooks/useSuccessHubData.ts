@@ -39,6 +39,8 @@ export interface SuccessHubSummary {
     status: string;
     photos: (string | { url: string })[] | null;
     price: number | null;
+    price_range_min?: number | null;
+    price_range_max?: number | null;
     property_type: string | null;
     bedrooms: number | null;
     bathrooms: number | null;
@@ -253,7 +255,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         supabase
           .from("listings")
           .select(
-            "id,address,city,state,zip_code,neighborhood,status,photos,price,updated_at,created_at,active_date,listing_number,unit_number,condo_details,property_type,bedrooms,bathrooms,square_feet,listing_stats(view_count,showing_request_count)",
+            "id,address,city,state,zip_code,neighborhood,status,photos,price,price_range_min,price_range_max,updated_at,created_at,active_date,listing_number,unit_number,condo_details,property_type,bedrooms,bathrooms,square_feet,listing_stats(view_count,showing_request_count)",
           )
           .eq("agent_id", agentId)
           .in("status", ["active", "pending", "coming_soon", "off_market"])
@@ -391,6 +393,10 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           status: l.status ?? "",
           photos: (l.photos as string[] | null) ?? null,
           price: typeof l.price === "number" ? l.price : null,
+          price_range_min:
+            typeof (l as any).price_range_min === "number" ? (l as any).price_range_min : null,
+          price_range_max:
+            typeof (l as any).price_range_max === "number" ? (l as any).price_range_max : null,
           property_type: typeof l.property_type === "string" ? l.property_type : null,
           bedrooms: typeof l.bedrooms === "number" ? l.bedrooms : null,
           bathrooms: typeof l.bathrooms === "number" ? l.bathrooms : null,

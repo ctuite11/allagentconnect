@@ -57,6 +57,8 @@ export function mapMarketRowToListingCard(row: {
   state: string;
   zip_code: string;
   price: number | null;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   property_type: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -81,6 +83,8 @@ export function mapMarketRowToListingCard(row: {
     state: row.state ?? "",
     zip_code: row.zip_code ?? "",
     price: typeof row.price === "number" ? row.price : 0,
+    price_range_min: typeof row.price_range_min === "number" ? row.price_range_min : null,
+    price_range_max: typeof row.price_range_max === "number" ? row.price_range_max : null,
     property_type: row.property_type,
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
@@ -122,6 +126,8 @@ export function mapSummaryListingToListingCard(
     state: l.state,
     zip_code: l.zip_code ?? "",
     price: l.price ?? 0,
+    price_range_min: typeof l.price_range_min === "number" ? l.price_range_min : null,
+    price_range_max: typeof l.price_range_max === "number" ? l.price_range_max : null,
     property_type: l.property_type,
     bedrooms: l.bedrooms,
     bathrooms: l.bathrooms,

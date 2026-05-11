@@ -32,6 +32,7 @@ import {
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
+import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 /** Normalize MLS photos (array, JSON string, single URL string) for compact/grid photo helpers. */
 function normalizeListingPhotos(raw: unknown): unknown[] {
@@ -60,7 +61,7 @@ interface ListingCardProps {
     city: string;
     state: string;
     zip_code: string;
-    price: number;
+    price: number | null;
     property_type: string | null;
     bedrooms: number | null;
     bathrooms: number | null;
@@ -300,9 +301,10 @@ const ListingCard = ({
         const criteria = sheet.criteria as any;
         if (!criteria) return false;
 
-        // Price matching: listing price must fall within hot sheet min/max range
-        if (criteria.min_price && listing.price < criteria.min_price) return false;
-        if (criteria.max_price && listing.price > criteria.max_price) return false;
+        // Price matching: effective price (single or range midpoint) within hot sheet bounds
+        const eff = listingEffectiveNumericPrice(listing);
+        if (criteria.min_price && (eff == null || eff < criteria.min_price)) return false;
+        if (criteria.max_price && (eff == null || eff > criteria.max_price)) return false;
 
         // Bedrooms: listing must have >= hot sheet minimum (if specified)
         if (criteria.bedrooms !== null && criteria.bedrooms !== undefined) {
@@ -446,22 +448,7 @@ const ListingCard = ({
       setDeleting(false);
     }
   };
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0
-    }).format(price);
-  };
-  const formatPriceRange = () => {
-    const min = listing.price_range_min;
-    const max = listing.price_range_max;
-    if (min && max) return `${formatPrice(min)} – ${formatPrice(max)}`;
-    if (min) return `From ${formatPrice(min)}`;
-    if (max) return `Up to ${formatPrice(max)}`;
-    return null;
-  };
-  const displayPrice = listing.price ? formatPrice(listing.price) : (formatPriceRange() || formatPrice(0));
+  const displayPrice = formatListingPriceDisplay(listing) ?? "—";
   const listingPhotos = normalizeListingPhotos(listing?.photos);
   const getPhotoByIndex = (index: number) => {
     if (listingPhotos.length > 0) {
@@ -1307,9 +1294,11 @@ const ListingCard = ({
   // Grid view - Clean design for listing search results
   const currentPhoto = getPhotoByIndex(currentPhotoIndex);
   const totalPhotos = getTotalPhotos();
-  const pricePerSqft = listing.square_feet && listing.square_feet > 0 
-    ? Math.round(listing.price / listing.square_feet) 
-    : null;
+  const basisSqft = listingEffectiveNumericPrice(listing);
+  const pricePerSqft =
+    listing.square_feet && listing.square_feet > 0 && basisSqft != null && basisSqft > 0
+      ? Math.round(basisSqft / listing.square_feet)
+      : null;
   const listingIdLabel = formatListingIdLabel(listing);
 
   return (

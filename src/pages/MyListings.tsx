@@ -26,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
 
 // Managed statuses for My Listings controls (intentionally excludes BOM).
@@ -386,8 +387,10 @@ function MyListingsView({
           const domB = b.list_date ? Math.floor((Date.now() - new Date(b.list_date).getTime()) / 86400000) : 0;
           return domB - domA;
         }
-        case "price":
-          return (b.price ?? 0) - (a.price ?? 0);
+        case "price": {
+          const ev = (x: Listing) => listingEffectiveNumericPrice(x) ?? 0;
+          return ev(b) - ev(a);
+        }
         case "status":
           return (a.status ?? "").localeCompare(b.status ?? "");
         case "date":
@@ -400,7 +403,8 @@ function MyListingsView({
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
-    setEditPrice(listing.price);
+    const seed = listingEffectiveNumericPrice(listing);
+    setEditPrice(seed != null ? Math.round(seed) : "");
     // Treat BOM as an activation action in management UI, not a managed status.
     setEditStatus((listing.status === "back_on_market" ? "active" : listing.status) as ListingStatus);
   };
@@ -489,18 +493,16 @@ function MyListingsView({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-between gap-2 border-t border-neutral-100 pt-2 lg:border-0 lg:pt-0">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-100 pt-2 lg:border-0 lg:pt-0">
             {selectedStatuses.size > 0 ? (
               <button
                 type="button"
                 onClick={clearStatusFilters}
-                className="text-[13px] font-medium text-zinc-500 underline-offset-4 hover:text-zinc-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                className="mr-auto text-[13px] font-medium text-zinc-500 underline-offset-4 hover:text-zinc-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
               >
                 Clear filters
               </button>
-            ) : (
-              <span className="hidden text-[12px] text-zinc-400 lg:inline">Filter by status</span>
-            )}
+            ) : null}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -753,184 +755,183 @@ function MyListingsView({
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex gap-4">
+                <div className="relative flex items-start gap-4">
+                  <button
+                    type="button"
+                    className="h-[100px] w-[140px] shrink-0 overflow-hidden rounded-xl border border-zinc-100 bg-white outline-none transition-colors hover:border-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                    onClick={() => setListingCardMenuId(l.id)}
+                    aria-label={`View or edit listing: ${formatAddressWithUnit(l)}`}
+                  >
+                    <img
+                      src={thumbnail || "/placeholder.svg"}
+                      alt=""
+                      className="pointer-events-none h-full w-full object-cover"
+                    />
+                  </button>
+
+                  <div className="min-w-0 flex-1 space-y-0.5">
                     <button
                       type="button"
-                      className="flex min-w-0 flex-1 items-start gap-4 rounded-lg border border-transparent bg-transparent p-0 text-left outline-none transition-colors hover:border-zinc-100/90 hover:bg-zinc-50/50 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                      className="w-full rounded-lg border border-transparent p-0 text-left outline-none transition-colors hover:border-zinc-100/90 hover:bg-zinc-50/50 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
                       onClick={() => setListingCardMenuId(l.id)}
                       aria-label={`View or edit listing: ${formatAddressWithUnit(l)}`}
                     >
-                      <div className="h-[100px] w-[140px] shrink-0 overflow-hidden rounded-xl border border-zinc-100 bg-white">
-                        <img
-                          src={thumbnail || "/placeholder.svg"}
-                          alt=""
-                          className="pointer-events-none h-full w-full object-cover"
-                        />
-                      </div>
-
-                      <div className="min-w-0 flex-1 space-y-0.5 pt-0.5">
-                        <div className="flex items-center gap-2">
-                          {l.listing_number && (
-                            <span className="text-xs leading-none text-primary">#{l.listing_number}</span>
-                          )}
-                          {l.listing_type && (
-                            <>
-                              <span className="text-zinc-300">•</span>
-                              <span className="inline-block rounded border border-zinc-100 bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#0E56F5]">
-                                {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <div className="truncate text-base font-semibold leading-tight text-zinc-900">
-                          {formatAddressWithUnit(l)}
-                        </div>
-                        <div className="text-sm leading-tight text-zinc-500">
-                          {l.state} {l.zip_code}
-                          {l.neighborhood ? ` · ${l.neighborhood}` : ""}
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="hidden w-[140px] shrink-0 sm:block" aria-hidden />
-                    <div className="min-w-0 flex-1">
-                      <div className="mt-0">
-                        {isEditing ? (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <input
-                              type="number"
-                              className="w-28 rounded border border-zinc-200 bg-white px-2 py-1 text-sm"
-                              value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                            />
-                            <select
-                              className="rounded border border-zinc-200 bg-white px-2 py-1 text-xs capitalize"
-                              value={editStatus}
-                              onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                            >
-                              {ALL_STATUSES.map((tab) => (
-                                <option key={tab.value} value={tab.value}>
-                                  {tab.label}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground hover:bg-primary/90"
-                              onClick={saveQuickEdit}
-                            >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
-                              onClick={cancelQuickEdit}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex shrink-0 items-center gap-2">
-                              <span className="text-sm font-medium text-zinc-900">${l.price.toLocaleString()}</span>
-                              <button
-                                type="button"
-                                className="text-xs text-primary hover:text-primary/80 hover:underline"
-                                onClick={() => startQuickEdit(l)}
-                                title="Quick edit price and status"
-                              >
-                                Quick Edit
-                              </button>
-                            </div>
-                            <div className="w-8 shrink-0" />
-                            {(() => {
-                              const now = new Date();
-                              const allEvents = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
-                              const events = allEvents.filter((e: any) => {
-                                if (!e?.date || !e?.end_time) return true;
-                                return new Date(`${e.date}T${e.end_time}`) > now;
-                              });
-                              const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
-                              const openHouseEvent = openHouseIndex >= 0 ? events[openHouseIndex] : null;
-                              const openHouseCount = events.filter((e: any) => e?.event_type !== "broker_tour").length;
-                              const brokerTourIndex = events.findIndex((e: any) => e?.event_type === "broker_tour");
-                              const brokerTourEvent = brokerTourIndex >= 0 ? events[brokerTourIndex] : null;
-                              const brokerTourCount = events.filter((e: any) => e?.event_type === "broker_tour").length;
-                              const hasEvents = openHouseEvent || brokerTourEvent;
-
-                              if (!hasEvents) return null;
-
-                              return (
-                                <div className="min-w-0 space-y-0.5">
-                                  {openHouseEvent && (() => {
-                                    const first = formatOpenHouseEvent(openHouseEvent);
-                                    return (
-                                      <div className="flex min-w-0 items-center gap-1.5 text-sm text-zinc-600">
-                                        <span aria-hidden className="shrink-0">
-                                          🎈
-                                        </span>
-                                        <span className="truncate">
-                                          Open House • {first.dateLabel} • {first.timeLabel}
-                                        </span>
-                                        {openHouseCount > 1 && (
-                                          <span className="shrink-0 text-xs text-zinc-400">+{openHouseCount - 1} more</span>
-                                        )}
-                                        <button
-                                          type="button"
-                                          className="ml-1 shrink-0 text-xs text-primary hover:text-primary/80 hover:underline"
-                                          onClick={() => onViewOpenHouses(l)}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="shrink-0 text-xs text-red-600 hover:text-red-700 hover:underline"
-                                          onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
-                                        >
-                                          Delete
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
-                                  {brokerTourEvent && (() => {
-                                    const first = formatOpenHouseEvent(brokerTourEvent);
-                                    return (
-                                      <div className="flex min-w-0 items-center gap-1.5 text-sm text-zinc-600">
-                                        <span aria-hidden className="shrink-0">
-                                          🚙
-                                        </span>
-                                        <span className="truncate">
-                                          Broker Tour • {first.dateLabel} • {first.timeLabel}
-                                        </span>
-                                        {brokerTourCount > 1 && (
-                                          <span className="shrink-0 text-xs text-zinc-400">+{brokerTourCount - 1} more</span>
-                                        )}
-                                        <button
-                                          type="button"
-                                          className="ml-1 shrink-0 text-xs text-primary hover:text-primary/80 hover:underline"
-                                          onClick={() => onViewOpenHouses(l)}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="shrink-0 text-xs text-red-600 hover:text-red-700 hover:underline"
-                                          onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
-                                        >
-                                          Delete
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
-                                </div>
-                              );
-                            })()}
-                          </div>
+                      <div className="flex items-center gap-2">
+                        {l.listing_number && (
+                          <span className="text-xs leading-none text-primary">#{l.listing_number}</span>
+                        )}
+                        {l.listing_type && (
+                          <>
+                            <span className="text-zinc-300">•</span>
+                            <span className="inline-block rounded border border-zinc-100 bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#0E56F5]">
+                              {LISTING_TYPE_LABELS[l.listing_type] || l.listing_type}
+                            </span>
+                          </>
                         )}
                       </div>
+                      <div className="truncate text-base font-semibold leading-tight text-zinc-900">
+                        {formatAddressWithUnit(l)}
+                      </div>
+                      <div className="text-sm leading-tight text-zinc-500">
+                        {l.state} {l.zip_code}
+                        {l.neighborhood ? ` · ${l.neighborhood}` : ""}
+                      </div>
+                    </button>
+
+                    <div className="mt-1">
+                      {isEditing ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="number"
+                            className="w-28 rounded border border-zinc-200 bg-white px-2 py-1 text-sm"
+                            value={editPrice}
+                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                          />
+                          <select
+                            className="rounded border border-zinc-200 bg-white px-2 py-1 text-xs capitalize"
+                            value={editStatus}
+                            onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
+                          >
+                            {ALL_STATUSES.map((tab) => (
+                              <option key={tab.value} value={tab.value}>
+                                {tab.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground hover:bg-primary/90"
+                            onClick={saveQuickEdit}
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
+                            onClick={cancelQuickEdit}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+                          <div className="flex shrink-0 flex-wrap items-center gap-2">
+                            <span className="text-sm font-medium text-zinc-900">
+                              {formatListingPriceDisplay(l) ?? "—"}
+                            </span>
+                            <button
+                              type="button"
+                              className="text-xs text-primary hover:text-primary/80 hover:underline"
+                              onClick={() => startQuickEdit(l)}
+                              title="Quick edit price and status"
+                            >
+                              Quick Edit
+                            </button>
+                          </div>
+                          {(() => {
+                            const now = new Date();
+                            const allEvents = Array.isArray(l.open_houses) ? (l.open_houses as any[]) : [];
+                            const events = allEvents.filter((e: any) => {
+                              if (!e?.date || !e?.end_time) return true;
+                              return new Date(`${e.date}T${e.end_time}`) > now;
+                            });
+                            const openHouseIndex = events.findIndex((e: any) => e?.event_type !== "broker_tour");
+                            const openHouseEvent = openHouseIndex >= 0 ? events[openHouseIndex] : null;
+                            const openHouseCount = events.filter((e: any) => e?.event_type !== "broker_tour").length;
+                            const brokerTourIndex = events.findIndex((e: any) => e?.event_type === "broker_tour");
+                            const brokerTourEvent = brokerTourIndex >= 0 ? events[brokerTourIndex] : null;
+                            const brokerTourCount = events.filter((e: any) => e?.event_type === "broker_tour").length;
+                            const hasEvents = openHouseEvent || brokerTourEvent;
+
+                            if (!hasEvents) return null;
+
+                            return (
+                              <div className="min-w-0 flex-1 space-y-0.5">
+                                {openHouseEvent && (() => {
+                                  const first = formatOpenHouseEvent(openHouseEvent);
+                                  return (
+                                    <div className="flex min-w-0 items-center gap-1.5 text-sm text-zinc-600">
+                                      <span aria-hidden className="shrink-0">
+                                        🎈
+                                      </span>
+                                      <span className="truncate">
+                                        Open House • {first.dateLabel} • {first.timeLabel}
+                                      </span>
+                                      {openHouseCount > 1 && (
+                                        <span className="shrink-0 text-xs text-zinc-400">+{openHouseCount - 1} more</span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        className="ml-1 shrink-0 text-xs text-primary hover:text-primary/80 hover:underline"
+                                        onClick={() => onViewOpenHouses(l)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="shrink-0 text-xs text-red-600 hover:text-red-700 hover:underline"
+                                        onClick={() => onDeleteOpenHouse(l.id, openHouseIndex)}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
+                                {brokerTourEvent && (() => {
+                                  const first = formatOpenHouseEvent(brokerTourEvent);
+                                  return (
+                                    <div className="flex min-w-0 items-center gap-1.5 text-sm text-zinc-600">
+                                      <span aria-hidden className="shrink-0">
+                                        🚙
+                                      </span>
+                                      <span className="truncate">
+                                        Broker Tour • {first.dateLabel} • {first.timeLabel}
+                                      </span>
+                                      {brokerTourCount > 1 && (
+                                        <span className="shrink-0 text-xs text-zinc-400">+{brokerTourCount - 1} more</span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        className="ml-1 shrink-0 text-xs text-primary hover:text-primary/80 hover:underline"
+                                        onClick={() => onViewOpenHouses(l)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="shrink-0 text-xs text-red-600 hover:text-red-700 hover:underline"
+                                        onClick={() => onDeleteOpenHouse(l.id, brokerTourIndex)}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1090,9 +1091,10 @@ const MyListings = () => {
               if (!criteria.propertyTypes.includes(listing.property_type)) return;
             }
             
-            // Check price range
-            if (criteria.minPrice && listing.price < criteria.minPrice) return;
-            if (criteria.maxPrice && listing.price > criteria.maxPrice) return;
+            // Check price range (use effective price when only range is set)
+            const listingPriceVal = listingEffectiveNumericPrice(listing as Listing);
+            if (criteria.minPrice && (listingPriceVal == null || listingPriceVal < criteria.minPrice)) return;
+            if (criteria.maxPrice && (listingPriceVal == null || listingPriceVal > criteria.maxPrice)) return;
             
             // Check bedrooms
             if (criteria.bedrooms && listing.bedrooms < criteria.bedrooms) return;
@@ -1423,7 +1425,7 @@ const MyListings = () => {
             <h3 className="text-lg font-semibold mb-4">Share Listing</h3>
             <SocialShareMenu
               url={getListingShareUrl(socialShareListing.id)}
-              title={`${socialShareListing.address}, ${socialShareListing.city} - $${socialShareListing.price.toLocaleString()}`}
+              title={`${socialShareListing.address}, ${socialShareListing.city} - ${formatListingPriceDisplay(socialShareListing) ?? "—"}`}
               description={`Check out this property listing`}
               listingId={socialShareListing.id}
             />

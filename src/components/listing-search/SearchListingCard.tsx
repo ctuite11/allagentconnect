@@ -26,6 +26,7 @@ import DcmlsBadge from "@/components/DcmlsBadge";
 import { resolveListedByAttribution } from "@/lib/listingListedBy";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
 import { buildDisplayAddress, cn, listingCardStreetHeading } from "@/lib/utils";
+import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ interface SearchListing {
   city: string;
   state: string;
   zip_code: string;
-  price: number;
+  price: number | null;
   property_type?: string | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
@@ -86,9 +87,6 @@ interface SearchListingCardProps {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(price);
 
 const resolvePhotoUrl = (photo: any): string | null => {
   if (typeof photo === "string") return photo;
@@ -166,18 +164,12 @@ export const SearchListingCard = ({
   const docCount = getDocCount(listing.documents);
   const propertyStyle = getPropertyStyle(listing);
 
-  const formatPriceRange = () => {
-    const min = listing.price_range_min;
-    const max = listing.price_range_max;
-    if (min && max) return `${formatPrice(min)} – ${formatPrice(max)}`;
-    if (min) return `From ${formatPrice(min)}`;
-    if (max) return `Up to ${formatPrice(max)}`;
-    return null;
-  };
-
-  const displayPrice = listing.price ? formatPrice(listing.price) : (formatPriceRange() || formatPrice(0));
-  const pricePerSqFt = listing.square_feet && listing.square_feet > 0
-    ? Math.round(listing.price / listing.square_feet) : null;
+  const displayPrice = formatListingPriceDisplay(listing) ?? "—";
+  const basisForSqft = listingEffectiveNumericPrice(listing);
+  const pricePerSqFt =
+    listing.square_feet && listing.square_feet > 0 && basisForSqft != null && basisForSqft > 0
+      ? Math.round(basisForSqft / listing.square_feet)
+      : null;
 
   const fullAddress = buildDisplayAddress(listing);
   const listedByLine = resolveListedByAttribution(listing);
