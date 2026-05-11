@@ -6,17 +6,6 @@ import { ROUTES } from "@/constants/routes";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
@@ -141,7 +130,6 @@ const AddListing = () => {
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [deletingDraft, setDeletingDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -2162,7 +2150,7 @@ const AddListing = () => {
     commission_type: formData.commission_type || null,
     commission_notes: formData.commission_notes || null,
     showing_instructions: formData.showing_instructions || null,
-    lockbox_code: formData.lockbox_code || null,
+    lockbox_code: null,
     appointment_required: formData.appointment_required,
     additional_notes: formData.additional_notes || null,
     
@@ -2655,31 +2643,6 @@ const AddListing = () => {
     toast.info("Preview functionality coming soon");
   };
 
-  const handleDeleteDraft = async () => {
-    const targetId = listingId || draftId;
-    const isDraftRecord = backendStatusRef.current === "draft";
-    if (!targetId || !isDraftRecord) {
-      toast.error("Only draft listings can be deleted.");
-      return;
-    }
-
-    setDeletingDraft(true);
-    try {
-      const { error } = await supabase.rpc("delete_draft_listing", {
-        p_listing_id: targetId,
-      });
-      if (error) throw error;
-
-      toast.success("Draft deleted");
-      navigate("/agent/listings?status=draft");
-    } catch (error: any) {
-      console.error("Delete draft error:", error);
-      toast.error(error?.message || "Failed to delete draft");
-    } finally {
-      setDeletingDraft(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
     setSubmitting(true);
@@ -3056,20 +3019,20 @@ const AddListing = () => {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 {autoSaving && (
-                  <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
-                    <span>Auto-saving…</span>
+                  <div className="flex items-center gap-1.5 text-[11px] font-normal leading-snug text-neutral-400">
+                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin opacity-70" aria-hidden />
+                    <span>Auto-saving draft…</span>
                   </div>
                 )}
                 {!autoSaving && lastAutoSave && (
-                  <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                    <span>Last saved {lastAutoSave.toLocaleTimeString()}</span>
+                  <div className="flex items-center gap-1.5 text-[11px] font-normal leading-snug text-neutral-400">
+                    <Cloud className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
+                    <span>Draft auto-saved {lastAutoSave.toLocaleTimeString()}</span>
                   </div>
                 )}
                 {!autoSaving && !lastAutoSave && hasUnsavedChanges && (
-                  <div className="flex items-center gap-1.5 text-xs text-amber-800">
-                    <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
+                  <div className="flex items-center gap-1.5 text-[11px] font-normal leading-snug text-neutral-400">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
                     <span>Unsaved changes</span>
                   </div>
                 )}
@@ -3078,40 +3041,6 @@ const AddListing = () => {
               {/* Edit mode: Preview + Save Changes only */}
               {listingId ? (
                 <>
-                  {backendStatusRef.current === "draft" && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          type="button"
-                          disabled={deletingDraft || submitting || autoSaving}
-                          className="gap-1.5"
-                        >
-                          <Trash2 className="h-4 w-4 shrink-0" />
-                          {deletingDraft ? "Deleting…" : "Delete Draft"}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete this draft?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently remove the draft listing. This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel disabled={deletingDraft}>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDeleteDraft}
-                            disabled={deletingDraft}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            {deletingDraft ? "Deleting..." : "Delete Draft"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -3123,18 +3052,18 @@ const AddListing = () => {
                     Preview
                   </Button>
                   <Button
-                    variant="default"
+                    variant={autoSaving ? "ghost" : backendStatusRef.current === "draft" && formData.status !== "draft" ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleSaveChanges()}
                     type="button"
                     disabled={submitting || autoSaving}
-                    className="gap-1.5"
+                    className={cn(
+                      "gap-1.5",
+                      autoSaving && "font-normal text-neutral-500 shadow-none hover:bg-transparent hover:text-neutral-500",
+                    )}
                   >
                     {autoSaving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
-                        Saving…
-                      </>
+                      <span className="text-xs font-normal text-neutral-500">Saving…</span>
                     ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                       <>
                         <Upload className="h-4 w-4 shrink-0" />
@@ -4737,20 +4666,6 @@ const AddListing = () => {
                         onChange={(e) => setFormData(prev => ({ ...prev, showing_instructions: e.target.value }))}
                         rows={3}
                       />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="lockbox_code">Lockbox Code</Label>
-                        <Input
-                          id="lockbox_code"
-                          type="text"
-                          placeholder="1234"
-                          value={formData.lockbox_code}
-                          onChange={(e) => setFormData(prev => ({ ...prev, lockbox_code: e.target.value }))}
-                          autoComplete="off"
-                          data-form-type="other"
-                        />
-                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
