@@ -14,9 +14,34 @@ function toTitleCase(str: string): string {
     .join(' ');
 }
 
-export function buildDisplayAddress(
-  listing: { address: string; city: string; state: string; zip_code: string; unit_number?: string | null; condo_details?: any }
-) {
+/** Minimal listing slice for formatting street + MLS unit (column or condo_details). */
+export type ListingAddressUnitSource = {
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  unit_number?: string | null;
+  condo_details?: unknown;
+};
+
+export function resolveListingUnitNumber(listing: ListingAddressUnitSource): string | null {
+  const top = listing.unit_number;
+  if (top != null && String(top).trim() !== "") return String(top).trim();
+  if (!listing.condo_details) return null;
+  try {
+    const details =
+      typeof listing.condo_details === "string"
+        ? JSON.parse(listing.condo_details as string)
+        : listing.condo_details;
+    const u = (details as { unit_number?: unknown })?.unit_number;
+    if (u != null && String(u).trim() !== "") return String(u).trim();
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+export function buildDisplayAddress(listing: ListingAddressUnitSource) {
   const city = listing.city || '';
   const state = listing.state || '';
   const zip = listing.zip_code || '';
@@ -27,23 +52,12 @@ export function buildDisplayAddress(
   let base = (listing.address || '').trim();
   base = removeCountry(base);
 
-  // Get unit number — prefer top-level unit_number, fall back to condo_details
-  let unit: string | null = listing.unit_number ? String(listing.unit_number) : null;
-  if (!unit) {
-    try {
-      const details =
-        typeof listing.condo_details === 'string'
-          ? JSON.parse(listing.condo_details)
-          : listing.condo_details;
-      unit = details?.unit_number ? String(details.unit_number) : null;
-    } catch {
-      unit = null;
-    }
-  }
+  const unit = resolveListingUnitNumber(listing);
 
   if (unit) {
-    const hasHash = new RegExp(`#\\s*${unit}\\b`, 'i').test(base);
-    const hasWord = new RegExp(`\\bUnit\\s*${unit}\\b`, 'i').test(base);
+    const esc = unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const hasHash = new RegExp(`#\\s*${esc}\\b`, "i").test(base);
+    const hasWord = new RegExp(`\\bUnit\\s*${esc}\\b`, "i").test(base);
     if (!hasHash && !hasWord) {
       const cityIndex = city ? base.indexOf(`, ${city}`) : -1;
       if (cityIndex > -1) {
@@ -83,6 +97,34 @@ export function buildDisplayAddress(
 
   // Convert to Title Case before returning
   return toTitleCase(base);
+}
+
+/**
+ * First line for split card layouts (grid / list shell): street + unit, no city/state/zip.
+ * Keeps unit injection in sync with {@link buildDisplayAddress}.
+ */
+export function listingCardStreetHeading(listing: ListingAddressUnitSource): string {
+  const full = buildDisplayAddress(listing);
+  const city = (listing.city || "").trim();
+  const state = (listing.state || "").trim();
+  const zip = (listing.zip_code || "").trim();
+  if (!city) return full;
+
+  const fullLower = full.toLowerCase();
+  const candidates: string[] = [];
+  if (zip) {
+    candidates.push(`, ${city}, ${state} ${zip}`);
+    const zip5 = zip.split("-")[0]?.trim();
+    if (zip5 && zip5 !== zip) candidates.push(`, ${city}, ${state} ${zip5}`);
+  }
+  candidates.push(`, ${city}, ${state}`);
+
+  for (const tail of candidates) {
+    if (fullLower.endsWith(tail.toLowerCase())) {
+      return full.slice(0, full.length - tail.length).trim();
+    }
+  }
+  return full;
 }
 
 /**

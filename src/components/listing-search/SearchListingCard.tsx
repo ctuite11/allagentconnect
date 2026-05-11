@@ -25,7 +25,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { resolveListedByAttribution } from "@/lib/listingListedBy";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
-import { cn } from "@/lib/utils";
+import { buildDisplayAddress, cn, listingCardStreetHeading } from "@/lib/utils";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -129,17 +129,6 @@ const getNextOpenHouse = (openHouses?: any) => {
   return upcoming[0] || null;
 };
 
-const getUnitNumber = (listing: SearchListing) => {
-  if (listing.unit_number) return listing.unit_number;
-  if (!listing.condo_details) return null;
-  try {
-    const details = typeof listing.condo_details === 'string' ? JSON.parse(listing.condo_details) : listing.condo_details;
-    return details?.unit_number || null;
-  } catch {
-    return null;
-  }
-};
-
 const getPropertyStyle = (listing: SearchListing) => {
   if (listing.property_styles) {
     if (Array.isArray(listing.property_styles) && listing.property_styles.length > 0) return listing.property_styles[0];
@@ -173,7 +162,6 @@ export const SearchListingCard = ({
   const photoUrl = getFirstPhoto(listing);
   const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
-  const unitNumber = getUnitNumber(listing);
   const photoCount = Array.isArray(listing.photos) ? listing.photos.length : 0;
   const docCount = getDocCount(listing.documents);
   const propertyStyle = getPropertyStyle(listing);
@@ -191,7 +179,7 @@ export const SearchListingCard = ({
   const pricePerSqFt = listing.square_feet && listing.square_feet > 0
     ? Math.round(listing.price / listing.square_feet) : null;
 
-  const fullAddress = `${listing.address}${unitNumber ? ` #${unitNumber}` : ""}, ${listing.city}, ${listing.state}`;
+  const fullAddress = buildDisplayAddress(listing);
   const listedByLine = resolveListedByAttribution(listing);
 
   const handleCardClick = () => {
@@ -380,7 +368,7 @@ export const SearchListingCard = ({
                     {listingIdLabel}
                   </button>
                 )}
-                <h3 className="mt-0.5 break-words text-sm font-semibold leading-tight tracking-[-0.01em] text-foreground">
+                <h3 className="mt-0.5 min-h-[2.25rem] break-words text-sm font-semibold leading-tight tracking-[-0.01em] text-foreground">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
@@ -388,7 +376,7 @@ export const SearchListingCard = ({
                     onClick={(e) => e.stopPropagation()}
                     className="transition-colors hover:text-neutral-800"
                   >
-                    {listing.address}{unitNumber ? `, #${unitNumber}` : ""}
+                    {listingCardStreetHeading(listing)}
                   </a>
                 </h3>
                 <div className="mt-1 flex items-center gap-1.5 text-xs text-neutral-600">
@@ -513,8 +501,8 @@ export const SearchListingCard = ({
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="break-words text-sm font-semibold leading-tight text-foreground">
-                {listing.address}{unitNumber ? `, #${unitNumber}` : ""}
+              <h3 className="min-h-[2.25rem] break-words text-sm font-semibold leading-tight text-foreground">
+                {listingCardStreetHeading(listing)}
               </h3>
               <div className="mt-0.5 flex items-center text-xs text-neutral-600">
                 <MapPin className="w-3 h-3 mr-0.5" />

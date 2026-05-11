@@ -31,6 +31,8 @@ interface MarketListingRow {
   agent_id: string;
   brokerage: string;
   neighborhood: string | null;
+  unit_number: string | null;
+  condo_details: unknown;
 }
 
 const DISPLAY_CAP = 24;
@@ -78,6 +80,11 @@ export function MarketActivityRow() {
       agent_id: row.agent_id,
       brokerage: companyMap[row.agent_id] || "AAC Agent",
       neighborhood: typeof row.neighborhood === "string" ? row.neighborhood : null,
+      unit_number:
+        row.unit_number != null && String(row.unit_number).trim() !== ""
+          ? String(row.unit_number).trim()
+          : null,
+      condo_details: row.condo_details ?? null,
     };
   }, []);
 
@@ -91,7 +98,8 @@ export function MarketActivityRow() {
       .select(`
         id, address, city, state, zip_code, price, property_type,
         bedrooms, bathrooms, square_feet, neighborhood,
-        photos, status, created_at, active_date, listing_number, agent_id
+        photos, status, created_at, active_date, listing_number, unit_number, condo_details,
+        agent_id
       `)
       .not("status", "in", "(draft,expired)")
       .order("created_at", { ascending: false })
@@ -141,7 +149,8 @@ export function MarketActivityRow() {
             .select(`
               id, address, city, state, zip_code, price, property_type,
               bedrooms, bathrooms, square_feet, neighborhood,
-              photos, status, created_at, active_date, listing_number, agent_id
+              photos, status, created_at, active_date, listing_number, unit_number, condo_details,
+              agent_id
             `)
             .eq("id", newRow.id)
             .maybeSingle();

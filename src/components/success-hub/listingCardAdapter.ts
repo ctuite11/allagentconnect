@@ -68,6 +68,8 @@ export function mapMarketRowToListingCard(row: {
   listing_number?: string | null;
   agent_id: string;
   neighborhood?: string | null;
+  unit_number?: string | null;
+  condo_details?: unknown;
   /** Display brokerage once via listing attribution (avoid duplicate agentInfo + Listed by). */
   brokerage?: string;
 }): ListingCardModel {
@@ -140,5 +142,7 @@ export function mapSummaryListingToListingCard(
     },
     agent_id: agentId,
     neighborhood: l.neighborhood?.trim() || undefined,
+    unit_number: typeof l.unit_number === "string" ? l.unit_number : undefined,
+    condo_details: l.condo_details,
   };
 }

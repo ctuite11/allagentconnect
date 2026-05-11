@@ -25,7 +25,7 @@ import {
 import { format } from "date-fns";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
-import { cn } from "@/lib/utils";
+import { cn, listingCardStreetHeading } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,6 +61,9 @@ export interface ShellListingData {
   neighborhood?: string | null;
   publish_to_dcmls?: boolean;
   dcmls_status?: string;
+  /** MLS condo unit (column) — included in formatted street heading when not already in address */
+  unit_number?: string | null;
+  condo_details?: unknown;
 }
 
 export interface ListingCardShellProps {
@@ -70,7 +73,6 @@ export interface ListingCardShellProps {
   /** Computed display values */
   photoUrl: string | null;
   displayPrice: string;
-  unitNumber?: string | null;
 
   /** Banners */
   statusBanner?: BannerData | null;
@@ -163,7 +165,6 @@ export function ListingCardShell({
   listing,
   photoUrl,
   displayPrice,
-  unitNumber,
   statusBanner,
   priceChangeBanner,
   openHouseBanner,
@@ -256,13 +257,8 @@ export function ListingCardShell({
           <div className="col-span-6 flex flex-col">
             {addressSlot || (
               <>
-                <h3 className="mb-1 break-words text-sm font-semibold">
-                  {listing.address}
-                  {unitNumber && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      Unit {unitNumber}
-                    </Badge>
-                  )}
+                <h3 className="mb-1 min-h-[2.25rem] break-words text-sm font-semibold">
+                  {listingCardStreetHeading(listing)}
                 </h3>
                 <div className="flex items-center text-muted-foreground text-xs mb-2">
                   <MapPin className="w-3 h-3 mr-1 shrink-0 text-[#047857]" aria-hidden />

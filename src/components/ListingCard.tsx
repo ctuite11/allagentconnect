@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { buildDisplayAddress, cn, propertyTypeToEnum } from "@/lib/utils";
+import { buildDisplayAddress, cn, listingCardStreetHeading, propertyTypeToEnum } from "@/lib/utils";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
@@ -76,6 +76,7 @@ interface ListingCardProps {
     is_relisting?: boolean;
     original_listing_id?: string | null;
     condo_details?: any;
+    unit_number?: string | null;
     cancelled_at?: string | null;
     listing_stats?: {
       view_count: number;
@@ -671,16 +672,6 @@ const ListingCard = ({
     return `${buyerCount} Buyer Match${buyerCount !== 1 ? 'es' : ''}`;
   };
   const matchButtonStyle = getMatchButtonStyle();
-  const getUnitNumber = () => {
-    if (!listing.condo_details) return null;
-    try {
-      const details = typeof listing.condo_details === 'string' ? JSON.parse(listing.condo_details) : listing.condo_details;
-      return details?.unit_number || null;
-    } catch {
-      return null;
-    }
-  };
-  const unitNumber = getUnitNumber();
   const calculateDaysOnMarket = () => {
     // Use active_date (MLS date) if available, otherwise fall back to created_at
     const marketDate = listing.active_date || listing.created_at;
@@ -880,7 +871,7 @@ const ListingCard = ({
 
           <div className="flex min-w-0 cursor-pointer items-start gap-1.5" onClick={openListingDetail}>
             <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
-            <p className="min-w-0 flex-1 break-words text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
+            <p className="min-h-[2.25rem] min-w-0 flex-1 break-words text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
           </div>
 
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
@@ -1157,7 +1148,6 @@ const ListingCard = ({
         listing={listing}
         photoUrl={photoUrl}
         displayPrice={displayPrice}
-        unitNumber={unitNumber}
         statusBanner={statusBanner}
         priceChangeBanner={priceChangeBanner}
         openHouseBanner={openHouseBanner}
@@ -1429,18 +1419,8 @@ const ListingCard = ({
           <div className="min-w-0">
             <div className="flex min-w-0 items-start gap-1.5">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
-              <h3 className="min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
-                {(() => {
-                  // Extract just the street address (first part before any comma)
-                  let street = listing.address || '';
-                  // Take only the first segment before any comma
-                  const firstComma = street.indexOf(',');
-                  if (firstComma > 0) {
-                    street = street.substring(0, firstComma);
-                  }
-                  // Convert to Title Case
-                  return street.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-                })()}
+              <h3 className="min-h-[2.25rem] min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
+                {listingCardStreetHeading(listing)}
               </h3>
             </div>
             <p className="text-xs text-muted-foreground pl-5 mt-0.5">
