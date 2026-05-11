@@ -409,7 +409,7 @@ const AddListing = () => {
   useEffect(() => {
     if (!user || !hasUnsavedChanges) return;
     
-    // Debounce autosave to 8 seconds after last change
+    // Debounce autosave to 14 seconds after last change
     const debounceTimeout = setTimeout(() => {
       // In edit mode for non-draft listings, use handleSaveChanges to preserve status
       if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
@@ -417,7 +417,7 @@ const AddListing = () => {
       } else {
         handleSaveDraft(true);
       }
-    }, 8000);
+    }, 14000);
     
     return () => clearTimeout(debounceTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -4684,7 +4684,7 @@ const AddListing = () => {
                             placeholder={
                               formData.commission_type === 'percentage'
                                 ? 'e.g. 2.5 (% of sale price)'
-                                : 'e.g. 5000 (flat dollar amount)'
+                                : 'e.g. $5,000'
                             }
                             value={formData.commission_rate}
                             onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
