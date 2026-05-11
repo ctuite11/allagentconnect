@@ -2303,7 +2303,15 @@ const AddListing = () => {
 
       setHasUnsavedChanges(false);
       setLastAutoSave(new Date());
-      
+
+      if (isAutoSave) {
+        toast.success("Auto-saved", {
+          id: "add-listing-autosave",
+          duration: 2600,
+          description: "Your draft was saved in the background.",
+        });
+      }
+
       if (!isAutoSave) {
         toast.success("Draft saved successfully!");
         navigate(`${ROUTES.MY_LISTINGS}?status=draft`);
@@ -2527,7 +2535,14 @@ const AddListing = () => {
       }
 
       setHasUnsavedChanges(false);
-      if (!isAutoSave) {
+      if (isAutoSave) {
+        setLastAutoSave(new Date());
+        toast.success("Auto-saved", {
+          id: "add-listing-autosave",
+          duration: 2600,
+          description: "Your changes were saved in the background.",
+        });
+      } else {
         toast.success("Listing changes saved!");
         const returnTo = location.state?.from;
         if (returnTo) {
@@ -3019,23 +3034,23 @@ const AddListing = () => {
           {/* Action Buttons - Sticky Top Bar */}
           <div className="-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm supports-[backdrop-filter]:bg-white/90">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <div className="flex min-w-0 flex-1 items-center gap-2">
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
                 {autoSaving && (
-                  <div className="flex items-center gap-1.5 text-[11px] font-normal leading-snug text-neutral-400">
-                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin opacity-70" aria-hidden />
-                    <span>Auto-saving draft…</span>
+                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-neutral-600">
+                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-neutral-500" aria-hidden />
+                    <span>Auto-saving…</span>
                   </div>
                 )}
-                {!autoSaving && lastAutoSave && (
-                  <div className="flex items-center gap-1.5 text-[11px] font-normal leading-snug text-neutral-400">
-                    <Cloud className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
-                    <span>Draft auto-saved {lastAutoSave.toLocaleTimeString()}</span>
-                  </div>
-                )}
-                {!autoSaving && !lastAutoSave && hasUnsavedChanges && (
-                  <div className="flex items-center gap-1.5 text-[11px] font-normal leading-snug text-neutral-400">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                {!autoSaving && hasUnsavedChanges && (
+                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-amber-800/90">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
                     <span>Unsaved changes</span>
+                  </div>
+                )}
+                {!autoSaving && !hasUnsavedChanges && lastAutoSave && (
+                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-neutral-600">
+                    <Cloud className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
+                    <span>Auto-saved {lastAutoSave.toLocaleTimeString()}</span>
                   </div>
                 )}
               </div>
