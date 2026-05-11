@@ -57,6 +57,7 @@ export function mapMarketRowToListingCard(row: {
   state: string;
   zip_code: string;
   price: number | null;
+  listing_type?: string | null;
   price_range_min?: number | null;
   price_range_max?: number | null;
   property_type: string | null;
@@ -86,6 +87,7 @@ export function mapMarketRowToListingCard(row: {
     price_range_min: typeof row.price_range_min === "number" ? row.price_range_min : null,
     price_range_max: typeof row.price_range_max === "number" ? row.price_range_max : null,
     property_type: row.property_type,
+    listing_type: row.listing_type ?? undefined,
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
     square_feet: row.square_feet,

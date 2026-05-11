@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LineChart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
-import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 
 /** Matches listing-search compact share trigger (neutral AAC). */
@@ -21,6 +20,7 @@ interface MarketListingRow {
   price: number | null;
   price_range_min?: number | null;
   price_range_max?: number | null;
+  listing_type: string | null;
   property_type: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -28,6 +28,7 @@ interface MarketListingRow {
   photos: unknown;
   status: string;
   created_at: string;
+  updated_at: string;
   active_date: string | null;
   listing_number: string | null;
   agent_id: string;
@@ -40,14 +41,17 @@ interface MarketListingRow {
 /** Pool size from Supabase before visibility filter. */
 const FETCH_LISTING_LIMIT = 42;
 /** Fixed number of cards shown; new realtime items displace the oldest slot (no extra rows from updates). */
-const VISIBLE_MARKET_ACTIVITY_SLOTS = 8;
+const VISIBLE_MARKET_ACTIVITY_SLOTS = 4;
+
+type MarketTypeFilter = "sale" | "rental";
 
 export function MarketActivityRow() {
   const navigate = useNavigate();
-  const [listings, setListings] = useState<MarketListingRow[]>([]);
+  const [poolListings, setPoolListings] = useState<MarketListingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [marketTypeFilter, setMarketTypeFilter] = useState<MarketTypeFilter>("sale");
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
@@ -75,6 +79,7 @@ export function MarketActivityRow() {
       price: row.price,
       price_range_min: typeof row.price_range_min === "number" ? row.price_range_min : null,
       price_range_max: typeof row.price_range_max === "number" ? row.price_range_max : null,
+      listing_type: row.listing_type ?? null,
       property_type: row.property_type ?? null,
       bedrooms: typeof row.bedrooms === "number" ? row.bedrooms : null,
       bathrooms: typeof row.bathrooms === "number" ? row.bathrooms : null,
@@ -82,6 +87,7 @@ export function MarketActivityRow() {
       photos: row.photos,
       status: row.status,
       created_at: row.created_at,
+      updated_at: typeof row.updated_at === "string" ? row.updated_at : row.created_at,
       active_date: typeof row.active_date === "string" ? row.active_date : null,
       listing_number: typeof row.listing_number === "string" ? row.listing_number : null,
       agent_id: row.agent_id,
@@ -103,13 +109,14 @@ export function MarketActivityRow() {
     const { data, error } = await supabase
       .from("listings")
       .select(`
-        id, address, city, state, zip_code, price, property_type,
+        id, address, city, state, zip_code, price, price_range_min, price_range_max, listing_type,
+        property_type,
         bedrooms, bathrooms, square_feet, neighborhood,
-        photos, status, created_at, active_date, listing_number, unit_number, condo_details,
+        photos, status, created_at, updated_at, active_date, listing_number, unit_number, condo_details,
         agent_id
       `)
       .not("status", "in", "(draft,expired)")
-      .order("created_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(FETCH_LISTING_LIMIT);
 
     if (error || !data) {
@@ -132,8 +139,8 @@ export function MarketActivityRow() {
     }
 
     const parsed = data.map((row: any) => parseListing(row, companyMap));
-    const visible = filterVisibleListings(parsed, userId).slice(0, VISIBLE_MARKET_ACTIVITY_SLOTS);
-    setListings(visible);
+    const visible = filterVisibleListings(parsed, userId);
+    setPoolListings(visible);
     setLoading(false);
   }, [parseListing]);
 
@@ -141,52 +148,92 @@ export function MarketActivityRow() {
     fetchListings();
   }, [fetchListings]);
 
+  const visibleListings = useMemo(() => {
+    const sorted = [...poolListings].sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
+    const filtered =
+      marketTypeFilter === "sale"
+        ? sorted.filter((l) => l.listing_type === "for_sale")
+        : sorted.filter((l) => l.listing_type === "for_rent");
+    return filtered.slice(0, VISIBLE_MARKET_ACTIVITY_SLOTS);
+  }, [poolListings, marketTypeFilter]);
+
   useEffect(() => {
-    const allowed = new Set(listings.map((l) => l.id));
+    const allowed = new Set(visibleListings.map((l) => l.id));
     setSelectedIds((prev) => {
       const next = new Set([...prev].filter((id) => allowed.has(id)));
       if (prev.size === next.size && [...prev].every((id) => next.has(id))) return prev;
       return next;
     });
-  }, [listings]);
+  }, [visibleListings]);
 
   useEffect(() => {
+    const upsertFromListingChange = async (listingId: string) => {
+      const { data } = await supabase
+        .from("listings")
+        .select(`
+          id, address, city, state, zip_code, price, price_range_min, price_range_max, listing_type,
+          property_type,
+          bedrooms, bathrooms, square_feet, neighborhood,
+          photos, status, created_at, updated_at, active_date, listing_number, unit_number, condo_details,
+          agent_id
+        `)
+        .eq("id", listingId)
+        .maybeSingle();
+
+      if (!data) return;
+
+      const companyMap: Record<string, string> = {};
+      const { data: profile } = await supabase
+        .from("agent_profiles")
+        .select("id, company")
+        .eq("id", data.agent_id)
+        .maybeSingle();
+      if (profile?.company) companyMap[profile.id] = profile.company;
+
+      const parsed = parseListing(data, companyMap);
+      const visible = filterVisibleListings([parsed], currentUserId);
+
+      setPoolListings((prev) => {
+        // Remove if not visible to this user (e.g., off_market not owned)
+        if (visible.length === 0) return prev.filter((l) => l.id !== parsed.id);
+
+        const without = prev.filter((l) => l.id !== parsed.id);
+        const next = [parsed, ...without].sort(
+          (a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at),
+        );
+        return next.slice(0, FETCH_LISTING_LIMIT);
+      });
+    };
+
     const channel = supabase
-      .channel("market-activity-inserts")
+      .channel("market-activity-changes")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "listings" },
         async (payload) => {
           const newRow = payload.new as any;
           if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
+          if (typeof newRow.id !== "string") return;
+          await upsertFromListingChange(newRow.id);
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "listings" },
+        async (payload) => {
+          const oldRow = payload.old as any;
+          const newRow = payload.new as any;
+          if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
+          if (typeof newRow.id !== "string") return;
 
-          const { data } = await supabase
-            .from("listings")
-            .select(`
-              id, address, city, state, zip_code, price, price_range_min, price_range_max, property_type,
-              bedrooms, bathrooms, square_feet, neighborhood,
-              photos, status, created_at, active_date, listing_number, unit_number, condo_details,
-              agent_id
-            `)
-            .eq("id", newRow.id)
-            .maybeSingle();
+          // Avoid re-fetching on unrelated updates; treat only status/type/price changes as meaningful.
+          const relevantChanged = ["status", "listing_type", "price", "price_range_min", "price_range_max", "active_date"].some(
+            (k) => oldRow?.[k] !== newRow?.[k],
+          );
+          if (!relevantChanged) return;
 
-          if (!data) return;
-
-          const companyMap: Record<string, string> = {};
-          const { data: profile } = await supabase
-            .from("agent_profiles")
-            .select("id, company")
-            .eq("id", data.agent_id)
-            .maybeSingle();
-          if (profile?.company) companyMap[profile.id] = profile.company;
-
-          const parsed = parseListing(data, companyMap);
-          const visible = filterVisibleListings([parsed], currentUserId);
-          if (visible.length === 0) return;
-
-          setListings((prev) => [visible[0], ...prev].slice(0, VISIBLE_MARKET_ACTIVITY_SLOTS));
-        }
+          await upsertFromListingChange(newRow.id);
+        },
       )
       .subscribe();
 
@@ -228,16 +275,21 @@ export function MarketActivityRow() {
             <p className="mt-0.5 text-xs text-neutral-500">Loading recent listings…</p>
           </div>
         </div>
-        <div className={SUCCESS_HUB_LISTINGS_GRID}>
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="h-[17.5rem] max-w-full animate-pulse rounded-lg border border-zinc-100 bg-white" />
-          ))}
+        <div className="overflow-x-auto">
+          <div className="grid min-w-max grid-cols-4 gap-5 content-start">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-[17.5rem] max-w-full animate-pulse rounded-lg border border-zinc-100 bg-white"
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (listings.length === 0) {
+  if (visibleListings.length === 0) {
     return (
       <div className="min-w-0">
         {headerBlock}
@@ -272,6 +324,34 @@ export function MarketActivityRow() {
           triggerLabel="Share selected"
           onSuccessfulShare={clearSelection}
         />
+
+        <div className="ml-auto flex shrink-0 items-center gap-1 rounded-md border border-neutral-200 bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <button
+            type="button"
+            onClick={() => setMarketTypeFilter("sale")}
+            className={[
+              "h-7 whitespace-nowrap rounded-sm px-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
+              marketTypeFilter === "sale"
+                ? "bg-neutral-900 text-white"
+                : "bg-white text-neutral-800 hover:bg-neutral-50",
+            ].join(" ")}
+          >
+            Sale
+          </button>
+          <button
+            type="button"
+            onClick={() => setMarketTypeFilter("rental")}
+            className={[
+              "h-7 whitespace-nowrap rounded-sm px-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
+              marketTypeFilter === "rental"
+                ? "bg-neutral-900 text-white"
+                : "bg-white text-neutral-800 hover:bg-neutral-50",
+            ].join(" ")}
+          >
+            Rental
+          </button>
+        </div>
+
         {selectedCount > 0 ? (
           <button
             type="button"
@@ -283,16 +363,19 @@ export function MarketActivityRow() {
         ) : null}
       </div>
 
-      <div className={`${SUCCESS_HUB_LISTINGS_GRID} content-start`}>
-        {listings.map((listing) => (
-          <SuccessHubListingCard
-            key={listing.id}
-            listing={mapMarketRowToListingCard(listing)}
-            compactSelectionAccent="aacGreen"
-            onSelect={(id) => toggleSelection(id)}
-            isSelected={selectedIds.has(listing.id)}
-          />
-        ))}
+      {/* Single-row 4-card layout (never a second row). If the viewport gets narrow, the row scrolls horizontally. */}
+      <div className="overflow-x-auto">
+        <div className="grid min-w-max grid-cols-4 gap-5 content-start">
+          {visibleListings.map((listing) => (
+            <SuccessHubListingCard
+              key={listing.id}
+              listing={mapMarketRowToListingCard(listing)}
+              compactSelectionAccent="aacGreen"
+              onSelect={(id) => toggleSelection(id)}
+              isSelected={selectedIds.has(listing.id)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
