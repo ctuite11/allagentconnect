@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
+import { listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 /** Drop list-side agent/office fields so compact `ListingCard` has no “Listed by” row (buyer map grid parity). */
 function listingRowForMapCompactGrid(row: any): any {
@@ -186,7 +187,12 @@ const ListingSearchResults = () => {
       if (filters.listDateTo) query = query.lte("list_date", filters.listDateTo);
 
       const ascending = sortDirection === "asc";
-      query = query.order(sortColumn, { ascending, nullsFirst: false });
+      // DB `price` sorts ignore `price_range_*`; price order is applied client-side with `listingEffectiveNumericPrice`.
+      if (sortColumn !== "price") {
+        query = query.order(sortColumn, { ascending, nullsFirst: false });
+      } else {
+        query = query.order("list_date", { ascending: false, nullsFirst: false });
+      }
 
       const { data, error } = await query;
 
@@ -229,6 +235,20 @@ const ListingSearchResults = () => {
 
         listingsWithAgents = filterVisibleListings(listingsWithAgents, currentUserId);
         listingsWithAgents = filterByPricePerSqft(listingsWithAgents, filters.pricePerSqFtMin || "", filters.pricePerSqFt || "");
+
+        if (sortColumn === "price") {
+          const dir = sortDirection === "asc" ? 1 : -1;
+          listingsWithAgents = [...listingsWithAgents].sort((a, b) => {
+            const ea = listingEffectiveNumericPrice(a);
+            const eb = listingEffectiveNumericPrice(b);
+            const aMissing = ea == null;
+            const bMissing = eb == null;
+            if (aMissing && bMissing) return 0;
+            if (aMissing) return 1;
+            if (bMissing) return -1;
+            return (ea - eb) * dir;
+          });
+        }
 
         setListings(listingsWithAgents);
       } else {
