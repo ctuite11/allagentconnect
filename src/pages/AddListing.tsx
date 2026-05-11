@@ -120,6 +120,30 @@ function addListingFormStatusToDbStatus(formStatus: string): string {
   return key;
 }
 
+/** `example.com`, `www.example.com`, or full URL → stored with `https://` when missing scheme. */
+function normalizeOptionalWebUrl(raw: string | null | undefined): string | null {
+  const t = (raw ?? "").trim();
+  if (!t) return null;
+  if (/^(mailto:|tel:)/i.test(t)) return t;
+  const collapsed = t.replace(/\s+/g, "");
+  if (/^https?:\/\//i.test(collapsed)) return collapsed;
+  return `https://${collapsed}`;
+}
+
+/** Inline validation: scheme optional; must resolve to a host with a dot. */
+function isPlausibleWebUrl(raw: string): boolean {
+  const t = raw.trim();
+  if (!t) return false;
+  if (/^(mailto:|tel:)/i.test(t)) return true;
+  const candidate = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  try {
+    const u = new URL(candidate);
+    return Boolean(u.hostname && u.hostname.includes("."));
+  } catch {
+    return /^[\w.-]+\.\w{2,}(\/.*)?$/i.test(t);
+  }
+}
+
 const AddListing = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -2166,9 +2190,9 @@ const AddListing = () => {
     building_name: formData.building_name || null,
     disclosures_other: formData.disclosures_other || null,
     
-    property_website_url: formData.property_website_url || null,
-    virtual_tour_url: formData.virtual_tour_url || null,
-    video_url: formData.video_url || null,
+    property_website_url: normalizeOptionalWebUrl(formData.property_website_url),
+    virtual_tour_url: normalizeOptionalWebUrl(formData.virtual_tour_url),
+    video_url: normalizeOptionalWebUrl(formData.video_url),
     listing_agreement_types: formData.listing_agreement_type ? [formData.listing_agreement_type] : null,
     attom_id: attomId,
     price_range_min: formData.price ? null : (formData.price_range_min ? parseFloat(formData.price_range_min) : null),
@@ -3635,7 +3659,7 @@ const AddListing = () => {
                           <FormattedInput
                             id="price_range_min"
                             format="currency"
-                            placeholder="Min"
+                            placeholder="Low end (e.g. 350000)"
                             value={formData.price_range_min}
                              onChange={(value) => {
                                setFormData(prev => {
@@ -3649,7 +3673,7 @@ const AddListing = () => {
                           <FormattedInput
                             id="price_range_max"
                             format="currency"
-                            placeholder="Max"
+                            placeholder="High end (e.g. 425000)"
                             value={formData.price_range_max}
                              onChange={(value) => {
                                setFormData(prev => {
@@ -3785,7 +3809,7 @@ const AddListing = () => {
                   </div>
 
                   {/* Property Description */}
-                  <div className="space-y-2 mt-4">
+                  <div className="mt-6 space-y-3">
                     <Label htmlFor="description">Property Description</Label>
                     <Textarea
                       id="description"
@@ -3793,6 +3817,7 @@ const AddListing = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       rows={6}
                       placeholder="Describe the property features, location highlights, and any special details..."
+                      className="min-h-[8.5rem]"
                     />
                   </div>
                 </div>
@@ -4621,7 +4646,7 @@ const AddListing = () => {
                   <div className="space-y-4 border-t border-zinc-100 pt-6">
                     <Label className={agentSectionTitle}>Buyer Agent Compensation</Label>
                     <p className="text-sm text-muted-foreground -mt-2">Offered from the seller</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:items-start">
                       <div className="space-y-2">
                         <Label htmlFor="commission_type">Compensation Type</Label>
                         <Select
@@ -4637,11 +4662,18 @@ const AddListing = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <Label htmlFor="commission_rate">
                           {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
                         </Label>
-                        <div className="relative">
+                        <div className="flex items-center gap-1">
+                          {formData.commission_type === "percentage" ? (
+                            <span className="shrink-0 pl-0.5 text-left text-sm font-medium tabular-nums text-muted-foreground">
+                              %
+                            </span>
+                          ) : (
+                            <span className="shrink-0 pl-0.5 text-left text-sm font-medium text-muted-foreground">$</span>
+                          )}
                           <Input
                             id="commission_rate"
                             name="buyer_agent_commission_rate"
@@ -4650,20 +4682,19 @@ const AddListing = () => {
                             step="0.01"
                             min="0"
                             max={formData.commission_type === 'percentage' ? "100" : undefined}
-                            placeholder={formData.commission_type === 'percentage' ? '2.5' : '5000'}
+                            placeholder={
+                              formData.commission_type === 'percentage'
+                                ? 'e.g. 2.5 (% of sale price)'
+                                : 'e.g. 5000 (flat dollar amount)'
+                            }
                             value={formData.commission_rate}
                             onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
                             autoComplete="off"
                             className={cn(
+                              "h-9 min-w-0 flex-1 py-1",
                               "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                              formData.commission_type === 'percentage' ? "pr-8" : "pl-6"
                             )}
                           />
-                          {formData.commission_type === 'percentage' ? (
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">%</span>
-                          ) : (
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">$</span>
-                          )}
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -4680,9 +4711,9 @@ const AddListing = () => {
                 )}
 
                 {/* Showing Instructions */}
-                <div className="space-y-4 border-t border-zinc-100 pt-6">
+                <div className="space-y-5 border-t border-zinc-100 pt-8 pb-2">
                   <Label className={agentSectionTitle}>Showing Instructions</Label>
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div className="space-y-2">
                       <Label htmlFor="showing_instructions">Instructions</Label>
                       <Textarea
@@ -4690,10 +4721,11 @@ const AddListing = () => {
                         placeholder="Please call 24 hours in advance. Remove shoes..."
                         value={formData.showing_instructions}
                         onChange={(e) => setFormData(prev => ({ ...prev, showing_instructions: e.target.value }))}
-                        rows={3}
+                        rows={4}
+                        className="min-h-[6.5rem]"
                       />
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 pt-1">
                       <Checkbox
                         id="appointment_required"
                         checked={formData.appointment_required}
@@ -4710,14 +4742,15 @@ const AddListing = () => {
 
 
                 {/* Additional Notes */}
-                <div className="space-y-2 border-t border-zinc-100 pt-6">
+                <div className="mt-2 space-y-4 border-t border-zinc-100 pt-10">
                   <Label htmlFor="additional_notes">Additional Notes</Label>
                   <Textarea
                     id="additional_notes"
                     placeholder="Any other important information about the property..."
                     value={formData.additional_notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, additional_notes: e.target.value }))}
-                    rows={4}
+                    rows={5}
+                    className="min-h-[7.5rem]"
                   />
                 </div>
 
@@ -4733,39 +4766,45 @@ const AddListing = () => {
                         <Label htmlFor="property_website_url">Property Website URL</Label>
                         <Input
                           id="property_website_url"
-                          type="url"
-                          placeholder="https://www.example.com/listing/123"
+                          type="text"
+                          inputMode="url"
+                          autoComplete="url"
+                          placeholder="www.example.com/listing or https://…"
                           value={formData.property_website_url}
                           onChange={(e) => setFormData(prev => ({ ...prev, property_website_url: e.target.value }))}
                         />
-                        {formData.property_website_url && !/^https?:\/\/.+\..+/.test(formData.property_website_url) && (
-                          <p className="text-sm text-destructive">Please enter a valid URL</p>
+                        {formData.property_website_url && !isPlausibleWebUrl(formData.property_website_url) && (
+                          <p className="text-sm text-destructive">Enter a valid web address (https:// added automatically when you save)</p>
                         )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="virtual_tour_url">Virtual Tour URL</Label>
                         <Input
                           id="virtual_tour_url"
-                          type="url"
-                          placeholder="https://vimeo.com/... or Matterport link"
+                          type="text"
+                          inputMode="url"
+                          autoComplete="url"
+                          placeholder="my.matterport.com/show/… or vimeo.com/…"
                           value={formData.virtual_tour_url}
                           onChange={(e) => setFormData(prev => ({ ...prev, virtual_tour_url: e.target.value }))}
                         />
-                        {formData.virtual_tour_url && !/^https?:\/\/.+\..+/.test(formData.virtual_tour_url) && (
-                          <p className="text-sm text-destructive">Please enter a valid URL</p>
+                        {formData.virtual_tour_url && !isPlausibleWebUrl(formData.virtual_tour_url) && (
+                          <p className="text-sm text-destructive">Enter a valid web address (https:// added automatically when you save)</p>
                         )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="video_url">Video URL</Label>
                         <Input
                           id="video_url"
-                          type="url"
-                          placeholder="https://youtu.be/..."
+                          type="text"
+                          inputMode="url"
+                          autoComplete="url"
+                          placeholder="youtu.be/… or youtube.com/watch?v=…"
                           value={formData.video_url}
                           onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
                         />
-                        {formData.video_url && !/^https?:\/\/.+\..+/.test(formData.video_url) && (
-                          <p className="text-sm text-destructive">Please enter a valid URL</p>
+                        {formData.video_url && !isPlausibleWebUrl(formData.video_url) && (
+                          <p className="text-sm text-destructive">Enter a valid web address (https:// added automatically when you save)</p>
                         )}
                         <div className="flex items-center gap-2 mt-2">
                           <Button
