@@ -4716,7 +4716,7 @@ const AddListing = () => {
                               type="text"
                               inputMode="numeric"
                               autoComplete="off"
-                              placeholder="e.g. $5,000"
+                              placeholder="5,000"
                               value={commissionFlatFeeDisplay(formData.commission_rate)}
                               onChange={(e) =>
                                 setFormData((prev) => ({
@@ -4739,7 +4739,7 @@ const AddListing = () => {
                               step="0.01"
                               min="0"
                               max="100"
-                              placeholder="e.g. 2.5 (% of sale price)"
+                              placeholder="2.5"
                               value={formData.commission_rate}
                               onChange={(e) =>
                                 setFormData((prev) => ({ ...prev, commission_rate: e.target.value }))
