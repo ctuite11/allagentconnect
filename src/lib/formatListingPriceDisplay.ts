@@ -45,6 +45,23 @@ export function formatListingPriceDisplay(listing: ListingPriceFields): string |
   return null;
 }
 
+/**
+ * Compact surfaces (map/search cards): show a single figure.
+ * - Fixed `price` → that amount
+ * - Min + max range → **higher** endpoint only (e.g. `$425,000` for 350k–425k)
+ * - Single range endpoint → that value
+ */
+export function formatListingPriceDisplayCompactPrimary(listing: ListingPriceFields): string | null {
+  const price = positiveOrNull(listing.price);
+  if (price != null) return usdWhole(price);
+  const min = positiveOrNull(listing.price_range_min);
+  const max = positiveOrNull(listing.price_range_max);
+  if (min != null && max != null) return usdWhole(Math.max(min, max));
+  if (min != null) return usdWhole(min);
+  if (max != null) return usdWhole(max);
+  return null;
+}
+
 /** Single numeric basis for sort, $/sqft, quick-edit seed: prefers `price`, else midpoint or one end of range. */
 export function listingEffectiveNumericPrice(listing: ListingPriceFields): number | null {
   const price = positiveOrNull(listing.price);

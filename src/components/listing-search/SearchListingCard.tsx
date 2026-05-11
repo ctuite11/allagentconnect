@@ -26,7 +26,7 @@ import DcmlsBadge from "@/components/DcmlsBadge";
 import { resolveListedByAttribution } from "@/lib/listingListedBy";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
 import { buildDisplayAddress, cn, listingCardStreetHeading } from "@/lib/utils";
-import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
+import { formatListingPriceDisplayCompactPrimary, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -164,7 +164,7 @@ export const SearchListingCard = ({
   const docCount = getDocCount(listing.documents);
   const propertyStyle = getPropertyStyle(listing);
 
-  const displayPrice = formatListingPriceDisplay(listing) ?? "—";
+  const displayPrice = formatListingPriceDisplayCompactPrimary(listing) ?? "—";
   const basisForSqft = listingEffectiveNumericPrice(listing);
   const pricePerSqFt =
     listing.square_feet && listing.square_feet > 0 && basisForSqft != null && basisForSqft > 0
