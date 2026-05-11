@@ -409,7 +409,7 @@ const AddListing = () => {
   useEffect(() => {
     if (!user || !hasUnsavedChanges) return;
     
-    // Debounce autosave to 3 seconds after last change
+    // Debounce autosave to 8 seconds after last change
     const debounceTimeout = setTimeout(() => {
       // In edit mode for non-draft listings, use handleSaveChanges to preserve status
       if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
@@ -417,7 +417,7 @@ const AddListing = () => {
       } else {
         handleSaveDraft(true);
       }
-    }, 3000);
+    }, 8000);
     
     return () => clearTimeout(debounceTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3809,7 +3809,7 @@ const AddListing = () => {
                   </div>
 
                   {/* Property Description */}
-                  <div className="mt-6 space-y-3">
+                  <div className="mt-6 space-y-3 pb-10">
                     <Label htmlFor="description">Property Description</Label>
                     <Textarea
                       id="description"
@@ -3817,7 +3817,7 @@ const AddListing = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       rows={6}
                       placeholder="Describe the property features, location highlights, and any special details..."
-                      className="min-h-[8.5rem]"
+                      className="min-h-[9.75rem]"
                     />
                   </div>
                 </div>
@@ -4646,14 +4646,14 @@ const AddListing = () => {
                   <div className="space-y-4 border-t border-zinc-100 pt-6">
                     <Label className={agentSectionTitle}>Buyer Agent Compensation</Label>
                     <p className="text-sm text-muted-foreground -mt-2">Offered from the seller</p>
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:items-start">
-                      <div className="space-y-2">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end md:gap-4">
+                      <div className="space-y-2 md:col-span-3">
                         <Label htmlFor="commission_type">Compensation Type</Label>
                         <Select
                           value={formData.commission_type}
                           onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="h-9">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -4662,18 +4662,17 @@ const AddListing = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-2 md:col-span-2 md:max-w-[10.5rem]">
                         <Label htmlFor="commission_rate">
                           {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
                         </Label>
-                        <div className="flex items-center gap-1">
-                          {formData.commission_type === "percentage" ? (
-                            <span className="shrink-0 pl-0.5 text-left text-sm font-medium tabular-nums text-muted-foreground">
-                              %
-                            </span>
-                          ) : (
-                            <span className="shrink-0 pl-0.5 text-left text-sm font-medium text-muted-foreground">$</span>
-                          )}
+                        <div className="relative w-full">
+                          <span
+                            className="pointer-events-none absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-sm font-medium tabular-nums text-muted-foreground"
+                            aria-hidden
+                          >
+                            {formData.commission_type === "percentage" ? "%" : "$"}
+                          </span>
                           <Input
                             id="commission_rate"
                             name="buyer_agent_commission_rate"
@@ -4691,16 +4690,17 @@ const AddListing = () => {
                             onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
                             autoComplete="off"
                             className={cn(
-                              "h-9 min-w-0 flex-1 py-1",
+                              "h-9 w-full py-1 pl-7 pr-2",
                               "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                             )}
                           />
                         </div>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-2 md:col-span-7">
                         <Label htmlFor="commission_notes">Compensation Notes</Label>
                         <Input
                           id="commission_notes"
+                          className="h-9"
                           placeholder="Additional compensation details"
                           value={formData.commission_notes}
                           onChange={(e) => setFormData(prev => ({ ...prev, commission_notes: e.target.value }))}
@@ -4711,7 +4711,7 @@ const AddListing = () => {
                 )}
 
                 {/* Showing Instructions */}
-                <div className="space-y-5 border-t border-zinc-100 pt-8 pb-2">
+                <div className="space-y-5 border-t border-zinc-100 pt-8 pb-10">
                   <Label className={agentSectionTitle}>Showing Instructions</Label>
                   <div className="space-y-5">
                     <div className="space-y-2">
@@ -4722,7 +4722,7 @@ const AddListing = () => {
                         value={formData.showing_instructions}
                         onChange={(e) => setFormData(prev => ({ ...prev, showing_instructions: e.target.value }))}
                         rows={4}
-                        className="min-h-[6.5rem]"
+                        className="min-h-[7.75rem]"
                       />
                     </div>
                     <div className="flex items-center space-x-2 pt-1">
@@ -4742,7 +4742,7 @@ const AddListing = () => {
 
 
                 {/* Additional Notes */}
-                <div className="mt-2 space-y-4 border-t border-zinc-100 pt-10">
+                <div className="mt-2 space-y-4 border-t border-zinc-100 pt-12 pb-4">
                   <Label htmlFor="additional_notes">Additional Notes</Label>
                   <Textarea
                     id="additional_notes"
@@ -4750,7 +4750,7 @@ const AddListing = () => {
                     value={formData.additional_notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, additional_notes: e.target.value }))}
                     rows={5}
-                    className="min-h-[7.5rem]"
+                    className="min-h-[8.75rem]"
                   />
                 </div>
 
