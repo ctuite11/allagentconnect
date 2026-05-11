@@ -144,6 +144,30 @@ function isPlausibleWebUrl(raw: string): boolean {
   }
 }
 
+/** Flat fee `commission_rate` is digits-only in form state (e.g. "5000") so saves use `parseFloat` unchanged. */
+function commissionFlatFeeDigitsFromNumber(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "";
+  const n = parseFloat(String(value).replace(/,/g, ""));
+  if (!Number.isFinite(n) || n < 0) return "";
+  return String(Math.round(n));
+}
+
+/** Strip grouping/non-digits from flat-fee typing; normalize to whole dollars as digits. */
+function commissionFlatFeeDigitsFromInput(raw: string): string {
+  const d = raw.replace(/\D/g, "");
+  if (d === "") return "";
+  const n = Number(d);
+  if (!Number.isFinite(n) || n < 0) return "";
+  return String(Math.floor(n));
+}
+
+function commissionFlatFeeDisplay(digits: string): string {
+  if (!digits) return "";
+  const n = Number(digits);
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString("en-US");
+}
+
 const AddListing = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -660,8 +684,13 @@ const AddListing = () => {
           year_built: data.year_built?.toString() || "",
           price: data.price?.toString() || "",
           description: data.description || "",
-          commission_rate: data.commission_rate?.toString() || "",
           commission_type: data.commission_type || "percentage",
+          commission_rate:
+            data.commission_type === "flat_fee"
+              ? commissionFlatFeeDigitsFromNumber(data.commission_rate)
+              : data.commission_rate != null && data.commission_rate !== ""
+                ? String(data.commission_rate)
+                : "",
           commission_notes: data.commission_notes || "",
           showing_instructions: data.showing_instructions || "",
           lockbox_code: data.lockbox_code || "",
@@ -4651,7 +4680,13 @@ const AddListing = () => {
                         <Label htmlFor="commission_type">Compensation Type</Label>
                         <Select
                           value={formData.commission_type}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, commission_type: value }))}
+                          onValueChange={(value) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              commission_type: value,
+                              commission_rate: "",
+                            }))
+                          }
                         >
                           <SelectTrigger className="h-9">
                             <SelectValue />
@@ -4673,28 +4708,49 @@ const AddListing = () => {
                           >
                             {formData.commission_type === "percentage" ? "%" : "$"}
                           </span>
-                          <Input
-                            key={formData.commission_type}
-                            id="commission_rate"
-                            name="buyer_agent_commission_rate"
-                            type="number"
-                            inputMode="decimal"
-                            step="0.01"
-                            min="0"
-                            max={formData.commission_type === "percentage" ? "100" : undefined}
-                            placeholder={
-                              formData.commission_type === "flat_fee"
-                                ? "e.g. $5,000"
-                                : "e.g. 2.5 (% of sale price)"
-                            }
-                            value={formData.commission_rate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
-                            autoComplete="off"
-                            className={cn(
-                              "h-9 w-full py-1 pl-7 pr-2",
-                              "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                            )}
-                          />
+                          {formData.commission_type === "flat_fee" ? (
+                            <Input
+                              key="commission_rate_flat"
+                              id="commission_rate"
+                              name="buyer_agent_commission_rate"
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="off"
+                              placeholder="e.g. $5,000"
+                              value={commissionFlatFeeDisplay(formData.commission_rate)}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  commission_rate: commissionFlatFeeDigitsFromInput(e.target.value),
+                                }))
+                              }
+                              className={cn(
+                                "h-9 w-full py-1 pl-7 pr-2",
+                                "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                              )}
+                            />
+                          ) : (
+                            <Input
+                              key="commission_rate_pct"
+                              id="commission_rate"
+                              name="buyer_agent_commission_rate"
+                              type="number"
+                              inputMode="decimal"
+                              step="0.01"
+                              min="0"
+                              max="100"
+                              placeholder="e.g. 2.5 (% of sale price)"
+                              value={formData.commission_rate}
+                              onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, commission_rate: e.target.value }))
+                              }
+                              autoComplete="off"
+                              className={cn(
+                                "h-9 w-full py-1 pl-7 pr-2",
+                                "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                              )}
+                            />
+                          )}
                         </div>
                       </div>
                       <div className="space-y-2 md:col-span-7">
