@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, useNavigationType } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -237,6 +237,7 @@ const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const navigationType = useNavigationType();
   
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -285,6 +286,45 @@ const PropertyDetail = () => {
     (role === "agent" || role === "admin") &&
     !!listingAgentId &&
     viewerId !== listingAgentId;
+
+  /** In-app return path only (blocks protocol-relative `//`). */
+  const isSafeInternalReturnPath = (path: string) =>
+    path.startsWith("/") && !path.startsWith("//");
+
+  /**
+   * `/property/:id` is shared; back must never send agents to buyer routes by default.
+   * Prefer explicit `location.state.from`, then history when stacked via PUSH, else role fallback.
+   */
+  const handlePropertyDetailBack = () => {
+    const params = new URLSearchParams(location.search);
+    const st = (location.state as { from?: string } | null)?.from;
+
+    if (params.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
+      navigate("/favorites");
+      return;
+    }
+    if (st === "/client/search") {
+      navigate("/client/search");
+      return;
+    }
+    if (typeof st === "string" && isSafeInternalReturnPath(st)) {
+      navigate(st);
+      return;
+    }
+    if ((isAgent || isAdmin) && navigationType === "PUSH") {
+      navigate(-1);
+      return;
+    }
+    if (isAgent || isAdmin) {
+      navigate("/listing-results");
+      return;
+    }
+    if (isBuyer) {
+      navigate("/client/dashboard");
+      return;
+    }
+    navigate("/browse");
+  };
 
   const handleMessageListingAgent = async () => {
     if (!viewerId || !listingAgentId || isStartingChat) return;
@@ -697,23 +737,19 @@ const PropertyDetail = () => {
               ? "← Back to Favorites"
               : stateFrom === "/client/search"
                 ? "← Back to Results"
-                : "← Back to Dashboard";
+                : stateFrom?.startsWith("/listing-results")
+                  ? "← Back to Results"
+                  : typeof stateFrom === "string" && isSafeInternalReturnPath(stateFrom)
+                    ? "← Back"
+                    : isAgent || isAdmin
+                      ? "← Back"
+                      : isBuyer
+                        ? "← Back to Dashboard"
+                        : "← Back to Browse";
             return (
           <button
             type="button"
-            onClick={() => {
-              const p = new URLSearchParams(location.search);
-              const st = (location.state as { from?: string } | null)?.from;
-              if (p.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
-                navigate("/favorites");
-                return;
-              }
-              if (st === "/client/search") {
-                navigate("/client/search");
-                return;
-              }
-              navigate("/client/dashboard");
-            }}
+            onClick={handlePropertyDetailBack}
             className="inline-flex items-center gap-2 text-[13px] font-medium text-neutral-500 underline-offset-4 transition-colors hover:text-neutral-800 hover:underline focus-visible:outline-none focus-visible:ring-0 focus-visible:underline focus-visible:text-neutral-900"
             aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
           >
