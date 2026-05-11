@@ -49,6 +49,8 @@ interface Listing {
   state: string;
   zip_code: string;
   price: number;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   bedrooms: number;
   bathrooms: number;
   square_feet: number;
@@ -106,7 +108,9 @@ function toPropertyMapListings(
   city: string;
   state: string;
   zip_code: string;
-  price: number;
+  price: number | null;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   latitude: number | null;
   longitude: number | null;
 }[] {
@@ -116,13 +120,19 @@ function toPropertyMapListings(
     const ex = rec as unknown as Record<string, unknown>;
     const lat = parseOptionalCoord(rec.latitude) ?? parseOptionalCoord(ex.lat);
     const lng = parseOptionalCoord(rec.longitude) ?? parseOptionalCoord(ex.lng);
+    const prMin = typeof rec.price_range_min === "number" ? rec.price_range_min : null;
+    const prMax = typeof rec.price_range_max === "number" ? rec.price_range_max : null;
+    const price =
+      Number.isFinite(priceNum) && priceNum > 0 ? priceNum : null;
     return {
       id: String(rec.id),
       address: rec.address ?? "",
       city: rec.city ?? "",
       state: rec.state ?? "",
       zip_code: rec.zip_code ?? "",
-      price: Number.isFinite(priceNum) ? priceNum : 0,
+      price,
+      price_range_min: prMin,
+      price_range_max: prMax,
       latitude: lat,
       longitude: lng,
     };
@@ -332,6 +342,8 @@ const Favorites = ({
             state,
             zip_code,
             price,
+            price_range_min,
+            price_range_max,
             bedrooms,
             bathrooms,
             square_feet,
@@ -475,6 +487,8 @@ const Favorites = ({
           state: l.state,
           zip_code: l.zip_code,
           price: l.price,
+          price_range_min: l.price_range_min ?? null,
+          price_range_max: l.price_range_max ?? null,
           status: l.status,
           bedrooms: l.bedrooms,
           bathrooms: l.bathrooms,

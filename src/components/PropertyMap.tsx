@@ -1,4 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
+import {
+  formatListingPriceDisplayCompactPrimary,
+  type ListingPriceFields,
+} from "@/lib/formatListingPriceDisplay";
 
 type GoogleMapsApi = typeof google.maps;
 type SearchMarker = (google.maps.Marker | google.maps.marker.AdvancedMarkerElement) & {
@@ -20,7 +24,9 @@ interface Listing {
   city: string;
   state: string;
   zip_code: string;
-  price: number;
+  price: number | null;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   latitude?: number | null;
   longitude?: number | null;
 }
@@ -213,28 +219,6 @@ const PropertyMap = ({
     return "";
   };
 
-  /** Map pins only: short labels (never full dollar amounts) for readability. */
-  const formatCompactPrice = (value?: number | null) => {
-    if (value == null || Number.isNaN(Number(value))) return "$--";
-    const v = Math.round(Number(value));
-    if (v < 0) return "$--";
-
-    if (v >= 10_000_000) {
-      const m = v / 1_000_000;
-      return `$${m.toFixed(1).replace(/\.0$/, "")}M`;
-    }
-    if (v >= 1_000_000) {
-      const m = v / 1_000_000;
-      // e.g. 1_375_000 → $1.38M; 1_300_000 → $1.3M
-      return `$${parseFloat(m.toFixed(2)).toString()}M`;
-    }
-    if (v >= 1_000) {
-      // e.g. 345_555 → $346K
-      return `$${Math.round(v / 1_000)}K`;
-    }
-    return `$${v}`;
-  };
-
   const applyPriceBadgeStyles = (
     element: HTMLElement,
     highlighted: boolean,
@@ -391,7 +375,8 @@ const PropertyMap = ({
             if (!Number.isFinite(latN) || !Number.isFinite(lngN)) continue;
 
             const position = { lat: latN, lng: lngN };
-            const priceLabel = formatCompactPrice(listing.price);
+            const priceLabel =
+              formatListingPriceDisplayCompactPrimary(listing as ListingPriceFields) ?? "—";
             const highlighted = listing.id === highlightedListingId;
             const selected = listing.id === selectedListingId;
 

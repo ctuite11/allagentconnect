@@ -46,10 +46,11 @@ export function formatListingPriceDisplay(listing: ListingPriceFields): string |
 }
 
 /**
- * Compact surfaces (map/search cards): show a single figure.
- * - Fixed `price` → that amount
- * - Min + max range → **higher** endpoint only (e.g. `$425,000` for 350k–425k)
- * - Single range endpoint → that value
+ * **Map pins only** (`PropertyMap`). Full-range listing cards use {@link formatListingPriceDisplay}.
+ * - Fixed `price` → that amount (`$`-formatted whole dollars, never `$0`).
+ * - Min + max range → **higher** endpoint only, e.g. `$425,000` for 350k–425k.
+ * - Single range endpoint → that value only.
+ * - No usable amount → `null` (map shows `—`).
  */
 export function formatListingPriceDisplayCompactPrimary(listing: ListingPriceFields): string | null {
   const price = positiveOrNull(listing.price);

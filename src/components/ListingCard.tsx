@@ -32,7 +32,7 @@ import {
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
-import { formatListingPriceDisplayCompactPrimary, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
+import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 /** Normalize MLS photos (array, JSON string, single URL string) for compact/grid photo helpers. */
 function normalizeListingPhotos(raw: unknown): unknown[] {
@@ -448,7 +448,7 @@ const ListingCard = ({
       setDeleting(false);
     }
   };
-  const displayPrice = formatListingPriceDisplayCompactPrimary(listing) ?? "—";
+  const displayPrice = formatListingPriceDisplay(listing) ?? "—";
   const listingPhotos = normalizeListingPhotos(listing?.photos);
   const getPhotoByIndex = (index: number) => {
     if (listingPhotos.length > 0) {

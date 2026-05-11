@@ -8,6 +8,8 @@ export interface ListingRecord {
   state: string;
   zip_code: string;
   price: number;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   status: string;
   property_type: string | null;
   bedrooms: number | null;
