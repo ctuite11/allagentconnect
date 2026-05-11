@@ -88,7 +88,7 @@ const DcmlsExclusiveListings = () => {
                 </div>
                 <div className="p-4">
                   <p className="text-lg font-bold text-primary">{formatPrice(listing.price)}</p>
-                  <p className="text-sm font-medium text-foreground mt-1 truncate">{listing.address}</p>
+                  <p className="mt-1 break-words text-sm font-medium text-foreground">{listing.address}</p>
                   <p className="text-xs text-muted-foreground">{listing.city}, {listing.state}</p>
                   <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                     {listing.bedrooms != null && (

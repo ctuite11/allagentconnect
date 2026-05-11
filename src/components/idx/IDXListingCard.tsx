@@ -89,10 +89,10 @@ export function IDXListingCard({ listing }: IDXListingCardProps) {
 
         {/* Address */}
         <div>
-          <p className="font-medium text-neutral-900 truncate">
+          <p className="break-words font-medium text-neutral-900">
             {formatAddress(listing.address)}
           </p>
-          <p className="text-sm text-neutral-500 truncate">
+          <p className="break-words text-sm text-neutral-500">
             {formatCityStateZip(listing.address)}
           </p>
         </div>

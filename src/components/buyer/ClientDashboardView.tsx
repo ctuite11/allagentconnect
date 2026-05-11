@@ -538,12 +538,12 @@ export function ClientDashboardView({
                                   <p className={dashTileTitleClass}>
                                     {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                                   </p>
-                                  <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
-                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
-                                    <span className="min-w-0 truncate">{listing.address}</span>
+                                  <p className={`flex min-w-0 items-start gap-1 ${dashTileAddressClass}`}>
+                                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
+                                    <span className="min-w-0 break-words">{listing.address}</span>
                                   </p>
-                                  <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
-                                    <span className="min-w-0 truncate">
+                                  <p className={`flex min-w-0 items-start gap-1 ${dashTileSecondaryClass}`}>
+                                    <span className="min-w-0 break-words">
                                       {listing.city}, {listing.state}
                                     </span>
                                   </p>
@@ -625,12 +625,12 @@ export function ClientDashboardView({
                                 <p className={dashTileTitleClass}>
                                   {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                                 </p>
-                                <p className={`flex min-w-0 items-center gap-1 ${dashTileAddressClass}`}>
-                                  <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
-                                  <span className="min-w-0 truncate">{listing.address}</span>
+                                <p className={`flex min-w-0 items-start gap-1 ${dashTileAddressClass}`}>
+                                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
+                                  <span className="min-w-0 break-words">{listing.address}</span>
                                 </p>
-                                <p className={`flex min-w-0 items-center gap-1 truncate ${dashTileSecondaryClass}`}>
-                                  <span className="min-w-0 truncate">
+                                <p className={`flex min-w-0 items-start gap-1 ${dashTileSecondaryClass}`}>
+                                  <span className="min-w-0 break-words">
                                     {listing.city}, {listing.state}
                                   </span>
                                 </p>

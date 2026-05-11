@@ -878,9 +878,9 @@ const ListingCard = ({
             ) : null}
           </div>
 
-          <div className="flex cursor-pointer items-start gap-1.5" onClick={openListingDetail}>
+          <div className="flex min-w-0 cursor-pointer items-start gap-1.5" onClick={openListingDetail}>
             <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
-            <p className="truncate text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
+            <p className="min-w-0 flex-1 break-words text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
           </div>
 
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
@@ -1427,9 +1427,9 @@ const ListingCard = ({
         <div className="grid grid-cols-[1fr_auto] gap-x-3 mb-2">
           {/* Left Column - Address */}
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
-              <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
+            <div className="flex min-w-0 items-start gap-1.5">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+              <h3 className="min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
                 {(() => {
                   // Extract just the street address (first part before any comma)
                   let street = listing.address || '';

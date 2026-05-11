@@ -256,7 +256,7 @@ export function ListingCardShell({
           <div className="col-span-6 flex flex-col">
             {addressSlot || (
               <>
-                <h3 className="font-semibold text-sm mb-1">
+                <h3 className="mb-1 break-words text-sm font-semibold">
                   {listing.address}
                   {unitNumber && (
                     <Badge variant="secondary" className="ml-2 text-xs">

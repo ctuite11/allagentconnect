@@ -380,7 +380,7 @@ export const SearchListingCard = ({
                     {listingIdLabel}
                   </button>
                 )}
-                <h3 className="text-sm font-semibold tracking-[-0.01em] text-foreground leading-tight mt-0.5">
+                <h3 className="mt-0.5 break-words text-sm font-semibold leading-tight tracking-[-0.01em] text-foreground">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
                     target="_blank"
@@ -513,7 +513,7 @@ export const SearchListingCard = ({
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground truncate">
+              <h3 className="break-words text-sm font-semibold leading-tight text-foreground">
                 {listing.address}{unitNumber ? `, #${unitNumber}` : ""}
               </h3>
               <div className="mt-0.5 flex items-center text-xs text-neutral-600">

@@ -488,7 +488,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     </Badge>
                   </div>
                   <CardContent className="p-4">
-                    <p className="truncate text-sm font-semibold text-neutral-900">{listing.address}</p>
+                    <p className="break-words text-sm font-semibold text-neutral-900">{listing.address}</p>
                     <p className="mt-0.5 text-xs text-neutral-500">
                       {listing.city}, {listing.state} {listing.zip_code}
                     </p>
