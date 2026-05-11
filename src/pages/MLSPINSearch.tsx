@@ -5,6 +5,7 @@ import MLSPINFilterPanel from "@/components/mlspin-search/MLSPINFilterPanel";
 import MLSPINResultsTable from "@/components/mlspin-search/MLSPINResultsTable";
 import ListingIntelDrawer from "@/components/mlspin-search/ListingIntelDrawer";
 import { toast } from "sonner";
+import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
 
 interface FilterState {
   propertyTypes: string[];
@@ -127,12 +128,14 @@ const MLSPINSearch = () => {
         query = query.in("property_type", filters.propertyTypes);
       }
 
-      // Apply price filters
-      if (filters.priceMin) {
-        query = query.gte("price", parseInt(filters.priceMin));
-      }
-      if (filters.priceMax) {
-        query = query.lte("price", parseInt(filters.priceMax));
+      {
+        const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
+        const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+        query = applyListingPriceOverlapFilter(
+          query,
+          Number.isFinite(pmin) && pmin > 0 ? pmin : null,
+          Number.isFinite(pmax) && pmax > 0 ? pmax : null,
+        );
       }
 
       // Apply beds filters

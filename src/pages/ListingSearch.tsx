@@ -12,6 +12,7 @@ import { RotateCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
+import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
 
 const ListingSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -98,8 +99,15 @@ const ListingSearch = () => {
       }
       if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
       if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
-      if (filters.priceMin) query = query.gte("price", parseInt(filters.priceMin));
-      if (filters.priceMax) query = query.lte("price", parseInt(filters.priceMax));
+      {
+        const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
+        const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+        query = applyListingPriceOverlapFilter(
+          query,
+          Number.isFinite(pmin) && pmin > 0 ? pmin : null,
+          Number.isFinite(pmax) && pmax > 0 ? pmax : null,
+        );
+      }
       if (filters.bedsMin) query = query.gte("bedrooms", parseInt(filters.bedsMin));
       if (filters.bathsMin) query = query.gte("bathrooms", parseFloat(filters.bathsMin));
       if (filters.state) query = query.eq("state", filters.state);

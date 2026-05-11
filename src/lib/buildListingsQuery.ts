@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { applyLocationFilter } from "./buildLocationFilter";
 import { applyDcmlsFilter } from "./dcmlsFilter";
+import { applyListingPriceOverlapFilter } from "./applyListingPriceOverlapFilter";
 
 interface SearchCriteria {
   statuses?: string[];
@@ -106,13 +107,12 @@ export function buildListingsQuery(
     query = query.in("property_type", mappedTypes);
   }
 
-  // Price filters
-  if (criteria.minPrice > 0) {
-    query = query.gte("price", criteria.minPrice);
-  }
-  if (criteria.maxPrice > 0) {
-    query = query.lte("price", criteria.maxPrice);
-  }
+  // Price: fixed `price`, `price_range_min`/`price_range_max`, or single-ended range — overlap search band
+  query = applyListingPriceOverlapFilter(
+    query,
+    criteria.minPrice > 0 ? criteria.minPrice : null,
+    criteria.maxPrice > 0 ? criteria.maxPrice : null,
+  );
 
   // Bedrooms/bathrooms
   if (criteria.bedrooms > 0) {

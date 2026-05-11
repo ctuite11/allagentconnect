@@ -19,6 +19,7 @@ import { FilterState, initialFilters } from "@/components/listing-search/Listing
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import { listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
+import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
 
 /** Drop list-side agent/office fields so compact `ListingCard` has no “Listed by” row (buyer map grid parity). */
 function listingRowForMapCompactGrid(row: any): any {
@@ -162,8 +163,15 @@ const ListingSearchResults = () => {
       if (filters.internalFilter === "off_market") query = query.eq("status", "off_market");
       else if (filters.internalFilter === "coming_soon") query = query.eq("status", "coming_soon");
       if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
-      if (filters.priceMin) query = query.gte("price", parseInt(filters.priceMin));
-      if (filters.priceMax) query = query.lte("price", parseInt(filters.priceMax));
+      {
+        const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
+        const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+        query = applyListingPriceOverlapFilter(
+          query,
+          Number.isFinite(pmin) && pmin > 0 ? pmin : null,
+          Number.isFinite(pmax) && pmax > 0 ? pmax : null,
+        );
+      }
       if (filters.bedsMin) query = query.gte("bedrooms", parseInt(filters.bedsMin));
       if (filters.bedsMax) query = query.lte("bedrooms", parseInt(filters.bedsMax));
       if (filters.bathsMin) query = query.gte("bathrooms", parseFloat(filters.bathsMin));
