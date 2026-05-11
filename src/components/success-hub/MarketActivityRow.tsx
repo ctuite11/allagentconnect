@@ -35,7 +35,10 @@ interface MarketListingRow {
   condo_details: unknown;
 }
 
-const DISPLAY_CAP = 24;
+/** Pool size from Supabase before visibility filter. */
+const FETCH_LISTING_LIMIT = 42;
+/** Fixed number of cards shown; new realtime items displace the oldest slot (no extra rows from updates). */
+const VISIBLE_MARKET_ACTIVITY_SLOTS = 8;
 
 export function MarketActivityRow() {
   const navigate = useNavigate();
@@ -103,7 +106,7 @@ export function MarketActivityRow() {
       `)
       .not("status", "in", "(draft,expired)")
       .order("created_at", { ascending: false })
-      .limit(42);
+      .limit(FETCH_LISTING_LIMIT);
 
     if (error || !data) {
       setLoading(false);
@@ -125,7 +128,7 @@ export function MarketActivityRow() {
     }
 
     const parsed = data.map((row: any) => parseListing(row, companyMap));
-    const visible = filterVisibleListings(parsed, userId).slice(0, DISPLAY_CAP);
+    const visible = filterVisibleListings(parsed, userId).slice(0, VISIBLE_MARKET_ACTIVITY_SLOTS);
     setListings(visible);
     setLoading(false);
   }, [parseListing]);
@@ -133,6 +136,15 @@ export function MarketActivityRow() {
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
+
+  useEffect(() => {
+    const allowed = new Set(listings.map((l) => l.id));
+    setSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => allowed.has(id)));
+      if (prev.size === next.size && [...prev].every((id) => next.has(id))) return prev;
+      return next;
+    });
+  }, [listings]);
 
   useEffect(() => {
     const channel = supabase
@@ -169,7 +181,7 @@ export function MarketActivityRow() {
           const visible = filterVisibleListings([parsed], currentUserId);
           if (visible.length === 0) return;
 
-          setListings((prev) => [visible[0], ...prev].slice(0, DISPLAY_CAP));
+          setListings((prev) => [visible[0], ...prev].slice(0, VISIBLE_MARKET_ACTIVITY_SLOTS));
         }
       )
       .subscribe();
@@ -267,7 +279,7 @@ export function MarketActivityRow() {
         ) : null}
       </div>
 
-      <div className={SUCCESS_HUB_LISTINGS_GRID}>
+      <div className={`${SUCCESS_HUB_LISTINGS_GRID} content-start`}>
         {listings.map((listing) => (
           <SuccessHubListingCard
             key={listing.id}

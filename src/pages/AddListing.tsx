@@ -4674,17 +4674,18 @@ const AddListing = () => {
                             {formData.commission_type === "percentage" ? "%" : "$"}
                           </span>
                           <Input
+                            key={formData.commission_type}
                             id="commission_rate"
                             name="buyer_agent_commission_rate"
                             type="number"
                             inputMode="decimal"
                             step="0.01"
                             min="0"
-                            max={formData.commission_type === 'percentage' ? "100" : undefined}
+                            max={formData.commission_type === "percentage" ? "100" : undefined}
                             placeholder={
-                              formData.commission_type === 'percentage'
-                                ? 'e.g. 2.5 (% of sale price)'
-                                : 'e.g. $5,000'
+                              formData.commission_type === "flat_fee"
+                                ? "e.g. $5,000"
+                                : "e.g. 2.5 (% of sale price)"
                             }
                             value={formData.commission_rate}
                             onChange={(e) => setFormData(prev => ({ ...prev, commission_rate: e.target.value }))}
