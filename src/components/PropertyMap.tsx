@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import {
-  formatListingPriceDisplayCompactPrimary,
-  type ListingPriceFields,
-} from "@/lib/formatListingPriceDisplay";
+import { formatListingMapPinTruncated, type ListingPriceFields } from "@/lib/formatListingPriceDisplay";
 
 type GoogleMapsApi = typeof google.maps;
 type SearchMarker = (google.maps.Marker | google.maps.marker.AdvancedMarkerElement) & {
@@ -376,7 +373,7 @@ const PropertyMap = ({
 
             const position = { lat: latN, lng: lngN };
             const priceLabel =
-              formatListingPriceDisplayCompactPrimary(listing as ListingPriceFields) ?? "—";
+              formatListingMapPinTruncated(listing as ListingPriceFields) ?? "—";
             const highlighted = listing.id === highlightedListingId;
             const selected = listing.id === selectedListingId;
 

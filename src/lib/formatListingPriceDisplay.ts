@@ -46,21 +46,51 @@ export function formatListingPriceDisplay(listing: ListingPriceFields): string |
 }
 
 /**
- * **Map pins only** (`PropertyMap`). Full-range listing cards use {@link formatListingPriceDisplay}.
- * - Fixed `price` → that amount (`$`-formatted whole dollars, never `$0`).
- * - Min + max range → **higher** endpoint only, e.g. `$425,000` for 350k–425k.
- * - Single range endpoint → that value only.
- * - No usable amount → `null` (map shows `—`).
+ * Dollar amount used for compact “single figure” UX: fixed price, else high end of range, else lone endpoint.
  */
-export function formatListingPriceDisplayCompactPrimary(listing: ListingPriceFields): string | null {
+function listingCompactPrimaryAmount(listing: ListingPriceFields): number | null {
   const price = positiveOrNull(listing.price);
-  if (price != null) return usdWhole(price);
+  if (price != null) return price;
   const min = positiveOrNull(listing.price_range_min);
   const max = positiveOrNull(listing.price_range_max);
-  if (min != null && max != null) return usdWhole(Math.max(min, max));
-  if (min != null) return usdWhole(min);
-  if (max != null) return usdWhole(max);
+  if (min != null && max != null) return Math.max(min, max);
+  if (min != null) return min;
+  if (max != null) return max;
   return null;
+}
+
+/** Full currency for compact primary figure (non-map callers). Maps use {@link formatListingMapPinTruncated}. */
+export function formatListingPriceDisplayCompactPrimary(listing: ListingPriceFields): string | null {
+  const n = listingCompactPrimaryAmount(listing);
+  return n != null ? usdWhole(n) : null;
+}
+
+/**
+ * **Google Map pins only**: AAC/Zillow-style short labels (`$2M`, `$1.38M`, `$600K`, `$346K`).
+ * Same numeric basis as {@link formatListingPriceDisplayCompactPrimary}; never emits bare numbers or `$0`.
+ */
+export function formatListingMapPinTruncated(listing: ListingPriceFields): string | null {
+  const n = listingCompactPrimaryAmount(listing);
+  if (n == null) return null;
+  return truncateUsdForMapPin(n);
+}
+
+function truncateUsdForMapPin(v: number): string {
+  const rounded = Math.round(v);
+  if (rounded <= 0) return "";
+
+  if (rounded >= 10_000_000) {
+    const m = rounded / 1_000_000;
+    return `$${m.toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (rounded >= 1_000_000) {
+    const m = rounded / 1_000_000;
+    return `$${parseFloat(m.toFixed(2)).toString()}M`;
+  }
+  if (rounded >= 1_000) {
+    return `$${Math.round(rounded / 1_000)}K`;
+  }
+  return usdWhole(rounded);
 }
 
 /** Single numeric basis for sort, $/sqft, quick-edit seed: prefers `price`, else midpoint or one end of range. */
