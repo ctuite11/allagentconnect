@@ -91,7 +91,7 @@ export function MarketActivityRow() {
       .select(`
         id, address, city, state, zip_code, price, property_type,
         bedrooms, bathrooms, square_feet, neighborhood,
-        photos, status, created_at, agent_id
+        photos, status, created_at, active_date, listing_number, agent_id
       `)
       .not("status", "in", "(draft,expired)")
       .order("created_at", { ascending: false })
