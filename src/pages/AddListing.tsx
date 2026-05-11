@@ -130,6 +130,8 @@ const AddListing = () => {
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  /** Create flow: manual Save Draft only (Publish uses `submitting`). */
+  const [savingDraft, setSavingDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -2229,7 +2231,7 @@ const AddListing = () => {
       if (isAutoSave) {
         setAutoSaving(true);
       } else {
-        setSubmitting(true);
+        setSavingDraft(true);
       }
 
       // Upload files (preserves existing, uploads new)
@@ -2332,7 +2334,7 @@ const AddListing = () => {
       if (isAutoSave) {
         setAutoSaving(false);
       } else {
-        setSubmitting(false);
+        setSavingDraft(false);
       }
     }
   };
@@ -3052,18 +3054,18 @@ const AddListing = () => {
                     Preview
                   </Button>
                   <Button
-                    variant={autoSaving ? "ghost" : backendStatusRef.current === "draft" && formData.status !== "draft" ? "default" : "outline"}
+                    variant={backendStatusRef.current === "draft" && formData.status !== "draft" ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleSaveChanges()}
                     type="button"
-                    disabled={submitting || autoSaving}
-                    className={cn(
-                      "gap-1.5",
-                      autoSaving && "font-normal text-neutral-500 shadow-none hover:bg-transparent hover:text-neutral-500",
-                    )}
+                    disabled={submitting}
+                    className="gap-1.5"
                   >
-                    {autoSaving ? (
-                      <span className="text-xs font-normal text-neutral-500">Saving…</span>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                        {backendStatusRef.current === "draft" && formData.status !== "draft" ? "Publishing…" : "Saving…"}
+                      </>
                     ) : backendStatusRef.current === "draft" && formData.status !== "draft" ? (
                       <>
                         <Upload className="h-4 w-4 shrink-0" />
@@ -3085,17 +3087,26 @@ const AddListing = () => {
                     size="sm"
                     onClick={() => handleSaveDraft(false)}
                     type="button"
-                    disabled={submitting || autoSaving}
+                    disabled={savingDraft || submitting}
                     className="gap-1.5 border-zinc-200"
                   >
-                    <Save className="h-4 w-4 shrink-0" />
-                    Save Draft
+                    {savingDraft ? (
+                      <>
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                        Saving…
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 shrink-0" />
+                        Save Draft
+                      </>
+                    )}
                   </Button>
                   <Button variant="outline" size="sm" onClick={handlePreview} type="button" className="gap-1.5 border-zinc-200">
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
-                  <Button variant="default" size="sm" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting} className="gap-1.5">
+                  <Button variant="default" size="sm" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting || savingDraft} className="gap-1.5">
                     {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
