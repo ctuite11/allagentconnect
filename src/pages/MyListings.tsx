@@ -626,9 +626,6 @@ function MyListingsView({
             const hasPublicOpenHouse = upcomingEvents.some((oh: any) => oh.event_type === "in_person");
             const hasBrokerTour = upcomingEvents.some((oh: any) => oh.event_type === "broker_tour");
 
-            const listDateObj = l.list_date ? new Date(l.list_date) : l.created_at ? new Date(l.created_at) : null;
-            const dom = listDateObj ? Math.max(0, Math.floor((Date.now() - listDateObj.getTime()) / (1000 * 60 * 60 * 24))) : 0;
-
             return (
               <CardSurface key={l.id} interactive className="relative p-4">
                 {l.status === "draft" && (
@@ -728,10 +725,6 @@ function MyListingsView({
                         </div>
                       )
                     )}
-                    <div className="text-xs leading-tight">
-                      <span className="text-zinc-400">DOM:</span>{" "}
-                      <span className="font-medium text-zinc-700">{dom}</span>
-                    </div>
                     {l.status === "draft" && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

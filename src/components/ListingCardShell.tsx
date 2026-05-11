@@ -70,7 +70,6 @@ export interface ListingCardShellProps {
   /** Computed display values */
   photoUrl: string | null;
   displayPrice: string;
-  daysOnMarket: number;
   unitNumber?: string | null;
 
   /** Banners */
@@ -127,9 +126,6 @@ export interface ListingCardShellProps {
   /** Stats row style: "default" (small muted) or "prominent" (larger, primary-colored icons) */
   statsVariant?: "default" | "prominent";
 
-  /** When true, suppresses the "X days on market" badge in the info row */
-  hideDOMBadge?: boolean;
-
   /** Status badge size override */
   statusSize?: "sm" | "md" | "lg";
 
@@ -167,7 +163,6 @@ export function ListingCardShell({
   listing,
   photoUrl,
   displayPrice,
-  daysOnMarket,
   unitNumber,
   statusBanner,
   priceChangeBanner,
@@ -187,7 +182,6 @@ export function ListingCardShell({
   photoAspect = "square",
   pricePosition = "default",
   statsVariant = "default",
-  hideDOMBadge = false,
   statusSize = "sm",
   statusLabel,
   hidePhotoBanners = false,
@@ -282,7 +276,7 @@ export function ListingCardShell({
               </>
             )}
 
-            {/* Info row: listing number + DOM + extras */}
+            {/* Info row: listing number + extras (DOM only on listing detail pages) */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
               {listingIdLabel &&
                 (onListingNumberClick ? (
@@ -300,12 +294,6 @@ export function ListingCardShell({
                   <span>{listingIdLabel}</span>
                 ))}
               {infoRowExtra}
-              {!hideDOMBadge && listingIdLabel && daysOnMarket > 0 && <span>•</span>}
-              {!hideDOMBadge && daysOnMarket > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  {daysOnMarket} {daysOnMarket === 1 ? 'day' : 'days'} on market
-                </Badge>
-              )}
             </div>
 
             {/* Stats row: bed/bath/sqft + extras */}

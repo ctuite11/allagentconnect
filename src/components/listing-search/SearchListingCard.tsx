@@ -9,7 +9,6 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
   MapPin, Bed, Bath, Home, Calendar,
@@ -141,14 +140,6 @@ const getUnitNumber = (listing: SearchListing) => {
   }
 };
 
-const calculateDaysOnMarket = (listing: SearchListing) => {
-  const marketDate = listing.active_date || listing.list_date || listing.created_at;
-  if (!marketDate) return 0;
-  const activeDate = new Date(marketDate);
-  const today = new Date();
-  return Math.ceil(Math.abs(today.getTime() - activeDate.getTime()) / (1000 * 60 * 60 * 24));
-};
-
 const getPropertyStyle = (listing: SearchListing) => {
   if (listing.property_styles) {
     if (Array.isArray(listing.property_styles) && listing.property_styles.length > 0) return listing.property_styles[0];
@@ -183,7 +174,6 @@ export const SearchListingCard = ({
   const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
   const unitNumber = getUnitNumber(listing);
-  const daysOnMarket = calculateDaysOnMarket(listing);
   const photoCount = Array.isArray(listing.photos) ? listing.photos.length : 0;
   const docCount = getDocCount(listing.documents);
   const propertyStyle = getPropertyStyle(listing);
@@ -430,9 +420,6 @@ export const SearchListingCard = ({
                     Listed {format(new Date(listing.list_date), "MM/dd/yy")}
                   </div>
                 )}
-                {daysOnMarket > 0 && (
-                  <div className="mt-0.5 text-xs text-neutral-600">{daysOnMarket} DOM</div>
-                )}
               </div>
             </div>
 
@@ -546,11 +533,6 @@ export const SearchListingCard = ({
                   >
                     {listingIdLabel}
                   </button>
-                )}
-                {daysOnMarket > 0 && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                    {daysOnMarket} DOM
-                  </Badge>
                 )}
               </div>
             </div>

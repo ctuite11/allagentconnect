@@ -862,23 +862,20 @@ const ListingCard = ({
             >
               {displayPrice}
             </p>
-            {!hideMlsMeta && (
+            {!hideMlsMeta && compactIdLabel ? (
               <div className="flex flex-col items-end gap-0.5 text-right">
-                {compactIdLabel ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openListingDetail();
-                    }}
-                    className={cn(LISTING_ID_NAV_CLASS, "block w-full text-right text-xs")}
-                  >
-                    {compactIdLabel}
-                  </button>
-                ) : null}
-                <p className="text-xs text-muted-foreground">DOM {daysOnMarket}</p>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openListingDetail();
+                  }}
+                  className={cn(LISTING_ID_NAV_CLASS, "block w-full text-right text-xs")}
+                >
+                  {compactIdLabel}
+                </button>
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="flex cursor-pointer items-start gap-1.5" onClick={openListingDetail}>
@@ -1160,7 +1157,6 @@ const ListingCard = ({
         listing={listing}
         photoUrl={photoUrl}
         displayPrice={displayPrice}
-        daysOnMarket={daysOnMarket}
         unitNumber={unitNumber}
         statusBanner={statusBanner}
         priceChangeBanner={priceChangeBanner}
@@ -1498,9 +1494,8 @@ const ListingCard = ({
           </p>
         )}
 
-        {/* AAC blue listing ID above DOM */}
-        <div className="mb-3 flex flex-col gap-0.5">
-          {listingIdLabel ? (
+        {listingIdLabel ? (
+          <div className="mb-3">
             <button
               type="button"
               className={cn(LISTING_ID_NAV_CLASS, "block text-left text-sm font-mono font-medium")}
@@ -1511,9 +1506,8 @@ const ListingCard = ({
             >
               {listingIdLabel}
             </button>
-          ) : null}
-          <p className="text-xs text-muted-foreground">DOM {daysOnMarket}</p>
-        </div>
+          </div>
+        ) : null}
 
         {/* Divider */}
         <div className="my-3 border-t border-neutral-100" />

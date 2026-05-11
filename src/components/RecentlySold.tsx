@@ -4,9 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, Square, TrendingUp, Calendar } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
-
+import { MapPin, Bed, Bath, Square, TrendingUp } from "lucide-react";
 interface SoldListing {
   id: string;
   address: string;
@@ -78,16 +76,6 @@ const RecentlySold = () => {
     }).format(price);
   };
 
-  const getDaysOnMarket = (listing: SoldListing) => {
-    if (listing.listing_stats?.cumulative_active_days) {
-      return listing.listing_stats.cumulative_active_days;
-    }
-    // Fallback calculation
-    const startDate = new Date(listing.active_date || listing.created_at);
-    const endDate = new Date(listing.updated_at);
-    return differenceInDays(endDate, startDate);
-  };
-
   if (loading) {
     return null;
   }
@@ -113,7 +101,6 @@ const RecentlySold = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {soldListings.map((listing) => {
             const photoUrl = getFirstPhoto(listing.photos);
-            const daysOnMarket = getDaysOnMarket(listing);
 
             return (
               <Card
@@ -140,12 +127,8 @@ const RecentlySold = () => {
 
                 <CardContent className="p-6">
                   <div className="mb-3">
-                    <div className="text-2xl font-bold text-primary mb-1">
+                    <div className="text-2xl font-bold text-primary">
                       {formatPrice(listing.price)}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-3 h-3" />
-                      <span>{daysOnMarket} days on market</span>
                     </div>
                   </div>
 

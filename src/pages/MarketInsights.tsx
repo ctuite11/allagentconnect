@@ -184,15 +184,6 @@ const MarketInsights = () => {
     return null;
   };
 
-  const getDaysOnMarket = (listing: SoldListing) => {
-    if (listing.listing_stats?.cumulative_active_days) {
-      return listing.listing_stats.cumulative_active_days;
-    }
-    const startDate = new Date(listing.active_date || listing.created_at);
-    const endDate = new Date(listing.updated_at);
-    return differenceInDays(endDate, startDate);
-  };
-
   return (
     <div className="min-h-screen flex flex-col pt-20">
       <Seo
@@ -456,7 +447,6 @@ const MarketInsights = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredListings.slice(0, 12).map((listing) => {
                           const photoUrl = getFirstPhoto(listing.photos);
-                          const daysOnMarket = getDaysOnMarket(listing);
 
                           return (
                             <Card
@@ -483,12 +473,8 @@ const MarketInsights = () => {
 
                               <CardContent className="p-6">
                                 <div className="mb-3">
-                                  <div className="text-2xl font-bold text-primary mb-1">
+                                  <div className="text-2xl font-bold text-primary">
                                     {formatPrice(listing.price)}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>{daysOnMarket} days on market</span>
                                   </div>
                                 </div>
 
