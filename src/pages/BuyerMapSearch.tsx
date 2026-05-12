@@ -36,6 +36,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { cn } from "@/lib/utils";
+import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 
 const BED_PRESETS: Array<{ label: string; bedrooms: string }> = [
   { label: "Any", bedrooms: "" },

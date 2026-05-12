@@ -737,7 +737,7 @@ const AddListing = () => {
           commission_rate:
             data.commission_type === "flat_fee"
               ? commissionFlatFeeDigitsFromNumber(data.commission_rate)
-              : data.commission_rate != null && data.commission_rate !== ""
+              : data.commission_rate != null
                 ? String(data.commission_rate)
                 : "",
           commission_notes: data.commission_notes || "",
