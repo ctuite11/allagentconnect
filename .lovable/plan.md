@@ -1,18 +1,30 @@
-## Revert My Listings quick edit to its previous size/design
+# My Listings — Tighten Quick Edit Row
 
-The recent commit `dc3bc4ae "Tighten my listings quick edit controls"` shrank the inline quick-edit row on the My Listings cards (smaller inputs, tighter gaps, smaller buttons/labels). Restoring the prior look means undoing just that commit's diff in `src/pages/MyListings.tsx`.
+## Problem
+When the Quick Edit row opens on a My Listings card, it renders much larger than the closed state (tall inputs, big PRICE/STATUS labels, oversized Save/Cancel), and the `$` sign sits flush-left while the number is right-aligned — creating the awkward "$&nbsp;&nbsp;&nbsp;343,344" gap shown in the screenshot.
 
-### Change
-- Revert the quick-edit block in `src/pages/MyListings.tsx` to the version from commit `caa042d7` (one commit before the tightening).
+The closed state shows price as a single compact line: `$343,344` followed by a small "Quick Edit" link in `text-sm`.
 
-### Restored details
-- Wrapper: `flex flex-wrap items-end gap-2` (was tightened to `gap-1`/`gap-1.5`).
-- Labels: `text-[11px]` uppercase, no `leading-none` clamp.
-- Price field: width `w-[9.5rem] sm:w-44`, input `h-8`, `pl-6 pr-2`, right-aligned `text-[13px]`, `$` prefix at `left-2.5` `text-[13px]`, focus ring `ring-2`.
-- Status select: trigger `h-8 w-[10.5rem]`, `text-[13px]`, items without the smaller `py-1.5 text-xs` overrides.
-- Action buttons: Save `h-8 px-3 text-[13px]`, Cancel `h-8 px-2 text-[13px] text-zinc-600` (removes the smaller `h-7`/`text-[11px]` and hover override).
-- Action group wrapper: `flex items-center gap-1.5 pb-0.5`.
+## Goal
+Make the open Quick Edit row visually match the closed state — same height, same type scale, `$` immediately next to the number, no oversized labels.
 
-### Out of scope
-- No changes to `formatListingPriceDisplay.ts` or the price-display fix from `caa042d7` (that commit is kept).
-- No changes to card layout, photos, agent/MLS metadata, or any other surface.
+## Changes (src/pages/MyListings.tsx, lines ~803–849)
+
+1. **Remove the uppercase `PRICE` / `STATUS` labels.** They double the row height and aren't in the closed state.
+2. **Price input**
+   - Left-align text (remove `text-right`) so `$` sits directly next to the digits, matching `$343,344`.
+   - Keep `h-7`, narrow width (`w-[7rem]`).
+   - Keep the absolute `$` prefix and `pl-5`.
+3. **Status select**
+   - `h-7`, `w-[7.5rem]`, `text-[12px]`, no label above.
+4. **Save / Cancel buttons**
+   - Stay at `h-7`, but drop the `pb-0.5` wrapper so they align on the same baseline as the inputs (no label offset to compensate for anymore).
+5. **Container**
+   - `flex flex-wrap items-center gap-2` (was `items-end gap-1.5` to accommodate labels). Now everything is one tight row at the same height as the closed price line.
+
+No logic, state, or handler changes — purely presentational tightening of the editing row.
+
+## Out of Scope
+- Closed-state markup
+- Other listing card variants (Success Hub, Search results)
+- Save/Cancel behavior
