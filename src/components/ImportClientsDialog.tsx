@@ -236,11 +236,35 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         .in('email', emails);
 
       const existingEmails = new Set(existingClients?.map(c => c.email) || []);
-      
-      // Filter out duplicates
-      const newClients = validationResult.valid.filter(c => !existingEmails.has(c.email));
+
+      // Check which emails already belong to AAC accounts (agents/buyers).
+      const aacRegistered = new Set<string>();
+      await Promise.all(
+        emails.map(async (em) => {
+          const { data } = await supabase.rpc(
+            "is_email_registered_with_aac" as any,
+            { p_email: em }
+          );
+          if (data === true) aacRegistered.add(em.toLowerCase());
+        })
+      );
+
+      // Filter out duplicates and AAC-registered emails
+      const newClients = validationResult.valid.filter(
+        (c) => !existingEmails.has(c.email) && !aacRegistered.has(c.email.toLowerCase())
+      );
+
+      const aacSkipped = validationResult.valid.filter((c) =>
+        aacRegistered.has(c.email.toLowerCase())
+      ).length;
 
       if (newClients.length === 0) {
+        if (aacSkipped > 0) {
+          toast.error(
+            `${aacSkipped} email(s) are already registered with AAC and were skipped. No new clients to import.`
+          );
+          return;
+        }
         toast.error("All clients already exist in your database");
         return;
       }
@@ -261,11 +285,12 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
 
       if (error) throw error;
 
-      const skipped = validationResult.valid.length - newClients.length;
-      
+      const dupSkipped = validationResult.valid.length - newClients.length - aacSkipped;
+
       toast.success(
         `Successfully imported ${newClients.length} client(s)` +
-        (skipped > 0 ? `. Skipped ${skipped} duplicate(s)` : '')
+        (dupSkipped > 0 ? `. Skipped ${dupSkipped} duplicate(s)` : '') +
+        (aacSkipped > 0 ? `. Skipped ${aacSkipped} already registered with AAC` : '')
       );
       
       onImportComplete();
