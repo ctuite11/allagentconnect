@@ -3239,7 +3239,7 @@ const AddListing = () => {
                     Preview
                   </Button>
                   <Button
-                    variant={backendStatusRef.current === "draft" && formData.status !== "draft" ? "default" : "outline"}
+                    variant="default"
                     size="sm"
                     onClick={() => handleSaveChanges()}
                     type="button"
