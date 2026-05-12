@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, Cloud, ChevronDown, Check, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
@@ -3174,8 +3174,21 @@ const AddListing = () => {
                         value="yes"
                         checked={formData.show_on_dcmls === true}
                         onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: true }))}
-                        className="h-4 w-4 accent-zinc-900"
+                        className="sr-only"
                       />
+                      <span
+                        className={cn(
+                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-none border-2 transition-colors",
+                          formData.show_on_dcmls === true
+                            ? "border-neon-green bg-neon-green text-white"
+                            : "border-zinc-300 bg-white",
+                        )}
+                        aria-hidden
+                      >
+                        {formData.show_on_dcmls === true ? (
+                          <Check className="h-2.5 w-2.5 stroke-[3]" strokeLinecap="round" strokeLinejoin="round" />
+                        ) : null}
+                      </span>
                       <span className="font-medium text-zinc-900">Yes, publish to DCMLS</span>
                     </label>
                     <label className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-zinc-50">
@@ -3185,8 +3198,21 @@ const AddListing = () => {
                         value="no"
                         checked={formData.show_on_dcmls === false}
                         onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: false }))}
-                        className="h-4 w-4 accent-zinc-900"
+                        className="sr-only"
                       />
+                      <span
+                        className={cn(
+                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-none border-2 transition-colors",
+                          formData.show_on_dcmls === false
+                            ? "border-neon-green bg-neon-green text-white"
+                            : "border-zinc-300 bg-white",
+                        )}
+                        aria-hidden
+                      >
+                        {formData.show_on_dcmls === false ? (
+                          <Check className="h-2.5 w-2.5 stroke-[3]" strokeLinecap="round" strokeLinejoin="round" />
+                        ) : null}
+                      </span>
                       <span className="font-medium text-zinc-900">No, keep as internal only</span>
                     </label>
                   </div>
