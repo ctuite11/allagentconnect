@@ -26,7 +26,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
+import { formatListingPriceDisplay, formatUsdWholeForInput, listingEffectiveNumericPrice, parseUsdWholeInput } from "@/lib/formatListingPriceDisplay";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
 
 // Managed statuses for My Listings controls (intentionally excludes BOM).
@@ -800,38 +802,50 @@ function MyListingsView({
 
                     <div className="mt-1">
                       {isEditing ? (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <input
-                            type="number"
-                            className="w-28 rounded border border-zinc-200 bg-white px-2 py-1 text-sm"
-                            value={editPrice}
-                            onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                          />
-                          <select
-                            className="rounded border border-zinc-200 bg-white px-2 py-1 text-xs capitalize"
-                            value={editStatus}
-                            onChange={(e) => setEditStatus(e.target.value as ListingStatus)}
-                          >
-                            {ALL_STATUSES.map((tab) => (
-                              <option key={tab.value} value={tab.value}>
-                                {tab.label}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            type="button"
-                            className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground hover:bg-primary/90"
-                            onClick={saveQuickEdit}
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
-                            onClick={cancelQuickEdit}
-                          >
-                            Cancel
-                          </button>
+                        <div className="flex flex-wrap items-end gap-2">
+                          <div className="flex min-w-0 flex-col gap-1">
+                            <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Price</span>
+                            <div className="relative w-[9.5rem] min-w-0 sm:w-44">
+                              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] font-medium text-zinc-500" aria-hidden>
+                                $
+                              </span>
+                              <Input
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete="off"
+                                aria-label="Listing price"
+                                className="h-8 border-zinc-200 bg-white pl-6 pr-2 text-right text-[13px] font-medium tabular-nums text-zinc-900 shadow-none focus-visible:border-zinc-300 focus-visible:ring-2 focus-visible:ring-zinc-300/50 focus-visible:ring-offset-0"
+                                value={editPrice === "" ? "" : formatUsdWholeForInput(editPrice)}
+                                onChange={(e) => setEditPrice(parseUsdWholeInput(e.target.value))}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex min-w-0 flex-col gap-1">
+                            <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Status</span>
+                            <Select
+                              value={editStatus}
+                              onValueChange={(v) => setEditStatus(v as ListingStatus)}
+                            >
+                              <SelectTrigger className="h-8 w-[10.5rem] border-zinc-200 bg-white text-[13px] capitalize text-zinc-900 shadow-none focus:ring-zinc-300/50">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ALL_STATUSES.map((tab) => (
+                                  <SelectItem key={tab.value} value={tab.value} className="capitalize">
+                                    {tab.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex items-center gap-1.5 pb-0.5">
+                            <Button type="button" size="sm" className="h-8 px-3 text-[13px]" onClick={saveQuickEdit}>
+                              Save
+                            </Button>
+                            <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-[13px] text-zinc-600" onClick={cancelQuickEdit}>
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">

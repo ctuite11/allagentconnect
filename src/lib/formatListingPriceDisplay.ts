@@ -59,6 +59,23 @@ function listingCompactPrimaryAmount(listing: ListingPriceFields): number | null
   return null;
 }
 
+/** Whole dollars for inline price inputs: comma grouping, no currency symbol. */
+export function formatUsdWholeForInput(n: number): string {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0, useGrouping: true }).format(n);
+}
+
+/**
+ * Parses typing in a whole-dollar price field (`425000`, `425,000`, `$425k` digits).
+ * @returns `""` when empty, otherwise a non-negative integer.
+ */
+export function parseUsdWholeInput(raw: string): number | "" {
+  const digits = raw.replace(/[^\d]/g, "");
+  if (digits === "") return "";
+  const n = Number.parseInt(digits, 10);
+  if (!Number.isFinite(n) || n < 0) return "";
+  return n;
+}
+
 /** Full currency for compact primary figure (non-map callers). Maps use {@link formatListingMapPinTruncated}. */
 export function formatListingPriceDisplayCompactPrimary(listing: ListingPriceFields): string | null {
   const n = listingCompactPrimaryAmount(listing);
