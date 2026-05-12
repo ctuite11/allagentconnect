@@ -24,9 +24,10 @@ interface ContactAgentProfileDialogProps {
   agentName: string;
   agentEmail: string;
   buttonText?: string;
+  triggerClassName?: string;
 }
 
-const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText = "Contact Agent" }: ContactAgentProfileDialogProps) => {
+const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText = "Contact Agent", triggerClassName }: ContactAgentProfileDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
