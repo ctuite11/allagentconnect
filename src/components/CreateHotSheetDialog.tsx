@@ -54,6 +54,8 @@ interface CreateHotSheetDialogProps {
   }>;
   lockedToClient?: boolean;
   hideNotificationSettings?: boolean;
+  /** When set with `editMode`, shows delete controls (used from agent `/agent/hot-sheets` edit only). */
+  allowDeleteFromEdit?: boolean;
 }
 
 export function CreateHotSheetDialog({
@@ -68,12 +70,15 @@ export function CreateHotSheetDialog({
   preSelectedClients,
   lockedToClient = false,
   hideNotificationSettings = false,
+  allowDeleteFromEdit = false,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [saving, setSaving] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+  const [showDeleteHotSheetDialog, setShowDeleteHotSheetDialog] = useState(false);
+  const [deletingHotSheet, setDeletingHotSheet] = useState(false);
+
   // Client information
   const [clientFirstName, setClientFirstName] = useState("");
   const [clientLastName, setClientLastName] = useState("");
@@ -1080,6 +1085,34 @@ export function CreateHotSheetDialog({
     setNotificationSchedule("immediately");
   };
 
+  const handleConfirmDeleteHotSheet = async () => {
+    if (!hotSheetId || !allowDeleteFromEdit) return;
+    setDeletingHotSheet(true);
+    try {
+      const { error: clientsError } = await supabase
+        .from("hot_sheet_clients")
+        .delete()
+        .eq("hot_sheet_id", hotSheetId);
+      if (clientsError) throw clientsError;
+      const { error: sheetError } = await supabase
+        .from("hot_sheets")
+        .delete()
+        .eq("id", hotSheetId)
+        .eq("user_id", userId);
+      if (sheetError) throw sheetError;
+      toast.success("Hot sheet deleted.");
+      setShowDeleteHotSheetDialog(false);
+      resetForm();
+      onOpenChange(false);
+      await onSuccess(hotSheetId);
+    } catch (e: unknown) {
+      console.error("Delete hot sheet failed:", e);
+      toast.error(e instanceof Error ? e.message : "Could not delete hot sheet.");
+    } finally {
+      setDeletingHotSheet(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[min(92dvh,900px)] w-[calc(100%-1.25rem)] max-w-3xl gap-0 overflow-y-auto border border-neutral-200 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)] sm:w-full sm:max-h-[90vh] sm:rounded-xl sm:p-5 sm:gap-4">
@@ -1976,6 +2009,20 @@ export function CreateHotSheetDialog({
               )}
             </Button>
           </div>
+
+          {editMode && hotSheetId && allowDeleteFromEdit ? (
+            <div className="border-t border-neutral-200 pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-9 px-2 text-[13px] font-medium text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={() => setShowDeleteHotSheetDialog(true)}
+                disabled={saving}
+              >
+                Delete hot sheet…
+              </Button>
+            </div>
+          ) : null}
         </div>
       </DialogContent>
 
@@ -2097,6 +2144,28 @@ export function CreateHotSheetDialog({
                 "Yes"
               )}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteHotSheetDialog} onOpenChange={setShowDeleteHotSheetDialog}>
+        <AlertDialogContent className="border border-neutral-200 bg-white sm:rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the hot sheet and its client links. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingHotSheet}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deletingHotSheet}
+              onClick={() => void handleConfirmDeleteHotSheet()}
+            >
+              {deletingHotSheet ? "Deleting…" : "Delete"}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
