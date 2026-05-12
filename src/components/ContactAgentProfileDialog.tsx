@@ -181,12 +181,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
             <Button type="button" variant="outline" size="sm" className="border-neutral-200" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={loading}
-              className="bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50"
-            >
+            <Button type="submit" size="sm" disabled={loading}>
               {loading ? "Sending…" : "Send message"}
             </Button>
           </div>

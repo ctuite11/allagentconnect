@@ -393,7 +393,7 @@ export function ShareListingsDialog({
                           setLastSavedEmail(recipientEmail.trim());
                           setShowSavePrompt(true);
                         }}
-                        className="h-8 rounded-md bg-neutral-900 px-3 text-[13px] font-medium text-white hover:bg-neutral-800"
+                        className="h-8 rounded-md px-3 text-[13px] font-medium"
                       >
                         Save to My Contacts
                       </Button>
@@ -560,7 +560,7 @@ export function ShareListingsDialog({
               size="sm"
               onClick={onSubmit}
               disabled={!canSubmit || submitting}
-              className="h-9 min-w-[8.5rem] rounded-lg bg-neutral-900 px-4 text-[13px] font-medium text-white hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-500 disabled:hover:bg-neutral-200"
+              className="h-9 min-w-[8.5rem] rounded-lg px-4 text-[13px] font-medium disabled:opacity-50"
             >
               <Send className="mr-2 h-3.5 w-3.5 shrink-0" aria-hidden />
               <span>{submitting ? "Sending…" : `Share${selectedCount === 1 ? "" : ` (${selectedCount})`}`}</span>

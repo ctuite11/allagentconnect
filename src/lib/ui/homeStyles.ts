@@ -27,9 +27,11 @@ export const homeStyles = {
   iconBoxSm: "h-8 w-8 rounded-xl border border-zinc-200 bg-[#F7F6F3] flex items-center justify-center",
 
   // ============ BUTTONS ============
-  // Primary (dark)
-  btnPrimary: "inline-flex items-center justify-center rounded-2xl bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_34px_rgba(0,0,0,0.16)] transition",
-  btnPrimarySm: "inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] hover:shadow-[0_10px_26px_rgba(0,0,0,0.14)] transition",
+  // Primary (AAC blue — match shared `Button` default / `bg-aac`)
+  btnPrimary:
+    "inline-flex items-center justify-center rounded-2xl bg-aac px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-aac-hover hover:shadow active:bg-aac-active transition",
+  btnPrimarySm:
+    "inline-flex items-center justify-center rounded-xl bg-aac px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-aac-hover hover:shadow active:bg-aac-active transition",
   
   // Secondary (white/outline)
   btnSecondary: "inline-flex items-center justify-center rounded-2xl border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)] transition",

@@ -346,12 +346,7 @@ const MyFavorites = () => {
             <p className="mb-6 text-[13px] leading-snug text-neutral-500">
               Heart listings from any hot sheet — they aggregate here automatically.
             </p>
-            <Button
-              type="button"
-              size="sm"
-              className="bg-neutral-900 text-white hover:bg-neutral-800"
-              onClick={() => navigate("/agent/hot-sheets")}
-            >
+            <Button type="button" size="sm" onClick={() => navigate("/agent/hot-sheets")}>
               Open hot sheets
             </Button>
           </Card>

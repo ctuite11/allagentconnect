@@ -325,12 +325,7 @@ const ConsumerPropertyDetail = () => {
               Check your connection and try again.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                className="bg-neutral-900 text-white hover:bg-neutral-800"
-                onClick={() => void loadListing()}
-              >
+              <Button type="button" size="sm" onClick={() => void loadListing()}>
                 Try again
               </Button>
               <Button type="button" size="sm" variant="outline" className="border-neutral-200" onClick={() => navigate("/browse")}>
@@ -351,7 +346,7 @@ const ConsumerPropertyDetail = () => {
             <p className="text-[15px] font-semibold text-neutral-900">Listing not found</p>
             <p className="mt-2 text-[13px] text-neutral-500">It may have been removed or the link is incorrect.</p>
             <div className="mt-6 flex justify-center">
-              <Button type="button" className="bg-neutral-900 text-white hover:bg-neutral-800" onClick={() => navigate("/browse")}>
+              <Button type="button" onClick={() => navigate("/browse")}>
                 Back to search
               </Button>
             </div>
@@ -851,11 +846,7 @@ const ConsumerPropertyDetail = () => {
                     </div>
 
                     <div className="grid gap-2">
-                      <Button
-                        size="lg"
-                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
-                        onClick={() => handleMessageAgent(agentProfile.id)}
-                      >
+                      <Button size="lg" className="w-full gap-2" onClick={() => handleMessageAgent(agentProfile.id)}>
                         <MessageSquare className="h-5 w-5" />
                         Message listing agent
                       </Button>

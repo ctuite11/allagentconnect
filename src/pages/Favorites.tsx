@@ -999,12 +999,7 @@ const Favorites = ({
               <p className="mb-6 text-[13px] leading-snug text-neutral-500">
                 Save listings while you browse — they&apos;ll appear here with map pins for quick comparisons.
               </p>
-              <Button
-                type="button"
-                size="sm"
-                className="bg-neutral-900 text-white hover:bg-neutral-800"
-                onClick={() => navigate("/client/search")}
-              >
+              <Button type="button" size="sm" onClick={() => navigate("/client/search")}>
                 Browse listings
               </Button>
             </Card>
@@ -1138,8 +1133,7 @@ const Favorites = ({
                           <Button
                             type="button"
                             size="sm"
-                            variant="outline"
-                            className="h-7 rounded-md border-neutral-900 bg-neutral-900 px-2.5 text-xs font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-neutral-800"
+                            className="h-7 rounded-md px-2.5 text-xs font-medium"
                             onClick={() => setShowKeptOnly(false)}
                           >
                             Show all
@@ -1273,13 +1267,7 @@ const Favorites = ({
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50"
-                  onClick={handleSendShareEmail}
-                  disabled={shareSending}
-                >
+                <Button type="button" size="sm" onClick={handleSendShareEmail} disabled={shareSending}>
                   {shareSending ? "Sending…" : "Send email"}
                 </Button>
               </div>
@@ -1340,12 +1328,7 @@ const Favorites = ({
             <p className="mb-6 text-[13px] leading-snug text-neutral-500">
               Save listings while you browse so you can revisit them anytime.
             </p>
-            <Button
-              type="button"
-              size="sm"
-              className="bg-neutral-900 text-white hover:bg-neutral-800"
-              onClick={() => navigate(isPublicMode ? "/" : "/browse")}
-            >
+            <Button type="button" size="sm" onClick={() => navigate(isPublicMode ? "/" : "/browse")}>
               Browse properties
             </Button>
           </Card>
@@ -1538,13 +1521,7 @@ const Favorites = ({
               >
                 Cancel
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50"
-                onClick={handleSendShareEmail}
-                disabled={shareSending}
-              >
+              <Button type="button" size="sm" onClick={handleSendShareEmail} disabled={shareSending}>
                 {shareSending ? "Sending…" : "Send email"}
               </Button>
             </div>

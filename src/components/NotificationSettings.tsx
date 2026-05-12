@@ -124,12 +124,7 @@ const NotificationSettings = () => {
         <CardContent className="py-10 text-center">
           <p className="text-[15px] font-semibold text-neutral-900">Couldn&apos;t load settings</p>
           <p className="mt-1 text-[13px] text-neutral-500">Check your connection and try again.</p>
-          <Button
-            type="button"
-            size="sm"
-            className="mt-5 bg-neutral-900 text-white hover:bg-neutral-800"
-            onClick={() => void fetchPreferences()}
-          >
+          <Button type="button" size="sm" className="mt-5" onClick={() => void fetchPreferences()}>
             Try again
           </Button>
         </CardContent>
@@ -212,11 +207,7 @@ const NotificationSettings = () => {
         </div>
 
         <div className="pt-2">
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
-          >
+          <Button onClick={handleSave} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

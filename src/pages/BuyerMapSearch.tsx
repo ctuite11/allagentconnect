@@ -1376,12 +1376,11 @@ export default function BuyerMapSearch() {
                           type="button"
                           size="sm"
                           variant={showKeptOnly ? "default" : "outline"}
-                          className={cn(
-                            "h-7 shrink-0 whitespace-nowrap rounded-md px-2.5 text-[11px] font-medium",
+                          className={
                             showKeptOnly
-                              ? "bg-neutral-900 text-white hover:bg-neutral-800"
-                              : "border-neutral-200 bg-white text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90",
-                          )}
+                              ? "h-7 shrink-0 whitespace-nowrap rounded-md px-2.5 text-[11px] font-medium"
+                              : "h-7 shrink-0 whitespace-nowrap rounded-md border-neutral-200 bg-white px-2.5 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
+                          }
                           onClick={() => setShowKeptOnly(true)}
                           aria-pressed={showKeptOnly}
                         >
@@ -1557,12 +1556,7 @@ export default function BuyerMapSearch() {
               <Button type="button" variant="outline" className="border-neutral-200" onClick={() => setShareModalOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                type="button"
-                className="bg-neutral-900 text-white hover:bg-neutral-800"
-                onClick={handleSendShareEmail}
-                disabled={shareSending}
-              >
+              <Button type="button" onClick={handleSendShareEmail} disabled={shareSending}>
                 Send email
               </Button>
             </div>

@@ -39,8 +39,7 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
           type="button"
           onClick={handleSend}
           disabled={!value.trim() || sending}
-          variant="outline"
-          className="h-9 shrink-0 gap-1.5 rounded-full border-zinc-900 bg-zinc-900 px-4 text-[13px] font-semibold text-white shadow-none hover:bg-zinc-800 hover:text-white hover:border-zinc-800 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400"
+          className="h-9 shrink-0 gap-1.5 rounded-full px-4 text-[13px] font-semibold shadow-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
         >
           {sending ? "…" : "Send"}
           <Send className="h-3.5 w-3.5 opacity-95" aria-hidden />
