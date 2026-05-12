@@ -42,6 +42,7 @@ import {
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
+import { clientDashboardStatIconClass } from "@/lib/navIconColors";
 
 export interface ClientDashboardAgentInfo {
   id: string;
@@ -417,7 +418,11 @@ export function ClientDashboardView({
                 className={`${aacCardInteractive} p-4 md:p-5`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Icon className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden strokeWidth={2} />
+                  <Icon
+                    className={`h-4 w-4 shrink-0 ${clientDashboardStatIconClass(label)}`}
+                    aria-hidden
+                    strokeWidth={2}
+                  />
                 </div>
                 <div className="mt-2 text-lg font-semibold tracking-tight text-neutral-900 tabular-nums sm:text-xl">{value}</div>
                 <div className="mt-0.5 text-[13px] font-medium text-neutral-600">{label}</div>
@@ -434,7 +439,7 @@ export function ClientDashboardView({
                     <div className={previewSectionHeaderRowClass}>
                       <div className={previewSectionTitleWrapClass}>
                         <CardTitle className={`${dashSectionTitleClass} inline-flex items-center gap-2`}>
-                          <Flame className="h-4 w-4 shrink-0 text-amber-600" aria-hidden strokeWidth={2} />
+                          <Flame className="h-4 w-4 shrink-0 text-red-600" aria-hidden strokeWidth={2} />
                           Hot Sheets
                         </CardTitle>
                         <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>

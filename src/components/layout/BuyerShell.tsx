@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { buyerPageShell } from "@/lib/buyerUi";
+import { buyerPortalNavIconClass } from "@/lib/navIconColors";
 
 const NAV_ITEMS = [
   { to: "/client/search", label: "Search", icon: Search },
@@ -77,7 +78,7 @@ export function BuyerShell() {
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? "text-[#0E56F5]" : "text-zinc-500"}`} />
+                    <Icon className={`h-4 w-4 flex-shrink-0 ${buyerPortalNavIconClass(to, isActive)}`} />
                     {label}
                     {/* Unread badge on Messages */}
                     {to === "/messages" && unreadCount > 0 && (
@@ -131,7 +132,7 @@ export function BuyerShell() {
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`h-4 w-4 ${isActive ? "text-[#0E56F5]" : "text-zinc-500"}`} />
+                    <Icon className={`h-4 w-4 ${buyerPortalNavIconClass(to, isActive)}`} />
                     {label}
                     {to === "/messages" && unreadCount > 0 && (
                       <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
