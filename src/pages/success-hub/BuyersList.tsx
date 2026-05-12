@@ -69,16 +69,44 @@ export default function BuyersList() {
         return;
       }
 
-      if (!relationships || relationships.length === 0) {
+      const relRows = (relationships ?? []) as any[];
+
+      // Also include any buyer who is a member of one of this agent's hot sheets
+      // (parity with Success Hub which unions relationships ∪ hot_sheet_clients).
+      const { data: agentSheets, error: sheetsErr } = await (supabase as any)
+        .from("hot_sheets")
+        .select("id")
+        .eq("agent_id", user.id);
+      if (sheetsErr) {
+        console.error("Error loading agent hot sheets for buyer union:", sheetsErr);
+      }
+      const sheetIds = (agentSheets ?? []).map((s: any) => String(s.id));
+      let hscClientIds: string[] = [];
+      if (sheetIds.length > 0) {
+        const { data: hscRows, error: hscErr } = await supabase
+          .from("hot_sheet_clients")
+          .select("client_id")
+          .in("hot_sheet_id", sheetIds);
+        if (hscErr) {
+          console.error("Error loading hot_sheet_clients for buyer union:", hscErr);
+        }
+        hscClientIds = [
+          ...new Set(
+            (hscRows ?? [])
+              .map((r: any) => (r?.client_id != null ? String(r.client_id).trim() : ""))
+              .filter(Boolean),
+          ),
+        ];
+      }
+
+      if (relRows.length === 0 && hscClientIds.length === 0) {
         setBuyers([]);
         return;
       }
 
-      const authClientIds = relationships.map((r) => r.client_id).filter(Boolean);
-      const crmClientIds = (relationships as any[])
-        .map((r) => r.crm_client_id)
-        .filter(Boolean) as string[];
-      const allCrmIds = [...new Set([...authClientIds, ...crmClientIds])];
+      const authClientIds = relRows.map((r) => r.client_id).filter(Boolean) as string[];
+      const crmClientIds = relRows.map((r) => r.crm_client_id).filter(Boolean) as string[];
+      const allCrmIds = [...new Set([...authClientIds, ...crmClientIds, ...hscClientIds])];
 
       const { data: clientsData, error: clientsErr } = await supabase
         .from("clients")
@@ -97,22 +125,44 @@ export default function BuyersList() {
         clientMap.set(c.id, c);
       }
 
-      const rows: BuyerRow[] = relationships.map((r: any) => {
+      const rows: BuyerRow[] = [];
+      const seenClientIds = new Set<string>();
+
+      for (const r of relRows) {
         const crmId = r.crm_client_id || r.client_id;
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
-        if (!c) return null;
+        if (!c) continue;
+        if (seenClientIds.has(c.id)) continue;
+        seenClientIds.add(c.id);
         const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
         const buyerWorkspaceLinked =
           String(r.status) === "active" && r.client_id != null && String(r.client_id).trim() !== "";
-        return {
+        rows.push({
           clientId: c.id,
           name,
           email: c?.email ?? "",
           phone: c?.phone ?? null,
           status: r.status,
           buyerWorkspaceLinked,
-        };
-      }).filter(Boolean) as BuyerRow[];
+        });
+      }
+
+      // Union: buyers on agent's hot sheets without an explicit relationship row.
+      for (const cid of hscClientIds) {
+        if (seenClientIds.has(cid)) continue;
+        const c = clientMap.get(cid);
+        if (!c) continue;
+        seenClientIds.add(cid);
+        const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
+        rows.push({
+          clientId: c.id,
+          name,
+          email: c?.email ?? "",
+          phone: c?.phone ?? null,
+          status: "active",
+          buyerWorkspaceLinked: false,
+        });
+      }
 
       setBuyers(rows);
     } catch (err) {
