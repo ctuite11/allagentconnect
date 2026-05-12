@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ChevronRight, Clock, UserPlus } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronRight, Clock, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,6 +194,16 @@ export default function BuyersList() {
       />
 
       <AgentAacPage className="pb-12">
+        <div className="mb-4">
+          <Link
+            to="/agent-dashboard"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0E56F5] underline-offset-2 transition-colors hover:text-[#0B46CC] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+            title="Return to Success Hub dashboard"
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
+            Back
+          </Link>
+        </div>
         <AgentPageHeader
           title="My Buyers"
           subtitle="Manage buyer hot sheets, favorites, invites, and activity."
@@ -205,7 +215,7 @@ export default function BuyersList() {
             type="button"
             size="sm"
             onClick={() => setShowCreate(true)}
-            className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+            className="bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-[#0E56F5]/35 focus-visible:ring-offset-2"
           >
             <UserPlus className="mr-1.5 h-3.5 w-3.5" />
             New Buyer
@@ -213,7 +223,7 @@ export default function BuyersList() {
         </div>
 
         {loadError && !loading && buyers.length === 0 ? (
-          <AgentSectionCard className="border-neutral-200 p-6 shadow-sm hover:border-neutral-200 hover:shadow-sm">
+          <AgentSectionCard className="border-0 p-6 shadow-none hover:border-0 hover:shadow-none">
             <p className="text-sm font-medium text-neutral-900">Couldn&apos;t load buyers</p>
             <p className="mt-2 text-sm text-neutral-600">
               Check your connection and try again.
@@ -221,14 +231,14 @@ export default function BuyersList() {
             <Button
               type="button"
               size="sm"
-              className="mt-4 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+              className="mt-4 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-[#0E56F5]/35 focus-visible:ring-offset-2"
               onClick={() => void loadBuyers()}
             >
               Try again
             </Button>
           </AgentSectionCard>
         ) : (
-        <AgentSectionCard className="border-neutral-200 p-5 shadow-sm sm:p-6 hover:border-neutral-200 hover:shadow-sm">
+        <AgentSectionCard className="border-0 p-5 shadow-none sm:p-6 hover:border-0 hover:shadow-none">
           {/* Filter pills */}
           <div className="mb-5 flex flex-wrap gap-2">
             {filterPills.map((pill) => {
@@ -241,7 +251,7 @@ export default function BuyersList() {
                   className={cn(
                     "h-8 rounded-full px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
                     active
-                      ? "bg-neutral-900 text-white"
+                      ? "bg-[#0E56F5] text-white"
                       : "border border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50/80"
                   )}
                 >
@@ -344,6 +354,8 @@ function BuyerCard({
           crmClientId={buyer.clientId}
           metrics={metrics}
           metricsLoading={buyerMetricsLoading}
+          metricsToolbarTintIcons
+          hotSheetMetricUseFlame
           avatarClassName="bg-neutral-200 text-neutral-800"
           className="rounded-none border-0 bg-transparent px-0 py-0 shadow-none"
           trailing={<BuyerRowStatusPill buyer={buyer} />}
@@ -424,7 +436,7 @@ function EmptyState({
         type="button"
         size="sm"
         onClick={onCreate}
-        className="mt-5 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+        className="mt-5 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-[#0E56F5]/35 focus-visible:ring-offset-2"
       >
         <UserPlus className="mr-2 h-4 w-4" />
         New Buyer
