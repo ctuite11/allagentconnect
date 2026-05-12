@@ -7,16 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Bell, ChevronLeft, Pencil } from "lucide-react";
+import { Plus, Trash2, Bell, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
+import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
+import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { Seo } from "@/components/Seo";
 import {
-  buyerCollectionCardRoot,
-  buyerImageMosaicCell,
-  buyerImageMosaicGrid,
   buyerSectionDesc as buyerSectionDescClass,
   buyerSectionTitle as buyerSectionTitleClass,
   buyerPageMain,
@@ -39,23 +38,20 @@ const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
   value === "instant" || value === "daily" || value === "weekly";
 
-function AgentSheetPhotoCell({ src }: { src?: string }) {
-  const [failed, setFailed] = useState(false);
-  if (!src || failed) {
-    return <div className={buyerImageMosaicCell} aria-hidden />;
-  }
-  return (
-    <div className={buyerImageMosaicCell}>
-      <img
-        src={src}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover"
-        loading="lazy"
-        onError={() => setFailed(true)}
-      />
-    </div>
-  );
+interface BuyerCollection {
+  clientId: string;
+  clientName: string;
+  clientInitials: string;
+  hotSheets: { id: string; name: string }[];
+  photos: string[];
+  collaborators: string[];
 }
+
+const getInitials = (first?: string, last?: string): string => {
+  const f = (first || "")[0]?.toUpperCase() || "";
+  const l = (last || "")[0]?.toUpperCase() || "";
+  return f + l || "?";
+};
 
 interface HotSheetsProps {
   isPublicMode?: boolean;
@@ -72,13 +68,6 @@ interface BuyerHotSheetItem {
   updated_at?: string | null;
   last_sent_at: string | null;
   is_active: boolean;
-}
-
-interface AgentHotSheetListCard {
-  id: string;
-  name: string;
-  photos: string[];
-  matchCount: number;
 }
 
 interface ShareTokenRow {
@@ -130,9 +119,7 @@ const HotSheets = ({
   isBuyerMode = false,
 }: HotSheetsProps) => {
   const navigate = useNavigate();
-  const [agentSheetCards, setAgentSheetCards] = useState<AgentHotSheetListCard[]>([]);
-  const [agentDeleteTarget, setAgentDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const [agentDeleteBusy, setAgentDeleteBusy] = useState(false);
+  const [collections, setCollections] = useState<BuyerCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -650,32 +637,108 @@ const HotSheets = ({
       setRawHotSheets(sheets);
 
       if (!sheets.length) {
-        setAgentSheetCards([]);
+        setCollections([]);
         return;
       }
 
-      const { photosById, countsById } = await loadHotSheetPhotosAndCounts(
-        supabase,
-        sheets.map((s) => ({ id: s.id, criteria: s.criteria })),
-      );
+      // 2. Fetch listing photos from criteria-matched listings for each sheet
+      const photosPerSheet = new Map<string, string[]>();
+      for (const sheet of sheets) {
+        const criteria = sheet.criteria;
+        if (!criteria) continue;
+        try {
+          const { data: matchedListings } = await buildListingsQuery(supabase, criteria).limit(20);
+          const photos: string[] = [];
+          for (const l of (matchedListings || []) as Array<{ photos?: unknown }>) {
+            const lPhotos = Array.isArray(l.photos) ? l.photos : null;
+            if (lPhotos?.length && photos.length < 4) {
+              const raw = lPhotos[0];
+              const url =
+                typeof raw === "string"
+                  ? raw
+                  : raw && typeof raw === "object" && "url" in raw && typeof (raw as { url?: unknown }).url === "string"
+                    ? (raw as { url: string }).url
+                    : null;
+              if (url) photos.push(url);
+            }
+          }
+          if (photos.length) photosPerSheet.set(sheet.id, photos);
+        } catch (e) {
+          console.error("Error fetching matches for", sheet.id, e);
+        }
+      }
 
-      const cards: AgentHotSheetListCard[] = sheets.map((sheet) => {
-        const raw = photosById[sheet.id] || [];
-        const padded = [raw[0], raw[1], raw[2], raw[3]].map((u) => (typeof u === "string" && u ? u : ""));
-        return {
-          id: sheet.id,
-          name: sheet.name,
-          photos: padded,
-          matchCount: countsById[sheet.id] ?? 0,
-        };
-      });
+      // 3. Group by client
+      const clientMap = new Map<string, BuyerCollection>();
 
-      setAgentSheetCards(cards);
+      for (const sheet of sheets) {
+        const clients = (sheet.hot_sheet_clients || []).map((hsc) => {
+          const c = hsc.clients;
+          return Array.isArray(c) ? c[0] : c;
+        }).filter(Boolean);
+
+        // Collect collaborator emails from shares
+        const shareEmails = (sheet.hot_sheet_shares || []).map((s) => s.shared_with_email);
+        const collabInitials = shareEmails.map((e: string) => {
+          const parts = e.split("@")[0].split(/[._-]/);
+          return parts.map((p: string) => p[0]?.toUpperCase() || "").join("").slice(0, 2);
+        });
+
+        // Get photos for this sheet from criteria matches
+        const sheetPhotos: string[] = photosPerSheet.get(sheet.id) || [];
+
+        if (clients.length === 0) {
+          // Hot sheet with no client — use criteria name or sheet name
+          const key = `__no_client_${sheet.id}`;
+          const criteriaFirstName =
+            typeof sheet.criteria?.clientFirstName === "string" ? sheet.criteria.clientFirstName : undefined;
+          const criteriaLastName =
+            typeof sheet.criteria?.clientLastName === "string" ? sheet.criteria.clientLastName : undefined;
+          clientMap.set(key, {
+            clientId: sheet.id,
+            clientName: criteriaFirstName
+              ? [criteriaFirstName, criteriaLastName].filter(Boolean).join(" ")
+              : sheet.name,
+            clientInitials: getInitials(criteriaFirstName, criteriaLastName),
+            hotSheets: [{ id: sheet.id, name: sheet.name }],
+            photos: sheetPhotos,
+            collaborators: collabInitials,
+          });
+        } else {
+          for (const client of clients) {
+            const existing = clientMap.get(client.id);
+            if (existing) {
+              existing.hotSheets.push({ id: sheet.id, name: sheet.name });
+              // Merge photos up to 4
+              for (const ph of sheetPhotos) {
+                if (existing.photos.length < 4 && !existing.photos.includes(ph)) {
+                  existing.photos.push(ph);
+                }
+              }
+              // Merge collaborators
+              for (const ci of collabInitials) {
+                if (!existing.collaborators.includes(ci)) existing.collaborators.push(ci);
+              }
+            } else {
+              clientMap.set(client.id, {
+                clientId: client.id,
+                clientName: [client.first_name, client.last_name].filter(Boolean).join(" ") || "Unnamed Client",
+                clientInitials: getInitials(client.first_name, client.last_name),
+                hotSheets: [{ id: sheet.id, name: sheet.name }],
+                photos: sheetPhotos,
+                collaborators: collabInitials,
+              });
+            }
+          }
+        }
+      }
+
+      setCollections(Array.from(clientMap.values()));
     } catch (error) {
       console.error("Error fetching hot sheets:", error);
       toast.error("Failed to load hot sheets");
       setAgentLoadError(true);
-      setAgentSheetCards([]);
+      setCollections([]);
       setRawHotSheets([]);
     } finally {
       setLoading(false);
@@ -695,10 +758,13 @@ const HotSheets = ({
               : sheet
           )
         );
-        setAgentSheetCards((prev) =>
-          prev.map((card) =>
-            card.id === hotSheetId ? { ...card, name: updatedHotSheet.name } : card,
-          ),
+        setCollections((prev) =>
+          prev.map((collection) => ({
+            ...collection,
+            hotSheets: collection.hotSheets.map((sheet) =>
+              sheet.id === hotSheetId ? { ...sheet, name: updatedHotSheet.name } : sheet
+            ),
+          }))
         );
         setEditingHotSheetId(null);
         return;
@@ -710,31 +776,11 @@ const HotSheets = ({
     }
   };
 
-  const confirmAgentDeleteHotSheet = async () => {
-    if (!agentDeleteTarget || !user) return;
-    setAgentDeleteBusy(true);
-    try {
-      const { error: clientsError } = await supabase
-        .from("hot_sheet_clients")
-        .delete()
-        .eq("hot_sheet_id", agentDeleteTarget.id);
-      if (clientsError) throw clientsError;
-      const { error: sheetError } = await supabase
-        .from("hot_sheets")
-        .delete()
-        .eq("id", agentDeleteTarget.id)
-        .eq("user_id", user.id);
-      if (sheetError) throw sheetError;
-      toast.success("Hot sheet deleted.");
-      setAgentDeleteTarget(null);
-      await fetchData(user.id);
-    } catch (error: unknown) {
-      console.error("Agent delete hot sheet failed:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Could not delete this hot sheet.",
-      );
-    } finally {
-      setAgentDeleteBusy(false);
+  const handleCardClick = (collection: BuyerCollection) => {
+    if (collection.hotSheets.length === 1) {
+      navigate(`/hot-sheets/${collection.hotSheets[0].id}/review`);
+    } else {
+      navigate(`/hot-sheets/buyer/${collection.clientId}`, { state: { from: "/agent/hot-sheets" } });
     }
   };
 
@@ -847,10 +893,10 @@ const HotSheets = ({
               Try again
             </Button>
           </div>
-        ) : agentSheetCards.length === 0 ? (
+        ) : collections.length === 0 ? (
           <div className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-sm md:p-12">
             <Bell className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
-            <h3 className="mb-2 text-lg font-semibold text-neutral-900">No hot sheets yet</h3>
+            <h3 className="mb-2 text-lg font-semibold text-neutral-900">No buyer hot sheets yet</h3>
             <p className="mx-auto max-w-md text-sm text-neutral-600">
               Create your first hot sheet to start curating listings for your buyers—use{" "}
               <span className="font-medium text-neutral-800">Create Hot Sheet</span> at the top of this page.
@@ -858,94 +904,18 @@ const HotSheets = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 bg-white md:grid-cols-2 lg:grid-cols-3">
-            {agentSheetCards.map((card) => {
-              const p = card.photos;
-              return (
-                <article
-                  key={card.id}
-                  className={`${buyerCollectionCardRoot} relative flex min-h-[19rem] flex-col md:min-h-[20rem]`}
-                >
-                  <button
-                    type="button"
-                    aria-label={`Delete hot sheet ${card.name}`}
-                    onClick={() => setAgentDeleteTarget({ id: card.id, name: card.name })}
-                    className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-md text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-                  >
-                    <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Edit hot sheet ${card.name}`}
-                    onClick={() => {
-                      setEditingHotSheetId(card.id);
-                      setEditDialogOpen(true);
-                    }}
-                    className="absolute right-11 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-                  >
-                    <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-                  </button>
-                  <div className={buyerImageMosaicGrid}>
-                    <AgentSheetPhotoCell src={p[0]} />
-                    <AgentSheetPhotoCell src={p[1]} />
-                    <AgentSheetPhotoCell src={p[2]} />
-                    <AgentSheetPhotoCell src={p[3]} />
-                  </div>
-                  <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
-                    <div className="min-w-0 shrink-0 pr-20">
-                      <h3 className="truncate text-lg font-semibold leading-snug text-neutral-900">
-                        <span className="font-medium text-neutral-600">Hot Sheet: </span>
-                        <span>{card.name}</span>
-                      </h3>
-                      <p className="mt-2 text-sm text-neutral-600">
-                        {card.matchCount}{" "}
-                        {card.matchCount === 1 ? "listing matches" : "listings match"}
-                      </p>
-                    </div>
-                    <div className="mt-auto flex shrink-0 justify-start pt-3">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/hot-sheets/${card.id}/review`)}
-                        className="text-sm font-medium text-[#0E56F5] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-                      >
-                        View all
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+            {collections.map((collection) => (
+              <BuyerCollectionCard
+                key={collection.clientId}
+                clientName={collection.clientName}
+                hotSheetCount={collection.hotSheets.length}
+                photos={collection.photos}
+                onClick={() => handleCardClick(collection)}
+              />
+            ))}
           </div>
         )}
       </PageShell>
-
-      <AlertDialog
-        open={Boolean(agentDeleteTarget)}
-        onOpenChange={(open) => {
-          if (!open && !agentDeleteBusy) setAgentDeleteTarget(null);
-        }}
-      >
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this hot sheet?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes{" "}
-              <strong className="font-medium text-foreground">{agentDeleteTarget?.name ?? "this hot sheet"}</strong>{" "}
-              and its client links. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={agentDeleteBusy}>Cancel</AlertDialogCancel>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={agentDeleteBusy}
-              onClick={() => void confirmAgentDeleteHotSheet()}
-            >
-              {agentDeleteBusy ? "Deleting…" : "Delete"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Share Dialog */}
       <Dialog
