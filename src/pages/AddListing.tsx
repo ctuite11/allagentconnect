@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, Cloud, ChevronDown, Check, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
+import { Loader2, Save, Eye, Upload, X, Image as ImageIcon, FileText, GripVertical, Cloud, ChevronDown, CheckCircle2, AlertCircle, Home, CalendarIcon, Lock, RefreshCw } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
@@ -45,7 +45,7 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
-import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
+import { dcmlsPublishSnapshot } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -770,7 +770,7 @@ const AddListing = () => {
           fiscal_year: (data as any).fiscal_year?.toString() || "",
           residential_exemption: (data as any).residential_exemption || "",
           // Preserve existing DB publish state when editing to avoid accidental resets.
-          show_on_dcmls: dcmlsShowOnFromRecord(data as any),
+          show_on_dcmls: false,
         }));
         
         // Load photos from database
@@ -2164,7 +2164,7 @@ const AddListing = () => {
       return null;
     }
     
-    const dcmlsSnapshot = dcmlsPublishSnapshot(formData.show_on_dcmls);
+    const dcmlsSnapshot = dcmlsPublishSnapshot(false);
     
     const draftPrice =
       formData.listing_type === "for_rent"
@@ -2361,8 +2361,8 @@ const AddListing = () => {
       pet_options: petOptions,
     } : {}),
 
-    // DCMLS publish state - atomic snapshot ensures consistency
-    ...dcmlsPublishSnapshot(formData.show_on_dcmls),
+    // DCMLS: gated until AAC launch — always persist internal-only snapshot (publish_to_dcmls false).
+    ...dcmlsPublishSnapshot(false),
 
     // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
     ...(isRelisting ? {
@@ -3157,67 +3157,40 @@ const AddListing = () => {
             }
           />
 
-          {/* DCMLS Publish Decision - Prominent Control Right After Header */}
+          {/* DCMLS — visible roadmap; publishing disabled until AAC launch (payload always internal-only). */}
           <div className="mb-5 border-b border-zinc-200/80 pb-5">
             <div className="rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <div className="flex items-start justify-between gap-6">
                 <div className="min-w-0 flex-1">
-                  <h3 className={`${agentSectionTitle} mb-1`}>Publish to DCMLS?</h3>
-                  <p className="mb-4 text-sm text-neutral-500">
-                    This is a required decision. Choose whether to publish this listing to the DCMLS system for wider distribution.
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <h3 className={agentSectionTitle}>Publish to DCMLS?</h3>
+                    <span className="inline-flex rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                      Coming soon
+                    </span>
+                  </div>
+                  <p className="mb-3 text-sm leading-snug text-neutral-500">
+                    Coming soon — DCMLS publishing will be available once AAC listings are live and ready for launch. Until
+                    then, saves keep this listing internal to AAC agents only.
                   </p>
-                  <div className="flex flex-wrap gap-x-6 gap-y-2">
-                    <label className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-zinc-50">
-                      <input
-                        type="radio"
-                        name="show_on_dcmls"
-                        value="yes"
-                        checked={formData.show_on_dcmls === true}
-                        onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: true }))}
-                        className="sr-only"
-                      />
+                  <div
+                    className="pointer-events-none select-none space-y-2 rounded-lg border border-zinc-100 bg-zinc-50/40 px-3 py-3 text-neutral-600"
+                    aria-disabled="true"
+                  >
+                    <div className="flex items-center gap-3 rounded-md p-1.5 opacity-55">
                       <span
-                        className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-none border-2 transition-colors",
-                          formData.show_on_dcmls === true
-                            ? "border-neon-green bg-neon-green text-white"
-                            : "border-zinc-300 bg-white",
-                        )}
+                        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-none border-2 border-zinc-300 bg-white"
                         aria-hidden
-                      >
-                        {formData.show_on_dcmls === true ? (
-                          <Check className="h-2.5 w-2.5 stroke-[3]" strokeLinecap="round" strokeLinejoin="round" />
-                        ) : null}
-                      </span>
-                      <span className="font-medium text-zinc-900">Yes, publish to DCMLS</span>
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-zinc-50">
-                      <input
-                        type="radio"
-                        name="show_on_dcmls"
-                        value="no"
-                        checked={formData.show_on_dcmls === false}
-                        onChange={() => setFormData(prev => ({ ...prev, show_on_dcmls: false }))}
-                        className="sr-only"
                       />
-                      <span
-                        className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-none border-2 transition-colors",
-                          formData.show_on_dcmls === false
-                            ? "border-neon-green bg-neon-green text-white"
-                            : "border-zinc-300 bg-white",
-                        )}
-                        aria-hidden
-                      >
-                        {formData.show_on_dcmls === false ? (
-                          <Check className="h-2.5 w-2.5 stroke-[3]" strokeLinecap="round" strokeLinejoin="round" />
-                        ) : null}
-                      </span>
-                      <span className="font-medium text-zinc-900">No, keep as internal only</span>
-                    </label>
+                      <span className="text-sm font-medium text-zinc-700">Yes, publish to DCMLS</span>
+                    </div>
+                    <div className="flex items-center gap-3 rounded-md border border-zinc-200/80 bg-white/80 p-1.5">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-neon-green" aria-hidden />
+                      <span className="text-sm font-medium text-zinc-900">No, keep as internal only</span>
+                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-neutral-400">Active</span>
+                    </div>
                   </div>
                   <p className="mt-3 text-xs text-neutral-500">
-                    Published listings are visible to external DCMLS consumers. Internal-only listings are for AAC agents only.
+                    Published listings will be visible to external DCMLS consumers once this option is enabled.
                   </p>
                 </div>
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-zinc-200/90 bg-white shadow-[inset_0_1px_0_rgba(0,0,0,0.03)]">
