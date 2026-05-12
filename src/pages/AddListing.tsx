@@ -65,6 +65,9 @@ const ATTOM_ENABLED = false;
 const addListingFormChrome =
   "[&_input]:focus-visible:border-zinc-900 [&_input]:focus-visible:ring-1 [&_input]:focus-visible:ring-zinc-300/80 [&_input]:focus-visible:shadow-none [&_textarea]:focus-visible:border-zinc-900 [&_textarea]:focus-visible:ring-1 [&_textarea]:focus-visible:ring-zinc-300/80 [&_textarea]:shadow-none [&_button[role=combobox]_svg]:text-zinc-500";
 
+/** Shared outline `Button` class for media uploads on Add Listing (Photos, Floor Plans, Documents). */
+const ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS = "border-zinc-200";
+
 interface FileWithPreview {
   file: File;
   preview: string;
@@ -5039,7 +5042,7 @@ const AddListing = () => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="border-zinc-200"
+                          className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={() => document.getElementById("photo-upload")?.click()}
                           disabled={isUploadingPhotos}
                         >
@@ -5059,7 +5062,7 @@ const AddListing = () => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="border-zinc-200"
+                          className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={handleNavigateToManagePhotos}
                           disabled={isUploadingPhotos}
                         >
@@ -5122,7 +5125,7 @@ const AddListing = () => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="border-zinc-200"
+                          className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={() => document.getElementById("floorplan-upload")?.click()}
                         >
                           <Upload className="mr-2 h-4 w-4 shrink-0" aria-hidden />
@@ -5132,7 +5135,7 @@ const AddListing = () => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="border-zinc-200"
+                          className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={handleNavigateToManageFloorPlans}
                         >
                           Manage Floor Plans
@@ -5176,7 +5179,7 @@ const AddListing = () => {
                     <div>
                       <Label className={agentSectionTitle}>Documents</Label>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Select the document type, choose a file, then click Add document. Files upload to storage when you save or publish the listing.
+                        Select the document type, use Upload Documents to pick a file, then click Add document. Files upload to storage when you save or publish the listing.
                       </p>
                     </div>
 
@@ -5232,11 +5235,11 @@ const AddListing = () => {
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="border-zinc-200"
+                              className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                               onClick={() => pendingDocumentInputRef.current?.click()}
                             >
                               <Upload className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-                              Choose file
+                              Upload Documents
                             </Button>
                             <span
                               className="min-w-0 max-w-full truncate text-sm text-muted-foreground sm:max-w-md"
