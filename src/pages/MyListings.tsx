@@ -802,11 +802,11 @@ function MyListingsView({
 
                     <div className="mt-1">
                       {isEditing ? (
-                        <div className="flex flex-wrap items-end gap-2">
-                          <div className="flex min-w-0 flex-col gap-1">
-                            <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Price</span>
-                            <div className="relative w-[9.5rem] min-w-0 sm:w-44">
-                              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] font-medium text-zinc-500" aria-hidden>
+                        <div className="flex flex-wrap items-end gap-1.5">
+                          <div className="flex min-w-0 flex-col gap-0.5">
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Price</span>
+                            <div className="relative w-[7.5rem] min-w-0 sm:w-[8rem]">
+                              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[12px] font-medium text-zinc-500" aria-hidden>
                                 $
                               </span>
                               <Input
@@ -814,35 +814,35 @@ function MyListingsView({
                                 inputMode="numeric"
                                 autoComplete="off"
                                 aria-label="Listing price"
-                                className="h-8 border-zinc-200 bg-white pl-6 pr-2 text-right text-[13px] font-medium tabular-nums text-zinc-900 shadow-none focus-visible:border-zinc-300 focus-visible:ring-2 focus-visible:ring-zinc-300/50 focus-visible:ring-offset-0"
+                                className="h-7 border-zinc-200 bg-white pl-5 pr-2 text-right text-[12px] font-medium tabular-nums text-zinc-900 shadow-none focus-visible:border-zinc-300 focus-visible:ring-1 focus-visible:ring-zinc-300/50 focus-visible:ring-offset-0"
                                 value={editPrice === "" ? "" : formatUsdWholeForInput(editPrice)}
                                 onChange={(e) => setEditPrice(parseUsdWholeInput(e.target.value))}
                               />
                             </div>
                           </div>
-                          <div className="flex min-w-0 flex-col gap-1">
-                            <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Status</span>
+                          <div className="flex min-w-0 flex-col gap-0.5">
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Status</span>
                             <Select
                               value={editStatus}
                               onValueChange={(v) => setEditStatus(v as ListingStatus)}
                             >
-                              <SelectTrigger className="h-8 w-[10.5rem] border-zinc-200 bg-white text-[13px] capitalize text-zinc-900 shadow-none focus:ring-zinc-300/50">
+                              <SelectTrigger className="h-7 w-[8.5rem] border-zinc-200 bg-white px-2 text-[12px] capitalize text-zinc-900 shadow-none focus:ring-1 focus:ring-zinc-300/50">
                                 <SelectValue placeholder="Status" />
                               </SelectTrigger>
                               <SelectContent>
                                 {ALL_STATUSES.map((tab) => (
-                                  <SelectItem key={tab.value} value={tab.value} className="capitalize">
+                                  <SelectItem key={tab.value} value={tab.value} className="text-xs capitalize">
                                     {tab.label}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="flex items-center gap-1.5 pb-0.5">
-                            <Button type="button" size="sm" className="h-8 px-3 text-[13px]" onClick={saveQuickEdit}>
+                          <div className="flex items-center gap-1 pb-0.5">
+                            <Button type="button" size="sm" className="h-7 px-2.5 text-[12px]" onClick={saveQuickEdit}>
                               Save
                             </Button>
-                            <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-[13px] text-zinc-600" onClick={cancelQuickEdit}>
+                            <Button type="button" variant="ghost" size="sm" className="h-7 px-1.5 text-[12px] text-zinc-600" onClick={cancelQuickEdit}>
                               Cancel
                             </Button>
                           </div>
