@@ -30,6 +30,7 @@ import {
 import { formatTownSelectionLabel, normalizeTownSelections, toggleTownSelection } from "@/lib/townSelection";
 import { HOT_SHEET_FILTER_STATUSES, PROPERTY_TYPES as STATUS_PROPERTY_TYPES } from "@/constants/status";
 import { cn } from "@/lib/utils";
+import { enqueueHotSheetClientInvites } from "@/lib/enqueueHotSheetClientInvites";
 
 /** Nested cards in this dialog — keep white surface and subtle shadow (override global Card lift). */
 const HS_DIALOG_CARD =
@@ -952,8 +953,37 @@ export function CreateHotSheetDialog({
           }
         }
 
-        toast.success("Hot sheet created");
         window.localStorage.removeItem(`aac:hotsheet:draft:${userId}:new`);
+
+        if (lockedToClient && createdHotSheet && selectedClients.length > 0) {
+          const inviteRes = await enqueueHotSheetClientInvites({
+            supabase,
+            hotSheetId: createdHotSheet.id,
+            hotSheetName: hotSheetName.trim(),
+            agentUserId: userId,
+            clientIds: selectedClients.map((c) => c.id).filter((id) => !String(id).startsWith("temp-")),
+          });
+
+          if (inviteRes.ok && inviteRes.enqueued > 0) {
+            void supabase.functions.invoke("kick-email-queue").catch((e) => {
+              console.warn("[CreateHotSheetDialog] kick-email-queue invoke failed (email may still process on schedule)", e);
+            });
+            toast.success(
+              "Hot sheet saved and invite email sent. Your buyer should receive it shortly (ask them to check spam if needed).",
+            );
+          } else if (inviteRes.errors.length > 0) {
+            console.error("[CreateHotSheetDialog] Hot sheet saved but invite enqueue failed", inviteRes.errors);
+            toast.warning(
+              `Hot sheet saved, but the invite email could not be sent: ${inviteRes.errors[0]}. Open the review page and use Send Invites.`,
+            );
+          } else if (inviteRes.enqueued === 0) {
+            toast.success(
+              "Hot sheet saved. No invite email was sent (missing email, already linked, or not eligible). Open the hot sheet review page to send or resend.",
+            );
+          }
+        } else {
+          toast.success("Hot sheet created");
+        }
 
         resetDialogState();
         onOpenChange(false);
@@ -1046,7 +1076,9 @@ export function CreateHotSheetDialog({
             ) : null}
           </DialogTitle>
           <DialogDescription className="text-[13px] leading-snug text-neutral-500">
-            Set criteria and contacts. Invites and listing sends run from the hot sheet review screen.
+            {lockedToClient
+              ? "Set criteria for this buyer. When you confirm, we save the hot sheet and send the invite email with listing previews (same as Send Invites on review)."
+              : "Set criteria and contacts. Invites and listing sends run from the hot sheet review screen."}
           </DialogDescription>
           <div className="mt-3 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -1977,7 +2009,9 @@ export function CreateHotSheetDialog({
                   <p><span className="font-medium">Agent:</span> {notifyAgent ? "Enabled" : "Disabled"}</p>
                   {selectedClients.length > 0 && (
                     <p className="text-muted-foreground">
-                      Contacts on this sheet receive invitations and listing emails when you send from the review screen.
+                      {lockedToClient
+                        ? "After you create this sheet, we email each contact the invite link and sample listings (Resend queue)."
+                        : "Contacts on this sheet receive invitations and listing emails when you send from the review screen."}
                     </p>
                   )}
                   <p><span className="font-medium">Schedule:</span> {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}</p>
