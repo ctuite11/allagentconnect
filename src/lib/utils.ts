@@ -24,6 +24,17 @@ export type ListingAddressUnitSource = {
   condo_details?: unknown;
 };
 
+/** Common MLS / vendor keys for condo unit inside `condo_details` JSON. */
+function pickUnitFromCondoDetails(details: unknown): string | null {
+  if (details == null || typeof details !== "object") return null;
+  const d = details as Record<string, unknown>;
+  for (const k of ["unit_number", "unitNumber", "UnitNumber", "unit", "UNIT"] as const) {
+    const v = d[k];
+    if (v != null && String(v).trim() !== "") return String(v).trim();
+  }
+  return null;
+}
+
 export function resolveListingUnitNumber(listing: ListingAddressUnitSource): string | null {
   const top = listing.unit_number;
   if (top != null && String(top).trim() !== "") return String(top).trim();
@@ -33,12 +44,10 @@ export function resolveListingUnitNumber(listing: ListingAddressUnitSource): str
       typeof listing.condo_details === "string"
         ? JSON.parse(listing.condo_details as string)
         : listing.condo_details;
-    const u = (details as { unit_number?: unknown })?.unit_number;
-    if (u != null && String(u).trim() !== "") return String(u).trim();
+    return pickUnitFromCondoDetails(details);
   } catch {
-    /* ignore */
+    return null;
   }
-  return null;
 }
 
 export function buildDisplayAddress(listing: ListingAddressUnitSource) {
@@ -57,8 +66,12 @@ export function buildDisplayAddress(listing: ListingAddressUnitSource) {
   if (unit) {
     const esc = unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const hasHash = new RegExp(`#\\s*${esc}\\b`, "i").test(base);
-    const hasWord = new RegExp(`\\bUnit\\s*${esc}\\b`, "i").test(base);
-    if (!hasHash && !hasWord) {
+    /** Match MLS-style unit tokens (not only "Unit …") so we still append `#` when appropriate. */
+    const hasMlsUnitToken = new RegExp(
+      `\\b(?:Unit|Apt\\.?|Apartment|Ste\\.?)\\s*${esc}\\b`,
+      "i",
+    ).test(base);
+    if (!hasHash && !hasMlsUnitToken) {
       const cityIndex = city ? base.indexOf(`, ${city}`) : -1;
       if (cityIndex > -1) {
         base = `${base.slice(0, cityIndex)} #${unit}${base.slice(cityIndex)}`;
