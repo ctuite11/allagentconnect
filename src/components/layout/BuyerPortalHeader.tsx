@@ -3,7 +3,6 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, LogOut, Search, LayoutDashboard, Heart, Flame, MessageSquare, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
-import { buyerPortalNavIconClass } from "@/lib/navIconColors";
 import AACMonogram from "@/components/ui/AACMonogram";
 
 const NAV_ITEMS = [
@@ -72,7 +71,11 @@ export function BuyerPortalHeader() {
               {({ isActive }) =>
                 to === "/messages" ? (
                   <span className="relative inline-flex items-center gap-1.5">
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${buyerPortalNavIconClass(to, isActive)}`} />
+                    <Icon
+                      className={`h-4 w-4 flex-shrink-0 ${
+                        isActive ? "text-[#0E56F5]" : "text-zinc-500"
+                      }`}
+                    />
                     {label}
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold flex items-center justify-center leading-none pointer-events-none">
@@ -82,7 +85,11 @@ export function BuyerPortalHeader() {
                   </span>
                 ) : (
                   <>
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${buyerPortalNavIconClass(to, isActive)}`} />
+                    <Icon
+                      className={`h-4 w-4 flex-shrink-0 ${
+                        isActive ? "text-[#0E56F5]" : "text-zinc-500"
+                      }`}
+                    />
                     {label}
                   </>
                 )
@@ -125,7 +132,11 @@ export function BuyerPortalHeader() {
             >
               {({ isActive }) => (
                 <>
-                  <Icon className={`h-4 w-4 ${buyerPortalNavIconClass(to, isActive)}`} />
+                  <Icon
+                    className={`h-4 w-4 ${
+                      isActive ? "text-[#0E56F5]" : "text-zinc-500"
+                    }`}
+                  />
                   {label}
                   {to === "/messages" && unreadCount > 0 && (
                     <span className="ml-auto min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold flex items-center justify-center leading-none">
