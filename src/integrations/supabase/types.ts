@@ -4310,6 +4310,10 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      is_email_registered_with_aac: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
       is_email_unsubscribed: {
         Args: { _category: string; _email: string }
         Returns: boolean
