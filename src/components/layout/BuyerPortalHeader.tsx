@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, LogOut, Search, LayoutDashboard, Heart, FileText, MessageSquare, User } from "lucide-react";
+import { Menu, X, LogOut, Search, LayoutDashboard, Heart, Flame, MessageSquare, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { to: "/client/search", label: "Search", icon: Search },
   { to: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/favorites", label: "Favorites", icon: Heart },
-  { to: "/hot-sheets", label: "Hot Sheets", icon: FileText },
+  { to: "/hot-sheets", label: "Hot Sheets", icon: Flame },
   { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/client/account", label: "Account", icon: User },
 ];

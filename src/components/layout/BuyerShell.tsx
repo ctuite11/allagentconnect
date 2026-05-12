@@ -4,7 +4,7 @@ import {
   Search,
   LayoutDashboard,
   Heart,
-  FileText,
+  Flame,
   MessageSquare,
   User,
   LogOut,
@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { to: "/client/search", label: "Search", icon: Search },
   { to: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/favorites", label: "Favorites", icon: Heart },
-  { to: "/hot-sheets", label: "Hot Sheets", icon: FileText },
+  { to: "/hot-sheets", label: "Hot Sheets", icon: Flame },
   { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/client/account", label: "Account", icon: User },
 ];

@@ -3,7 +3,7 @@
  * using the buyer's auth profile when resolvable — for the agent mirror view on BuyerAccount.
  */
 import { useEffect, useState } from "react";
-import { Heart, MessageSquare, Search, Sparkles } from "lucide-react";
+import { Heart, MessageSquare, Flame, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
@@ -398,7 +398,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     {
       label: "Hot Sheets",
       value: String(hotSheets.length),
-      icon: Search,
+      icon: Flame,
       subtle:
         hotSheets.length > 0
           ? `${hotSheets.length} saved search${hotSheets.length === 1 ? "" : "es"}`

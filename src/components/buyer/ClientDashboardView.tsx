@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import {
@@ -433,7 +433,10 @@ export function ClientDashboardView({
                   <CardHeader className={previewSectionHeaderClass}>
                     <div className={previewSectionHeaderRowClass}>
                       <div className={previewSectionTitleWrapClass}>
-                        <CardTitle className={dashSectionTitleClass}>Hot Sheets</CardTitle>
+                        <CardTitle className={`${dashSectionTitleClass} inline-flex items-center gap-2`}>
+                          <Flame className="h-4 w-4 shrink-0 text-amber-600" aria-hidden strokeWidth={2} />
+                          Hot Sheets
+                        </CardTitle>
                         <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
                           Alerts for saved searches.
                         </CardDescription>
