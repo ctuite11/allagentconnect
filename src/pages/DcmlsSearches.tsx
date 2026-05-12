@@ -109,7 +109,7 @@ const DcmlsSearches = () => {
           <div className="flex items-start justify-between mb-10 gap-4 flex-wrap">
             <div>
               <div className="inline-flex items-center gap-2 mb-3">
-                <Flame className="w-4 h-4 text-foreground/70" />
+                <Flame className="w-4 h-4 text-red-600" />
                 <span className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-medium">
                   Live Listing Feed
                 </span>

@@ -1,4 +1,4 @@
-import { Flame, MessageSquare, Eye } from "lucide-react";
+import { Flame, Heart, MessageSquare } from "lucide-react";
 
 interface ListingInterestSignalsProps {
   savesCount: number;
@@ -21,8 +21,8 @@ export function ListingInterestSignals({
   return (
     <div className="flex flex-wrap items-center gap-3 text-xs">
       {savesCount > 0 && (
-        <span className="inline-flex items-center gap-1 text-orange-600 dark:text-orange-400 font-medium">
-          <Flame className="h-3.5 w-3.5" />
+        <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium">
+          <Heart className="h-3.5 w-3.5" />
           {savesCount} buyer{savesCount !== 1 ? "s" : ""} saved
         </span>
       )}
@@ -33,8 +33,8 @@ export function ListingInterestSignals({
         </span>
       )}
       {hotsheetMatchCount > 0 && (
-        <span className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 font-medium">
-          <Eye className="h-3.5 w-3.5" />
+        <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
+          <Flame className="h-3.5 w-3.5" />
           {hotsheetMatchCount} Hot Sheet{hotsheetMatchCount !== 1 ? "s" : ""} match
         </span>
       )}

@@ -3,7 +3,7 @@ import {
   List,
   FileText,
   Search,
-  Bell,
+  Flame,
   UserCircle,
   ClipboardList,
   MessageSquare,
@@ -33,6 +33,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { shadcnAgentSidebarNavIconClass } from "@/lib/navIconColors";
 
 interface NavItem {
   title: string;
@@ -55,7 +56,7 @@ const listingItems: NavItem[] = [
 
 const clientItems: NavItem[] = [
   { title: "My Contacts", url: "/my-clients", icon: UserCircle },
-  { title: "Hot Sheets", url: "/agent/hot-sheets", icon: Bell },
+  { title: "Hot Sheets", url: "/agent/hot-sheets", icon: Flame },
   { title: "Showing Requests", url: "/showing-requests", icon: ClipboardList },
   { title: "Favorites", url: "/my-favorites", icon: Heart },
 ];
@@ -100,7 +101,7 @@ function SidebarGroupSection({ label, items, currentPath, collapsed, onNavigate,
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <item.icon className="h-4 w-4 shrink-0" />
+                  <item.icon className={cn("h-4 w-4 shrink-0", shadcnAgentSidebarNavIconClass(item.title))} />
                   {!collapsed && (
                     <>
                       <span className="flex-1 truncate">{item.title}</span>

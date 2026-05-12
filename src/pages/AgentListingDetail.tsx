@@ -36,7 +36,7 @@ import {
   DollarSign,
   Building2,
   Info,
-  Flame,
+  ThermometerSun,
   MessageSquare,
   Copy
 } from "lucide-react";
@@ -699,7 +699,7 @@ const AgentListingDetail = () => {
               <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-3">
                 {listing.heating_types && formatArray(listing.heating_types) && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Flame className="w-4 h-4 text-orange-500" />
+                    <ThermometerSun className="w-4 h-4 text-orange-500" />
                     <span className="text-muted-foreground">Heating:</span>
                     <span className="font-medium">{formatArray(listing.heating_types)}</span>
                   </div>

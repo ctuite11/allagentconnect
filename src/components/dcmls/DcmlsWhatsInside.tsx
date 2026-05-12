@@ -12,11 +12,14 @@ import {
 
 const AAC_BLUE = "#0E56F5";
 const AAC_GREEN = "#50C878";
+const AAC_RED = "#DC2626";
 
 type Feature = {
   icon: LucideIcon;
   title: string;
   desc: string;
+  /** Default AAC blue; Hot Sheets uses red per global nav spec. */
+  accent?: "blue" | "red";
 };
 
 const FEATURES: Feature[] = [
@@ -29,6 +32,7 @@ const FEATURES: Feature[] = [
     icon: Flame,
     title: "Hot Sheets",
     desc: "Curated collections of homes matched to what you're looking for.",
+    accent: "red",
   },
   {
     icon: Sparkles,
@@ -80,7 +84,11 @@ const DcmlsWhatsInside: React.FC = () => {
 
         {/* Feature grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 border border-border/60 rounded-2xl overflow-hidden">
-          {FEATURES.map(({ icon: Icon, title, desc }) => (
+          {FEATURES.map(({ icon: Icon, title, desc, accent = "blue" }) => {
+            const isRed = accent === "red";
+            const iconBg = isRed ? "rgba(220, 38, 38, 0.08)" : `${AAC_BLUE}0F`;
+            const iconColor = isRed ? AAC_RED : AAC_BLUE;
+            return (
             <div
               key={title}
               className="group bg-background p-8 md:p-10 transition-colors hover:bg-muted/30"
@@ -88,9 +96,9 @@ const DcmlsWhatsInside: React.FC = () => {
               <div className="flex items-start gap-4">
                 <div
                   className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: `${AAC_BLUE}0F` }}
+                  style={{ backgroundColor: iconBg }}
                 >
-                  <Icon className="w-5 h-5" style={{ color: AAC_BLUE }} />
+                  <Icon className="w-5 h-5" style={{ color: iconColor }} />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-2">
@@ -109,7 +117,8 @@ const DcmlsWhatsInside: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTA */}

@@ -499,7 +499,7 @@ const AgentDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Listings</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Home className="h-4 w-4 text-muted-foreground" />
+                <Home className="h-4 w-4 text-emerald-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
@@ -513,7 +513,7 @@ const AgentDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Hot Sheets</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Flame className="h-4 w-4 text-muted-foreground" />
+                <Flame className="h-4 w-4 text-red-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
@@ -527,7 +527,7 @@ const AgentDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Favorites</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Heart className="h-4 w-4 text-muted-foreground" />
+                <Heart className="h-4 w-4 text-rose-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
@@ -541,7 +541,7 @@ const AgentDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Contacts</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Users className="h-4 w-4 text-indigo-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
@@ -575,7 +575,7 @@ const AgentDashboard = () => {
                 {profilePicture ? (
                   <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <UserCircle className="h-4 w-4 text-muted-foreground" />
+                  <UserCircle className="h-4 w-4 text-slate-600" />
                 )}
               </div>
             </CardHeader>
@@ -617,7 +617,7 @@ const AgentDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">Communication Center</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Bell className="h-4 w-4 text-muted-foreground" />
+                <Bell className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">
@@ -637,7 +637,7 @@ const AgentDashboard = () => {
                   <CardDescription className="text-xs">Latest updates and interactions</CardDescription>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                  <Activity className="h-4 w-4 text-muted-foreground" />
+                  <Activity className="h-4 w-4 text-violet-600" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 p-3 sm:p-4 pt-2">

@@ -460,11 +460,11 @@ const ClientInvitationSetup = () => {
     );
   }
 
-  const benefits = [
-    { icon: Eye, label: "View curated listings" },
-    { icon: Heart, label: "Save favorite homes" },
-    { icon: Flame, label: "Receive Hot Sheets instantly" },
-    { icon: MessageSquare, label: "Private communication with your agent" },
+  const benefits: { icon: typeof Eye; label: string; iconClass: string }[] = [
+    { icon: Eye, label: "View curated listings", iconClass: "text-violet-600" },
+    { icon: Heart, label: "Save favorite homes", iconClass: "text-rose-600" },
+    { icon: Flame, label: "Receive Hot Sheets instantly", iconClass: "text-red-600" },
+    { icon: MessageSquare, label: "Private communication with your agent", iconClass: "text-blue-600" },
   ];
 
   const inviterName = agentFirstName || "Your agent";
@@ -504,10 +504,10 @@ const ClientInvitationSetup = () => {
             </div>
 
             <ul className="space-y-3">
-              {benefits.map(({ icon: Icon, label }) => (
+              {benefits.map(({ icon: Icon, label, iconClass }) => (
                 <li key={label} className="flex items-center gap-3 text-[14px] text-zinc-700">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-50 border border-zinc-100">
-                    <Icon className="w-4 h-4 text-zinc-600" />
+                    <Icon className={`w-4 h-4 ${iconClass}`} />
                   </span>
                   {label}
                 </li>

@@ -1,4 +1,4 @@
-import { AlertTriangle, Mail, Users, FileText, ChevronRight } from "lucide-react";
+import { AlertTriangle, Mail, Users, FileText, ChevronRight, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
@@ -9,7 +9,7 @@ interface NeedsAttentionBarProps {
 const iconMap: Record<string, React.ReactNode> = {
   invite: <Users className="h-5 w-5 text-amber-600" />,
   message: <Mail className="h-5 w-5 text-primary" />,
-  hotsheet: <FileText className="h-5 w-5 text-emerald-600" />,
+  hotsheet: <Flame className="h-5 w-5 text-red-600" />,
   listing: <FileText className="h-5 w-5 text-primary" />,
 };
 

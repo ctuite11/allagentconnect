@@ -355,7 +355,7 @@ export default function NetworkIntelligence() {
               <div className="rounded-2xl border border-border bg-card p-5 space-y-5">
                 {/* New needs pill */}
                 <div className="flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-amber-500" />
+                  <TrendingUp className="h-4 w-4 text-amber-500" />
                   <span className="text-sm text-foreground">
                     <span className="font-bold text-foreground tabular-nums">
                       {summary?.buyerDemand.newNeedsCount7d ?? 0}
@@ -415,7 +415,7 @@ export default function NetworkIntelligence() {
           <section>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-muted-foreground" />
+                <Flame className="h-4 w-4 text-red-600" />
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                   Your Hot Sheets
                 </h2>

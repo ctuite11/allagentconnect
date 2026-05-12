@@ -86,7 +86,7 @@ const DcmlsAccount = () => {
               className="group border border-border/60 rounded-xl p-6 bg-card hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between mb-6">
-                <Heart className="w-5 h-5 text-muted-foreground" />
+                <Heart className="w-5 h-5 text-rose-600" />
                 <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
               </div>
               <p className="text-3xl font-semibold text-foreground tracking-tight">
@@ -100,7 +100,7 @@ const DcmlsAccount = () => {
               className="group border border-border/60 rounded-xl p-6 bg-card hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between mb-6">
-                <Flame className="w-5 h-5 text-muted-foreground" />
+                <Flame className="w-5 h-5 text-red-600" />
                 <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
               </div>
               <p className="text-3xl font-semibold text-foreground tracking-tight">
@@ -111,7 +111,7 @@ const DcmlsAccount = () => {
 
             <div className="border border-border/60 rounded-xl p-6 bg-card">
               <div className="flex items-start justify-between mb-6">
-                <Bell className="w-5 h-5 text-muted-foreground" />
+                <Bell className="w-5 h-5 text-amber-600" />
               </div>
               <p className="text-3xl font-semibold text-foreground tracking-tight">
                 {loading ? "—" : stats.alertsOn}
