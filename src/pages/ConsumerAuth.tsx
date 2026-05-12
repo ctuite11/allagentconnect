@@ -232,7 +232,7 @@ const ConsumerAuth = () => {
 
       if (error) {
         if (error.message.includes("already registered")) {
-          toast.error("This email is already registered. Please login instead.");
+          toast.error("This email is already registered with AAC. Please sign in instead.");
         } else {
           toast.error(error.message);
         }
@@ -241,7 +241,7 @@ const ConsumerAuth = () => {
 
       // Check for "fake success" - user exists but identities is empty
       if (data.user && data.user.identities?.length === 0) {
-        toast.error("This email is already registered. Please login instead.");
+        toast.error("This email is already registered with AAC. Please sign in instead.");
         return;
       }
 

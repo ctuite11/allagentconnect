@@ -772,13 +772,28 @@ export function CreateHotSheetDialog({
   const handleCreateClient = async () => {
     setCreatingClient(true);
     try {
+      const normalizedEmail = clientEmail.toLowerCase().trim();
+      // Block if this email already belongs to an AAC account.
+      const { data: alreadyRegistered, error: regCheckErr } = await supabase.rpc(
+        "is_email_registered_with_aac" as any,
+        { p_email: normalizedEmail }
+      );
+      if (regCheckErr) throw regCheckErr;
+      if (alreadyRegistered === true) {
+        toast.error(
+          "This email is already registered with AAC. They already have an account — share your AAC profile link instead."
+        );
+        setCreatingClient(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("clients")
         .insert({
           agent_id: userId,
           first_name: clientFirstName.trim(),
           last_name: clientLastName.trim(),
-          email: clientEmail.toLowerCase().trim(),
+          email: normalizedEmail,
           phone: clientPhone ? formatPhoneNumber(clientPhone) : null,
         })
         .select()

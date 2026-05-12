@@ -152,7 +152,21 @@ const BuyerAuth = () => {
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        if (signUpError.message?.toLowerCase().includes("already")) {
+          toast.error("This email is already registered with AAC. Please sign in instead.");
+          setIsLogin(true);
+          return;
+        }
+        throw signUpError;
+      }
+
+      // Supabase returns a user with empty identities when email already exists.
+      if (authData?.user && (authData.user.identities?.length ?? 0) === 0) {
+        toast.error("This email is already registered with AAC. Please sign in instead.");
+        setIsLogin(true);
+        return;
+      }
 
       if (authData.user) {
         // Create buyer profile

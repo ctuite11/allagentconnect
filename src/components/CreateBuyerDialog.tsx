@@ -69,6 +69,21 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
 
       const normalizedEmail = email.trim().toLowerCase();
 
+      // 0. Block if this email already belongs to an AAC account (agent or buyer).
+      const { data: alreadyRegistered, error: regCheckErr } = await supabase.rpc(
+        "is_email_registered_with_aac" as any,
+        { p_email: normalizedEmail }
+      );
+      if (regCheckErr) {
+        failWithStep("check existing AAC account", regCheckErr);
+      }
+      if (alreadyRegistered === true) {
+        toast.error(
+          "This email is already registered with AAC. They already have an account — share your AAC profile link instead."
+        );
+        return;
+      }
+
       // 1. Look up an existing CRM contact for this agent + email so we can
       //    reactivate instead of hitting the unique-constraint error.
       const { data: existing, error: existingErr } = await supabase
