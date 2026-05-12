@@ -437,19 +437,19 @@ function BuyerRowStatusPill({ buyer }: { buyer: BuyerRow }) {
   if (buyer.buyerWorkspaceLinked) {
     return (
       <span
-        className={cn(shell, "border-neutral-200 bg-white text-neutral-900")}
+        className={cn(shell, "border-[#22C55E]/30 bg-[#22C55E]/10 text-[#15803D]")}
       >
-        <CheckCircle2 className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
+        <CheckCircle2 className="h-3 w-3 shrink-0 text-[#22C55E]" strokeWidth={2} aria-hidden />
         Searching
       </span>
     );
   }
   return (
     <span
-      className={cn(shell, "border-neutral-200 bg-neutral-100 text-neutral-800")}
+      className={cn(shell, "border-[#22C55E]/30 bg-[#22C55E]/10 text-[#15803D]")}
     >
-      <CheckCircle2 className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
-      Invite Accepted
+      <CheckCircle2 className="h-3 w-3 shrink-0 text-[#22C55E]" strokeWidth={2} aria-hidden />
+      Searching
     </span>
   );
 }
