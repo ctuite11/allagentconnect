@@ -72,6 +72,47 @@ interface FileWithPreview {
   uploaded?: boolean;
   url?: string;
   documentType?: string;
+  /** When `documentType` is `other`, user-provided label stored in DB as `customLabel` on the document JSON. */
+  customDocumentLabel?: string;
+}
+
+/** Labels for listing documents (Add Listing) — matches Select values below. */
+const ADD_LISTING_DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  purchase_and_sale: "Purchase & Sale Agreement",
+  lead_paint: "Lead Paint Disclosure",
+  property_disclosure: "Property Disclosure",
+  inspection_report: "Inspection Report",
+  title_report: "Title Report",
+  survey: "Survey",
+  hoa_docs: "HOA Documents",
+  deed: "Deed",
+  other: "Other",
+};
+
+function addListingDocumentTypeDisplay(doc: Pick<FileWithPreview, "documentType" | "customDocumentLabel">): string {
+  const key = doc.documentType || "";
+  const base = ADD_LISTING_DOCUMENT_TYPE_LABELS[key] || (key ? key.replace(/_/g, " ") : "Document");
+  if (key === "other" && doc.customDocumentLabel?.trim()) {
+    return `${base}: ${doc.customDocumentLabel.trim()}`;
+  }
+  return base;
+}
+
+function listingDocumentToPayload(doc: FileWithPreview): {
+  url: string;
+  name?: string;
+  documentType?: string;
+  customLabel?: string;
+} {
+  const base: { url: string; name?: string; documentType?: string; customLabel?: string } = {
+    url: doc.url!,
+    name: doc.file?.name || "",
+    documentType: doc.documentType || "",
+  };
+  if (doc.documentType === "other" && doc.customDocumentLabel?.trim()) {
+    base.customLabel = doc.customDocumentLabel.trim();
+  }
+  return base;
 }
 
 // Zod validation schema - year_built allows empty/undefined, only validates when value provided
@@ -349,6 +390,11 @@ const AddListing = () => {
   const [photos, setPhotos] = useState<FileWithPreview[]>([]);
   const [floorPlans, setFloorPlans] = useState<FileWithPreview[]>([]);
   const [documents, setDocuments] = useState<FileWithPreview[]>([]);
+  /** Staged document: not added to `documents` until user clicks Add. */
+  const [pendingDocumentType, setPendingDocumentType] = useState<string>("");
+  const [pendingDocumentFile, setPendingDocumentFile] = useState<File | null>(null);
+  const [pendingDocumentCustomLabel, setPendingDocumentCustomLabel] = useState("");
+  const pendingDocumentInputRef = useRef<HTMLInputElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Address dropdown state
@@ -765,14 +811,21 @@ const AddListing = () => {
             // Extract filename from URL or use stored name
             const docName = doc.name || (docUrl ? decodeURIComponent(docUrl.split('/').pop() || '').replace(/^\d+_/, '') : `Document ${index + 1}`);
             const docType = doc.documentType || '';
-            
+            const custom =
+              typeof doc.customLabel === "string"
+                ? doc.customLabel
+                : typeof doc.customDocumentLabel === "string"
+                  ? doc.customDocumentLabel
+                  : undefined;
+
             return {
               file: new File([], docName), // Create file with name for display
               preview: docUrl,
               id: `existing-doc-${index}`,
               uploaded: true,
               url: docUrl,
-              documentType: docType
+              documentType: docType,
+              customDocumentLabel: custom?.trim() || undefined,
             };
           });
           setDocuments(loadedDocuments);
@@ -1763,7 +1816,7 @@ const AddListing = () => {
     prevPropertyTypeRef.current = newType;
   }, [formData.property_type, isInitialLoad]);
 
-  const handleFileSelect = async (files: FileList | null, type: 'photos' | 'floorplans' | 'documents') => {
+  const handleFileSelect = async (files: FileList | null, type: "photos" | "floorplans") => {
     if (!files) return;
     
     // For photos, upload directly with spinner
@@ -1872,7 +1925,7 @@ const AddListing = () => {
       return;
     }
     
-    // For floor plans and documents, keep existing behavior
+    // Floor plans: add locally (upload on save). Documents use staged picker + Add above.
     const fileArray = Array.from(files);
     const newFiles: FileWithPreview[] = fileArray.map(file => ({
       file,
@@ -1882,9 +1935,8 @@ const AddListing = () => {
 
     if (type === 'floorplans') {
       setFloorPlans(prev => [...prev, ...newFiles]);
-    } else {
-      setDocuments(prev => [...prev, ...newFiles]);
     }
+    // Documents use staged type + file + explicit Add (see Documents section).
   };
 
   const handleRemoveFile = (id: string, type: 'photos' | 'floorplans' | 'documents') => {
@@ -1901,9 +1953,58 @@ const AddListing = () => {
         return prev.filter(f => f.id !== id);
       });
     } else {
-      setDocuments(prev => prev.filter(f => f.id !== id));
+      setDocuments((prev) => {
+        const file = prev.find((f) => f.id === id);
+        if (file?.preview) URL.revokeObjectURL(file.preview);
+        return prev.filter((f) => f.id !== id);
+      });
     }
   };
+
+  const handlePendingDocumentFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingDocumentFile(file);
+    e.target.value = "";
+  };
+
+  const handleAddPendingDocument = () => {
+    if (!pendingDocumentType) {
+      toast.error("Select a document type");
+      return;
+    }
+    if (!pendingDocumentFile) {
+      toast.error("Choose a file to add");
+      return;
+    }
+    if (pendingDocumentType === "other" && !pendingDocumentCustomLabel.trim()) {
+      toast.error("Enter a name for this document");
+      return;
+    }
+    const id = Math.random().toString(36).slice(2, 11);
+    const preview = pendingDocumentFile.type.startsWith("image/")
+      ? URL.createObjectURL(pendingDocumentFile)
+      : "";
+    setDocuments((prev) => [
+      ...prev,
+      {
+        file: pendingDocumentFile,
+        preview,
+        id,
+        documentType: pendingDocumentType,
+        customDocumentLabel:
+          pendingDocumentType === "other" ? pendingDocumentCustomLabel.trim() : undefined,
+      },
+    ]);
+    setPendingDocumentFile(null);
+    setPendingDocumentType("");
+    setPendingDocumentCustomLabel("");
+  };
+
+  const canAddPendingDocument =
+    Boolean(pendingDocumentType) &&
+    Boolean(pendingDocumentFile) &&
+    (pendingDocumentType !== "other" || pendingDocumentCustomLabel.trim().length > 0);
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -1929,7 +2030,7 @@ const AddListing = () => {
   const uploadFiles = async (): Promise<{
     photos: { url: string; name?: string }[];
     floorPlans: { url: string; name?: string }[];
-    documents: { url: string; name?: string; documentType?: string }[];
+    documents: { url: string; name?: string; documentType?: string; customLabel?: string }[];
   }> => {
     if (!user) {
       console.warn("uploadFiles called without user - aborting");
@@ -1938,7 +2039,7 @@ const AddListing = () => {
 
     const uploadedPhotos: { url: string; name?: string }[] = [];
     const uploadedFloorPlans: { url: string; name?: string }[] = [];
-    const uploadedDocuments: { url: string; name?: string; documentType?: string }[] = [];
+    const uploadedDocuments: { url: string; name?: string; documentType?: string; customLabel?: string }[] = [];
 
     // ---- PHOTOS ----
     for (const photo of photos) {
@@ -2010,11 +2111,7 @@ const AddListing = () => {
     // ---- DOCUMENTS ----
     for (const doc of documents) {
       if (doc.uploaded && doc.url) {
-        uploadedDocuments.push({
-          url: doc.url,
-          name: doc.file?.name || "",
-          documentType: doc.documentType || "",
-        });
+        uploadedDocuments.push(listingDocumentToPayload({ ...doc, url: doc.url } as FileWithPreview));
         continue;
       }
 
@@ -2037,7 +2134,9 @@ const AddListing = () => {
         .from("listing-documents")
         .getPublicUrl(filePath);
 
-      uploadedDocuments.push({ url: publicUrl, name: doc.file.name, documentType: doc.documentType || "" });
+      uploadedDocuments.push(
+        listingDocumentToPayload({ ...doc, url: publicUrl, uploaded: true } as FileWithPreview),
+      );
     }
 
     console.log("uploadFiles result", {
@@ -2500,10 +2599,16 @@ const AddListing = () => {
 
     try {
       // Upload any new files
-      let uploaded: { photos: { url: string; name: string }[]; floorPlans: { url: string; name: string }[]; documents: { url: string; name: string; documentType: string }[] } = {
+      let uploaded: {
+        photos: { url: string; name: string }[];
+        floorPlans: { url: string; name: string }[];
+        documents: { url: string; name?: string; documentType?: string; customLabel?: string }[];
+      } = {
         photos: photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url!, name: p.file?.name || '' })),
         floorPlans: floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url!, name: p.file?.name || '' })),
-        documents: documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url!, name: d.file?.name || '', documentType: d.documentType || 'Other' })),
+        documents: documents
+          .filter((d) => d.uploaded && d.url)
+          .map((d) => listingDocumentToPayload({ ...d, url: d.url! } as FileWithPreview)),
       };
 
       const hasNewFilesToUpload = 
@@ -2517,7 +2622,12 @@ const AddListing = () => {
           uploaded = {
             photos: uploadResult.photos.map(p => ({ url: p.url, name: p.name || '' })),
             floorPlans: uploadResult.floorPlans.map(p => ({ url: p.url, name: p.name || '' })),
-            documents: uploadResult.documents.map(d => ({ url: d.url, name: d.name || '', documentType: d.documentType || 'Other' })),
+            documents: uploadResult.documents.map((d) => ({
+              url: d.url,
+              name: d.name || '',
+              documentType: d.documentType || '',
+              ...(d.customLabel ? { customLabel: d.customLabel } : {}),
+            })),
           };
           console.log('[handleSaveChanges] Files uploaded successfully:', uploaded);
         } catch (uploadError: any) {
@@ -2640,22 +2750,24 @@ const AddListing = () => {
       // Get current media from state to preserve it
       const currentPhotos = photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
       const currentFloorPlans = floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
-      const currentDocuments = documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url, name: d.file?.name || '' }));
-      
+      const currentDocuments = documents
+        .filter((d) => d.uploaded && d.url)
+        .map((d) => listingDocumentToPayload({ ...d, url: d.url! } as FileWithPreview));
+
       const payload = buildListingDataFromForm(
         { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments },
         undefined,
         freshUser.id
       );
-      
+
       // Remove agent_id from update (it's immutable)
       const { agent_id, ...updatePayload } = payload;
-      
+
       await supabase
         .from('listings')
         .update(updatePayload)
         .eq('id', targetId);
-        
+
       console.log('[AddListing] Form data saved before navigating to photos');
     } catch (err) {
       console.error('[AddListing] Error saving before photo navigation:', err);
@@ -2686,21 +2798,23 @@ const AddListing = () => {
       
       const currentPhotos = photos.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
       const currentFloorPlans = floorPlans.filter(p => p.uploaded && p.url).map(p => ({ url: p.url, name: p.file?.name || '' }));
-      const currentDocuments = documents.filter(d => d.uploaded && d.url).map(d => ({ url: d.url, name: d.file?.name || '' }));
-      
+      const currentDocuments = documents
+        .filter((d) => d.uploaded && d.url)
+        .map((d) => listingDocumentToPayload({ ...d, url: d.url! } as FileWithPreview));
+
       const payload = buildListingDataFromForm(
         { photos: currentPhotos, floorPlans: currentFloorPlans, documents: currentDocuments },
         undefined,
         freshUser.id
       );
-      
+
       const { agent_id, ...updatePayload } = payload;
-      
+
       await supabase
         .from('listings')
         .update(updatePayload)
         .eq('id', targetId);
-        
+
       console.log('[AddListing] Form data saved before navigating to floor plans');
     } catch (err) {
       console.error('[AddListing] Error saving before floor plan navigation:', err);
@@ -5057,93 +5171,148 @@ const AddListing = () => {
                     )}
                   </div>
 
-                  {/* Documents */}
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  {/* Documents — staged add: type + file + explicit Add; list below */}
+                  <div className="space-y-4 border-t border-zinc-100 pt-6 pb-8">
+                    <div>
                       <Label className={agentSectionTitle}>Documents</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="border-zinc-200 sm:shrink-0"
-                        onClick={() => document.getElementById("document-upload")?.click()}
-                      >
-                        <Upload className="mr-2 h-4 w-4 shrink-0" aria-hidden />
-                        Upload Documents
-                      </Button>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Select the document type, choose a file, then click Add document. Files upload to storage when you save or publish the listing.
+                      </p>
                     </div>
-                    <input
-                      id="document-upload"
-                      type="file"
-                      multiple
-                      accept=".pdf,.doc,.docx"
-                      onChange={(e) => handleFileSelect(e.target.files, 'documents')}
-                      className="hidden"
-                    />
-                    {documents.length > 0 && (
-                      <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          Select the document type for each uploaded file
-                        </p>
-                        {documents.map((doc) => (
-                          <div key={doc.id} className="space-y-2 rounded-lg border border-zinc-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 flex-1">
-                                <FileText className="w-5 h-5 text-muted-foreground" />
-                                <span className="text-sm">{doc.file.name}</span>
+
+                    <div className="rounded-lg border border-zinc-200/90 bg-zinc-50/50 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-5">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="document-type-select" className="text-xs font-medium text-neutral-700">
+                            Document type
+                          </Label>
+                          <Select
+                            value={pendingDocumentType || undefined}
+                            onValueChange={(value) => {
+                              setPendingDocumentType(value);
+                              if (value !== "other") setPendingDocumentCustomLabel("");
+                            }}
+                          >
+                            <SelectTrigger id="document-type-select" className={`bg-white border-neutral-200 ${addListingFormChrome}`}>
+                              <SelectValue placeholder="Select type…" />
+                            </SelectTrigger>
+                            <SelectContent className="z-50 bg-white">
+                              <SelectItem value="purchase_and_sale">Purchase & Sale Agreement</SelectItem>
+                              <SelectItem value="lead_paint">Lead Paint Disclosure</SelectItem>
+                              <SelectItem value="property_disclosure">Property Disclosure</SelectItem>
+                              <SelectItem value="inspection_report">Inspection Report</SelectItem>
+                              <SelectItem value="title_report">Title Report</SelectItem>
+                              <SelectItem value="survey">Survey</SelectItem>
+                              <SelectItem value="hoa_docs">HOA Documents</SelectItem>
+                              <SelectItem value="deed">Deed</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {pendingDocumentType === "other" ? (
+                          <div className="space-y-2 sm:col-span-2">
+                            <Label htmlFor="document-custom-label" className="text-xs font-medium text-neutral-700">
+                              Custom document name
+                            </Label>
+                            <Input
+                              id="document-custom-label"
+                              className={`bg-white ${addListingFormChrome}`}
+                              placeholder="e.g. HOA addendum, easement agreement…"
+                              value={pendingDocumentCustomLabel}
+                              onChange={(e) => setPendingDocumentCustomLabel(e.target.value)}
+                            />
+                          </div>
+                        ) : null}
+
+                        <div className="space-y-2 sm:col-span-2">
+                          <span className="text-xs font-medium text-neutral-700">File</span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="border-zinc-200"
+                              onClick={() => pendingDocumentInputRef.current?.click()}
+                            >
+                              <Upload className="mr-2 h-4 w-4 shrink-0" aria-hidden />
+                              Choose file
+                            </Button>
+                            <span
+                              className="min-w-0 max-w-full truncate text-sm text-muted-foreground sm:max-w-md"
+                              title={pendingDocumentFile?.name}
+                            >
+                              {pendingDocumentFile ? pendingDocumentFile.name : "No file selected"}
+                            </span>
+                          </div>
+                          <input
+                            ref={pendingDocumentInputRef}
+                            id="document-upload-pending"
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={handlePendingDocumentFileChange}
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40 disabled:opacity-50"
+                          disabled={!canAddPendingDocument}
+                          onClick={handleAddPendingDocument}
+                        >
+                          Add document
+                        </Button>
+                        {pendingDocumentType || pendingDocumentFile || pendingDocumentCustomLabel ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-neutral-600 hover:text-neutral-900"
+                            onClick={() => {
+                              setPendingDocumentType("");
+                              setPendingDocumentFile(null);
+                              setPendingDocumentCustomLabel("");
+                            }}
+                          >
+                            Clear selection
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {documents.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-neutral-800">Added documents</p>
+                        <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                          {documents.map((doc) => (
+                            <li key={doc.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                              <div className="flex min-w-0 flex-1 items-start gap-3">
+                                <FileText className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium text-neutral-900">{doc.file.name}</p>
+                                  <p className="text-xs text-muted-foreground">{addListingDocumentTypeDisplay(doc)}</p>
+                                </div>
                               </div>
                               <Button
                                 type="button"
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                onClick={() => handleRemoveFile(doc.id, 'documents')}
+                                className="shrink-0 border-zinc-200"
+                                onClick={() => handleRemoveFile(doc.id, "documents")}
                               >
-                                <X className="w-4 h-4" />
+                                <X className="mr-1.5 h-4 w-4" aria-hidden />
+                                Remove
                               </Button>
-                            </div>
-                            <div className="flex gap-2 items-end">
-                              <div className="flex-1">
-                                <Select
-                                  value={doc.documentType || ''}
-                                  onValueChange={(value) => {
-                                    setDocuments(documents.map(d => 
-                                      d.id === doc.id ? { ...d, documentType: value } : d
-                                    ));
-                                  }}
-                                >
-                                  <SelectTrigger className="bg-white border-neutral-200">
-                                    <SelectValue placeholder="Select document type..." />
-                                  </SelectTrigger>
-                                  <SelectContent className="z-50 bg-white">
-                                    <SelectItem value="purchase_and_sale">Purchase & Sale Agreement</SelectItem>
-                                    <SelectItem value="lead_paint">Lead Paint Disclosure</SelectItem>
-                                    <SelectItem value="property_disclosure">Property Disclosure</SelectItem>
-                                    <SelectItem value="inspection_report">Inspection Report</SelectItem>
-                                    <SelectItem value="title_report">Title Report</SelectItem>
-                                    <SelectItem value="survey">Survey</SelectItem>
-                                    <SelectItem value="hoa_docs">HOA Documents</SelectItem>
-                                    <SelectItem value="deed">Deed</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              {doc.documentType === 'other' && (
-                                <div className="flex-1">
-                                  <Input
-                                    placeholder="Specify document type..."
-                                    value={(doc as any).customDocType || ''}
-                                    onChange={(e) => {
-                                      setDocuments(documents.map(d => 
-                                        d.id === doc.id ? { ...d, customDocType: e.target.value } as any : d
-                                      ));
-                                    }}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No documents added yet.</p>
                     )}
                   </div>
                 </div>
