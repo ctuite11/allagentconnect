@@ -1407,7 +1407,7 @@ const ListingCard = ({
           {/* Left Column - Address */}
           <div className="min-w-0">
             <div className="flex min-w-0 items-start gap-1.5">
-              <MapPin className="mt-1 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+              <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
               <h3 className="min-h-[2.25rem] min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
                 {listingCardStreetHeading(listing)}
               </h3>
