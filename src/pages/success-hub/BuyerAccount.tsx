@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
@@ -233,10 +234,13 @@ export default function BuyerAccount() {
           favoritesEmptySearch: "/search",
         }}
         topBanner={
-          <div className="border-b border-neutral-200 bg-white px-6 py-3 md:px-8">
+          <div className="bg-white px-6 py-3 md:px-8">
             <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2">
-              <Button variant="ghost" size="sm" asChild className="-ml-1 h-9 text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900">
-                <Link to="/success-hub/buyers">← Back to buyers</Link>
+              <Button variant="ghost" size="sm" asChild className="-ml-1 h-9 gap-1 text-[#0E56F5] hover:bg-[#0E56F5]/10 hover:text-[#0B46CC]">
+                <Link to="/success-hub/buyers" title="Return to Success Hub buyers list">
+                  <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
+                  Back to buyers
+                </Link>
               </Button>
             </div>
           </div>
