@@ -17,8 +17,8 @@ interface PillProps {
 
 const variantStyles: Record<PillVariant, { default: string; active: string; disabled: string }> = {
   primary: {
-    default: "bg-primary-soft text-primary",
-    active: "bg-primary text-primary-foreground",
+    default: "bg-primary-soft text-aac",
+    active: "bg-aac text-white hover:bg-aac-hover",
     disabled: "bg-neutral-soft text-neutral-text cursor-not-allowed opacity-70",
   },
   neutral: {

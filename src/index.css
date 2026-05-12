@@ -2,21 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AAC Brand Tokens - LOCKED */
-:root {
-  /* Royal Blue - Primary Brand */
-  --aac: 221 92% 51%;              /* #0E56F5 - System Royal Blue */
-  --aac-hover: 221 92% 45%;        /* Darker hover state */
-  --aac-active: 221 92% 38%;       /* Active/pressed state */
-  --aac-ring: 221 92% 51% / 0.25;
-  --aac-soft: 221 92% 51% / 0.08;
-  --aac-hero: 221 100% 60%;        /* #3B6CFF - Hero/Globe energy blue */
-  
-  /* Success Green - Verified/Approved states ONLY */
-  --aac-success: 160 84% 39%;      /* #059669 - Emerald-600 */
-  --aac-success-rgb: 5, 150, 105;  /* For rgba() in JS */
-}
-
 /* iOS Safari tap highlight (blue/gray overlay) */
 button,
 a,
@@ -56,6 +41,17 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* ============ AAC PRIMARY ACTION BLUE (LOCKED) ============
+     * Hex #0E56F5 — all default CTAs use `bg-aac` / `bg-primary` (same HSL). */
+    --aac: 221 92% 51%;
+    --aac-hover: 221 92% 44%;
+    --aac-active: 221 92% 38%;
+    --aac-ring: 221 92% 51% / 0.25;
+    --aac-soft: 221 92% 51% / 0.08;
+    --aac-hero: 221 100% 60%; /* #3B6CFF — hero / marketing only */
+    --aac-success: 160 84% 39%; /* #059669 — semantic success */
+    --aac-success-rgb: 5, 150, 105;
+
     /* ============ APPLE NEUTRALS + AAC GREEN (LOCKED) ============ */
     
     /* App Backgrounds - Apple neutral */
@@ -74,7 +70,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 240 6% 12%;
 
-    --primary: 221 92% 51%;
+    --primary: var(--aac);
     --primary-foreground: 0 0% 100%;
 
     /* Soft hover surface: #F2F2F7 */
@@ -121,12 +117,12 @@ All colors MUST be HSL.
     --success-foreground: 0 0% 100%;
 
     /* Tech-forward colors - blue only for primary actions */
-    --electric-blue: 221 92% 51%;
+    --electric-blue: var(--aac);
     --neon-cyan: 185 100% 50%;
     --neon-green: 160 84% 39%;        /* Emerald-600 */
     
     /* Pill color tokens */
-    --primary-soft: 221 92% 51%;
+    --primary-soft: var(--aac);
     --success-soft: 160 84% 39%;      /* Emerald-600 */
     --warning: 38 92% 50%;
     --warning-soft: 38 92% 50%;
@@ -157,7 +153,7 @@ All colors MUST be HSL.
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 221 92% 51%;
+    --primary: var(--aac);
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 14%;
