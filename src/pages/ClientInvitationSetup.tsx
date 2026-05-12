@@ -12,6 +12,13 @@ import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
+/** Authoritative invite context from `share_tokens` (token string alone is not enough — query params can be tampered). */
+type InviteAnchor = {
+  agentId: string;
+  crmClientId: string | null;
+  clientEmail: string | null;
+};
+
 const ClientInvitationSetup = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -33,10 +40,15 @@ const ClientInvitationSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
+  const [inviteAnchor, setInviteAnchor] = useState<InviteAnchor | null>(null);
   const [agentFirstName, setAgentFirstName] = useState<string>("");
-  const isEmailLocked = !!initialEmail;
-  const hasNameFromInvite = !!(initialFirstName && initialLastName);
+  /** Lock email when present on the URL or on the invite token payload (buyer must accept with invited email). */
+  const isEmailLocked =
+    Boolean(initialEmail.trim()) || Boolean(inviteAnchor?.clientEmail?.trim());
   const postAcceptPath = "/client/dashboard";
+
+  const effectiveAgentId = inviteAnchor?.agentId || agentId;
+  const effectiveCrmClientId = (inviteAnchor?.crmClientId || clientId || "").trim() || undefined;
 
   const markInviteHandoff = () => {
     if (typeof window === "undefined") return;
@@ -127,6 +139,7 @@ const ClientInvitationSetup = () => {
         return;
       }
       try {
+        setInviteAnchor(null);
         const { data, error } = await supabase
           .from("share_tokens")
           .select("*")
@@ -143,15 +156,53 @@ const ClientInvitationSetup = () => {
           toast.info("This invitation has already been used");
           setTokenValid(false);
         } else {
-          setTokenValid(true);
-          if (agentId) {
-            const { data: agentData } = await supabase
-              .from("agent_profiles")
-              .select("first_name")
-              .eq("id", agentId)
-              .maybeSingle();
-            if (agentData) setAgentFirstName(agentData.first_name);
+          const payload = (data.payload ?? null) as Record<string, unknown> | null;
+          if (payload?.type !== "client_hotsheet_invite") {
+            toast.error("This link is not a valid buyer invitation.");
+            setTokenValid(false);
+            return;
           }
+
+          const tokenAgentId = String(data.agent_id ?? "").trim();
+          if (!tokenAgentId) {
+            toast.error("This invitation is missing agent information. Please contact your agent.");
+            setTokenValid(false);
+            return;
+          }
+
+          const crmFromPayload = typeof payload.client_id === "string" ? payload.client_id : null;
+          const emailFromPayload =
+            typeof payload.client_email === "string"
+              ? String(payload.client_email).trim().toLowerCase()
+              : null;
+
+          const emailFromUrl = initialEmail.trim().toLowerCase();
+          if (emailFromPayload && emailFromUrl && emailFromUrl !== emailFromPayload) {
+            toast.error(
+              "This link does not match the email on your invitation. Open the link from your invitation email.",
+            );
+            setTokenValid(false);
+            return;
+          }
+
+          setInviteAnchor({
+            agentId: tokenAgentId,
+            crmClientId: crmFromPayload,
+            clientEmail: emailFromPayload,
+          });
+
+          if (emailFromPayload && !emailFromUrl) {
+            setEmail(emailFromPayload);
+          }
+
+          const { data: agentData } = await supabase
+            .from("agent_profiles")
+            .select("first_name")
+            .eq("id", tokenAgentId)
+            .maybeSingle();
+          if (agentData?.first_name) setAgentFirstName(agentData.first_name);
+
+          setTokenValid(true);
         }
       } catch (error) {
         console.error("Token validation error:", error);
@@ -162,7 +213,7 @@ const ClientInvitationSetup = () => {
       }
     };
     validateToken();
-  }, [invitationToken, agentId]);
+  }, [invitationToken, initialEmail]);
 
   const passwordResults = useMemo(() => validatePassword(password).results, [password]);
   const compactRules = useMemo(() => {
@@ -206,6 +257,10 @@ const ClientInvitationSetup = () => {
       await supabase.auth.signOut();
 
       const normalizedEmail = email.trim().toLowerCase();
+      if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
+        toast.error("Use the same email address your agent sent this invitation to.");
+        return;
+      }
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
@@ -255,10 +310,10 @@ const ClientInvitationSetup = () => {
         .insert({ user_id: userId, role: "buyer" });
       if (roleError) console.error("Error assigning buyer role:", roleError);
 
-      if (!agentId) {
+      if (!effectiveAgentId) {
         throw new Error("Invitation is missing agent context. Please request a new invitation link.");
       }
-      await ensureActiveRelationship(userId, agentId, clientId || undefined);
+      await ensureActiveRelationship(userId, effectiveAgentId, effectiveCrmClientId);
 
       const { error: tokenUpdateError } = await supabase
         .from("share_tokens")
@@ -271,7 +326,7 @@ const ClientInvitationSetup = () => {
         throw new Error("Your account is ready, but we could not finalize the invite token. Please retry from your invitation email.");
       }
 
-      if (agentId) setPrimaryAgentId(agentId);
+      if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
 
       setPhase("success");
     } catch (error: any) {
@@ -294,6 +349,11 @@ const ClientInvitationSetup = () => {
       await supabase.auth.signOut();
 
       const normalizedEmail = email.trim().toLowerCase();
+      if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
+        toast.error("Sign in with the email address your invitation was sent to.");
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: signinPassword,
@@ -303,10 +363,10 @@ const ClientInvitationSetup = () => {
 
       const userId = data.user.id;
 
-      if (!agentId) {
+      if (!effectiveAgentId) {
         throw new Error("Invitation is missing agent context. Please request a new invitation link.");
       }
-      await ensureActiveRelationship(userId, agentId, clientId || undefined);
+      await ensureActiveRelationship(userId, effectiveAgentId, effectiveCrmClientId);
 
       const { error: tokenErr } = await supabase
         .from("share_tokens")
@@ -319,7 +379,7 @@ const ClientInvitationSetup = () => {
         throw new Error("Signed in, but we could not finalize the invite token. Please retry from your invitation email.");
       }
 
-      if (agentId) setPrimaryAgentId(agentId);
+      if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
 
       setPhase("success");
     } catch (error: any) {
@@ -538,34 +598,36 @@ const ClientInvitationSetup = () => {
                   />
                 </div>
 
-                {!hasNameFromInvite && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="firstName" className="text-[13px] text-zinc-600">First name</Label>
-                      <Input
-                        id="firstName"
-                        type="text"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="First"
-                        className="h-11 rounded-xl"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="lastName" className="text-[13px] text-zinc-600">Last name</Label>
-                      <Input
-                        id="lastName"
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Last"
-                        className="h-11 rounded-xl"
-                        required
-                      />
-                    </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="firstName" className="text-[13px] text-zinc-600">First name</Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="First"
+                      className="h-11 rounded-xl"
+                      required
+                    />
                   </div>
-                )}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="lastName" className="text-[13px] text-zinc-600">Last name</Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Last"
+                      className="h-11 rounded-xl"
+                      required
+                    />
+                  </div>
+                </div>
+                <p className="text-[11.5px] text-zinc-500 leading-relaxed -mt-2">
+                  You can use the name you prefer on your All Agent Connect profile. Your agent&apos;s contact
+                  record may still show the name they have on file; that does not affect your access.
+                </p>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="password" className="text-[13px] text-zinc-600">Password</Label>
