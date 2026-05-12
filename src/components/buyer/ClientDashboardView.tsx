@@ -547,7 +547,7 @@ export function ClientDashboardView({
                                     {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                                   </p>
                                   <p className={`flex min-w-0 items-start gap-1 ${dashTileAddressClass}`}>
-                                    <MapPin className="mt-1 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
+                                    <MapPin className="mt-1 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
                                     <span className="min-w-0 break-words">{listing.address}</span>
                                   </p>
                                   <p className={`flex min-w-0 items-start gap-1 ${dashTileSecondaryClass}`}>
@@ -634,7 +634,7 @@ export function ClientDashboardView({
                                   {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
                                 </p>
                                 <p className={`flex min-w-0 items-start gap-1 ${dashTileAddressClass}`}>
-                                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
+                                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
                                   <span className="min-w-0 break-words">{listing.address}</span>
                                 </p>
                                 <p className={`flex min-w-0 items-start gap-1 ${dashTileSecondaryClass}`}>
