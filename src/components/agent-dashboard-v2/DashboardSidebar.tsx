@@ -19,7 +19,6 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { agentDarkSidebarNavIconClass } from "@/lib/navIconColors";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -101,7 +100,7 @@ function SidebarRow({
     >
       <span className="relative shrink-0">
         <item.icon
-          className={cn("h-[18px] w-[18px]", agentDarkSidebarNavIconClass(item.label, active))}
+          className={cn("h-[18px] w-[18px]", active ? "text-[#0E56F5]" : "text-zinc-400")}
         />
         {collapsed && hasBadge && (
           <span className="absolute -top-1.5 -right-1.5 inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-white leading-none">
