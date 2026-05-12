@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Home, Layers, MessageSquare, Users } from "lucide-react";
+import { Flame, Home, MessageSquare, Users } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 const shell =
@@ -52,7 +52,7 @@ export function SuccessHubStatRow({ summary }: SuccessHubStatRowProps) {
       label: "Hot Sheets",
       value: String(m.activeHotSheetCount),
       subtle: "Active sheets",
-      icon: Layers,
+      icon: Flame,
       iconClass: "text-amber-600",
       onClick: () => navigate("/agent/hot-sheets"),
     },

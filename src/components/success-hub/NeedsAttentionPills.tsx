@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Mail, Users, TrendingUp, Home } from "lucide-react";
+import { Flame, Mail, Users, Home } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 interface NeedsAttentionPillsProps {
@@ -9,7 +9,7 @@ interface NeedsAttentionPillsProps {
 const iconMap: Record<string, React.ElementType> = {
   invite: Users,
   message: Mail,
-  hotsheet: TrendingUp,
+  hotsheet: Flame,
   listing: Home,
 };
 
@@ -21,7 +21,7 @@ export function NeedsAttentionPills({ items }: NeedsAttentionPillsProps) {
   return (
     <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
       {items.map((item) => {
-        const Icon = iconMap[item.type] ?? TrendingUp;
+        const Icon = iconMap[item.type] ?? Flame;
         return (
           <button
             key={item.id}

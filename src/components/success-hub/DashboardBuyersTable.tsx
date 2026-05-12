@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Heart, Layers, Users } from "lucide-react";
+import { Flame, Heart, Users } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 /** Matches `BuyersList`: `navigate(\`/success-hub/buyers/${b.clientId}\`)` where id is `clients.id`. */
@@ -78,7 +78,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                         <p className="truncate">{typeof b.email === "string" && b.email.trim() ? b.email.trim() : "—"}</p>
                         <p className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] text-neutral-600">
                           <span className="inline-flex items-center gap-0.5">
-                            <Layers className="h-3 w-3 text-amber-600" aria-hidden />
+                            <Flame className="h-3 w-3 text-amber-600" aria-hidden />
                             <span className="tabular-nums font-medium text-neutral-700">{b.hotSheetCount}</span>
                             <span className="text-neutral-500">Hot Sheets</span>
                           </span>
@@ -105,7 +105,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                     <th className="px-2.5 py-1.5 text-left text-[11px] font-medium text-neutral-500">Email</th>
                     <th className="w-[5.5rem] px-1.5 py-1.5 text-center text-[11px] font-medium text-neutral-500">
                       <span className="inline-flex items-center justify-center gap-1">
-                        <Layers className="h-3 w-3 text-amber-600" aria-hidden />
+                        <Flame className="h-3 w-3 text-amber-600" aria-hidden />
                         Hot Sheets
                       </span>
                     </th>
