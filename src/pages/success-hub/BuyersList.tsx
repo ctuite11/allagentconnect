@@ -73,7 +73,7 @@ export default function BuyersList() {
 
       // Also include any buyer who is a member of one of this agent's hot sheets
       // (parity with Success Hub which unions relationships ∪ hot_sheet_clients).
-      const { data: agentSheets, error: sheetsErr } = await supabase
+      const { data: agentSheets, error: sheetsErr } = await (supabase as any)
         .from("hot_sheets")
         .select("id")
         .eq("agent_id", user.id);
