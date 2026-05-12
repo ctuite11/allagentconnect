@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/Seo";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import { Button } from "@/components/ui/button";
-import { Bell, Plus, Trash2, Info } from "lucide-react";
+import { Bell, Plus, Trash2, Info, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
