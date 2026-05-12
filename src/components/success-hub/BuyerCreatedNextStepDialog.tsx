@@ -89,11 +89,16 @@ export function BuyerCreatedNextStepDialog({
               onClick={handleInviteNow}
               className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-white border border-zinc-200 text-zinc-900 font-medium text-[14px] hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
             >
-              <span className="inline-flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-zinc-500" />
-                Invite Client Now
+              <span className="inline-flex flex-col items-start gap-0.5 text-left min-w-0">
+                <span className="inline-flex items-center gap-2.5">
+                  <Mail className="w-4 h-4 shrink-0 text-zinc-500" />
+                  Invite Client Now
+                </span>
+                <span className="pl-6 text-[12px] font-normal text-zinc-500">
+                  Workspace invite email only — no Hot Sheet yet
+                </span>
               </span>
-              <ArrowRight className="w-4 h-4 text-zinc-400" />
+              <ArrowRight className="w-4 h-4 shrink-0 text-zinc-400" />
             </button>
 
             <div className="pt-1">

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { toast } from "sonner";
 import { Loader2, Mail, ArrowRight } from "lucide-react";
 
@@ -102,94 +103,39 @@ export function ReviewBuyerInviteDialog({
       const user = sessionData.session?.user;
       if (!user) throw new Error("Your session has expired. Please sign in again.");
 
-      // 2) Create the share token (agent → client invite, no hot sheet yet)
-      const token = crypto.randomUUID();
-      const tokenPayload = {
-        type: "client_hotsheet_invite" as const,
-        client_id: buyer.id,
-        client_email: buyer.email.toLowerCase(),
-        suppress_initial_matches: true,
-        invite_only: true,
-      };
-
-      console.log("[ReviewBuyerInvite] creating share_token", {
-        agent_id: user.id,
-        payload: tokenPayload,
+      const enqueueRes = await enqueueBuyerWorkspaceInvite({
+        supabase,
+        agentUserId: user.id,
+        buyer: {
+          id: buyer.id,
+          email: buyer.email,
+          firstName: buyer.firstName,
+          lastName: buyer.lastName,
+        },
+        inviterDisplayName: agentName,
       });
 
-      const { data: tokenRow, error: tokenError } = await supabase
-        .from("share_tokens")
-        .insert({
-          token,
-          agent_id: user.id,
-          payload: tokenPayload,
-        })
-        .select("id, token")
-        .single();
-
-      if (tokenError || !tokenRow) {
-        console.error("[ReviewBuyerInvite] share_token insert failed", {
-          message: tokenError?.message,
-          details: (tokenError as any)?.details,
-          hint: (tokenError as any)?.hint,
-          code: (tokenError as any)?.code,
+      if (!enqueueRes.ok) {
+        console.error("[ReviewBuyerInvite] enqueueBuyerWorkspaceInvite failed", {
+          error: enqueueRes.error,
+          buyerId: buyer.id,
         });
-        throw new Error(tokenError?.message || "Could not create invite token.");
+        toast.warning(
+          `Invite was not queued: ${enqueueRes.error ?? "Unknown error"}. Try again or contact support.`,
+        );
+        return;
       }
 
-      // 3) Build the invite acceptance link the email CTA will point to
-      const hotSheetLink =
-        `${window.location.origin}/client-invite` +
-        `?invitation_token=${encodeURIComponent(tokenRow.token)}` +
-        `&email=${encodeURIComponent(buyer.email.toLowerCase())}` +
-        `&agent_id=${encodeURIComponent(user.id)}` +
-        `&client_id=${encodeURIComponent(buyer.id)}` +
-        (buyer.firstName ? `&first_name=${encodeURIComponent(buyer.firstName)}` : "") +
-        (buyer.lastName ? `&last_name=${encodeURIComponent(buyer.lastName)}` : "");
+      void supabase.functions.invoke("kick-email-queue").catch((e) => {
+        console.warn(
+          "[ReviewBuyerInvite] kick-email-queue invoke failed (email may still process on schedule)",
+          e,
+        );
+      });
 
-      const invitePayload = {
-        invitedEmail: buyer.email.toLowerCase(),
-        inviterName: agentName,
-        hotSheetName: "Your private buyer workspace",
-        hotSheetLink,
-        tokenId: tokenRow.id,
-        clientId: buyer.id,
-        mode: "invite_only" as const,
-        // Pass through agent-edited copy (function may use these in the future)
-        customSubject: subject,
-        customMessage: body,
-      };
-
-      console.log("[ReviewBuyerInvite] invoking send-hot-sheet-invite", invitePayload);
-
-      // 4) Send the invite email via the canonical agent→client function
-      const { data: sendData, error: sendError } = await supabase.functions.invoke(
-        "send-hot-sheet-invite",
-        { body: invitePayload },
+      toast.success(
+        `Invite email queued for ${fullName}. They should receive it shortly (check spam if needed).`,
       );
-
-      if (sendError) {
-        // Surface every available diagnostic to the console
-        const ctx = (sendError as any).context;
-        let responseBody: unknown = null;
-        try {
-          responseBody = ctx?.body ? await ctx.body : null;
-        } catch {
-          /* ignore */
-        }
-        console.error("[ReviewBuyerInvite] send-hot-sheet-invite failed", {
-          message: sendError.message,
-          name: sendError.name,
-          status: ctx?.status ?? null,
-          statusText: ctx?.statusText ?? null,
-          responseBody,
-          sendData,
-        });
-        throw new Error(sendError.message || "Email send failed.");
-      }
-
-      console.log("[ReviewBuyerInvite] send success", sendData);
-      toast.success(`Invite sent to ${fullName}.`);
       onSent?.();
       onClose();
     } catch (err: any) {
@@ -259,7 +205,8 @@ export function ReviewBuyerInviteDialog({
               disabled={sending}
             />
             <p className="text-[12px] text-zinc-500">
-              A secure invitation button will be added automatically when the email is sent.
+              The outgoing email uses the standard invite template with a secure join button. Subject and
+              message here are for your review only.
             </p>
           </div>
 
