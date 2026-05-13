@@ -88,14 +88,14 @@ function CriteriaPills({ criteria }: { criteria: any }) {
 
   if (criteria.sqftMin) pills.push(`${criteria.sqftMin.toLocaleString()}+ sqft`);
 
-  if (pills.length === 0) return <span className="text-xs text-zinc-400">All properties</span>;
+  if (pills.length === 0) return <span className="text-xs text-neutral-400">All properties</span>;
 
   return (
     <div className="flex flex-wrap gap-1">
       {pills.map((pill, i) => (
         <span
           key={i}
-          className="rounded-full border border-zinc-200/80 bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-600"
+          className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-600"
         >
           {pill}
         </span>
@@ -279,23 +279,23 @@ const HotSheetBuyerDetail = () => {
 
   if (loading) {
     return (
-      <div className="pt-4 px-6 pb-6">
+      <div className="bg-white pt-4 px-6 pb-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
           <div className="mb-2 flex animate-pulse items-center gap-2">
-            <div className="h-9 w-9 rounded-md bg-zinc-100" />
-            <div className="h-4 w-28 rounded bg-zinc-100" />
+            <div className="h-9 w-9 rounded-md bg-neutral-100" />
+            <div className="h-4 w-28 rounded bg-neutral-100" />
           </div>
           <div className="mb-3 space-y-2">
-            <div className="h-[4.5rem] rounded-xl border border-zinc-200/60 bg-zinc-50" />
-            <div className="h-8 w-40 animate-pulse rounded-md bg-zinc-100" />
+            <div className="h-[4.5rem] rounded-xl border border-neutral-200 bg-neutral-50/80" />
+            <div className="h-8 w-40 animate-pulse rounded-md bg-neutral-100" />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-50">
-                <div className="aspect-[4/3] bg-zinc-100" />
+              <div key={i} className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50/80">
+                <div className="aspect-[4/3] bg-neutral-100" />
                 <div className="space-y-2 p-3">
-                  <div className="h-4 w-2/3 rounded bg-zinc-200" />
-                  <div className="h-3 w-1/2 rounded bg-zinc-100" />
+                  <div className="h-4 w-2/3 rounded bg-neutral-200" />
+                  <div className="h-3 w-1/2 rounded bg-neutral-100" />
                 </div>
               </div>
             ))}
@@ -310,19 +310,19 @@ const HotSheetBuyerDetail = () => {
     : "Unknown Buyer";
 
   return (
-    <div className="pt-4 px-6 pb-6">
+    <div className="bg-white pt-4 px-6 pb-6">
       <div className="mx-auto w-full max-w-[88rem] min-w-0">
         {/* Header — back + title only (matches mockup) */}
         <div className="mb-2 flex items-center gap-2">
           <button
             type="button"
             onClick={() => navigate(backTo)}
-            className="rounded-md p-1.5 -ml-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="-ml-1.5 rounded-md p-1.5 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
             aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" strokeWidth={2} />
           </button>
-          <h1 className="truncate text-sm font-semibold tracking-tight text-zinc-600">Hot sheets</h1>
+          <h1 className="truncate text-sm font-semibold tracking-tight text-neutral-900">Hot sheets</h1>
         </div>
 
         {/* Buyer card + New Hot Sheet (grouped — CTA directly under card, left-aligned) */}
@@ -336,12 +336,13 @@ const HotSheetBuyerDetail = () => {
               metrics={buyerActivityMetrics}
               metricsLoading={buyerActivityMetrics === null}
               trailing={<RelationshipStatusPill status={relationshipStatus} />}
+              className="border-neutral-200 shadow-sm"
             />
             <div className="flex w-full justify-start">
               <Button
                 type="button"
-                variant="outline"
-                className="h-8 shrink-0 gap-1.5 rounded-md border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-50"
+                size="sm"
+                className="h-8 shrink-0 gap-1.5 px-3 text-xs font-medium"
                 onClick={() => setCreateHotSheetOpen(true)}
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
@@ -352,8 +353,8 @@ const HotSheetBuyerDetail = () => {
         )}
 
         {hotSheets.length === 0 ? (
-          <div className={`${buyerSectionCard} rounded-xl border-zinc-200/90 p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]`}>
-            <p className="text-sm text-zinc-500">No hot sheets linked to this buyer.</p>
+          <div className={`${buyerSectionCard} rounded-xl border-neutral-200 p-8 text-center shadow-sm`}>
+            <p className="text-sm text-neutral-500">No hot sheets linked to this buyer.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
@@ -361,7 +362,7 @@ const HotSheetBuyerDetail = () => {
               <div
                 key={hs.id}
                 onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
-                className={`relative ${buyerCollectionCardRoot} rounded-xl border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]`}
+                className={`relative ${buyerCollectionCardRoot} rounded-xl border-neutral-200 shadow-sm`}
               >
                 <div className="absolute top-2 right-2 z-10 flex gap-1">
                   {hs.canDeletePending ? (
@@ -385,9 +386,9 @@ const HotSheetBuyerDetail = () => {
                       e.stopPropagation();
                       setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
                     }}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-zinc-200/90 bg-white shadow-sm transition-colors hover:bg-zinc-50"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm transition-colors hover:bg-neutral-50"
                   >
-                    <Pencil className="h-3.5 w-3.5 text-zinc-700" />
+                    <Pencil className="h-3.5 w-3.5 text-neutral-700" strokeWidth={2} />
                   </button>
                 </div>
 
@@ -399,8 +400,9 @@ const HotSheetBuyerDetail = () => {
                 </div>
 
                 <div className="bg-white px-3 pt-2.5 pb-3">
-                  <h3 className="truncate text-sm font-semibold text-zinc-900">{hs.name}</h3>
-                  <p className="mt-0.5 text-xs text-zinc-500">
+                  <p className="text-[11px] font-normal leading-snug text-neutral-500">Hot Sheet Name:</p>
+                  <h3 className="mt-0.5 truncate text-sm font-semibold text-neutral-900">{hs.name}</h3>
+                  <p className="mt-0.5 text-xs text-neutral-500">
                     {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
                   </p>
                   <div className="mt-2">
