@@ -185,7 +185,7 @@ const HotSheets = ({
       <Button
         type="button"
         size="sm"
-        className="h-9 w-fit shrink-0 bg-neutral-900 px-4 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+        className="w-fit shrink-0"
         onClick={() =>
           buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
         }
@@ -233,7 +233,7 @@ const HotSheets = ({
               key={item}
               className="flex items-center gap-2 text-[13px] font-medium text-neutral-700"
             >
-              <span className="h-2 w-2 shrink-0 rounded-full bg-neutral-400" aria-hidden />
+              <span className="h-2 w-2 shrink-0 rounded-full bg-[#16A34A]" aria-hidden />
               {item}
             </span>
           ))}

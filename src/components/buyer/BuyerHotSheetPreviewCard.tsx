@@ -146,10 +146,8 @@ export function BuyerHotSheetPreviewCard({
       {isHotSheetsPage ? (
         <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
           <div className="min-w-0 shrink-0">
-            <p className="line-clamp-2 text-base font-semibold leading-snug text-neutral-900">
-              <span className="font-semibold">Hot Sheet Name: </span>
-              <span>{title}</span>
-            </p>
+            <p className="text-[13px] font-normal leading-snug text-neutral-500">Hot Sheet Name:</p>
+            <p className="mt-0.5 line-clamp-2 text-base font-semibold leading-snug text-neutral-900">{title}</p>
             {agentAttribution ? (
               <p className="mt-1 text-left text-xs text-zinc-500">Your agent: {agentAttribution}</p>
             ) : null}
