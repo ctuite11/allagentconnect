@@ -10,7 +10,7 @@ interface ListingsOpportunityCenterProps {
 
 const stats = [
   { key: "buyers", label: "Active Buyers", icon: Users, route: "/success-hub/buyers" },
-  { key: "opportunities", label: "New Opportunities", icon: Zap, route: "/client-needs" },
+  { key: "opportunities", label: "New Opportunities", icon: Zap, route: "/communications" },
   { key: "network", label: "Network Activity", icon: MessageCircle, route: "/messages" },
 ] as const;
 
@@ -66,7 +66,7 @@ export function ListingsOpportunityCenter({
       {/* Bottom CTA */}
       <div className="text-center">
         <button
-          onClick={() => navigate("/client-needs")}
+          onClick={() => navigate("/communications")}
           className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           View Opportunities

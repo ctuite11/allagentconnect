@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
-import { Loader2 } from "lucide-react";
+import { Loader2, Inbox, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
@@ -27,7 +27,7 @@ import {
 /** Comms Center — restored workflow from git 24b73b21 (full page; parent of 4e8293b6 was already the stub). */
 const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showWarningBanner, setShowWarningBanner] = useState(false);
   const [hasNotificationsEnabled, setHasNotificationsEnabled] = useState(false);
@@ -69,14 +69,18 @@ const ClientNeedsDashboard = () => {
   }, [hasNotificationsEnabled, hasFilters, filtersLocallySet, preferencesLoaded, warningDismissed]);
 
   const checkAuth = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setUser(session.user);
+    } finally {
+      setSessionChecked(true);
     }
-    setUser(session.user);
   };
 
   const handleFiltersUpdated = (hasFilters: boolean) => {
@@ -250,12 +254,22 @@ const ClientNeedsDashboard = () => {
         canonical="https://allagentconnect.com/communications"
         noindex
       />
+      {!sessionChecked ? (
+        <div className="flex min-h-[50vh] w-full items-center justify-center bg-white" aria-busy="true">
+          <Loader2 className="h-8 w-8 animate-spin text-[#0E56F5]" aria-hidden />
+        </div>
+      ) : !user ? (
+        <div className="flex min-h-[40vh] w-full items-center justify-center bg-white">
+          <Loader2 className="h-7 w-7 animate-spin text-zinc-400" aria-hidden />
+        </div>
+      ) : (
       <div className="bg-white pt-6">
         <main className={`${aacStyles.pageContainer} pb-12`}>
           <PageHeader
             title="Communications Center"
             subtitle="Agent-to-agent collaboration and deal flow"
             className="mb-6"
+            icon={<Inbox className="h-8 w-8 shrink-0 text-[#0E56F5]" aria-hidden />}
           />
 
           <section>
@@ -300,9 +314,9 @@ const ClientNeedsDashboard = () => {
           </section>
 
           {showWarningBanner && (
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start gap-3">
-                <div className="text-amber-600 text-xl">⚠️</div>
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
                 <div className="flex-1">
                   <h3 className="font-semibold text-amber-900 text-sm mb-1">
                     Important: Broad network communications alerts
@@ -379,9 +393,9 @@ const ClientNeedsDashboard = () => {
         </main>
 
         {hasUnsavedChanges && (
-          <div className="bg-white border-t border-zinc-200 px-6 mt-8">
-            <div className="py-4 flex items-center justify-between max-w-7xl mx-auto">
-              <p className="text-zinc-500 text-sm">You have unsaved changes</p>
+          <div className={aacStyles.stickyFooter}>
+            <div className={`${aacStyles.stickyFooterInner} mx-auto max-w-7xl`}>
+              <p className={aacStyles.unsavedText}>You have unsaved changes</p>
               <Button onClick={handleSavePreferences} disabled={saving}>
                 {saving ? (
                   <span className="flex items-center gap-2">
@@ -396,6 +410,7 @@ const ClientNeedsDashboard = () => {
           </div>
         )}
       </div>
+      )}
     </>
   );
 };
