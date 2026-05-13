@@ -70,8 +70,8 @@ export function BuyerCollectionCard({
             <p className="text-sm text-neutral-600">
               {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}
             </p>
-            <div className="pointer-events-none flex shrink-0 items-center gap-1 text-sm font-medium text-neutral-700">
-              <Eye className="h-4 w-4 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
+            <div className="pointer-events-none flex shrink-0 items-center gap-1 text-sm font-medium text-[#0E56F5]">
+              <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
               <span>View</span>
             </div>
           </div>

@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
 const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
@@ -119,6 +120,7 @@ const HotSheets = ({
   isBuyerMode = false,
 }: HotSheetsProps) => {
   const navigate = useNavigate();
+  const { user: authSessionUser, loading: authRoleLoading } = useAuthRole();
   const [collections, setCollections] = useState<BuyerCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
@@ -199,7 +201,13 @@ const HotSheets = ({
         Mobile: title → statuses → CTA → panel (max-lg:order-* on left children only).
         lg: left column flex justify-between (title+desc top, CTA bottom); center lg:self-center; no mobile order on lg.
       */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:grid-rows-1 lg:items-stretch lg:gap-x-5 lg:gap-y-0">
+      <div
+        className={
+          buyerMode
+            ? "grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_1.2fr_0.9fr] lg:grid-rows-1 lg:items-stretch lg:gap-x-5 lg:gap-y-0"
+            : "grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_1.2fr] lg:grid-rows-1 lg:items-stretch lg:gap-x-5 lg:gap-y-0"
+        }
+      >
         <div className="max-lg:contents lg:col-start-1 lg:row-start-1 lg:flex lg:min-h-0 lg:w-full lg:flex-col lg:justify-between lg:items-start lg:self-stretch lg:pt-0.5">
           {/* order-* only for mobile grid stacking; at lg, document order = title → CTA (avoid order-0 above order-1 flex flip) */}
           <div className="max-lg:order-1 min-w-0 lg:min-h-0">
@@ -231,12 +239,12 @@ const HotSheets = ({
           ))}
         </div>
 
-        <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm lg:col-start-3 lg:row-start-1 lg:self-start">
-          <p className={DASH_SECTION_TITLE}>Connected to your agent</p>
-          <p className={`mt-1 ${DASH_SECTION_DESC}`}>
-            Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
-          </p>
-
+        {buyerMode ? (
+          <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm lg:col-start-3 lg:row-start-1 lg:self-start">
+            <p className={DASH_SECTION_TITLE}>Connected to your agent</p>
+            <p className={`mt-1 ${DASH_SECTION_DESC}`}>
+              Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
+            </p>
 
             <p className={`mt-3.5 ${DASH_SECTION_TITLE}`}>Alert Frequency</p>
             <div className="mt-2 inline-flex w-full rounded-lg border border-neutral-200 bg-neutral-50/80 p-1">
@@ -274,7 +282,8 @@ const HotSheets = ({
                 Weekly
               </button>
             </div>
-        </div>
+          </div>
+        ) : null}
       </div>
     </section>
     );
@@ -282,11 +291,12 @@ const HotSheets = ({
 
   useEffect(() => {
     if (buyerMode) {
-      loadBuyerHotSheets();
+      if (authRoleLoading) return;
+      void loadBuyerHotSheets();
       return;
     }
     checkAuth();
-  }, [buyerMode]);
+  }, [buyerMode, authSessionUser?.id, authRoleLoading]);
 
   const openBuyerHotSheet = (hotSheetId: string, shareToken: string | undefined) => {
     if (shareToken) {
@@ -301,13 +311,15 @@ const HotSheets = ({
       setBuyerLoading(true);
       setBuyerLinkedAgentName(null);
 
-      let user: User | null = null;
-      try {
-        const { data } = await supabase.auth.getUser();
-        user = data?.user ?? null;
-      } catch (authErr) {
-        console.warn("[HotSheets] auth.getUser failed", authErr);
-        user = null;
+      let user: User | null = authSessionUser ?? null;
+      if (!user) {
+        try {
+          const { data } = await supabase.auth.getUser();
+          user = data?.user ?? null;
+        } catch (authErr) {
+          console.warn("[HotSheets] auth.getUser failed", authErr);
+          user = null;
+        }
       }
 
       const userId = user?.id ?? null;
