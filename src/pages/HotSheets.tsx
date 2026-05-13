@@ -307,11 +307,6 @@ const HotSheets = ({
   };
 
   const loadBuyerHotSheets = async () => {
-    /** TEMP: remove after debugging buyer hot sheet visibility (RLS + relationship path). */
-    const dbg = (...args: unknown[]) => {
-      console.log("[HotSheetsBuyerDebug]", ...args);
-    };
-
     try {
       setBuyerLoading(true);
       setBuyerLinkedAgentName(null);
@@ -333,30 +328,13 @@ const HotSheets = ({
         return;
       }
 
-      dbg("resolved auth user id", userId, "session email", user?.email ?? null);
-
       try {
-        const { data: allRelsForClient, error: allRelsErr } = await supabase
-          .from("client_agent_relationships")
-          .select("id, agent_id, client_id, crm_client_id, status, ended_at")
-          .eq("client_id", userId);
-
-        dbg(
-          "client_agent_relationships (all rows where client_id = auth.uid)",
-          { error: allRelsErr?.message ?? null, rows: allRelsForClient ?? [] },
-        );
-
         const { data: relationship, error: relErr } = await supabase
           .from("client_agent_relationships")
-          .select("agent_id, client_id, crm_client_id, status")
+          .select("agent_id")
           .eq("client_id", userId)
           .eq("status", "active")
           .maybeSingle();
-
-        dbg("client_agent_relationships active lookup (for agent name)", {
-          error: relErr?.message ?? null,
-          relationship: relationship ?? null,
-        });
 
         const rawAid =
           relationship && typeof relationship === "object"
@@ -393,36 +371,22 @@ const HotSheets = ({
 
       const buyerEmailNorm = (profile?.email || user?.email || "").toLowerCase().trim();
 
-      dbg("profiles row (by id)", {
-        profileEmail: profile?.email ?? null,
-        buyerEmailNorm,
-      });
-
       const allHotSheetIds = new Set<string>();
       const tokenMap: Record<string, string> = {};
 
       // 1) Primary: hot_sheet_clients (RLS: buyer’s CRM links). Includes buyer-created sheets; no share token required.
       const { data: hscRows, error: hscErr } = await supabase
         .from("hot_sheet_clients")
-        .select("hot_sheet_id, client_id");
+        .select("hot_sheet_id");
 
       if (hscErr) {
         console.error("Failed to load hot_sheet_clients", hscErr);
-        dbg("hot_sheet_clients query error", hscErr.message, hscErr);
       } else {
-        dbg(
-          "hot_sheet_clients rows visible to buyer (RLS)",
-          (hscRows ?? []).length,
-          "sample",
-          (hscRows ?? []).slice(0, 20),
-        );
         for (const row of hscRows || []) {
           const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
           if (hid) allHotSheetIds.add(hid);
         }
       }
-
-      dbg("hot_sheet_ids from junction (pre-token union)", [...allHotSheetIds]);
 
       // 2) Union: accepted share_token invites (optional /client/hotsheet/:token link)
       const { data: acceptedTokenRows, error: tokenErr } = await supabase
@@ -432,7 +396,6 @@ const HotSheets = ({
 
       if (tokenErr) {
         console.error("Failed to load accepted tokens", tokenErr);
-        dbg("share_tokens query error", tokenErr.message ?? tokenErr);
       } else {
         for (const tokenRow of (acceptedTokenRows || []) as ShareTokenRow[]) {
           const payload = (tokenRow.payload && typeof tokenRow.payload === "object"
@@ -454,10 +417,7 @@ const HotSheets = ({
         }
       }
 
-      dbg("hot_sheet_ids after share_tokens union", [...allHotSheetIds], "tokenMap keys", Object.keys(tokenMap));
-
       if (!allHotSheetIds.size) {
-        dbg("no hot sheet ids — empty UI (junction + tokens yielded none). Check RLS can_authenticated_buyer_view_hot_sheet_client vs car.crm_client_id = hsc.client_id");
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
         setBuyerPreviewPhotosById({});
@@ -473,7 +433,6 @@ const HotSheets = ({
 
       if (sheetErr) {
         console.error("Failed to load hot sheets", sheetErr);
-        dbg("hot_sheets .in() error", sheetErr.message, sheetErr);
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
         setBuyerPreviewPhotosById({});
@@ -482,15 +441,6 @@ const HotSheets = ({
       }
 
       const rows = (hotSheetRows || []) as BuyerHotSheetItem[];
-      const requestedIds = [...allHotSheetIds];
-      const returnedIds = rows.map((r) => r.id);
-      dbg("hot_sheets final rows", {
-        requestedCount: requestedIds.length,
-        returnedCount: rows.length,
-        missingAfterSelect: requestedIds.filter((id) => !returnedIds.includes(id)),
-        rowsSummary: rows.map((r) => ({ id: r.id, name: r.name })),
-      });
-
       setBuyerHotSheets(rows);
       setBuyerTokenByHotSheetId(tokenMap);
 
@@ -502,7 +452,6 @@ const HotSheets = ({
       setBuyerMatchCountsById(countsById);
     } catch (error) {
       console.error("Error loading buyer hot sheets", error);
-      console.log("[HotSheetsBuyerDebug] loadBuyerHotSheets threw", error);
       toast.error("Unable to load Hot Sheets right now");
       setBuyerLinkedAgentName(null);
       setBuyerHotSheets([]);

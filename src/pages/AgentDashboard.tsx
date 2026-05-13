@@ -11,7 +11,7 @@ import forSaleImg from "@/assets/listing-for-sale.jpg";
 import privateSaleImg from "@/assets/listing-private-sale.jpg";
 import forRentImg from "@/assets/listing-for-rent.jpg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { LayoutGrid, List, Home, Flame, Heart, Users, Mail, Activity, UserCircle, CheckCircle, Inbox } from "lucide-react";
+import { LayoutGrid, List, Home, Flame, Heart, Users, Mail, Activity, UserCircle, CheckCircle, Bell } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DASHBOARD_FILTER_STATUSES, LISTING_STATUS_LABELS } from "@/constants/status";
@@ -552,7 +552,7 @@ const AgentDashboard = () => {
 
           {/* Hidden until launch - Communications Center card */}
           {false && (
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/communications")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">My Communications</CardTitle>
@@ -612,12 +612,12 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Communication Center Card */}
-          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/communications")}>
+          <Card className="group hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 cursor-pointer bg-[#FFFFFF] overflow-hidden relative touch-manipulation h-40" style={{ borderColor: '#D2D2D7', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => navigate("/client-needs")}>
             
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4 relative z-10">
               <CardTitle className="text-sm font-medium">Communication Center</CardTitle>
               <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                <Inbox className="h-4 w-4 text-[#0E56F5]" />
+                <Bell className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="relative z-10 p-3 sm:p-4 pt-0">

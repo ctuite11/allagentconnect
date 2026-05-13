@@ -563,7 +563,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           type: "message",
           label: `You have ${unreadMessageCount} unread message${unreadMessageCount > 1 ? "s" : ""}`,
           sub: `${unreadMessageCount} conversation${unreadMessageCount > 1 ? "s" : ""} waiting`,
-          path: "/agent/messages",
+          path: "/communications",
           count: unreadMessageCount,
         });
       }

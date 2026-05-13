@@ -28,11 +28,10 @@ export function CommunicationsPanel({ conversations }: CommunicationsPanelProps)
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-base font-semibold text-foreground">Recent Messages</h3>
         <button
-          type="button"
-          onClick={() => navigate("/communications")}
-          className="text-sm font-medium text-[#0E56F5] hover:underline inline-flex items-center gap-1"
+          onClick={() => navigate("/client-needs")}
+          className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
         >
-          Communication Center <ChevronRight className="h-4 w-4 shrink-0" />
+          Open Inbox <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
@@ -41,7 +40,7 @@ export function CommunicationsPanel({ conversations }: CommunicationsPanelProps)
           <button
             key={conv.conversation_id}
             type="button"
-            onClick={() => navigate(`/agent/messages/${conv.conversation_id}`)}
+            onClick={() => navigate("/client-needs")}
             className="w-full text-left px-4 py-3 rounded-xl flex items-start gap-3 bg-white border border-transparent transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
           >
             <Avatar className="h-8 w-8 shrink-0 mt-0.5">

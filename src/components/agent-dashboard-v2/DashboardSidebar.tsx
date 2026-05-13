@@ -7,7 +7,7 @@ import {
   List,
   Flame,
   MessageSquare,
-  Inbox,
+  Radio,
   UserCircle,
   Calendar,
   BarChart3,
@@ -39,7 +39,7 @@ interface SidebarItem {
 const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard" },
   { label: "Search", icon: Search, route: "/listing-search" },
-  { label: "Communications", icon: Inbox, route: "/communications" },
+  { label: "Comms", icon: Radio, route: "/communications" },
   { label: "Messages", icon: MessageSquare, route: "/agent/messages" },
   { label: "Buyers", icon: Users, route: "/success-hub/buyers" },
   { label: "Agent Network", icon: Users, route: "/our-members" },
@@ -158,14 +158,6 @@ export function DashboardSidebar({
 
   const resolvedActive = activeItem ?? (() => {
     const path = location.pathname;
-    if (
-      path === "/communications" ||
-      path.startsWith("/communications/") ||
-      path === "/client-needs" ||
-      path.startsWith("/client-needs/")
-    ) {
-      return "Communications";
-    }
     const allItems = [...mainMenu, ...(isAdmin ? [adminItem] : []), ...otherTools];
     const exact = allItems.find((item) => item.route && item.route === path);
     if (exact) return exact.label;
