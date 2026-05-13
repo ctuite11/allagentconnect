@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
-import { Loader2 } from "lucide-react";
+import { Loader2, Inbox, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
@@ -11,7 +11,6 @@ import GeographicPreferencesManager, { GeographicData } from "@/components/Geogr
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { toast } from "sonner";
-import { aacStyles } from "@/ui/aacStyles";
 import { Seo } from "@/components/Seo";
 import {
   AlertDialog,
@@ -24,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-/** Comms Center — restored workflow from git 24b73b21 (full page; parent of 4e8293b6 was already the stub). */
+/** Communications Center — notification channels, filters, and email cadence (agent). */
 const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
@@ -250,29 +249,30 @@ const ClientNeedsDashboard = () => {
         canonical="https://allagentconnect.com/communications"
         noindex
       />
-      <div className="bg-white pt-6">
-        <main className={`${aacStyles.pageContainer} pb-12`}>
+      <div className="bg-white">
+        <main className="mx-auto max-w-7xl space-y-5 px-6 pb-8 pt-4">
           <PageHeader
             title="Communications Center"
             subtitle="Agent-to-agent collaboration and deal flow"
-            className="mb-6"
+            titleClassName="text-neutral-900"
+            subtitleClassName="text-neutral-500"
+            className="mb-0"
+            icon={<Inbox className="h-8 w-8 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />}
           />
 
-          <section>
-            <h2 className={aacStyles.sectionH2}>Channels</h2>
-            <p className={aacStyles.sectionHelper}>Choose what you send and receive</p>
-            <div className="mt-4">
-              <NotificationPreferenceCards />
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+            <p className="text-sm text-neutral-500">Choose what you send and receive</p>
+            <NotificationPreferenceCards />
           </section>
 
-          <section data-preferences-section>
-            <h2 className={aacStyles.sectionH2}>My Preferences</h2>
-            <p className={aacStyles.sectionHelper}>
+          <section data-preferences-section className="space-y-2">
+            <h2 className="text-xl font-semibold text-neutral-900">My Preferences</h2>
+            <p className="text-sm text-neutral-500">
               Narrow which agent-network communications activity can trigger Comms Center email alerts.
             </p>
 
-            <div className="space-y-3 mt-4">
+            <div className="space-y-2.5">
               <PriceRangePreferences
                 agentId={user?.id || ""}
                 onFiltersUpdated={handleFiltersUpdated}
@@ -291,30 +291,30 @@ const ClientNeedsDashboard = () => {
             </div>
           </section>
 
-          <section>
-            <h2 className={aacStyles.sectionH2}>Notification Settings</h2>
-            <p className={aacStyles.sectionHelper}>Configure cadence for agent communication alerts from the network</p>
-            <div className="mt-4">
-              <ClientNeedsNotificationSettings />
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-xl font-semibold text-neutral-900">Notification Settings</h2>
+            <p className="text-sm text-neutral-500">
+              Configure cadence for agent communication alerts from the network
+            </p>
+            <ClientNeedsNotificationSettings />
           </section>
 
           {showWarningBanner && (
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start gap-3">
-                <div className="text-amber-600 text-xl">⚠️</div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-amber-900 text-sm mb-1">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" strokeWidth={2} aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <h3 className="mb-1 text-sm font-semibold text-amber-900">
                     Important: Broad network communications alerts
                   </h3>
-                  <p className="text-xs text-amber-800 mb-3">
-                    You have Comms Center email alerts enabled but haven&apos;t set any filters below. That can mean alerts for{' '}
-                    <strong>a wide range</strong> of agent-network communications activity.
+                  <p className="mb-3 text-xs text-amber-800">
+                    You have Comms Center email alerts enabled but haven&apos;t set any filters below. That can mean
+                    alerts for <strong>a wide range</strong> of agent-network communications activity.
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      className="h-7 px-3 text-xs rounded border border-amber-300 bg-white text-amber-900 hover:bg-amber-50"
+                      className="h-7 rounded-md border border-amber-300 bg-white px-3 text-xs text-amber-900 hover:bg-amber-50"
                       onClick={() => {
                         document.querySelector("[data-preferences-section]")?.scrollIntoView({ behavior: "smooth" });
                       }}
@@ -323,7 +323,7 @@ const ClientNeedsDashboard = () => {
                     </button>
                     <button
                       type="button"
-                      className="h-7 px-3 text-xs rounded border border-amber-300 bg-white text-amber-900 hover:bg-amber-50"
+                      className="h-7 rounded-md border border-amber-300 bg-white px-3 text-xs text-amber-900 hover:bg-amber-50"
                       onClick={() => setShowWarningDialog(true)}
                     >
                       Review Options
@@ -339,8 +339,9 @@ const ClientNeedsDashboard = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Set your communications preferences</AlertDialogTitle>
                 <AlertDialogDescription>
-                  To keep Comms Center email aligned with how you work, set at least one filter: price range, property types,
-                  or geographic areas. Without filters, you may receive alerts for broad network communications activity.
+                  To keep Comms Center email aligned with how you work, set at least one filter: price range, property
+                  types, or geographic areas. Without filters, you may receive alerts for broad network communications
+                  activity.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -379,13 +380,13 @@ const ClientNeedsDashboard = () => {
         </main>
 
         {hasUnsavedChanges && (
-          <div className="bg-white border-t border-zinc-200 px-6 mt-8">
-            <div className="py-4 flex items-center justify-between max-w-7xl mx-auto">
-              <p className="text-zinc-500 text-sm">You have unsaved changes</p>
-              <Button onClick={handleSavePreferences} disabled={saving}>
+          <div className="sticky bottom-0 z-40 border-t border-neutral-200 bg-white">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+              <p className="text-sm text-neutral-500">You have unsaved changes</p>
+              <Button type="button" onClick={handleSavePreferences} disabled={saving}>
                 {saving ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                     Saving...
                   </span>
                 ) : (

@@ -38,7 +38,7 @@ const OPTIONS: { value: Frequency; label: string; description: string }[] = [
 ];
 
 const cardShell =
-  "rounded-2xl border border-neutral-200 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
+  "rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow duration-150 hover:shadow-md";
 
 export const ClientNeedsNotificationSettings = () => {
   const [settings, setSettings] = useState<NotificationSettings>({ frequency: "immediate" });
@@ -125,7 +125,7 @@ export const ClientNeedsNotificationSettings = () => {
     <Card className={cn(cardShell)}>
       <CardHeader className="space-y-1 p-0">
         <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 shrink-0 text-neutral-600" aria-hidden />
+          <Bell className="h-5 w-5 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
           <CardTitle className="text-base font-semibold text-neutral-900">Communications notifications</CardTitle>
         </div>
         <p className="text-[13px] leading-relaxed text-neutral-500">
@@ -141,20 +141,24 @@ export const ClientNeedsNotificationSettings = () => {
               <div
                 key={opt.value}
                 className={cn(
-                  "flex items-start gap-3 rounded-xl border border-transparent px-3 py-2.5 transition-colors",
-                  active ? "border-neutral-200 bg-white shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]" : "hover:bg-neutral-50/80",
+                  "flex items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors",
+                  active
+                    ? "border-neutral-200 bg-white shadow-sm"
+                    : "border-transparent hover:bg-neutral-50/80",
                 )}
               >
-                <RadioGroupItem value={opt.value} id={`comms-notif-${opt.value}`} className="mt-0.5 border-neutral-300" />
+                <RadioGroupItem value={opt.value} id={`comms-notif-${opt.value}`} className="mt-0.5" />
                 <Label
                   htmlFor={`comms-notif-${opt.value}`}
                   className={cn(
                     "cursor-pointer text-[13px] leading-snug",
-                    active ? "font-medium text-neutral-900" : "font-normal text-neutral-700",
+                    active ? "font-medium text-neutral-900" : "font-normal text-neutral-600",
                   )}
                 >
                   <span className="block">{opt.label}</span>
-                  <span className="mt-0.5 block text-xs font-normal leading-snug text-neutral-500">{opt.description}</span>
+                  <span className="mt-0.5 block text-xs font-normal leading-snug text-neutral-500">
+                    {opt.description}
+                  </span>
                 </Label>
               </div>
             );

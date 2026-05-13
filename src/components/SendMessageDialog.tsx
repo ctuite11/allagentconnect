@@ -380,13 +380,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 bg-[#FAFAF8]">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border border-neutral-200 bg-white p-0">
         <div className="p-6 pb-0">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className="text-xl font-semibold text-neutral-900">
               {showConfirmation ? "Confirm & Send" : `Send ${categoryTitle}`}
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription className="text-neutral-600">
               {showConfirmation
                 ? "Review your message before sending"
                 : "Compose and send a message to matching agents"}
@@ -396,18 +396,18 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
         {showConfirmation ? (
           <div className="space-y-5 p-6">
-            <div className="space-y-4 p-4 rounded-xl border border-border">
+            <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
               <div>
-                <Label className="text-sm font-semibold text-foreground">Subject</Label>
+                <Label className="text-sm font-semibold text-neutral-900">Subject</Label>
                 <p className="mt-1 text-sm">{subject}</p>
               </div>
               <div>
-                <Label className="text-sm font-semibold text-foreground">Message</Label>
+                <Label className="text-sm font-semibold text-neutral-900">Message</Label>
                 <p className="mt-1 text-sm whitespace-pre-wrap">{message}</p>
               </div>
               {state && (
                 <div>
-                  <Label className="text-sm font-semibold text-foreground">Criteria</Label>
+                  <Label className="text-sm font-semibold text-neutral-900">Criteria</Label>
                   <div className="mt-1 text-sm space-y-1">
                     <p><strong>State:</strong> {getStateName(state)}</p>
                   {selectedCountyId && selectedCountyId !== "all" && (
@@ -431,13 +431,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
 
             {!loadingCount && recipientCount !== null && (
-              <div className="border border-border rounded-xl p-4">
+              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-[#111317] text-white flex items-center justify-center">
-                    <AACMonogram className="h-3 w-3" />
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0E56F5] text-white">
+                    <AACMonogram className="h-3 w-3 text-white" />
                   </div>
-                  <span className="text-sm">
-                    This will be sent to <strong className="text-foreground font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                  <span className="text-sm text-neutral-600">
+                    This will be sent to <strong className="font-semibold text-neutral-900">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
                   </span>
                 </div>
               </div>
@@ -476,9 +476,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         ) : (
           <div className="space-y-6 p-6">
             {/* Recipient Count */}
-            <div className="bg-white rounded-2xl shadow-sm px-5 py-4">
+            <div className="rounded-2xl border border-neutral-200 bg-white px-5 py-4 shadow-sm">
               <div className="flex items-center gap-3">
-                <AACMonogram className="h-6 w-6 text-emerald-600" />
+                <AACMonogram className="h-6 w-6 text-[#0E56F5]" />
                 {loadingCount ? (
                   <span className="text-sm text-neutral-500">
                     Calculating recipients...
@@ -498,10 +498,10 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {showLocationFields && (
               <div className="space-y-6">
                 {/* State and County - Always visible */}
-                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-6 pt-5 pb-3 border-b border-neutral-100">
+                <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                  <div className="border-b border-neutral-200 px-6 pb-3 pt-5">
                     <div className="flex items-center gap-3">
-                      <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -548,25 +548,29 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                 {/* Towns & Neighborhoods Section */}
                 <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
-                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                  <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                      <div className="flex items-center justify-between px-6 pt-5 pb-3 hover:bg-neutral-50 transition-colors">
+                      <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
                         <div className="flex items-center gap-3">
-                          <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                           <span className="text-base font-semibold text-neutral-900">Towns & Neighborhoods</span>
                           {selectedCities.length > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-medium">
+                            <span className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-600">
                               {selectedCities.length} selected
                             </span>
                           )}
                         </div>
-                        {townsOpen ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
+                        {townsOpen ? (
+                          <ChevronUp className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                        )}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="p-6 pt-4 border-t border-neutral-100 space-y-4">
+                      <div className="space-y-4 border-t border-neutral-200 p-6 pt-4">
                         {/* Show Areas Yes/No */}
                         <div className="flex items-center gap-4">
                           <Label className="text-sm font-medium text-neutral-700">Show Areas</Label>
@@ -612,7 +616,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 <button
                                   type="button"
                                   onClick={selectAllTowns}
-                                  className="w-full text-left text-emerald-600 font-medium hover:bg-neutral-100 px-2 py-1 rounded transition-colors text-sm mb-1"
+                                  className="mb-1 w-full rounded px-2 py-1 text-left text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
                                 >
                                   Add All Towns ({townsList.length})
                                 </button>
@@ -685,25 +689,29 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Property Types - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={propertyTypesOpen} onOpenChange={setPropertyTypesOpen}>
-                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-6 pt-5 pb-3 hover:bg-neutral-50 transition-colors">
+                        <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                             <span className="text-base font-semibold text-neutral-900">Property Types</span>
                             {propertyTypes.length > 0 && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-medium">
+                              <span className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-600">
                                 {propertyTypes.length} selected
                               </span>
                             )}
                           </div>
-                          {propertyTypesOpen ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
+                          {propertyTypesOpen ? (
+                            <ChevronUp className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                          )}
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="p-6 pt-4 border-t border-neutral-100">
+                        <div className="border-t border-neutral-200 p-6 pt-4">
                           <div className="flex items-center gap-2 mb-4">
                             <Checkbox
                               id="selectAllPropertyTypes"
@@ -737,25 +745,29 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Price Range - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={priceRangeOpen} onOpenChange={setPriceRangeOpen}>
-                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-6 pt-5 pb-3 hover:bg-neutral-50 transition-colors">
+                        <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-emerald-600/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                             </svg>
                             <span className="text-base font-semibold text-neutral-900">Price Range</span>
                             {(minPrice || maxPrice) && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-medium">
+                              <span className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-600">
                                 ${minPriceDisplay || '0'} - ${maxPriceDisplay || '∞'}
                               </span>
                             )}
                           </div>
-                          {priceRangeOpen ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
+                          {priceRangeOpen ? (
+                            <ChevronUp className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                          )}
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="p-6 pt-4 border-t border-neutral-100">
+                        <div className="border-t border-neutral-200 p-6 pt-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="minPrice" className="text-sm font-medium text-neutral-700">
@@ -837,7 +849,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             )}
 
             {/* Subject & Message */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+            <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
               <div className="space-y-2.5">
                 <Label htmlFor="subject" className="text-sm font-medium text-neutral-800">Subject *</Label>
                 <Input

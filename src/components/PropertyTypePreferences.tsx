@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -103,7 +102,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
 
   if (loading) {
     return (
-      <Card>
+      <Card className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
         <CardContent className="flex items-center justify-center py-8">
           <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
         </CardContent>
@@ -113,105 +112,104 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
 
   return (
   <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <Card className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md">
         <CollapsibleTrigger className="w-full">
           <CardHeader className="cursor-pointer p-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Home className="h-5 w-5 text-emerald-600/80" />
-                <CardTitle className="text-base font-medium text-zinc-900">Property Type</CardTitle>
+                <Home className="h-5 w-5 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                <CardTitle className="text-base font-semibold text-neutral-900">Property Type</CardTitle>
               </div>
-              {isOpen ? <ChevronUp className="h-5 w-5 text-zinc-400" /> : <ChevronDown className="h-5 w-5 text-zinc-400" />}
+              {isOpen ? (
+                <ChevronUp className="h-5 w-5 text-neutral-400" strokeWidth={2} />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-neutral-400" strokeWidth={2} />
+              )}
             </div>
-            <CardDescription className="text-left text-sm text-zinc-500 mt-1">
+            <CardDescription className="mt-1 text-left text-sm text-neutral-500">
               Select which property types you want to receive notifications about
             </CardDescription>
             {!isOpen && selectedTypes.length > 0 && (
-              <div className="mt-2 bg-white border border-zinc-200 rounded-xl px-3 py-2 text-left">
-                <p className="text-sm font-medium text-zinc-900">
-                  {selectedTypes.length} property type{selectedTypes.length !== 1 ? 's' : ''} selected
+              <div className="mt-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-left">
+                <p className="text-sm font-medium text-neutral-900">
+                  {selectedTypes.length} property type{selectedTypes.length !== 1 ? "s" : ""} selected
                 </p>
               </div>
             )}
             {!isOpen && selectedTypes.length === 0 && (
-              <p className="text-sm text-zinc-400 mt-1 text-left">
-                No property types selected
-              </p>
+              <p className="mt-1 text-left text-sm text-neutral-500">No property types selected</p>
             )}
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-2 pt-3 px-0 pb-0">
-        
-        {/* Selection count */}
-        <span className="text-xs text-zinc-600">
-          {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
-        </span>
+          <CardContent className="space-y-2 px-0 pb-0 pt-3">
+            <span className="text-xs text-neutral-600">
+              {selectedTypes.length} of {PROPERTY_TYPES.length} types selected
+            </span>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border border-zinc-200 rounded-xl p-3 max-h-80 overflow-y-auto bg-white">
-          {/* Select all as first checkbox item */}
-          <div className={`flex items-center space-x-2 col-span-1 md:col-span-2 pb-2 mb-2 border-b border-zinc-200 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-50 ${allSelected ? "bg-emerald-50" : ""}`}>
-             <Checkbox
-               id="type-select-all"
-               checked={allSelected}
-               onCheckedChange={selectAll}
-             />
-             <Label
-               htmlFor="type-select-all"
-               className={`cursor-pointer flex-1 text-sm ${allSelected ? "font-medium text-emerald-700" : "text-zinc-700"}`}
-             >
-               Select all
-             </Label>
-           </div>
-          {PROPERTY_TYPES.map((type) => {
-            const isChecked = selectedTypes.includes(type.value);
-            return (
-              <div key={type.value} className={`flex items-center space-x-2 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-emerald-50 ${isChecked ? "bg-emerald-50" : ""}`}>
-                 <Checkbox
-                   id={`type-${type.value}`}
-                   checked={isChecked}
-                   onCheckedChange={() => togglePropertyType(type.value)}
-                 />
-                 <Label
-                   htmlFor={`type-${type.value}`}
-                   className={`cursor-pointer flex-1 text-sm ${isChecked ? "font-medium text-emerald-700" : "text-zinc-600"}`}
-                 >
-                   {type.label}
-                 </Label>
-               </div>
-            );
-          })}
-        </div>
+            <div className="grid max-h-80 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-3 md:grid-cols-2">
+              <div
+                className={`col-span-1 -mx-2 mb-2 flex items-center space-x-2 rounded-lg border-b border-neutral-200 px-2 py-1.5 pb-2 transition-colors hover:bg-neutral-50/80 md:col-span-2 ${allSelected ? "bg-neutral-50" : ""}`}
+              >
+                <Checkbox id="type-select-all" checked={allSelected} onCheckedChange={selectAll} />
+                <Label
+                  htmlFor="type-select-all"
+                  className={`flex-1 cursor-pointer text-sm ${allSelected ? "font-medium text-neutral-900" : "text-neutral-600"}`}
+                >
+                  Select all
+                </Label>
+              </div>
+              {PROPERTY_TYPES.map((type) => {
+                const isChecked = selectedTypes.includes(type.value);
+                return (
+                  <div
+                    key={type.value}
+                    className={`-mx-2 flex items-center space-x-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-neutral-50/80 ${isChecked ? "bg-neutral-50" : ""}`}
+                  >
+                    <Checkbox id={`type-${type.value}`} checked={isChecked} onCheckedChange={() => togglePropertyType(type.value)} />
+                    <Label
+                      htmlFor={`type-${type.value}`}
+                      className={`flex-1 cursor-pointer text-sm ${isChecked ? "font-medium text-neutral-900" : "text-neutral-600"}`}
+                    >
+                      {type.label}
+                    </Label>
+                  </div>
+                );
+              })}
+            </div>
 
-        {selectedTypes.length > 0 && (
-          <div className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2">
-            <p className="text-sm">
-              <span className="font-medium text-zinc-700">You will receive notifications for:</span>
-              <br />
-              <span className="text-zinc-900 font-medium">
-                {selectedTypes.map(type => {
-                  const typeObj = PROPERTY_TYPES.find(t => t.value === type);
-                  return typeObj?.label;
-                }).filter(Boolean).join(", ")}
-              </span>
-            </p>
-          </div>
-        )}
+            {selectedTypes.length > 0 && (
+              <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2">
+                <p className="text-sm">
+                  <span className="font-medium text-neutral-600">You will receive notifications for:</span>
+                  <br />
+                  <span className="font-medium text-neutral-900">
+                    {selectedTypes
+                      .map((type) => {
+                        const typeObj = PROPERTY_TYPES.find((t) => t.value === type);
+                        return typeObj?.label;
+                      })
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
+                </p>
+              </div>
+            )}
 
-        {selectedTypes.length === 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-            <p className="text-sm text-amber-900">
-              <span className="font-medium">No property types selected</span>
-              <br />
-              <span className="text-amber-700">
-                You will not receive notifications until you select at least one property type.
-              </span>
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </CollapsibleContent>
-    </Card>
+            {selectedTypes.length === 0 && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                <p className="text-sm text-amber-900">
+                  <span className="font-medium">No property types selected</span>
+                  <br />
+                  <span className="text-amber-800">
+                    You will not receive notifications until you select at least one property type.
+                  </span>
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
     </Collapsible>
   );
 };

@@ -10,6 +10,8 @@ interface PageHeaderProps {
   titleClassName?: string;
   /** Optional subtitle below title */
   subtitle?: string;
+  /** Optional class names for the subtitle paragraph */
+  subtitleClassName?: string;
   /** 
    * Explicit parent route to navigate to on back click.
    * If provided, shows back button and navigates to this route.
@@ -40,7 +42,8 @@ interface PageHeaderProps {
 export function PageHeader({ 
   title, 
   titleClassName,
-  subtitle, 
+  subtitle,
+  subtitleClassName,
   backTo, 
   className,
   actions,
@@ -84,7 +87,7 @@ export function PageHeader({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-zinc-500 text-sm mt-0.5">{subtitle}</p>
+            <p className={cn("text-sm mt-0.5 text-zinc-500", subtitleClassName)}>{subtitle}</p>
           )}
         </div>
       </div>
