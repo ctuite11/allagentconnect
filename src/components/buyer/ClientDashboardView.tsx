@@ -144,11 +144,12 @@ export interface ClientDashboardViewProps {
 const buyerHeaderSoftBtn =
   "h-8 rounded-full border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-4";
 
-/** Success Hub agent mirror — AAC brand blue, borderless hero shell (preview cards keep their borders). */
+/** Success Hub agent mirror — same typographic hierarchy as buyer (neutral headings). */
 const agentMirrorHeroShell = "rounded-2xl border-0 bg-white p-4 shadow-none md:p-5 lg:p-6";
-const agentMirrorSectionTitle = "text-[15px] font-semibold text-[#0E56F5]";
-const agentMirrorHeaderIcon = "text-[#0E56F5]";
-const agentMirrorStatValue = "mt-2 text-lg font-semibold tracking-tight text-[#0E56F5] tabular-nums sm:text-xl";
+const agentMirrorSectionTitle = "text-[15px] font-semibold text-neutral-950";
+const agentMirrorHeaderIcon = "text-neutral-400";
+const agentMirrorStatValue =
+  "mt-2 text-lg font-semibold tracking-tight text-neutral-900 tabular-nums sm:text-xl";
 
 function getPrimaryPhotoUrl(photos: unknown): string {
   if (!photos) return "/placeholder.svg";
@@ -261,13 +262,7 @@ export function ClientDashboardView({
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
               <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-                  <h1
-                    className={
-                      variant === "agent"
-                        ? "text-xl font-semibold tracking-tight text-[#0E56F5] sm:text-2xl"
-                        : "text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl"
-                    }
-                  >
+                  <h1 className="text-xl font-semibold tracking-tight text-neutral-950 sm:text-2xl">
                     {buyerDisplayName.trim()}
                   </h1>
                   {buyerPresenceOnline ? (
@@ -332,7 +327,7 @@ export function ClientDashboardView({
                         title={variant === "agent" ? "Send email to buyer" : undefined}
                       >
                         <Mail
-                          className={`mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4 ${variant === "agent" ? "text-blue-600" : ""}`}
+                          className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
                           aria-hidden
                           strokeWidth={2}
                         />
@@ -349,7 +344,7 @@ export function ClientDashboardView({
                     onClick={goMessages}
                   >
                     <MessageSquare
-                      className={`mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4 ${variant === "agent" ? "text-blue-600" : ""}`}
+                      className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
                       aria-hidden
                       strokeWidth={2}
                     />

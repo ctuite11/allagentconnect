@@ -61,7 +61,7 @@ export const buyerStatCardInteractive = `${buyerSectionCard} cursor-pointer tran
 export const buyerCollectionCardRoot = `${buyerSectionCard} cursor-pointer overflow-hidden transition-[border-color,box-shadow] duration-150 hover:border-neutral-300 hover:shadow-md focus-within:border-neutral-300 focus-within:shadow-md`;
 
 /** Typography */
-export const buyerSectionTitle = "text-[15px] font-semibold text-neutral-900";
+export const buyerSectionTitle = "text-[15px] font-semibold text-neutral-950";
 
 export const buyerSectionDesc = "text-[13px] leading-snug text-neutral-500";
 

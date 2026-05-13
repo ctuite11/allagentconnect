@@ -155,8 +155,8 @@ export function BuyerHotSheetPreviewCard({
             ) : null}
           </div>
           <div className="mt-auto flex w-full shrink-0 items-center justify-end pt-3">
-            <span className="pointer-events-none inline-flex items-center gap-1.5 text-sm font-medium text-[#0E56F5]">
-              <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+            <span className="pointer-events-none inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600">
+              <Eye className="h-4 w-4 shrink-0 text-neutral-600" strokeWidth={2} aria-hidden />
               View
             </span>
           </div>

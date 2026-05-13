@@ -21,7 +21,7 @@ export function DashboardListingImage({
       return <div className={`${imageClassName} bg-white`} aria-hidden />;
     }
     return (
-      <div className="flex h-full w-full items-center justify-center bg-white text-[#0E56F5]" aria-hidden>
+      <div className="flex h-full w-full items-center justify-center bg-white text-neutral-500" aria-hidden>
         <AACMonogram className="h-7 w-7" size={28} />
       </div>
     );

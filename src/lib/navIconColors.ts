@@ -23,7 +23,7 @@ export function buyerPortalNavIconClass(navPath: string, isActive: boolean): str
 const clientDashboardStatLabelPalette: Record<string, string> = {
   "Hot Sheets": "text-red-600",
   Favorites: "text-rose-600",
-  "New Matches": "text-amber-600",
+  "New Matches": "text-[#16A34A]",
   "Unread Messages": "text-blue-600",
 };
 
