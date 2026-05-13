@@ -3,9 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
+/** Native control — avoids any global `Button` / primary styles bleeding onto channel Send. */
+const channelSendClassName =
+  "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-800 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
 
 const channelCard =
   "cursor-pointer rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-[border-color,box-shadow] duration-150 hover:shadow-md";
@@ -187,8 +190,8 @@ export const NotificationPreferenceCards = () => {
                 onClick={() => setOpenDialog({ open: true, category: card.key, title: card.title })}
               >
                 {/* Top row: Icon + Title + Description */}
-                <div className="flex items-start gap-3">
-                  <IconComponent className="h-5 w-5 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                <div className="flex items-start gap-3 [&_svg]:!text-[#16A34A]">
+                  <IconComponent className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
                   <div className="min-w-0 flex-1">
                     <h4 className="text-[15px] font-semibold text-neutral-900">{card.title}</h4>
                     <p className="text-sm text-neutral-500">{card.description}</p>
@@ -197,34 +200,29 @@ export const NotificationPreferenceCards = () => {
                 
                 {/* Bottom row: Send + Active/Muted toggle */}
                 <div className="mt-4 flex items-center justify-between">
-                  <Button
+                  <button
                     type="button"
-                    size="sm"
+                    className={channelSendClassName}
                     onClick={(e) => {
                       e.stopPropagation();
                       setOpenDialog({ open: true, category: card.key, title: card.title });
                     }}
                   >
                     <span className="flex items-center gap-1.5">
-                      <Send className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                      <Send className="h-3.5 w-3.5 !text-neutral-700" strokeWidth={2} aria-hidden />
                       Send
                     </span>
-                  </Button>
+                  </button>
 
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1.5">
                       <span
                         className={cn(
-                          "h-2 w-2 rounded-full",
-                          card.active ? "bg-[#0E56F5]" : "bg-neutral-400",
+                          "h-2 w-2 shrink-0 rounded-full",
+                          card.active ? "!bg-[#16A34A]" : "!bg-neutral-400",
                         )}
                       />
-                      <span
-                        className={cn(
-                          "text-xs font-medium",
-                          card.active ? "text-neutral-900" : "text-neutral-500",
-                        )}
-                      >
+                      <span className="text-xs font-medium !text-neutral-600">
                         {card.active ? "Active" : "Muted"}
                       </span>
                     </div>
@@ -232,7 +230,7 @@ export const NotificationPreferenceCards = () => {
                       id={`receive-${card.key}`}
                       checked={card.active}
                       onCheckedChange={() => togglePreference(card.key)}
-                      className="data-[state=checked]:bg-[#0E56F5] data-[state=unchecked]:bg-neutral-200 focus-visible:ring-[#0E56F5]/25"
+                      className="data-[state=checked]:!bg-[#0E56F5] data-[state=unchecked]:!bg-neutral-200 focus-visible:ring-[#0E56F5]/25"
                     />
                   </div>
                 </div>

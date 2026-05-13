@@ -117,7 +117,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
           <CardHeader className="cursor-pointer p-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Home className="h-5 w-5 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                <Home className="h-5 w-5 !text-[#16A34A]" strokeWidth={2} aria-hidden />
                 <CardTitle className="text-base font-semibold text-neutral-900">Property Type</CardTitle>
               </div>
               {isOpen ? (

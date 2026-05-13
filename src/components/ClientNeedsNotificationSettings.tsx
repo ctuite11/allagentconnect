@@ -125,7 +125,7 @@ export const ClientNeedsNotificationSettings = () => {
     <Card className={cn(cardShell)}>
       <CardHeader className="space-y-1 p-0">
         <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+          <Bell className="h-5 w-5 shrink-0 !text-[#16A34A]" strokeWidth={2} aria-hidden />
           <CardTitle className="text-base font-semibold text-neutral-900">Communications notifications</CardTitle>
         </div>
         <p className="text-[13px] leading-relaxed text-neutral-500">

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
-import { Loader2, Inbox, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
@@ -249,7 +249,7 @@ const ClientNeedsDashboard = () => {
         canonical="https://allagentconnect.com/communications"
         noindex
       />
-      <div className="bg-white">
+      <div className="bg-white" data-aac-page="communications-center">
         <main className="mx-auto max-w-7xl space-y-5 px-6 pb-8 pt-4">
           <PageHeader
             title="Communications Center"
@@ -257,7 +257,6 @@ const ClientNeedsDashboard = () => {
             titleClassName="text-neutral-900"
             subtitleClassName="text-neutral-500"
             className="mb-0"
-            icon={<Inbox className="h-8 w-8 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />}
           />
 
           <section className="space-y-2">

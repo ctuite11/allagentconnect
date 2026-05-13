@@ -433,7 +433,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {!loadingCount && recipientCount !== null && (
               <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0E56F5] text-white">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#16A34A] text-white">
                     <AACMonogram className="h-3 w-3 text-white" />
                   </div>
                   <span className="text-sm text-neutral-600">
@@ -454,10 +454,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Edit
               </Button>
-              <Button 
-                onClick={handleSend} 
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSend}
                 disabled={sending}
-                className="rounded-lg"
+                className="rounded-lg border-neutral-200 bg-white text-neutral-800 shadow-none hover:bg-neutral-50 hover:text-neutral-900"
               >
                 {sending ? (
                   <>
@@ -478,7 +480,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {/* Recipient Count */}
             <div className="rounded-2xl border border-neutral-200 bg-white px-5 py-4 shadow-sm">
               <div className="flex items-center gap-3">
-                <AACMonogram className="h-6 w-6 text-[#0E56F5]" />
+                <AACMonogram className="h-6 w-6 text-[#16A34A]" />
                 {loadingCount ? (
                   <span className="text-sm text-neutral-500">
                     Calculating recipients...
@@ -501,7 +503,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
                   <div className="border-b border-neutral-200 px-6 pb-3 pt-5">
                     <div className="flex items-center gap-3">
-                      <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -552,7 +554,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                       <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
                         <div className="flex items-center gap-3">
-                          <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                           <span className="text-base font-semibold text-neutral-900">Towns & Neighborhoods</span>
@@ -693,7 +695,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                             <span className="text-base font-semibold text-neutral-900">Property Types</span>
@@ -749,7 +751,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
                         <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-[#0E56F5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                             </svg>
                             <span className="text-base font-semibold text-neutral-900">Price Range</span>
@@ -882,9 +884,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={handleSend}
-                className="rounded-lg"
+                className="rounded-lg border-neutral-200 bg-white text-neutral-800 shadow-none hover:bg-neutral-50 hover:text-neutral-900"
               >
                 <Send className="h-4 w-4 mr-2" />
                 Preview & Send
