@@ -9,13 +9,14 @@ export type BuyerActivityMetrics = {
   messages: number;
 };
 
-const emptyMetrics = (): BuyerActivityMetrics => ({
+/** Zeroed metrics — safe to reuse (read-only display). */
+export const EMPTY_BUYER_ACTIVITY_METRICS: BuyerActivityMetrics = {
   matches: 0,
   views: 0,
   favorites: 0,
   hotSheets: 0,
   messages: 0,
-});
+};
 
 /**
  * Aggregates buyer-facing activity for a CRM client across all hot sheets they are linked to.
@@ -36,7 +37,7 @@ export async function fetchBuyerActivityMetrics(
 
     const hsIds = [...new Set((hscRows ?? []).map((r: { hot_sheet_id?: string }) => r.hot_sheet_id).filter(Boolean))] as string[];
 
-    if (hsIds.length === 0) return emptyMetrics();
+    if (hsIds.length === 0) return { ...EMPTY_BUYER_ACTIVITY_METRICS };
 
     const hotSheets = hsIds.length;
 
@@ -85,6 +86,6 @@ export async function fetchBuyerActivityMetrics(
     return { matches, views, favorites, hotSheets, messages };
   } catch (e) {
     console.warn("[fetchBuyerActivityMetrics]", e);
-    return emptyMetrics();
+    return { ...EMPTY_BUYER_ACTIVITY_METRICS };
   }
 }

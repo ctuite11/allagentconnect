@@ -108,7 +108,7 @@ function MetricsToolbar({
           {i > 0 ? <span className="mx-2 h-3 w-px shrink-0 bg-neutral-200" aria-hidden /> : null}
           <span
             className={cn(
-              "inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600",
+              "inline-flex items-center gap-1 text-[11px] font-medium text-neutral-700",
               it.kind === "number" && "tabular-nums",
             )}
             title={it.label}
@@ -155,7 +155,8 @@ export type AgentBuyerActivityHeaderCardProps = {
   /** Override initials bubble (e.g. Success Hub My Buyers neutral chrome). */
   avatarClassName?: string;
   /**
-   * Parent-provided metrics (skips internal fetch). Pass `null` to show zeros while loading.
+   * Parent-provided metrics (skips internal fetch).
+   * Pass `metricsLoading` explicitly; if omitted, `metrics={null}` is treated as loading until real values arrive.
    */
   metrics?: BuyerActivityMetrics | null;
   metricsLoading?: boolean;
@@ -211,7 +212,10 @@ export function AgentBuyerActivityHeaderCard({
   }, [crmClientId, controlled]);
 
   const metrics = controlled ? metricsProp : internalMetrics;
-  const loading = controlled ? !!metricsLoadingProp : internalLoading;
+  /** When parent omits `metricsLoading`, treat `metrics={null}` as still loading (safe default). */
+  const loading = controlled
+    ? Boolean(metricsLoadingProp ?? metricsProp === null)
+    : internalLoading;
 
   const phoneDisplay = phone?.trim() ? formatPhoneNumber(phone) : "";
   const contactLine =

@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Pencil, ArrowLeft, CheckCircle2, Clock, Plus, Trash2 } from "lucide-react";
+import { Home, Pencil, ArrowLeft, Clock, Plus, Search, Trash2 } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
 import { buyerCollectionCardRoot, buyerImageMosaicGrid, buyerSectionCard } from "@/lib/buyerUi";
-import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
+import {
+  EMPTY_BUYER_ACTIVITY_METRICS,
+  fetchBuyerActivityMetrics,
+  type BuyerActivityMetrics,
+} from "@/lib/fetchBuyerActivityMetrics";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { formatCriteriaDisplayLabel, formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import {
@@ -107,9 +111,9 @@ function CriteriaPills({ criteria }: { criteria: any }) {
 function RelationshipStatusPill({ status }: { status: "active" | "pending" }) {
   if (status === "active") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-        <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
-        Active
+      <span className="inline-flex items-center gap-1 rounded-full border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.07)] px-2.5 py-0.5 text-[11px] font-medium text-[#0E56F5]">
+        <Search className="h-3 w-3 shrink-0" strokeWidth={2} aria-hidden />
+        Searching
       </span>
     );
   }
@@ -251,6 +255,7 @@ const HotSheetBuyerDetail = () => {
       setBuyerActivityMetrics(activity);
     } catch (e) {
       console.error("Error fetching buyer data:", e);
+      setBuyerActivityMetrics(EMPTY_BUYER_ACTIVITY_METRICS);
     } finally {
       setLoading(false);
     }
@@ -265,7 +270,7 @@ const HotSheetBuyerDetail = () => {
         p_crm_client_id: clientId,
       });
       if (error) throw error;
-      toast.success("Pending invite removed.");
+      toast.success("Hot sheet invite deleted.");
       setPendingDeleteSheet(null);
       await fetchBuyerData();
     } catch (e: unknown) {
@@ -327,7 +332,7 @@ const HotSheetBuyerDetail = () => {
 
         {/* Buyer card + New Hot Sheet (grouped — CTA directly under card, left-aligned) */}
         {buyer && relationshipStatus && (
-          <div className="mb-3 w-full space-y-2">
+          <div className="mb-2 w-full space-y-4">
             <AgentBuyerActivityHeaderCard
               displayName={displayName}
               email={buyer.email}
@@ -337,6 +342,8 @@ const HotSheetBuyerDetail = () => {
               metricsLoading={buyerActivityMetrics === null}
               trailing={<RelationshipStatusPill status={relationshipStatus} />}
               className="border-neutral-200 shadow-sm"
+              metricsToolbarTintIcons
+              hotSheetMetricUseFlame
             />
             <div className="flex w-full justify-start">
               <Button
@@ -353,11 +360,11 @@ const HotSheetBuyerDetail = () => {
         )}
 
         {hotSheets.length === 0 ? (
-          <div className={`${buyerSectionCard} rounded-xl border-neutral-200 p-8 text-center shadow-sm`}>
+          <div className={`${buyerSectionCard} mt-8 rounded-xl border-neutral-200 p-8 text-center shadow-sm`}>
             <p className="text-sm text-neutral-500">No hot sheets linked to this buyer.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
             {hotSheets.map((hs) => (
               <div
                 key={hs.id}
@@ -368,15 +375,14 @@ const HotSheetBuyerDetail = () => {
                   {hs.canDeletePending ? (
                     <button
                       type="button"
-                      aria-label="Remove pending hot sheet invite"
+                      aria-label="Delete hot sheet invite"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPendingDeleteSheet(hs);
                       }}
-                      className="flex h-8 items-center justify-center gap-1 rounded-md border border-red-200/90 bg-white px-2 text-xs font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                     >
-                      <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      Remove invite
+                      <Trash2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
                     </button>
                   ) : null}
                   <button
@@ -400,8 +406,9 @@ const HotSheetBuyerDetail = () => {
                 </div>
 
                 <div className="bg-white px-3 pt-2.5 pb-3">
-                  <p className="text-[11px] font-normal leading-snug text-neutral-500">Hot Sheet Name:</p>
-                  <h3 className="mt-0.5 truncate text-sm font-semibold text-neutral-900">{hs.name}</h3>
+                  <p className="truncate text-sm font-normal leading-snug text-neutral-600">
+                    Hot Sheet Name: <span className="font-semibold text-neutral-900">{hs.name}</span>
+                  </p>
                   <p className="mt-0.5 text-xs text-neutral-500">
                     {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
                   </p>
@@ -461,12 +468,12 @@ const HotSheetBuyerDetail = () => {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Remove pending hot sheet invite?</AlertDialogTitle>
+              <AlertDialogTitle>Delete hot sheet invite?</AlertDialogTitle>
               <AlertDialogDescription>
-                This removes only the{" "}
+                This removes the{" "}
                 <strong className="font-medium text-foreground">pending</strong> invite and link for{" "}
                 <strong className="font-medium text-foreground">{pendingDeleteSheet?.name ?? "this saved search"}</strong>.
-                Use this before the buyer accepts or joins the sheet in workspace — it does not delete an accepted/shared hot sheet group.
+                Use this before the buyer accepts or joins the sheet in workspace — it does not delete an accepted shared hot sheet group.
                 This cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -480,7 +487,7 @@ const HotSheetBuyerDetail = () => {
                   void confirmDeletePendingHotSheet();
                 }}
               >
-                {deletingHotSheet ? "Removing…" : "Remove invite"}
+                {deletingHotSheet ? "Deleting…" : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
