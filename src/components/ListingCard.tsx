@@ -955,14 +955,24 @@ const ListingCard = ({
           {/* Comment row — minimal on Favorites / hot-sheet grids; legacy row if agent attribution without buyer flag */}
           {showCompactCommentsRow && (
             <div
+              role="group"
+              aria-label="Listing comments and discussion"
               className={
                 showCompactComments
                   ? cn(
                       "mt-2 w-full",
-                      compactListedByMessageSeparator && "border-t border-neutral-200 pt-2",
+                      (compactListedByMessageSeparator || onOpenChat) &&
+                        "border-t border-neutral-200 pt-2.5",
+                      onOpenChat && showCompactComments && "cursor-pointer",
                     )
-                  : "mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full gap-2"
+                  : "mt-auto flex w-full items-center justify-between gap-2 border-t border-border/40 pt-2"
               }
+              onClick={(e) => {
+                e.stopPropagation();
+                if (showCompactComments && onOpenChat) {
+                  onOpenChat();
+                }
+              }}
             >
               <div className={showCompactComments ? "min-w-0 w-full" : "flex-1 min-w-0"}>
                 {chatMessages && chatMessages.length > 0 ? (
@@ -1040,7 +1050,7 @@ const ListingCard = ({
                 ) : onOpenChat ? (
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1.5 rounded-sm text-[12px] text-neutral-500 transition-colors hover:text-neutral-900"
+                    className="inline-flex w-full min-w-0 items-center justify-start gap-1.5 rounded-sm text-left text-[12px] text-neutral-500 transition-colors hover:text-neutral-900"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
