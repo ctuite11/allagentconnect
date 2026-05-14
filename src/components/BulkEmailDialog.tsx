@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mail, FileText } from "lucide-react";
 import { EmailTemplateManager } from "./EmailTemplateManager";
+import { EmailComposerToolbar } from "./email/EmailComposerToolbar";
 
 interface BulkEmailDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
   const [agentInfo, setAgentInfo] = useState<{ name: string; phone: string; email: string } | null>(null);
   const [sendAsGroup, setSendAsGroup] = useState(false);
   const [sendCopyToSelf, setSendCopyToSelf] = useState(false);
@@ -210,8 +212,15 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
 
           <div className="space-y-2">
             <Label htmlFor="message">Message *</Label>
+            <EmailComposerToolbar
+              textareaRef={messageRef}
+              value={message}
+              onChange={setMessage}
+              uploadFolder="bulk"
+            />
             <Textarea
               id="message"
+              ref={messageRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Your message..."
