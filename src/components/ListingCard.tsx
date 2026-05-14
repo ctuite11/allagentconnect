@@ -584,6 +584,22 @@ const ListingCard = ({
         };
       }
     }
+
+    // Off Market banner — 48 hours from when it transitioned to off_market
+    if (currentStatus === LISTING_STATUS.OFF_MARKET && statusHistory.length > 0) {
+      const offMarketEntry = statusHistory.find(h => h.new_status === LISTING_STATUS.OFF_MARKET);
+      if (offMarketEntry) {
+        const hoursSinceOff = (Date.now() - new Date(offMarketEntry.changed_at).getTime()) / (1000 * 60 * 60);
+        if (hoursSinceOff <= 48) {
+          return {
+            text: "OFF MARKET",
+            color: "bg-rose-600",
+            iconType: "refresh" as const
+          };
+        }
+      }
+    }
+
     return null;
   };
 
