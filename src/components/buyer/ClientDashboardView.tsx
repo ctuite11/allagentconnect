@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { cn } from "@/lib/utils";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
@@ -43,6 +43,7 @@ import {
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
+import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { clientDashboardStatIconClass } from "@/lib/navIconColors";
 
 export interface ClientDashboardAgentInfo {
@@ -80,6 +81,7 @@ export interface ClientDashboardMarketListing {
   square_feet: number | null;
   photos: unknown;
   created_at: string;
+  listing_number?: string | null;
   agent_id?: string | null;
   agent_profile?: ListedByAgentProfile;
 }
@@ -368,7 +370,9 @@ export function ClientDashboardView({
                     onClick={goMessages}
                   >
                     <MessageSquare
-                      className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
+                      className={`mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4 ${
+                        variant === "agent" ? "text-[#0E56F5]" : "text-neutral-600"
+                      }`}
                       aria-hidden
                       strokeWidth={2}
                     />
@@ -582,7 +586,16 @@ export function ClientDashboardView({
                   <CardHeader className={previewSectionHeaderClass}>
                     <div className={previewSectionHeaderRowClass}>
                       <div className={previewSectionTitleWrapClass}>
-                        <CardTitle className={variant === "agent" ? agentMirrorSectionTitle : dashSectionTitleClass}>
+                        <CardTitle
+                          className={`${
+                            variant === "agent" ? agentMirrorSectionTitle : dashSectionTitleClass
+                          } inline-flex items-center gap-2`}
+                        >
+                          <Heart
+                            className="h-4 w-4 shrink-0 text-[#FF2D55]"
+                            aria-hidden
+                            strokeWidth={2}
+                          />
                           Favorites
                         </CardTitle>
                         <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
@@ -629,6 +642,15 @@ export function ClientDashboardView({
                                     alt=""
                                     imageClassName="absolute inset-0 h-full w-full object-cover"
                                   />
+                                  <div
+                                    className="pointer-events-none absolute right-2 top-2 z-10"
+                                    aria-hidden
+                                  >
+                                    <Heart
+                                      className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
+                                      strokeWidth={2.25}
+                                    />
+                                  </div>
                                 </div>
                                 <div className={unifiedHotFavBody}>
                                   <p className={dashTileTitleClass}>
@@ -695,6 +717,7 @@ export function ClientDashboardView({
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         {latestListingsPreview.map((listing) => {
                           const photos = listing.photos ?? [];
+                          const listingIdLabel = formatListingIdLabel(listing);
                           const listedBy = resolveListedByAttribution(
                             listing as ListedBySource,
                             (listing.agent_profile as ListedByAgentProfile) ?? null,
@@ -721,9 +744,18 @@ export function ClientDashboardView({
                                 />
                               </div>
                               <div className={listingPreviewBody}>
-                                <p className={dashTileTitleClass}>
-                                  {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
-                                </p>
+                                <div className="mb-0 flex items-start justify-between gap-2">
+                                  <p className={dashTileTitleClass}>
+                                    {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
+                                  </p>
+                                  {listingIdLabel ? (
+                                    <span
+                                      className={`${LISTING_ID_NAV_CLASS} shrink-0 text-right text-[12px] leading-snug tabular-nums`}
+                                    >
+                                      {listingIdLabel}
+                                    </span>
+                                  ) : null}
+                                </div>
                                 <p className={`flex min-w-0 items-start gap-1 ${dashTileAddressClass}`}>
                                   <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
                                   <span className="min-w-0 break-words">{listing.address}</span>

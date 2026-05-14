@@ -53,6 +53,7 @@ interface MarketListing {
   square_feet: number | null;
   photos: unknown;
   created_at: string;
+  listing_number?: string | null;
   agent_id?: string | null;
   agent_profile?: {
     company: string | null;
@@ -319,7 +320,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           const { data, error } = await supabase
             .from("listings")
             .select(
-              "id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at, agent_id",
+              "id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at, listing_number, agent_id",
             )
             .in("status", ["coming_soon", "active", "back_on_market"])
             .order("created_at", { ascending: false })
