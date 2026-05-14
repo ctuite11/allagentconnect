@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, MapPin, RefreshCw, CheckCircle2, Clock, ChevronDown, ArrowLeft, Pencil } from "lucide-react";
+import { Send, MapPin, ChevronDown, ArrowLeft, Pencil } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -32,10 +32,8 @@ import {
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import { fetchBuyerActivityMetrics, type BuyerActivityMetrics } from "@/lib/fetchBuyerActivityMetrics";
 import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
-import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
 interface ReviewRecipient {
@@ -54,141 +52,6 @@ interface ReviewRecipient {
   sendDashboardInvite: boolean;
   /** Active agent–client relationship with a linked buyer account (they are already in search). */
   buyerLinked: boolean;
-}
-
-/** Per-contact dashboard invite UX: accepted, pending invite elsewhere, or still needs first invite. */
-function recipientInviteStatus(r: ReviewRecipient): "accepted" | "sent" | "needs" {
-  if (r.inviteAccepted || r.buyerLinked) return "accepted";
-  if (!r.sendDashboardInvite) return "sent";
-  return "needs";
-}
-
-function CompactClientRecipientsStrip({
-  recipients,
-  hotSheetId,
-  hotSheetName,
-  agentName,
-  agentUserId,
-  onRefresh,
-  collaborativeMode,
-  recipientActivity,
-  recipientActivityLoading,
-  hotSheetRef,
-}: {
-  recipients: ReviewRecipient[];
-  hotSheetId: string;
-  hotSheetName: string;
-  agentName: string;
-  agentUserId: string;
-  onRefresh: () => void;
-  /** Shared workspace — hide invite/resend affordances; neutral collaboration labels */
-  collaborativeMode?: boolean;
-  recipientActivity: Record<string, BuyerActivityMetrics>;
-  recipientActivityLoading: boolean;
-  /** Display code for current sheet (e.g. HS-1002) on metrics row */
-  hotSheetRef: string;
-}) {
-  const [cooldownUntil, setCooldownUntil] = useState<Record<string, number>>({});
-  const [resendingId, setResendingId] = useState<string | null>(null);
-
-  if (!recipients.length) return null;
-
-  const handleResend = async (r: ReviewRecipient) => {
-    if (!r.resendTokenId || !r.resendToken) return;
-    setResendingId(r.clientId);
-
-    const hotSheetLink =
-      `${window.location.origin}/client-invite` +
-      `?invitation_token=${encodeURIComponent(r.resendToken)}` +
-      `&email=${encodeURIComponent(r.email)}` +
-      `&agent_id=${encodeURIComponent(agentUserId)}` +
-      `&client_id=${encodeURIComponent(r.clientId)}`;
-
-    const { error } = await supabase.functions.invoke("send-hot-sheet-invite", {
-      body: {
-        invitedEmail: r.email,
-        inviterName: agentName,
-        hotSheetName,
-        hotSheetLink,
-        hotSheetId,
-        tokenId: r.resendTokenId,
-        actorUserId: agentUserId,
-        mode: "resend",
-      },
-    });
-
-    if (error) {
-      toast.error("Failed to resend invite");
-    } else {
-      toast.success(`Invite resent to ${r.email}`);
-    }
-
-    setCooldownUntil((prev) => ({ ...prev, [r.clientId]: Date.now() + 2 * 60 * 1000 }));
-    setResendingId(null);
-    await onRefresh();
-  };
-
-  return (
-    <div className="mb-2 space-y-2">
-      {recipients.map((r) => {
-        const inCooldown = cooldownUntil[r.clientId] != null && Date.now() < cooldownUntil[r.clientId]!;
-        const trailing = (() => {
-          const st = recipientInviteStatus(r);
-          if (collaborativeMode || st === "accepted") {
-            return (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800">
-                <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
-                {collaborativeMode ? "Searching" : "Invite Accepted"}
-              </span>
-            );
-          }
-          if (st === "sent") {
-            return (
-              <>
-                <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-900">
-                  <Clock className="h-3 w-3" />
-                  Invite Sent
-                </span>
-                {!collaborativeMode && r.resendTokenId && r.resendToken && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
-                    disabled={resendingId === r.clientId || inCooldown}
-                    onClick={() => handleResend(r)}
-                  >
-                    <RefreshCw
-                      className={`mr-1.5 h-3.5 w-3.5 ${resendingId === r.clientId ? "animate-spin" : ""}`}
-                    />
-                    {resendingId === r.clientId ? "Sending…" : inCooldown ? "Wait 2 min" : "Resend"}
-                  </Button>
-                )}
-              </>
-            );
-          }
-          return (
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/90 bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-900">
-              Needs Invite
-            </span>
-          );
-        })();
-        return (
-          <AgentBuyerActivityHeaderCard
-            key={r.clientId}
-            className="transition-all duration-200 ease-out hover:-translate-y-[1px] hover:border-neutral-300 hover:shadow-md"
-            displayName={r.displayName}
-            email={r.email}
-            phone={r.phone}
-            crmClientId={r.clientId}
-            metrics={recipientActivity[r.clientId] ?? null}
-            metricsLoading={recipientActivityLoading}
-            trailing={trailing}
-            hotSheetRef={hotSheetRef}
-          />
-        );
-      })}
-    </div>
-  );
 }
 
 function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
@@ -266,8 +129,6 @@ const HotSheetReview = () => {
   /** CRM buyer id to return to buyer hot sheet list when applicable */
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
-  const [recipientActivity, setRecipientActivity] = useState<Record<string, BuyerActivityMetrics>>({});
-  const [recipientActivityLoading, setRecipientActivityLoading] = useState(false);
   const [removedListingsOpen, setRemovedListingsOpen] = useState(false);
   /** Buyer hot-sheet saves — read-only hearts on shared workspace cards */
   const [buyerHotSheetFavoriteIds, setBuyerHotSheetFavoriteIds] = useState<Set<string>>(new Set());
@@ -283,35 +144,8 @@ const HotSheetReview = () => {
     setConversationRecipientBuyerId(null);
     setBuyerContextClientId(null);
     setReviewRecipients([]);
-    setRecipientActivity({});
-    setRecipientActivityLoading(false);
     setRemovedListingsOpen(false);
   }, [id]);
-
-  useEffect(() => {
-    if (!reviewRecipients.length) {
-      setRecipientActivity({});
-      setRecipientActivityLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setRecipientActivityLoading(true);
-    (async () => {
-      const results = await Promise.all(
-        reviewRecipients.map((r) => fetchBuyerActivityMetrics(supabase, r.clientId)),
-      );
-      if (cancelled) return;
-      const next: Record<string, BuyerActivityMetrics> = {};
-      reviewRecipients.forEach((r, i) => {
-        next[r.clientId] = results[i];
-      });
-      setRecipientActivity(next);
-      setRecipientActivityLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [reviewRecipients]);
 
   useEffect(() => {
     if (id) {
@@ -1193,8 +1027,9 @@ if (comments && comments.length > 0) {
                 <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
                   {isSharedWorkspace ? "Buyer activity" : "Review matches"}
                 </h1>
-                <p className="mt-1 truncate text-[13px] text-neutral-500" title={hotSheet.name}>
-                  {hotSheet.name}
+                <p className="mt-1.5 text-[13px] leading-snug sm:text-[14px]" title={hotSheet.name}>
+                  <span className="text-neutral-500">Hot Sheet Name: </span>
+                  <span className="font-semibold text-neutral-900">{hotSheet.name}</span>
                 </p>
               </div>
               <span className="shrink-0 text-[11px] font-medium tabular-nums text-neutral-400 sm:mb-0.5">
@@ -1202,21 +1037,6 @@ if (comments && comments.length > 0) {
               </span>
             </div>
           </header>
-
-          {agentUserId && id && (
-            <CompactClientRecipientsStrip
-              recipients={reviewRecipients}
-              hotSheetId={id}
-              hotSheetName={hotSheet.name}
-              agentName={agentDisplayName}
-              agentUserId={agentUserId}
-              onRefresh={fetchHotSheetAndListings}
-              collaborativeMode={isSharedWorkspace}
-              recipientActivity={recipientActivity}
-              recipientActivityLoading={recipientActivityLoading}
-              hotSheetRef={formatHotSheetRef(id)}
-            />
-          )}
 
           {/* Search criteria */}
           <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-4 sm:py-3.5">
@@ -1270,6 +1090,7 @@ if (comments && comments.length > 0) {
                         id="select-all"
                         checked={selectedListings.size === listings.length && listings.length > 0}
                         onCheckedChange={toggleSelectAll}
+                        className="border-zinc-300 data-[state=checked]:border-[#16A34A] data-[state=checked]:bg-[#16A34A] data-[state=checked]:text-white data-[state=indeterminate]:border-[#16A34A] data-[state=indeterminate]:bg-[#16A34A] data-[state=indeterminate]:text-white"
                       />
                       <label htmlFor="select-all" className="cursor-pointer text-[13px] font-medium text-neutral-800">
                         {selectedListings.size === listings.length && listings.length > 0
@@ -1444,6 +1265,7 @@ if (comments && comments.length > 0) {
                     isHotSheetFavorite={
                       isSharedWorkspace ? buyerHotSheetFavoriteIds.has(listing.id) : undefined
                     }
+                    compactSelectionAccent="aacGreen"
                   />
                 ))}
               </div>
