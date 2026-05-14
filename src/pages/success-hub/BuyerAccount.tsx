@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BulkEmailDialog } from "@/components/BulkEmailDialog";
+import { SingleClientEmailDialog } from "@/components/SingleClientEmailDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
@@ -292,15 +292,12 @@ export default function BuyerAccount() {
       )}
 
       {client.email?.trim() ? (
-        <BulkEmailDialog
+        <SingleClientEmailDialog
           open={emailComposeOpen}
           onOpenChange={setEmailComposeOpen}
-          recipients={[
-            {
-              email: client.email.trim(),
-              name: capitalizedName.trim() || client.email.trim(),
-            },
-          ]}
+          clientId={client.id}
+          recipientEmail={client.email.trim()}
+          recipientName={capitalizedName.trim() || undefined}
         />
       ) : null}
     </>
