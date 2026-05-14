@@ -71,6 +71,7 @@ export function ConversationPanel({
   }, [details?.listingId]);
 
   useEffect(() => {
+    if (messages.length === 0) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -192,6 +193,20 @@ export function ConversationPanel({
   const contextLabel =
     details?.listingId && !threadTitle?.trim() ? listingAddress || "Listing conversation" : null;
 
+  const hasMessages = messages.length > 0;
+
+  const composer = (
+    <MessageComposer
+      edge={hasMessages ? "bottom" : "top"}
+      onSend={async (body) => {
+        const ok = await sendMessage(body);
+        if (ok) onInboxInvalidate?.();
+        return ok;
+      }}
+      sending={sending}
+    />
+  );
+
   return (
     <div className="flex min-h-0 h-full w-full flex-1 flex-col">
       {/* Header */}
@@ -263,32 +278,36 @@ export function ConversationPanel({
         </div>
       </div>
 
-      {/* Thread */}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-2">
-        <div className="mx-auto w-full max-w-[520px]">
-          {messages.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-12 text-center">
-              <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
-              <p className="mt-2 text-[12px] leading-snug text-zinc-500">
-                Say hello below — first messages set the tone for this thread.
-              </p>
+      {hasMessages ? (
+        <>
+          {/* Thread — scroll; composer stays pinned to bottom */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-2">
+            <div className="mx-auto w-full max-w-[520px]">
+              {threadElements}
+              <div ref={messagesEndRef} />
             </div>
-          ) : (
-            threadElements
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Composer */}
-      <MessageComposer
-        onSend={async (body) => {
-          const ok = await sendMessage(body);
-          if (ok) onInboxInvalidate?.();
-          return ok;
-        }}
-        sending={sending}
-      />
+          </div>
+          {composer}
+        </>
+      ) : (
+        <>
+          {/* Empty thread: composer directly under header so input is visible without scrolling */}
+          {composer}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3">
+            <div className="mx-auto flex min-h-full w-full max-w-[520px] flex-col">
+              <div className="flex flex-1 flex-col items-center justify-center px-2 py-6 sm:py-8">
+                <div className="w-full rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center sm:py-10">
+                  <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
+                  <p className="mt-2 text-[12px] leading-snug text-zinc-500">
+                    Type above to start — first messages set the tone for this thread.
+                  </p>
+                </div>
+              </div>
+              <div ref={messagesEndRef} className="h-0 shrink-0" aria-hidden />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
