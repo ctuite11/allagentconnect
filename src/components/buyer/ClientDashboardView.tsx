@@ -121,7 +121,7 @@ export interface ClientDashboardViewProps {
   /** Optional — agent opens thread with buyer instead of generic inbox */
   onMessagesPrimary?: () => void;
   onMessagesIcon?: () => void;
-  /** Agent mirror — opens AAC in-app email composer (`BulkEmailDialog` / send-bulk-email); no mailto. */
+  /** Agent mirror — opens in-app email via parent (`SingleClientEmailDialog` / `send-agent-client-email`); no mailto. */
   onEmailPrimary?: () => void;
   showBuyerSelfServiceChrome?: boolean;
   setAddFriendOpen?: (open: boolean) => void;

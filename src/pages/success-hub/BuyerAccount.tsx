@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SingleClientEmailDialog } from "@/components/SingleClientEmailDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -207,6 +207,7 @@ export default function BuyerAccount() {
               className={mirrorActionBtn}
               onClick={() => setEditOpen(true)}
             >
+              <Pencil className="mr-1.5 h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden strokeWidth={2} />
               Edit buyer
             </Button>
             <Button
@@ -216,6 +217,7 @@ export default function BuyerAccount() {
               className={mirrorActionBtn}
               onClick={() => setRemoveOpen(true)}
             >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden strokeWidth={2} />
               Remove buyer
             </Button>
           </>

@@ -5,9 +5,14 @@ import { Button } from "@/components/ui/button";
 interface MessageComposerProps {
   onSend: (body: string) => Promise<boolean>;
   sending: boolean;
+  /**
+   * `bottom` — sticky footer below the thread (border-top).
+   * `top` — directly under the panel header on empty threads (border-bottom).
+   */
+  edge?: "top" | "bottom";
 }
 
-export function MessageComposer({ onSend, sending }: MessageComposerProps) {
+export function MessageComposer({ onSend, sending, edge = "bottom" }: MessageComposerProps) {
   const [value, setValue] = useState("");
 
   const handleSend = async () => {
@@ -24,8 +29,13 @@ export function MessageComposer({ onSend, sending }: MessageComposerProps) {
     }
   };
 
+  const shell =
+    edge === "top"
+      ? "flex-shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2.5"
+      : "flex-shrink-0 border-t border-neutral-200/90 bg-white px-3 py-2.5";
+
   return (
-    <div className="flex-shrink-0 border-t border-neutral-200/90 bg-white px-3 py-2.5">
+    <div className={shell}>
       <div className="flex w-full items-center gap-2">
         <input
           value={value}
