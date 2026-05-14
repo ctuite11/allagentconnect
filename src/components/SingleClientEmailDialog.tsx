@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
 
@@ -54,19 +54,13 @@ export function SingleClientEmailDialog({
     }
     setSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-agent-client-email", {
-        body: {
-          clientId,
-          recipientEmail,
-          recipientName,
-          subject: s,
-          message: m,
-        },
+      await invokeEdgeFunction("send-agent-client-email", {
+        clientId,
+        recipientEmail,
+        recipientName,
+        subject: s,
+        message: m,
       });
-      if (error) throw error;
-      if (data && (data as { success?: boolean }).success === false) {
-        throw new Error((data as { error?: string }).error || "Send failed");
-      }
       toast.success(`Email sent to ${recipientName?.trim() || recipientEmail}`);
       reset();
       onOpenChange(false);
