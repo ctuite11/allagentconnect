@@ -164,6 +164,35 @@ function LegacyClientHotSheetRedirect() {
   return <Navigate to={`/client/hotsheet/${token}${location.search}`} replace />;
 }
 
+/** Legacy `/success-hub/buyers*` → agent buyers workspace (dashboard sidebar “Buyers”). */
+function LegacySuccessHubBuyersToAgentBuyers() {
+  const { search } = useLocation();
+  return <Navigate to={`/agent/buyers${search}`} replace />;
+}
+
+function LegacySuccessHubBuyerFavoritesToAgent() {
+  const { buyerId } = useParams<{ buyerId: string }>();
+  const { search } = useLocation();
+  return <Navigate to={`/agent/buyers/${buyerId ?? ""}/favorites${search}`} replace />;
+}
+
+function LegacySuccessHubBuyerAccountToAgent() {
+  const { buyerId } = useParams<{ buyerId: string }>();
+  const { search } = useLocation();
+  return <Navigate to={`/agent/buyers/${buyerId ?? ""}${search}`} replace />;
+}
+
+/**
+ * Normalizes `/agent/buyers/buyers/:buyerId` → `/agent/buyers/:buyerId`.
+ * A relative `buyers/<id>` from `/agent/buyers` resolves to an extra `buyers/` segment, which
+ * does not match `/agent/buyers/:buyerId` (single param) and would otherwise hit `*` → 404.
+ */
+function AgentBuyersDoubleSegmentRedirect() {
+  const { buyerId } = useParams<{ buyerId: string }>();
+  const { search } = useLocation();
+  return <Navigate to={`/agent/buyers/${buyerId ?? ""}${search}`} replace />;
+}
+
 function FavoritesEntry() {
   const { role, loading } = useAuthRole();
   if (loading) {
@@ -288,12 +317,23 @@ const App = () => (
                   <Route path="/agent-dashboard" element={<RouteGuard requireRole="agent"><SuccessHubDashboard /></RouteGuard>} />
                   <Route path="/agent-dashboard-v2" element={<Navigate to="/agent-dashboard" replace />} />
                   <Route path="/success-hub" element={<Navigate to="/agent-dashboard" replace />} />
-                  <Route path="/success-hub/buyers" element={<RouteGuard requireRole="agent"><BuyersList /></RouteGuard>} />
+                  <Route path="/agent/buyers" element={<RouteGuard requireRole="agent"><BuyersList /></RouteGuard>} />
                   <Route
-                    path="/success-hub/buyers/:buyerId/favorites"
+                    path="/agent/buyers/buyers/:buyerId"
+                    element={
+                      <RouteGuard requireRole="agent">
+                        <AgentBuyersDoubleSegmentRedirect />
+                      </RouteGuard>
+                    }
+                  />
+                  <Route
+                    path="/agent/buyers/:buyerId/favorites"
                     element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>}
                   />
-                  <Route path="/success-hub/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
+                  <Route path="/agent/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
+                  <Route path="/success-hub/buyers" element={<LegacySuccessHubBuyersToAgentBuyers />} />
+                  <Route path="/success-hub/buyers/:buyerId/favorites" element={<LegacySuccessHubBuyerFavoritesToAgent />} />
+                  <Route path="/success-hub/buyers/:buyerId" element={<LegacySuccessHubBuyerAccountToAgent />} />
                   <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
                   <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
                   <Route path="/communications" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />

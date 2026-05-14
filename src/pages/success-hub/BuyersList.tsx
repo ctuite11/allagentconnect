@@ -36,6 +36,13 @@ function titleCaseToken(term: string): string {
   return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
 }
 
+/** Canonical agent buyer workspace URL — always CRM `clients.id` (matches `BuyerAccount` + `useBuyerWorkspaceMirror`). */
+function agentBuyerAccountPath(crmClientId: string): string {
+  const id = String(crmClientId ?? "").trim();
+  if (!id) return "/agent/buyers";
+  return `/agent/buyers/${id}`;
+}
+
 function formatBuyerListName(c: { first_name?: string | null; last_name?: string | null; email?: string | null }): string {
   const rawFn = typeof c.first_name === "string" ? c.first_name.trim() : "";
   const rawLn = typeof c.last_name === "string" ? c.last_name.trim() : "";
@@ -353,7 +360,7 @@ export default function BuyersList() {
                     buyer={b}
                     buyerMetricsLoading={buyerMetricsStillLoading}
                     metrics={metricsForBuyer ?? null}
-                    onOpen={() => navigate(`/agent/buyers/${b.clientId}`)}
+                    to={agentBuyerAccountPath(b.clientId)}
                   />
                 );
               })}
@@ -376,7 +383,7 @@ export default function BuyersList() {
         buyer={createdBuyer}
         onClose={() => setCreatedBuyer(null)}
         onCreateHotSheet={(b) =>
-          navigate(`/agent/buyers/${b.id}?createHotSheet=1`)
+          navigate(`${agentBuyerAccountPath(b.id)}?createHotSheet=1`)
         }
       />
     </>
@@ -387,29 +394,23 @@ function BuyerCard({
   buyer,
   metrics,
   buyerMetricsLoading,
-  onOpen,
+  to,
 }: {
   buyer: BuyerRow;
   metrics: BuyerActivityMetrics | null;
   buyerMetricsLoading: boolean;
-  onOpen: () => void;
+  /** Absolute path to buyer workspace (`/agent/buyers/:crmClientId`). */
+  to: string;
 }) {
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
+    <Link
+      to={to}
       className={cn(
         "group flex cursor-pointer items-stretch gap-3 rounded-xl border border-neutral-200 bg-white p-4 pl-5",
         "shadow-sm transition-[box-shadow,border-color,background-color] duration-150",
         "hover:border-neutral-300 hover:bg-neutral-50/80 hover:shadow-md",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
+        "no-underline text-inherit",
       )}
       aria-label={`Open buyer ${buyer.name}`}
     >
@@ -437,7 +438,7 @@ function BuyerCard({
           aria-hidden
         />
       </div>
-    </div>
+    </Link>
   );
 }
 

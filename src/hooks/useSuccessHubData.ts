@@ -141,11 +141,12 @@ function safeLowerEmail(v: unknown): string | null {
 }
 
 /** `client_agent_relationships` may use `client_id` and/or `crm_client_id` for the same `clients` row. */
+/** Prefer CRM `clients.id` (same as `BuyersList` / `BuyerAccount` URL) over auth `client_id`. */
 function resolveRelationshipClientId(row: {
   client_id?: string | null;
   crm_client_id?: string | null;
 }): string | null {
-  const raw = row?.client_id ?? row?.crm_client_id;
+  const raw = row?.crm_client_id ?? row?.client_id;
   if (raw == null) return null;
   const s = String(raw).trim();
   return s || null;
@@ -552,7 +553,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           type: "invite",
           label: `You have ${pendingInviteCount} pending invite${plural}`,
           sub: `${pendingInviteCount} invite${plural} awaiting acceptance`,
-          path: "/success-hub/buyers",
+          path: "/agent/buyers",
           count: pendingInviteCount,
         });
       }
