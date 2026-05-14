@@ -371,6 +371,26 @@ export function renderEmailTemplate(
       });
     }
 
+    case "agent-client-email": {
+      const clientName = variables.clientName || "there";
+      const agentName = variables.agentName || "Your agent";
+      const agentEmail = variables.agentEmail || "";
+      const agentPhone = variables.agentPhone || "";
+      const msgSubject = variables.subject || "Message from your agent";
+      const msgBody = String(variables.message || "").replace(/\n/g, "<br>");
+
+      return buildAacEmail({
+        headline: msgSubject,
+        body: `
+          <p style="margin:0 0 12px;">Hi ${clientName},</p>
+          <div style="margin:0 0 16px;color:#334155;">${msgBody}</div>
+          <p style="margin:24px 0 4px;color:#0f172a;font-weight:600;">${agentName}</p>
+          ${agentEmail ? `<p style="margin:0;color:#475569;font-size:13px;">${agentEmail}</p>` : ""}
+          ${agentPhone ? `<p style="margin:0;color:#475569;font-size:13px;">${agentPhone}</p>` : ""}
+          <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;">You can reply directly to this email to respond.</p>`,
+      });
+    }
+
     default:
       return buildAacEmail({
         headline: "",
