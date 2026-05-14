@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mail, FileText } from "lucide-react";
@@ -22,6 +23,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [template, setTemplate] = useState<string>("custom");
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const [agentInfo, setAgentInfo] = useState<{ name: string; phone: string; email: string } | null>(null);
   const [sendAsGroup, setSendAsGroup] = useState(false);
@@ -71,8 +73,9 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
   };
 
   const handleSend = async () => {
-    if (!subject.trim() || !message.trim()) {
-      toast.error("Please fill in both subject and message");
+    const isTemplated = template === "early-access-update-v1";
+    if (!subject.trim() || (!isTemplated && !message.trim())) {
+      toast.error(isTemplated ? "Please fill in the subject" : "Please fill in both subject and message");
       return;
     }
 
@@ -102,10 +105,11 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
         body: {
           recipients: finalRecipients,
           subject: personalizedSubject,
-          message: personalizedMessage,
+          message: isTemplated ? "" : personalizedMessage,
           agentId: user.id,
           agentEmail: agentInfo?.email, // Pass agent email for replyTo
           sendAsGroup: sendAsGroup && recipients.length < 5, // Only allow group mode for small groups
+          template: isTemplated ? "early-access-update-v1" : undefined,
         },
       });
 
@@ -120,6 +124,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
       setMessage("");
       setSendAsGroup(false);
       setSendCopyToSelf(false);
+      setTemplate("custom");
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error sending bulk email:", error);
@@ -200,6 +205,29 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="template">Template</Label>
+            <Select value={template} onValueChange={(v) => {
+              setTemplate(v);
+              if (v === "early-access-update-v1") {
+                setSubject((prev) => prev || "A first look inside All Agent Connect");
+              }
+            }}>
+              <SelectTrigger id="template">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="early-access-update-v1">Early Access Update — Product Tour (5 sections, luxury sample data)</SelectItem>
+              </SelectContent>
+            </Select>
+            {template === "early-access-update-v1" && (
+              <p className="text-xs text-muted-foreground">
+                Pre-built email featuring 5 product screenshots with illustrative luxury sample names and addresses. Your custom message below will be ignored.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="subject">Subject *</Label>
             <Input
               id="subject"
@@ -211,7 +239,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">Message *</Label>
+            <Label htmlFor="message">Message {template === "custom" ? "*" : "(ignored for this template)"}</Label>
             <EmailComposerToolbar
               textareaRef={messageRef}
               value={message}
@@ -226,6 +254,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               placeholder="Your message..."
               rows={8}
               maxLength={5000}
+              disabled={template !== "custom"}
             />
             <p className="text-xs text-muted-foreground">{message.length}/5000</p>
           </div>
@@ -234,7 +263,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSend} disabled={sending || !subject.trim() || !message.trim()}>
+              <Button onClick={handleSend} disabled={sending || !subject.trim() || (template === "custom" && !message.trim())}>
                 {sending ? "Sending..." : "Send Email"}
               </Button>
             </div>
