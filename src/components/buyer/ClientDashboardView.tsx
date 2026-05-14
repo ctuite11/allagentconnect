@@ -6,11 +6,10 @@ import type { ReactNode } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
-import { cn } from "@/lib/utils";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import {
   buyerDashboardHotFavTile as unifiedHotFavCardClass,
@@ -121,7 +120,7 @@ export interface ClientDashboardViewProps {
   /** Optional — agent opens thread with buyer instead of generic inbox */
   onMessagesPrimary?: () => void;
   onMessagesIcon?: () => void;
-  /** Agent mirror — opens in-app email via parent (`SingleClientEmailDialog` / `send-agent-client-email`); no mailto. */
+  /** Agent mirror — opens `SingleClientEmailDialog` when the buyer email row is clicked; no mailto. */
   onEmailPrimary?: () => void;
   showBuyerSelfServiceChrome?: boolean;
   setAddFriendOpen?: (open: boolean) => void;
@@ -286,23 +285,31 @@ export function ClientDashboardView({
                 {variant === "agent" && (buyerEmail?.trim() || buyerPhoneFmt) ? (
                   <div className="flex flex-col gap-1.5 text-xs text-neutral-600">
                     {buyerEmail?.trim() ? (
-                      <span className="flex min-w-0 items-center gap-2" title="Buyer email">
-                        <Mail
-                          className={`h-3.5 w-3.5 shrink-0 ${variant === "agent" ? "text-[#0E56F5]" : "text-neutral-400"}`}
-                          aria-hidden
-                          strokeWidth={2}
-                        />
-                        {variant === "agent" ? (
+                      onEmailPrimary ? (
+                        <button
+                          type="button"
+                          onClick={() => onEmailPrimary()}
+                          className="-mx-1 flex min-w-0 max-w-full items-center gap-2 rounded-lg py-1.5 pl-1 pr-2 text-left text-xs text-neutral-600 transition-colors hover:bg-neutral-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+                          title="Send email through All Agent Connect (opens composer — not an external mail app)"
+                          aria-label={`Send email to ${buyerEmail.trim()}`}
+                        >
+                          <Mail
+                            className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]"
+                            aria-hidden
+                            strokeWidth={2}
+                          />
                           <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
-                        ) : (
-                          <a
-                            href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
-                            className="min-w-0 truncate text-neutral-700 transition-colors hover:text-neutral-900 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
-                          >
-                            {buyerEmail.trim()}
-                          </a>
-                        )}
-                      </span>
+                        </button>
+                      ) : (
+                        <span className="flex min-w-0 items-center gap-2" title="Buyer email">
+                          <Mail
+                            className={`h-3.5 w-3.5 shrink-0 ${agentMirrorHeaderIcon}`}
+                            aria-hidden
+                            strokeWidth={2}
+                          />
+                          <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
+                        </span>
+                      )
                     ) : null}
                     {buyerPhoneFmt ? (
                       <span className="flex items-center gap-2" title="Buyer phone">
@@ -326,40 +333,20 @@ export function ClientDashboardView({
                   </div>
                 ) : null}
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {buyerEmail?.trim() ? (
-                    variant === "agent" ? (
-                      onEmailPrimary ? (
-                        <button
-                          type="button"
-                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), buyerHeaderSoftBtn)}
-                          title="Send email through All Agent Connect (does not open an external mail app)"
-                          onClick={() => {
-                            onEmailPrimary();
-                          }}
-                        >
-                          <Mail
-                            className="mr-1.5 h-3.5 w-3.5 text-[#0E56F5] sm:mr-2 sm:h-4 sm:w-4"
-                            aria-hidden
-                            strokeWidth={2}
-                          />
-                          Email
-                        </button>
-                      ) : null
-                    ) : (
-                      <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
-                        <a
-                          href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
-                          title="Send email"
-                        >
-                          <Mail
-                            className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
-                            aria-hidden
-                            strokeWidth={2}
-                          />
-                          Email
-                        </a>
-                      </Button>
-                    )
+                  {buyerEmail?.trim() && variant !== "agent" ? (
+                    <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
+                      <a
+                        href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
+                        title="Send email"
+                      >
+                        <Mail
+                          className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
+                          aria-hidden
+                          strokeWidth={2}
+                        />
+                        Email
+                      </a>
+                    </Button>
                   ) : null}
                   <Button
                     variant="outline"

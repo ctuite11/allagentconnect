@@ -22,10 +22,13 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
       <div className="flex flex-col gap-3.5 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
         <div className="min-w-0 flex-1 space-y-3">
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold tracking-tight text-neutral-950">
-              Hi, {displayFirst}
+            <h1 className="text-2xl font-semibold tracking-tight text-neutral-950 sm:text-[1.625rem]">
+              Success Hub
             </h1>
-            <p className="max-w-xl text-sm leading-snug text-neutral-500">
+            <p className="text-sm font-medium text-neutral-600">
+              Hi, {displayFirst}
+            </p>
+            <p className="max-w-xl pt-0.5 text-sm leading-snug text-neutral-500">
               Manage your buyers, listings, hot sheets, and messages.
             </p>
           </div>
