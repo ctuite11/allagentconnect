@@ -1,69 +1,48 @@
 ## Goal
 
-Sending an email to a single buyer (Buyer Account, Client Dashboard, etc.) should:
-- enqueue **one** row in `email_jobs`
-- render through the AAC Unified template
-- invoke `kick-email-queue` to process immediately
-- never touch `send-bulk-email`, marketing tracking, or the bulk modal
+Let agents attach photos and insert links when composing the bulk email used to reach early-access agents (and any other bulk recipient list). Photos are uploaded to storage and embedded inline as `<img>` in the email body. Links are inserted as `<a>` tags. Recipients receive a real HTML email with images and clickable links.
 
-## Approach
+## Scope
 
-### 1. New edge function `send-agent-client-email`
+- **In scope:** `BulkEmailDialog` (the dialog used today to email lists) and the `send-bulk-email` edge function so HTML content is preserved.
+- **Out of scope:** `SingleClientEmailDialog`, `EmailAgentDialog (admin)`, `SendEmailDialog`, `EmailShareModal`. We'll roll those out next once this is working.
 
-Mirrors `send-buyer-agent-email` / `send-client-agent-message` but reversed (agent → one client).
+## UX
 
-Behavior:
-- Authenticate caller via JWT, confirm caller is the agent.
-- Validate body: `{ clientId? | recipientEmail, subject, message, replyToSelf? }`.
-- Resolve agent (sender) name + email from `agent_profiles` → fallback `profiles`.
-- Resolve recipient email (from `crm_clients` / `profiles` if `clientId` given, else use validated `recipientEmail`).
-- Insert one row into `email_jobs` with:
-  ```
-  payload: {
-    provider: "resend",
-    template: "agent-client-message",   // new case in renderEmailTemplate
-    to: recipientEmail,
-    subject: trimmedSubject,
-    variables: {
-      clientName, agentName, agentEmail, agentPhone,
-      subject, message
-    },
-    reply_to: agentEmail
-  }
-  ```
-  No `category` field → no tracking pixel / unsubscribe injection (transactional only).
-- After insert, `supabase.functions.invoke("kick-email-queue", {})` (best-effort; cron also picks it up).
-- Return `{ success, jobId }`.
+Above the message textarea, add a small toolbar:
 
-### 2. Add `agent-client-message` template case in `_shared/renderEmailTemplate.ts`
+```
+[ 🔗 Insert link ]  [ 🖼 Insert photo ]    (file size hint)
+```
 
-AAC Unified (`buildAacEmail`) with:
-- headline: subject
-- body: personal-message block + agent contact block (reuse existing helpers)
-- no marketing footer
+- **Insert link**: small popover with two inputs — "Link text" + "URL" — and an "Insert" button. Inserts `<a href="URL" target="_blank" rel="noopener">Link text</a>` at the textarea cursor position.
+- **Insert photo**: opens a file picker (PNG/JPG/WEBP, max 5 MB). On select:
+  1. Upload to Supabase Storage bucket `email-attachments` under `bulk/{userId}/{uuid}-{filename}`.
+  2. Get the public URL.
+  3. Insert `<img src="{publicUrl}" alt="" style="max-width:100%;height:auto;border-radius:8px;margin:12px 0;" />` at the textarea cursor.
+- Show a small spinner + toast while uploading. Show inserted HTML inline in the textarea (users see the tag — acceptable for this internal tool; mirrors how they already write `{client_name}` variables).
+- Add a tiny helper line: "Tip: HTML, links, and inline images are supported."
 
-### 3. New lightweight UI component `SingleClientEmailDialog`
+## Backend
 
-Same look as current minimalist dialog (Subject + Message, char count, Send button). On submit calls `supabase.functions.invoke("send-agent-client-email", { body: { clientId, recipientEmail, subject, message } })`.
+- **Storage bucket**: create public bucket `email-attachments` if it doesn't exist, with RLS allowing authenticated users to upload to their own folder and public read.
+- **`send-bulk-email` edge function**: stop wrapping the message with `message.replace(/\n/g, '<br>')` blindly. Instead:
+  - If the message contains HTML tags (heuristic: `/<[a-z][\s\S]*>/i`), use it as-is inside the template body.
+  - Otherwise, escape + convert newlines to `<br>` (current behaviour).
+  - This preserves `<img>` and `<a>` tags inserted from the composer while keeping plain-text messages safe.
+- No change to recipient handling, rate limiting, tracking pixel, or campaign logging.
 
-### 4. Swap call sites
+## Files to change
 
-Replace `BulkEmailDialog` usage with `SingleClientEmailDialog` in:
-- `src/pages/success-hub/BuyerAccount.tsx`
-- `src/components/buyer/ClientDashboardView.tsx`
+- `src/components/BulkEmailDialog.tsx` — add toolbar, link popover, file input, upload handler, cursor-aware insert helper.
+- `src/components/email/EmailComposerToolbar.tsx` (new) — extracted toolbar so we can drop it into other composers later.
+- `supabase/functions/send-bulk-email/index.ts` — branch HTML vs plain message rendering.
+- New migration: create `email-attachments` storage bucket + policies.
 
-Leave `BulkEmailDialog` and `send-bulk-email` intact for `MyClients` multi-select use case.
+## Acceptance
 
-### 5. Verification
-
-- Trigger send from `/agent/buyers/:id` Buyer Account → confirm one new `email_jobs` row, `email_events` shows `processing_started` then `sent`, recipient inbox receives AAC Unified email, no `send-bulk-email` invocation in network log.
-
-## Files
-
-- new: `supabase/functions/send-agent-client-email/index.ts`
-- edit: `supabase/functions/_shared/renderEmailTemplate.ts` (add case)
-- new: `src/components/SingleClientEmailDialog.tsx`
-- edit: `src/pages/success-hub/BuyerAccount.tsx`
-- edit: `src/components/buyer/ClientDashboardView.tsx`
-
-No DB migration required (uses existing `email_jobs` queue).
+- Composing a bulk email, clicking "Insert photo" uploads a file and inserts an `<img>` at the cursor.
+- Clicking "Insert link" inserts a working `<a href>` at the cursor.
+- Sent email renders the image inline and the link is clickable in the recipient's inbox.
+- Plain-text messages (no HTML) still render with line breaks as before.
+- One row per recipient in `email_jobs`, no regressions in tracking pixel or rate limit.
