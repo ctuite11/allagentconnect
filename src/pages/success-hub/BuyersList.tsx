@@ -29,6 +29,24 @@ interface BuyerRow {
 
 type FilterKey = "all" | "active" | "pending";
 
+/** Title-case each stored name part so "brody" + "tuite" and single-field "brody tuite" both become "Brody Tuite". */
+function titleCaseToken(term: string): string {
+  const t = term.trim();
+  if (!t) return "";
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+}
+
+function formatBuyerListName(c: { first_name?: string | null; last_name?: string | null; email?: string | null }): string {
+  const rawFn = typeof c.first_name === "string" ? c.first_name.trim() : "";
+  const rawLn = typeof c.last_name === "string" ? c.last_name.trim() : "";
+  const fnParts = rawFn.split(/\s+/).filter(Boolean).map(titleCaseToken);
+  const lnParts = rawLn.split(/\s+/).filter(Boolean).map(titleCaseToken);
+  const fromFields = [...fnParts, ...lnParts].filter(Boolean).join(" ");
+  if (fromFields) return fromFields;
+  const em = typeof c.email === "string" ? c.email.trim() : "";
+  return em;
+}
+
 function BuyersRowsSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="space-y-3" aria-hidden>
@@ -134,7 +152,7 @@ export default function BuyersList() {
         if (!c) continue;
         if (seenClientIds.has(c.id)) continue;
         seenClientIds.add(c.id);
-        const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
+        const name = formatBuyerListName(c);
         const buyerWorkspaceLinked =
           String(r.status) === "active" && r.client_id != null && String(r.client_id).trim() !== "";
         rows.push({
@@ -153,7 +171,7 @@ export default function BuyersList() {
         const c = clientMap.get(cid);
         if (!c) continue;
         seenClientIds.add(cid);
-        const name = [c.first_name, c.last_name].filter(Boolean).join(" ").trim() || c.email;
+        const name = formatBuyerListName(c);
         rows.push({
           clientId: c.id,
           name,
@@ -239,7 +257,7 @@ export default function BuyersList() {
       <Seo
         title="Buyers | All Agent Connect"
         description="View and manage buyer accounts, activity, and connected workflows inside All Agent Connect."
-        canonical="https://allagentconnect.com/success-hub/buyers"
+        canonical="https://allagentconnect.com/agent/buyers"
         noindex
       />
 
@@ -335,7 +353,7 @@ export default function BuyersList() {
                     buyer={b}
                     buyerMetricsLoading={buyerMetricsStillLoading}
                     metrics={metricsForBuyer ?? null}
-                    onOpen={() => navigate(`/success-hub/buyers/${b.clientId}`)}
+                    onOpen={() => navigate(`/agent/buyers/${b.clientId}`)}
                   />
                 );
               })}
@@ -358,7 +376,7 @@ export default function BuyersList() {
         buyer={createdBuyer}
         onClose={() => setCreatedBuyer(null)}
         onCreateHotSheet={(b) =>
-          navigate(`/success-hub/buyers/${b.id}?createHotSheet=1`)
+          navigate(`/agent/buyers/${b.id}?createHotSheet=1`)
         }
       />
     </>
@@ -406,6 +424,8 @@ function BuyerCard({
           metricsLoading={buyerMetricsLoading}
           metricsToolbarTintIcons
           hotSheetMetricUseFlame
+          hideMetricsToolbarTopRule={true}
+          metricsToolbarNewMatchesSparklePlus={true}
           avatarClassName="bg-neutral-200 text-neutral-800"
           className="rounded-none border-0 bg-transparent px-0 py-0 shadow-none"
           trailing={<BuyerRowStatusPill buyer={buyer} />}

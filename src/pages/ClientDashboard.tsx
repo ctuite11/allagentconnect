@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Heart, Flame, Sparkles, MessageSquare } from "lucide-react";
+import { Heart, Flame, Sparkle, MessageSquare } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
 import { toast } from "sonner";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
@@ -544,7 +544,7 @@ export default function ClientDashboard() {
     {
       label: "New Matches",
       value: marketListings.length > 0 ? String(Math.min(marketListings.length, 6)) : "--",
-      icon: Sparkles,
+      icon: Sparkle,
       subtle: marketListings.length > 0 ? "On the market" : "Awaiting activity",
     },
     {

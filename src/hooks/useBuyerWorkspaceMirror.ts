@@ -3,7 +3,7 @@
  * using the buyer's auth profile when resolvable — for the agent mirror view on BuyerAccount.
  */
 import { useEffect, useState } from "react";
-import { Heart, MessageSquare, Flame, Sparkles } from "lucide-react";
+import { Heart, MessageSquare, Flame, Sparkle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
@@ -407,7 +407,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
     {
       label: "New Matches",
       value: marketListings.length > 0 ? String(Math.min(marketListings.length, 6)) : "--",
-      icon: Sparkles,
+      icon: Sparkle,
       subtle: marketListings.length > 0 ? "On the market" : "Awaiting activity",
     },
     {
