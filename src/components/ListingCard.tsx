@@ -148,6 +148,11 @@ interface ListingCardProps {
   hideCompactFavorite?: boolean;
   /** Compact `onSelect` checkbox checked colors; `aacGreen` = Success Hub market activity (#16A34A). */
   compactSelectionAccent?: "default" | "aacGreen";
+  /**
+   * Agent viewing buyer-saved favorites: solid red heart on the photo only (no toolbar chip / no FavoriteButton box).
+   * Omit the empty top chrome row when there is no selection checkbox and no interactive favorite chrome.
+   */
+  compactSavedHeartOverlay?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -173,6 +178,7 @@ const ListingCard = ({
   compactDetailNavigateState,
   hideCompactFavorite = false,
   compactSelectionAccent = "default",
+  compactSavedHeartOverlay = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const { role } = useAuthRole();
@@ -711,13 +717,17 @@ const ListingCard = ({
     const showFavoriteChrome =
       !suppressFavoriteHeartChrome && (isHotSheetFavorite || !hideCompactFavorite);
 
+    const showCompactTopChromeRow =
+      !compactAgentOwned &&
+      (Boolean(onSelect) || showFavoriteChrome || !compactSavedHeartOverlay);
+
     return <Card
         className="flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm transition-[box-shadow,border-color] hover:border-zinc-200 hover:shadow-md"
         onClick={openListingDetail}
       >
         <div className="relative group flex-shrink-0">
           {/* Top overlay: shared h-9 row so shortlist chip and FavoriteButton square/circle share one center line — do not override FavoriteButton sizing. */}
-          {!compactAgentOwned ? (
+          {showCompactTopChromeRow ? (
             <div
               className={cn(
                 "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-2 pt-2",
@@ -828,6 +838,14 @@ const ListingCard = ({
             ) : (
               <div className="h-full w-full bg-zinc-50" aria-hidden />
             )}
+            {compactSavedHeartOverlay ? (
+              <div className="pointer-events-none absolute left-2 top-2 z-20" aria-hidden>
+                <Heart
+                  className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                  strokeWidth={1.5}
+                />
+              </div>
+            ) : null}
           </div>
           
           {/* Status Change Banner (top priority) */}
