@@ -15,9 +15,23 @@ interface ConversationPanelProps {
   conversationId: string | undefined;
   /** Refetch inbox thread list (e.g. after send — sidebar previews update for sender). */
   onInboxInvalidate?: () => void;
+  /**
+   * When set (e.g. embedded listing thread), header close calls this instead of navigating away.
+   */
+  onCloseRequest?: () => void;
+  /**
+   * Primary header line — e.g. full listing address for a listing-scoped thread.
+   * When set, the listing “About:” subtitle is omitted to avoid duplication.
+   */
+  threadTitle?: string | null;
 }
 
-export function ConversationPanel({ conversationId, onInboxInvalidate }: ConversationPanelProps) {
+export function ConversationPanel({
+  conversationId,
+  onInboxInvalidate,
+  onCloseRequest,
+  threadTitle,
+}: ConversationPanelProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from as string | undefined;
@@ -26,6 +40,14 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
+
+  const handleHeaderClose = () => {
+    if (onCloseRequest) {
+      onCloseRequest();
+      return;
+    }
+    navigate(from ?? "/agent-dashboard");
+  };
 
   useEffect(() => {
     if (!details?.listingId) {
@@ -105,7 +127,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
         <p className="mb-4 text-[13px] font-medium text-zinc-700">Conversation not found</p>
         <button
           type="button"
-          onClick={() => navigate(from ?? "/agent-dashboard")}
+          onClick={handleHeaderClose}
           className="text-[13px] font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
         >
           Go back
@@ -124,7 +146,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
             </h2>
             <button
               type="button"
-              onClick={() => navigate(from ?? "/agent-dashboard")}
+              onClick={handleHeaderClose}
               className="shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
             >
               <X className="h-4 w-4" aria-hidden />
@@ -167,9 +189,8 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
     lastSenderId = msg.senderId;
   });
 
-  const contextLabel = details?.listingId
-    ? listingAddress || "Listing conversation"
-    : null;
+  const contextLabel =
+    details?.listingId && !threadTitle?.trim() ? listingAddress || "Listing conversation" : null;
 
   return (
     <div className="flex min-h-0 h-full w-full flex-1 flex-col">
@@ -185,19 +206,37 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
               isOnline={isOnline}
             />
             <div className="min-w-0">
-              <div className="flex min-w-0 flex-wrap items-center gap-2 gap-y-1">
-                <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
-                  {details?.otherUserName}
-                </h2>
-                {details ? (
-                  <span className="inline-flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
-                    {details.otherUserIsAgent ? "AAC agent" : "Client"}
-                  </span>
-                ) : null}
-              </div>
-              {contextLabel ? (
-                <span className="mt-1 block truncate text-[12px] leading-snug text-zinc-500">{contextLabel}</span>
-              ) : null}
+              {threadTitle?.trim() ? (
+                <>
+                  <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{threadTitle.trim()}</h2>
+                  <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2 gap-y-1">
+                    <span className="truncate text-[12px] leading-snug text-zinc-500">
+                      Discussion with {details?.otherUserName}
+                    </span>
+                    {details ? (
+                      <span className="inline-flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
+                        {details.otherUserIsAgent ? "AAC agent" : "Client"}
+                      </span>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 gap-y-1">
+                    <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+                      {details?.otherUserName}
+                    </h2>
+                    {details ? (
+                      <span className="inline-flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
+                        {details.otherUserIsAgent ? "AAC agent" : "Client"}
+                      </span>
+                    ) : null}
+                  </div>
+                  {contextLabel ? (
+                    <span className="mt-1 block truncate text-[12px] leading-snug text-zinc-500">{contextLabel}</span>
+                  ) : null}
+                </>
+              )}
               {details?.otherUserId && (
                 <span className="mt-1 flex items-center gap-1.5">
                   {isOnline ? (
@@ -216,7 +255,7 @@ export function ConversationPanel({ conversationId, onInboxInvalidate }: Convers
           </div>
           <button
             type="button"
-            onClick={() => navigate(from ?? "/agent-dashboard")}
+            onClick={handleHeaderClose}
             className="-mr-1 shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
           >
             <X className="h-4 w-4" aria-hidden />
