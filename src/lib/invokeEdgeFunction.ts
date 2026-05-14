@@ -26,8 +26,17 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
   });
 
   if (error || !data?.success) {
+    const context = (error as { context?: Response } | null)?.context;
+    const backendError = context
+      ? await context
+          .clone()
+          .json()
+          .then((body) => (typeof body?.error === "string" ? body.error : null))
+          .catch(() => null)
+      : null;
+
     throw new Error(
-      data?.error || error?.message || "Something went wrong. Please try again.",
+      data?.error || backendError || error?.message || "Something went wrong. Please try again.",
     );
   }
 
