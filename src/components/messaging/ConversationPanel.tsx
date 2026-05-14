@@ -197,7 +197,6 @@ export function ConversationPanel({
 
   const composer = (
     <MessageComposer
-      edge={hasMessages ? "bottom" : "top"}
       onSend={async (body) => {
         const ok = await sendMessage(body);
         if (ok) onInboxInvalidate?.();
