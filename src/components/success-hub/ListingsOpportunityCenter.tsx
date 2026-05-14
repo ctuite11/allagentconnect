@@ -9,7 +9,7 @@ interface ListingsOpportunityCenterProps {
 }
 
 const stats = [
-  { key: "buyers", label: "Active Buyers", icon: Users, route: "/success-hub/buyers" },
+  { key: "buyers", label: "Active Buyers", icon: Users, route: "/agent/buyers" },
   { key: "opportunities", label: "New Opportunities", icon: Zap, route: "/client-needs" },
   { key: "network", label: "Network Activity", icon: MessageCircle, route: "/messages" },
 ] as const;

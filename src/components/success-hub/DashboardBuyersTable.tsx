@@ -2,9 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { Flame, Heart, Users } from "lucide-react";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
-/** Matches `BuyersList`: `navigate(\`/success-hub/buyers/${b.clientId}\`)` where id is `clients.id`. */
+/** Matches `BuyersList`: buyer workspace uses `clients.id` in URL (`/agent/buyers/:id`). */
 function buyerAccountPath(clientId: string) {
-  return `/success-hub/buyers/${clientId}`;
+  return `/agent/buyers/${clientId}`;
 }
 
 interface DashboardBuyersTableProps {
@@ -49,7 +49,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
         </div>
         <button
           type="button"
-          onClick={() => navigate("/success-hub/buyers")}
+          onClick={() => navigate("/agent/buyers")}
           className="shrink-0 rounded-sm text-sm font-medium text-indigo-600 underline-offset-2 transition-colors hover:text-indigo-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
         >
           View all →

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BulkEmailDialog } from "@/components/BulkEmailDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { EditBuyerDialog } from "@/components/success-hub/EditBuyerDialog";
 import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
@@ -96,13 +97,14 @@ export default function BuyerAccount() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [emailComposeOpen, setEmailComposeOpen] = useState(false);
 
   const handleGeneralMessage = async () => {
     if (!user?.id || !mirror.client?.agent_user_id) return;
     try {
       const convoId = await findOrCreateConversation(user.id, mirror.client.agent_user_id);
       if (convoId) {
-        navigate(`/messages/${convoId}`);
+        navigate(`/agent/messages/${convoId}`);
       } else {
         toast.error("Could not open conversation.");
       }
@@ -131,7 +133,7 @@ export default function BuyerAccount() {
           title="Buyer workspace | All Agent Connect"
           description="View buyer activity, hot sheets, and favorites in All Agent Connect."
           canonical={
-            buyerId ? `https://allagentconnect.com/success-hub/buyers/${buyerId}` : undefined
+            buyerId ? `https://allagentconnect.com/agent/buyers/${buyerId}` : undefined
           }
           noindex
         />
@@ -154,7 +156,7 @@ export default function BuyerAccount() {
               Buyer not found or you don&apos;t have access.
             </p>
             <Button variant="outline" size="sm" className="mt-5 border-neutral-200 shadow-sm" asChild>
-              <Link to="/success-hub/buyers">Back to buyers</Link>
+              <Link to="/agent/buyers">Back to buyers</Link>
             </Button>
           </AgentSectionCard>
         </AgentAacPage>
@@ -173,7 +175,7 @@ export default function BuyerAccount() {
       <Seo
         title={`${capitalizedName || "Buyer"} | All Agent Connect`}
         description="Agent view of buyer activity, hot sheets, favorites, and market previews."
-        canonical={`https://allagentconnect.com/success-hub/buyers/${buyerId ?? ""}`}
+        canonical={`https://allagentconnect.com/agent/buyers/${buyerId ?? ""}`}
         noindex
       />
       <ClientDashboardView
@@ -220,16 +222,17 @@ export default function BuyerAccount() {
         }
         onMessagesPrimary={handleGeneralMessage}
         onMessagesIcon={handleGeneralMessage}
+        onEmailPrimary={() => setEmailComposeOpen(true)}
         onStatTileNavigate={(label) => {
           if (!buyerId) return;
-          if (label === "Favorites") navigate(`/success-hub/buyers/${buyerId}/favorites`);
+          if (label === "Favorites") navigate(`/agent/buyers/${buyerId}/favorites`);
           if (label === "New Matches") navigate("/search");
           if (label === "Unread Messages") navigate("/agent/messages");
           if (label === "Hot Sheets") navigate("/agent/hot-sheets");
         }}
         dashboardPaths={{
           hotSheetsViewAll: "/agent/hot-sheets",
-          favoritesViewAll: `/success-hub/buyers/${buyerId}/favorites`,
+          favoritesViewAll: `/agent/buyers/${buyerId}/favorites`,
           marketSearch: "/search",
           favoritesEmptySearch: "/search",
         }}
@@ -237,7 +240,7 @@ export default function BuyerAccount() {
           <div className="bg-white px-6 py-3 md:px-8">
             <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2">
               <Button variant="ghost" size="sm" asChild className="-ml-1 h-9 gap-1 text-[#0E56F5] hover:bg-[#0E56F5]/10 hover:text-[#0B46CC]">
-                <Link to="/success-hub/buyers" title="Return to Success Hub buyers list">
+                <Link to="/agent/buyers" title="Return to buyers list">
                   <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
                   Back to buyers
                 </Link>
@@ -260,7 +263,7 @@ export default function BuyerAccount() {
         buyerName={capitalizedName}
         agentId={client.agent_id}
         buyerId={client.id}
-        onRemoved={() => navigate("/success-hub/buyers")}
+        onRemoved={() => navigate("/agent/buyers")}
       />
 
       {user?.id && (
@@ -287,6 +290,19 @@ export default function BuyerAccount() {
           }}
         />
       )}
+
+      {client.email?.trim() ? (
+        <BulkEmailDialog
+          open={emailComposeOpen}
+          onOpenChange={setEmailComposeOpen}
+          recipients={[
+            {
+              email: client.email.trim(),
+              name: capitalizedName.trim() || client.email.trim(),
+            },
+          ]}
+        />
+      ) : null}
     </>
   );
 }

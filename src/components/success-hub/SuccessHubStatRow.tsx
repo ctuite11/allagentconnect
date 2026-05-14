@@ -37,7 +37,7 @@ export function SuccessHubStatRow({ summary }: SuccessHubStatRowProps) {
       subtle: "Active relationships",
       icon: Users,
       iconClass: "text-indigo-600",
-      onClick: () => navigate("/success-hub/buyers"),
+      onClick: () => navigate("/agent/buyers"),
     },
     {
       key: "listings",

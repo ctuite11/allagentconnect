@@ -46,7 +46,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
               variant="outline"
               size="sm"
               className="h-9 gap-1.5 rounded-full border-neutral-200 bg-white px-4 text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
-              onClick={() => navigate("/success-hub/buyers")}
+              onClick={() => navigate("/agent/buyers")}
             >
               <UserPlus className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
               Add buyer

@@ -493,7 +493,7 @@ const MyClients = () => {
       if (error) throw error;
       toast.success(`${toTitleCase(client.first_name)} added to My Buyers`);
       await fetchClients(user.id);
-      navigate(`/success-hub/buyers/${client.id}`);
+      navigate(`/agent/buyers/${client.id}`);
     } catch (err: any) {
       console.error("[MyClients] Add to Buyers failed", err);
       toast.error(err?.message || "Couldn't add this contact to buyers");

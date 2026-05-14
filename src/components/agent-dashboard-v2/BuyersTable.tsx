@@ -28,7 +28,7 @@ export function BuyersTable({ buyers }: BuyersTableProps) {
           return (
             <button
               key={buyer.id}
-              onClick={() => navigate(`/success-hub/buyers/${buyer.id}`)}
+              onClick={() => navigate(`/agent/buyers/${buyer.id}`)}
               className="w-full flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3.5 text-left hover:border-muted-foreground/30 transition-colors group"
             >
               <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground shrink-0">

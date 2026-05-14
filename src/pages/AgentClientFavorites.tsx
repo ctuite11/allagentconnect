@@ -96,7 +96,7 @@ export default function AgentClientFavorites() {
 
   const handleBack = () => {
     if (buyerId) {
-      navigate(`/success-hub/buyers/${buyerId}`);
+      navigate(`/agent/buyers/${buyerId}`);
       return;
     }
     navigate("/my-clients");
