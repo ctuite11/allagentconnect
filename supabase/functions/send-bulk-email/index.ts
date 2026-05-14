@@ -119,6 +119,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("[send-bulk-email] Created campaign:", campaign.id);
 
+    // Preserve user-inserted HTML (images, links). Otherwise escape and convert newlines.
+    const looksLikeHtml = /<[a-z][\s\S]*>/i.test(message);
+    const escapeHtml = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const renderedBody = looksLikeHtml
+      ? message
+      : escapeHtml(message).replace(/\n/g, "<br>");
+
     // Build email HTML template
     const htmlTemplate = `
       <!DOCTYPE html>
@@ -135,15 +143,14 @@ const handler = async (req: Request): Promise<Response> => {
               margin: 0 auto;
               padding: 20px;
             }
-            .content {
-              white-space: pre-wrap;
-            }
+            .content img { max-width: 100%; height: auto; }
+            .content a { color: #0E56F5; }
           </style>
         </head>
         <body>
           <div class="content">
             {{GREETING}}
-            <p>${message.replace(/\n/g, '<br>')}</p>
+            <div>${renderedBody}</div>
           </div>
         </body>
       </html>
