@@ -119,8 +119,13 @@ interface ListingCardProps {
     sender_id: string | null;
     created_at: string;
   }>;
+  /**
+   * Optional hot-sheet id for parents that mount `ListingChatDrawer` with `hot_sheet_comments` realtime.
+   * Compact listing discussion opened via `onOpenChat` does **not** use this prop.
+   */
   hotSheetId?: string;
   onNewMessage?: (msg: any) => void;
+  /** Opens listing discussion (Sheet, inbox thread, or hot-sheet drawer). Never gated on `hotSheetId`. */
   onOpenChat?: () => void;
   interestSignals?: ListingSignals | null;
   /** Favorited on the current hot sheet (e.g. by client) */
@@ -153,6 +158,11 @@ interface ListingCardProps {
    * Omit the empty top chrome row when there is no selection checkbox and no interactive favorite chrome.
    */
   compactSavedHeartOverlay?: boolean;
+  /**
+   * When true with compact comments, draws a neutral rule between “Listed by” and the comment row.
+   * Use only on agent client favorites — omit elsewhere.
+   */
+  compactListedByMessageSeparator?: boolean;
 }
 const ListingCard = ({
   listing,
@@ -179,6 +189,7 @@ const ListingCard = ({
   hideCompactFavorite = false,
   compactSelectionAccent = "default",
   compactSavedHeartOverlay = false,
+  compactListedByMessageSeparator = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const { role } = useAuthRole();
@@ -708,7 +719,10 @@ const ListingCard = ({
 
     const hasCommentThread = Boolean((chatMessages && chatMessages.length > 0) || clientComment);
     const legacyCommentRowSignals = Boolean(onOpenChat || hasCommentThread || agentInfo);
-    const buyerCommentRowSignals = Boolean(showCompactComments && (onOpenChat || hasCommentThread));
+    /** `onOpenChat` alone enables the compact comment row (e.g. agent favorites → conversation Sheet) — no `hotSheetId` required. */
+    const buyerCommentRowSignals = Boolean(
+      (showCompactComments || onOpenChat) && (onOpenChat || hasCommentThread),
+    );
     const showCompactCommentsRow = buyerCommentRowSignals || (!showCompactComments && legacyCommentRowSignals);
 
     const totalPhotos = getTotalPhotos();
@@ -943,7 +957,10 @@ const ListingCard = ({
             <div
               className={
                 showCompactComments
-                  ? "mt-2 w-full"
+                  ? cn(
+                      "mt-2 w-full",
+                      compactListedByMessageSeparator && "border-t border-neutral-200 pt-2",
+                    )
                   : "mt-auto pt-2 border-t border-border/40 flex items-center justify-between w-full gap-2"
               }
             >

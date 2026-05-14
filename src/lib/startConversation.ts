@@ -34,7 +34,11 @@ export async function findOrCreateConversation(
   const { data: existing, error: searchError } = await query.maybeSingle();
 
   if (searchError) {
-    console.error("Error searching for conversation:", searchError);
+    console.error("[findOrCreateConversation] search failed", {
+      message: searchError.message,
+      code: searchError.code,
+      details: searchError,
+    });
     return null;
   }
 
@@ -56,7 +60,14 @@ export async function findOrCreateConversation(
     .single();
 
   if (createError || !newConvo) {
-    console.error("Error creating conversation:", createError);
+    console.error("[findOrCreateConversation] insert failed", {
+      message: createError?.message,
+      code: createError?.code,
+      details: createError,
+      listingId,
+      currentUserId,
+      otherUserId,
+    });
     return null;
   }
 

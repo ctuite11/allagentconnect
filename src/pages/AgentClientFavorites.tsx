@@ -103,7 +103,7 @@ async function fetchListingConversationPreviewMap(
     if (!latestByConvo.has(cid)) latestByConvo.set(cid, m);
   }
 
-  const out: Record<string, ChatMessage[]> = {};
+  const out: Record<string, ListingCardThreadPreview[]> = {};
   for (const [convoId, msg] of latestByConvo) {
     const lid = convoIdToListingId.get(convoId);
     if (!lid || out[lid]) continue;
@@ -201,6 +201,7 @@ export default function AgentClientFavorites() {
   const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
   const [messagesMap, setMessagesMap] = useState<Record<string, ListingCardThreadPreview[]>>({});
   const [discussionOpen, setDiscussionOpen] = useState(false);
+  const [discussionResolving, setDiscussionResolving] = useState(false);
   const [discussionConvoId, setDiscussionConvoId] = useState<string | null>(null);
   const [discussionListingId, setDiscussionListingId] = useState<string | null>(null);
   const [discussionTitle, setDiscussionTitle] = useState("");
@@ -329,15 +330,18 @@ export default function AgentClientFavorites() {
   const openListingDiscussion = useCallback(
     async (listingId: string) => {
       const agentId = authUser?.id;
+      console.log("[AgentClientFavorites] openListingDiscussion:start", {
+        listingId,
+        agentId,
+        buyerUserId,
+        crmClientId,
+      });
       if (!agentId || !buyerUserId) {
+        console.warn("[AgentClientFavorites] openListingDiscussion:missing agent or buyer id");
         toast.error("Unable to open discussion.");
         return;
       }
-      const convId = await findOrCreateConversation(agentId, buyerUserId, { listingId });
-      if (!convId) {
-        toast.error("Could not open listing discussion.");
-        return;
-      }
+
       const row = favorites.find((r) => r.listing_id === listingId);
       const mapped = row ? mapAgentClientFavoriteRpcToListingCard(row) : null;
       const merged = mapped ? { ...mapped, ...(listingEnrich[listingId] ?? {}) } : null;
@@ -345,12 +349,43 @@ export default function AgentClientFavorites() {
         merged && (merged.address || merged.city)
           ? [merged.address, merged.city].filter(Boolean).join(", ").trim()
           : "Listing discussion";
-      setDiscussionConvoId(convId);
+
       setDiscussionListingId(listingId);
       setDiscussionTitle(title);
+      setDiscussionConvoId(null);
+      setDiscussionResolving(true);
       setDiscussionOpen(true);
+      console.log("[AgentClientFavorites] openListingDiscussion:sheet opened (resolving thread)");
+
+      try {
+        console.log("[AgentClientFavorites] findOrCreateConversation:before", {
+          agentId,
+          buyerUserId,
+          listingId,
+        });
+        const convId = await findOrCreateConversation(agentId, buyerUserId, { listingId });
+        console.log("[AgentClientFavorites] findOrCreateConversation:after", { convId });
+        if (!convId) {
+          console.warn("[AgentClientFavorites] findOrCreateConversation returned null (see startConversation logs)");
+          toast.error("Could not open listing discussion.");
+          setDiscussionOpen(false);
+          setDiscussionListingId(null);
+          setDiscussionTitle("");
+          return;
+        }
+        setDiscussionConvoId(convId);
+        console.log("[AgentClientFavorites] openListingDiscussion:ConversationPanel bound", { convId });
+      } catch (e) {
+        console.error("[AgentClientFavorites] openListingDiscussion:unexpected error", e);
+        toast.error("Could not open listing discussion.");
+        setDiscussionOpen(false);
+        setDiscussionListingId(null);
+        setDiscussionTitle("");
+      } finally {
+        setDiscussionResolving(false);
+      }
     },
-    [authUser?.id, buyerUserId, favorites, listingEnrich],
+    [authUser?.id, buyerUserId, favorites, listingEnrich, crmClientId],
   );
 
   const count = favorites.length;
@@ -425,6 +460,9 @@ export default function AgentClientFavorites() {
                   showCompactComments
                   chatMessages={messagesMap[row.listing_id] || []}
                   onOpenChat={() => {
+                    console.log("[AgentClientFavorites] ListingCard onOpenChat invoked", {
+                      listingId: row.listing_id,
+                    });
                     void openListingDiscussion(row.listing_id);
                   }}
                   hideCompactFavorite
@@ -446,9 +484,11 @@ export default function AgentClientFavorites() {
         onOpenChange={(open) => {
           setDiscussionOpen(open);
           if (!open) {
+            setDiscussionResolving(false);
             setDiscussionConvoId(null);
             setDiscussionListingId(null);
             setDiscussionTitle("");
+            console.log("[AgentClientFavorites] discussion sheet closed");
           }
         }}
       >
@@ -456,15 +496,21 @@ export default function AgentClientFavorites() {
           side="right"
           className="flex h-full w-full max-h-[100dvh] flex-col gap-0 border-l border-neutral-200 p-0 sm:max-w-lg"
         >
-          {discussionConvoId ? (
-            <ConversationPanel
-              conversationId={discussionConvoId}
-              threadTitle={discussionTitle}
-              onCloseRequest={() => setDiscussionOpen(false)}
-              onInboxInvalidate={() => {
-                void refreshDiscussionPreview();
-              }}
-            />
+          {discussionOpen ? (
+            discussionResolving || !discussionConvoId ? (
+              <div className="flex min-h-0 flex-1 flex-col bg-white">
+                <AacMonogramLoader variant="section" message="Opening discussion…" className="min-h-[40vh] flex-1" />
+              </div>
+            ) : (
+              <ConversationPanel
+                conversationId={discussionConvoId}
+                threadTitle={discussionTitle}
+                onCloseRequest={() => setDiscussionOpen(false)}
+                onInboxInvalidate={() => {
+                  void refreshDiscussionPreview();
+                }}
+              />
+            )
           ) : null}
         </SheetContent>
       </Sheet>
