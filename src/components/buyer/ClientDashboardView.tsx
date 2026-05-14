@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
@@ -100,7 +100,7 @@ export interface ClientDashboardViewProps {
   navigate: NavigateFunction;
   /** Full name (first + last) for the header title. */
   buyerDisplayName: string;
-  /** Logged-in buyer or CRM client — used for header mailto. */
+  /** Logged-in buyer or CRM client email (display; agent mirror uses in-app messaging, not mailto). */
   buyerEmail: string | null;
   /** CRM / mirror — buyer phone line under name (optional). */
   buyerPhoneFmt?: { display: string; telHref: string } | null;
@@ -118,6 +118,8 @@ export interface ClientDashboardViewProps {
   /** Optional — agent opens thread with buyer instead of generic inbox */
   onMessagesPrimary?: () => void;
   onMessagesIcon?: () => void;
+  /** Agent mirror — opens AAC in-app email composer (`BulkEmailDialog` / send-bulk-email); no mailto. */
+  onEmailPrimary?: () => void;
   showBuyerSelfServiceChrome?: boolean;
   setAddFriendOpen?: (open: boolean) => void;
   setShowEndDialog?: (open: boolean) => void;
@@ -208,6 +210,7 @@ export function ClientDashboardView({
   getHotSheetCardPath,
   onMessagesPrimary,
   onMessagesIcon,
+  onEmailPrimary,
   showBuyerSelfServiceChrome = true,
   setAddFriendOpen,
   setShowEndDialog,
@@ -282,20 +285,20 @@ export function ClientDashboardView({
                     {buyerEmail?.trim() ? (
                       <span className="flex min-w-0 items-center gap-2" title="Buyer email">
                         <Mail
-                          className={`h-3.5 w-3.5 shrink-0 ${variant === "agent" ? agentMirrorHeaderIcon : "text-neutral-400"}`}
+                          className={`h-3.5 w-3.5 shrink-0 ${variant === "agent" ? "text-[#0E56F5]" : "text-neutral-400"}`}
                           aria-hidden
                           strokeWidth={2}
                         />
-                        <a
-                          href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
-                          className={
-                            variant === "agent"
-                              ? "min-w-0 truncate text-neutral-700 transition-colors hover:text-[#0E56F5] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
-                              : "min-w-0 truncate text-neutral-700 transition-colors hover:text-neutral-900 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
-                          }
-                        >
-                          {buyerEmail.trim()}
-                        </a>
+                        {variant === "agent" ? (
+                          <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
+                        ) : (
+                          <a
+                            href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
+                            className="min-w-0 truncate text-neutral-700 transition-colors hover:text-neutral-900 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                          >
+                            {buyerEmail.trim()}
+                          </a>
+                        )}
                       </span>
                     ) : null}
                     {buyerPhoneFmt ? (
@@ -321,19 +324,39 @@ export function ClientDashboardView({
                 ) : null}
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {buyerEmail?.trim() ? (
-                    <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
-                      <a
-                        href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
-                        title={variant === "agent" ? "Send email to buyer" : undefined}
-                      >
-                        <Mail
-                          className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
-                          aria-hidden
-                          strokeWidth={2}
-                        />
-                        Email
-                      </a>
-                    </Button>
+                    variant === "agent" ? (
+                      onEmailPrimary ? (
+                        <button
+                          type="button"
+                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), buyerHeaderSoftBtn)}
+                          title="Send email through All Agent Connect (does not open an external mail app)"
+                          onClick={() => {
+                            onEmailPrimary();
+                          }}
+                        >
+                          <Mail
+                            className="mr-1.5 h-3.5 w-3.5 text-[#0E56F5] sm:mr-2 sm:h-4 sm:w-4"
+                            aria-hidden
+                            strokeWidth={2}
+                          />
+                          Email
+                        </button>
+                      ) : null
+                    ) : (
+                      <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
+                        <a
+                          href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
+                          title="Send email"
+                        >
+                          <Mail
+                            className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
+                            aria-hidden
+                            strokeWidth={2}
+                          />
+                          Email
+                        </a>
+                      </Button>
+                    )
                   ) : null}
                   <Button
                     variant="outline"
