@@ -4339,10 +4339,6 @@ export type Database = {
         Returns: string
       }
       owns_submission: { Args: { p_submission_id: string }; Returns: boolean }
-      ensure_conversation_participants_for_caller: {
-        Args: { p_conversation_id: string }
-        Returns: undefined
-      }
       rate_limit_consume: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: Json
