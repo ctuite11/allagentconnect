@@ -46,6 +46,8 @@ interface BuyerCollection {
   hotSheets: { id: string; name: string }[];
   photos: string[];
   collaborators: string[];
+  /** False for criteria-only cards (no CRM `clients.id` for `/agent/buyers/:id/favorites`). */
+  supportsBuyerFavorites: boolean;
 }
 
 const getInitials = (first?: string, last?: string): string => {
@@ -715,6 +717,7 @@ const HotSheets = ({
             hotSheets: [{ id: sheet.id, name: sheet.name }],
             photos: sheetPhotos,
             collaborators: collabInitials,
+            supportsBuyerFavorites: false,
           });
         } else {
           for (const client of clients) {
@@ -739,6 +742,7 @@ const HotSheets = ({
                 hotSheets: [{ id: sheet.id, name: sheet.name }],
                 photos: sheetPhotos,
                 collaborators: collabInitials,
+                supportsBuyerFavorites: true,
               });
             }
           }
@@ -923,6 +927,11 @@ const HotSheets = ({
                 hotSheetCount={collection.hotSheets.length}
                 photos={collection.photos}
                 onClick={() => handleCardClick(collection)}
+                onFavoritesClick={
+                  isAgentMode && collection.supportsBuyerFavorites
+                    ? () => navigate(`/agent/buyers/${collection.clientId}/favorites`)
+                    : undefined
+                }
               />
             ))}
           </div>

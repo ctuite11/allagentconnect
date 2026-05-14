@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Pencil, ArrowLeft, Clock, Plus, Search, Trash2 } from "lucide-react";
+import { Home, Pencil, ArrowLeft, Clock, Plus, Search, Trash2, Eye, Heart } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -414,6 +414,27 @@ const HotSheetBuyerDetail = () => {
                   </p>
                   <div className="mt-2">
                     <CriteriaPills criteria={hs.criteria} />
+                  </div>
+                  <div className="mt-2 flex items-center justify-end gap-3 border-t border-neutral-100 pt-2">
+                    <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
+                      <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                      <span>View</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="pointer-events-auto inline-flex items-center gap-1 text-sm font-medium text-neutral-700 transition-colors hover:text-neutral-900"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/agent/buyers/${clientId}/favorites`);
+                      }}
+                    >
+                      <Heart
+                        className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      <span>Favorites</span>
+                    </button>
                   </div>
                 </div>
               </div>

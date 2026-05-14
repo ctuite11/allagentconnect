@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye } from "lucide-react";
+import { Eye, Heart } from "lucide-react";
 import {
   buyerCollectionCardRoot,
   buyerImageMosaicCell,
@@ -11,6 +11,8 @@ interface BuyerCollectionCardProps {
   hotSheetCount: number;
   photos: string[];
   onClick: () => void;
+  /** When set, shows a Favorites control (CRM buyer favorites) next to View. */
+  onFavoritesClick?: () => void;
 }
 
 function PhotoCell({ src }: { src?: string }) {
@@ -32,14 +34,15 @@ function PhotoCell({ src }: { src?: string }) {
 }
 
 /**
- * Agent Hot Sheets list (`/agent/hot-sheets`) — 2×2 photo mosaic + title, count, single “View” affordance.
- * Empty photo slots are plain white cells (no house/monogram). Whole card is clickable.
+ * Agent Hot Sheets list (`/agent/hot-sheets`) — 2×2 photo mosaic + title, count, View + optional Favorites.
+ * Empty photo slots are plain white cells (no house/monogram). Whole card is clickable; Favorites stops propagation.
  */
 export function BuyerCollectionCard({
   clientName,
   hotSheetCount,
   photos,
   onClick,
+  onFavoritesClick,
 }: BuyerCollectionCardProps) {
   const p = [photos[0], photos[1], photos[2], photos[3]];
 
@@ -70,9 +73,28 @@ export function BuyerCollectionCard({
             <p className="text-sm text-neutral-600">
               {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}
             </p>
-            <div className="pointer-events-none flex shrink-0 items-center gap-1 text-sm font-medium text-[#0E56F5]">
-              <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
-              <span>View</span>
+            <div className="flex shrink-0 items-center gap-3">
+              <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
+                <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                <span>View</span>
+              </div>
+              {onFavoritesClick ? (
+                <button
+                  type="button"
+                  className="pointer-events-auto inline-flex items-center gap-1 text-sm font-medium text-neutral-700 transition-colors hover:text-neutral-900"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFavoritesClick();
+                  }}
+                >
+                  <Heart
+                    className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                  <span>Favorites</span>
+                </button>
+              ) : null}
             </div>
           </div>
         </div>

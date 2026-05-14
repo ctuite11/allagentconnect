@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, MapPin, ChevronDown, ArrowLeft, Pencil } from "lucide-react";
+import { Send, MapPin, ChevronDown, ArrowLeft, Pencil, Heart } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -1127,6 +1127,21 @@ if (comments && comments.length > 0) {
                     <SelectItem value="price-low">Price: Low to High</SelectItem>
                   </SelectContent>
                 </Select>
+                {buyerContextClientId ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 gap-1.5 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                    onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                  >
+                    <Heart
+                      className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    Favorites
+                  </Button>
+                ) : null}
                 {!isSharedWorkspace && !invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                   <Button
                     type="button"
