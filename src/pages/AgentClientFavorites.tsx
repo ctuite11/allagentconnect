@@ -505,8 +505,6 @@ export default function AgentClientFavorites() {
             ) : (
               <ConversationPanel
                 conversationId={discussionConvoId}
-                threadTitle={discussionTitle}
-                onCloseRequest={() => setDiscussionOpen(false)}
                 onInboxInvalidate={() => {
                   void refreshDiscussionPreview();
                 }}

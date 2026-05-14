@@ -4255,6 +4255,10 @@ export type Database = {
         }
       }
       end_client_relationship: { Args: never; Returns: number }
+      ensure_conversation_participants_for_caller: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
       get_client_favorites_for_agent: {
