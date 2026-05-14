@@ -63,18 +63,23 @@ serve(async (req) => {
 
   const supaAdmin = createClient(supabaseUrl, serviceRoleKey);
 
+  console.log("[send-agent-client-email] authenticated", { agentId });
+
   // Resolve recipient
   let recipientEmail = (body.recipientEmail ?? "").trim();
   let recipientName = (body.recipientName ?? "").trim();
 
   if (body.clientId) {
     const { data: client, error: clientErr } = await supaAdmin
-      .from("crm_clients")
+      .from("clients")
       .select("id, agent_id, email, first_name, last_name")
       .eq("id", body.clientId)
       .maybeSingle();
 
-    if (clientErr) return json({ success: false, error: clientErr.message }, 500);
+    if (clientErr) {
+      console.error("[send-agent-client-email] client lookup failed", clientErr);
+      return json({ success: false, error: clientErr.message }, 500);
+    }
     if (!client) return json({ success: false, error: "Client not found" }, 404);
     if (client.agent_id !== agentId) {
       return json({ success: false, error: "Forbidden" }, 403);
@@ -156,6 +161,7 @@ serve(async (req) => {
     .single();
 
   if (jobErr) {
+    console.error("[send-agent-client-email] email enqueue failed", jobErr);
     return json({ success: false, error: `Email enqueue failed: ${jobErr.message}` }, 500);
   }
 
