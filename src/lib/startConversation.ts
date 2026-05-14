@@ -43,8 +43,7 @@ export async function findOrCreateConversation(
   }
 
   if (existing) {
-    // Ensure participant rows exist
-    await ensureParticipants(existing.id, currentUserId, otherUserId);
+    await ensureParticipants(existing.id);
     return existing.id;
   }
 
@@ -71,27 +70,19 @@ export async function findOrCreateConversation(
     return null;
   }
 
-  // Create participant rows for both users
-  await ensureParticipants(newConvo.id, currentUserId, otherUserId);
+  await ensureParticipants(newConvo.id);
 
   return newConvo.id;
 }
 
-async function ensureParticipants(
-  conversationId: string,
-  userA: string,
-  userB: string
-): Promise<void> {
-  // Upsert both participants
-  const { error } = await supabase.from("conversation_participants").upsert(
-    [
-      { conversation_id: conversationId, user_id: userA },
-      { conversation_id: conversationId, user_id: userB },
-    ],
-    { onConflict: "conversation_id,user_id" }
-  );
-  
+async function ensureParticipants(conversationId: string): Promise<void> {
+  // Avoid client `upsert` default ON CONFLICT DO UPDATE: `cp_update_own` only allows updating your own row,
+  // so updating the counterparty's participant row fails RLS. Server RPC uses INSERT ... DO NOTHING only.
+  const { error } = await supabase.rpc("ensure_conversation_participants_for_caller", {
+    p_conversation_id: conversationId,
+  });
+
   if (error) {
-    console.error("Error ensuring participants:", error);
+    console.error("[ensureParticipants] ensure_conversation_participants_for_caller failed:", error);
   }
 }

@@ -14,7 +14,7 @@ import {
 } from "@/components/success-hub/listingCardAdapter";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { cn } from "@/lib/utils";
@@ -496,6 +496,7 @@ export default function AgentClientFavorites() {
           side="right"
           className="flex h-full w-full max-h-[100dvh] flex-col gap-0 border-l border-neutral-200 p-0 sm:max-w-lg"
         >
+          <SheetTitle className="sr-only">Listing discussion</SheetTitle>
           {discussionOpen ? (
             discussionResolving || !discussionConvoId ? (
               <div className="flex min-h-0 flex-1 flex-col bg-white">
