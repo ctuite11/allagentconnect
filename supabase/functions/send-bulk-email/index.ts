@@ -301,7 +301,7 @@ const handler = async (req: Request): Promise<Response> => {
           : "";
 
         const personalizedHtml = htmlTemplate
-          .replace("{{GREETING}}", `<p>Hello ${recipient.name},</p>`) +
+          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`) +
           (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
 
         return {
