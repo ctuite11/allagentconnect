@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { BuyerRowStatusPill, type BuyerRowStatusInput } from "@/components/agent/BuyerRowStatusPill";
@@ -362,7 +362,6 @@ export default function AgentClientFavorites() {
         ) : error ? null : count > 0 ? (
           <>
             <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-neutral-200 pb-4">
-              <Heart className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" strokeWidth={1.5} aria-hidden />
               <h2 className="text-sm font-semibold text-neutral-950">Favorites</h2>
               <span className="text-sm text-neutral-500">{listingsLabel}</span>
             </div>
@@ -371,18 +370,18 @@ export default function AgentClientFavorites() {
                 <SuccessHubListingCard
                   key={row.listing_id}
                   compactSavedHeartOverlay
-                  showCompactComments={Boolean(primaryHotSheetForComments)}
+                  showCompactComments
                   hotSheetId={primaryHotSheetForComments ?? undefined}
                   chatMessages={messagesMap[row.listing_id] || []}
                   onNewMessage={handleNewMessage}
-                  onOpenChat={
-                    primaryHotSheetForComments
-                      ? () => {
-                          setChatListingId(row.listing_id);
-                          setChatDrawerOpen(true);
-                        }
-                      : undefined
-                  }
+                  onOpenChat={() => {
+                    if (primaryHotSheetForComments) {
+                      setChatListingId(row.listing_id);
+                      setChatDrawerOpen(true);
+                    } else {
+                      toast.info("Add this buyer to a hot sheet to leave listing notes here.");
+                    }
+                  }}
                   hideCompactFavorite
                   listing={{
                     ...mapAgentClientFavoriteRpcToListingCard(row),

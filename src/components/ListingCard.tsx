@@ -839,10 +839,11 @@ const ListingCard = ({
               <div className="h-full w-full bg-zinc-50" aria-hidden />
             )}
             {compactSavedHeartOverlay ? (
-              <div className="pointer-events-none absolute left-2 top-2 z-20" aria-hidden>
+              <div className="pointer-events-none absolute right-2 top-2 z-20" aria-hidden>
                 <Heart
-                  className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                  strokeWidth={1.5}
+                  className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
+                  strokeWidth={2.25}
+                  aria-hidden
                 />
               </div>
             ) : null}
