@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,8 +14,25 @@ import {
 } from "@/components/success-hub/listingCardAdapter";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { ConversationPanel } from "@/components/messaging/ConversationPanel";
+import { findOrCreateConversation } from "@/lib/startConversation";
 import { cn } from "@/lib/utils";
+import { useAuthRole } from "@/hooks/useAuthRole";
+
+/**
+ * Compact card preview shape expected by `ListingCard` — sourced here from `conversation_messages` only
+ * (not `hot_sheet_comments`). `hot_sheet_id` is an unused legacy field on the card type.
+ */
+type ListingCardThreadPreview = {
+  id: string;
+  hot_sheet_id: string;
+  listing_id: string;
+  comment: string;
+  sender_role: string;
+  sender_id: string | null;
+  created_at: string;
+};
 
 function titleCaseToken(term: string): string {
   const t = term.trim();
@@ -27,6 +44,82 @@ function formatFavoritesClientDisplayName(first: string, last: string): string {
   const fnParts = first.trim().split(/\s+/).filter(Boolean).map(titleCaseToken);
   const lnParts = last.trim().split(/\s+/).filter(Boolean).map(titleCaseToken);
   return [...fnParts, ...lnParts].filter(Boolean).join(" ").trim();
+}
+
+function conversationRowToCardPreview(
+  row: {
+    id: string;
+    listing_id: string;
+    sender_agent_id: string;
+    body: string;
+    created_at: string;
+  },
+  agentUserId: string,
+): ListingCardThreadPreview {
+  return {
+    id: row.id,
+    hot_sheet_id: "",
+    listing_id: row.listing_id,
+    comment: row.body,
+    sender_role: row.sender_agent_id === agentUserId ? "agent" : "client",
+    sender_id: row.sender_agent_id,
+    created_at: row.created_at,
+  };
+}
+
+/** Latest `conversation_messages` row per listing for compact card previews (same thread as inbox / property). */
+async function fetchListingConversationPreviewMap(
+  listingIds: string[],
+  agentUserId: string,
+  buyerUserId: string,
+): Promise<Record<string, ListingCardThreadPreview[]>> {
+  if (listingIds.length === 0) return {};
+  const { data: convoRows, error: cErr } = await supabase
+    .from("conversations")
+    .select("id, listing_id, agent_a_id, agent_b_id")
+    .in("listing_id", listingIds);
+  if (cErr || !convoRows?.length) return {};
+
+  const convos = (convoRows as { id: string; listing_id: string; agent_a_id: string; agent_b_id: string }[]).filter(
+    (c) =>
+      (c.agent_a_id === agentUserId && c.agent_b_id === buyerUserId) ||
+      (c.agent_a_id === buyerUserId && c.agent_b_id === agentUserId),
+  );
+  if (convos.length === 0) return {};
+
+  const convoIds = convos.map((c) => c.id);
+  const convoIdToListingId = new Map(convos.map((c) => [c.id, c.listing_id]));
+
+  const { data: msgRows, error: mErr } = await supabase
+    .from("conversation_messages")
+    .select("id, conversation_id, sender_agent_id, body, created_at")
+    .in("conversation_id", convoIds)
+    .order("created_at", { ascending: false });
+  if (mErr || !msgRows?.length) return {};
+
+  const latestByConvo = new Map<string, (typeof msgRows)[0]>();
+  for (const m of msgRows) {
+    const cid = m.conversation_id as string;
+    if (!latestByConvo.has(cid)) latestByConvo.set(cid, m);
+  }
+
+  const out: Record<string, ChatMessage[]> = {};
+  for (const [convoId, msg] of latestByConvo) {
+    const lid = convoIdToListingId.get(convoId);
+    if (!lid || out[lid]) continue;
+    out[lid] = [conversationRowToCardPreview(msg as never, agentUserId)];
+  }
+  return out;
+}
+
+async function fetchLatestPreviewForListing(
+  listingId: string,
+  agentUserId: string,
+  buyerUserId: string,
+): Promise<ListingCardThreadPreview | null> {
+  const map = await fetchListingConversationPreviewMap([listingId], agentUserId, buyerUserId);
+  const arr = map[listingId];
+  return arr?.[0] ?? null;
 }
 
 async function fetchListingEnrichmentForFavorites(
@@ -94,6 +187,7 @@ export default function AgentClientFavorites() {
   /** CRM `clients.id` — Success Hub uses `buyerId`; legacy route uses `clientId`. */
   const crmClientId = buyerId ?? clientId ?? "";
   const navigate = useNavigate();
+  const { user: authUser } = useAuthRole();
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<AgentClientFavoriteRpcRow[]>([]);
   const [listingEnrich, setListingEnrich] = useState<Record<string, Partial<ListingCardModel>>>({});
@@ -105,20 +199,12 @@ export default function AgentClientFavorites() {
     buyerWorkspaceLinked: false,
   });
   const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
-  const [hotSheetIdsForComments, setHotSheetIdsForComments] = useState<string[]>([]);
-  const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>({});
-  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
-  const [chatListingId, setChatListingId] = useState<string | null>(null);
+  const [messagesMap, setMessagesMap] = useState<Record<string, ListingCardThreadPreview[]>>({});
+  const [discussionOpen, setDiscussionOpen] = useState(false);
+  const [discussionConvoId, setDiscussionConvoId] = useState<string | null>(null);
+  const [discussionListingId, setDiscussionListingId] = useState<string | null>(null);
+  const [discussionTitle, setDiscussionTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  const handleNewMessage = useCallback((msg: ChatMessage) => {
-    setMessagesMap((prev) => {
-      const lid = msg.listing_id;
-      const cur = prev[lid] ?? [];
-      if (cur.some((m) => m.id === msg.id)) return prev;
-      return { ...prev, [lid]: [...cur, msg] };
-    });
-  }, []);
 
   useEffect(() => {
     if (!crmClientId) {
@@ -129,43 +215,12 @@ export default function AgentClientFavorites() {
     void loadPage(crmClientId);
   }, [crmClientId]);
 
-  const primaryHotSheetForComments = hotSheetIdsForComments[0] ?? null;
-
-  useEffect(() => {
-    if (!primaryHotSheetForComments) return;
-    const channel = supabase
-      .channel(`agent-client-favorites-chat-${primaryHotSheetForComments}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "hot_sheet_comments",
-          filter: `hot_sheet_id=eq.${primaryHotSheetForComments}`,
-        },
-        (payload) => {
-          const newMsg = payload.new as ChatMessage;
-          setMessagesMap((prev) => {
-            const lid = newMsg.listing_id;
-            const existing = prev[lid] || [];
-            if (existing.some((m) => m.id === newMsg.id)) return prev;
-            return { ...prev, [lid]: [...existing, newMsg] };
-          });
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [primaryHotSheetForComments]);
-
   const loadPage = async (id: string) => {
     try {
       setLoading(true);
       setError(null);
       setListingEnrich({});
       setMessagesMap({});
-      setHotSheetIdsForComments([]);
       setBuyerUserId(null);
 
       const {
@@ -224,10 +279,11 @@ export default function AgentClientFavorites() {
         return;
       }
 
-      setBuyerUserId(String(profile.id));
+      const buyerAuthId = String(profile.id);
+      setBuyerUserId(buyerAuthId);
 
       const { data, error: rpcError } = await supabase.rpc("get_client_favorites_for_agent", {
-        p_buyer_user_id: profile.id,
+        p_buyer_user_id: buyerAuthId,
         p_crm_client_id: id,
       });
 
@@ -249,38 +305,8 @@ export default function AgentClientFavorites() {
       const enrich = await fetchListingEnrichmentForFavorites(listingIds);
       setListingEnrich(enrich);
 
-      const { data: hscRows } = await supabase.from("hot_sheet_clients").select("hot_sheet_id").eq("client_id", id);
-      const candidateIds = [...new Set((hscRows ?? []).map((r: { hot_sheet_id: string }) => r.hot_sheet_id))];
-      let orderedSheetIds: string[] = [];
-      if (candidateIds.length > 0) {
-        const { data: ownedSheets } = await supabase
-          .from("hot_sheets")
-          .select("id, created_at")
-          .eq("agent_id", user.id)
-          .in("id", candidateIds)
-          .order("created_at", { ascending: false });
-        orderedSheetIds = (ownedSheets ?? []).map((s: { id: string }) => s.id);
-      }
-      setHotSheetIdsForComments(orderedSheetIds);
-
-      if (orderedSheetIds.length > 0 && listingIds.length > 0) {
-        const { data: commentRows, error: cErr } = await supabase
-          .from("hot_sheet_comments")
-          .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
-          .in("hot_sheet_id", orderedSheetIds)
-          .in("listing_id", listingIds)
-          .order("created_at", { ascending: true });
-        if (!cErr && commentRows) {
-          const map: Record<string, ChatMessage[]> = {};
-          for (const row of commentRows) {
-            const lid = row.listing_id;
-            if (!lid) continue;
-            if (!map[lid]) map[lid] = [];
-            map[lid].push(row as ChatMessage);
-          }
-          setMessagesMap(map);
-        }
-      }
+      const previewMap = await fetchListingConversationPreviewMap(listingIds, user.id, buyerAuthId);
+      setMessagesMap(previewMap);
     } catch (err) {
       console.error(err);
       setError("Failed to load favorites");
@@ -288,6 +314,44 @@ export default function AgentClientFavorites() {
       setLoading(false);
     }
   };
+
+  const refreshDiscussionPreview = useCallback(async () => {
+    if (!discussionListingId || !buyerUserId) return;
+    const agentId = authUser?.id;
+    if (!agentId) return;
+    const latest = await fetchLatestPreviewForListing(discussionListingId, agentId, buyerUserId);
+    setMessagesMap((prev) => ({
+      ...prev,
+      [discussionListingId]: latest ? [latest] : [],
+    }));
+  }, [discussionListingId, buyerUserId, authUser?.id]);
+
+  const openListingDiscussion = useCallback(
+    async (listingId: string) => {
+      const agentId = authUser?.id;
+      if (!agentId || !buyerUserId) {
+        toast.error("Unable to open discussion.");
+        return;
+      }
+      const convId = await findOrCreateConversation(agentId, buyerUserId, { listingId });
+      if (!convId) {
+        toast.error("Could not open listing discussion.");
+        return;
+      }
+      const row = favorites.find((r) => r.listing_id === listingId);
+      const mapped = row ? mapAgentClientFavoriteRpcToListingCard(row) : null;
+      const merged = mapped ? { ...mapped, ...(listingEnrich[listingId] ?? {}) } : null;
+      const title =
+        merged && (merged.address || merged.city)
+          ? [merged.address, merged.city].filter(Boolean).join(", ").trim()
+          : "Listing discussion";
+      setDiscussionConvoId(convId);
+      setDiscussionListingId(listingId);
+      setDiscussionTitle(title);
+      setDiscussionOpen(true);
+    },
+    [authUser?.id, buyerUserId, favorites, listingEnrich],
+  );
 
   const count = favorites.length;
   const listingsLabel = `${count} listing${count === 1 ? "" : "s"}`;
@@ -300,24 +364,11 @@ export default function AgentClientFavorites() {
     navigate("/my-clients");
   };
 
-  const favoritesDrawerHotSheetId = useMemo(() => {
-    if (!chatListingId) return null;
-    const msgs = messagesMap[chatListingId];
-    if (msgs?.length) return msgs[msgs.length - 1].hot_sheet_id;
-    return primaryHotSheetForComments;
-  }, [chatListingId, messagesMap, primaryHotSheetForComments]);
-
-  const chatAddress = useMemo(() => {
-    if (!chatListingId) return "";
-    const row = favorites.find((r) => r.listing_id === chatListingId);
-    if (!row) return "";
-    const mapped = mapAgentClientFavoriteRpcToListingCard(row);
-    const merged = { ...mapped, ...(listingEnrich[chatListingId] ?? {}) };
-    return `${merged.address}, ${merged.city}`;
-  }, [chatListingId, favorites, listingEnrich]);
-
   return (
-    <AgentAacPage className="bg-white pb-12">
+    <AgentAacPage
+      className="bg-white pb-12"
+      data-build-marker="agent-client-favorites-comments-v2"
+    >
       <div className="mx-auto w-full max-w-6xl px-4 pt-5 md:px-6">
         <div className="mb-6 border-b border-neutral-200 pb-5">
           <button
@@ -370,17 +421,11 @@ export default function AgentClientFavorites() {
                 <SuccessHubListingCard
                   key={row.listing_id}
                   compactSavedHeartOverlay
+                  compactListedByMessageSeparator
                   showCompactComments
-                  hotSheetId={primaryHotSheetForComments ?? undefined}
                   chatMessages={messagesMap[row.listing_id] || []}
-                  onNewMessage={handleNewMessage}
                   onOpenChat={() => {
-                    if (primaryHotSheetForComments) {
-                      setChatListingId(row.listing_id);
-                      setChatDrawerOpen(true);
-                    } else {
-                      toast.info("Add this buyer to a hot sheet to leave listing notes here.");
-                    }
+                    void openListingDiscussion(row.listing_id);
                   }}
                   hideCompactFavorite
                   listing={{
@@ -396,19 +441,33 @@ export default function AgentClientFavorites() {
         )}
       </div>
 
-      {chatListingId && favoritesDrawerHotSheetId ? (
-        <ListingChatDrawer
-          open={chatDrawerOpen}
-          onOpenChange={setChatDrawerOpen}
-          hotSheetId={favoritesDrawerHotSheetId}
-          listingId={chatListingId}
-          listingAddress={chatAddress}
-          messages={messagesMap[chatListingId] || []}
-          onNewMessage={handleNewMessage}
-          viewerPerspective="agent"
-          conversationRecipientUserId={buyerUserId}
-        />
-      ) : null}
+      <Sheet
+        open={discussionOpen}
+        onOpenChange={(open) => {
+          setDiscussionOpen(open);
+          if (!open) {
+            setDiscussionConvoId(null);
+            setDiscussionListingId(null);
+            setDiscussionTitle("");
+          }
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="flex h-full w-full max-h-[100dvh] flex-col gap-0 border-l border-neutral-200 p-0 sm:max-w-lg"
+        >
+          {discussionConvoId ? (
+            <ConversationPanel
+              conversationId={discussionConvoId}
+              threadTitle={discussionTitle}
+              onCloseRequest={() => setDiscussionOpen(false)}
+              onInboxInvalidate={() => {
+                void refreshDiscussionPreview();
+              }}
+            />
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </AgentAacPage>
   );
 }
