@@ -73,40 +73,34 @@ function buildEarlyAccessUpdateBody(): string {
       img: `${STORAGE_BASE}/01-home.png`,
       title: "The new front door for elite real estate.",
       desc: "All Agent Connect is the private network where vetted agents share off-market opportunities, refer clients, and close faster — before listings ever touch the public market.",
-      scenario: "Charles Whitman just listed 248 Beacon Hill Penthouse — $6.4M — privately to 12 vetted agents.",
     },
     {
       img: `${STORAGE_BASE}/02-success-hub.png`,
       title: "Your Success Hub — every deal in one view.",
       desc: "Pipeline, buyer activity, listing performance, and live market signals on a single command center designed for top producers.",
-      scenario: "Margaux Devine watched 3 of her Back Bay listings collect 47 qualified views overnight.",
     },
     {
       img: `${STORAGE_BASE}/03-comms.png`,
       title: "Communications Center — clients and colleagues, one inbox.",
       desc: "Email, message, and collaborate without leaving AAC. Every conversation tied to the right listing, buyer, or referral.",
-      scenario: "Sloane Whitfield closed a Greenwich referral entirely through her AAC inbox.",
     },
     {
       img: `${STORAGE_BASE}/04-results.png`,
       title: "Results that move — MLS-grade search, AAC speed.",
       desc: "Find the right home or comp in seconds with rich filters, radius search, and live off-market inventory only AAC agents see.",
-      scenario: "A Newport buyer hunting $4M–$7M waterfronts surfaced 9 perfect matches in one click.",
     },
     {
       img: `${STORAGE_BASE}/05-network.png`,
       title: "The Agent Referral Network — your trusted bench.",
       desc: "Discover and refer to top agents in any market. Every profile is verified, protected from cold scraping, and ready to send a deal your way.",
-      scenario: "Henry Ashford referred a Greenwich client to Margaux Devine — closed at $8.9M.",
     },
   ];
 
   const sectionHtml = sections.map((s, i) => `
     <tr><td style="padding:${i === 0 ? "8px" : "32px"} 0 0;">
-      <img src="${s.img}" alt="${s.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #e5e7eb;" />
+      <img src="${s.img}" alt="${s.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;" />
       <h2 style="margin:20px 0 8px;font-size:22px;font-weight:700;color:#0f172a;line-height:1.25;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.title}</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.desc}</p>
-      <p style="margin:0;padding:12px 14px;background:#f8fafc;border-left:3px solid #0E56F5;border-radius:6px;font-size:14px;line-height:1.5;color:#475569;font-style:italic;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.scenario}</p>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.desc}</p>
     </td></tr>`).join("");
 
   return `
@@ -114,7 +108,7 @@ function buildEarlyAccessUpdateBody(): string {
       <tr><td style="padding:0 0 8px;">
         <p style="margin:0 0 6px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Early Access Update</p>
         <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;line-height:1.15;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A first look inside All Agent Connect.</h1>
-        <p style="margin:0;font-size:15px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Five new ways AAC is changing how top agents work together. The scenarios below are illustrative — names and addresses are not real.</p>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Five new ways AAC is changing how top agents work together.</p>
       </td></tr>
       ${sectionHtml}
       <tr><td align="center" style="padding:36px 0 8px;">
