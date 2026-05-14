@@ -545,13 +545,13 @@ const ListingCard = ({
         };
       }
       
-      // For 'active' status, check if it became active recently (within 7 days)
+      // For 'active' status, check if it became active recently (within 48 hours)
       if (isActiveStatus && statusHistory.length > 0) {
         const allActiveStatuses = statusHistory.filter(h => h.new_status === LISTING_STATUS.ACTIVE);
         if (allActiveStatuses.length >= 1) {
           const mostRecentActiveDate = new Date(allActiveStatuses[0].changed_at);
-          const daysSinceActive = Math.ceil((Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60 * 24));
-          if (daysSinceActive <= 7) {
+          const hoursSinceActive = (Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60);
+          if (hoursSinceActive <= 48) {
             return {
               text: "NEW LISTING",
               color: "bg-neutral-900",
@@ -566,7 +566,7 @@ const ListingCard = ({
     if (statusHistory.length >= 2 && isActiveStatus) {
       const previousStatus = statusHistory[1]?.new_status;
       const changeDate = new Date(statusHistory[0].changed_at);
-      const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
+      const hoursSinceChange = (Date.now() - changeDate.getTime()) / (1000 * 60 * 60);
 
       // Use status constants for comparison
       const offMarketStatuses = [
@@ -576,7 +576,7 @@ const ListingCard = ({
         LISTING_STATUS.CANCELLED,
         LISTING_STATUS.TEMPORARILY_WITHDRAWN,
       ];
-      if (offMarketStatuses.includes(previousStatus) && daysSinceChange <= 14) {
+      if (offMarketStatuses.includes(previousStatus) && hoursSinceChange <= 48) {
         return {
           text: "BACK ON MARKET",
           color: "bg-orange-600",
@@ -592,14 +592,13 @@ const ListingCard = ({
     
     const recentPriceChange = priceHistory[0];
     const changeDate = new Date(recentPriceChange.changed_at);
-    const daysSinceChange = Math.ceil((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Show price change banner for 14 days
-    if (daysSinceChange <= 14) {
-      const priceDirection = recentPriceChange.new_price < recentPriceChange.old_price ? 'reduced' : 'increased';
+    const hoursSinceChange = (Date.now() - changeDate.getTime()) / (1000 * 60 * 60);
+
+    // Show PRICE REDUCED banner for 48 hours; only for decreases
+    if (hoursSinceChange <= 48 && recentPriceChange.new_price < recentPriceChange.old_price) {
       return {
-        text: priceDirection === 'reduced' ? "PRICE REDUCED" : "PRICE CHANGE",
-        color: priceDirection === 'reduced' ? "bg-red-600" : "bg-amber-600",
+        text: "PRICE REDUCED",
+        color: "bg-red-600",
         iconType: "trendingDown" as const
       };
     }

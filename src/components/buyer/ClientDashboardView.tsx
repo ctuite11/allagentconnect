@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
+import { cn } from "@/lib/utils";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import {
   buyerDashboardHotFavTile as unifiedHotFavCardClass,
