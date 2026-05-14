@@ -18,6 +18,7 @@ interface BulkEmailRequest {
   agentId: string;
   agentEmail?: string;
   sendAsGroup?: boolean;
+  template?: string;
 }
 
 interface RateLimitResult {
@@ -64,13 +65,76 @@ function build429Response(resetAt: string): Response {
   });
 }
 
+const STORAGE_BASE = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v1`;
+
+function buildEarlyAccessUpdateBody(): string {
+  const sections = [
+    {
+      img: `${STORAGE_BASE}/01-home.png`,
+      title: "The new front door for elite real estate.",
+      desc: "All Agent Connect is the private network where vetted agents share off-market opportunities, refer clients, and close faster — before listings ever touch the public market.",
+      scenario: "Charles Whitman just listed 248 Beacon Hill Penthouse — $6.4M — privately to 12 vetted agents.",
+    },
+    {
+      img: `${STORAGE_BASE}/02-success-hub.jpg`,
+      title: "Your Success Hub — every deal in one view.",
+      desc: "Pipeline, buyer activity, listing performance, and live market signals on a single command center designed for top producers.",
+      scenario: "Margaux Devine watched 3 of her Back Bay listings collect 47 qualified views overnight.",
+    },
+    {
+      img: `${STORAGE_BASE}/03-comms.jpg`,
+      title: "Communications Center — clients and colleagues, one inbox.",
+      desc: "Email, message, and collaborate without leaving AAC. Every conversation tied to the right listing, buyer, or referral.",
+      scenario: "Sloane Whitfield closed a Greenwich referral entirely through her AAC inbox.",
+    },
+    {
+      img: `${STORAGE_BASE}/04-results.jpg`,
+      title: "Results that move — MLS-grade search, AAC speed.",
+      desc: "Find the right home or comp in seconds with rich filters, radius search, and live off-market inventory only AAC agents see.",
+      scenario: "A Newport buyer hunting $4M–$7M waterfronts surfaced 9 perfect matches in one click.",
+    },
+    {
+      img: `${STORAGE_BASE}/05-network.jpg`,
+      title: "The Agent Referral Network — your trusted bench.",
+      desc: "Discover and refer to top agents in any market. Every profile is verified, protected from cold scraping, and ready to send a deal your way.",
+      scenario: "Henry Ashford referred a Greenwich client to Margaux Devine — closed at $8.9M.",
+    },
+  ];
+
+  const sectionHtml = sections.map((s, i) => `
+    <tr><td style="padding:${i === 0 ? "8px" : "32px"} 0 0;">
+      <img src="${s.img}" alt="${s.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #e5e7eb;" />
+      <h2 style="margin:20px 0 8px;font-size:22px;font-weight:700;color:#0f172a;line-height:1.25;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.title}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.desc}</p>
+      <p style="margin:0;padding:12px 14px;background:#f8fafc;border-left:3px solid #0E56F5;border-radius:6px;font-size:14px;line-height:1.5;color:#475569;font-style:italic;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.scenario}</p>
+    </td></tr>`).join("");
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
+      <tr><td style="padding:0 0 8px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Early Access Update</p>
+        <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;line-height:1.15;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A first look inside All Agent Connect.</h1>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Five new ways AAC is changing how top agents work together. The scenarios below are illustrative — names and addresses are not real.</p>
+      </td></tr>
+      ${sectionHtml}
+      <tr><td align="center" style="padding:36px 0 8px;">
+        <a href="https://allagentconnect.com/agent-dashboard" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Open your Success Hub</a>
+      </td></tr>
+      <tr><td style="padding:24px 0 0;">
+        <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You're receiving this because you registered for early access at allagentconnect.com.</p>
+      </td></tr>
+    </table>`;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { recipients, subject, message, agentId, agentEmail, sendAsGroup = false }: BulkEmailRequest = await req.json();
+    const { recipients, subject, message, agentId, agentEmail, sendAsGroup = false, template }: BulkEmailRequest = await req.json();
+
+    const isTemplated = template === "early-access-update-v1";
 
     console.log(`[send-bulk-email] Enqueuing bulk email to ${recipients.length} recipients`);
 
@@ -78,8 +142,11 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("No recipients provided");
     }
 
-    if (!subject || !message) {
-      throw new Error("Subject and message are required");
+    if (!subject) {
+      throw new Error("Subject is required");
+    }
+    if (!isTemplated && !message) {
+      throw new Error("Message is required");
     }
 
     if (!agentId) {
@@ -120,12 +187,11 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("[send-bulk-email] Created campaign:", campaign.id);
 
     // Preserve user-inserted HTML (images, links). Otherwise escape and convert newlines.
-    const looksLikeHtml = /<[a-z][\s\S]*>/i.test(message);
     const escapeHtml = (s: string) =>
       s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const renderedBody = looksLikeHtml
-      ? message
-      : escapeHtml(message).replace(/\n/g, "<br>");
+    const renderedBody = isTemplated
+      ? buildEarlyAccessUpdateBody()
+      : (/<[a-z][\s\S]*>/i.test(message) ? message : escapeHtml(message).replace(/\n/g, "<br>"));
 
     // Build email HTML template
     const htmlTemplate = `
