@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EmailComposerToolbar } from "@/components/email/EmailComposerToolbar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, Users } from "lucide-react";
@@ -25,9 +27,12 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [template, setTemplate] = useState<string>("custom");
+  const messageRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = async () => {
-    if (!subject.trim() || !message.trim()) {
+    const isTemplated = template === "early-access-update-v1";
+    if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error("Please fill in both subject and message");
       return;
     }
@@ -44,9 +49,10 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
         body: {
           recipients: recipients.map((r) => ({ email: r.email, name: r.name })),
           subject: subject.trim(),
-          message: message.trim(),
+          message: isTemplated ? "" : message.trim(),
           agentId: user.id,
           sendAsGroup: false,
+          template: isTemplated ? "early-access-update-v1" : undefined,
         },
       });
 
@@ -55,6 +61,7 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
       toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? "s" : ""}`);
       setSubject("");
       setMessage("");
+      setTemplate("custom");
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error sending email:", error);
@@ -102,6 +109,34 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="email-template">Template</Label>
+            <Select
+              value={template}
+              onValueChange={(v) => {
+                setTemplate(v);
+                if (v === "early-access-update-v1") {
+                  setSubject((prev) => prev || "A first look inside All Agent Connect");
+                }
+              }}
+            >
+              <SelectTrigger id="email-template" className="border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="early-access-update-v1">
+                  Early Access Update — Product Tour
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {template === "early-access-update-v1" && (
+              <p className="text-xs text-muted-foreground">
+                Pre-built email featuring 5 product screenshots with luxury sample data. Custom message below is ignored.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="email-subject">Subject *</Label>
             <Input
               id="email-subject"
@@ -114,15 +149,25 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email-message">Message *</Label>
+            <Label htmlFor="email-message">
+              Message {template === "custom" ? "*" : "(ignored for this template)"}
+            </Label>
+            <EmailComposerToolbar
+              textareaRef={messageRef}
+              value={message}
+              onChange={setMessage}
+              uploadFolder="bulk"
+            />
             <Textarea
               id="email-message"
+              ref={messageRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Your message..."
               rows={6}
               className="border-slate-200 resize-none"
               maxLength={5000}
+              disabled={template !== "custom"}
             />
             <p className="text-xs text-muted-foreground text-right">{message.length}/5000</p>
           </div>
@@ -138,7 +183,7 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
           </Button>
           <Button
             onClick={handleSend}
-            disabled={sending || !subject.trim() || !message.trim()}
+            disabled={sending || !subject.trim() || (template === "custom" && !message.trim())}
             className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {sending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
