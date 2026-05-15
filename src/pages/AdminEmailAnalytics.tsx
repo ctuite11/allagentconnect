@@ -134,7 +134,7 @@ export default function AdminEmailAnalytics() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-[1280px]">
-      <PageHeader title="Email Analytics" description="Bulk and transactional email delivery, opens, clicks, and bounces." />
+      <PageHeader title="Email Analytics" subtitle="Bulk and transactional email delivery, opens, clicks, and bounces." />
 
       <div className="flex flex-wrap gap-3 mb-6">
         <Select value={range} onValueChange={(v) => setRange(v as Range)}>
