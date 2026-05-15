@@ -67,6 +67,7 @@ function build429Response(resetAt: string): Response {
 
 const STORAGE_BASE = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v1`;
 const STORAGE_BASE_V2 = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v2`;
+const IMG_VERSION_V2 = "v3";
 const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
 
 function buildEarlyAccessUpdateBody(): string {
@@ -134,31 +135,31 @@ function buildEarlyAccessUpdateBody(): string {
 function buildEarlyAccessUpdateV2Body(): string {
   const sections: Array<{ img?: string; title: string; desc?: string }> = [
     {
-      img: `${STORAGE_BASE_V2}/01-home.png`,
+      img: `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION_V2}`,
       title: "Homepage",
     },
     {
-      img: `${STORAGE_BASE_V2}/02-success-hub.png`,
+      img: `${STORAGE_BASE_V2}/02-success-hub.png?v=${IMG_VERSION_V2}`,
       title: "Success Hub",
       desc: "Your daily command center — active buyers, live listings, hot sheets, and what needs your attention today, all in one place.",
     },
     {
-      img: `${STORAGE_BASE_V2}/03-results.png`,
+      img: `${STORAGE_BASE_V2}/03-results.png?v=${IMG_VERSION_V2}`,
       title: "Search Results",
       desc: "Search the full network on a map and list view — your listings, partner-agent listings, and off-market inventory in one unified view.",
     },
     {
-      img: `${STORAGE_BASE_V2}/04-comms.png`,
+      img: `${STORAGE_BASE_V2}/04-comms.png?v=${IMG_VERSION_V2}`,
       title: "Communications Center",
       desc: "Agent-to-agent collaboration: buyer needs, sales intel, rental demand, and direct discussion — all opt-in, all in one inbox.",
     },
     {
-      img: `${STORAGE_BASE_V2}/05-network.png`,
+      img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
       title: "Agent Referral Network",
       desc: "A vetted directory of verified agents for referrals, introductions, and trusted collaboration across markets.",
     },
     {
-      img: `${STORAGE_BASE_V2}/06-footer.png`,
+      img: `${STORAGE_BASE_V2}/06-footer.png?v=${IMG_VERSION_V2}`,
       title: "Footer",
     },
   ];
