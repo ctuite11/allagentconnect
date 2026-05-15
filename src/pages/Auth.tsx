@@ -72,19 +72,50 @@ const US_STATES = [
 
 type AuthMode = "signin" | "register" | "forgot-password";
 
-/** Email-aligned lockup: green monogram + neutral wordmark (no blue in wordmark). */
+/** Email-aligned masthead: black band, green monogram, white wordmark, emerald underline. */
 function AuthBrandLockup({ className }: { className?: string }) {
   return (
-    <div className={cn("flex justify-center", className)}>
-      <div className="flex items-center justify-center gap-3 sm:gap-4">
-        <AACMonogram className="h-11 w-11 shrink-0 text-[#50C878]" aria-hidden />
+    <div className={cn("w-full bg-[#0B0B0F] py-10 sm:py-12", className)}>
+      <div className="flex flex-col items-center justify-center gap-3">
+        <AACMonogram className="h-12 w-12 text-[#50C878]" aria-hidden />
         <span
-          className="text-xl font-semibold tracking-tight text-zinc-950 sm:text-2xl"
+          className="text-2xl font-semibold tracking-tight text-white sm:text-[26px]"
+          style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
+        >
+          All Agent Connect
+        </span>
+        <span className="mt-2 block h-[2px] w-24 rounded-full bg-[#50C878]" aria-hidden />
+      </div>
+    </div>
+  );
+}
+
+/** Email-aligned footer mark: small monogram + wordmark on dark band. */
+function AuthFooterMark() {
+  return (
+    <div className="w-full bg-[#0B0B0F] py-8">
+      <div className="flex flex-col items-center justify-center gap-2">
+        <AACMonogram className="h-7 w-7 text-[#50C878]" aria-hidden />
+        <span
+          className="text-sm font-medium tracking-tight text-white/80"
           style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
         >
           All Agent Connect
         </span>
       </div>
+    </div>
+  );
+}
+
+/** Shared shell: dark masthead → white content → dark footer. */
+function AuthShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <AuthBrandLockup />
+      <main className="flex-1 flex items-center justify-center px-4 py-10 sm:py-14">
+        <div className="w-full max-w-[460px]">{children}</div>
+      </main>
+      <AuthFooterMark />
     </div>
   );
 }
@@ -768,10 +799,8 @@ const Auth = () => {
   // Uses normalized comparison to prevent case sensitivity issues
   if (hasEmailMismatch) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
-        <div className="w-full max-w-[420px]">
-          <AuthBrandLockup className="mb-8" />
-          <div className={`${authCardSurface} text-center`}>
+      <AuthShell>
+        <div className={`${authCardSurface} text-center`}>
             <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
               <LogOut className="w-7 h-7 text-amber-600" />
             </div>
@@ -803,10 +832,9 @@ const Auth = () => {
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
                 Sign Out & Register Different Email
               </Button>
-            </div>
           </div>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
@@ -821,9 +849,8 @@ const Auth = () => {
     }
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4">
-        <div className="w-full max-w-[420px]">
-          <div className={`${authCardSurface} text-center`}>
+      <AuthShell>
+        <div className={`${authCardSurface} text-center`}>
             {isPending ? (
               <>
                 <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -903,19 +930,15 @@ const Auth = () => {
                 </Button>
               </>
             )}
-          </div>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
-      <div className="w-full max-w-[420px]">
-        <AuthBrandLockup className="mb-8" />
-
-        {/* Form Container */}
-        <div className={`${authCardSurface} relative`}>
+    <AuthShell>
+      {/* Form Container */}
+      <div className={`${authCardSurface} relative`}>
           {(mode === "forgot-password" || mode === "register") && (
             <button
               onClick={() => switchMode("signin")}
@@ -1224,9 +1247,8 @@ const Auth = () => {
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-};
+      </AuthShell>
+    );
+  };
 
 export default Auth;
