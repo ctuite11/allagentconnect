@@ -108,7 +108,6 @@ function AuthShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-}
 
 const Auth = () => {
   const navigate = useNavigate();
