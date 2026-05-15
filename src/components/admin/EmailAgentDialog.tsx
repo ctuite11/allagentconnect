@@ -31,7 +31,7 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = async () => {
-    const isTemplated = template === "early-access-update-v1";
+    const isTemplated = template === "early-access-update-v1" || template === "early-access-update-v2";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error("Please fill in both subject and message");
       return;
@@ -52,7 +52,7 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
           message: isTemplated ? "" : message.trim(),
           agentId: user.id,
           sendAsGroup: false,
-          template: isTemplated ? "early-access-update-v1" : undefined,
+          template: isTemplated ? template : undefined,
         },
       });
 
@@ -114,7 +114,7 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
               value={template}
               onValueChange={(v) => {
                 setTemplate(v);
-                if (v === "early-access-update-v1") {
+                if (v === "early-access-update-v1" || v === "early-access-update-v2") {
                   setSubject((prev) => prev || "A first look inside All Agent Connect");
                 }
               }}
@@ -124,14 +124,17 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="early-access-update-v2">
+                  Early Access — First Look (v2, recommended)
+                </SelectItem>
                 <SelectItem value="early-access-update-v1">
                   Early Access Update — Product Tour
                 </SelectItem>
               </SelectContent>
             </Select>
-            {template === "early-access-update-v1" && (
+            {(template === "early-access-update-v1" || template === "early-access-update-v2") && (
               <p className="text-xs text-muted-foreground">
-                Pre-built email featuring 5 product screenshots with luxury sample data. Custom message below is ignored.
+                Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
               </p>
             )}
           </div>
