@@ -182,10 +182,6 @@ function buildEarlyAccessUpdateV2Body(): string {
         <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks for being part of early access. Here's a sample of the platform ahead of launch — no pitch, just the product.</p>
       </td></tr>
       ${sectionHtml}
-      <tr><td align="center" style="padding:48px 0 8px;">
-        <p style="margin:0;font-size:24px;font-weight:700;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">What successful agents need.</p>
-        <p style="margin:6px 0 0;font-size:24px;font-weight:700;color:#0E56F5;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">In one special place.</p>
-      </td></tr>
       <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;margin-top:32px;">
         <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">More to come soon.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
