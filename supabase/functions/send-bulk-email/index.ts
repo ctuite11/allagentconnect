@@ -168,7 +168,7 @@ function buildEarlyAccessUpdateV2Body(): string {
     <tr><td style="padding:${i === 0 ? "8px" : "24px"} 0 0;">
       ${s.title ? `<h2 style="margin:0 0 10px;font-size:18px;font-weight:600;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.title}</h2>` : ""}
       ${s.desc ? `<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.desc}</p>` : ""}
-      ${s.img ? `<img src="${s.img}" alt="${s.title || "All Agent Connect"}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;" />` : ""}
+      ${s.img ? `<img src="${s.img}" alt="${s.title || "All Agent Connect"}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #cbd5e1;" />` : ""}
     </td></tr>`).join("");
 
   return `
