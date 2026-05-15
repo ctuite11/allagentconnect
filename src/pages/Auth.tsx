@@ -73,38 +73,48 @@ const US_STATES = [
 
 type AuthMode = "signin" | "register" | "forgot-password";
 
-/** Premium AAC lockup — brand monogram (blue+green) with two-tone wordmark. */
-function AuthBrandLockup({ className }: { className?: string }) {
+/** Dark masthead lockup — matches AAC unified email template. */
+function AuthBrandMasthead() {
   return (
-    <div
-      className={cn("flex items-center justify-center gap-3", className)}
-      aria-label="All Agent Connect"
-    >
-      <BrandMonogram size={40} />
-      <div
-        className="text-[26px] font-semibold leading-none tracking-tight sm:text-[30px]"
-        style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
-      >
-        <span className="text-[#0E56F5]">All Agent</span>{" "}
-        <span className="text-muted-foreground">Connect</span>
+    <div className="w-full bg-[#0B0B0F] px-6 py-10 sm:py-12">
+      <div className="flex flex-col items-center gap-4">
+        <AACMonogram className="h-10 w-10 text-[#22C55E]" />
+        <div
+          className="text-[22px] font-semibold leading-none tracking-tight text-white sm:text-[26px]"
+          style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
+        >
+          All Agent Connect
+        </div>
+        <div className="h-[2px] w-16 bg-[#22C55E]" />
       </div>
     </div>
   );
 }
 
-/** Shared shell: clean white background, centered lockup at top. */
+/** Dark footer band — matches AAC unified email template. */
+function AuthBrandFooter() {
+  return (
+    <div className="w-full bg-[#0B0B0F] px-6 py-6 mt-auto">
+      <div className="flex flex-col items-center gap-2">
+        <div className="h-[2px] w-full max-w-[640px] bg-[#22C55E] -mt-6 mb-4" />
+        <AACMonogram className="h-7 w-7 text-[#22C55E]" />
+        <div className="text-sm text-white/80" style={{ fontFamily: "Manrope, system-ui, sans-serif" }}>
+          All Agent Connect
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Shared shell: dark masthead + white content + dark footer (email template aligned). */
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <div className="w-full pt-10 sm:pt-14">
-        <AuthBrandLockup />
-      </div>
-      <main className="flex-1 flex items-start justify-center px-4 py-10 sm:py-14">
+    <div className="min-h-screen flex flex-col bg-white">
+      <AuthBrandMasthead />
+      <main className="flex-1 flex items-start justify-center px-4 py-10 sm:py-14 bg-white">
         <div className="w-full max-w-[460px]">{children}</div>
       </main>
-      <div className="py-6 text-center text-xs text-muted-foreground">
-        Private by design. Agent-verified.
-      </div>
+      <AuthBrandFooter />
     </div>
   );
 }
