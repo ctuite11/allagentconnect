@@ -1,83 +1,50 @@
-# Early Access Update — Email Blast
+## Goal
 
-A polished HTML email featuring screenshots of 5 key AAC surfaces, each captioned with a luxury-flavored sample scenario (fake names, fake addresses, fake price points). Wired as a new reusable template in `send-bulk-email`, selectable from `BulkEmailDialog`.
+Rebuild the Early Access update email from scratch as a simple, calm "first look" at what we've built — no marketing spin, no references to lawsuits or market noise. Just the product, shown via the agent's own real screenshots.
 
-## Pages featured (in order)
+## Approach
 
-1. **Homepage Hero** (`/`) — "Where elite agents connect, off‑market."
-2. **Agent Dashboard / Success Hub** (`/agent-dashboard`) — pipeline, metrics, market activity at a glance.
-3. **Communications Center** (`/messages` or comms route) — unified inbox for clients + agents.
-4. **Results / Listing Search** (`/listings` or search results) — MLS‑style discovery surface.
-5. **Agent Referral Network** (`/network` discovery) — protected directory of vetted agents.
+Replace the current `early-access-update-v1` template in `supabase/functions/send-bulk-email/index.ts` with a clean, minimal layout:
 
-Each section in the email gets:
-- Full‑width screenshot (rounded corners, soft shadow, AAC frame)
-- Bold headline + 1–2 sentence description of the feature
-- Italic "scenario" line with luxury fake data, e.g.:
-  - *"Charles Whitman just listed 248 Beacon Hill Penthouse — $6.4M — privately to 12 vetted agents."*
-  - *"Sloane Whitfield's buyer is hunting Back Bay brownstones, $3M–$5M. 4 agents matched in 2 minutes."*
-  - *"Henry Ashford referred a Greenwich client to Margaux Devine — closed at $8.9M."*
+1. **Brand header** — AAC logo + monogram (already hosted in the `email-attachments` bucket)
+2. **Intro** — 2–3 sentences: "A quick first look at what we've built. Launching soon."
+3. **Six sections in order**, each as a full-width screenshot + caption:
+   1. Homepage — *caption only, no description*
+   2. Success Hub — screenshot + short description
+   3. Search Results — screenshot + short description
+   4. Comms Center — screenshot + short description
+   5. Agent Referral Network — screenshot + short description
+   6. Footer — *caption only, no description*
+4. **Sign-off** — short note from Chris, contact info, no CTA pressure
 
-## Implementation steps
+## Screenshots
 
-### 1. Capture screenshots
-Use `browser--screenshot` at 1280×800 on the 5 routes above (logged‑in admin session). Save to `src/assets/email/early-access-v1/` as `01-home.jpg` … `05-network.jpg`.
+The 4 already uploaded (homepage, comms, referral network, footer) will be used as-is — **not edited, not regenerated**. The 2 missing screenshots (Success Hub, Search Results) will be uploaded by the user in the next message before I build.
 
-### 2. Upload to public bucket
-Use `supabase--storage_upload` to push each into the existing `email-attachments` (or `brand-assets`) public bucket under `email/early-access-v1/`. Capture the public URLs.
+I will:
+- Copy each uploaded screenshot into `src/assets/email/early-access-v2/` (new folder so we don't disturb v1)
+- Upload the 6 files to Supabase Storage at `email-attachments/early-access-v2/` so they're served from public CDN URLs in the email
+- Reference them in the template via the `STORAGE_BASE` URL pattern already used by the edge function
 
-### 3. New email template
-Add case `"early-access-update-v1"` to `supabase/functions/_shared/renderEmailTemplate.ts`. Renders via `buildAacEmail` with 5 stacked sections (image + headline + body + scenario), AAC brand colors, footer CTA "Open your Success Hub" → `/agent-dashboard`.
+## Descriptions (draft — to be confirmed)
 
-### 4. Wire into bulk send
-- Update `supabase/functions/send-bulk-email/index.ts` to accept `template: "early-access-update-v1"` and call the renderer (skip the user‑typed message path when this template is chosen).
-- Update `src/components/BulkEmailDialog.tsx` to add a "Template" select: *Custom message* (current default) | *Early Access Update — Product Tour*. When the template is chosen, hide the message textarea and show a small preview link instead.
+Short, factual, ~1 sentence each. No hype.
 
-### 5. Deploy + QA
-- Deploy `send-bulk-email`.
-- Send a test to a single admin address.
-- Convert resulting HTML to image and visually verify all 5 screenshots load, captions render, links work.
+- **Success Hub** — "Your daily command center: active buyers, live listings, and what needs your attention today."
+- **Search Results** — "Search the full network — your listings, partner-agent listings, and off-market inventory in one view."
+- **Comms Center** — "Agent-to-agent collaboration: buyer needs, sales intel, rental demand, and direct discussion — all opt-in."
+- **Agent Referral Network** — "A vetted directory of verified agents for referrals, introductions, and trusted collaboration."
 
-## Sample copy (draft)
+You can rewrite any of these before I build.
 
-**Subject:** A look inside All Agent Connect — built for agents like you
+## Template selection
 
-**Preheader:** Five new ways AAC is changing how top agents work together.
+Keeps the existing `early-access-update-v1` value in the dropdown working (so old drafts don't break) and adds a new option `early-access-update-v2` in `BulkEmailDialog.tsx` and the edge function's template switch. v1 stays as a fallback; v2 becomes the recommended choice.
 
-**Sections:**
+## What I need from you before building
 
-1. **The new front door for elite real estate.**
-   AAC is the private network where vetted agents share off‑market opportunities, refer clients, and close faster.
-   *Charles Whitman just listed 248 Beacon Hill Penthouse — $6.4M — privately to 12 vetted agents.*
+1. Upload the 2 missing screenshots: **Success Hub** and **Search Results**
+2. Confirm (or rewrite) the 4 caption descriptions above
+3. Confirm the sign-off line / contact block (use the footer's "Chris Tuite, Founder, 617-877-0519, chris@allagentconnect.com"?)
 
-2. **Your Success Hub — every deal in one view.**
-   Pipeline, buyer activity, listing performance, and live market signals on one page.
-   *Margaux Devine watched 3 of her Back Bay listings get 47 qualified views overnight.*
-
-3. **Communications Center — clients and colleagues, one inbox.**
-   Email, message, and collaborate without leaving AAC.
-   *Sloane Whitfield closed a Greenwich referral entirely through her AAC inbox.*
-
-4. **Results that move — MLS‑grade search, AAC speed.**
-   Find the right home or comp in seconds with rich filters and radius search.
-   *A Newport buyer searching $4M–$7M waterfronts surfaced 9 perfect matches in one click.*
-
-5. **The Agent Referral Network — your trusted bench.**
-   Discover and refer to top agents in any market, with protection from cold scraping.
-   *Henry Ashford referred a Greenwich client to Margaux Devine — closed at $8.9M.*
-
-**CTA:** *Open your Success Hub* → `https://allagentconnect.com/agent-dashboard`
-
-## Files touched
-
-- new: `src/assets/email/early-access-v1/01-home.jpg` … `05-network.jpg` (or storage‑only)
-- edit: `supabase/functions/_shared/renderEmailTemplate.ts` (+ new case)
-- edit: `supabase/functions/send-bulk-email/index.ts` (template branch)
-- edit: `src/components/BulkEmailDialog.tsx` (template selector)
-- deploy: `send-bulk-email`
-
-## Open questions (will assume defaults if you don't answer)
-
-- **Subject + preheader** — use the draft above? (default: yes)
-- **Recipient list** — only the early‑access registered agents (existing bulk flow target)? (default: yes)
-- **Logged‑in screenshots** — OK to capture from your admin session so dashboards aren't empty? (default: yes)
+Once I have those, I'll build v2, deploy the edge function, and you can preview by sending a test to yourself via "Send a copy to myself".
