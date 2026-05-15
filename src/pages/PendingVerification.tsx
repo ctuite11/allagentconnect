@@ -8,10 +8,23 @@ import { authDebug, getAgentStatus } from "@/lib/authDebug";
 import NetworkGlobe from "@/components/home/NetworkGlobe";
 import { AGENT_STATUS } from "@/constants/status";
 import { toast } from "sonner";
+import AACMonogram from "@/components/ui/AACMonogram";
 
 const POLL_INTERVAL_MS = 5000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+
+function PendingBrandLockup() {
+  return (
+    <div className="flex items-center justify-center gap-3" aria-label="All Agent Connect">
+      <AACMonogram className="h-9 w-9 text-aacSuccess" aria-hidden />
+      <div className="text-[26px] font-semibold leading-none tracking-normal sm:text-[32px]">
+        <span className="text-aac">All Agent</span>{" "}
+        <span className="text-muted-foreground">Connect</span>
+      </div>
+    </div>
+  );
+}
 
 const PendingVerification = () => {
   const navigate = useNavigate();
