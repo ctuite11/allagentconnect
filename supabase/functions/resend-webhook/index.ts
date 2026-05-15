@@ -255,19 +255,13 @@ Deno.serve(async (req) => {
     event: normalized,
     detail: {
       provider_event_type: eventType,
+      subject,
       raw: evt,
     },
     provider_message_id: providerMessageId,
     recipient_email: recipient,
     provider_event_at: createdAt,
     source: "resend_webhook",
-
-    // Explicit webhook tracking fields.
-    resend_email_id: providerMessageId,
-    event_type: eventType,
-    recipient: recipient,
-    subject,
-    raw_payload: evt,
   });
   if (evtErr) {
     console.error("[resend-webhook] email_events insert failed:", evtErr);
