@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Upload, CheckCircle2 } from "lucide-react";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { authDebug, getAgentStatus } from "@/lib/authDebug";
-import NetworkGlobe from "@/components/home/NetworkGlobe";
 import { AGENT_STATUS } from "@/constants/status";
 import { toast } from "sonner";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -306,14 +305,6 @@ const PendingVerification = () => {
   if (isApproved) {
     return (
       <div className="min-h-screen flex flex-col relative bg-white">
-        <div 
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ opacity: 0.12, filter: 'saturate(0.5)' }}
-        >
-          <div className="w-[300px] h-[300px]">
-            <NetworkGlobe />
-          </div>
-        </div>
         <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-xl">
             <div className="rounded-2xl p-8 md:p-10 text-center">
@@ -341,11 +332,6 @@ const PendingVerification = () => {
             <span className="text-[#0E56F5]">All Agent</span>
             <span className="text-zinc-400"> Connect</span>
           </h1>
-
-          {/* Globe — muted */}
-          <div className="mx-auto mb-8 w-[100px] h-[100px]" style={{ opacity: 0.3 }}>
-            <NetworkGlobe variant="static" strokeColor="#94A3B8" />
-          </div>
 
           <h2 className="text-2xl md:text-3xl font-medium text-zinc-900 mb-3">
             We couldn't verify your license
