@@ -166,17 +166,17 @@ function buildEarlyAccessUpdateV2Body(): string {
     <tr><td style="padding:32px 0 0;">
       <!--[if mso]>
       <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr>
-      <td width="220" valign="top" style="padding-right:20px;">
+      <td width="180" valign="top" style="padding-right:20px;">
       <![endif]-->
-      <div style="display:inline-block;vertical-align:top;width:100%;max-width:220px;padding-right:20px;box-sizing:border-box;">
+      <div style="display:inline-block;vertical-align:top;width:100%;max-width:180px;padding-right:20px;box-sizing:border-box;">
         <h2 style="margin:0 0 10px;font-size:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.title}</h2>
         <div style="width:32px;height:2px;background:#22C55E;margin:0 0 12px;border-radius:1px;"></div>
         <p style="margin:0 0 12px;font-size:13px;line-height:1.55;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.desc}</p>
         ${r.bullets.map(b => `<p style="margin:0 0 4px;font-size:12px;line-height:1.5;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">✓</span> ${b}</p>`).join("")}
       </div>
-      <!--[if mso]></td><td width="360" valign="top"><![endif]-->
-      <div style="display:inline-block;vertical-align:top;width:100%;max-width:360px;box-sizing:border-box;">
-        <img src="${r.img}" alt="${r.title}" width="360" style="display:block;width:100%;max-width:360px;height:auto;border-radius:10px;border:1px solid #cbd5e1;" />
+      <!--[if mso]></td><td width="400" valign="top"><![endif]-->
+      <div style="display:inline-block;vertical-align:top;width:100%;max-width:400px;box-sizing:border-box;">
+        <img src="${r.img}" alt="${r.title}" width="400" style="display:block;width:100%;max-width:400px;height:auto;border-radius:10px;border:2px solid #0E56F5;" />
       </div>
       <!--[if mso]></td></tr></table><![endif]-->
     </td></tr>`).join("");
@@ -192,7 +192,7 @@ function buildEarlyAccessUpdateV2Body(): string {
         <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.</p>
       </td></tr>
       <tr><td style="padding:8px 0 0;">
-        <img src="${heroImg}" alt="All Agent Connect homepage" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #cbd5e1;" />
+        <img src="${heroImg}" alt="All Agent Connect homepage" width="596" style="display:block;width:100%;max-width:596px;height:auto;border-radius:12px;border:2px solid #0E56F5;" />
       </td></tr>
       ${rowHtml}
       <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;margin-top:32px;">
