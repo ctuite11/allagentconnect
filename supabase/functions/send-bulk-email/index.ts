@@ -157,6 +157,10 @@ function buildEarlyAccessUpdateV2Body(): string {
       title: "Agent Referral Network",
       desc: "A vetted directory of verified agents for referrals, introductions, and trusted collaboration across markets.",
     },
+    {
+      img: `${STORAGE_BASE_V2}/06-footer.png`,
+      title: "Footer",
+    },
   ];
 
   const sectionHtml = sections.map((s, i) => `
