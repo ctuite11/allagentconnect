@@ -133,42 +133,52 @@ function buildEarlyAccessUpdateBody(): string {
 }
 
 function buildEarlyAccessUpdateV2Body(): string {
-  const sections: Array<{ img?: string; title: string; desc?: string }> = [
-    {
-      img: `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION_V2}`,
-      title: "Homepage",
-    },
+  const heroImg = `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION_V2}`;
+
+  const rows: Array<{ img: string; title: string; desc: string; bullets: string[] }> = [
     {
       img: `${STORAGE_BASE_V2}/02-success-hub.png?v=${IMG_VERSION_V2}`,
       title: "Success Hub",
-      desc: "Your daily command center — active buyers, live listings, hot sheets, and what needs your attention today, all in one place.",
+      desc: "One centralized place for buyers, listings, hot sheets, conversations, favorites, and referrals.",
+      bullets: ["Buyer management", "Hot sheets & saved searches", "Listing visibility", "Internal collaboration", "Real-time activity", "Referral opportunities"],
     },
     {
       img: `${STORAGE_BASE_V2}/03-results.png?v=${IMG_VERSION_V2}`,
       title: "Search Results",
-      desc: "Search the full network on a map and list view — your listings, partner-agent listings, and off-market inventory in one unified view.",
+      desc: "Real-time market visibility. Search listings, map inventory, save hot sheets, and share opportunities instantly.",
+      bullets: ["Interactive map search", "Real-time listing updates", "Save as hot sheet", "Share directly with agents"],
     },
     {
       img: `${STORAGE_BASE_V2}/04-comms.png?v=${IMG_VERSION_V2}`,
       title: "Communications Center",
-      desc: "Agent-to-agent collaboration: buyer needs, sales intel, rental demand, and direct discussion — all opt-in, all in one inbox.",
+      desc: "Straight to your email. Internal direct messaging built for active real estate collaboration.",
+      bullets: ["Buyer needs", "Off-market opportunities", "Rental requests", "Referral discussions", "Sales intel"],
     },
     {
       img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
-      title: "Agent Referral Network",
-      desc: "A vetted directory of verified agents for referrals, introductions, and trusted collaboration across markets.",
-    },
-    {
-      img: `${STORAGE_BASE_V2}/06-footer.png?v=${IMG_VERSION_V2}`,
-      title: "",
+      title: "Verified Agent Network",
+      desc: "Relationships still matter. AAC helps agents connect directly with trusted professionals across markets and specialties.",
+      bullets: ["Search by name or market", "View agent specialties", "Build trusted relationships", "Grow your network"],
     },
   ];
 
-  const sectionHtml = sections.map((s, i) => `
-    <tr><td style="padding:${i === 0 ? "8px" : "24px"} 0 0;">
-      ${s.title ? `<h2 style="margin:0 0 10px;font-size:18px;font-weight:600;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.title}</h2>` : ""}
-      ${s.desc ? `<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.desc}</p>` : ""}
-      ${s.img ? `<img src="${s.img}" alt="${s.title || "All Agent Connect"}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #cbd5e1;" />` : ""}
+  const rowHtml = rows.map((r) => `
+    <tr><td style="padding:32px 0 0;">
+      <!--[if mso]>
+      <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr>
+      <td width="220" valign="top" style="padding-right:20px;">
+      <![endif]-->
+      <div style="display:inline-block;vertical-align:top;width:100%;max-width:220px;padding-right:20px;box-sizing:border-box;">
+        <h2 style="margin:0 0 10px;font-size:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.title}</h2>
+        <div style="width:32px;height:2px;background:#22C55E;margin:0 0 12px;border-radius:1px;"></div>
+        <p style="margin:0 0 12px;font-size:13px;line-height:1.55;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.desc}</p>
+        ${r.bullets.map(b => `<p style="margin:0 0 4px;font-size:12px;line-height:1.5;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">✓</span> ${b}</p>`).join("")}
+      </div>
+      <!--[if mso]></td><td width="360" valign="top"><![endif]-->
+      <div style="display:inline-block;vertical-align:top;width:100%;max-width:360px;box-sizing:border-box;">
+        <img src="${r.img}" alt="${r.title}" width="360" style="display:block;width:100%;max-width:360px;height:auto;border-radius:10px;border:1px solid #cbd5e1;" />
+      </div>
+      <!--[if mso]></td></tr></table><![endif]-->
     </td></tr>`).join("");
 
   return `
@@ -176,12 +186,15 @@ function buildEarlyAccessUpdateV2Body(): string {
       <tr><td align="center" style="padding:0 0 24px;">
         <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
       </td></tr>
-      <tr><td style="padding:0 0 8px;">
+      <tr><td style="padding:0 0 16px;">
         <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Early Access</p>
-        <h1 style="margin:0 0 10px;font-size:24px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A quick first look at what we've built.</h1>
-        <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks for being part of early access. Here's a sample of the platform ahead of launch — no pitch, just the product.</p>
+        <h1 style="margin:0 0 10px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">See the market before it happens.</h1>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.</p>
       </td></tr>
-      ${sectionHtml}
+      <tr><td style="padding:8px 0 0;">
+        <img src="${heroImg}" alt="All Agent Connect homepage" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #cbd5e1;" />
+      </td></tr>
+      ${rowHtml}
       <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;margin-top:32px;">
         <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">More to come soon.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
