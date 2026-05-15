@@ -428,13 +428,7 @@ const PendingVerification = () => {
   return (
     <PendingShell>
       <div className="flex flex-col items-center text-center">
-        <div className="relative mb-10 flex h-[132px] w-[132px] items-center justify-center sm:mb-12">
-          <div className="relative h-[118px] w-[118px] rounded-full border border-aac/10 bg-background shadow-custom-md">
-            <NetworkGlobe variant="static" strokeColor="hsl(var(--aac))" fillTriangles />
-          </div>
-        </div>
-
-        <h1 className="text-[34px] font-semibold leading-tight tracking-normal text-foreground sm:text-[42px]">
+        <h1 className="mt-4 text-[34px] font-semibold leading-tight tracking-normal text-foreground sm:text-[42px]">
           Almost there.
         </h1>
 
