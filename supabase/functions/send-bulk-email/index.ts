@@ -160,15 +160,15 @@ function buildEarlyAccessUpdateV2Body(): string {
     },
     {
       img: `${STORAGE_BASE_V2}/06-footer.png?v=${IMG_VERSION_V2}`,
-      title: "Footer",
+      title: "",
     },
   ];
 
   const sectionHtml = sections.map((s, i) => `
-    <tr><td style="padding:${i === 0 ? "8px" : "32px"} 0 0;">
-      ${s.img ? `<img src="${s.img}" alt="${s.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #e2e8f0;" />` : ""}
-      <h2 style="margin:18px 0 ${s.desc ? "8px" : "0"};font-size:18px;font-weight:600;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.title}</h2>
-      ${s.desc ? `<p style="margin:0;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.desc}</p>` : ""}
+    <tr><td style="padding:${i === 0 ? "8px" : "24px"} 0 0;">
+      ${s.title ? `<h2 style="margin:0 0 10px;font-size:18px;font-weight:600;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.title}</h2>` : ""}
+      ${s.desc ? `<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${s.desc}</p>` : ""}
+      ${s.img ? `<img src="${s.img}" alt="${s.title || "All Agent Connect"}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;" />` : ""}
     </td></tr>`).join("");
 
   return `
