@@ -1,27 +1,25 @@
-## Goal
-Replace the 5 screenshot assets in the Early Access v2 email with the user's freshly uploaded screenshots, plus add the new Footer screenshot. Captions only — no template/layout edits.
+## Problem
 
-## Image swaps
-Copy uploads into `src/assets/email/early-access-v2/` (overwriting existing files), then upload to Supabase Storage `email-attachments/early-access-v2/` so the live email picks them up:
+The 6 screenshots in Supabase Storage at `email-attachments/early-access-v2/` were updated, but the URLs in the email body are unchanged. Gmail (and most mail clients) proxy and cache remote images by URL. Once they've fetched `01-home.png`, they keep serving their cached copy — so the email looks identical to the previous send even though storage now has different bytes.
 
-1. `01-home.png` ← Homepage screenshot (hero "See the market before it happens")
-2. `02-success-hub.png` ← Success Hub screenshot (dark sidebar, Jessica Carter, Market activity)
-3. `03-results.png` ← Search Results screenshot (Edit search, map + 5 listing cards)
-4. `04-comms.png` ← Communications Center screenshot (Channels + My Preferences)
-5. `05-network.png` ← AAC Referral Network screenshot (5 agent cards)
-6. `06-footer.png` ← **NEW** Footer screenshot (dark footer with Platform / Solutions / Company columns)
+## Fix
 
-## Edge function update
-In `supabase/functions/send-bulk-email/index.ts`, extend `buildEarlyAccessUpdateV2Body()` to add a 6th section for the Footer with the image and a short caption. Keep the existing 5 sections' captions as they are. No changes to subject, layout, or template registration.
+Append a version query string to each image URL in `buildEarlyAccessUpdateV2Body()` in `supabase/functions/send-bulk-email/index.ts`. The query string is ignored by Supabase Storage but treated as a new URL by image proxies, forcing a fresh fetch.
 
-Caption draft for the new Footer section:
-- **Title:** "One quiet front door"
-- **Body:** "Everything ties back to a single private network — no public listings, no consumer noise. Just verified agents talking to verified agents."
+### Change
 
-## Deploy
-Redeploy `send-bulk-email` so the new caption + image render on the next test send.
+In `supabase/functions/send-bulk-email/index.ts`:
 
-## Out of scope
-- No edits to v1 template
-- No changes to BulkEmailDialog / EmailAgentDialog (v2 option already exists)
-- No edits to the screenshots themselves
+- Add a constant `const IMG_VERSION = "v2";` (bump this number any time screenshots are replaced in the future).
+- Update each of the 6 `img:` lines to append `?v=${IMG_VERSION}`, e.g.:
+  ```
+  img: `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION}`
+  ```
+
+### Deploy & verify
+
+1. Redeploy `send-bulk-email`.
+2. Send yourself a fresh test email.
+3. Confirm the new screenshots render. Future screenshot swaps just need `IMG_VERSION` bumped (`v3`, `v4`, …).
+
+No other files change. No DB or frontend changes.
