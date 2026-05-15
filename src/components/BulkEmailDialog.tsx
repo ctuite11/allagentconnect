@@ -73,7 +73,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
   };
 
   const handleSend = async () => {
-    const isTemplated = template === "early-access-update-v1";
+    const isTemplated = template === "early-access-update-v1" || template === "early-access-update-v2";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error(isTemplated ? "Please fill in the subject" : "Please fill in both subject and message");
       return;
@@ -109,7 +109,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
           agentId: user.id,
           agentEmail: agentInfo?.email, // Pass agent email for replyTo
           sendAsGroup: sendAsGroup && recipients.length < 5, // Only allow group mode for small groups
-          template: isTemplated ? "early-access-update-v1" : undefined,
+          template: isTemplated ? template : undefined,
         },
       });
 
@@ -208,7 +208,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
             <Label htmlFor="template">Template</Label>
             <Select value={template} onValueChange={(v) => {
               setTemplate(v);
-              if (v === "early-access-update-v1") {
+              if (v === "early-access-update-v1" || v === "early-access-update-v2") {
                 setSubject((prev) => prev || "A first look inside All Agent Connect");
               }
             }}>
@@ -217,12 +217,13 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="early-access-update-v2">Early Access — First Look (v2, recommended)</SelectItem>
                 <SelectItem value="early-access-update-v1">Early Access Update — Product Tour (5 sections, luxury sample data)</SelectItem>
               </SelectContent>
             </Select>
-            {template === "early-access-update-v1" && (
+            {(template === "early-access-update-v1" || template === "early-access-update-v2") && (
               <p className="text-xs text-muted-foreground">
-                Pre-built email featuring 5 product screenshots with illustrative luxury sample names and addresses. Your custom message below will be ignored.
+                Pre-built email featuring product screenshots and short captions. Your custom message below will be ignored.
               </p>
             )}
           </div>
