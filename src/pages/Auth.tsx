@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Loader2, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
+import BrandMonogram from "@/components/home-v2/Monogram";
 import { cn } from "@/lib/utils";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
@@ -72,50 +73,38 @@ const US_STATES = [
 
 type AuthMode = "signin" | "register" | "forgot-password";
 
-/** Email-aligned masthead: black band, green monogram, white wordmark, emerald underline. */
+/** Premium AAC lockup — brand monogram (blue+green) with two-tone wordmark. */
 function AuthBrandLockup({ className }: { className?: string }) {
   return (
-    <div className={cn("w-full bg-[#0B0B0F] py-10 sm:py-12", className)}>
-      <div className="flex flex-col items-center justify-center gap-3">
-        <AACMonogram className="h-12 w-12 text-[#50C878]" aria-hidden />
-        <span
-          className="text-2xl font-semibold tracking-tight text-white sm:text-[26px]"
-          style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
-        >
-          All Agent Connect
-        </span>
-        <span className="mt-2 block h-[2px] w-24 rounded-full bg-[#50C878]" aria-hidden />
+    <div
+      className={cn("flex items-center justify-center gap-3", className)}
+      aria-label="All Agent Connect"
+    >
+      <BrandMonogram size={40} />
+      <div
+        className="text-[26px] font-semibold leading-none tracking-tight sm:text-[30px]"
+        style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
+      >
+        <span className="text-[#0E56F5]">All Agent</span>{" "}
+        <span className="text-muted-foreground">Connect</span>
       </div>
     </div>
   );
 }
 
-/** Email-aligned footer mark: small monogram + wordmark on dark band. */
-function AuthFooterMark() {
-  return (
-    <div className="w-full bg-[#0B0B0F] py-8">
-      <div className="flex flex-col items-center justify-center gap-2">
-        <AACMonogram className="h-7 w-7 text-[#50C878]" aria-hidden />
-        <span
-          className="text-sm font-medium tracking-tight text-white/80"
-          style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
-        >
-          All Agent Connect
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** Shared shell: dark masthead → white content → dark footer. */
+/** Shared shell: clean white background, centered lockup at top. */
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <AuthBrandLockup />
-      <main className="flex-1 flex items-center justify-center px-4 py-10 sm:py-14">
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="w-full pt-10 sm:pt-14">
+        <AuthBrandLockup />
+      </div>
+      <main className="flex-1 flex items-start justify-center px-4 py-10 sm:py-14">
         <div className="w-full max-w-[460px]">{children}</div>
       </main>
-      <AuthFooterMark />
+      <div className="py-6 text-center text-xs text-muted-foreground">
+        Private by design. Agent-verified.
+      </div>
     </div>
   );
 }
