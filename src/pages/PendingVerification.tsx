@@ -426,11 +426,9 @@ const PendingVerification = () => {
   // DEFAULT — Pending / Unverified (polling)
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-background px-4 py-8 sm:px-6">
-      <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[560px] flex-col items-center justify-center text-center">
-        <PendingBrandLockup />
-
-        <div className="relative my-10 flex h-[132px] w-[132px] items-center justify-center sm:my-12">
+    <PendingShell>
+      <div className="flex flex-col items-center text-center">
+        <div className="relative mb-10 flex h-[132px] w-[132px] items-center justify-center sm:mb-12">
           <div className="absolute inset-0 rounded-full bg-aac-soft blur-2xl" />
           <div className="relative h-[118px] w-[118px] rounded-full border border-aac/10 bg-background shadow-custom-md">
             <NetworkGlobe variant="static" strokeColor="hsl(var(--aac))" fillTriangles />
@@ -467,8 +465,8 @@ const PendingVerification = () => {
             hello@allagentconnect.com
           </a>
         </p>
-      </main>
-    </div>
+      </div>
+    </PendingShell>
   );
 };
 
