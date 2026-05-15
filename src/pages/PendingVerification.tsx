@@ -393,60 +393,48 @@ const PendingVerification = () => {
   // DEFAULT — Pending / Unverified (polling)
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
-      <div 
-        className="fixed pointer-events-none"
-        style={{
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -60%)',
-          width: '280px',
-          height: '280px',
-          background: 'radial-gradient(circle, rgba(5, 150, 105, 0.08) 0%, transparent 60%)',
-        }}
-      />
-      
-      <div className="relative z-10 w-full max-w-md text-center">
-        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-6">
-          <span className="text-[#0E56F5]">All Agent</span>
-          <span className="text-zinc-400"> Connect</span>
-        </h1>
-        
-        <div className="mx-auto mb-8 w-[130px] h-[130px]">
-          <NetworkGlobe variant="static" strokeColor="#0E56F5" fillTriangles />
+    <div className="min-h-screen bg-background px-4 py-8 sm:px-6">
+      <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[560px] flex-col items-center justify-center text-center">
+        <PendingBrandLockup />
+
+        <div className="relative my-10 flex h-[132px] w-[132px] items-center justify-center sm:my-12">
+          <div className="absolute inset-0 rounded-full bg-aac-soft blur-2xl" />
+          <div className="relative h-[118px] w-[118px] rounded-full border border-aac/10 bg-background shadow-custom-md">
+            <NetworkGlobe variant="static" strokeColor="hsl(var(--aac))" fillTriangles />
+          </div>
         </div>
-        
-        <h2 className="text-2xl md:text-3xl font-medium text-zinc-900 mb-3">
+
+        <h1 className="text-[34px] font-semibold leading-tight tracking-normal text-foreground sm:text-[42px]">
           Almost there.
-        </h2>
-        
+        </h1>
+
         {userEmail && (
-          <p className="text-sm text-zinc-600 mb-6">
-            We're verifying your account now. You'll receive a confirmation email shortly.
+          <p className="mt-4 max-w-[420px] text-[15px] leading-6 text-muted-foreground sm:text-base">
+            Your AAC membership request is in review. We’ll email you as soon as verification is complete.
           </p>
         )}
 
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          className="w-full rounded-full bg-zinc-900 text-white py-3.5 text-sm font-medium cursor-default flex items-center justify-center gap-2"
-        >
-          <span className="inline-block w-2 h-2 rounded-full bg-aacSuccess" />
-          Verification in progress
-        </button>
+        <div className="mt-8 w-full rounded-[28px] border border-border bg-foreground px-5 py-4 text-primary-foreground shadow-custom-lg sm:mt-10">
+          <div className="flex items-center justify-center gap-3 text-sm font-semibold sm:text-[15px]">
+            <span className="relative flex h-2.5 w-2.5" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-aacSuccess opacity-60" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-aacSuccess" />
+            </span>
+            Verification in progress
+          </div>
+        </div>
 
-        <p className="text-zinc-500 text-[11px] mt-6 tracking-wide">
+        <p className="mt-6 text-xs font-medium tracking-normal text-muted-foreground">
           Private by design. Agent-verified.
         </p>
 
-        <p className="text-zinc-400 text-xs mt-4">
+        <p className="mt-4 text-xs text-muted-foreground/80">
           Questions? Reach us at{" "}
-          <a href="mailto:hello@allagentconnect.com" className="hover:text-aacSuccess transition-colors">
+          <a href="mailto:hello@allagentconnect.com" className="font-medium text-foreground transition-colors hover:text-aac">
             hello@allagentconnect.com
           </a>
         </p>
-      </div>
+      </main>
     </div>
   );
 };
