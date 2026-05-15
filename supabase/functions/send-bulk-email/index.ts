@@ -185,7 +185,7 @@ function buildEarlyAccessUpdateV2Body(): string {
         <img src="${heroImg}" alt="All Agent Connect homepage" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
       <tr><td align="center" style="padding:20px 0 0;">
-        <p style="margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Elite connections. Proven success.</p>
+        <p style="margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Elite connections. Proven results.</p>
         <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The private network for matching buyer needs with off-market inventory.</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Exclusive, top-tier networking designed for your success.</p>
       </td></tr>
