@@ -265,7 +265,7 @@ export function ConversationsList({
                   "outline-none mb-1.5 flex items-center gap-2 rounded-xl px-2 py-3 transition-all duration-200 ease-out last:mb-0",
                   isSelected
                     ? "border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-neutral-200/80"
-                    : cn(buyerMessagingThreadRow, idx % 2 === 1 && "bg-neutral-50")
+                    : cn(buyerMessagingThreadRow, idx % 2 === 1 && "bg-neutral-100")
                 )}
               >
                 {canDelete ? (
