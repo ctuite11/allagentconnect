@@ -22,7 +22,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
-import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
+import { type ChatMessage } from "@/components/ListingChatDrawer";
+import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
+import {
+  fetchListingConversationMessagesMap,
+  mergeListingThreadMessages,
+} from "@/lib/listingConversationThread";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 
@@ -570,21 +575,31 @@ const HotSheetReview = () => {
       setAllListings(workspaceIsShared ? visibleListings : nextListings);
       setSelectedListings(new Set());
 
-      // Fetch all chat messages for this hot sheet
-const { data: comments } = await supabase
-  .from("hot_sheet_comments")
-  .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
-  .eq("hot_sheet_id", id as string)
-  .order("created_at", { ascending: true });
-if (comments && comments.length > 0) {
-  const grouped: Record<string, ChatMessage[]> = {};
-  comments.forEach((c: any) => {
-    if (!c.listing_id) return;
-    if (!grouped[c.listing_id]) grouped[c.listing_id] = [];
-    grouped[c.listing_id].push(c as ChatMessage);
-  });
-  setMessagesMap(grouped);
-}
+      const listingIdsForChat = visibleListings.map((l) => l.id);
+      const grouped: Record<string, ChatMessage[]> = {};
+      const { data: comments } = await supabase
+        .from("hot_sheet_comments")
+        .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
+        .eq("hot_sheet_id", id as string)
+        .order("created_at", { ascending: true });
+      for (const c of comments ?? []) {
+        const lid = (c as ChatMessage).listing_id;
+        if (!lid) continue;
+        if (!grouped[lid]) grouped[lid] = [];
+        grouped[lid].push(c as ChatMessage);
+      }
+
+      let merged = grouped;
+      if (user?.id && buyerAuthForConversationSync && listingIdsForChat.length > 0) {
+        const convoMap = await fetchListingConversationMessagesMap(
+          listingIdsForChat,
+          user.id,
+          buyerAuthForConversationSync,
+          user.id,
+        );
+        merged = mergeListingThreadMessages(convoMap, grouped);
+      }
+      setMessagesMap(merged);
     } catch (error: any) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load hot sheet data");
@@ -1358,23 +1373,33 @@ if (comments && comments.length > 0) {
           )}
         </div>
 
-      {/* Chat Drawer */}
-      {chatListingId && (
-        <ListingChatDrawer
+      {chatListingId && conversationRecipientBuyerId ? (
+        <ListingConversationSheet
           open={chatDrawerOpen}
-          onOpenChange={setChatDrawerOpen}
-          hotSheetId={id!}
+          onOpenChange={(open) => {
+            setChatDrawerOpen(open);
+            if (!open) setChatListingId(null);
+          }}
           listingId={chatListingId}
-          listingAddress={
+          otherUserId={conversationRecipientBuyerId}
+          threadTitle={
             listings.find((l) => l.id === chatListingId)
               ? `${listings.find((l) => l.id === chatListingId)!.address}, ${listings.find((l) => l.id === chatListingId)!.city}`
-              : ""
+              : "Listing discussion"
           }
-          messages={messagesMap[chatListingId] || []}
-          onNewMessage={handleNewMessage}
-          conversationRecipientUserId={loading ? undefined : conversationRecipientBuyerId}
+          onInboxInvalidate={() => {
+            if (!agentUserId || !conversationRecipientBuyerId || !chatListingId) return;
+            void fetchListingConversationMessagesMap(
+              [chatListingId],
+              agentUserId,
+              conversationRecipientBuyerId,
+              agentUserId,
+            ).then((convoMap) => {
+              setMessagesMap((prev) => mergeListingThreadMessages(convoMap, { [chatListingId]: prev[chatListingId] ?? [] }));
+            });
+          }}
         />
-      )}
+      ) : null}
 
       {/* Confirm send (invite flow only — not shared workspace) */}
       {!isSharedWorkspace && (

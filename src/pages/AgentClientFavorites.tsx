@@ -14,9 +14,11 @@ import {
 } from "@/components/success-hub/listingCardAdapter";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { ConversationPanel } from "@/components/messaging/ConversationPanel";
-import { findOrCreateConversation } from "@/lib/startConversation";
+import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
+import {
+  fetchListingConversationPreviewMap,
+  type ListingCardThreadMessage,
+} from "@/lib/listingConversationThread";
 import { cn } from "@/lib/utils";
 import { useAuthRole } from "@/hooks/useAuthRole";
 
@@ -24,15 +26,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
  * Compact card preview shape expected by `ListingCard` — sourced here from `conversation_messages` only
  * (not `hot_sheet_comments`). `hot_sheet_id` is an unused legacy field on the card type.
  */
-type ListingCardThreadPreview = {
-  id: string;
-  hot_sheet_id: string;
-  listing_id: string;
-  comment: string;
-  sender_role: string;
-  sender_id: string | null;
-  created_at: string;
-};
+type ListingCardThreadPreview = ListingCardThreadMessage;
 
 function titleCaseToken(term: string): string {
   const t = term.trim();
@@ -44,82 +38,6 @@ function formatFavoritesClientDisplayName(first: string, last: string): string {
   const fnParts = first.trim().split(/\s+/).filter(Boolean).map(titleCaseToken);
   const lnParts = last.trim().split(/\s+/).filter(Boolean).map(titleCaseToken);
   return [...fnParts, ...lnParts].filter(Boolean).join(" ").trim();
-}
-
-function conversationRowToCardPreview(
-  row: {
-    id: string;
-    listing_id: string;
-    sender_agent_id: string;
-    body: string;
-    created_at: string;
-  },
-  agentUserId: string,
-): ListingCardThreadPreview {
-  return {
-    id: row.id,
-    hot_sheet_id: "",
-    listing_id: row.listing_id,
-    comment: row.body,
-    sender_role: row.sender_agent_id === agentUserId ? "agent" : "client",
-    sender_id: row.sender_agent_id,
-    created_at: row.created_at,
-  };
-}
-
-/** Latest `conversation_messages` row per listing for compact card previews (same thread as inbox / property). */
-async function fetchListingConversationPreviewMap(
-  listingIds: string[],
-  agentUserId: string,
-  buyerUserId: string,
-): Promise<Record<string, ListingCardThreadPreview[]>> {
-  if (listingIds.length === 0) return {};
-  const { data: convoRows, error: cErr } = await supabase
-    .from("conversations")
-    .select("id, listing_id, agent_a_id, agent_b_id")
-    .in("listing_id", listingIds);
-  if (cErr || !convoRows?.length) return {};
-
-  const convos = (convoRows as { id: string; listing_id: string; agent_a_id: string; agent_b_id: string }[]).filter(
-    (c) =>
-      (c.agent_a_id === agentUserId && c.agent_b_id === buyerUserId) ||
-      (c.agent_a_id === buyerUserId && c.agent_b_id === agentUserId),
-  );
-  if (convos.length === 0) return {};
-
-  const convoIds = convos.map((c) => c.id);
-  const convoIdToListingId = new Map(convos.map((c) => [c.id, c.listing_id]));
-
-  const { data: msgRows, error: mErr } = await supabase
-    .from("conversation_messages")
-    .select("id, conversation_id, sender_agent_id, body, created_at")
-    .in("conversation_id", convoIds)
-    .order("created_at", { ascending: false });
-  if (mErr || !msgRows?.length) return {};
-
-  const latestByConvo = new Map<string, (typeof msgRows)[0]>();
-  for (const m of msgRows) {
-    const cid = m.conversation_id as string;
-    if (!latestByConvo.has(cid)) latestByConvo.set(cid, m);
-  }
-
-  const out: Record<string, ListingCardThreadPreview[]> = {};
-  for (const [convoId, msg] of latestByConvo) {
-    const lid = convoIdToListingId.get(convoId);
-    if (!lid || out[lid]) continue;
-    out[lid] = [conversationRowToCardPreview(msg as never, agentUserId)];
-  }
-  return out;
-}
-
-async function fetchLatestPreviewForListing(
-  listingId: string,
-  agentUserId: string,
-  buyerUserId: string,
-): Promise<ListingCardThreadPreview | null> {
-  const map = await fetchListingConversationPreviewMap([listingId], agentUserId, buyerUserId);
-  const arr = map[listingId];
-  return arr?.[0] ?? null;
 }
 
 async function fetchListingEnrichmentForFavorites(
@@ -201,8 +119,6 @@ export default function AgentClientFavorites() {
   const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
   const [messagesMap, setMessagesMap] = useState<Record<string, ListingCardThreadPreview[]>>({});
   const [discussionOpen, setDiscussionOpen] = useState(false);
-  const [discussionResolving, setDiscussionResolving] = useState(false);
-  const [discussionConvoId, setDiscussionConvoId] = useState<string | null>(null);
   const [discussionListingId, setDiscussionListingId] = useState<string | null>(null);
   const [discussionTitle, setDiscussionTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -306,7 +222,12 @@ export default function AgentClientFavorites() {
       const enrich = await fetchListingEnrichmentForFavorites(listingIds);
       setListingEnrich(enrich);
 
-      const previewMap = await fetchListingConversationPreviewMap(listingIds, user.id, buyerAuthId);
+      const previewMap = await fetchListingConversationPreviewMap(
+        listingIds,
+        user.id,
+        buyerAuthId,
+        user.id,
+      );
       setMessagesMap(previewMap);
     } catch (err) {
       console.error(err);
@@ -320,24 +241,21 @@ export default function AgentClientFavorites() {
     if (!discussionListingId || !buyerUserId) return;
     const agentId = authUser?.id;
     if (!agentId) return;
-    const latest = await fetchLatestPreviewForListing(discussionListingId, agentId, buyerUserId);
+    const previewMap = await fetchListingConversationPreviewMap(
+      [discussionListingId],
+      agentId,
+      buyerUserId,
+      agentId,
+    );
     setMessagesMap((prev) => ({
       ...prev,
-      [discussionListingId]: latest ? [latest] : [],
+      [discussionListingId]: previewMap[discussionListingId] ?? [],
     }));
   }, [discussionListingId, buyerUserId, authUser?.id]);
 
   const openListingDiscussion = useCallback(
-    async (listingId: string) => {
-      const agentId = authUser?.id;
-      console.log("[AgentClientFavorites] openListingDiscussion:start", {
-        listingId,
-        agentId,
-        buyerUserId,
-        crmClientId,
-      });
-      if (!agentId || !buyerUserId) {
-        console.warn("[AgentClientFavorites] openListingDiscussion:missing agent or buyer id");
+    (listingId: string) => {
+      if (!authUser?.id || !buyerUserId) {
         toast.error("Unable to open discussion.");
         return;
       }
@@ -352,40 +270,9 @@ export default function AgentClientFavorites() {
 
       setDiscussionListingId(listingId);
       setDiscussionTitle(title);
-      setDiscussionConvoId(null);
-      setDiscussionResolving(true);
       setDiscussionOpen(true);
-      console.log("[AgentClientFavorites] openListingDiscussion:sheet opened (resolving thread)");
-
-      try {
-        console.log("[AgentClientFavorites] findOrCreateConversation:before", {
-          agentId,
-          buyerUserId,
-          listingId,
-        });
-        const convId = await findOrCreateConversation(agentId, buyerUserId, { listingId });
-        console.log("[AgentClientFavorites] findOrCreateConversation:after", { convId });
-        if (!convId) {
-          console.warn("[AgentClientFavorites] findOrCreateConversation returned null (see startConversation logs)");
-          toast.error("Could not open listing discussion.");
-          setDiscussionOpen(false);
-          setDiscussionListingId(null);
-          setDiscussionTitle("");
-          return;
-        }
-        setDiscussionConvoId(convId);
-        console.log("[AgentClientFavorites] openListingDiscussion:ConversationPanel bound", { convId });
-      } catch (e) {
-        console.error("[AgentClientFavorites] openListingDiscussion:unexpected error", e);
-        toast.error("Could not open listing discussion.");
-        setDiscussionOpen(false);
-        setDiscussionListingId(null);
-        setDiscussionTitle("");
-      } finally {
-        setDiscussionResolving(false);
-      }
     },
-    [authUser?.id, buyerUserId, favorites, listingEnrich, crmClientId],
+    [authUser?.id, buyerUserId, favorites, listingEnrich],
   );
 
   const count = favorites.length;
@@ -463,7 +350,7 @@ export default function AgentClientFavorites() {
                     console.log("[AgentClientFavorites] ListingCard onOpenChat invoked", {
                       listingId: row.listing_id,
                     });
-                    void openListingDiscussion(row.listing_id);
+                    openListingDiscussion(row.listing_id);
                   }}
                   hideCompactFavorite
                   listing={{
@@ -479,40 +366,24 @@ export default function AgentClientFavorites() {
         )}
       </div>
 
-      <Sheet
-        open={discussionOpen}
-        onOpenChange={(open) => {
-          setDiscussionOpen(open);
-          if (!open) {
-            setDiscussionResolving(false);
-            setDiscussionConvoId(null);
-            setDiscussionListingId(null);
-            setDiscussionTitle("");
-            console.log("[AgentClientFavorites] discussion sheet closed");
-          }
-        }}
-      >
-        <SheetContent
-          side="right"
-          className="flex h-full w-full max-h-[100dvh] flex-col gap-0 border-l border-neutral-200 p-0 sm:max-w-lg"
-        >
-          <SheetTitle className="sr-only">Listing discussion</SheetTitle>
-          {discussionOpen ? (
-            discussionResolving || !discussionConvoId ? (
-              <div className="flex min-h-0 flex-1 flex-col bg-white">
-                <AacMonogramLoader variant="section" message="Opening discussion…" className="min-h-[40vh] flex-1" />
-              </div>
-            ) : (
-              <ConversationPanel
-                conversationId={discussionConvoId}
-                onInboxInvalidate={() => {
-                  void refreshDiscussionPreview();
-                }}
-              />
-            )
-          ) : null}
-        </SheetContent>
-      </Sheet>
+      {buyerUserId ? (
+        <ListingConversationSheet
+          open={discussionOpen}
+          onOpenChange={(open) => {
+            setDiscussionOpen(open);
+            if (!open) {
+              setDiscussionListingId(null);
+              setDiscussionTitle("");
+            }
+          }}
+          listingId={discussionListingId}
+          otherUserId={buyerUserId}
+          threadTitle={discussionTitle}
+          onInboxInvalidate={() => {
+            void refreshDiscussionPreview();
+          }}
+        />
+      ) : null}
     </AgentAacPage>
   );
 }

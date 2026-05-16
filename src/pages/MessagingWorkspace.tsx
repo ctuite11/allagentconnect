@@ -144,11 +144,13 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 lg:h-[calc(100dvh-3.5rem-12rem)] lg:min-h-[420px] lg:flex-row lg:gap-5"
-                  : "flex min-h-0 w-full flex-1 flex-col gap-4 md:min-h-[min(560px,calc(100vh-11rem))] md:flex-row md:gap-5"
+                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5"
+                  : "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5"
               }
             >
-              <div className={`flex h-[min(42dvh,360px)] min-h-[240px] w-full shrink-0 flex-none md:h-full md:min-h-0 md:w-[320px] ${buyerMessagingPanel}`}>
+              <div
+                className={`flex h-[min(38dvh,320px)] min-h-[220px] w-full shrink-0 flex-none md:h-full md:min-h-0 md:w-[320px] ${buyerMessagingPanel}`}
+              >
                 <ConversationsList
                   threads={safeThreads}
                   threadsLoading={Boolean(threadsLoading)}
@@ -168,7 +170,7 @@ function MessagingWorkspaceContent({
               </div>
 
               <div
-                className={`flex min-h-[min(52dvh,420px)] w-full flex-1 flex-col md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none ${panelShellClass}`}
+                className={`flex h-[min(48dvh,400px)] min-h-[280px] w-full flex-1 flex-col overflow-hidden md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none ${panelShellClass}`}
               >
                 <ConversationPanel
                   conversationId={selectedConversationId}

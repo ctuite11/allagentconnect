@@ -24,6 +24,8 @@ interface ConversationPanelProps {
    * When set, the listing “About:” subtitle is omitted to avoid duplication.
    */
   threadTitle?: string | null;
+  /** Sheet/drawer embed: panel fills parent height with pinned composer. */
+  layoutVariant?: "default" | "embedded";
 }
 
 export function ConversationPanel({
@@ -31,6 +33,7 @@ export function ConversationPanel({
   onInboxInvalidate,
   onCloseRequest,
   threadTitle,
+  layoutVariant = "default",
 }: ConversationPanelProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -193,8 +196,6 @@ export function ConversationPanel({
   const contextLabel =
     details?.listingId && !threadTitle?.trim() ? listingAddress || "Listing conversation" : null;
 
-  const hasMessages = messages.length > 0;
-
   const composer = (
     <MessageComposer
       onSend={async (body) => {
@@ -205,6 +206,11 @@ export function ConversationPanel({
       sending={sending}
     />
   );
+
+  const rootClass =
+    layoutVariant === "embedded"
+      ? "flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden"
+      : "flex h-full min-h-0 w-full max-h-full flex-1 flex-col overflow-hidden";
 
   const rolePill = details ? (
     <span className="inline-flex shrink-0 items-center rounded border border-neutral-200/60 bg-white px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-zinc-500">
@@ -222,7 +228,7 @@ export function ConversationPanel({
     ) : null;
 
   return (
-    <div className="flex min-h-0 h-full w-full flex-1 flex-col">
+    <div className={rootClass}>
       {/* Header */}
       <div className="shrink-0 border-b border-neutral-200/90 px-4 py-2.5">
         <div className="flex w-full items-center justify-between gap-3">
@@ -276,36 +282,24 @@ export function ConversationPanel({
         </div>
       </div>
 
-      {hasMessages ? (
-        <>
-          {/* Thread — scroll; composer stays pinned to bottom */}
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-2">
-            <div className="mx-auto w-full max-w-[520px]">
-              {threadElements}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-          {composer}
-        </>
-      ) : (
-        <>
-          {/* Empty thread: composer directly under header so input is visible without scrolling */}
-          {composer}
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3">
-            <div className="mx-auto flex min-h-full w-full max-w-[520px] flex-col">
-              <div className="flex flex-1 flex-col items-center justify-center px-2 py-6 sm:py-8">
-                <div className="w-full rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center sm:py-10">
-                  <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
-                  <p className="mt-2 text-[12px] leading-snug text-zinc-500">
-                    Type above to start — first messages set the tone for this thread.
-                  </p>
-                </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-2">
+        <div className="mx-auto w-full max-w-[520px]">
+          {threadElements.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-2 py-8 sm:py-12">
+              <div className="w-full rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center sm:py-10">
+                <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
+                <p className="mt-2 text-[12px] leading-snug text-zinc-500">
+                  Send a message below to start this thread.
+                </p>
               </div>
-              <div ref={messagesEndRef} className="h-0 shrink-0" aria-hidden />
             </div>
-          </div>
-        </>
-      )}
+          ) : (
+            threadElements
+          )}
+          <div ref={messagesEndRef} className="h-0 shrink-0" aria-hidden />
+        </div>
+      </div>
+      {composer}
     </div>
   );
 }

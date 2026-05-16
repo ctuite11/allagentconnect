@@ -26,7 +26,12 @@ import {
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import ListingCard from "@/components/ListingCard";
-import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
+import { type ChatMessage } from "@/components/ListingChatDrawer";
+import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
+import {
+  fetchListingConversationMessagesMap,
+  mergeListingThreadMessages,
+} from "@/lib/listingConversationThread";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import {
@@ -199,6 +204,7 @@ const ClientHotsheetPage = () => {
     let cancelled = false;
     void (async () => {
       const ids = listings.map((l) => l.id);
+      const agentId = typeof hotSheet?.user_id === "string" ? hotSheet.user_id.trim() : "";
       const { data, error } = await supabase
         .from("hot_sheet_comments")
         .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
@@ -213,7 +219,17 @@ const ClientHotsheetPage = () => {
         if (!map[lid]) map[lid] = [];
         map[lid].push(row as ChatMessage);
       }
-      if (!cancelled) setListingChatByListingId(map);
+
+      let merged = map;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.id && agentId && ids.length > 0) {
+        const convoMap = await fetchListingConversationMessagesMap(ids, user.id, agentId, agentId);
+        merged = mergeListingThreadMessages(convoMap, map);
+      }
+
+      if (!cancelled) setListingChatByListingId(merged);
     })();
     return () => {
       cancelled = true;
@@ -855,25 +871,39 @@ const ClientHotsheetPage = () => {
         </div>
       </main>
 
-      {listingChatListingId && hotSheet?.id ? (
-        <ListingChatDrawer
-          viewerPerspective="client"
+      {listingChatListingId && hotSheet?.user_id ? (
+        <ListingConversationSheet
           open={listingChatOpen}
           onOpenChange={(open) => {
             setListingChatOpen(open);
             if (!open) setListingChatListingId(null);
           }}
-          hotSheetId={hotSheet.id}
           listingId={listingChatListingId}
-          listingAddress={(() => {
+          otherUserId={hotSheet.user_id}
+          threadTitle={(() => {
             const row = listings.find((l) => l.id === listingChatListingId);
-            return row ? `${row.address}, ${row.city}` : "";
+            return row ? `${row.address}, ${row.city}` : "Listing discussion";
           })()}
-          messages={listingChatByListingId[listingChatListingId] ?? []}
-          onNewMessage={handleListingChatMessage}
-          conversationRecipientUserId={
-            !loading && !error && hotSheet ? hotSheet.user_id ?? null : undefined
-          }
+          onInboxInvalidate={() => {
+            void (async () => {
+              const {
+                data: { user },
+              } = await supabase.auth.getUser();
+              const agentId = hotSheet?.user_id;
+              if (!user?.id || !agentId || !listingChatListingId) return;
+              const convoMap = await fetchListingConversationMessagesMap(
+                [listingChatListingId],
+                user.id,
+                agentId,
+                agentId,
+              );
+              setListingChatByListingId((prev) =>
+                mergeListingThreadMessages(convoMap, {
+                  [listingChatListingId]: prev[listingChatListingId] ?? [],
+                }),
+              );
+            })();
+          }}
         />
       ) : null}
 

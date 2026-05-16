@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
+import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
 
 export interface Message {
   id: string;
@@ -64,6 +65,11 @@ export function useConversation(conversationId: string | undefined) {
         setLoading(false);
         return;
       }
+
+      await supabase.rpc("ensure_conversation_participants_for_caller", {
+        p_conversation_id: normalizedId,
+      });
+      await unarchiveConversationForUser(supabase, normalizedId);
 
       const otherUserId = convo.agent_a_id === user.id ? convo.agent_b_id : convo.agent_a_id;
 

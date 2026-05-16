@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import { Card } from "@/components/ui/card";
 import ListingCard from "@/components/ListingCard";
-import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
+import { type ChatMessage } from "@/components/ListingChatDrawer";
+import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
+import {
+  fetchListingConversationMessagesMap,
+  mergeListingThreadMessages,
+} from "@/lib/listingConversationThread";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -225,9 +230,27 @@ const Favorites = ({
         if (!map[lid]) map[lid] = [];
         map[lid].push(row as ChatMessage);
       }
+
+      let merged = map;
+      const { data: hsRow } = await supabase
+        .from("hot_sheets")
+        .select("user_id")
+        .eq("id", primaryHs)
+        .maybeSingle();
+      const agentId = typeof hsRow?.user_id === "string" ? hsRow.user_id.trim() : "";
+      if (agentId && listingIds.length > 0) {
+        const convoMap = await fetchListingConversationMessagesMap(
+          listingIds,
+          auth.user.id,
+          agentId,
+          agentId,
+        );
+        merged = mergeListingThreadMessages(convoMap, map);
+      }
+
       if (!cancelled) {
         setFavoritesHotSheetForComments(primaryHs);
-        setFavoritesChatMap(map);
+        setFavoritesChatMap(merged);
       }
     })();
     return () => {
@@ -1292,24 +1315,38 @@ const Favorites = ({
           </AlertDialogContent>
         </AlertDialog>
 
-        {buyerMode && favoritesChatListingId && favoritesDrawerHotSheetId ? (
-          <ListingChatDrawer
-            viewerPerspective="client"
+        {buyerMode && favoritesChatListingId && favoritesConversationAgentUserId ? (
+          <ListingConversationSheet
             open={favoritesChatOpen}
             onOpenChange={(open) => {
               setFavoritesChatOpen(open);
               if (!open) setFavoritesChatListingId(null);
             }}
-            hotSheetId={favoritesDrawerHotSheetId}
             listingId={favoritesChatListingId}
-            listingAddress={(() => {
+            otherUserId={favoritesConversationAgentUserId}
+            threadTitle={(() => {
               const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
               const l = fav?.listings;
-              return l ? `${l.address}, ${l.city}` : "";
+              return l ? `${l.address}, ${l.city}` : "Listing discussion";
             })()}
-            messages={favoritesChatMap[favoritesChatListingId] ?? []}
-            onNewMessage={handleFavoritesChatMessage}
-            conversationRecipientUserId={favoritesConversationAgentUserId}
+            onInboxInvalidate={() => {
+              void (async () => {
+                const { data: auth } = await supabase.auth.getUser();
+                const agentId = favoritesConversationAgentUserId;
+                if (!auth.user?.id || !agentId || !favoritesChatListingId) return;
+                const convoMap = await fetchListingConversationMessagesMap(
+                  [favoritesChatListingId],
+                  auth.user.id,
+                  agentId,
+                  agentId,
+                );
+                setFavoritesChatMap((prev) =>
+                  mergeListingThreadMessages(convoMap, {
+                    [favoritesChatListingId]: prev[favoritesChatListingId] ?? [],
+                  }),
+                );
+              })();
+            }}
           />
         ) : null}
       </div>
@@ -1546,24 +1583,38 @@ const Favorites = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {buyerMode && favoritesChatListingId && favoritesDrawerHotSheetId ? (
-        <ListingChatDrawer
-          viewerPerspective="client"
+      {buyerMode && favoritesChatListingId && favoritesConversationAgentUserId ? (
+        <ListingConversationSheet
           open={favoritesChatOpen}
           onOpenChange={(open) => {
             setFavoritesChatOpen(open);
             if (!open) setFavoritesChatListingId(null);
           }}
-          hotSheetId={favoritesDrawerHotSheetId}
           listingId={favoritesChatListingId}
-          listingAddress={(() => {
+          otherUserId={favoritesConversationAgentUserId}
+          threadTitle={(() => {
             const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
             const l = fav?.listings;
-            return l ? `${l.address}, ${l.city}` : "";
+            return l ? `${l.address}, ${l.city}` : "Listing discussion";
           })()}
-          messages={favoritesChatMap[favoritesChatListingId] ?? []}
-          onNewMessage={handleFavoritesChatMessage}
-          conversationRecipientUserId={favoritesConversationAgentUserId}
+          onInboxInvalidate={() => {
+            void (async () => {
+              const { data: auth } = await supabase.auth.getUser();
+              const agentId = favoritesConversationAgentUserId;
+              if (!auth.user?.id || !agentId || !favoritesChatListingId) return;
+              const convoMap = await fetchListingConversationMessagesMap(
+                [favoritesChatListingId],
+                auth.user.id,
+                agentId,
+                agentId,
+              );
+              setFavoritesChatMap((prev) =>
+                mergeListingThreadMessages(convoMap, {
+                  [favoritesChatListingId]: prev[favoritesChatListingId] ?? [],
+                }),
+              );
+            })();
+          }}
         />
       ) : null}
 
