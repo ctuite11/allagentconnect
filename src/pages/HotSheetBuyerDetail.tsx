@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Pencil, ArrowLeft, Clock, Plus, Search, Trash2, Eye, Heart } from "lucide-react";
+import { Home, Pencil, ArrowLeft, Clock, Plus, Search, Trash2, Eye, Heart, RefreshCw } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -39,6 +39,8 @@ interface LinkedHotSheet {
   criteria: any;
   photos: string[];
   matchCount: number;
+  createdAt: string | null;
+  invitePending: boolean;
   /** Pending-only: safe to offer agent delete (RPC re-validates). */
   canDeletePending: boolean;
 }
