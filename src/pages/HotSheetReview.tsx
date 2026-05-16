@@ -25,6 +25,24 @@ import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
+
+function BuyerInitialsAvatar({ displayName, userId }: { displayName: string; userId?: string | null }) {
+  const { isOnline } = useAgentLastSeen(userId || undefined);
+  const initials = (displayName || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("") || "?";
+  return (
+    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700">
+      {initials}
+      {isOnline && (
+        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+      )}
+    </span>
+  );
+}
 import {
   DropdownMenu,
   DropdownMenuContent,
