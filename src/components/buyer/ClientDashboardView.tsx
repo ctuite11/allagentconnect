@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, Check } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, Check, LineChart } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -710,7 +710,8 @@ export function ClientDashboardView({
                 <CardHeader className={previewSectionHeaderClass}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className={previewSectionTitleWrapClass}>
-                      <CardTitle className={variant === "agent" ? agentMirrorSectionTitle : dashSectionTitleClass}>
+                      <CardTitle className={`${variant === "agent" ? agentMirrorSectionTitle : dashSectionTitleClass} flex items-center gap-2`}>
+                        <LineChart className="h-4 w-4 shrink-0 text-[#22C55E]" aria-hidden strokeWidth={2} />
                         Market activity
                       </CardTitle>
                       <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
@@ -790,13 +791,13 @@ export function ClientDashboardView({
                                       }}
                                       aria-label={isSelected ? "Deselect listing" : "Select listing"}
                                       aria-pressed={isSelected}
-                                      className={`absolute top-2 left-2 z-20 inline-flex h-7 w-7 items-center justify-center rounded-full border transition-all ${
+                                      className={`absolute top-2 left-2 z-20 inline-flex h-6 w-6 items-center justify-center rounded-[4px] border transition-all ${
                                         isSelected
                                           ? "border-[#22C55E] bg-[#22C55E] text-white shadow"
                                           : "border-white/80 bg-white/80 text-transparent hover:bg-white"
                                       }`}
                                     >
-                                      <Check className="h-4 w-4" strokeWidth={3} aria-hidden />
+                                      <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
                                     </button>
                                     <div
                                       className="absolute top-2 right-2 z-20"
