@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
+import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +54,8 @@ interface ReviewRecipient {
   sendDashboardInvite: boolean;
   /** Active agent–client relationship with a linked buyer account (they are already in search). */
   buyerLinked: boolean;
+  /** Linked auth user id (when buyer has accepted) — drives presence dot. */
+  authUserId?: string;
 }
 
 function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
@@ -372,6 +376,13 @@ const HotSheetReview = () => {
                 .map((r: any) => String(r.crm_client_id)),
             );
 
+            const authUserIdByCrmId = new Map<string, string>();
+            for (const r of (relationshipRows ?? []) as any[]) {
+              if (String(r.status) === "active" && r.client_id != null && r.crm_client_id != null) {
+                authUserIdByCrmId.set(String(r.crm_client_id), String(r.client_id));
+              }
+            }
+
             const tokensByClientId = new Map<string, any[]>();
             const tokensByEmail = new Map<string, any[]>();
 
@@ -459,6 +470,7 @@ const HotSheetReview = () => {
                 resendToken: !hasAccepted && pick ? pick.token : undefined,
                 sendDashboardInvite,
                 buyerLinked: buyerLinkedCrmIds.has(cid),
+                authUserId: authUserIdByCrmId.get(cid),
               });
             }
             workspaceIsShared =
@@ -1038,6 +1050,36 @@ if (comments && comments.length > 0) {
             </div>
           </header>
 
+          {/* Buyer recipients strip */}
+          {!isSharedWorkspace && reviewRecipients.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {reviewRecipients.map((r) => {
+                const pending = !r.inviteAccepted && !r.buyerLinked;
+                return (
+                  <span
+                    key={r.clientId}
+                    className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                  >
+                    <AgentAvatar
+                      name={r.displayName}
+                      headshotUrl={null}
+                      userId={r.authUserId}
+                      size="sm"
+                      showPresence
+                    />
+                    <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
+                    <BuyerRowStatusPill
+                      buyer={{
+                        status: pending ? "pending" : "active",
+                        buyerWorkspaceLinked: r.buyerLinked,
+                      }}
+                    />
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
           {/* Search criteria */}
           <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-4 sm:py-3.5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -1162,9 +1204,15 @@ if (comments && comments.length > 0) {
                     <Send className="h-3.5 w-3.5" />
                     {sending
                       ? "Sending…"
-                      : unacceptedCount > 0
-                        ? "Send Listings with Invite"
-                        : "Send Listings"}
+                      : (() => {
+                          const pendingRecipients = reviewRecipients.filter(
+                            (r) => !r.inviteAccepted && !r.buyerLinked,
+                          );
+                          if (pendingRecipients.length === 0) return "Send Listings";
+                          const allAlreadyInvited =
+                            pendingRecipients.every((r) => !!r.resendTokenId);
+                          return allAlreadyInvited ? "Resend Invite" : "Send Listings with Invite";
+                        })()}
                   </Button>
                 ) : !isSharedWorkspace && !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
