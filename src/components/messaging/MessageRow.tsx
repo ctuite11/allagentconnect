@@ -59,11 +59,11 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
           </div>
         )}
 
-        {/* Bubble — sent: charcoal (no primary/blue halo); inbound: white + hairline border */}
+        {/* Bubble — sent: AAC blue; inbound: white + hairline border */}
         <div
           className={cn(
           "w-full rounded-2xl px-3.5 py-2 whitespace-pre-wrap break-words text-[14px] leading-[1.65] shadow-none",
-          message.isOwn ? "bg-zinc-900 text-white" : "border border-neutral-200 bg-white text-zinc-800",
+          message.isOwn ? "bg-[#0E56F5] text-white" : "border border-neutral-200 bg-white text-zinc-800",
           !message.isOwn && showHeader && "ml-[46px]",
           !message.isOwn && !showHeader && "ml-[46px]"
         )}>
