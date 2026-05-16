@@ -238,7 +238,7 @@ export function ConversationsList({
             )}
           </div>
         ) : (
-          filtered.map((thread) => {
+          filtered.map((thread, idx) => {
             const isSelected = thread.id === selectedId;
             const isChecked = selectedIds.has(thread.id);
             const listingLine =
@@ -265,7 +265,7 @@ export function ConversationsList({
                   "outline-none mb-1.5 flex items-center gap-2 rounded-xl px-2 py-3 transition-all duration-200 ease-out last:mb-0",
                   isSelected
                     ? "border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-neutral-200/80"
-                    : buyerMessagingThreadRow
+                    : cn(buyerMessagingThreadRow, idx % 2 === 1 && "bg-neutral-50")
                 )}
               >
                 {canDelete ? (
@@ -296,6 +296,7 @@ export function ConversationsList({
                     headshotUrl={thread.otherUserHeadshotUrl}
                     size="lg"
                     showPresence={false}
+                    isBuyer={!thread.otherUserIsAgent}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="mb-px flex items-center justify-between gap-2">
