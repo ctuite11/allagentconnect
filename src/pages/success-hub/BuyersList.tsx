@@ -102,7 +102,7 @@ export default function BuyersList() {
       const { data: agentSheets, error: sheetsErr } = await (supabase as any)
         .from("hot_sheets")
         .select("id")
-        .eq("agent_id", user.id);
+        .eq("user_id", user.id);
       if (sheetsErr) {
         console.error("Error loading agent hot sheets for buyer union:", sheetsErr);
       }
@@ -125,14 +125,39 @@ export default function BuyersList() {
         ];
       }
 
-      if (relRows.length === 0 && hscClientIds.length === 0) {
+      // Pending invite tokens for this agent — surface buyers who only have an
+      // outstanding `client_hotsheet_invite` token (no relationship, no membership yet).
+      const { data: tokenRows, error: tokenErr } = await supabase
+        .from("share_tokens")
+        .select("payload, accepted_at")
+        .eq("agent_id", user.id);
+      if (tokenErr) {
+        console.error("Error loading invite tokens for buyer union:", tokenErr);
+      }
+      const pendingInviteClientIds = new Set<string>();
+      for (const t of tokenRows ?? []) {
+        const p = (t as any).payload as Record<string, unknown> | null;
+        if (!p || String(p.type ?? "") !== "client_hotsheet_invite") continue;
+        if ((t as any).accepted_at) continue;
+        const cid = p.client_id != null ? String(p.client_id).trim() : "";
+        if (cid) pendingInviteClientIds.add(cid);
+      }
+
+      if (relRows.length === 0 && hscClientIds.length === 0 && pendingInviteClientIds.size === 0) {
         setBuyers([]);
         return;
       }
 
       const authClientIds = relRows.map((r) => r.client_id).filter(Boolean) as string[];
       const crmClientIds = relRows.map((r) => r.crm_client_id).filter(Boolean) as string[];
-      const allCrmIds = [...new Set([...authClientIds, ...crmClientIds, ...hscClientIds])];
+      const allCrmIds = [
+        ...new Set([
+          ...authClientIds,
+          ...crmClientIds,
+          ...hscClientIds,
+          ...pendingInviteClientIds,
+        ]),
+      ];
 
       const { data: clientsData, error: clientsErr } = await supabase
         .from("clients")
@@ -180,12 +205,30 @@ export default function BuyersList() {
         if (!c) continue;
         seenClientIds.add(cid);
         const name = formatBuyerListName(c);
+        const pending = pendingInviteClientIds.has(cid);
         rows.push({
           clientId: c.id,
           name,
           email: c?.email ?? "",
           phone: c?.phone ?? null,
-          status: "active",
+          status: pending ? "pending" : "active",
+          buyerWorkspaceLinked: false,
+        });
+      }
+
+      // Union: buyers with only an outstanding invite token (not yet on a sheet).
+      for (const cid of pendingInviteClientIds) {
+        if (seenClientIds.has(cid)) continue;
+        const c = clientMap.get(cid);
+        if (!c) continue;
+        seenClientIds.add(cid);
+        const name = formatBuyerListName(c);
+        rows.push({
+          clientId: c.id,
+          name,
+          email: c?.email ?? "",
+          phone: c?.phone ?? null,
+          status: "pending",
           buyerWorkspaceLinked: false,
         });
       }
