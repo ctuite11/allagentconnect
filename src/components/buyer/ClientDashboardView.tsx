@@ -2,15 +2,17 @@
  * Shared buyer dashboard presentation — used by `/client/dashboard` and agent BuyerAccount mirror.
  * Same layout/tokens as the buyer-facing dashboard; parents supply data and navigation handlers.
  */
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, Check } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
+import FavoriteButton from "@/components/FavoriteButton";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import {
   buyerDashboardHotFavTile as unifiedHotFavCardClass,
   buyerDashboardHotFavTileBody as unifiedHotFavBody,
