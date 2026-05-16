@@ -106,7 +106,7 @@ const ListingChatDrawer = ({
           recipientUserId: recipient,
         });
         if (!sent.ok) {
-          toast.error(sent.message || "Failed to send message");
+          toast.error(("message" in sent && sent.message) || "Failed to send message");
           return;
         }
 
@@ -123,7 +123,7 @@ const ListingChatDrawer = ({
         });
 
         if (preview.ok) {
-          onNewMessage(preview.row as ChatMessage);
+          onNewMessage(preview.row as unknown as ChatMessage);
         }
 
         setNewMessage("");
