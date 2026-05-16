@@ -546,8 +546,39 @@ const HotSheetBuyerDetail = () => {
                     Hot Sheet Name: <span className="font-semibold text-neutral-900">{hs.name}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-neutral-500">
+                    {hs.createdAt
+                      ? `Created ${new Date(hs.createdAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })} · `
+                      : ""}
                     {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
                   </p>
+                  {hs.invitePending ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
+                        <Clock className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
+                        Pending Invite
+                      </span>
+                      <button
+                        type="button"
+                        disabled={resendingHotSheetId === hs.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResendInvite(hs);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-2 py-0.5 text-[11px] font-medium text-[#0E56F5] transition-colors hover:bg-[rgba(14,86,245,0.12)] disabled:opacity-60"
+                      >
+                        <RefreshCw
+                          className={`h-3 w-3 shrink-0 ${resendingHotSheetId === hs.id ? "animate-spin" : ""}`}
+                          strokeWidth={2}
+                          aria-hidden
+                        />
+                        {resendingHotSheetId === hs.id ? "Resending…" : "Resend invite"}
+                      </button>
+                    </div>
+                  ) : null}
                   <div className="mt-2">
                     <CriteriaPills criteria={hs.criteria} />
                   </div>
