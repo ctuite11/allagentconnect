@@ -9,6 +9,7 @@ export interface ConversationThread {
   otherUserName: string;
   otherUserEmail: string;
   otherUserHeadshotUrl: string | null;
+  otherUserIsAgent: boolean;
   lastMessagePreview: string | null;
   lastMessageAt: string;
   lastMessageSenderId: string | null;
@@ -67,6 +68,7 @@ export function useConversationThreads() {
             : "Unknown User",
           otherUserEmail: profile?.email || "",
           otherUserHeadshotUrl: profile?.headshot_url ?? null,
+          otherUserIsAgent: profile?.isAgent ?? false,
           lastMessagePreview: row.last_message_preview?.substring(0, 100) || null,
           lastMessageAt: row.last_message_at,
           lastMessageSenderId: row.last_message_sender_id,
