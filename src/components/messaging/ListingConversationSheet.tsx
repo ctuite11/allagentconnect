@@ -101,20 +101,15 @@ export function ListingConversationSheet({
       <SheetContent
         side="right"
         className={cn(
-          "flex h-full max-h-[100dvh] w-full flex-col gap-0 overflow-hidden border-l border-neutral-200 bg-white p-0 sm:max-w-[560px]",
+          "flex h-[100dvh] max-h-[100dvh] w-full flex-col gap-0 overflow-hidden border-l border-neutral-200 bg-white p-0 sm:max-w-[560px]",
           "[&>button]:hidden",
         )}
       >
         <SheetTitle className="sr-only">{threadTitle?.trim() || "Listing discussion"}</SheetTitle>
         {open ? (
-          <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col overflow-hidden bg-white",
-              resolving || !conversationId ? "min-h-[40vh]" : "h-full",
-            )}
-          >
+          <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
             {resolving || !conversationId ? (
-              <AacMonogramLoader variant="section" message="Opening discussion…" className="min-h-[40vh] flex-1" />
+              <AacMonogramLoader variant="section" message="Opening discussion…" className="flex-1" />
             ) : (
               <ConversationPanel
                 conversationId={conversationId}

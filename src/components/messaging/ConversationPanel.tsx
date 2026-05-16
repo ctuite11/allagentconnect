@@ -10,6 +10,7 @@ import { DateSeparator } from "./DateSeparator";
 import { MessageComposer } from "./MessageComposer";
 import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -206,6 +207,8 @@ export function ConversationPanel({
   const contextLabel =
     details?.listingId && !threadTitle?.trim() ? listingAddress || "Listing conversation" : null;
 
+  const isEmbedded = layoutVariant === "embedded";
+
   const composer = (
     <MessageComposer
       onSend={async (body) => {
@@ -214,13 +217,15 @@ export function ConversationPanel({
         return ok;
       }}
       sending={sending}
+      footerClassName={
+        isEmbedded ? "pb-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]" : undefined
+      }
     />
   );
 
-  const rootClass =
-    layoutVariant === "embedded"
-      ? "flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden"
-      : "flex h-full min-h-0 w-full max-h-full flex-1 flex-col overflow-hidden";
+  const rootClass = isEmbedded
+    ? "flex h-full min-h-0 w-full max-h-[100dvh] flex-col overflow-hidden"
+    : "flex h-full min-h-0 w-full max-h-full flex-1 flex-col overflow-hidden";
 
   const rolePill = details ? (
     <span className="inline-flex shrink-0 items-center rounded border border-neutral-200/60 bg-white px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-zinc-500">
@@ -296,8 +301,18 @@ export function ConversationPanel({
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-2">
         <div className="mx-auto w-full max-w-[520px]">
           {threadElements.length === 0 ? (
-            <div className="flex flex-col items-center justify-center px-2 py-8 sm:py-12">
-              <div className="w-full rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center sm:py-10">
+            <div
+              className={cn(
+                "flex flex-col items-center px-2",
+                isEmbedded ? "justify-start pt-5 pb-2" : "justify-center py-8 sm:py-12",
+              )}
+            >
+              <div
+                className={cn(
+                  "w-full rounded-xl border border-dashed border-neutral-200 bg-white px-4 text-center",
+                  isEmbedded ? "py-5" : "py-8 sm:py-10",
+                )}
+              >
                 <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
                 <p className="mt-2 text-[12px] leading-snug text-zinc-500">
                   Send a message below to start this thread.
@@ -310,7 +325,7 @@ export function ConversationPanel({
           <div ref={messagesEndRef} className="h-0 shrink-0" aria-hidden />
         </div>
       </div>
-      {composer}
+      {isEmbedded ? <div className="shrink-0">{composer}</div> : composer}
     </div>
   );
 }

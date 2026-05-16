@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface MessageComposerProps {
   onSend: (body: string) => Promise<boolean>;
@@ -10,9 +11,16 @@ interface MessageComposerProps {
    * `top` — directly under the panel header on empty threads (border-bottom).
    */
   edge?: "top" | "bottom";
+  /** Extra classes on the footer shell (e.g. embedded sheet bottom padding). */
+  footerClassName?: string;
 }
 
-export function MessageComposer({ onSend, sending, edge = "bottom" }: MessageComposerProps) {
+export function MessageComposer({
+  onSend,
+  sending,
+  edge = "bottom",
+  footerClassName,
+}: MessageComposerProps) {
   const [value, setValue] = useState("");
 
   const handleSend = async () => {
@@ -29,10 +37,12 @@ export function MessageComposer({ onSend, sending, edge = "bottom" }: MessageCom
     }
   };
 
-  const shell =
+  const shell = cn(
     edge === "top"
       ? "flex-shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2.5"
-      : "flex-shrink-0 border-t border-neutral-200/90 bg-white px-3 py-2.5";
+      : "flex-shrink-0 border-t border-neutral-200/90 bg-white px-3 py-2.5",
+    footerClassName,
+  );
 
   return (
     <div className={shell}>
