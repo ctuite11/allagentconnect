@@ -346,12 +346,7 @@ export default function AgentClientFavorites() {
                   compactListedByMessageSeparator
                   showCompactComments
                   chatMessages={messagesMap[row.listing_id] || []}
-                  onOpenChat={() => {
-                    console.log("[AgentClientFavorites] ListingCard onOpenChat invoked", {
-                      listingId: row.listing_id,
-                    });
-                    openListingDiscussion(row.listing_id);
-                  }}
+                  onOpenChat={() => openListingDiscussion(row.listing_id)}
                   hideCompactFavorite
                   listing={{
                     ...mapAgentClientFavoriteRpcToListingCard(row),

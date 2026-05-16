@@ -22,11 +22,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
-import { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
 import {
   fetchListingConversationMessagesMap,
   mergeListingThreadMessages,
+  type ListingCardThreadMessage,
 } from "@/lib/listingConversationThread";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
@@ -141,7 +141,7 @@ const HotSheetReview = () => {
   const [agentDisplayName, setAgentDisplayName] = useState("Your agent");
   const [listings, setListings] = useState<Listing[]>([]);
   const [allListings, setAllListings] = useState<Listing[]>([]);
-  const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>({});
+  const [messagesMap, setMessagesMap] = useState<Record<string, ListingCardThreadMessage[]>>({});
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState("newest");
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
@@ -194,7 +194,7 @@ const HotSheetReview = () => {
           filter: `hot_sheet_id=eq.${id}`,
         },
         (payload) => {
-          const newMsg = payload.new as ChatMessage;
+          const newMsg = payload.new as ListingCardThreadMessage;
           setMessagesMap((prev) => {
             const lid = newMsg.listing_id;
             const existing = prev[lid] || [];
@@ -216,7 +216,7 @@ const HotSheetReview = () => {
     };
   }, [id, listings]);
 
-  const handleNewMessage = useCallback((msg: ChatMessage) => {
+  const handleNewMessage = useCallback((msg: ListingCardThreadMessage) => {
     setMessagesMap((prev) => {
       const lid = msg.listing_id;
       const existing = prev[lid] || [];
@@ -576,17 +576,17 @@ const HotSheetReview = () => {
       setSelectedListings(new Set());
 
       const listingIdsForChat = visibleListings.map((l) => l.id);
-      const grouped: Record<string, ChatMessage[]> = {};
+      const grouped: Record<string, ListingCardThreadMessage[]> = {};
       const { data: comments } = await supabase
         .from("hot_sheet_comments")
         .select("id, hot_sheet_id, listing_id, comment, sender_role, sender_id, created_at")
         .eq("hot_sheet_id", id as string)
         .order("created_at", { ascending: true });
       for (const c of comments ?? []) {
-        const lid = (c as ChatMessage).listing_id;
+        const lid = (c as ListingCardThreadMessage).listing_id;
         if (!lid) continue;
         if (!grouped[lid]) grouped[lid] = [];
-        grouped[lid].push(c as ChatMessage);
+        grouped[lid].push(c as ListingCardThreadMessage);
       }
 
       let merged = grouped;

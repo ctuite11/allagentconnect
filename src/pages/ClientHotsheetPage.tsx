@@ -26,11 +26,11 @@ import {
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { AddFriendDialog } from "@/components/AddFriendDialog";
 import ListingCard from "@/components/ListingCard";
-import { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
 import {
   fetchListingConversationMessagesMap,
   mergeListingThreadMessages,
+  type ListingCardThreadMessage,
 } from "@/lib/listingConversationThread";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
@@ -102,14 +102,14 @@ const ClientHotsheetPage = () => {
   const [showEditCriteria, setShowEditCriteria] = useState(false);
   const [showAddFriend, setShowAddFriend] = useState(false);
   /** Per-listing `hot_sheet_comments` for compact card thread + drawer */
-  const [listingChatByListingId, setListingChatByListingId] = useState<Record<string, ChatMessage[]>>({});
+  const [listingChatByListingId, setListingChatByListingId] = useState<Record<string, ListingCardThreadMessage[]>>({});
   const [listingChatOpen, setListingChatOpen] = useState(false);
   const [listingChatListingId, setListingChatListingId] = useState<string | null>(null);
   const [deleteHotSheetOpen, setDeleteHotSheetOpen] = useState(false);
   const [deleteHotSheetBusy, setDeleteHotSheetBusy] = useState(false);
   const hidePublicFooter = isBuyerHotSheetByIdRoute || Boolean(currentUser);
 
-  const handleListingChatMessage = useCallback((msg: ChatMessage) => {
+  const handleListingChatMessage = useCallback((msg: ListingCardThreadMessage) => {
     setListingChatByListingId((prev) => {
       const lid = msg.listing_id;
       const cur = prev[lid] ?? [];
@@ -212,12 +212,12 @@ const ClientHotsheetPage = () => {
         .in("listing_id", ids)
         .order("created_at", { ascending: true });
       if (error || cancelled) return;
-      const map: Record<string, ChatMessage[]> = {};
+      const map: Record<string, ListingCardThreadMessage[]> = {};
       for (const row of data ?? []) {
         const lid = row.listing_id;
         if (!lid) continue;
         if (!map[lid]) map[lid] = [];
-        map[lid].push(row as ChatMessage);
+        map[lid].push(row as ListingCardThreadMessage);
       }
 
       let merged = map;

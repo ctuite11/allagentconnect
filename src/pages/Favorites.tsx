@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import { Card } from "@/components/ui/card";
 import ListingCard from "@/components/ListingCard";
-import { type ChatMessage } from "@/components/ListingChatDrawer";
 import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
 import {
   fetchListingConversationMessagesMap,
   mergeListingThreadMessages,
+  type ListingCardThreadMessage,
 } from "@/lib/listingConversationThread";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,7 +174,7 @@ const Favorites = ({
   const buyerMode = isBuyerMode || (!isAgentMode && !isPublicMode);
   /** When buyer is linked to hot sheets — load `hot_sheet_comments` tied to favorites */
   const [favoritesHotSheetForComments, setFavoritesHotSheetForComments] = useState<string | null>(null);
-  const [favoritesChatMap, setFavoritesChatMap] = useState<Record<string, ChatMessage[]>>({});
+  const [favoritesChatMap, setFavoritesChatMap] = useState<Record<string, ListingCardThreadMessage[]>>({});
   const [favoritesChatOpen, setFavoritesChatOpen] = useState(false);
   const [favoritesChatListingId, setFavoritesChatListingId] = useState<string | null>(null);
   /** `undefined` = not resolved yet (omit inbox sync); `null` = sheet has no owner */
@@ -182,7 +182,7 @@ const Favorites = ({
     string | null | undefined
   >(undefined);
 
-  const handleFavoritesChatMessage = useCallback((msg: ChatMessage) => {
+  const handleFavoritesChatMessage = useCallback((msg: ListingCardThreadMessage) => {
     setFavoritesChatMap((prev) => {
       const lid = msg.listing_id;
       const cur = prev[lid] ?? [];
@@ -223,12 +223,12 @@ const Favorites = ({
         .order("created_at", { ascending: true });
 
       if (error || cancelled) return;
-      const map: Record<string, ChatMessage[]> = {};
+      const map: Record<string, ListingCardThreadMessage[]> = {};
       for (const row of rows ?? []) {
         const lid = row.listing_id;
         if (!lid) continue;
         if (!map[lid]) map[lid] = [];
-        map[lid].push(row as ChatMessage);
+        map[lid].push(row as ListingCardThreadMessage);
       }
 
       let merged = map;

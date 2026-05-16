@@ -6,6 +6,7 @@ import { findOrCreateConversation } from "@/lib/startConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { HotSheetCommentPreviewSync } from "@/hooks/useConversation";
+import { cn } from "@/lib/utils";
 
 interface ListingConversationSheetProps {
   open: boolean;
@@ -99,24 +100,32 @@ export function ListingConversationSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex h-full max-h-[100dvh] w-full flex-col gap-0 overflow-hidden border-l border-neutral-200 p-0 sm:max-w-lg"
+        className={cn(
+          "flex h-full max-h-[100dvh] w-full flex-col gap-0 overflow-hidden border-l border-neutral-200 bg-white p-0 sm:max-w-[560px]",
+          "[&>button]:hidden",
+        )}
       >
         <SheetTitle className="sr-only">{threadTitle?.trim() || "Listing discussion"}</SheetTitle>
         {open ? (
-          resolving || !conversationId ? (
-            <div className="flex min-h-0 flex-1 flex-col bg-white">
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col overflow-hidden bg-white",
+              resolving || !conversationId ? "min-h-[40vh]" : "h-full",
+            )}
+          >
+            {resolving || !conversationId ? (
               <AacMonogramLoader variant="section" message="Opening discussion…" className="min-h-[40vh] flex-1" />
-            </div>
-          ) : (
-            <ConversationPanel
-              conversationId={conversationId}
-              threadTitle={threadTitle}
-              onCloseRequest={handleClose}
-              onInboxInvalidate={onInboxInvalidate}
-              layoutVariant="embedded"
-              hotSheetPreviewSync={hotSheetPreviewSync}
-            />
-          )
+            ) : (
+              <ConversationPanel
+                conversationId={conversationId}
+                threadTitle={threadTitle}
+                onCloseRequest={handleClose}
+                onInboxInvalidate={onInboxInvalidate}
+                layoutVariant="embedded"
+                hotSheetPreviewSync={hotSheetPreviewSync}
+              />
+            )}
+          </div>
         ) : null}
       </SheetContent>
     </Sheet>
