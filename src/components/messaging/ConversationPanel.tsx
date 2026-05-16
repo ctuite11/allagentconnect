@@ -241,6 +241,7 @@ export function ConversationPanel({
               headshotUrl={details?.otherUserHeadshotUrl ?? null}
               size="lg"
               showPresence={false}
+              isBuyer={!(details?.otherUserIsAgent ?? false)}
             />
             <div className="min-w-0">
               {threadTitle?.trim() ? (
