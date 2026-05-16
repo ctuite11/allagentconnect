@@ -99,6 +99,12 @@ const ListingChatDrawer = ({
         return;
       }
 
+      const willMirrorToConversation =
+        conversationRecipientUserId !== undefined &&
+        typeof conversationRecipientUserId === "string" &&
+        conversationRecipientUserId.trim().length > 0 &&
+        conversationRecipientUserId.trim() !== user.id;
+
       const insertRow =
         viewerPerspective === "agent"
           ? {
@@ -107,12 +113,14 @@ const ListingChatDrawer = ({
               comment: text,
               sender_role: "agent",
               sender_id: user.id,
+              suppress_email_notification: willMirrorToConversation,
             }
           : {
               hot_sheet_id: hotSheetId,
               listing_id: listingId,
               comment: text,
               sender_id: user.id,
+              suppress_email_notification: willMirrorToConversation,
             };
 
       const { data, error } = await supabase.from("hot_sheet_comments").insert(insertRow).select().single();
