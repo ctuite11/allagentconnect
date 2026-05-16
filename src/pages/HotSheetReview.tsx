@@ -23,8 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
-import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import {
   DropdownMenu,
   DropdownMenuContent,
