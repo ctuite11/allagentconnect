@@ -1204,9 +1204,15 @@ if (comments && comments.length > 0) {
                     <Send className="h-3.5 w-3.5" />
                     {sending
                       ? "Sending…"
-                      : unacceptedCount > 0
-                        ? "Send Listings with Invite"
-                        : "Send Listings"}
+                      : (() => {
+                          const pendingRecipients = reviewRecipients.filter(
+                            (r) => !r.inviteAccepted && !r.buyerLinked,
+                          );
+                          if (pendingRecipients.length === 0) return "Send Listings";
+                          const allAlreadyInvited =
+                            pendingRecipients.every((r) => !!r.resendTokenId);
+                          return allAlreadyInvited ? "Resend Invite" : "Send Listings with Invite";
+                        })()}
                   </Button>
                 ) : !isSharedWorkspace && !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
