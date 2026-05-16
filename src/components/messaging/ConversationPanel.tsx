@@ -189,7 +189,14 @@ export function ConversationPanel({
     const showHeader = msg.senderId !== lastSenderId;
 
     threadElements.push(
-      <MessageRow key={msg.id} message={msg} showHeader={showHeader} />
+      <MessageRow
+        key={msg.id}
+        message={{
+          ...msg,
+          senderIsBuyer: !msg.isOwn && !(details?.otherUserIsAgent ?? false),
+        }}
+        showHeader={showHeader}
+      />
     );
 
     lastDate = msgDate;
