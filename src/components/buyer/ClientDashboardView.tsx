@@ -2,15 +2,17 @@
  * Shared buyer dashboard presentation — used by `/client/dashboard` and agent BuyerAccount mirror.
  * Same layout/tokens as the buyer-facing dashboard; parents supply data and navigation handlers.
  */
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, Check } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
+import FavoriteButton from "@/components/FavoriteButton";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import {
   buyerDashboardHotFavTile as unifiedHotFavCardClass,
   buyerDashboardHotFavTileBody as unifiedHotFavBody,
@@ -226,6 +228,29 @@ export function ClientDashboardView({
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
+
+  // Buyer-only: select market activity listings for bulk share. Agent mirror is unaffected.
+  const [selectedMarketIds, setSelectedMarketIds] = useState<Set<string>>(() => new Set());
+  const visibleMarketIds = useMemo(
+    () => new Set((latestListingsPreview ?? []).map((l) => l.id)),
+    [latestListingsPreview],
+  );
+  useEffect(() => {
+    setSelectedMarketIds((prev) => {
+      const next = new Set([...prev].filter((id) => visibleMarketIds.has(id)));
+      if (next.size === prev.size) return prev;
+      return next;
+    });
+  }, [visibleMarketIds]);
+  const toggleMarketSelection = (id: string) => {
+    setSelectedMarketIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const clearMarketSelection = () => setSelectedMarketIds(new Set());
 
   const paths = {
     hotSheetsViewAll: dashboardPaths?.hotSheetsViewAll ?? "/hot-sheets",
@@ -705,6 +730,25 @@ export function ClientDashboardView({
                 <CardContent className={previewSectionMarketContentClass}>
                   {latestListingsPreview.length > 0 ? (
                     <div className="overflow-visible">
+                      {variant === "buyer" && selectedMarketIds.size > 0 ? (
+                        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                          <BulkShareListingsDialog
+                            listingIds={[...selectedMarketIds]}
+                            listingCount={selectedMarketIds.size}
+                            triggerVariant="outline"
+                            triggerClassName="h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600"
+                            triggerLabel={`Share selected (${selectedMarketIds.size})`}
+                            onSuccessfulShare={clearMarketSelection}
+                          />
+                          <button
+                            type="button"
+                            onClick={clearMarketSelection}
+                            className="h-7 shrink-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      ) : null}
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         {latestListingsPreview.map((listing) => {
                           const photos = listing.photos ?? [];
@@ -713,12 +757,15 @@ export function ClientDashboardView({
                             listing as ListedBySource,
                             (listing.agent_profile as ListedByAgentProfile) ?? null,
                           );
+                          const isSelected = variant === "buyer" && selectedMarketIds.has(listing.id);
                           return (
                             <article
                               key={listing.id}
                               role="button"
                               tabIndex={0}
-                              className={`${dashboardPreviewTileInteractive} flex flex-col`}
+                              className={`${dashboardPreviewTileInteractive} flex flex-col ${
+                                isSelected ? "ring-2 ring-[#22C55E] ring-offset-1" : ""
+                              }`}
                               onClick={() => navigate(`/property/${listing.id}`)}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" || e.key === " ") {
@@ -727,12 +774,39 @@ export function ClientDashboardView({
                                 }
                               }}
                             >
-                              <div className={listingPreviewMediaWrap}>
+                              <div className={`${listingPreviewMediaWrap} relative`}>
                                 <DashboardListingImage
                                   photoUrl={getPrimaryPhotoUrl(photos)}
                                   alt={listing.address}
                                   imageClassName="absolute inset-0 h-full w-full object-cover"
                                 />
+                                {variant === "buyer" ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleMarketSelection(listing.id);
+                                      }}
+                                      aria-label={isSelected ? "Deselect listing" : "Select listing"}
+                                      aria-pressed={isSelected}
+                                      className={`absolute top-2 left-2 z-20 inline-flex h-7 w-7 items-center justify-center rounded-full border transition-all ${
+                                        isSelected
+                                          ? "border-[#22C55E] bg-[#22C55E] text-white shadow"
+                                          : "border-white/80 bg-white/80 text-transparent hover:bg-white"
+                                      }`}
+                                    >
+                                      <Check className="h-4 w-4" strokeWidth={3} aria-hidden />
+                                    </button>
+                                    <div
+                                      className="absolute top-2 right-2 z-20"
+                                      onClick={(e) => e.stopPropagation()}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                    >
+                                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                                    </div>
+                                  </>
+                                ) : null}
                               </div>
                               <div className={listingPreviewBody}>
                                 <div className="mb-0 flex items-start justify-between gap-2">
