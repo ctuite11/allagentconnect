@@ -18,6 +18,7 @@ interface MessageRowProps {
     body: string;
     createdAt: string;
     isOwn: boolean;
+    senderIsBuyer?: boolean;
   };
   showHeader: boolean;
 }
@@ -41,6 +42,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
               headshotUrl={message.senderHeadshotUrl ?? null}
               size="lg"
               showPresence={false}
+              isBuyer={!!message.senderIsBuyer}
             />
             <span className="text-[13px] font-semibold text-zinc-900">
               {displayName}
