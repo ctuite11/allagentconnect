@@ -614,9 +614,6 @@ const HotSheetBuyerDetail = () => {
                       </button>
                     </div>
                   ) : null}
-                  <div className="mt-2">
-                    <CriteriaPills criteria={hs.criteria} />
-                  </div>
                   <div className="mt-2 flex items-center justify-end gap-3 border-t border-neutral-100 pt-2">
                     <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
                       <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
