@@ -1,22 +1,16 @@
 ## Scope
-Make the online-status indicator green and consistent (dot + "Online" text) on the shared buyer/agent dashboard view, affecting both:
-- **Agent side**: buyer presence shown to the agent (`buyerPresenceOnline`)
-- **Buyer side**: agent presence shown to the buyer (`agentPresenceOnline`)
-
-## Target file
-`src/components/buyer/ClientDashboardView.tsx`
+Update `/access-error` only. Wrap the page in a black header + black footer, with the AAC green monogram and white "All Agent Connect" wordmark in the header.
 
 ## Changes
-1. **Buyer presence pill (agent view, ~line 273)**  
-   Replace the gray neutral pill (`bg-neutral-50`, `border-neutral-200`, `bg-neutral-500` dot, `text-neutral-700` label) with a green success-themed pill:
-   - Dot: `bg-emerald-500` with `ring-emerald-100`
-   - Text: `text-emerald-700`
-   - Pill background: `bg-emerald-50`
-   - Pill border: `border-emerald-200`
 
-2. **Agent presence dot (buyer view, ~line 411)**  
-   Currently shows only a gray dot (`bg-neutral-500`) before the agent name. Update to match the dot+text pattern:
-   - Change dot to `bg-emerald-500` with `ring-emerald-100`
-   - Add inline "Online" label in `text-emerald-700` next to the dot, using the same compact styling (`text-[11px] font-medium uppercase tracking-wide`) as the buyer-side pill.
+**`src/pages/AccessError.tsx`** (only file touched)
+- Replace the current centered layout with: `<div className="min-h-screen flex flex-col bg-white">` containing:
+  1. **Black header** (`bg-black border-b border-black`, h-16, max-w-7xl px-5):
+     - Left: `<AACMonogram />` colored AAC green (`#22C55E`, h-7 w-7) + wordmark "All Agent Connect" in white (`text-white font-semibold tracking-tight`)
+     - Right: nothing (or optional "Sign in" link in zinc-300 → white)
+  2. **Main content** (`flex-1`): existing ShieldX icon, heading, copy, Contact Support button — unchanged
+  3. **Black footer** (`bg-black text-zinc-400 py-6`): centered small text `© {year} All Agent Connect`
+- Remove the standalone `<Logo>` from the body (now in header)
+- Imports: drop `Logo`, add `AACMonogram` from `@/components/ui/AACMonogram` and `Link` from `react-router-dom`
 
-No other files or UI elements are touched.
+No other files, routes, or components are modified. No new shared header/footer component is introduced (scope is one page).
