@@ -1050,6 +1050,36 @@ if (comments && comments.length > 0) {
             </div>
           </header>
 
+          {/* Buyer recipients strip */}
+          {!isSharedWorkspace && reviewRecipients.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {reviewRecipients.map((r) => {
+                const pending = !r.inviteAccepted && !r.buyerLinked;
+                return (
+                  <span
+                    key={r.clientId}
+                    className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                  >
+                    <AgentAvatar
+                      name={r.displayName}
+                      headshotUrl={null}
+                      userId={r.authUserId}
+                      size="sm"
+                      showPresence
+                    />
+                    <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
+                    <BuyerRowStatusPill
+                      buyer={{
+                        status: pending ? "pending" : "active",
+                        buyerWorkspaceLinked: r.buyerLinked,
+                      }}
+                    />
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
           {/* Search criteria */}
           <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-4 sm:py-3.5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
