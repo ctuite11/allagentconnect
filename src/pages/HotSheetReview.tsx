@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
+import { AgentAvatar } from "@/components/ui/AgentAvatar";
+import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +54,8 @@ interface ReviewRecipient {
   sendDashboardInvite: boolean;
   /** Active agent–client relationship with a linked buyer account (they are already in search). */
   buyerLinked: boolean;
+  /** Linked auth user id (when buyer has accepted) — drives presence dot. */
+  authUserId?: string;
 }
 
 function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
