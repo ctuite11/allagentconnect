@@ -1,16 +1,23 @@
 ## Scope
-Update `/access-error` only. Wrap the page in a black header + black footer, with the AAC green monogram and white "All Agent Connect" wordmark in the header.
+Replace the `mailto:` button on `/access-error` with an in-page **Contact Support** dialog that submits through the existing internal email pipeline. No new pages, no router changes, no other files outside this flow.
 
 ## Changes
 
-**`src/pages/AccessError.tsx`** (only file touched)
-- Replace the current centered layout with: `<div className="min-h-screen flex flex-col bg-white">` containing:
-  1. **Black header** (`bg-black border-b border-black`, h-16, max-w-7xl px-5):
-     - Left: `<AACMonogram />` colored AAC green (`#22C55E`, h-7 w-7) + wordmark "All Agent Connect" in white (`text-white font-semibold tracking-tight`)
-     - Right: nothing (or optional "Sign in" link in zinc-300 → white)
-  2. **Main content** (`flex-1`): existing ShieldX icon, heading, copy, Contact Support button — unchanged
-  3. **Black footer** (`bg-black text-zinc-400 py-6`): centered small text `© {year} All Agent Connect`
-- Remove the standalone `<Logo>` from the body (now in header)
-- Imports: drop `Logo`, add `AACMonogram` from `@/components/ui/AACMonogram` and `Link` from `react-router-dom`
+**1. `src/pages/AccessError.tsx`** — swap the `<a href="mailto:...">` button for a `<Button>` that opens a new dialog component (`<AccessErrorContactDialog />`). Black header/footer remain untouched.
 
-No other files, routes, or components are modified. No new shared header/footer component is introduced (scope is one page).
+**2. New `src/components/access-error/AccessErrorContactDialog.tsx`** — small shadcn `Dialog`:
+- Fields: Name, Email (prefilled from `supabase.auth.getUser()` if signed in), Message (textarea, required)
+- Submit calls `supabase.functions.invoke("send-contact-email", { body: { ... } })` with:
+  - `agentEmail: "hello@allagentconnect.com"`
+  - `agentName: "AAC Support"`
+  - `senderName`, `senderEmail`, `message` from the form
+  - `listingAddress: "Access Error — Support Request"` (subject context for existing template)
+- On success: toast "Message sent — we'll be in touch." and close dialog
+- On error: toast the error message
+- Loading state on submit button; basic email/required validation
+
+## Why reuse `send-contact-email`
+It's already wired to Resend + the AAC unified email template, supports rate-limiting, and accepts arbitrary sender/recipient — no new edge function needed. Recipient is forced to `hello@allagentconnect.com`.
+
+## Out of scope
+Header, footer, route, auth flow, any other page, edge function changes.
