@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
+import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 
 /** Matches listing-search compact share trigger (neutral AAC). */
@@ -275,15 +276,13 @@ export function MarketActivityRow() {
             <p className="mt-0.5 text-xs text-neutral-500">Loading recent listings…</p>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <div className="grid min-w-max grid-cols-4 gap-5 content-start">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-[17.5rem] max-w-full animate-pulse rounded-lg border border-zinc-100 bg-white"
-              />
-            ))}
-          </div>
+        <div className={SUCCESS_HUB_LISTINGS_GRID}>
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="min-w-0 h-[17.5rem] max-w-full animate-pulse rounded-lg border border-zinc-100 bg-white"
+            />
+          ))}
         </div>
       </div>
     );
@@ -363,19 +362,18 @@ export function MarketActivityRow() {
         ) : null}
       </div>
 
-      {/* Single-row 4-card layout (never a second row). If the viewport gets narrow, the row scrolls horizontally. */}
-      <div className="overflow-x-auto">
-        <div className="grid min-w-max grid-cols-4 gap-5 content-start">
-          {visibleListings.map((listing) => (
+      {/* Same responsive grid as My listings — cards shrink to the section width (no forced horizontal scroll). */}
+      <div className={SUCCESS_HUB_LISTINGS_GRID}>
+        {visibleListings.map((listing) => (
+          <div key={listing.id} className="min-w-0">
             <SuccessHubListingCard
-              key={listing.id}
               listing={mapMarketRowToListingCard(listing)}
               compactSelectionAccent="aacGreen"
               onSelect={(id) => toggleSelection(id)}
               isSelected={selectedIds.has(listing.id)}
             />
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

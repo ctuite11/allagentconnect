@@ -938,6 +938,12 @@ if (comments && comments.length > 0) {
           (resendCount > 0 ? ` — ${resendCount} resend${resendCount !== 1 ? "s" : ""}` : "") +
           ")",
       );
+      void supabase.functions.invoke("kick-email-queue").catch((e) => {
+        console.warn(
+          "[HotSheetReview] kick-email-queue failed — emails stay in queue until worker runs",
+          e,
+        );
+      });
       await fetchHotSheetAndListings();
     } catch (e: any) {
       console.error("[HotSheetReview] handleSendInvites error", e);

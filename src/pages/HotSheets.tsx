@@ -818,9 +818,15 @@ const HotSheets = ({
       const hotSheet = rawHotSheets.find((s) => s.id === hotSheetId);
       if (hotSheet) {
         try {
-          await supabase.functions.invoke("send-hot-sheet-invite", {
+          const { error: inviteFnErr } = await supabase.functions.invoke("send-hot-sheet-invite", {
             body: { invitedEmail: friendEmail.toLowerCase(), inviterName: user.email?.split("@")[0] || "A friend", hotSheetName: hotSheet.name, hotSheetLink: `${window.location.origin}/hot-sheets` },
           });
+          if (inviteFnErr) console.error("Failed to enqueue invite email:", inviteFnErr);
+          else {
+            void supabase.functions.invoke("kick-email-queue").catch((e) => {
+              console.warn("[HotSheets] kick-email-queue failed after friend share enqueue", e);
+            });
+          }
         } catch (emailError) { console.error("Failed to send invite email:", emailError); }
       }
       toast.success("Hot sheet shared successfully");
