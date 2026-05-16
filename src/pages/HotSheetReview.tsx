@@ -376,6 +376,13 @@ const HotSheetReview = () => {
                 .map((r: any) => String(r.crm_client_id)),
             );
 
+            const authUserIdByCrmId = new Map<string, string>();
+            for (const r of (relationshipRows ?? []) as any[]) {
+              if (String(r.status) === "active" && r.client_id != null && r.crm_client_id != null) {
+                authUserIdByCrmId.set(String(r.crm_client_id), String(r.client_id));
+              }
+            }
+
             const tokensByClientId = new Map<string, any[]>();
             const tokensByEmail = new Map<string, any[]>();
 
@@ -463,6 +470,7 @@ const HotSheetReview = () => {
                 resendToken: !hasAccepted && pick ? pick.token : undefined,
                 sendDashboardInvite,
                 buyerLinked: buyerLinkedCrmIds.has(cid),
+                authUserId: authUserIdByCrmId.get(cid),
               });
             }
             workspaceIsShared =
