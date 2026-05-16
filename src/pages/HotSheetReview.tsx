@@ -1160,7 +1160,11 @@ if (comments && comments.length > 0) {
                     disabled={sending || clientCount === 0}
                   >
                     <Send className="h-3.5 w-3.5" />
-                    {sending ? "Sending…" : "Send Listings"}
+                    {sending
+                      ? "Sending…"
+                      : unacceptedCount > 0
+                        ? "Send Listings with Invite"
+                        : "Send Listings"}
                   </Button>
                 ) : !isSharedWorkspace && !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
