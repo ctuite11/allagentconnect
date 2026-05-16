@@ -28,6 +28,7 @@ function renderListingShareCard(listing: any): string {
   const address = listing.address || "";
   const cityLine = [listing.city, listing.state].filter(Boolean).join(", ") +
     (listing.zipCode || listing.zip_code ? ` ${listing.zipCode || listing.zip_code}` : "");
+  const addressLine = address || cityLine.trim();
   const meta: string[] = [];
   if (listing.bedrooms) meta.push(`${listing.bedrooms} bd`);
   if (listing.bathrooms) meta.push(`${listing.bathrooms} ba`);
@@ -40,8 +41,8 @@ function renderListingShareCard(listing: any): string {
       ${photoUrl ? `<tr><td><img src="${photoUrl}" alt="${address}" style="display:block;width:100%;max-height:280px;object-fit:cover;border:0;outline:none;text-decoration:none;" /></td></tr>` : ""}
       <tr><td style="padding:16px 18px;">
         <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${fmtPrice(listing.price)}</p>
-        <p style="margin:0 0 4px;font-size:15px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${address}</p>
-        ${cityLine.trim() ? `<p style="margin:0 0 10px;font-size:14px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${cityLine}</p>` : ""}
+        <p style="margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${addressLine || "Address available on request"}</p>
+        ${address && cityLine.trim() ? `<p style="margin:0 0 10px;font-size:14px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${cityLine}</p>` : ""}
         ${meta.length ? `<p style="margin:0;font-size:13px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${meta.join("&nbsp;&nbsp;·&nbsp;&nbsp;")}</p>` : ""}
         ${propertyType ? `<p style="margin:6px 0 0;font-size:12px;color:#64748b;text-transform:capitalize;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${propertyType}</p>` : ""}
       </td></tr>
@@ -153,6 +154,7 @@ export function renderEmailTemplate(
           ${teaser.photoUrl ? `<img src="${teaser.photoUrl}" alt="Listing preview" style="display:block;width:100%;height:160px;object-fit:cover;" />` : ""}
           <div style="padding:12px 14px;">
             <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#111827;">${teaser.price || "Price unavailable"}</p>
+            ${teaser.address ? `<p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#0f172a;">${teaser.address}</p>` : ""}
             <p style="margin:0;color:#4b5563;">${teaser.cityState || "Location unavailable"}${teaser.bedsBaths ? ` • ${teaser.bedsBaths}` : ""}</p>
           </div>
         </div>
