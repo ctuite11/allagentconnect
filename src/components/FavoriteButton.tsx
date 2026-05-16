@@ -26,6 +26,8 @@ interface FavoriteButtonProps {
   rerunCheckKey?: number;
   /** Override tooltip text (e.g. buyer map search). */
   tooltip?: { notSaved?: string; saved?: string };
+  /** Omit hover tooltip (e.g. buyer dashboard market activity photo heart). */
+  hideTooltip?: boolean;
 }
 
 const FavoriteButton = ({
@@ -37,6 +39,7 @@ const FavoriteButton = ({
   labels,
   rerunCheckKey = 0,
   tooltip: tooltipOver,
+  hideTooltip = false,
 }: FavoriteButtonProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -122,37 +125,41 @@ const FavoriteButton = ({
 
   if (photoIcon && size === "icon") {
     // Plain <button> only — shadcn Button applies [&_svg]:size-4. Listing-photo overlay: premium pill control.
+    const photoHeartButton = (
+      <button
+        type="button"
+        onClick={handleToggleFavorite}
+        disabled={loading}
+        className={cn(
+          "relative z-20 inline-flex h-9 w-9 shrink-0 items-center justify-center bg-transparent",
+          "border-0 p-0 shadow-none outline-none rounded-full",
+          "transition-transform duration-200 ease-out",
+          "hover:scale-105 active:scale-100",
+          "focus-visible:ring-2 focus-visible:ring-white/35 focus-visible:ring-offset-0",
+          "disabled:opacity-50",
+          className,
+        )}
+        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      >
+        <Heart
+          className={cn(
+            "h-6 w-6 shrink-0",
+            isFavorite
+              ? "fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+              : "fill-white text-white stroke-white",
+          )}
+          size={24}
+          strokeWidth={1.5}
+          aria-hidden
+        />
+      </button>
+    );
+
+    if (hideTooltip) return photoHeartButton;
+
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={handleToggleFavorite}
-            disabled={loading}
-            className={cn(
-              "relative z-20 inline-flex h-9 w-9 shrink-0 items-center justify-center bg-transparent",
-              "border-0 p-0 shadow-none outline-none rounded-full",
-              "transition-transform duration-200 ease-out",
-              "hover:scale-105 active:scale-100",
-              "focus-visible:ring-2 focus-visible:ring-white/35 focus-visible:ring-offset-0",
-              "disabled:opacity-50",
-              className,
-            )}
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          >
-            <Heart
-              className={cn(
-                "h-6 w-6 shrink-0",
-                isFavorite
-                  ? "fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                  : "fill-white text-white stroke-white",
-              )}
-              size={24}
-              strokeWidth={1.5}
-              aria-hidden
-            />
-          </button>
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{photoHeartButton}</TooltipTrigger>
         <TooltipContent side="top">{favoriteTooltipText}</TooltipContent>
       </Tooltip>
     );

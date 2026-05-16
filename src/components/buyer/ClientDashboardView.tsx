@@ -862,7 +862,7 @@ export function ClientDashboardView({
                                       className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                                      <FavoriteButton listingId={listing.id} size="icon" photoIcon hideTooltip />
                                     </div>
                                   </div>
                                 </div>
