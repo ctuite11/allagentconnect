@@ -142,10 +142,137 @@ const HotSheetBuyerDetail = () => {
   const [buyerActivityMetrics, setBuyerActivityMetrics] = useState<BuyerActivityMetrics | null>(null);
   const [pendingDeleteSheet, setPendingDeleteSheet] = useState<LinkedHotSheet | null>(null);
   const [deletingHotSheet, setDeletingHotSheet] = useState(false);
+  const [resendingHotSheetId, setResendingHotSheetId] = useState<string | null>(null);
 
   useEffect(() => {
     if (clientId) fetchBuyerData();
   }, [clientId]);
+
+  const handleResendInvite = async (hs: LinkedHotSheet) => {
+    if (!buyer?.email || !clientId) {
+      toast.error("Buyer email missing — cannot resend invite.");
+      return;
+    }
+    setResendingHotSheetId(hs.id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Find or create a pending share_token for this buyer + hot sheet.
+      const { data: tokenRows } = await supabase
+        .from("share_tokens")
+        .select("id, token, payload, accepted_at")
+        .eq("agent_id", user.id);
+
+      let tokenId: string | null = null;
+      let token: string | null = null;
+      for (const t of tokenRows ?? []) {
+        const p = (t as any).payload as Record<string, unknown> | null;
+        if (!p || String(p.type ?? "") !== "client_hotsheet_invite") continue;
+        if (String(p.hot_sheet_id ?? "") !== String(hs.id)) continue;
+        const cid = p.client_id != null ? String(p.client_id) : "";
+        const cem = p.client_email != null ? String(p.client_email).trim().toLowerCase() : "";
+        const matches =
+          cid === clientId ||
+          (!!buyer.email && cem === buyer.email.trim().toLowerCase());
+        if (!matches) continue;
+        if ((t as any).accepted_at) continue;
+        tokenId = String((t as any).id);
+        token = String((t as any).token ?? "");
+        break;
+      }
+
+      let mode: "initial" | "resend" = "resend";
+      if (!tokenId || !token) {
+        const newToken = crypto.randomUUID();
+        const { data: inserted, error: insertErr } = await supabase
+          .from("share_tokens")
+          .insert({
+            token: newToken,
+            agent_id: user.id,
+            payload: {
+              type: "client_hotsheet_invite",
+              client_id: clientId,
+              client_email: buyer.email,
+              hot_sheet_id: hs.id,
+              suppress_initial_matches: true,
+            },
+          })
+          .select("id, token")
+          .single();
+        if (insertErr || !inserted) {
+          console.error("[ResendInvite] token insert failed", insertErr);
+          toast.error("Could not prepare invite. Try again.");
+          return;
+        }
+        tokenId = String(inserted.id);
+        token = String(inserted.token ?? newToken);
+        mode = "initial";
+        // Fire-and-forget audit log.
+        supabase.from("invite_events").insert({
+          token_id: tokenId,
+          hot_sheet_id: hs.id,
+          client_id: clientId,
+          client_email: buyer.email,
+          event_type: "token_created",
+          actor_user_id: user.id,
+        }).then(() => {});
+      }
+
+      // Pull agent display name.
+      const { data: agentProfile } = await supabase
+        .from("agent_profiles")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const agentName = agentProfile
+        ? `${agentProfile.first_name ?? ""} ${agentProfile.last_name ?? ""}`.trim() || "Your agent"
+        : "Your agent";
+
+      const hotSheetLink =
+        `${window.location.origin}/client-invite` +
+        `?invitation_token=${encodeURIComponent(token)}` +
+        `&email=${encodeURIComponent(buyer.email)}` +
+        `&agent_id=${encodeURIComponent(user.id)}` +
+        `&client_id=${encodeURIComponent(clientId)}`;
+
+      const { error: invokeErr } = await supabase.functions.invoke("send-hot-sheet-invite", {
+        body: {
+          invitedEmail: buyer.email,
+          inviterName: agentName,
+          hotSheetName: hs.name,
+          hotSheetLink,
+          hotSheetId: hs.id,
+          tokenId,
+          clientId,
+          mode,
+        },
+      });
+
+      if (invokeErr) {
+        console.error("[ResendInvite] invoke failed", invokeErr);
+        toast.error("Resend failed. Try again.");
+        return;
+      }
+
+      // Audit
+      supabase.from("invite_events").insert({
+        token_id: tokenId,
+        hot_sheet_id: hs.id,
+        client_id: clientId,
+        client_email: buyer.email,
+        event_type: "invite_resent",
+        actor_user_id: user.id,
+      }).then(() => {});
+
+      toast.success(`Invite resent to ${buyer.email}.`);
+    } catch (e: any) {
+      console.error("[ResendInvite] error", e);
+      toast.error(e?.message ?? "Resend failed.");
+    } finally {
+      setResendingHotSheetId(null);
+    }
+  };
 
   const fetchBuyerData = async () => {
     try {
