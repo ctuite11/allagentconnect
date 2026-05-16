@@ -120,9 +120,9 @@ function RelationshipStatusPill({ status }: { status: "active" | "pending" }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-sky-200/90 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-900">
-      <Clock className="h-3 w-3" />
-      Pending
+    <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-[11px] font-medium text-neutral-700">
+      <Clock className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
+      Pending Invite
     </span>
   );
 }
