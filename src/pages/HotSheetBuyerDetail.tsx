@@ -469,18 +469,53 @@ const HotSheetBuyerDetail = () => {
         {/* Buyer card + New Hot Sheet (grouped — CTA directly under card, left-aligned) */}
         {buyer && relationshipStatus && (
           <div className="mb-2 w-full space-y-4">
-            <AgentBuyerActivityHeaderCard
-              displayName={displayName}
-              email={buyer.email}
-              phone={buyer.phone ?? null}
-              crmClientId={clientId!}
-              metrics={buyerActivityMetrics}
-              metricsLoading={buyerActivityMetrics === null}
-              trailing={<RelationshipStatusPill status={relationshipStatus} />}
-              className="border-neutral-200 shadow-sm"
-              metricsToolbarTintIcons
-              hotSheetMetricUseFlame
-            />
+            {(() => {
+              const latestPendingHs =
+                relationshipStatus === "pending"
+                  ? [...hotSheets]
+                      .filter((h) => h.invitePending)
+                      .sort(
+                        (a, b) =>
+                          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+                      )[0]
+                  : null;
+              return (
+                <AgentBuyerActivityHeaderCard
+                  displayName={displayName}
+                  email={buyer.email}
+                  phone={buyer.phone ?? null}
+                  crmClientId={clientId!}
+                  metrics={buyerActivityMetrics}
+                  metricsLoading={buyerActivityMetrics === null}
+                  trailing={
+                    <div className="flex items-center gap-2">
+                      <RelationshipStatusPill status={relationshipStatus} />
+                      {latestPendingHs ? (
+                        <button
+                          type="button"
+                          disabled={resendingHotSheetId === latestPendingHs.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleResendInvite(latestPendingHs);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-2 py-0.5 text-[11px] font-medium text-[#0E56F5] transition-colors hover:bg-[rgba(14,86,245,0.12)] disabled:opacity-60"
+                        >
+                          <RefreshCw
+                            className={`h-3 w-3 shrink-0 ${resendingHotSheetId === latestPendingHs.id ? "animate-spin" : ""}`}
+                            strokeWidth={2}
+                            aria-hidden
+                          />
+                          {resendingHotSheetId === latestPendingHs.id ? "Resending…" : "Resend invite"}
+                        </button>
+                      ) : null}
+                    </div>
+                  }
+                  className="border-neutral-200 shadow-sm"
+                  metricsToolbarTintIcons
+                  hotSheetMetricUseFlame
+                />
+              );
+            })()}
             <div className="flex w-full justify-start">
               <Button
                 type="button"
