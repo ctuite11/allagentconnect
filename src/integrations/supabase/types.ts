@@ -2181,6 +2181,7 @@ export type Database = {
           listing_id: string
           sender_id: string | null
           sender_role: string
+          suppress_email_notification: boolean
           updated_at: string | null
         }
         Insert: {
@@ -2191,6 +2192,7 @@ export type Database = {
           listing_id: string
           sender_id?: string | null
           sender_role?: string
+          suppress_email_notification?: boolean
           updated_at?: string | null
         }
         Update: {
@@ -2201,6 +2203,7 @@ export type Database = {
           listing_id?: string
           sender_id?: string | null
           sender_role?: string
+          suppress_email_notification?: boolean
           updated_at?: string | null
         }
         Relationships: [
