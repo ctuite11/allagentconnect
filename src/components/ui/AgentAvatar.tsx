@@ -15,6 +15,11 @@ interface AgentAvatarProps {
   avatarClassName?: string;
   /** Extra classes for the AvatarFallback */
   fallbackClassName?: string;
+  /**
+   * When provided, the fallback renders these initials in a neutral bubble
+   * instead of the default AAC monogram. Used for buyer avatars in messaging.
+   */
+  initialsFallback?: { initials: string; className?: string };
 }
 
 const sizeClasses = {
@@ -48,6 +53,7 @@ export function AgentAvatar({
   showPresence = true,
   avatarClassName,
   fallbackClassName,
+  initialsFallback,
 }: AgentAvatarProps) {
   // Determine online status
   const shouldLookup = showPresence && isOnlineProp === undefined && !!userId;
@@ -62,9 +68,21 @@ export function AgentAvatar({
         {headshotUrl && (
           <AvatarImage src={headshotUrl} alt={name} className="object-cover" />
         )}
-        <AvatarFallback className={cn("bg-primary", fallbackClassName)}>
-          <AACMonogram className={cn(logoSizeClasses[size], "text-white")} />
-        </AvatarFallback>
+        {initialsFallback ? (
+          <AvatarFallback
+            className={cn(
+              "text-[11px] font-semibold",
+              initialsFallback.className ?? "bg-neutral-200 text-neutral-800",
+              fallbackClassName,
+            )}
+          >
+            {initialsFallback.initials}
+          </AvatarFallback>
+        ) : (
+          <AvatarFallback className={cn("bg-primary", fallbackClassName)}>
+            <AACMonogram className={cn(logoSizeClasses[size], "text-white")} />
+          </AvatarFallback>
+        )}
       </Avatar>
       {showDot && (
         <span
