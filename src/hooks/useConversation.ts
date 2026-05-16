@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
 import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
+import { syncHotSheetCommentPreview } from "@/lib/syncHotSheetCommentPreview";
+
+export type HotSheetCommentPreviewSync = {
+  hotSheetId: string;
+  listingId: string;
+  hotSheetAgentUserId: string;
+};
 
 export interface Message {
   id: string;
@@ -29,7 +36,10 @@ function normalizeConversationId(conversationId: string | undefined): string | u
   return t.length > 0 ? t : undefined;
 }
 
-export function useConversation(conversationId: string | undefined) {
+export function useConversation(
+  conversationId: string | undefined,
+  options?: { hotSheetPreviewSync?: HotSheetCommentPreviewSync | null },
+) {
   const { user } = useAuthRole();
   const normalizedId = normalizeConversationId(conversationId);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -249,6 +259,16 @@ export function useConversation(conversationId: string | undefined) {
           return false;
         }
 
+        const preview = options?.hotSheetPreviewSync;
+        if (preview?.hotSheetId && preview.listingId && preview.hotSheetAgentUserId) {
+          await syncHotSheetCommentPreview({
+            hotSheetId: preview.hotSheetId,
+            listingId: preview.listingId,
+            comment: body,
+            hotSheetAgentUserId: preview.hotSheetAgentUserId,
+          });
+        }
+
         supabase.functions.invoke("kick-email-queue").catch(() => {});
 
         return true;
@@ -259,7 +279,7 @@ export function useConversation(conversationId: string | undefined) {
         setSending(false);
       }
     },
-    [normalizedId, user, details, sending]
+    [normalizedId, user, details, sending, options?.hotSheetPreviewSync]
   );
 
   return {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { X, MessageSquare } from "lucide-react";
-import { useConversation } from "@/hooks/useConversation";
+import { useConversation, type HotSheetCommentPreviewSync } from "@/hooks/useConversation";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +26,8 @@ interface ConversationPanelProps {
   threadTitle?: string | null;
   /** Sheet/drawer embed: panel fills parent height with pinned composer. */
   layoutVariant?: "default" | "embedded";
+  /** Optional hot-sheet card preview sync (suppresses duplicate hot-sheet emails). */
+  hotSheetPreviewSync?: HotSheetCommentPreviewSync | null;
 }
 
 export function ConversationPanel({
@@ -34,12 +36,13 @@ export function ConversationPanel({
   onCloseRequest,
   threadTitle,
   layoutVariant = "default",
+  hotSheetPreviewSync,
 }: ConversationPanelProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from as string | undefined;
   const { messages, details, loading, notFound, fetchError, sending, sendMessage, refetch } =
-    useConversation(conversationId);
+    useConversation(conversationId, { hotSheetPreviewSync });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);

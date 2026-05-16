@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { mirrorListingChatToConversation } from "@/lib/mirrorListingChatToConversation";
+import { sendListingConversationMessage } from "@/lib/sendListingConversationMessage";
+import { syncHotSheetCommentPreview } from "@/lib/syncHotSheetCommentPreview";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -26,13 +27,10 @@ interface ListingChatDrawerProps {
   listingAddress: string;
   messages: ChatMessage[];
   onNewMessage: (msg: ChatMessage) => void;
-  /** Agent workspace vs buyer: controls bubble alignment + insert shape (matches `ClientHotSheet` client posts). */
   viewerPerspective?: "agent" | "client";
-  /**
-   * When set (auth.users id of the DM counterparty), each successful hot-sheet comment
-   * is also written to `conversation_messages` so it appears under /messages and emails the recipient.
-   */
   conversationRecipientUserId?: string | null;
+  /** `hot_sheets.user_id` — required when mirroring preview rows. */
+  hotSheetAgentUserId?: string | null;
 }
 
 const ListingChatDrawer = ({
@@ -45,19 +43,18 @@ const ListingChatDrawer = ({
   onNewMessage,
   viewerPerspective = "agent",
   conversationRecipientUserId,
+  hotSheetAgentUserId,
 }: ListingChatDrawerProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages change or drawer opens
   useEffect(() => {
     if (open && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, open]);
 
-  // Realtime subscription for this specific listing thread
   useEffect(() => {
     if (!open) return;
 
@@ -76,7 +73,7 @@ const ListingChatDrawer = ({
           if (newRow.listing_id === listingId) {
             onNewMessage(newRow);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -99,11 +96,39 @@ const ListingChatDrawer = ({
         return;
       }
 
-      const willMirrorToConversation =
-        conversationRecipientUserId !== undefined &&
-        typeof conversationRecipientUserId === "string" &&
-        conversationRecipientUserId.trim().length > 0 &&
-        conversationRecipientUserId.trim() !== user.id;
+      const recipient =
+        typeof conversationRecipientUserId === "string" ? conversationRecipientUserId.trim() : "";
+
+      if (recipient && recipient !== user.id) {
+        const sent = await sendListingConversationMessage({
+          listingId,
+          body: text,
+          recipientUserId: recipient,
+        });
+        if (!sent.ok) {
+          toast.error(sent.message || "Failed to send message");
+          return;
+        }
+
+        const sheetAgentId = (
+          hotSheetAgentUserId?.trim() ||
+          (viewerPerspective === "agent" ? user.id : recipient)
+        ).trim();
+
+        const preview = await syncHotSheetCommentPreview({
+          hotSheetId,
+          listingId,
+          comment: text,
+          hotSheetAgentUserId: sheetAgentId,
+        });
+
+        if (preview.ok) {
+          onNewMessage(preview.row as ChatMessage);
+        }
+
+        setNewMessage("");
+        return;
+      }
 
       const insertRow =
         viewerPerspective === "agent"
@@ -113,14 +138,12 @@ const ListingChatDrawer = ({
               comment: text,
               sender_role: "agent",
               sender_id: user.id,
-              suppress_email_notification: willMirrorToConversation,
             }
           : {
               hot_sheet_id: hotSheetId,
               listing_id: listingId,
               comment: text,
               sender_id: user.id,
-              suppress_email_notification: willMirrorToConversation,
             };
 
       const { data, error } = await supabase.from("hot_sheet_comments").insert(insertRow).select().single();
@@ -131,41 +154,23 @@ const ListingChatDrawer = ({
         return;
       }
 
-      // Optimistic: add locally (realtime will also fire but we dedupe by id)
       onNewMessage(data as ChatMessage);
       setNewMessage("");
 
-      if (conversationRecipientUserId !== undefined) {
-        const recipient =
-          typeof conversationRecipientUserId === "string"
-            ? conversationRecipientUserId.trim()
-            : "";
-        if (recipient) {
-          const synced = await mirrorListingChatToConversation({
-            listingId,
-            body: text,
-            recipientUserId: recipient,
-          });
-          if (!synced.ok) {
-            const msg = (synced as { ok: false; message: string }).message;
-            console.warn("conversation mirror failed:", msg);
-            toast.error(`Saved on listing, but inbox sync failed: ${msg}`);
-          }
-        } else if (viewerPerspective === "agent") {
-          toast.warning(
-            "Comment saved on this hot sheet. Link an onboarded buyer to your sheet for inbox and email alerts.",
-            { duration: 6000 },
-          );
-        } else {
-          toast.warning(
-            "Comment saved here, but Messages could not be synced — this sheet has no tied agent.",
-            { duration: 6000 },
-          );
-        }
+      if (viewerPerspective === "agent") {
+        toast.warning(
+          "Comment saved on this hot sheet. Link an onboarded buyer to your sheet for inbox and email alerts.",
+          { duration: 6000 },
+        );
+      } else {
+        toast.warning(
+          "Comment saved here, but Messages could not be synced — this sheet has no tied agent.",
+          { duration: 6000 },
+        );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error sending message:", err);
-      toast.error(err?.message ?? "Failed to send message");
+      toast.error(err instanceof Error ? err.message : "Failed to send message");
     } finally {
       setSending(false);
     }
@@ -179,7 +184,7 @@ const ListingChatDrawer = ({
   };
 
   const sorted = [...messages].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   );
 
   return (
@@ -189,7 +194,6 @@ const ListingChatDrawer = ({
           <SheetTitle className="text-base">Chat — {listingAddress}</SheetTitle>
         </SheetHeader>
 
-        {/* Message thread */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {sorted.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
@@ -229,7 +233,6 @@ const ListingChatDrawer = ({
           })}
         </div>
 
-        {/* Input */}
         <div className="border-t px-4 py-3 flex items-end gap-2">
           <Textarea
             value={newMessage}

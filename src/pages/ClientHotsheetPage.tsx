@@ -880,6 +880,8 @@ const ClientHotsheetPage = () => {
           }}
           listingId={listingChatListingId}
           otherUserId={hotSheet.user_id}
+          hotSheetId={hotSheet.id}
+          hotSheetAgentUserId={hotSheet.user_id}
           threadTitle={(() => {
             const row = listings.find((l) => l.id === listingChatListingId);
             return row ? `${row.address}, ${row.city}` : "Listing discussion";

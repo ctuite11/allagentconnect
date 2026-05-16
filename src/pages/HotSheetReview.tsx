@@ -1382,6 +1382,8 @@ const HotSheetReview = () => {
           }}
           listingId={chatListingId}
           otherUserId={conversationRecipientBuyerId}
+          hotSheetId={id ?? null}
+          hotSheetAgentUserId={agentUserId}
           threadTitle={
             listings.find((l) => l.id === chatListingId)
               ? `${listings.find((l) => l.id === chatListingId)!.address}, ${listings.find((l) => l.id === chatListingId)!.city}`

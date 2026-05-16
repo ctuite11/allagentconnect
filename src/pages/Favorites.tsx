@@ -1324,6 +1324,8 @@ const Favorites = ({
             }}
             listingId={favoritesChatListingId}
             otherUserId={favoritesConversationAgentUserId}
+            hotSheetId={favoritesDrawerHotSheetId}
+            hotSheetAgentUserId={favoritesConversationAgentUserId}
             threadTitle={(() => {
               const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
               const l = fav?.listings;
@@ -1592,6 +1594,8 @@ const Favorites = ({
           }}
           listingId={favoritesChatListingId}
           otherUserId={favoritesConversationAgentUserId}
+          hotSheetId={favoritesDrawerHotSheetId}
+          hotSheetAgentUserId={favoritesConversationAgentUserId}
           threadTitle={(() => {
             const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
             const l = fav?.listings;

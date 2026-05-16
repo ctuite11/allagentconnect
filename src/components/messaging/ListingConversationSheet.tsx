@@ -5,6 +5,7 @@ import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { HotSheetCommentPreviewSync } from "@/hooks/useConversation";
 
 interface ListingConversationSheetProps {
   open: boolean;
@@ -13,6 +14,9 @@ interface ListingConversationSheetProps {
   otherUserId: string | null | undefined;
   threadTitle?: string | null;
   onInboxInvalidate?: () => void;
+  /** When set, mirror sends to `hot_sheet_comments` with email suppressed (card previews). */
+  hotSheetId?: string | null;
+  hotSheetAgentUserId?: string | null;
 }
 
 /**
@@ -25,6 +29,8 @@ export function ListingConversationSheet({
   otherUserId,
   threadTitle,
   onInboxInvalidate,
+  hotSheetId,
+  hotSheetAgentUserId,
 }: ListingConversationSheetProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
@@ -81,6 +87,14 @@ export function ListingConversationSheet({
     onOpenChange(false);
   }, [onOpenChange]);
 
+  const hotSheetPreviewSync: HotSheetCommentPreviewSync | null = (() => {
+    const hsId = hotSheetId?.trim();
+    const lid = listingId?.trim();
+    const agentId = hotSheetAgentUserId?.trim();
+    if (!hsId || !lid || !agentId) return null;
+    return { hotSheetId: hsId, listingId: lid, hotSheetAgentUserId: agentId };
+  })();
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -100,6 +114,7 @@ export function ListingConversationSheet({
               onCloseRequest={handleClose}
               onInboxInvalidate={onInboxInvalidate}
               layoutVariant="embedded"
+              hotSheetPreviewSync={hotSheetPreviewSync}
             />
           )
         ) : null}
