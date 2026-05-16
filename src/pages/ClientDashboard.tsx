@@ -68,6 +68,8 @@ interface MarketListing {
   photos: any;
   created_at: string;
   listing_number?: string | null;
+  unit_number?: string | null;
+  condo_details?: unknown;
   agent_id?: string | null;
   agent_profile?: ListedByAgentProfile;
 }
@@ -454,7 +456,7 @@ export default function ClientDashboard() {
     const { data, error } = await supabase
       .from("listings")
       .select(
-        "id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at, listing_number, agent_id",
+        "id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at, listing_number, unit_number, condo_details, agent_id",
       )
       .in("status", ["coming_soon", "active", "back_on_market"])
       .order("created_at", { ascending: false })

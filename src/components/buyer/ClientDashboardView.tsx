@@ -2,16 +2,15 @@
  * Shared buyer dashboard presentation — used by `/client/dashboard` and agent BuyerAccount mirror.
  * Same layout/tokens as the buyer-facing dashboard; parents supply data and navigation handlers.
  */
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, Check, LineChart } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, LineChart } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
-import FavoriteButton from "@/components/FavoriteButton";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import {
   buyerDashboardHotFavTile as unifiedHotFavCardClass,
@@ -46,6 +45,8 @@ import {
 } from "@/lib/listingListedBy";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { clientDashboardStatIconClass } from "@/lib/navIconColors";
+import FavoriteButton from "@/components/FavoriteButton";
+import { cn, resolveListingUnitNumber, type ListingAddressUnitSource } from "@/lib/utils";
 
 export interface ClientDashboardAgentInfo {
   id: string;
@@ -76,6 +77,7 @@ export interface ClientDashboardMarketListing {
   address: string;
   city: string;
   state: string;
+  zip_code?: string | null;
   price: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -83,6 +85,8 @@ export interface ClientDashboardMarketListing {
   photos: unknown;
   created_at: string;
   listing_number?: string | null;
+  unit_number?: string | null;
+  condo_details?: unknown;
   agent_id?: string | null;
   agent_profile?: ListedByAgentProfile;
 }
@@ -195,6 +199,28 @@ function getPrimaryPhotoUrl(photos: unknown): string {
   return "/placeholder.svg";
 }
 
+/** Street line with MLS unit appended as `#3A` when not already present (buyer market activity only). */
+function formatBuyerMarketStreetLine(listing: ClientDashboardMarketListing): string {
+  let base = (listing.address || "").trim();
+  const unit = resolveListingUnitNumber(listing as ListingAddressUnitSource);
+  if (!unit) return base;
+
+  const esc = unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const hasHash = new RegExp(`#\\s*${esc}\\b`, "i").test(base);
+  const hasMlsUnitToken = new RegExp(
+    `\\b(?:Unit|Apt\\.?|Apartment|Ste\\.?)\\s*${esc}\\b`,
+    "i",
+  ).test(base);
+  if (hasHash || hasMlsUnitToken) return base;
+
+  const city = listing.city || "";
+  const cityIndex = city ? base.indexOf(`, ${city}`) : -1;
+  if (cityIndex > -1) {
+    return `${base.slice(0, cityIndex)} #${unit}${base.slice(cityIndex)}`;
+  }
+  return `${base} #${unit}`;
+}
+
 export function ClientDashboardView({
   variant,
   navigate,
@@ -229,29 +255,6 @@ export function ClientDashboardView({
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
 
-  // Buyer-only: select market activity listings for bulk share. Agent mirror is unaffected.
-  const [selectedMarketIds, setSelectedMarketIds] = useState<Set<string>>(() => new Set());
-  const visibleMarketIds = useMemo(
-    () => new Set((latestListingsPreview ?? []).map((l) => l.id)),
-    [latestListingsPreview],
-  );
-  useEffect(() => {
-    setSelectedMarketIds((prev) => {
-      const next = new Set([...prev].filter((id) => visibleMarketIds.has(id)));
-      if (next.size === prev.size) return prev;
-      return next;
-    });
-  }, [visibleMarketIds]);
-  const toggleMarketSelection = (id: string) => {
-    setSelectedMarketIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-  const clearMarketSelection = () => setSelectedMarketIds(new Set());
-
   const paths = {
     hotSheetsViewAll: dashboardPaths?.hotSheetsViewAll ?? "/hot-sheets",
     favoritesViewAll: dashboardPaths?.favoritesViewAll ?? "/favorites",
@@ -267,6 +270,28 @@ export function ClientDashboardView({
       fav.listing.id != null &&
       String(fav.listing.id).length > 0,
   );
+
+  const [buyerMarketSelectedIds, setBuyerMarketSelectedIds] = useState<Set<string>>(() => new Set());
+  const visibleMarketIds = useMemo(
+    () => new Set((latestListingsPreview ?? []).map((l) => l.id)),
+    [latestListingsPreview],
+  );
+  useEffect(() => {
+    setBuyerMarketSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => visibleMarketIds.has(id)));
+      if (next.size === prev.size) return prev;
+      return next;
+    });
+  }, [visibleMarketIds]);
+  const toggleBuyerMarketSelection = useCallback((listingId: string) => {
+    setBuyerMarketSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(listingId)) next.delete(listingId);
+      else next.add(listingId);
+      return next;
+    });
+  }, []);
+  const clearBuyerMarketSelection = useCallback(() => setBuyerMarketSelectedIds(new Set()), []);
 
   const statNavigate = (label: string) => {
     if (onStatTileNavigate) {
@@ -715,7 +740,9 @@ export function ClientDashboardView({
                         Market activity
                       </CardTitle>
                       <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
-                        New listings on Direct Connect MLS.
+                        {variant === "buyer"
+                          ? "Recent listings across AAC — tap a card for details."
+                          : "New listings on Direct Connect MLS."}
                       </CardDescription>
                     </div>
                     <button
@@ -731,19 +758,19 @@ export function ClientDashboardView({
                 <CardContent className={previewSectionMarketContentClass}>
                   {latestListingsPreview.length > 0 ? (
                     <div className="overflow-visible">
-                      {variant === "buyer" && selectedMarketIds.size > 0 ? (
+                      {variant === "buyer" && buyerMarketSelectedIds.size > 0 ? (
                         <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                           <BulkShareListingsDialog
-                            listingIds={[...selectedMarketIds]}
-                            listingCount={selectedMarketIds.size}
+                            listingIds={[...buyerMarketSelectedIds]}
+                            listingCount={buyerMarketSelectedIds.size}
                             triggerVariant="outline"
                             triggerClassName="h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600"
-                            triggerLabel={`Share selected (${selectedMarketIds.size})`}
-                            onSuccessfulShare={clearMarketSelection}
+                            triggerLabel={`Share selected (${buyerMarketSelectedIds.size})`}
+                            onSuccessfulShare={clearBuyerMarketSelection}
                           />
                           <button
                             type="button"
-                            onClick={clearMarketSelection}
+                            onClick={clearBuyerMarketSelection}
                             className="h-7 shrink-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
                           >
                             Clear
@@ -758,56 +785,161 @@ export function ClientDashboardView({
                             listing as ListedBySource,
                             (listing.agent_profile as ListedByAgentProfile) ?? null,
                           );
-                          const isSelected = variant === "buyer" && selectedMarketIds.has(listing.id);
+                          const openListing = () => navigate(`/property/${listing.id}`);
+                          const listingKeyDown = (e: KeyboardEvent) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openListing();
+                            }
+                          };
+
+                          if (variant === "buyer") {
+                            const isMarketSelected = buyerMarketSelectedIds.has(listing.id);
+                            const streetLine = formatBuyerMarketStreetLine(listing);
+
+                            return (
+                              <article
+                                key={listing.id}
+                                role="button"
+                                tabIndex={0}
+                                className={`${dashboardPreviewTileInteractive} flex flex-col`}
+                                onClick={openListing}
+                                onKeyDown={listingKeyDown}
+                              >
+                                <div className={listingPreviewMediaWrap}>
+                                  <DashboardListingImage
+                                    photoUrl={getPrimaryPhotoUrl(photos)}
+                                    alt={streetLine}
+                                    imageClassName="absolute inset-0 h-full w-full object-cover"
+                                  />
+                                  <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 px-2 pt-2">
+                                    <div className="pointer-events-auto flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center">
+                                      <div
+                                        role="checkbox"
+                                        aria-checked={isMarketSelected}
+                                        tabIndex={0}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleBuyerMarketSelection(listing.id);
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleBuyerMarketSelection(listing.id);
+                                          }
+                                        }}
+                                        className={cn(
+                                          "flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors",
+                                          isMarketSelected
+                                            ? "border-[#16A34A] bg-[#16A34A]"
+                                            : "border-zinc-300 bg-white",
+                                        )}
+                                        title="Keep in shortlist for this visit"
+                                        aria-label={
+                                          isMarketSelected
+                                            ? "Remove from shortlist"
+                                            : "Add to shortlist for this visit"
+                                        }
+                                      >
+                                        {isMarketSelected ? (
+                                          <svg
+                                            className="h-3 w-3 text-white"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                            aria-hidden
+                                          >
+                                            <path
+                                              fillRule="evenodd"
+                                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                              clipRule="evenodd"
+                                            />
+                                          </svg>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                    <div
+                                      className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className={listingPreviewBody}>
+                                  <div className="mb-0 flex items-start justify-between gap-2">
+                                    <p className={dashTileTitleClass}>
+                                      {listing.price ? `$${listing.price.toLocaleString()}` : "—"}
+                                    </p>
+                                    {listingIdLabel ? (
+                                      <span
+                                        className={`${LISTING_ID_NAV_CLASS} shrink-0 text-right text-[12px] leading-snug tabular-nums`}
+                                      >
+                                        {listingIdLabel}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <p className={`flex min-w-0 items-start gap-1 ${dashTileAddressClass}`}>
+                                    <MapPin
+                                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#50C878]"
+                                      aria-hidden
+                                      strokeWidth={2}
+                                    />
+                                    <span className="min-w-0 break-words">{streetLine}</span>
+                                  </p>
+                                  <p className={`flex min-w-0 items-start gap-1 ${dashTileSecondaryClass}`}>
+                                    <span className="min-w-0 break-words">
+                                      {listing.city}, {listing.state}
+                                    </span>
+                                  </p>
+                                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
+                                    {listing.bedrooms ? (
+                                      <div className="flex items-center gap-1">
+                                        <Bed className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                                        <span className="font-medium">{listing.bedrooms}</span>
+                                      </div>
+                                    ) : null}
+                                    {listing.bathrooms ? (
+                                      <div className="flex items-center gap-1">
+                                        <Bath className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                                        <span className="font-medium">{listing.bathrooms}</span>
+                                      </div>
+                                    ) : null}
+                                    {listing.square_feet ? (
+                                      <div className="flex items-center gap-1">
+                                        <Maximize className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                                        <span className="font-medium">{listing.square_feet.toLocaleString()}</span>
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                  {listedBy ? (
+                                    <p
+                                      className="mt-1.5 truncate text-[11px] font-normal leading-snug text-neutral-500"
+                                      title={`Listed by: ${listedBy}`}
+                                    >
+                                      Listed by: {listedBy}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </article>
+                            );
+                          }
+
                           return (
                             <article
                               key={listing.id}
                               role="button"
                               tabIndex={0}
-                              className={`${dashboardPreviewTileInteractive} flex flex-col ${
-                                isSelected ? "ring-2 ring-[#22C55E] ring-offset-1" : ""
-                              }`}
-                              onClick={() => navigate(`/property/${listing.id}`)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  navigate(`/property/${listing.id}`);
-                                }
-                              }}
+                              className={`${dashboardPreviewTileInteractive} flex flex-col`}
+                              onClick={openListing}
+                              onKeyDown={listingKeyDown}
                             >
-                              <div className={`${listingPreviewMediaWrap} relative`}>
+                              <div className={listingPreviewMediaWrap}>
                                 <DashboardListingImage
                                   photoUrl={getPrimaryPhotoUrl(photos)}
                                   alt={listing.address}
                                   imageClassName="absolute inset-0 h-full w-full object-cover"
                                 />
-                                {variant === "buyer" ? (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleMarketSelection(listing.id);
-                                      }}
-                                      aria-label={isSelected ? "Deselect listing" : "Select listing"}
-                                      aria-pressed={isSelected}
-                                      className={`absolute top-2 left-2 z-20 inline-flex h-6 w-6 items-center justify-center rounded-[4px] border transition-all ${
-                                        isSelected
-                                          ? "border-[#22C55E] bg-[#22C55E] text-white shadow"
-                                          : "border-white/80 bg-white/80 text-transparent hover:bg-white"
-                                      }`}
-                                    >
-                                      <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
-                                    </button>
-                                    <div
-                                      className="absolute top-2 right-2 z-20"
-                                      onClick={(e) => e.stopPropagation()}
-                                      onKeyDown={(e) => e.stopPropagation()}
-                                    >
-                                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
-                                    </div>
-                                  </>
-                                ) : null}
                               </div>
                               <div className={listingPreviewBody}>
                                 <div className="mb-0 flex items-start justify-between gap-2">
