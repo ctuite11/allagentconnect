@@ -154,6 +154,7 @@ export function renderEmailTemplate(
           ${teaser.photoUrl ? `<img src="${teaser.photoUrl}" alt="Listing preview" style="display:block;width:100%;height:160px;object-fit:cover;" />` : ""}
           <div style="padding:12px 14px;">
             <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#111827;">${teaser.price || "Price unavailable"}</p>
+            ${teaser.address ? `<p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#0f172a;">${teaser.address}</p>` : ""}
             <p style="margin:0;color:#4b5563;">${teaser.cityState || "Location unavailable"}${teaser.bedsBaths ? ` • ${teaser.bedsBaths}` : ""}</p>
           </div>
         </div>
