@@ -1078,13 +1078,7 @@ if (comments && comments.length > 0) {
                     key={r.clientId}
                     className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                   >
-                    <AgentAvatar
-                      name={r.displayName}
-                      headshotUrl={null}
-                      userId={r.authUserId}
-                      size="sm"
-                      showPresence
-                    />
+                    <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
                     <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
                     <BuyerRowStatusPill
                       buyer={{
