@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -452,6 +452,11 @@ export default function ClientDashboard() {
     setFavorites(rows);
   };
 
+  const refreshFavoritesPreview = useCallback(async () => {
+    if (!currentUserId) return;
+    await loadFavorites(currentUserId);
+  }, [currentUserId]);
+
   const loadMarketListings = async () => {
     const { data, error } = await supabase
       .from("listings")
@@ -734,6 +739,7 @@ export default function ClientDashboard() {
         setAddFriendOpen={setAddFriendOpen}
         setShowEndDialog={setShowEndDialog}
         onRequestDeleteHotSheet={(sheetId) => setHotSheetDeleteId(sheetId)}
+        onBuyerMarketFavoriteToggle={refreshFavoritesPreview}
       />
 
       {/* End Relationship Dialog */}

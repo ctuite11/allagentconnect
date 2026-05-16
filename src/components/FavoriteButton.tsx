@@ -28,6 +28,8 @@ interface FavoriteButtonProps {
   tooltip?: { notSaved?: string; saved?: string };
   /** Omit hover tooltip (e.g. buyer dashboard market activity photo heart). */
   hideTooltip?: boolean;
+  /** Called after a successful favorite toggle (not on sign-in redirect or error). */
+  onToggleSuccess?: (isFavorite: boolean) => void;
 }
 
 const FavoriteButton = ({
@@ -40,6 +42,7 @@ const FavoriteButton = ({
   rerunCheckKey = 0,
   tooltip: tooltipOver,
   hideTooltip = false,
+  onToggleSuccess,
 }: FavoriteButtonProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -92,6 +95,7 @@ const FavoriteButton = ({
         
         setIsFavorite(false);
         toast.success("Removed from favorites");
+        onToggleSuccess?.(false);
       } else {
         // Add to favorites
         const { error } = await supabase
@@ -105,6 +109,7 @@ const FavoriteButton = ({
         
         setIsFavorite(true);
         toast.success("Added to favorites");
+        onToggleSuccess?.(true);
       }
     } catch (error: any) {
       console.error("Error toggling favorite:", error);

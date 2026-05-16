@@ -149,6 +149,8 @@ export interface ClientDashboardViewProps {
   crmBuyerId?: string | null;
   /** Buyer self-service — opens parent delete confirmation (ignored for agent variant). */
   onRequestDeleteHotSheet?: (sheetId: string) => void;
+  /** Buyer dashboard — refresh favorites preview after market activity heart toggle. */
+  onBuyerMarketFavoriteToggle?: () => void;
 }
 
 const buyerHeaderSoftBtn =
@@ -251,6 +253,7 @@ export function ClientDashboardView({
   mirrorManagementActions,
   crmBuyerId = null,
   onRequestDeleteHotSheet,
+  onBuyerMarketFavoriteToggle,
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
@@ -862,7 +865,13 @@ export function ClientDashboardView({
                                       className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <FavoriteButton listingId={listing.id} size="icon" photoIcon hideTooltip />
+                                      <FavoriteButton
+                                        listingId={listing.id}
+                                        size="icon"
+                                        photoIcon
+                                        hideTooltip
+                                        onToggleSuccess={() => onBuyerMarketFavoriteToggle?.()}
+                                      />
                                     </div>
                                   </div>
                                 </div>
