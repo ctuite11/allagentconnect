@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { SquarePen, Search, Trash2 } from "lucide-react";
@@ -92,6 +92,18 @@ export function ConversationsList({
     );
   });
 
+  const visibleIds = useMemo(() => filtered.map((t) => t.id), [filtered]);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+
+  const toggleSelectAllVisible = useCallback(() => {
+    if (allVisibleSelected) {
+      setSelectedIds(new Set());
+      return;
+    }
+    setSelectedIds(new Set(visibleIds));
+  }, [allVisibleSelected, visibleIds]);
+
   const toggleSelected = useCallback((id: string, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -174,23 +186,31 @@ export function ConversationsList({
             className="h-9 w-full rounded-xl border border-neutral-200 bg-white pl-9 pr-3 text-[13px] text-zinc-900 shadow-none placeholder:text-zinc-400 transition-colors focus:border-neutral-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
           />
         </div>
+
       </div>
 
       {canDelete && selectedIds.size > 0 ? (
-        <div className="flex-shrink-0 border-b border-neutral-100 px-3 py-2">
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="flex-shrink-0 border-b border-neutral-100 bg-neutral-50/60 px-3 py-1.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <button
+              type="button"
+              onClick={toggleSelectAllVisible}
+              className="text-[11px] font-medium text-zinc-600 underline-offset-2 transition-colors hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+            >
+              {allVisibleSelected ? "Clear all" : "Select all"}
+            </button>
             <button
               type="button"
               onClick={() => openDeleteConfirm([...selectedIds])}
-              className="inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-red-700/90 underline-offset-2 transition-colors hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
             >
-              <Trash2 className="h-3 w-3 text-neutral-600" aria-hidden />
+              <Trash2 className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
               Delete selected ({selectedIds.size})
             </button>
             <button
               type="button"
               onClick={clearSelection}
-              className="h-7 shrink-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+              className="text-[11px] font-medium text-zinc-500 underline-offset-2 transition-colors hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
             >
               Clear
             </button>
@@ -238,8 +258,13 @@ export function ConversationsList({
             )}
           </div>
         ) : (
+<<<<<<< HEAD
           filtered.map((thread, idx) => {
             const isSelected = thread.id === selectedId;
+=======
+          filtered.map((thread) => {
+            const isActiveThread = thread.id === selectedId;
+>>>>>>> 19015211 (Polish AAC messaging inbox interactions)
             const isChecked = selectedIds.has(thread.id);
             const listingLine =
               thread.listingId && addressCache[thread.listingId]
@@ -262,10 +287,18 @@ export function ConversationsList({
               <div
                 key={thread.id}
                 className={cn(
+<<<<<<< HEAD
                   "outline-none mb-1.5 flex items-center gap-2 rounded-xl px-2 py-3 transition-all duration-200 ease-out last:mb-0",
                   isSelected
                     ? "border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-neutral-200/80"
                     : cn(buyerMessagingThreadRow, idx % 2 === 1 && "bg-neutral-100")
+=======
+                  "group outline-none mb-1.5 flex items-center gap-2 rounded-xl px-2 py-3 transition-all duration-200 ease-out last:mb-0",
+                  isActiveThread
+                    ? "border border-neutral-200/80 bg-neutral-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                    : buyerMessagingThreadRow,
+                  isChecked && !isActiveThread && "bg-neutral-50/80",
+>>>>>>> 19015211 (Polish AAC messaging inbox interactions)
                 )}
               >
                 {canDelete ? (
@@ -277,7 +310,7 @@ export function ConversationsList({
                       checked={isChecked}
                       onCheckedChange={(checked) => toggleSelected(thread.id, checked === true)}
                       aria-label={`Select conversation with ${thread.otherUserName}`}
-                      className="data-[state=checked]:border-[#16A34A] data-[state=checked]:bg-[#16A34A]"
+                      className="h-4 w-4 rounded-[3px] border-zinc-300 bg-white hover:border-zinc-400 data-[state=checked]:border-[#16A34A] data-[state=checked]:bg-[#16A34A] [&_svg]:h-3 [&_svg]:w-3"
                     />
                   </div>
                 ) : null}
@@ -350,7 +383,11 @@ export function ConversationsList({
                       e.stopPropagation();
                       openDeleteConfirm([thread.id]);
                     }}
-                    className="mr-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                    className={cn(
+                      "mr-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 opacity-0 transition-opacity hover:bg-zinc-100 hover:text-zinc-700 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
+                      "group-hover:opacity-100",
+                      (isChecked || isActiveThread) && "opacity-100",
+                    )}
                     aria-label={`Delete conversation with ${thread.otherUserName}`}
                     title="Delete conversation"
                   >
