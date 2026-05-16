@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
+import { archiveConversationsForUser } from "@/lib/archiveConversationsForUser";
+import { supabase } from "@/integrations/supabase/client";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
@@ -81,6 +84,23 @@ function MessagingWorkspaceContent({
   const panelShellClass = buyerMessagingPanel;
 
   const safeThreads = Array.isArray(threads) ? threads : [];
+  const messagesRouteBase = agentMode ? "/agent/messages" : "/messages";
+
+  const handleArchiveThreads = useCallback(
+    async (conversationIds: string[]): Promise<boolean> => {
+      const { error } = await archiveConversationsForUser(supabase, conversationIds);
+      if (error) {
+        toast.error("Could not delete conversation", { description: error });
+        return false;
+      }
+      await refetchThreads();
+      if (selectedConversationId && conversationIds.includes(selectedConversationId)) {
+        navigate(messagesRouteBase);
+      }
+      return true;
+    },
+    [messagesRouteBase, navigate, refetchThreads, selectedConversationId],
+  );
 
   return (
     <>
@@ -137,7 +157,8 @@ function MessagingWorkspaceContent({
                   selectedId={selectedConversationId}
                   onNewMessage={() => setNewMessageOpen(true)}
                   showNewMessageButton
-                  routeBase={agentMode ? "/agent/messages" : "/messages"}
+                  routeBase={messagesRouteBase}
+                  onArchiveThreads={handleArchiveThreads}
                   heading={buyerMode ? "Messages" : "Recent chats"}
                   searchPlaceholder={
                     buyerMode ? "Search messages" : "Search name, message, or address"

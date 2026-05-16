@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
 
 interface ConversationOptions {
   listingId?: string | null;
@@ -44,6 +45,7 @@ export async function findOrCreateConversation(
 
   if (existing) {
     await ensureParticipants(existing.id);
+    await unarchiveConversationForUser(supabase, existing.id);
     return existing.id;
   }
 
