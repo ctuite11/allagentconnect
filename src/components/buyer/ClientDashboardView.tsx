@@ -271,12 +271,12 @@ export function ClientDashboardView({
                     {buyerDisplayName.trim()}
                   </h1>
                   {buyerPresenceOnline ? (
-                    <div className="flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5">
+                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5">
                       <span
-                        className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-500 ring-2 ring-neutral-100"
+                        className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
                         title="Online"
                       />
-                      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-700">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
                         Online
                       </span>
                     </div>
@@ -408,16 +408,20 @@ export function ClientDashboardView({
                       </Avatar>
                       <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
                         <p className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
-                          {agentPresenceOnline ? (
-                            <span
-                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-500 ring-2 ring-neutral-100"
-                              title="Recently active"
-                              aria-label="Recently active"
-                            />
-                          ) : null}
                           <span>
                             {agent.first_name} {agent.last_name}
                           </span>
+                          {agentPresenceOnline ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5">
+                              <span
+                                className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
+                                title="Online"
+                              />
+                              <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-700">
+                                Online
+                              </span>
+                            </span>
+                          ) : null}
                         </p>
                         {agent.company ? <p className="text-[11px] text-neutral-500 sm:text-xs">{agent.company}</p> : null}
                         {agentPhoneFmt ? (
