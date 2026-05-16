@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Eye, FileText, Flame, Heart, Layers, MessageSquare, Plus, Sparkle } from "lucide-react";
+import { FileText, Flame, Heart, Layers, MessageSquare, Plus, Sparkle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { cn } from "@/lib/utils";
@@ -89,18 +89,6 @@ function MetricsToolbar({
       };
 
   const items: MetricItem[] = [
-    { key: "m", kind: "number", icon: Sparkle, label: "Matches", value: m.matches },
-    { key: "v", kind: "number", icon: Eye, label: "Views", value: m.views },
-    {
-      key: "f",
-      kind: "number",
-      icon: Heart,
-      label: "Buyer Favorites",
-      value: m.favorites,
-      iconClass: tintToolbarIcons
-        ? "fill-rose-500 text-rose-500 stroke-rose-500"
-        : undefined,
-    },
     showSheetCode
       ? {
           key: "h",
@@ -116,6 +104,17 @@ function MetricsToolbar({
           label: "Hot sheets",
           value: m.hotSheets,
         },
+    { key: "m", kind: "number", icon: Sparkle, label: "Matches", value: m.matches },
+    {
+      key: "f",
+      kind: "number",
+      icon: Heart,
+      label: "Buyer Favorites",
+      value: m.favorites,
+      iconClass: tintToolbarIcons
+        ? "fill-rose-500 text-rose-500 stroke-rose-500"
+        : undefined,
+    },
     { key: "msg", kind: "number", icon: MessageSquare, label: "Messages", value: m.messages },
   ];
 
