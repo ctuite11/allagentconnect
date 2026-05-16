@@ -189,7 +189,10 @@ const HotSheetBuyerDetail = () => {
 
       if (hscRes.data?.length) {
         const hsIds = hscRes.data.map((r: any) => r.hot_sheet_id);
-        const { data: hsData } = await supabase.from("hot_sheets").select("id, name, criteria").in("id", hsIds);
+        const { data: hsData } = await supabase
+          .from("hot_sheets")
+          .select("id, name, criteria, created_at")
+          .in("id", hsIds);
 
         const acceptedHotSheetIdsForClient = new Set<string>();
         if (!buyerWorkspaceLinked) {
@@ -238,12 +241,16 @@ const HotSheetBuyerDetail = () => {
           }
           const canDeletePending =
             !buyerWorkspaceLinked && !acceptedHotSheetIdsForClient.has(String(hs.id));
+          const invitePending =
+            !buyerWorkspaceLinked && !acceptedHotSheetIdsForClient.has(String(hs.id));
           result.push({
             id: hs.id,
             name: hs.name,
             criteria: hs.criteria,
             photos,
             matchCount: matchCount.value,
+            createdAt: (hs as any).created_at ?? null,
+            invitePending,
             canDeletePending,
           });
         }
