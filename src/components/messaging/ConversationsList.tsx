@@ -258,13 +258,8 @@ export function ConversationsList({
             )}
           </div>
         ) : (
-<<<<<<< HEAD
-          filtered.map((thread, idx) => {
-            const isSelected = thread.id === selectedId;
-=======
           filtered.map((thread) => {
             const isActiveThread = thread.id === selectedId;
->>>>>>> 19015211 (Polish AAC messaging inbox interactions)
             const isChecked = selectedIds.has(thread.id);
             const listingLine =
               thread.listingId && addressCache[thread.listingId]
@@ -287,18 +282,11 @@ export function ConversationsList({
               <div
                 key={thread.id}
                 className={cn(
-<<<<<<< HEAD
-                  "outline-none mb-1.5 flex items-center gap-2 rounded-xl px-2 py-3 transition-all duration-200 ease-out last:mb-0",
-                  isSelected
-                    ? "border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-neutral-200/80"
-                    : cn(buyerMessagingThreadRow, idx % 2 === 1 && "bg-neutral-100")
-=======
                   "group outline-none mb-1.5 flex items-center gap-2 rounded-xl px-2 py-3 transition-all duration-200 ease-out last:mb-0",
                   isActiveThread
                     ? "border border-neutral-200/80 bg-neutral-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                     : buyerMessagingThreadRow,
                   isChecked && !isActiveThread && "bg-neutral-50/80",
->>>>>>> 19015211 (Polish AAC messaging inbox interactions)
                 )}
               >
                 {canDelete ? (
