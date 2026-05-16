@@ -23,8 +23,26 @@ import {
 } from "@/components/ui/alert-dialog";
 import ListingCard from "@/components/ListingCard";
 import ListingChatDrawer, { type ChatMessage } from "@/components/ListingChatDrawer";
-import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
+
+function BuyerInitialsAvatar({ displayName, userId }: { displayName: string; userId?: string | null }) {
+  const { isOnline } = useAgentLastSeen(userId || undefined);
+  const initials = (displayName || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("") || "?";
+  return (
+    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700">
+      {initials}
+      {isOnline && (
+        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+      )}
+    </span>
+  );
+}
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1060,13 +1078,7 @@ if (comments && comments.length > 0) {
                     key={r.clientId}
                     className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                   >
-                    <AgentAvatar
-                      name={r.displayName}
-                      headshotUrl={null}
-                      userId={r.authUserId}
-                      size="sm"
-                      showPresence
-                    />
+                    <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
                     <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
                     <BuyerRowStatusPill
                       buyer={{
