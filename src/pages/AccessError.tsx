@@ -11,7 +11,9 @@ const AccessError = () => (
     <header className="w-full bg-black">
       <div className="mx-auto max-w-7xl px-5 h-16 flex items-center">
         <Link to="/" aria-label="All Agent Connect — Home" className="inline-flex items-center gap-2.5">
-          <AACMonogram className="w-7 h-7" style={{ color: AAC_GREEN } as React.CSSProperties} />
+          <span className="inline-flex w-7 h-7" style={{ color: AAC_GREEN }}>
+            <AACMonogram className="w-full h-full" />
+          </span>
           <span className="font-semibold tracking-tight text-white text-[15px]">
             All Agent Connect
           </span>
