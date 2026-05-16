@@ -229,6 +229,29 @@ export function ClientDashboardView({
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
 
+  // Buyer-only: select market activity listings for bulk share. Agent mirror is unaffected.
+  const [selectedMarketIds, setSelectedMarketIds] = useState<Set<string>>(() => new Set());
+  const visibleMarketIds = useMemo(
+    () => new Set((latestListingsPreview ?? []).map((l) => l.id)),
+    [latestListingsPreview],
+  );
+  useEffect(() => {
+    setSelectedMarketIds((prev) => {
+      const next = new Set([...prev].filter((id) => visibleMarketIds.has(id)));
+      if (next.size === prev.size) return prev;
+      return next;
+    });
+  }, [visibleMarketIds]);
+  const toggleMarketSelection = (id: string) => {
+    setSelectedMarketIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const clearMarketSelection = () => setSelectedMarketIds(new Set());
+
   const paths = {
     hotSheetsViewAll: dashboardPaths?.hotSheetsViewAll ?? "/hot-sheets",
     favoritesViewAll: dashboardPaths?.favoritesViewAll ?? "/favorites",
