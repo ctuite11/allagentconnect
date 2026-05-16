@@ -206,64 +206,63 @@ export function ConversationPanel({
     />
   );
 
+  const rolePill = details ? (
+    <span className="inline-flex shrink-0 items-center rounded border border-neutral-200/60 bg-white px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+      {details.otherUserIsAgent ? "AAC agent" : "Client"}
+    </span>
+  ) : null;
+
+  const presenceDot =
+    details?.otherUserId && isOnline ? (
+      <span
+        className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"
+        title="Online"
+        aria-label="Online"
+      />
+    ) : null;
+
   return (
     <div className="flex min-h-0 h-full w-full flex-1 flex-col">
       {/* Header */}
-      <div className="shrink-0 border-b border-neutral-200/90 px-4 py-3">
-        <div className="flex w-full items-center justify-between gap-4">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="shrink-0 border-b border-neutral-200/90 px-4 py-2.5">
+        <div className="flex w-full items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <UserAvatar
               name={details?.otherUserName ?? ""}
               headshotUrl={details?.otherUserHeadshotUrl ?? null}
               size="lg"
-              userId={details?.otherUserId}
-              isOnline={isOnline}
+              showPresence={false}
             />
             <div className="min-w-0">
               {threadTitle?.trim() ? (
                 <>
                   <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{threadTitle.trim()}</h2>
-                  <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2 gap-y-1">
+                  <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span className="truncate text-[12px] leading-snug text-zinc-500">
                       Discussion with {details?.otherUserName}
                     </span>
-                    {details ? (
-                      <span className="inline-flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
-                        {details.otherUserIsAgent ? "AAC agent" : "Client"}
-                      </span>
-                    ) : null}
+                    {presenceDot}
+                    {rolePill}
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex min-w-0 flex-wrap items-center gap-2 gap-y-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
                       {details?.otherUserName}
                     </h2>
-                    {details ? (
-                      <span className="inline-flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600 shadow-none">
-                        {details.otherUserIsAgent ? "AAC agent" : "Client"}
-                      </span>
-                    ) : null}
+                    {presenceDot}
+                    {rolePill}
                   </div>
                   {contextLabel ? (
-                    <span className="mt-1 block truncate text-[12px] leading-snug text-zinc-500">{contextLabel}</span>
+                    <span className="mt-0.5 block truncate text-[12px] leading-snug text-zinc-500">{contextLabel}</span>
                   ) : null}
-                </>
-              )}
-              {details?.otherUserId && (
-                <span className="mt-1 flex items-center gap-1.5">
-                  {isOnline ? (
-                    <>
-                      <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#22C55E]" />
-                      <span className="text-[11px] font-medium text-[#15803d]">Online</span>
-                    </>
-                  ) : lastSeenAt ? (
-                    <span className="text-[11px] text-zinc-500">
+                  {!isOnline && lastSeenAt ? (
+                    <span className="mt-0.5 block text-[11px] text-zinc-500">
                       Active {formatDistanceToNow(new Date(lastSeenAt), { addSuffix: true })}
                     </span>
                   ) : null}
-                </span>
+                </>
               )}
             </div>
           </div>

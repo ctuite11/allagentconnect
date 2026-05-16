@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { SquarePen, Search } from "lucide-react";
 import type { ConversationThread } from "@/hooks/useConversationThreads";
-import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "./UserAvatar";
@@ -64,12 +63,6 @@ export function ConversationsList({
         setAddressCache((prev) => ({ ...prev, ...entries }));
       });
   }, [threads, loading]);
-
-  const otherUserIds = useMemo(
-    () => threads.map((t) => t.otherUserId).filter(Boolean),
-    [threads]
-  );
-  const presenceMap = useAgentPresenceBatch(otherUserIds);
 
   const totalUnread = threads.filter((t) => t.isUnread).length;
 
@@ -206,7 +199,7 @@ export function ConversationsList({
                   name={thread.otherUserName}
                   headshotUrl={thread.otherUserHeadshotUrl}
                   size="lg"
-                  isOnline={presenceMap.get(thread.otherUserId)?.isOnline}
+                  showPresence={false}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-px">
