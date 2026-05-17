@@ -344,28 +344,26 @@ export function ClientDashboardView({
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-                        <h1 className="text-xl font-semibold tracking-tight text-neutral-950 sm:text-2xl">
-                          {buyerDisplayName.trim()}
-                        </h1>
-                        {buyerPresenceOnline ? (
-                          <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5">
-                            <span
-                              className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
-                              title="Online"
-                            />
-                            <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
-                              Online
+                      <div className="space-y-0.5">
+                        <p className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
+                          <span>{buyerDisplayName.trim()}</span>
+                          {buyerPresenceOnline ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5">
+                              <span
+                                className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
+                                title="Searching"
+                              />
+                              <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-700">
+                                SEARCHING
+                              </span>
                             </span>
-                          </div>
-                        ) : null}
-                      </div>
-                      {(buyerPhoneFmt || buyerEmail?.trim()) ? (
-                        <div className="space-y-0.5">
+                          ) : null}
+                        </p>
+                        <p className="text-[11px] text-neutral-500 sm:text-xs">Buyer</p>
                           {buyerPhoneFmt ? (
                             <a
                               href={buyerPhoneFmt.telHref}
-                              className="block text-[13px] text-neutral-800 hover:underline sm:text-sm"
+                              className="block text-[13px] text-neutral-800 hover:underline"
                             >
                               {buyerPhoneFmt.display}
                             </a>
@@ -397,8 +395,7 @@ export function ClientDashboardView({
                               </span>
                             )
                           ) : null}
-                        </div>
-                      ) : null}
+                      </div>
                       {showBuyerSelfServiceChrome ? (
                         <div className="flex flex-wrap gap-1.5 pt-0.5 sm:gap-2">
                           <Button
