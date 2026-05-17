@@ -15,6 +15,23 @@ interface BuyerCollectionCardProps {
   onFavoritesClick?: () => void;
 }
 
+function titleCaseToken(term: string): string {
+  const t = term.trim();
+  if (!t) return "";
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+}
+
+/** Title-case each name part so `brody tuite` → `Brody Tuite`. */
+function formatBuyerDisplayName(raw: string): string {
+  const formatted = raw
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(titleCaseToken)
+    .join(" ");
+  return formatted || "Unnamed Client";
+}
+
 function PhotoCell({ src }: { src?: string }) {
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
@@ -45,6 +62,7 @@ export function BuyerCollectionCard({
   onFavoritesClick,
 }: BuyerCollectionCardProps) {
   const p = [photos[0], photos[1], photos[2], photos[3]];
+  const buyerDisplayName = formatBuyerDisplayName(clientName);
 
   return (
     <article
@@ -68,7 +86,10 @@ export function BuyerCollectionCard({
 
       <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
         <div className="min-w-0 shrink-0">
-          <h3 className="truncate text-lg font-semibold text-neutral-900">{clientName}</h3>
+          <p className="truncate text-[13px] leading-snug" title={buyerDisplayName}>
+            <span className="text-neutral-500">Buyer Name: </span>
+            <span className="font-medium text-neutral-800">{buyerDisplayName}</span>
+          </p>
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-sm text-neutral-600">
               {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}
