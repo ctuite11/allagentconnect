@@ -11,12 +11,16 @@ import { setPrimaryAgentId } from "@/utils/agentTracking";
 import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { upsertBuyerProfile } from "@/lib/buyerProfile";
 
 /** Authoritative invite context from `share_tokens` (token string alone is not enough — query params can be tampered). */
 type InviteAnchor = {
   agentId: string;
   crmClientId: string | null;
   clientEmail: string | null;
+  seedFirstName?: string | null;
+  seedLastName?: string | null;
+  seedPhone?: string | null;
 };
 
 const ClientInvitationSetup = () => {
@@ -175,6 +179,12 @@ const ClientInvitationSetup = () => {
             typeof payload.client_email === "string"
               ? String(payload.client_email).trim().toLowerCase()
               : null;
+          const seedFirstName =
+            typeof payload.client_first_name === "string" ? String(payload.client_first_name).trim() : "";
+          const seedLastName =
+            typeof payload.client_last_name === "string" ? String(payload.client_last_name).trim() : "";
+          const seedPhone =
+            typeof payload.client_phone === "string" ? String(payload.client_phone).trim() : "";
 
           const emailFromUrl = initialEmail.trim().toLowerCase();
           if (emailFromPayload && emailFromUrl && emailFromUrl !== emailFromPayload) {
@@ -189,10 +199,19 @@ const ClientInvitationSetup = () => {
             agentId: tokenAgentId,
             crmClientId: crmFromPayload,
             clientEmail: emailFromPayload,
+            seedFirstName: seedFirstName || null,
+            seedLastName: seedLastName || null,
+            seedPhone: seedPhone || null,
           });
 
           if (emailFromPayload && !emailFromUrl) {
             setEmail(emailFromPayload);
+          }
+          if (seedFirstName && !initialFirstName.trim()) {
+            setFirstName(seedFirstName);
+          }
+          if (seedLastName && !initialLastName.trim()) {
+            setLastName(seedLastName);
           }
 
           const { data: agentData } = await supabase
@@ -289,21 +308,15 @@ const ClientInvitationSetup = () => {
       if (!authData.user) throw new Error("Account creation failed");
 
       const userId = await ensureBuyerSession(normalizedEmail, password, authData.user.id);
-      const nameFields = { first_name: firstName.trim(), last_name: lastName.trim() };
 
-      const { error: updateError, count } = await supabase
-        .from("profiles")
-        .update(nameFields)
-        .eq("id", userId);
-
-      if (!updateError && count === 0) {
-        const { error: insertError } = await supabase
-          .from("profiles")
-          .insert([{ id: userId, email: normalizedEmail, ...nameFields }]);
-        if (insertError) throw insertError;
-      } else if (updateError) {
-        throw updateError;
-      }
+      const { error: profileError } = await upsertBuyerProfile({
+        userId,
+        email: normalizedEmail,
+        firstName: firstName.trim() || inviteAnchor?.seedFirstName,
+        lastName: lastName.trim() || inviteAnchor?.seedLastName,
+        phone: inviteAnchor?.seedPhone,
+      });
+      if (profileError) throw profileError;
 
       const { error: roleError } = await supabase
         .from("user_roles")
@@ -362,6 +375,15 @@ const ClientInvitationSetup = () => {
       if (!data.user) throw new Error("Sign in failed — please try again.");
 
       const userId = data.user.id;
+
+      const { error: profileError } = await upsertBuyerProfile({
+        userId,
+        email: normalizedEmail,
+        firstName: firstName.trim() || inviteAnchor?.seedFirstName,
+        lastName: lastName.trim() || inviteAnchor?.seedLastName,
+        phone: inviteAnchor?.seedPhone,
+      });
+      if (profileError) throw profileError;
 
       if (!effectiveAgentId) {
         throw new Error("Invitation is missing agent context. Please request a new invitation link.");

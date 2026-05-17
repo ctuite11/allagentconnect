@@ -47,7 +47,7 @@ export async function enqueueHotSheetClientInvites({
 
   const [agentProfileRes, clientsRes, existingTokensRes, relationshipRes] = await Promise.all([
     supabase.from("agent_profiles").select("first_name, last_name").eq("id", agentUserId).maybeSingle(),
-    supabase.from("clients").select("id, email, first_name, last_name").in("id", uniqueIds),
+    supabase.from("clients").select("id, email, first_name, last_name, phone").in("id", uniqueIds),
     supabase.from("share_tokens").select("id, token, payload, accepted_at").eq("agent_id", agentUserId),
     supabase
       .from("client_agent_relationships")
@@ -60,9 +60,19 @@ export async function enqueueHotSheetClientInvites({
     ? `${agentProfileRes.data.first_name ?? ""} ${agentProfileRes.data.last_name ?? ""}`.trim()
     : "Your agent";
 
-  const clientMap = new Map<string, { email: string }>();
+  const clientMap = new Map<
+    string,
+    { email: string; first_name: string | null; last_name: string | null; phone: string | null }
+  >();
   for (const c of clientsRes.data ?? []) {
-    if (c.email) clientMap.set(String(c.id), { email: String(c.email) });
+    if (c.email) {
+      clientMap.set(String(c.id), {
+        email: String(c.email),
+        first_name: c.first_name ?? null,
+        last_name: c.last_name ?? null,
+        phone: c.phone ?? null,
+      });
+    }
   }
 
   const buyerLinkedCrmIds = new Set(
@@ -165,6 +175,9 @@ export async function enqueueHotSheetClientInvites({
             type: "client_hotsheet_invite",
             client_id: clientId,
             client_email: clientData.email,
+            client_first_name: clientData.first_name,
+            client_last_name: clientData.last_name,
+            client_phone: clientData.phone,
             hot_sheet_id: hotSheetId,
             suppress_initial_matches: true,
           },
@@ -197,7 +210,9 @@ export async function enqueueHotSheetClientInvites({
       `?invitation_token=${encodeURIComponent(finalToken)}` +
       `&email=${encodeURIComponent(clientData.email)}` +
       `&agent_id=${encodeURIComponent(agentUserId)}` +
-      `&client_id=${encodeURIComponent(clientId)}`;
+      `&client_id=${encodeURIComponent(clientId)}` +
+      (clientData.first_name ? `&first_name=${encodeURIComponent(clientData.first_name)}` : "") +
+      (clientData.last_name ? `&last_name=${encodeURIComponent(clientData.last_name)}` : "");
 
     const { error: fnError } = await supabase.functions.invoke("send-hot-sheet-invite", {
       body: {

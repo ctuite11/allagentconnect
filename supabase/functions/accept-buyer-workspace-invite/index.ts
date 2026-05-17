@@ -199,6 +199,35 @@ serve(async (req) => {
     }
   }
 
+  // Ensure buyer profile row exists (no duplicate ids) with auth/invite email.
+  const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+  const profileEmail = (
+    authUser?.user?.email?.trim() ||
+    invite.buyer_email?.trim() ||
+    ""
+  ).toLowerCase();
+
+  if (profileEmail) {
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const { error: profileInsertErr } = await supabaseAdmin.from("profiles").insert({
+        id: userId,
+        email: profileEmail,
+        first_name: null,
+        last_name: null,
+        phone: null,
+      });
+      if (profileInsertErr) {
+        console.error("Buyer profile insert on invite accept failed:", profileInsertErr);
+      }
+    }
+  }
+
   // Get owner name for toast
   const { data: ownerProfile } = await supabaseAdmin
     .from("profiles")
