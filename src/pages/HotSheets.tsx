@@ -35,10 +35,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthRole } from "@/hooks/useAuthRole";
 
-const ALERT_FREQUENCY_STORAGE_KEY = "buyer_hot_sheets_alert_frequency";
-const isAlertFrequency = (value: string): value is "instant" | "daily" | "weekly" =>
-  value === "instant" || value === "daily" || value === "weekly";
-
 interface BuyerCollection {
   clientId: string;
   clientName: string;
@@ -140,26 +136,11 @@ const HotSheets = ({
   const [buyerPreviewPhotosById, setBuyerPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [buyerMatchCountsById, setBuyerMatchCountsById] = useState<Record<string, number>>({});
   const [buyerLoading, setBuyerLoading] = useState(true);
-  const [buyerLinkedAgentName, setBuyerLinkedAgentName] = useState<string | null>(null);
-  const [alertFrequency, setAlertFrequency] = useState<"instant" | "daily" | "weekly">("instant");
   const [buyerDeleteTarget, setBuyerDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [buyerDeleteBusy, setBuyerDeleteBusy] = useState(false);
   /** Agent list: last fetch failed (clears list in catch). */
   const [agentLoadError, setAgentLoadError] = useState(false);
   const buyerMode = isBuyerMode;
-
-  useEffect(() => {
-    if (!buyerMode) return;
-    const saved = window.localStorage.getItem(ALERT_FREQUENCY_STORAGE_KEY);
-    if (saved && isAlertFrequency(saved)) {
-      setAlertFrequency(saved);
-    }
-  }, [buyerMode]);
-
-  useEffect(() => {
-    if (!buyerMode) return;
-    window.localStorage.setItem(ALERT_FREQUENCY_STORAGE_KEY, alertFrequency);
-  }, [alertFrequency, buyerMode]);
 
   /** Hero / page sections — white surface, subtle border/shadow (matches polished agent surfaces). */
   const AAC_CARD_SHELL =
@@ -245,45 +226,9 @@ const HotSheets = ({
           <div className="order-4 rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm lg:col-start-3 lg:row-start-1 lg:self-start">
             <p className={DASH_SECTION_TITLE}>Connected to your agent</p>
             <p className={`mt-1 ${DASH_SECTION_DESC}`}>
-              Your agent can view your Hot Sheets, monitor activity, and share matching opportunities.
+              Your agent can view your Hot Sheets, comment, and track activity.
             </p>
 
-            <p className={`mt-3.5 ${DASH_SECTION_TITLE}`}>Alert Frequency</p>
-            <div className="mt-2 inline-flex w-full rounded-lg border border-neutral-200 bg-neutral-50/80 p-1">
-              <button
-                type="button"
-                onClick={() => setAlertFrequency("instant")}
-                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 ${
-                  alertFrequency === "instant"
-                    ? "bg-neutral-900 text-white shadow-sm"
-                    : "text-neutral-600 hover:bg-white/80 hover:text-neutral-900"
-                }`}
-              >
-                Instant
-              </button>
-              <button
-                type="button"
-                onClick={() => setAlertFrequency("daily")}
-                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 ${
-                  alertFrequency === "daily"
-                    ? "bg-neutral-900 text-white shadow-sm"
-                    : "text-neutral-600 hover:bg-white/80 hover:text-neutral-900"
-                }`}
-              >
-                Daily
-              </button>
-              <button
-                type="button"
-                onClick={() => setAlertFrequency("weekly")}
-                className={`h-8 flex-1 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 ${
-                  alertFrequency === "weekly"
-                    ? "bg-neutral-900 text-white shadow-sm"
-                    : "text-neutral-600 hover:bg-white/80 hover:text-neutral-900"
-                }`}
-              >
-                Weekly
-              </button>
-            </div>
           </div>
         ) : null}
       </div>
@@ -311,7 +256,6 @@ const HotSheets = ({
   const loadBuyerHotSheets = async () => {
     try {
       setBuyerLoading(true);
-      setBuyerLinkedAgentName(null);
 
       let user: User | null = authSessionUser ?? null;
       if (!user) {
@@ -328,41 +272,6 @@ const HotSheets = ({
       if (!userId) {
         navigate("/auth");
         return;
-      }
-
-      try {
-        const { data: relationship, error: relErr } = await supabase
-          .from("client_agent_relationships")
-          .select("agent_id")
-          .eq("client_id", userId)
-          .eq("status", "active")
-          .maybeSingle();
-
-        const rawAid =
-          relationship && typeof relationship === "object"
-            ? (relationship as Record<string, unknown>).agent_id
-            : undefined;
-        const agentId =
-          typeof rawAid === "string" && rawAid.trim() ? rawAid.trim() : null;
-
-        if (!relErr && agentId) {
-          const { data: agentProfile, error: profileErr } = await supabase
-            .from("agent_profiles")
-            .select("first_name, last_name")
-            .eq("id", agentId)
-            .maybeSingle();
-
-          if (!profileErr && agentProfile && typeof agentProfile === "object") {
-            const ap = agentProfile as Record<string, unknown>;
-            const parts = [ap.first_name, ap.last_name].filter(
-              (x): x is string => typeof x === "string" && Boolean(x.trim()),
-            );
-            const display = parts.map((s) => s.trim()).join(" ");
-            if (display) setBuyerLinkedAgentName(display);
-          }
-        }
-      } catch (agentLookupErr) {
-        console.warn("[HotSheets] Linked agent attribution skipped", agentLookupErr);
       }
 
       const { data: profile } = await supabase
@@ -455,7 +364,6 @@ const HotSheets = ({
     } catch (error) {
       console.error("Error loading buyer hot sheets", error);
       toast.error("Unable to load Hot Sheets right now");
-      setBuyerLinkedAgentName(null);
       setBuyerHotSheets([]);
       setBuyerTokenByHotSheetId({});
       setBuyerPreviewPhotosById({});
@@ -506,12 +414,17 @@ const HotSheets = ({
               {renderHotSheetsHero()}
 
               {buyerLoading ? (
-                <section className="grid grid-cols-1 gap-5 bg-white md:grid-cols-2 lg:grid-cols-3">
+                <section className="grid grid-cols-1 gap-6 bg-white md:grid-cols-2 lg:grid-cols-3">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-                      <div className="h-5 w-1/2 animate-pulse rounded bg-neutral-100" />
-                      <div className="mt-3 h-4 w-5/6 animate-pulse rounded bg-neutral-100" />
-                      <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-neutral-100" />
+                    <div
+                      key={i}
+                      className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
+                    >
+                      <div className="h-48 w-full animate-pulse bg-neutral-100 md:h-52" />
+                      <div className="space-y-3 p-4">
+                        <div className="h-6 w-[85%] max-w-[16rem] animate-pulse rounded-md bg-neutral-100" />
+                        <div className="h-4 w-24 animate-pulse rounded-md bg-neutral-100" />
+                      </div>
                     </div>
                   ))}
                 </section>
@@ -529,16 +442,17 @@ const HotSheets = ({
                   </div>
                 </section>
               ) : (
-                <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <section className="grid grid-cols-1 gap-6 bg-white md:grid-cols-2 lg:grid-cols-3">
                   {buyerHotSheets.map((sheet) => {
                     const token = buyerTokenByHotSheetId[sheet.id];
+                    const matchCount = buyerMatchCountsById[sheet.id] ?? 0;
                     return (
                       <BuyerHotSheetPreviewCard
                         key={sheet.id}
                         variant="hotSheetsPage"
                         photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
                         title={sheet.name}
-                        linkedAgentName={buyerLinkedAgentName}
+                        matchCount={matchCount}
                         onClick={() => openBuyerHotSheet(sheet.id, token)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
@@ -546,6 +460,7 @@ const HotSheets = ({
                             openBuyerHotSheet(sheet.id, token);
                           }
                         }}
+                        onFavoritesClick={() => navigate("/favorites")}
                         onDeleteClick={() => setBuyerDeleteTarget({ id: sheet.id, name: sheet.name })}
                       />
                     );

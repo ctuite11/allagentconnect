@@ -1,34 +1,32 @@
-import type { KeyboardEvent, MouseEvent } from "react";
-import { Eye, Trash2 } from "lucide-react";
+import { useState, type KeyboardEvent, type MouseEvent } from "react";
+import { Eye, Heart, Trash2 } from "lucide-react";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import {
-  buyerDashboardHotFavTileBody,
+  buyerCollectionCardRoot,
   buyerDashboardHotFavTile,
+  buyerDashboardHotFavTileBody,
   buyerDashboardHotSheetCollageGrid,
   buyerDashboardHotSheetMediaWrap,
-  buyerPreviewCardInteractive,
+  buyerImageMosaicCell,
+  buyerImageMosaicGrid,
 } from "@/lib/buyerUi";
 
-const mosaicCell = "relative min-h-0 min-w-0 overflow-hidden bg-white";
 const mosaicImg = "absolute inset-0 h-full w-full object-cover";
 
-/** Hot Sheets listing page — 2×2 mosaic: tall left column + stacked right cells (empty slots stay white). */
-function HotSheetPageMosaic({ photoUrls }: { photoUrls: string[] }) {
-  const [a, b, c] = photoUrls.filter(Boolean).slice(0, 3);
-
+function HotSheetPagePhotoCell({ src }: { src?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return <div className={buyerImageMosaicCell} aria-hidden />;
+  }
   return (
-    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-[2px] bg-white [grid-template-columns:minmax(0,3fr)_minmax(0,2fr)]">
-      <div className={`${mosaicCell} row-span-2`}>
-        {a ? (
-          <DashboardListingImage photoUrl={a} alt="" imageClassName={mosaicImg} emptyFallback="neutral" />
-        ) : null}
-      </div>
-      <div className={mosaicCell}>
-        {b ? <DashboardListingImage photoUrl={b} alt="" imageClassName={mosaicImg} emptyFallback="neutral" /> : null}
-      </div>
-      <div className={mosaicCell}>
-        {c ? <DashboardListingImage photoUrl={c} alt="" imageClassName={mosaicImg} emptyFallback="neutral" /> : null}
-      </div>
+    <div className={buyerImageMosaicCell}>
+      <img
+        src={src}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
     </div>
   );
 }
@@ -74,45 +72,108 @@ function HotSheetDashboardCollage({ photoUrls }: { photoUrls: string[] }) {
 export interface BuyerHotSheetPreviewCardProps {
   photoUrls: string[];
   title: string;
-  /** Second line — e.g. “12 matches”; dashboard uses match count text. Omitted when `variant` is hotSheetsPage. */
+  /** Second line — e.g. “12 matches”; dashboard uses match count text. */
   subtitle?: string;
   /**
    * `dashboard` — default strip tile (two-line title + matches).
-   * `hotSheetsPage` — buyer Hot Sheets route: labeled name + Eye/View footer (whole card still primary action).
+   * `hotSheetsPage` — buyer Hot Sheets index: agent-style mosaic + View/Favorites footer.
    */
   variant?: "dashboard" | "hotSheetsPage";
-  /** Shown under the hot sheet name on `hotSheetsPage` only (e.g. buyer’s linked agent). */
-  linkedAgentName?: string | null;
+  /** Match count for `hotSheetsPage` footer line. */
+  matchCount?: number;
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent<HTMLElement>) => void;
+  /** Buyer Hot Sheets index — opens Favorites (stops card navigation). */
+  onFavoritesClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   /** Buyer self-service — compact delete control (stops card navigation). */
   onDeleteClick?: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
 /**
  * Hot Sheet collage tile — `dashboard` matches `ClientDashboard` strip.
- * `hotSheetsPage` adds labeled title + Eye/View affordance for `/client/hot-sheets`; whole-card click unchanged.
+ * `hotSheetsPage` matches agent `BuyerCollectionCard` sizing and chrome.
  */
 export function BuyerHotSheetPreviewCard({
   photoUrls,
   title,
   subtitle = "",
   variant = "dashboard",
-  linkedAgentName,
+  matchCount = 0,
   onClick,
   onKeyDown,
+  onFavoritesClick,
   onDeleteClick,
 }: BuyerHotSheetPreviewCardProps) {
-  const agentAttribution =
-    typeof linkedAgentName === "string" ? linkedAgentName.trim() : "";
-
   const isHotSheetsPage = variant === "hotSheetsPage";
-  const rootClass = isHotSheetsPage
-    ? `${buyerPreviewCardInteractive} flex min-h-[19rem] flex-col md:min-h-[20rem]`
-    : buyerDashboardHotFavTile;
-  const mediaWrapClass = isHotSheetsPage
-    ? "relative h-52 shrink-0 w-full overflow-hidden rounded-t-2xl bg-white md:h-56"
-    : buyerDashboardHotSheetMediaWrap;
+
+  if (isHotSheetsPage) {
+    const p = [photoUrls[0], photoUrls[1], photoUrls[2], photoUrls[3]];
+    const matchLabel = `${matchCount} ${matchCount === 1 ? "match" : "matches"}`;
+
+    return (
+      <div className="relative h-full min-h-0">
+        {onDeleteClick ? (
+          <button
+            type="button"
+            aria-label="Delete hot sheet"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteClick(e);
+            }}
+            className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-md border border-red-200/90 bg-white text-red-600 shadow-sm transition-colors hover:bg-red-50"
+          >
+            <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          </button>
+        ) : null}
+        <article
+          role="button"
+          tabIndex={0}
+          className={`${buyerCollectionCardRoot} flex min-h-[19rem] flex-col outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 md:min-h-[20rem]`}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
+        >
+          <div className={buyerImageMosaicGrid}>
+            <HotSheetPagePhotoCell src={p[0]} />
+            <HotSheetPagePhotoCell src={p[1]} />
+            <HotSheetPagePhotoCell src={p[2]} />
+            <HotSheetPagePhotoCell src={p[3]} />
+          </div>
+
+          <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
+            <div className="min-w-0 shrink-0">
+              <h3 className="truncate text-lg font-semibold text-neutral-900">{title}</h3>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <p className="text-sm text-neutral-600 tabular-nums">{matchLabel}</p>
+                <div className="flex shrink-0 items-center gap-3">
+                  <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
+                    <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                    <span>View</span>
+                  </div>
+                  {onFavoritesClick ? (
+                    <button
+                      type="button"
+                      className="pointer-events-auto inline-flex items-center gap-1 text-sm font-medium text-neutral-700 transition-colors hover:text-neutral-900"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFavoritesClick(e);
+                      }}
+                    >
+                      <Heart
+                        className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      <span>Favorites</span>
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full min-h-0">
@@ -132,40 +193,18 @@ export function BuyerHotSheetPreviewCard({
       <article
         role="button"
         tabIndex={0}
-        className={rootClass}
+        className={buyerDashboardHotFavTile}
         onClick={onClick}
         onKeyDown={onKeyDown}
       >
-      <div className={mediaWrapClass}>
-        {isHotSheetsPage ? (
-          <HotSheetPageMosaic photoUrls={photoUrls} />
-        ) : (
+        <div className={buyerDashboardHotSheetMediaWrap}>
           <HotSheetDashboardCollage photoUrls={photoUrls} />
-        )}
-      </div>
-      {isHotSheetsPage ? (
-        <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
-          <div className="min-w-0 shrink-0">
-            <p className="text-[13px] font-normal leading-snug text-neutral-500">Hot Sheet Name:</p>
-            <p className="mt-0.5 line-clamp-2 text-base font-semibold leading-snug text-neutral-900">{title}</p>
-            {agentAttribution ? (
-              <p className="mt-1 text-left text-xs text-zinc-500">Your agent: {agentAttribution}</p>
-            ) : null}
-          </div>
-          <div className="mt-auto flex w-full shrink-0 items-center justify-end pt-3">
-            <span className="pointer-events-none inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600">
-              <Eye className="h-4 w-4 shrink-0 text-neutral-600" strokeWidth={2} aria-hidden />
-              View
-            </span>
-          </div>
         </div>
-      ) : (
         <div className={`${buyerDashboardHotFavTileBody} flex-1`}>
           <p className="line-clamp-1 text-[16px] font-medium leading-snug tracking-tight text-neutral-900">{title}</p>
           {subtitle ? <p className="text-[12px] font-normal leading-tight text-neutral-500 tabular-nums">{subtitle}</p> : null}
         </div>
-      )}
-    </article>
+      </article>
     </div>
   );
 }

@@ -25,7 +25,7 @@ export async function loadHotSheetPhotosAndCounts(
         const photoUrls = (listings || [])
           .map((listing: unknown) => getPrimaryPhotoUrl((listing as { photos?: unknown })?.photos))
           .filter((url): url is string => Boolean(url))
-          .slice(0, 3);
+          .slice(0, 4);
 
         return [sheet.id, photoUrls, listings?.length ?? 0] as const;
       } catch (err) {
