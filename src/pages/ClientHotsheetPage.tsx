@@ -41,6 +41,10 @@ import {
 } from "@/lib/buyerUi";
 import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
 
+/** Listing results grid — same rhythm as agent `HotSheetReview` matches. */
+const BUYER_HOT_SHEET_RESULTS_GRID =
+  "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5";
+
 /** Row from `buildListingsQuery` with optional embed for “Listed by” */
 interface HotSheetListingRow {
   id: string;
@@ -825,37 +829,36 @@ const ClientHotsheetPage = () => {
             />
           )}
 
-          {/* Listings Count */}
-          <div className="mb-4">
-            <p className="text-lg font-semibold">
-              {listings.length} {listings.length === 1 ? "Home" : "Homes"} Found
+          {/* Listings — toolbar + grid (matches agent Hot Sheet results) */}
+          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-2.5 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-3 sm:py-3">
+            <p className="px-0.5 text-[13px] font-semibold tracking-tight text-neutral-900">
+              Matches{" "}
+              <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
             </p>
-            {isBuyerHotSheetByIdRoute && (
-              <p className="mt-1 text-sm text-muted-foreground">
+            {isBuyerHotSheetByIdRoute ? (
+              <p className="mt-1.5 px-0.5 text-[12px] leading-snug text-neutral-500">
                 Results update as new listings match your saved criteria.
               </p>
-            )}
+            ) : null}
           </div>
 
-          {/* Listings Grid */}
           {listings.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center space-y-2 max-w-md mx-auto">
-                <p className="text-foreground font-medium">No matching homes on the network right now</p>
-                <p className="text-sm text-muted-foreground">
+            <Card className="rounded-xl border border-neutral-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-10">
+              <CardContent className="mx-auto max-w-md space-y-2 p-0 text-center">
+                <p className="text-sm font-semibold text-neutral-900">No matching homes on the network right now</p>
+                <p className="text-[13px] leading-relaxed text-neutral-500">
                   Your hot sheet and criteria are saved. Check back soon — new listings that fit your search will show up here.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={BUYER_HOT_SHEET_RESULTS_GRID}>
               {listings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing as ComponentProps<typeof ListingCard>["listing"]}
                   viewMode="compact"
                   showActions={false}
-                  hideMlsMeta
                   showCompactComments
                   hotSheetId={hotSheet?.id}
                   chatMessages={listingChatByListingId[listing.id] ?? []}
