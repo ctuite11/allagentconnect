@@ -31,7 +31,10 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = async () => {
-    const isTemplated = template === "early-access-update-v1" || template === "early-access-update-v2";
+    const isTemplated =
+      template === "early-access-update-v1" ||
+      template === "early-access-update-v2" ||
+      template === "founding-partner-invitation";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error("Please fill in both subject and message");
       return;
@@ -117,6 +120,9 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
                 if (v === "early-access-update-v1" || v === "early-access-update-v2") {
                   setSubject((prev) => prev || "A first look inside All Agent Connect");
                 }
+                if (v === "founding-partner-invitation") {
+                  setSubject((prev) => prev || "You're invited: Founding Partner of All Agent Connect");
+                }
               }}
             >
               <SelectTrigger id="email-template" className="border-slate-200">
@@ -124,6 +130,9 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="founding-partner-invitation">
+                  Founding Partner — Exclusive Invitation
+                </SelectItem>
                 <SelectItem value="early-access-update-v2">
                   Early Access — First Look (v2, recommended)
                 </SelectItem>
@@ -132,7 +141,7 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
                 </SelectItem>
               </SelectContent>
             </Select>
-            {(template === "early-access-update-v1" || template === "early-access-update-v2") && (
+            {(template === "early-access-update-v1" || template === "early-access-update-v2" || template === "founding-partner-invitation") && (
               <p className="text-xs text-muted-foreground">
                 Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
               </p>
