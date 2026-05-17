@@ -69,6 +69,23 @@ function HotSheetDashboardCollage({ photoUrls }: { photoUrls: string[] }) {
   );
 }
 
+function titleCaseToken(term: string): string {
+  const t = term.trim();
+  if (!t) return "";
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+}
+
+/** Title-case each name part so `brody tuite` → `Brody Tuite`. */
+function formatBuyerDisplayName(raw: string): string {
+  const formatted = raw
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(titleCaseToken)
+    .join(" ");
+  return formatted || "Unnamed Client";
+}
+
 export interface BuyerHotSheetPreviewCardProps {
   photoUrls: string[];
   title: string;
@@ -81,6 +98,8 @@ export interface BuyerHotSheetPreviewCardProps {
   variant?: "dashboard" | "hotSheetsPage";
   /** Match count for `hotSheetsPage` footer line. */
   matchCount?: number;
+  /** Signed-in buyer display name for `hotSheetsPage` metadata row. */
+  buyerName?: string;
   onClick?: () => void;
   onKeyDown?: (e: KeyboardEvent<HTMLElement>) => void;
   /** Buyer Hot Sheets index — opens Favorites (stops card navigation). */
@@ -99,6 +118,7 @@ export function BuyerHotSheetPreviewCard({
   subtitle = "",
   variant = "dashboard",
   matchCount = 0,
+  buyerName = "",
   onClick,
   onKeyDown,
   onFavoritesClick,
@@ -109,6 +129,8 @@ export function BuyerHotSheetPreviewCard({
   if (isHotSheetsPage) {
     const p = [photoUrls[0], photoUrls[1], photoUrls[2], photoUrls[3]];
     const matchLabel = `${matchCount} ${matchCount === 1 ? "match" : "matches"}`;
+    const buyerDisplayName = formatBuyerDisplayName(buyerName);
+    const hotSheetDisplayName = title.trim() || "Untitled hot sheet";
 
     return (
       <div className="relative h-full min-h-0">
@@ -141,7 +163,14 @@ export function BuyerHotSheetPreviewCard({
 
           <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
             <div className="min-w-0 shrink-0">
-              <h3 className="truncate text-lg font-semibold text-neutral-900">{title}</h3>
+              <p className="truncate text-[13px] leading-snug" title={buyerDisplayName}>
+                <span className="text-neutral-500">Buyer Name: </span>
+                <span className="font-medium text-neutral-800">{buyerDisplayName}</span>
+              </p>
+              <p className="mt-1 truncate text-[13px] leading-snug" title={hotSheetDisplayName}>
+                <span className="text-neutral-500">Hot Sheet Name: </span>
+                <span className="font-medium text-neutral-800">{hotSheetDisplayName}</span>
+              </p>
               <div className="mt-2 flex items-center justify-between gap-2">
                 <p className="text-sm text-neutral-600 tabular-nums">{matchLabel}</p>
                 <div className="flex shrink-0 items-center gap-3">

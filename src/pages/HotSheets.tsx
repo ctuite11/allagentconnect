@@ -136,6 +136,7 @@ const HotSheets = ({
   const [buyerPreviewPhotosById, setBuyerPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [buyerMatchCountsById, setBuyerMatchCountsById] = useState<Record<string, number>>({});
   const [buyerLoading, setBuyerLoading] = useState(true);
+  const [buyerDisplayName, setBuyerDisplayName] = useState("");
   const [buyerDeleteTarget, setBuyerDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [buyerDeleteBusy, setBuyerDeleteBusy] = useState(false);
   /** Agent list: last fetch failed (clears list in catch). */
@@ -276,9 +277,14 @@ const HotSheets = ({
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("email")
+        .select("email, first_name, last_name")
         .eq("id", userId)
         .maybeSingle();
+
+      const profileName = [profile?.first_name, profile?.last_name]
+        .filter((part): part is string => typeof part === "string" && Boolean(part.trim()))
+        .join(" ");
+      setBuyerDisplayName(profileName);
 
       const buyerEmailNorm = (profile?.email || user?.email || "").toLowerCase().trim();
 
@@ -364,6 +370,7 @@ const HotSheets = ({
     } catch (error) {
       console.error("Error loading buyer hot sheets", error);
       toast.error("Unable to load Hot Sheets right now");
+      setBuyerDisplayName("");
       setBuyerHotSheets([]);
       setBuyerTokenByHotSheetId({});
       setBuyerPreviewPhotosById({});
@@ -452,6 +459,7 @@ const HotSheets = ({
                         variant="hotSheetsPage"
                         photoUrls={buyerPreviewPhotosById[sheet.id] ?? []}
                         title={sheet.name}
+                        buyerName={buyerDisplayName}
                         matchCount={matchCount}
                         onClick={() => openBuyerHotSheet(sheet.id, token)}
                         onKeyDown={(e) => {
