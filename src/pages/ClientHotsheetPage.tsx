@@ -3,14 +3,14 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate, useMatch } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { ArrowLeft, UserPlus, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -34,6 +34,7 @@ import {
 } from "@/lib/listingConversationThread";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
+import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import {
   buyerMarketListingTileMediaWrap,
   buyerPageMain,
@@ -44,6 +45,33 @@ import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthoriz
 /** Listing results grid — same rhythm as agent `HotSheetReview` matches. */
 const BUYER_HOT_SHEET_RESULTS_GRID =
   "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5";
+
+const BUYER_HOT_SHEET_ACTION_BTN =
+  "h-8 shrink-0 gap-1.5 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80";
+
+function getCriteriaSummaryLine(criteria: Record<string, unknown>): {
+  scope: string;
+  state: string;
+  statuses: string;
+} {
+  const c = criteria ?? {};
+  const towns = (c.cities || c.towns || []) as string[];
+  const scope =
+    towns.length > 0
+      ? towns.length > 4
+        ? `${towns.slice(0, 3).join(", ")} (+${towns.length - 3} more)`
+        : towns.join(", ")
+      : c.state
+        ? `All of ${String(c.state)}`
+        : "No location filter";
+  return {
+    scope,
+    state: c.state ? String(c.state) : "—",
+    statuses: Array.isArray(c.statuses) && c.statuses.length
+      ? formatCriteriaDisplayLabels(c.statuses as string[])
+      : "—",
+  };
+}
 
 /** Row from `buildListingsQuery` with optional embed for “Listed by” */
 interface HotSheetListingRow {
@@ -570,7 +598,8 @@ const ClientHotsheetPage = () => {
     );
   }
 
-  const criteria = hotSheet?.criteria || {};
+  const criteria = (hotSheet?.criteria || {}) as Record<string, unknown>;
+  const criteriaSummary = getCriteriaSummaryLine(criteria);
 
   // Show luxury onboarding modal for anonymous users BEFORE rendering main content
   if (showLoginPrompt && !currentUser && agentProfile) {
@@ -650,169 +679,210 @@ const ClientHotsheetPage = () => {
     <div className={`flex flex-col ${buyerPageShell} ${contentTopClass}`}>
       <main className={`flex-1 ${buyerPageMain}`}>
         <div>
-          {/* Back to Account */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate(isBuyerHotSheetByIdRoute ? "/hot-sheets" : "/client/dashboard")}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {isBuyerHotSheetByIdRoute ? "Back to Hot Sheets" : "Back to Your Account"}
-          </Button>
+          <header className="mb-4">
+            <button
+              type="button"
+              onClick={() => navigate(isBuyerHotSheetByIdRoute ? "/hot-sheets" : "/client/dashboard")}
+              className="group -ml-1 mb-3 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-[13px] font-medium text-neutral-600 transition-colors duration-200 hover:text-neutral-900"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-neutral-900" aria-hidden />
+              <span className="min-w-0 truncate">
+                {isBuyerHotSheetByIdRoute ? "Back to Hot Sheets" : "Back to Your Account"}
+              </span>
+            </button>
 
-          {/* Search criteria + header (hot sheet name + create) */}
-          <Card className="mb-6">
-            <CardHeader className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <p className="text-base font-medium text-foreground">
-                  Hot Sheet Name:{" "}
-                  <span className="text-[#0E56F5]">{hotSheet?.name || "Untitled hot sheet"}</span>
+            <div className="flex flex-col gap-1 border-b border-neutral-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+              <div className="min-w-0">
+                <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">Hot sheet matches</h1>
+                <p className="mt-1.5 text-[13px] leading-snug sm:text-[14px]" title={hotSheet?.name ?? undefined}>
+                  <span className="text-neutral-500">Hot Sheet Name: </span>
+                  <span className="font-semibold text-neutral-900">{hotSheet?.name || "Untitled hot sheet"}</span>
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 gap-1.5 sm:self-start"
-                  onClick={() => navigate("/client/hotsheets/new")}
-                >
-                  <Plus className="w-4 h-4" />
-                  Create New Hot Sheet
-                </Button>
               </div>
-              <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle className="text-base font-semibold">Search Criteria</CardTitle>
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="flex shrink-0 flex-wrap items-center gap-2 sm:mb-0.5">
+                {isBuyerHotSheetByIdRoute ? (
                   <Button
+                    type="button"
                     variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => setShowAddFriend(true)}
+                    className={BUYER_HOT_SHEET_ACTION_BTN}
+                    onClick={() => navigate("/client/hotsheets/new")}
                   >
-                    <UserPlus className="w-4 h-4" />
-                    Add a Friend
+                    <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    New hot sheet
                   </Button>
-                  <Button
-                    onClick={() => {
-                      if (!hotSheet?.user_id) {
-                        toast.error("This hot sheet cannot be edited right now");
-                        return;
-                      }
-                      setShowEditCriteria(true);
-                    }}
-                    variant="outline"
-                    size="sm"
-                    disabled={!hotSheet?.user_id}
-                  >
-                    Edit Search
-                  </Button>
-                  {isBuyerHotSheetByIdRoute ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5 border-red-200 text-red-600 hover:bg-red-50"
-                      onClick={() => setDeleteHotSheetOpen(true)}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                      Delete Hot Sheet
-                    </Button>
-                  ) : null}
+                ) : null}
+                {hotSheet?.id ? (
+                  <span className="text-[11px] font-medium tabular-nums text-neutral-400">
+                    {formatHotSheetRef(hotSheet.id)}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </header>
+
+          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-4 sm:py-3.5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-2">
+                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">Search criteria</p>
+                    <p className="text-[13px] leading-snug text-neutral-700">
+                      <span className="font-medium text-neutral-800">Scope</span>{" "}
+                      <span className="text-neutral-600">{criteriaSummary.scope}</span>
+                      <span className="mx-2 text-neutral-200" aria-hidden>
+                        ·
+                      </span>
+                      <span className="font-medium text-neutral-800">State</span>{" "}
+                      <span className="tabular-nums text-neutral-600">{criteriaSummary.state}</span>
+                      <span className="mx-2 text-neutral-200" aria-hidden>
+                        ·
+                      </span>
+                      <span className="font-medium text-neutral-800">Status</span>{" "}
+                      <span className="text-neutral-600">{criteriaSummary.statuses}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                {criteria.state && (
-                  <div>
-                    <span className="text-muted-foreground">State:</span>{" "}
-                    <span className="font-semibold">{criteria.state}</span>
-                  </div>
-                )}
-                {criteria.selectedCountyId && criteria.selectedCountyId !== "all" && (
-                  <div>
-                    <span className="text-muted-foreground">County:</span>{" "}
-                    <span className="font-semibold">{criteria.selectedCountyId}</span>
-                  </div>
-                )}
-                {criteria.county && criteria.county !== "all" && !criteria.selectedCountyId && (
-                  <div>
-                    <span className="text-muted-foreground">County:</span>{" "}
-                    <span className="font-semibold">{criteria.county}</span>
-                  </div>
-                )}
-                {criteria.minPrice && (
-                  <div>
-                    <span className="text-muted-foreground">Min Price:</span>{" "}
-                    <span className="font-semibold">${parseFloat(criteria.minPrice).toLocaleString()}</span>
-                  </div>
-                )}
-                {criteria.maxPrice && (
-                  <div>
-                    <span className="text-muted-foreground">Max Price:</span>{" "}
-                    <span className="font-semibold">${parseFloat(criteria.maxPrice).toLocaleString()}</span>
-                  </div>
-                )}
-                {criteria.bedrooms && (
-                  <div>
-                    <span className="text-muted-foreground">Min Beds:</span>{" "}
-                    <span className="font-semibold">{criteria.bedrooms}</span>
-                  </div>
-                )}
-                {criteria.bathrooms && (
-                  <div>
-                    <span className="text-muted-foreground">Min Baths:</span>{" "}
-                    <span className="font-semibold">{criteria.bathrooms}</span>
-                  </div>
-                )}
-                {criteria.minSqft && (
-                  <div>
-                    <span className="text-muted-foreground">Min SqFt:</span>{" "}
-                    <span className="font-semibold">{parseFloat(criteria.minSqft).toLocaleString()}</span>
-                  </div>
-                )}
-                {criteria.maxSqft && (
-                  <div>
-                    <span className="text-muted-foreground">Max SqFt:</span>{" "}
-                    <span className="font-semibold">{parseFloat(criteria.maxSqft).toLocaleString()}</span>
-                  </div>
-                )}
-                {criteria.zipCode && (
-                  <div>
-                    <span className="text-muted-foreground">Zip Code:</span>{" "}
-                    <span className="font-semibold">{criteria.zipCode}</span>
-                  </div>
-                )}
-                {criteria.propertyTypes && criteria.propertyTypes.length > 0 && (
-                  <div className="col-span-2 md:col-span-4">
-                    <span className="text-muted-foreground">Property Types:</span>{" "}
-                    <span className="font-semibold">
-                      {formatCriteriaDisplayLabels(criteria.propertyTypes as string[])}
-                    </span>
-                  </div>
-                )}
-                {criteria.statuses && criteria.statuses.length > 0 && (
-                  <div className="col-span-2 md:col-span-4">
-                    <span className="text-muted-foreground">Statuses:</span>{" "}
-                    <span className="font-semibold">
-                      {formatCriteriaDisplayLabels(criteria.statuses as string[])}
-                    </span>
-                  </div>
-                )}
-                {(criteria.cities && criteria.cities.length > 0) && (
-                  <div className="col-span-2 md:col-span-4">
-                    <span className="text-muted-foreground">Towns/Cities:</span>{" "}
-                    <span className="font-semibold">{criteria.cities.join(", ")}</span>
-                  </div>
-                )}
-                {criteria.neighborhoods && criteria.neighborhoods.length > 0 && (
-                  <div className="col-span-2 md:col-span-4">
-                    <span className="text-muted-foreground">Neighborhoods:</span>{" "}
-                    <span className="font-semibold">{criteria.neighborhoods.join(", ")}</span>
-                  </div>
-                )}
+              <div className="flex flex-wrap items-center gap-2 sm:self-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={BUYER_HOT_SHEET_ACTION_BTN}
+                  onClick={() => setShowAddFriend(true)}
+                >
+                  <UserPlus className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  Add a friend
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!hotSheet?.user_id}
+                  className={BUYER_HOT_SHEET_ACTION_BTN}
+                  onClick={() => {
+                    if (!hotSheet?.user_id) {
+                      toast.error("This hot sheet cannot be edited right now");
+                      return;
+                    }
+                    setShowEditCriteria(true);
+                  }}
+                >
+                  <Pencil className="mr-1.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  Edit criteria
+                </Button>
+                {isBuyerHotSheetByIdRoute ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={`${BUYER_HOT_SHEET_ACTION_BTN} border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50/90`}
+                    onClick={() => setDeleteHotSheetOpen(true)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    Delete hot sheet
+                  </Button>
+                ) : null}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-neutral-200 pt-3 text-[13px] leading-snug md:grid-cols-4">
+              {criteria.state ? (
+                <div>
+                  <span className="text-neutral-500">State:</span>{" "}
+                  <span className="font-medium text-neutral-800">{String(criteria.state)}</span>
+                </div>
+              ) : null}
+              {criteria.selectedCountyId && criteria.selectedCountyId !== "all" ? (
+                <div>
+                  <span className="text-neutral-500">County:</span>{" "}
+                  <span className="font-medium text-neutral-800">{String(criteria.selectedCountyId)}</span>
+                </div>
+              ) : null}
+              {criteria.county && criteria.county !== "all" && !criteria.selectedCountyId ? (
+                <div>
+                  <span className="text-neutral-500">County:</span>{" "}
+                  <span className="font-medium text-neutral-800">{String(criteria.county)}</span>
+                </div>
+              ) : null}
+              {criteria.minPrice ? (
+                <div>
+                  <span className="text-neutral-500">Min price:</span>{" "}
+                  <span className="font-medium tabular-nums text-neutral-800">
+                    ${parseFloat(String(criteria.minPrice)).toLocaleString()}
+                  </span>
+                </div>
+              ) : null}
+              {criteria.maxPrice ? (
+                <div>
+                  <span className="text-neutral-500">Max price:</span>{" "}
+                  <span className="font-medium tabular-nums text-neutral-800">
+                    ${parseFloat(String(criteria.maxPrice)).toLocaleString()}
+                  </span>
+                </div>
+              ) : null}
+              {criteria.bedrooms ? (
+                <div>
+                  <span className="text-neutral-500">Min beds:</span>{" "}
+                  <span className="font-medium tabular-nums text-neutral-800">{String(criteria.bedrooms)}</span>
+                </div>
+              ) : null}
+              {criteria.bathrooms ? (
+                <div>
+                  <span className="text-neutral-500">Min baths:</span>{" "}
+                  <span className="font-medium tabular-nums text-neutral-800">{String(criteria.bathrooms)}</span>
+                </div>
+              ) : null}
+              {criteria.minSqft ? (
+                <div>
+                  <span className="text-neutral-500">Min sqft:</span>{" "}
+                  <span className="font-medium tabular-nums text-neutral-800">
+                    {parseFloat(String(criteria.minSqft)).toLocaleString()}
+                  </span>
+                </div>
+              ) : null}
+              {criteria.maxSqft ? (
+                <div>
+                  <span className="text-neutral-500">Max sqft:</span>{" "}
+                  <span className="font-medium tabular-nums text-neutral-800">
+                    {parseFloat(String(criteria.maxSqft)).toLocaleString()}
+                  </span>
+                </div>
+              ) : null}
+              {criteria.zipCode ? (
+                <div>
+                  <span className="text-neutral-500">Zip:</span>{" "}
+                  <span className="font-medium text-neutral-800">{String(criteria.zipCode)}</span>
+                </div>
+              ) : null}
+              {Array.isArray(criteria.propertyTypes) && criteria.propertyTypes.length > 0 ? (
+                <div className="col-span-2 md:col-span-4">
+                  <span className="text-neutral-500">Property types:</span>{" "}
+                  <span className="font-medium text-neutral-800">
+                    {formatCriteriaDisplayLabels(criteria.propertyTypes as string[])}
+                  </span>
+                </div>
+              ) : null}
+              {Array.isArray(criteria.statuses) && criteria.statuses.length > 0 ? (
+                <div className="col-span-2 md:col-span-4">
+                  <span className="text-neutral-500">Statuses:</span>{" "}
+                  <span className="font-medium text-neutral-800">
+                    {formatCriteriaDisplayLabels(criteria.statuses as string[])}
+                  </span>
+                </div>
+              ) : null}
+              {Array.isArray(criteria.cities) && criteria.cities.length > 0 ? (
+                <div className="col-span-2 md:col-span-4">
+                  <span className="text-neutral-500">Towns/cities:</span>{" "}
+                  <span className="font-medium text-neutral-800">{(criteria.cities as string[]).join(", ")}</span>
+                </div>
+              ) : null}
+              {Array.isArray(criteria.neighborhoods) && criteria.neighborhoods.length > 0 ? (
+                <div className="col-span-2 md:col-span-4">
+                  <span className="text-neutral-500">Neighborhoods:</span>{" "}
+                  <span className="font-medium text-neutral-800">{(criteria.neighborhoods as string[]).join(", ")}</span>
+                </div>
+              ) : null}
+            </div>
+          </div>
 
           {/* Add Friend Dialog */}
           <AddFriendDialog open={showAddFriend} onOpenChange={setShowAddFriend} />
@@ -830,16 +900,19 @@ const ClientHotsheetPage = () => {
           )}
 
           {/* Listings — toolbar + grid (matches agent Hot Sheet results) */}
-          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-2.5 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-3 sm:py-3">
-            <p className="px-0.5 text-[13px] font-semibold tracking-tight text-neutral-900">
-              Matches{" "}
-              <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
-            </p>
-            {isBuyerHotSheetByIdRoute ? (
-              <p className="mt-1.5 px-0.5 text-[12px] leading-snug text-neutral-500">
-                Results update as new listings match your saved criteria.
-              </p>
-            ) : null}
+          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 sm:px-0.5">
+                <span className="text-[13px] font-semibold tracking-tight text-neutral-900">
+                  Matches <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
+                </span>
+              </div>
+              {isBuyerHotSheetByIdRoute ? (
+                <p className="px-1 text-[12px] leading-snug text-neutral-500 sm:px-0.5">
+                  Results update as new listings match your saved criteria.
+                </p>
+              ) : null}
+            </div>
           </div>
 
           {listings.length === 0 ? (
