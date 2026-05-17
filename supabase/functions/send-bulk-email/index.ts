@@ -201,7 +201,6 @@ function buildEarlyAccessUpdateV2Body(): string {
     </table>`;
 }
 
-const handler = async (req: Request): Promise<Response> => {
 function buildFoundingPartnerBody(): string {
   const heroImg = `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION_V2}`;
 
