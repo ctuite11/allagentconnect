@@ -598,8 +598,9 @@ const ClientHotsheetPage = () => {
     );
   }
 
-  const criteria = (hotSheet?.criteria || {}) as Record<string, unknown>;
-  const criteriaSummary = getCriteriaSummaryLine(criteria);
+  const criteriaSummary = getCriteriaSummaryLine(
+    (hotSheet?.criteria || {}) as Record<string, unknown>
+  );
 
   // Show luxury onboarding modal for anonymous users BEFORE rendering main content
   if (showLoginPrompt && !currentUser && agentProfile) {
@@ -782,105 +783,6 @@ const ClientHotsheetPage = () => {
                   </Button>
                 ) : null}
               </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-neutral-200 pt-3 text-[13px] leading-snug md:grid-cols-4">
-              {criteria.state ? (
-                <div>
-                  <span className="text-neutral-500">State:</span>{" "}
-                  <span className="font-medium text-neutral-800">{String(criteria.state)}</span>
-                </div>
-              ) : null}
-              {criteria.selectedCountyId && criteria.selectedCountyId !== "all" ? (
-                <div>
-                  <span className="text-neutral-500">County:</span>{" "}
-                  <span className="font-medium text-neutral-800">{String(criteria.selectedCountyId)}</span>
-                </div>
-              ) : null}
-              {criteria.county && criteria.county !== "all" && !criteria.selectedCountyId ? (
-                <div>
-                  <span className="text-neutral-500">County:</span>{" "}
-                  <span className="font-medium text-neutral-800">{String(criteria.county)}</span>
-                </div>
-              ) : null}
-              {criteria.minPrice ? (
-                <div>
-                  <span className="text-neutral-500">Min price:</span>{" "}
-                  <span className="font-medium tabular-nums text-neutral-800">
-                    ${parseFloat(String(criteria.minPrice)).toLocaleString()}
-                  </span>
-                </div>
-              ) : null}
-              {criteria.maxPrice ? (
-                <div>
-                  <span className="text-neutral-500">Max price:</span>{" "}
-                  <span className="font-medium tabular-nums text-neutral-800">
-                    ${parseFloat(String(criteria.maxPrice)).toLocaleString()}
-                  </span>
-                </div>
-              ) : null}
-              {criteria.bedrooms ? (
-                <div>
-                  <span className="text-neutral-500">Min beds:</span>{" "}
-                  <span className="font-medium tabular-nums text-neutral-800">{String(criteria.bedrooms)}</span>
-                </div>
-              ) : null}
-              {criteria.bathrooms ? (
-                <div>
-                  <span className="text-neutral-500">Min baths:</span>{" "}
-                  <span className="font-medium tabular-nums text-neutral-800">{String(criteria.bathrooms)}</span>
-                </div>
-              ) : null}
-              {criteria.minSqft ? (
-                <div>
-                  <span className="text-neutral-500">Min sqft:</span>{" "}
-                  <span className="font-medium tabular-nums text-neutral-800">
-                    {parseFloat(String(criteria.minSqft)).toLocaleString()}
-                  </span>
-                </div>
-              ) : null}
-              {criteria.maxSqft ? (
-                <div>
-                  <span className="text-neutral-500">Max sqft:</span>{" "}
-                  <span className="font-medium tabular-nums text-neutral-800">
-                    {parseFloat(String(criteria.maxSqft)).toLocaleString()}
-                  </span>
-                </div>
-              ) : null}
-              {criteria.zipCode ? (
-                <div>
-                  <span className="text-neutral-500">Zip:</span>{" "}
-                  <span className="font-medium text-neutral-800">{String(criteria.zipCode)}</span>
-                </div>
-              ) : null}
-              {Array.isArray(criteria.propertyTypes) && criteria.propertyTypes.length > 0 ? (
-                <div className="col-span-2 md:col-span-4">
-                  <span className="text-neutral-500">Property types:</span>{" "}
-                  <span className="font-medium text-neutral-800">
-                    {formatCriteriaDisplayLabels(criteria.propertyTypes as string[])}
-                  </span>
-                </div>
-              ) : null}
-              {Array.isArray(criteria.statuses) && criteria.statuses.length > 0 ? (
-                <div className="col-span-2 md:col-span-4">
-                  <span className="text-neutral-500">Statuses:</span>{" "}
-                  <span className="font-medium text-neutral-800">
-                    {formatCriteriaDisplayLabels(criteria.statuses as string[])}
-                  </span>
-                </div>
-              ) : null}
-              {Array.isArray(criteria.cities) && criteria.cities.length > 0 ? (
-                <div className="col-span-2 md:col-span-4">
-                  <span className="text-neutral-500">Towns/cities:</span>{" "}
-                  <span className="font-medium text-neutral-800">{(criteria.cities as string[]).join(", ")}</span>
-                </div>
-              ) : null}
-              {Array.isArray(criteria.neighborhoods) && criteria.neighborhoods.length > 0 ? (
-                <div className="col-span-2 md:col-span-4">
-                  <span className="text-neutral-500">Neighborhoods:</span>{" "}
-                  <span className="font-medium text-neutral-800">{(criteria.neighborhoods as string[]).join(", ")}</span>
-                </div>
-              ) : null}
             </div>
           </div>
 
