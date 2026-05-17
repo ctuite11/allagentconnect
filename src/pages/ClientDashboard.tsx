@@ -120,6 +120,7 @@ export default function ClientDashboard() {
   const [loadError, setLoadError] = useState(false);
 
   const { isOnline: agentPresenceOnline } = useAgentLastSeen(agent?.id);
+  const { isOnline: buyerPresenceOnline } = useAgentLastSeen(currentUserId ?? undefined);
 
   useEffect(() => {
     checkAuth();
@@ -730,6 +731,7 @@ export default function ClientDashboard() {
         buyerDisplayName={buyerDisplayName}
         buyerEmail={buyerEmail}
         buyerPhoneFmt={buyerPhoneFmt}
+        buyerPresenceOnline={buyerPresenceOnline}
         agent={agent}
         agentPresenceOnline={agentPresenceOnline}
         agentPhoneFmt={agentPhoneFmt}
