@@ -8,12 +8,6 @@ import { toast } from "sonner";
 import type { HotSheetCommentPreviewSync } from "@/hooks/useConversation";
 import { cn } from "@/lib/utils";
 
-/** Chat column inside the full-height sheet — composer pins to this box, not the viewport. */
-const LISTING_CHAT_PANEL_CLASS = cn(
-  "mx-auto flex w-full min-h-0 flex-col overflow-hidden",
-  "h-[min(720px,calc(100dvh-64px))] max-h-[min(720px,calc(100dvh-64px))]",
-);
-
 interface ListingConversationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -113,21 +107,19 @@ export function ListingConversationSheet({
       >
         <SheetTitle className="sr-only">{threadTitle?.trim() || "Listing discussion"}</SheetTitle>
         {open ? (
-          <div className="flex h-full min-h-0 flex-1 flex-col justify-center overflow-hidden bg-white px-4 py-8">
-            <div className={LISTING_CHAT_PANEL_CLASS}>
-              {resolving || !conversationId ? (
-                <AacMonogramLoader variant="section" message="Opening discussion…" className="min-h-0 flex-1" />
-              ) : (
-                <ConversationPanel
-                  conversationId={conversationId}
-                  threadTitle={threadTitle}
-                  onCloseRequest={handleClose}
-                  onInboxInvalidate={onInboxInvalidate}
-                  layoutVariant="embedded"
-                  hotSheetPreviewSync={hotSheetPreviewSync}
-                />
-              )}
-            </div>
+          <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
+            {resolving || !conversationId ? (
+              <AacMonogramLoader variant="section" message="Opening discussion…" className="flex-1" />
+            ) : (
+              <ConversationPanel
+                conversationId={conversationId}
+                threadTitle={threadTitle}
+                onCloseRequest={handleClose}
+                onInboxInvalidate={onInboxInvalidate}
+                layoutVariant="embedded"
+                hotSheetPreviewSync={hotSheetPreviewSync}
+              />
+            )}
           </div>
         ) : null}
       </SheetContent>
