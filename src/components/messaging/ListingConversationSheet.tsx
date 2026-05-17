@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import type { HotSheetCommentPreviewSync } from "@/hooks/useConversation";
 import { cn } from "@/lib/utils";
 
+/** Bounded chat panel — matches Messages column feel, not full viewport height. */
+const LISTING_CHAT_PANEL_CLASS = cn(
+  "flex w-full min-h-0 flex-col overflow-hidden rounded-2xl border border-neutral-200/90 bg-white",
+  "h-[min(680px,calc(100dvh-96px))] max-h-[min(680px,calc(100dvh-96px))]",
+  "shadow-[0_8px_30px_rgba(0,0,0,0.08)]",
+);
+
 interface ListingConversationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -101,15 +108,16 @@ export function ListingConversationSheet({
       <SheetContent
         side="right"
         className={cn(
-          "flex h-[100dvh] max-h-[100dvh] w-full flex-col gap-0 overflow-hidden border-l border-neutral-200 bg-white p-0 sm:max-w-[560px]",
+          // Override shadcn right sheet defaults (inset-y-0 h-full) — float a bounded panel with margins.
+          "!inset-y-auto top-6 bottom-6 right-0 flex !h-auto w-full max-w-none flex-col justify-start gap-0 border-0 bg-transparent p-4 shadow-none sm:max-w-[592px]",
           "[&>button]:hidden",
         )}
       >
         <SheetTitle className="sr-only">{threadTitle?.trim() || "Listing discussion"}</SheetTitle>
         {open ? (
-          <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
+          <div className={LISTING_CHAT_PANEL_CLASS}>
             {resolving || !conversationId ? (
-              <AacMonogramLoader variant="section" message="Opening discussion…" className="flex-1" />
+              <AacMonogramLoader variant="section" message="Opening discussion…" className="min-h-0 flex-1" />
             ) : (
               <ConversationPanel
                 conversationId={conversationId}

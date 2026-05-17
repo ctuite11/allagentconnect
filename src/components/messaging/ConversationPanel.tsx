@@ -224,7 +224,7 @@ export function ConversationPanel({
   );
 
   const rootClass = isEmbedded
-    ? "flex h-full min-h-0 w-full max-h-[100dvh] flex-col overflow-hidden"
+    ? "flex h-full min-h-0 w-full flex-col overflow-hidden"
     : "flex h-full min-h-0 w-full max-h-full flex-1 flex-col overflow-hidden";
 
   const rolePill = details ? (
