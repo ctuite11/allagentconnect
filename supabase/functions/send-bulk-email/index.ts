@@ -202,6 +202,85 @@ function buildEarlyAccessUpdateV2Body(): string {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+function buildFoundingPartnerBody(): string {
+  const heroImg = `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION_V2}`;
+
+  const benefits: Array<{ img: string; title: string; desc: string }> = [
+    {
+      img: `${STORAGE_BASE_V2}/02-success-hub.png?v=${IMG_VERSION_V2}`,
+      title: "Permanent Founding Partner status",
+      desc: "Public recognition badge on your profile and priority placement in the verified agent network — for as long as AAC exists.",
+    },
+    {
+      img: `${STORAGE_BASE_V2}/03-results.png?v=${IMG_VERSION_V2}`,
+      title: "Lifetime free access",
+      desc: "Success Hub, Hot Sheets, Communications Center, and the referral network. No cost, no trial timer, no future bill.",
+    },
+    {
+      img: `${STORAGE_BASE_V2}/04-comms.png?v=${IMG_VERSION_V2}`,
+      title: "Direct line to the founder",
+      desc: "Shape the roadmap, request features, and get white-glove onboarding from Chris and the founding team.",
+    },
+    {
+      img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
+      title: "First look at off-market inventory",
+      desc: "See coming-soon listings and active buyer demand from other top producers before any of it reaches the public market.",
+    },
+  ];
+
+  const benefitHtml = benefits.map((b) => `
+    <tr><td style="padding:32px 0 0;">
+      <img src="${b.img}" alt="${b.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:10px;border:1px solid #94a3b8;" />
+      <h2 style="margin:16px 0 10px;font-size:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.title}</h2>
+      <div style="width:32px;height:2px;background:#22C55E;margin:0 0 12px;border-radius:1px;"></div>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.desc}</p>
+    </td></tr>`).join("");
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
+      <tr><td align="center" style="padding:0 0 24px;">
+        <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
+      </td></tr>
+      <tr><td style="padding:0 0 16px;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Exclusive Invitation</p>
+        <h1 style="margin:0 0 14px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re invited to become a Founding Partner.</h1>
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite is sending you this exclusive opportunity because he recognizes you as a top producer in your market &mdash; and the kind of agent All Agent Connect was built for.</p>
+        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">This invitation is hand-picked, not a mass campaign. You&rsquo;re one of a small group of agents being offered <strong style="color:#0f172a;">Founding Partner</strong> status before we open the doors more broadly.</p>
+      </td></tr>
+      <tr><td style="padding:8px 0 0;">
+        <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
+      </td></tr>
+      <tr><td align="center" style="padding:24px 0 8px;">
+        <p style="margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">What being a Founding Partner means.</p>
+        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Built for the agents helping us build it.</p>
+      </td></tr>
+      ${benefitHtml}
+      <tr><td style="padding:32px 0 0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F7FBF4;border:1px solid #22C55E;border-radius:10px;">
+          <tr><td align="center" style="padding:20px 24px;">
+            <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Zero cost. Zero risk.</p>
+            <p style="margin:0;font-size:13px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder pricing locked for life.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td align="center" style="padding:28px 0 0;">
+        <a href="https://allagentconnect.com/agent-dashboard" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Accept your invitation &rarr;</a>
+      </td></tr>
+      <tr><td align="center" style="padding:12px 0 0;">
+        <a href="mailto:chris@allagentconnect.com?subject=Founding%20Partner%20Invitation" style="font-size:13px;color:#0E56F5;text-decoration:underline;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Or book a 15-minute intro call with Chris</a>
+      </td></tr>
+      <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;">
+        <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Looking forward to building this with you.</p>
+        <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
+        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
+      </td></tr>
+      <tr><td style="padding:24px 0 0;">
+        <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re receiving this because you were personally selected for the Founding Partner program.</p>
+      </td></tr>
+    </table>`;
+}
+
+const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
