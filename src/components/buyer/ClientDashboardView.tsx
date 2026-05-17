@@ -128,6 +128,10 @@ export interface ClientDashboardViewProps {
   onMessagesIcon?: () => void;
   /** Agent mirror — opens `SingleClientEmailDialog` when the buyer email row is clicked; no mailto. */
   onEmailPrimary?: () => void;
+  /** Buyer dashboard — opens in-app email composer when the agent email row is clicked; no mailto. */
+  onAgentEmailPrimary?: () => void;
+  /** Buyer dashboard — opens in-app email composer when the buyer email row is clicked. */
+  onBuyerEmailPrimary?: () => void;
   showBuyerSelfServiceChrome?: boolean;
   setAddFriendOpen?: (open: boolean) => void;
   setShowEndDialog?: (open: boolean) => void;
@@ -243,6 +247,8 @@ export function ClientDashboardView({
   onMessagesPrimary,
   onMessagesIcon,
   onEmailPrimary,
+  onAgentEmailPrimary,
+  onBuyerEmailPrimary,
   showBuyerSelfServiceChrome = true,
   setAddFriendOpen,
   setShowEndDialog,
@@ -335,16 +341,24 @@ export function ClientDashboardView({
                     </div>
                   ) : null}
                 </div>
-                {variant === "agent" && (buyerEmail?.trim() || buyerPhoneFmt) ? (
+                {(buyerEmail?.trim() || buyerPhoneFmt) ? (
                   <div className="flex flex-col gap-1.5 text-xs text-neutral-600">
                     {buyerEmail?.trim() ? (
-                      onEmailPrimary ? (
+                      (variant === "agent" && onEmailPrimary) ||
+                      (variant === "buyer" && onBuyerEmailPrimary) ? (
                         <button
                           type="button"
-                          onClick={() => onEmailPrimary()}
+                          onClick={() => {
+                            if (variant === "agent" && onEmailPrimary) onEmailPrimary();
+                            else if (onBuyerEmailPrimary) onBuyerEmailPrimary();
+                          }}
                           className="-mx-1 flex min-w-0 max-w-full items-center gap-2 rounded-lg py-1.5 pl-1 pr-2 text-left text-xs text-neutral-600 transition-colors hover:bg-neutral-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
                           title="Send email through All Agent Connect (opens composer — not an external mail app)"
-                          aria-label={`Send email to ${buyerEmail.trim()}`}
+                          aria-label={
+                            variant === "agent"
+                              ? `Send email to ${buyerEmail.trim()}`
+                              : "Open email composer"
+                          }
                         >
                           <Mail
                             className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]"
@@ -354,9 +368,12 @@ export function ClientDashboardView({
                           <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
                         </button>
                       ) : (
-                        <span className="flex min-w-0 items-center gap-2" title="Buyer email">
+                        <span
+                          className="flex min-w-0 items-center gap-2"
+                          title={variant === "agent" ? "Buyer email" : "Your email"}
+                        >
                           <Mail
-                            className={`h-3.5 w-3.5 shrink-0 ${agentMirrorHeaderIcon}`}
+                            className={`h-3.5 w-3.5 shrink-0 ${variant === "agent" ? agentMirrorHeaderIcon : "text-neutral-400"}`}
                             aria-hidden
                             strokeWidth={2}
                           />
@@ -386,21 +403,6 @@ export function ClientDashboardView({
                   </div>
                 ) : null}
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {buyerEmail?.trim() && variant !== "agent" ? (
-                    <Button variant="outline" size="sm" type="button" className={buyerHeaderSoftBtn} asChild>
-                      <a
-                        href={`mailto:${encodeURIComponent(buyerEmail.trim())}`}
-                        title="Send email"
-                      >
-                        <Mail
-                          className="mr-1.5 h-3.5 w-3.5 text-neutral-600 sm:mr-2 sm:h-4 sm:w-4"
-                          aria-hidden
-                          strokeWidth={2}
-                        />
-                        Email
-                      </a>
-                    </Button>
-                  ) : null}
                   <Button
                     variant="outline"
                     size="sm"
@@ -482,12 +484,33 @@ export function ClientDashboardView({
                             {agentPhoneFmt.display}
                           </a>
                         ) : null}
-                        <a
-                          href={`mailto:${agent.email}`}
-                          className="block break-all text-[11px] leading-snug text-neutral-600 hover:underline sm:text-xs"
-                        >
-                          {agent.email}
-                        </a>
+                        {agent.email ? (
+                          onAgentEmailPrimary ? (
+                            <button
+                              type="button"
+                              onClick={() => onAgentEmailPrimary()}
+                              className="-mx-1 flex min-w-0 max-w-full items-center gap-2 rounded-lg py-1 text-left text-[11px] leading-snug text-neutral-600 transition-colors hover:bg-neutral-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 sm:text-xs"
+                              title="Send email through All Agent Connect (opens composer — not an external mail app)"
+                              aria-label={`Send email to ${agent.first_name} ${agent.last_name}`}
+                            >
+                              <Mail
+                                className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]"
+                                aria-hidden
+                                strokeWidth={2}
+                              />
+                              <span className="min-w-0 break-all text-neutral-700">{agent.email}</span>
+                            </button>
+                          ) : (
+                            <span className="flex min-w-0 items-start gap-2 break-all text-[11px] leading-snug text-neutral-600 sm:text-xs">
+                              <Mail
+                                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400"
+                                aria-hidden
+                                strokeWidth={2}
+                              />
+                              <span className="min-w-0 text-neutral-700">{agent.email}</span>
+                            </span>
+                          )
+                        ) : null}
                       </div>
                     </div>
                     <div className="flex w-full max-w-[19rem] shrink-0 flex-row flex-nowrap items-center justify-center gap-2 sm:gap-3">
@@ -496,12 +519,10 @@ export function ClientDashboardView({
                         variant="outline"
                         size="sm"
                         className="h-8 shrink-0 whitespace-nowrap rounded-full border-neutral-200 bg-white px-2.5 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-3 sm:text-[13px]"
-                        onClick={() => {
-                          window.location.href = `mailto:${agent.email}`;
-                        }}
+                        onClick={goMessagesIcon}
                       >
-                        <Mail className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
-                        Email
+                        <MessageSquare className="mr-1.5 h-4 w-4 shrink-0 text-[#0E56F5] sm:mr-2" aria-hidden />
+                        Message
                       </Button>
                       {showBuyerSelfServiceChrome ? (
                         <Button

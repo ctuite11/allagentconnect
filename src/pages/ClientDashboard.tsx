@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buyerPageMain, buyerPageShell } from "@/lib/buyerUi";
 import { ClientDashboardView } from "@/components/buyer/ClientDashboardView";
+import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Seo } from "@/components/Seo";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
@@ -113,6 +114,7 @@ export default function ClientDashboard() {
   const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
   const [editingHotSheetOwnerUserId, setEditingHotSheetOwnerUserId] = useState<string | null>(null);
   const [editHotSheetDialogOpen, setEditHotSheetDialogOpen] = useState(false);
+  const [contactAgentEmailOpen, setContactAgentEmailOpen] = useState(false);
   /** True only when initial boot fails before identity is committed — full-page retry (partial fetch failures keep the dashboard). */
   const [loadError, setLoadError] = useState(false);
 
@@ -740,7 +742,17 @@ export default function ClientDashboard() {
         setShowEndDialog={setShowEndDialog}
         onRequestDeleteHotSheet={(sheetId) => setHotSheetDeleteId(sheetId)}
         onBuyerMarketFavoriteToggle={refreshFavoritesPreview}
+        onAgentEmailPrimary={() => setContactAgentEmailOpen(true)}
+        onBuyerEmailPrimary={() => setContactAgentEmailOpen(true)}
       />
+
+      {agent ? (
+        <ContactMyAgentDialog
+          open={contactAgentEmailOpen}
+          onOpenChange={setContactAgentEmailOpen}
+          agentDisplayName={`${agent.first_name} ${agent.last_name}`.trim()}
+        />
+      ) : null}
 
       {/* End Relationship Dialog */}
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
