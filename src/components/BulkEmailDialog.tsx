@@ -73,7 +73,10 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
   };
 
   const handleSend = async () => {
-    const isTemplated = template === "early-access-update-v1" || template === "early-access-update-v2";
+    const isTemplated =
+      template === "early-access-update-v1" ||
+      template === "early-access-update-v2" ||
+      template === "founding-partner-invitation";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error(isTemplated ? "Please fill in the subject" : "Please fill in both subject and message");
       return;
@@ -211,17 +214,21 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               if (v === "early-access-update-v1" || v === "early-access-update-v2") {
                 setSubject((prev) => prev || "A first look inside All Agent Connect");
               }
+              if (v === "founding-partner-invitation") {
+                setSubject((prev) => prev || "You're invited: Founding Partner of All Agent Connect");
+              }
             }}>
               <SelectTrigger id="template">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="founding-partner-invitation">Founding Partner — Exclusive Invitation</SelectItem>
                 <SelectItem value="early-access-update-v2">Early Access — First Look (v2, recommended)</SelectItem>
                 <SelectItem value="early-access-update-v1">Early Access Update — Product Tour (5 sections, luxury sample data)</SelectItem>
               </SelectContent>
             </Select>
-            {(template === "early-access-update-v1" || template === "early-access-update-v2") && (
+            {(template === "early-access-update-v1" || template === "early-access-update-v2" || template === "founding-partner-invitation") && (
               <p className="text-xs text-muted-foreground">
                 Pre-built email featuring product screenshots and short captions. Your custom message below will be ignored.
               </p>
