@@ -107,6 +107,7 @@ export default function ClientDashboard() {
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [buyerDisplayName, setBuyerDisplayName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState<string | null>(null);
+  const [buyerPhoneRaw, setBuyerPhoneRaw] = useState<string | null>(null);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [hotSheetPreviewMatchCountsById, setHotSheetPreviewMatchCountsById] = useState<Record<string, number>>({});
   const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
@@ -208,7 +209,7 @@ export default function ClientDashboard() {
       try {
         const { data: profileRow } = await supabase
           .from("profiles")
-          .select("first_name, last_name")
+          .select("first_name, last_name, phone")
           .eq("id", user.id)
           .maybeSingle();
         const first = sanitizeFirstName(profileRow?.first_name);
@@ -223,6 +224,7 @@ export default function ClientDashboard() {
         const display = [firstLine, last].filter(Boolean).join(" ").trim();
         setBuyerDisplayName(display || (user.email ?? ""));
         setBuyerEmail(user.email ?? null);
+        setBuyerPhoneRaw(profileRow?.phone ?? null);
 
         const cameFromInviteAcceptance = consumeInviteHandoffMarker();
         if (cameFromInviteAcceptance) {
@@ -575,6 +577,7 @@ export default function ClientDashboard() {
   ];
 
   const agentPhoneFmt = agent ? formatUsPhoneForDisplay(agent.phone) : null;
+  const buyerPhoneFmt = formatUsPhoneForDisplay(buyerPhoneRaw);
 
   if (loading) {
     return (
@@ -726,6 +729,7 @@ export default function ClientDashboard() {
         navigate={navigate}
         buyerDisplayName={buyerDisplayName}
         buyerEmail={buyerEmail}
+        buyerPhoneFmt={buyerPhoneFmt}
         agent={agent}
         agentPresenceOnline={agentPresenceOnline}
         agentPhoneFmt={agentPhoneFmt}

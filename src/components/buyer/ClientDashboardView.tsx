@@ -227,6 +227,16 @@ function formatBuyerMarketStreetLine(listing: ClientDashboardMarketListing): str
   return `${base} #${unit}`;
 }
 
+function displayNameInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]![0] ?? ""}${parts[parts.length - 1]![0] ?? ""}`.toUpperCase();
+  }
+  if (parts.length === 1 && parts[0]!.length >= 2) return parts[0]!.slice(0, 2).toUpperCase();
+  if (parts.length === 1) return (parts[0]![0] ?? "?").toUpperCase();
+  return "?";
+}
+
 export function ClientDashboardView({
   variant,
   navigate,
@@ -263,6 +273,7 @@ export function ClientDashboardView({
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
   const goMessagesIcon = onMessagesIcon ?? goMessages;
+  const buyerInitials = useMemo(() => displayNameInitials(buyerDisplayName), [buyerDisplayName]);
 
   const paths = {
     hotSheetsViewAll: dashboardPaths?.hotSheetsViewAll ?? "/hot-sheets",
@@ -324,136 +335,163 @@ export function ClientDashboardView({
             }
           >
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
-              <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-                  <h1 className="text-xl font-semibold tracking-tight text-neutral-950 sm:text-2xl">
-                    {buyerDisplayName.trim()}
-                  </h1>
-                  {buyerPresenceOnline ? (
-                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5">
-                      <span
-                        className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
-                        title="Online"
-                      />
-                      <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
-                        Online
-                      </span>
+              {variant === "buyer" ? (
+                <div className="min-w-0 flex-1">
+                  <div className="flex max-w-full items-start gap-3">
+                    <Avatar className="h-[60px] w-[60px] shrink-0 border border-neutral-200 ring-0 sm:h-16 sm:w-16">
+                      <AvatarFallback className="bg-neutral-100 text-sm font-medium text-neutral-600">
+                        {buyerInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+                        <h1 className="text-xl font-semibold tracking-tight text-neutral-950 sm:text-2xl">
+                          {buyerDisplayName.trim()}
+                        </h1>
+                        {buyerPresenceOnline ? (
+                          <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5">
+                            <span
+                              className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
+                              title="Online"
+                            />
+                            <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
+                              Online
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
+                      {(buyerPhoneFmt || buyerEmail?.trim()) ? (
+                        <div className="space-y-0.5">
+                          {buyerPhoneFmt ? (
+                            <a
+                              href={buyerPhoneFmt.telHref}
+                              className="block text-[13px] text-neutral-800 hover:underline sm:text-sm"
+                            >
+                              {buyerPhoneFmt.display}
+                            </a>
+                          ) : null}
+                          {buyerEmail?.trim() ? (
+                            onBuyerEmailPrimary ? (
+                              <button
+                                type="button"
+                                onClick={() => onBuyerEmailPrimary()}
+                                className="-mx-1 flex min-w-0 max-w-full items-center gap-2 rounded-lg py-1 text-left text-[11px] leading-snug text-neutral-600 transition-colors hover:bg-neutral-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 sm:text-xs"
+                                title="Send email through All Agent Connect (opens composer — not an external mail app)"
+                                aria-label="Open email composer"
+                              >
+                                <Mail
+                                  className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]"
+                                  aria-hidden
+                                  strokeWidth={2}
+                                />
+                                <span className="min-w-0 truncate whitespace-nowrap text-neutral-700">
+                                  {buyerEmail.trim()}
+                                </span>
+                              </button>
+                            ) : (
+                              <span className="flex min-w-0 items-center gap-2 text-[11px] leading-snug text-neutral-600 sm:text-xs">
+                                <Mail className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden strokeWidth={2} />
+                                <span className="min-w-0 truncate whitespace-nowrap text-neutral-700">
+                                  {buyerEmail.trim()}
+                                </span>
+                              </span>
+                            )
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {showBuyerSelfServiceChrome ? (
+                        <div className="flex flex-wrap gap-1.5 pt-0.5 sm:gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            className={buyerHeaderSoftBtn}
+                            onClick={() => setAddFriendOpen?.(true)}
+                          >
+                            <UserPlus className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" aria-hidden />
+                            Add a Friend
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
+                  </div>
                 </div>
-                {(buyerEmail?.trim() || buyerPhoneFmt) ? (
-                  <div className="flex flex-col gap-1.5 text-xs text-neutral-600">
-                    {buyerEmail?.trim() ? (
-                      (variant === "agent" && onEmailPrimary) ||
-                      (variant === "buyer" && onBuyerEmailPrimary) ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (variant === "agent" && onEmailPrimary) onEmailPrimary();
-                            else if (onBuyerEmailPrimary) onBuyerEmailPrimary();
-                          }}
-                          className="-mx-1 flex min-w-0 max-w-full items-center gap-2 rounded-lg py-1.5 pl-1 pr-2 text-left text-xs text-neutral-600 transition-colors hover:bg-neutral-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-                          title="Send email through All Agent Connect (opens composer — not an external mail app)"
-                          aria-label={
-                            variant === "agent"
-                              ? `Send email to ${buyerEmail.trim()}`
-                              : "Open email composer"
-                          }
-                        >
-                          <Mail
-                            className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]"
-                            aria-hidden
-                            strokeWidth={2}
-                          />
-                          <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
-                        </button>
-                      ) : (
+              ) : (
+                <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+                    <h1 className="text-xl font-semibold tracking-tight text-neutral-950 sm:text-2xl">
+                      {buyerDisplayName.trim()}
+                    </h1>
+                    {buyerPresenceOnline ? (
+                      <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5">
                         <span
-                          className="flex min-w-0 items-center gap-2"
-                          title={variant === "agent" ? "Buyer email" : "Your email"}
-                        >
-                          <Mail
-                            className={`h-3.5 w-3.5 shrink-0 ${variant === "agent" ? agentMirrorHeaderIcon : "text-neutral-400"}`}
-                            aria-hidden
-                            strokeWidth={2}
-                          />
-                          <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
-                        </span>
-                      )
-                    ) : null}
-                    {buyerPhoneFmt ? (
-                      <span className="flex items-center gap-2" title="Buyer phone">
-                        <Phone
-                          className={`h-3.5 w-3.5 shrink-0 ${variant === "agent" ? agentMirrorHeaderIcon : "text-neutral-400"}`}
-                          aria-hidden
-                          strokeWidth={2}
+                          className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
+                          title="Online"
                         />
-                        <a
-                          href={buyerPhoneFmt.telHref}
-                          className={
-                            variant === "agent"
-                              ? "text-neutral-700 transition-colors hover:text-[#0E56F5] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
-                              : "text-neutral-700 transition-colors hover:text-neutral-900 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
-                          }
-                        >
-                          {buyerPhoneFmt.display}
-                        </a>
-                      </span>
+                        <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
+                          Online
+                        </span>
+                      </div>
                     ) : null}
                   </div>
-                ) : null}
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    className={buyerHeaderSoftBtn}
-                    title={variant === "agent" ? "Open messages with this buyer" : undefined}
-                    onClick={goMessages}
-                  >
-                    <MessageSquare
-                      className={`mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4 ${
-                        variant === "agent" ? "text-[#0E56F5]" : "text-neutral-600"
-                      }`}
-                      aria-hidden
-                      strokeWidth={2}
-                    />
-                    Message
-                  </Button>
-                  {showBuyerSelfServiceChrome ? (
+                  {(buyerEmail?.trim() || buyerPhoneFmt) ? (
+                    <div className="flex flex-col gap-1.5 text-xs text-neutral-600">
+                      {buyerEmail?.trim() ? (
+                        onEmailPrimary ? (
+                          <button
+                            type="button"
+                            onClick={() => onEmailPrimary()}
+                            className="-mx-1 flex min-w-0 max-w-full items-center gap-2 rounded-lg py-1.5 pl-1 pr-2 text-left text-xs text-neutral-600 transition-colors hover:bg-neutral-100/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+                            title="Send email through All Agent Connect (opens composer — not an external mail app)"
+                            aria-label={`Send email to ${buyerEmail.trim()}`}
+                          >
+                            <Mail
+                              className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]"
+                              aria-hidden
+                              strokeWidth={2}
+                            />
+                            <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
+                          </button>
+                        ) : (
+                          <span className="flex min-w-0 items-center gap-2" title="Buyer email">
+                            <Mail className={`h-3.5 w-3.5 shrink-0 ${agentMirrorHeaderIcon}`} aria-hidden strokeWidth={2} />
+                            <span className="min-w-0 truncate text-neutral-700">{buyerEmail.trim()}</span>
+                          </span>
+                        )
+                      ) : null}
+                      {buyerPhoneFmt ? (
+                        <span className="flex items-center gap-2" title="Buyer phone">
+                          <Phone className={`h-3.5 w-3.5 shrink-0 ${agentMirrorHeaderIcon}`} aria-hidden strokeWidth={2} />
+                          <a
+                            href={buyerPhoneFmt.telHref}
+                            className="text-neutral-700 transition-colors hover:text-[#0E56F5] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
+                          >
+                            {buyerPhoneFmt.display}
+                          </a>
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       type="button"
                       className={buyerHeaderSoftBtn}
-                      onClick={() => setAddFriendOpen?.(true)}
+                      title="Open messages with this buyer"
+                      onClick={goMessages}
                     >
-                      <UserPlus className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" aria-hidden />
-                      Add a Friend
+                      <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-[#0E56F5] sm:mr-2 sm:h-4 sm:w-4" aria-hidden strokeWidth={2} />
+                      Message
                     </Button>
-                  ) : null}
-                  {mirrorManagementActions}
+                    {mirrorManagementActions}
+                  </div>
                 </div>
-              </div>
+              )}
               {variant === "buyer" && agent ? (
-                <div className="relative w-full shrink-0 pt-2 lg:ms-auto lg:w-fit lg:max-w-[22rem] lg:pt-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className={`absolute right-0 top-2 z-10 h-8 w-8 shrink-0 rounded-full border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2 lg:top-0 lg:h-9 lg:w-9`}
-                    aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
-                    onClick={goMessagesIcon}
-                  >
-                    <MessageSquare className="h-[15px] w-[15px] text-neutral-700 sm:h-4 sm:w-4" aria-hidden />
-                    {unreadCount > 0 ? (
-                      <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full border border-white bg-neutral-900 px-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    ) : null}
-                  </Button>
-                  <div className="flex flex-col items-center gap-2 pr-10 sm:pr-11 lg:pr-12">
-                    <div className="flex max-w-full items-start gap-3">
+                <div className="w-full shrink-0 pt-2 lg:ms-auto lg:w-auto lg:min-w-[18rem] lg:max-w-[min(100%,28rem)] lg:pt-0">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex w-full max-w-full items-start gap-3">
                       <Avatar className="h-[60px] w-[60px] shrink-0 border border-neutral-200 ring-0 sm:h-16 sm:w-16">
                         <AvatarImage src={agent.headshot_url || ""} />
                         <AvatarFallback className="text-sm font-medium text-neutral-600">
@@ -461,8 +499,8 @@ export function ClientDashboardView({
                           {agent.last_name[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="min-w-0 max-w-[min(14rem,calc(100vw-8rem))] space-y-0.5 sm:max-w-[15rem]">
-                        <p className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
                           <span>
                             {agent.first_name} {agent.last_name}
                           </span>
@@ -498,31 +536,37 @@ export function ClientDashboardView({
                                 aria-hidden
                                 strokeWidth={2}
                               />
-                              <span className="min-w-0 break-all text-neutral-700">{agent.email}</span>
+                              <span className="min-w-0 truncate whitespace-nowrap text-neutral-700">{agent.email}</span>
                             </button>
                           ) : (
-                            <span className="flex min-w-0 items-start gap-2 break-all text-[11px] leading-snug text-neutral-600 sm:text-xs">
+                            <span className="flex min-w-0 items-center gap-2 text-[11px] leading-snug text-neutral-600 sm:text-xs">
                               <Mail
-                                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400"
+                                className="h-3.5 w-3.5 shrink-0 text-neutral-400"
                                 aria-hidden
                                 strokeWidth={2}
                               />
-                              <span className="min-w-0 text-neutral-700">{agent.email}</span>
+                              <span className="min-w-0 truncate whitespace-nowrap text-neutral-700">{agent.email}</span>
                             </span>
                           )
                         ) : null}
                       </div>
                     </div>
-                    <div className="flex w-full max-w-[19rem] shrink-0 flex-row flex-nowrap items-center justify-center gap-2 sm:gap-3">
+                    <div className="flex w-full max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-2 sm:gap-3">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-8 shrink-0 whitespace-nowrap rounded-full border-neutral-200 bg-white px-2.5 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-3 sm:text-[13px]"
+                        className="relative h-8 shrink-0 whitespace-nowrap rounded-full border-neutral-200 bg-white px-2.5 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-3 sm:text-[13px]"
+                        aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
                         onClick={goMessagesIcon}
                       >
                         <MessageSquare className="mr-1.5 h-4 w-4 shrink-0 text-[#0E56F5] sm:mr-2" aria-hidden />
                         Message
+                        {unreadCount > 0 ? (
+                          <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full border border-white bg-neutral-900 px-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </span>
+                        ) : null}
                       </Button>
                       {showBuyerSelfServiceChrome ? (
                         <Button
