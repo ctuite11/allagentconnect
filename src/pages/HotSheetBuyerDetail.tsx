@@ -2,18 +2,17 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Pencil, ArrowLeft, Clock, Plus, Search, Trash2, Eye, Heart, RefreshCw } from "lucide-react";
+import { ArrowLeft, Clock, Plus, Search, RefreshCw } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
 import {
-  buyerCollectionCardRoot,
+  buyerDashboardHotFavTile,
   buyerDashboardHotSheetsPreviewGrid,
-  buyerImageMosaicGrid,
   buyerSectionCard,
 } from "@/lib/buyerUi";
-import { formatBuyerDisplayName } from "@/lib/buyerProfile";
+import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
 import {
   EMPTY_BUYER_ACTIVITY_METRICS,
   fetchBuyerActivityMetrics,
@@ -49,21 +48,6 @@ interface LinkedHotSheet {
   invitePending: boolean;
   /** Pending-only: safe to offer agent delete (RPC re-validates). */
   canDeletePending: boolean;
-}
-
-function PhotoCell({ src }: { src?: string }) {
-  if (src) {
-    return (
-      <div className="relative w-full h-full overflow-hidden">
-        <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-      </div>
-    );
-  }
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-white">
-      <Home className="h-5 w-5 text-neutral-300" />
-    </div>
-  );
 }
 
 function CriteriaPills({ criteria }: { criteria: any }) {
@@ -438,9 +422,9 @@ const HotSheetBuyerDetail = () => {
           </div>
           <div className={buyerDashboardHotSheetsPreviewGrid}>
             {[1, 2].map((i) => (
-              <div key={i} className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50/80">
-                <div className="aspect-[4/3] bg-neutral-100" />
-                <div className="space-y-2 p-3">
+              <div key={i} className={`${buyerDashboardHotFavTile} animate-pulse overflow-hidden`}>
+                <div className="h-40 w-full bg-neutral-100" />
+                <div className="space-y-2 px-3 py-3">
                   <div className="h-4 w-2/3 rounded bg-neutral-200" />
                   <div className="h-3 w-1/2 rounded bg-neutral-100" />
                 </div>
@@ -455,8 +439,6 @@ const HotSheetBuyerDetail = () => {
   const displayName = buyer
     ? `${buyer.firstName} ${buyer.lastName}`.trim() || buyer.email || "Unknown Buyer"
     : "Unknown Buyer";
-  const buyerMetadataName = formatBuyerDisplayName(displayName);
-
   return (
     <div className="bg-white pt-4 px-6 pb-6">
       <div className="mx-auto w-full max-w-[88rem] min-w-0">
@@ -542,108 +524,35 @@ const HotSheetBuyerDetail = () => {
             <p className="text-sm text-neutral-500">No hot sheets linked to this buyer.</p>
           </div>
         ) : (
-          <div className={`mt-8 ${buyerDashboardHotSheetsPreviewGrid}`}>
+          <div className={`mt-8 ${buyerDashboardHotSheetsPreviewGrid} [&>*]:min-w-0`}>
             {hotSheets.map((hs) => (
-              <div
+              <BuyerHotSheetPreviewCard
                 key={hs.id}
+                variant="agentDetail"
+                photoUrls={hs.photos}
+                title={hs.name}
+                subtitle={`${hs.matchCount} ${hs.matchCount === 1 ? "match" : "matches"}`}
+                preferWideTitle
+                createdAt={hs.createdAt}
+                invitePending={hs.invitePending}
+                resendInviteLoading={resendingHotSheetId === hs.id}
+                onResendInvite={() => handleResendInvite(hs)}
                 onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
-                className={`relative ${buyerCollectionCardRoot} rounded-xl border-neutral-200 shadow-sm`}
-              >
-                <div className="absolute top-2 right-2 z-10 flex gap-1">
-                  {hs.canDeletePending ? (
-                    <button
-                      type="button"
-                      aria-label="Delete hot sheet invite"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPendingDeleteSheet(hs);
-                      }}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    aria-label="Edit hot sheet"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingHotSheet({ id: hs.id, criteria: hs.criteria });
-                    }}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm transition-colors hover:bg-neutral-50"
-                  >
-                    <Pencil className="h-3.5 w-3.5 text-neutral-700" strokeWidth={2} />
-                  </button>
-                </div>
-
-                <div className={buyerImageMosaicGrid}>
-                  <PhotoCell src={hs.photos[0]} />
-                  <PhotoCell src={hs.photos[1]} />
-                  <PhotoCell src={hs.photos[2]} />
-                  <PhotoCell src={hs.photos[3]} />
-                </div>
-
-                <div className="bg-white px-3 pt-2.5 pb-3">
-                  <p className="truncate text-[13px] leading-snug" title={buyerMetadataName}>
-                    <span className="text-neutral-500">Buyer Name: </span>
-                    <span className="font-medium text-neutral-800">{buyerMetadataName}</span>
-                  </p>
-                  <p className="mt-0.5 text-xs text-neutral-500">
-                    {hs.createdAt
-                      ? `Created ${new Date(hs.createdAt).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })} · `
-                      : ""}
-                    {hs.matchCount} listing{hs.matchCount !== 1 ? "s" : ""} match
-                  </p>
-                  {hs.invitePending ? (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
-                        <Clock className="h-3 w-3 shrink-0 text-neutral-500" strokeWidth={2} aria-hidden />
-                        Pending Invite
-                      </span>
-                      <button
-                        type="button"
-                        disabled={resendingHotSheetId === hs.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleResendInvite(hs);
-                        }}
-                        className="inline-flex items-center gap-1 rounded-full border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-2 py-0.5 text-[11px] font-medium text-[#0E56F5] transition-colors hover:bg-[rgba(14,86,245,0.12)] disabled:opacity-60"
-                      >
-                        <RefreshCw
-                          className={`h-3 w-3 shrink-0 ${resendingHotSheetId === hs.id ? "animate-spin" : ""}`}
-                          strokeWidth={2}
-                          aria-hidden
-                        />
-                        {resendingHotSheetId === hs.id ? "Resending…" : "Resend invite"}
-                      </button>
-                    </div>
-                  ) : null}
-                  <div className="mt-2 flex items-center justify-end gap-3 border-t border-neutral-100 pt-2">
-                    <div
-                      className="pointer-events-none inline-flex items-center gap-1 text-sm font-medium text-[#0E56F5]"
-                      title="View hot sheet"
-                    >
-                      <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
-                      <span>View</span>
-                    </div>
-                    <div
-                      className="pointer-events-none inline-flex items-center gap-1 text-sm font-medium text-neutral-700"
-                      title="View favorites"
-                    >
-                      <Heart
-                        className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                        strokeWidth={2}
-                        aria-hidden
-                      />
-                      <span>Favorites</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  navigate(`/hot-sheets/${hs.id}/review`);
+                }}
+                onFavoritesClick={() => {
+                  if (clientId) navigate(`/agent/buyers/${clientId}/favorites`);
+                }}
+                onDeleteClick={
+                  hs.canDeletePending ? () => setPendingDeleteSheet(hs) : undefined
+                }
+                onEditClick={() =>
+                  setEditingHotSheet({ id: hs.id, criteria: hs.criteria })
+                }
+              />
             ))}
           </div>
         )}

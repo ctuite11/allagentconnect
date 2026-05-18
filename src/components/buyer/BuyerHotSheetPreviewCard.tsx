@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent, type MouseEvent } from "react";
-import { Eye, Heart, Trash2 } from "lucide-react";
+import { Clock, Eye, Heart, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import {
   buyerCollectionCardRoot,
@@ -9,6 +9,7 @@ import {
   buyerDashboardHotSheetMediaWrap,
   buyerImageMosaicCell,
   buyerImageMosaicGrid,
+  buyerPreviewCardInteractive,
 } from "@/lib/buyerUi";
 
 const mosaicImg = "absolute inset-0 h-full w-full object-cover";
@@ -95,7 +96,7 @@ export interface BuyerHotSheetPreviewCardProps {
    * `dashboard` — default strip tile (two-line title + matches).
    * `hotSheetsPage` — buyer Hot Sheets index: agent-style mosaic + View/Favorites footer.
    */
-  variant?: "dashboard" | "hotSheetsPage";
+  variant?: "dashboard" | "hotSheetsPage" | "agentDetail";
   /** Match count for `hotSheetsPage` footer line. */
   matchCount?: number;
   /** Signed-in buyer display name for `hotSheetsPage` metadata row. */
@@ -106,8 +107,14 @@ export interface BuyerHotSheetPreviewCardProps {
   onFavoritesClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   /** Buyer self-service — compact delete control (stops card navigation). */
   onDeleteClick?: (e: MouseEvent<HTMLButtonElement>) => void;
+  /** Agent buyer detail — edit criteria (stops card navigation). */
+  onEditClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   /** Buyer dashboard 2-up grid — allow title to wrap to two lines instead of truncating. */
   preferWideTitle?: boolean;
+  createdAt?: string | null;
+  invitePending?: boolean;
+  onResendInvite?: (e: MouseEvent<HTMLButtonElement>) => void;
+  resendInviteLoading?: boolean;
 }
 
 /**
@@ -125,9 +132,134 @@ export function BuyerHotSheetPreviewCard({
   onKeyDown,
   onFavoritesClick,
   onDeleteClick,
+  onEditClick,
   preferWideTitle = false,
+  createdAt = null,
+  invitePending = false,
+  onResendInvite,
+  resendInviteLoading = false,
 }: BuyerHotSheetPreviewCardProps) {
   const isHotSheetsPage = variant === "hotSheetsPage";
+  const isAgentDetail = variant === "agentDetail";
+  const hotSheetDisplayName = title.trim() || "Untitled hot sheet";
+  const titleClass = preferWideTitle ? "line-clamp-2" : "truncate";
+
+  if (isAgentDetail) {
+    const createdLabel = createdAt
+      ? `Created ${new Date(createdAt).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })}`
+      : null;
+
+    const agentTileClass = `${buyerPreviewCardInteractive} flex flex-col`;
+
+    return (
+      <div className="relative h-full min-h-0">
+        <div className="absolute top-2 right-2 z-20 flex gap-1">
+          {onDeleteClick ? (
+            <button
+              type="button"
+              aria-label="Delete hot sheet invite"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteClick(e);
+              }}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white text-neutral-500 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+              <Trash2 className="h-3.5 w-3.5 shrink-0" aria-hidden strokeWidth={2} />
+            </button>
+          ) : null}
+          {onEditClick ? (
+            <button
+              type="button"
+              aria-label="Edit hot sheet"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditClick(e);
+              }}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm transition-colors hover:bg-neutral-50"
+            >
+              <Pencil className="h-3.5 w-3.5 text-neutral-700" aria-hidden strokeWidth={2} />
+            </button>
+          ) : null}
+        </div>
+        <article
+          role="button"
+          tabIndex={0}
+          className={agentTileClass}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
+        >
+          <div className={buyerDashboardHotSheetMediaWrap}>
+            <HotSheetDashboardCollage photoUrls={photoUrls} />
+          </div>
+          <div className={`${buyerDashboardHotFavTileBody} flex h-auto min-h-20 flex-1 flex-col gap-1`}>
+            <p className={`min-w-0 text-[13px] leading-snug ${titleClass}`} title={hotSheetDisplayName}>
+              <span className="text-neutral-500">Hot Sheet Name: </span>
+              <span className="font-medium text-neutral-800">{hotSheetDisplayName}</span>
+            </p>
+            {subtitle ? (
+              <p className="text-[12px] font-normal leading-tight text-neutral-500 tabular-nums">{subtitle}</p>
+            ) : null}
+            {createdLabel ? (
+              <p className="text-[11px] leading-snug text-neutral-500">{createdLabel}</p>
+            ) : null}
+            {invitePending ? (
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
+                  <Clock className="h-3 w-3 shrink-0 text-neutral-500" aria-hidden strokeWidth={2} />
+                  Pending Invite
+                </span>
+                {onResendInvite ? (
+                  <button
+                    type="button"
+                    disabled={resendInviteLoading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onResendInvite(e);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-2 py-0.5 text-[11px] font-medium text-[#0E56F5] transition-colors hover:bg-[rgba(14,86,245,0.12)] disabled:opacity-60"
+                  >
+                    <RefreshCw
+                      className={`h-3 w-3 shrink-0 ${resendInviteLoading ? "animate-spin" : ""}`}
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    {resendInviteLoading ? "Resending…" : "Resend invite"}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="mt-auto flex items-center justify-end gap-3 border-t border-neutral-100 pt-2">
+              <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
+                <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                <span>View</span>
+              </div>
+              {onFavoritesClick ? (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-neutral-700 transition-colors hover:text-neutral-900"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFavoritesClick(e);
+                  }}
+                >
+                  <Heart
+                    className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                  <span>Favorites</span>
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </article>
+      </div>
+    );
+  }
 
   if (isHotSheetsPage) {
     const p = [photoUrls[0], photoUrls[1], photoUrls[2], photoUrls[3]];
