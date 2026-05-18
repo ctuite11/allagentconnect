@@ -4,7 +4,7 @@
  * Used by: ListingSearchResults, HotSheetReview, PropertyDetail, MyListings, etc.
  */
 import * as React from "react";
-import { Home, Mail, Phone, Search, Send, User, PencilLine, Layers, Plus, X, UserPlus } from "lucide-react";
+import { Check, Home, Mail, Phone, Search, Send, User, PencilLine, Layers, Plus, X, UserPlus } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 import {
@@ -113,6 +113,10 @@ const DEFAULT_MESSAGE_CHIPS = [
   "Happy to answer any questions.",
 ];
 
+const CONTACT_ADD_FEEDBACK_MS = 2800;
+
+type ContactAddFeedback = "added" | "already-added" | null;
+
 export function ShareListingsDialog({
   open,
   onOpenChange,
@@ -161,6 +165,8 @@ export function ShareListingsDialog({
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [showSavePrompt, setShowSavePrompt] = React.useState(false);
   const [lastSavedEmail, setLastSavedEmail] = React.useState<string>("");
+  const [contactAddFeedback, setContactAddFeedback] = React.useState<ContactAddFeedback>(null);
+  const [highlightedRecipientEmail, setHighlightedRecipientEmail] = React.useState<string | null>(null);
   const contactSearchRef = React.useRef<HTMLDivElement>(null);
 
   const contactDisplayName = (contact: ContactSearchResult) =>
@@ -193,6 +199,15 @@ export function ShareListingsDialog({
     onDismissContactDropdown?.();
   };
 
+  const showContactAddFeedback = (kind: Exclude<ContactAddFeedback, null>, email?: string) => {
+    setContactAddFeedback(kind);
+    if (kind === "already-added" && email) {
+      setHighlightedRecipientEmail(email.trim().toLowerCase());
+    } else {
+      setHighlightedRecipientEmail(null);
+    }
+  };
+
   const handleContactSelect = (contact: ContactSearchResult) => {
     const email = contact.email?.trim();
     if (!email) return;
@@ -201,7 +216,12 @@ export function ShareListingsDialog({
 
     if (onAddRecipient) {
       if (tryAddRecipient(name, email)) {
+        showContactAddFeedback("added");
         clearPendingRecipientFields();
+      } else if (isDuplicateRecipientEmail(email)) {
+        showContactAddFeedback("already-added", email);
+        setContactQuery("");
+        onDismissContactDropdown?.();
       } else {
         setContactQuery("");
         onDismissContactDropdown?.();
@@ -226,6 +246,22 @@ export function ShareListingsDialog({
       setShowSavePrompt(false);
     }
   }, [recipientEmail, lastSavedEmail]);
+
+  React.useEffect(() => {
+    if (!contactAddFeedback) return;
+    const timer = window.setTimeout(() => {
+      setContactAddFeedback(null);
+      setHighlightedRecipientEmail(null);
+    }, CONTACT_ADD_FEEDBACK_MS);
+    return () => window.clearTimeout(timer);
+  }, [contactAddFeedback]);
+
+  React.useEffect(() => {
+    if (!open) {
+      setContactAddFeedback(null);
+      setHighlightedRecipientEmail(null);
+    }
+  }, [open]);
 
   // Dismiss contact dropdown when clicking outside the search area (ref must live inside portaled dialog).
   React.useEffect(() => {
@@ -354,25 +390,35 @@ export function ShareListingsDialog({
                 Recipients ({recipients.length})
               </div>
               <div className="flex flex-wrap gap-2">
-                {recipients.map((r, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                  >
-                    <span className="truncate text-neutral-900">{r.name}</span>
-                    <span className="max-w-[10rem] truncate text-xs text-neutral-500">({r.email})</span>
-                    {onRemoveRecipient && (
-                      <button
-                        type="button"
-                        onClick={() => onRemoveRecipient(idx)}
-                        className="-mr-0.5 ml-0.5 rounded-full p-1 transition-colors hover:bg-neutral-100"
-                        aria-label={`Remove ${r.name}`}
-                      >
-                        <X className="h-3 w-3 text-neutral-500" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {recipients.map((r, idx) => {
+                  const isHighlighted =
+                    highlightedRecipientEmail != null &&
+                    r.email.trim().toLowerCase() === highlightedRecipientEmail;
+                  return (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "flex items-center gap-2 rounded-full border px-2.5 py-1 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-300",
+                        isHighlighted
+                          ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
+                          : "border-neutral-200 bg-white",
+                      )}
+                    >
+                      <span className="truncate text-neutral-900">{r.name}</span>
+                      <span className="max-w-[10rem] truncate text-xs text-neutral-500">({r.email})</span>
+                      {onRemoveRecipient && (
+                        <button
+                          type="button"
+                          onClick={() => onRemoveRecipient(idx)}
+                          className="-mr-0.5 ml-0.5 rounded-full p-1 transition-colors hover:bg-neutral-100"
+                          aria-label={`Remove ${r.name}`}
+                        >
+                          <X className="h-3 w-3 text-neutral-500" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}
@@ -418,6 +464,30 @@ export function ShareListingsDialog({
                 </div>
               )}
             </div>
+
+            {contactAddFeedback && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={cn(
+                  "flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] leading-snug",
+                  contactAddFeedback === "added"
+                    ? "border-emerald-200/90 bg-emerald-50/70 text-emerald-900"
+                    : "border-neutral-200 bg-neutral-50 text-neutral-700",
+                )}
+              >
+                <Check
+                  className={cn(
+                    "h-3.5 w-3.5 shrink-0",
+                    contactAddFeedback === "added" ? "text-emerald-600" : "text-neutral-500",
+                  )}
+                  aria-hidden
+                />
+                <span>
+                  {contactAddFeedback === "added" ? "Contact added" : "Contact already added"}
+                </span>
+              </div>
+            )}
 
             <div className="flex items-center gap-3 py-0.5">
               <Separator className="flex-1 bg-neutral-100" />
