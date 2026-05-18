@@ -18,6 +18,7 @@ import { Seo } from "@/components/Seo";
 import {
   buyerSectionDesc as buyerSectionDescClass,
   buyerSectionTitle as buyerSectionTitleClass,
+  buyerDashboardHotSheetsPreviewGrid,
   buyerPageMain,
   buyerPageStack,
 } from "@/lib/buyerUi";
@@ -52,7 +53,8 @@ interface AgentPersonalHotSheet {
   photos: string[];
 }
 
-type AgentHotSheetsView = "buyers" | "mine";
+const AAC_PRIMARY_BTN =
+  "border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2";
 
 const getInitials = (first?: string, last?: string): string => {
   const f = (first || "")[0]?.toUpperCase() || "";
@@ -129,7 +131,6 @@ const HotSheets = ({
   const { user: authSessionUser, loading: authRoleLoading } = useAuthRole();
   const [collections, setCollections] = useState<BuyerCollection[]>([]);
   const [personalHotSheets, setPersonalHotSheets] = useState<AgentPersonalHotSheet[]>([]);
-  const [agentHotSheetsView, setAgentHotSheetsView] = useState<AgentHotSheetsView>("buyers");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -175,51 +176,18 @@ const HotSheets = ({
   const renderHotSheetsHero = () => {
     const showHeroCreate = buyerMode || (!loading && !!user);
 
-    const heroCreateButton = showHeroCreate ? (
-      <div className="flex flex-wrap items-center gap-2">
-        {!buyerMode ? (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              variant={agentHotSheetsView === "buyers" ? "default" : "outline"}
-              className={
-                agentHotSheetsView === "buyers"
-                  ? "shrink-0 border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
-                  : "shrink-0 border-neutral-200 bg-white text-neutral-800 shadow-sm hover:bg-neutral-50"
-              }
-              onClick={() => setAgentHotSheetsView("buyers")}
-            >
-              Buyers
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={agentHotSheetsView === "mine" ? "default" : "outline"}
-              className={
-                agentHotSheetsView === "mine"
-                  ? "shrink-0 border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
-                  : "shrink-0 border-neutral-200 bg-white text-neutral-800 shadow-sm hover:bg-neutral-50"
-              }
-              onClick={() => setAgentHotSheetsView("mine")}
-            >
-              My Hot Sheets
-            </Button>
-          </>
-        ) : null}
+    const heroCreateButton =
+      showHeroCreate && buyerMode ? (
         <Button
           type="button"
           size="sm"
-          className="w-fit shrink-0 border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
-          onClick={() =>
-            buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
-          }
+          className={`w-fit shrink-0 ${AAC_PRIMARY_BTN}`}
+          onClick={() => navigate("/hot-sheets/new")}
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           Create Hot Sheet
         </Button>
-      </div>
-    ) : null;
+      ) : null;
 
     return (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
@@ -795,6 +763,102 @@ const HotSheets = ({
     }
   };
 
+  const openPersonalHotSheet = (sheetId: string) => {
+    navigate(`/hot-sheets/${sheetId}/review`);
+  };
+
+  const renderMyHotSheetsSection = () => (
+    <section className={`${AAC_CARD_SHELL} p-5 md:p-6`} aria-labelledby="agent-my-hot-sheets-heading">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h2 id="agent-my-hot-sheets-heading" className={DASH_SECTION_TITLE}>
+            My Hot Sheets
+          </h2>
+          <p className={DASH_SECTION_DESC}>Hot sheets you saved for your own search.</p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          className={`h-8 shrink-0 gap-1.5 px-3 text-xs font-medium ${AAC_PRIMARY_BTN}`}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
+          Create Hot Sheet
+        </Button>
+      </div>
+
+      <div className="mt-5">
+        {personalHotSheets.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/50 px-4 py-10 text-center">
+            <p className="text-sm text-neutral-600">
+              No personal hot sheets yet. Save a search from listing results or create one here.
+            </p>
+          </div>
+        ) : (
+          <div
+            className={`${buyerDashboardHotSheetsPreviewGrid} md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0`}
+          >
+            {personalHotSheets.map((sheet) => (
+              <BuyerHotSheetPreviewCard
+                key={sheet.id}
+                variant="dashboard"
+                photoUrls={sheet.photos}
+                title={sheet.name}
+                preferWideTitle
+                onClick={() => openPersonalHotSheet(sheet.id)}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  openPersonalHotSheet(sheet.id);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
+  const renderBuyersSection = () => (
+    <section className={`${AAC_CARD_SHELL} p-5 md:p-6`} aria-labelledby="agent-buyer-hot-sheets-heading">
+      <div className="space-y-1">
+        <h2 id="agent-buyer-hot-sheets-heading" className={DASH_SECTION_TITLE}>
+          Buyers
+        </h2>
+        <p className={DASH_SECTION_DESC}>Hot sheets linked to your buyers.</p>
+      </div>
+
+      <div className="mt-5">
+        {collections.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50/50 px-4 py-10 text-center">
+            <Bell className="mx-auto mb-3 h-10 w-10 text-neutral-300" aria-hidden />
+            <p className="text-sm font-medium text-neutral-900">No buyer hot sheets yet</p>
+            <p className="mt-1 text-sm text-neutral-600">
+              Create a hot sheet and attach a buyer to see collections here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {collections.map((collection) => (
+              <BuyerCollectionCard
+                key={collection.clientId}
+                clientName={collection.clientName}
+                hotSheetCount={collection.hotSheets.length}
+                photos={collection.photos}
+                onClick={() => handleCardClick(collection)}
+                onFavoritesClick={
+                  isAgentMode && collection.supportsBuyerFavorites
+                    ? () => navigate(`/agent/buyers/${collection.clientId}/favorites`)
+                    : undefined
+                }
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
   const handleDeleteShare = async (shareId: string) => {
     try {
       const { error } = await supabase.from("hot_sheet_shares").delete().eq("id", shareId);
@@ -817,25 +881,35 @@ const HotSheets = ({
           noindex
         />
         <div className="mb-5">{renderHotSheetsHero()}</div>
-        <div
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-          role="status"
-          aria-live="polite"
-          aria-busy="true"
-        >
+        <div className="space-y-6" role="status" aria-live="polite" aria-busy="true">
           <span className="sr-only">Loading hot sheets…</span>
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
-            >
-              <Skeleton className="h-48 w-full rounded-none bg-neutral-100 md:h-52" />
-              <div className="space-y-3 p-4">
-                <Skeleton className="h-6 w-[85%] max-w-[16rem] rounded-md bg-neutral-100" />
-                <Skeleton className="h-4 w-24 rounded-md bg-neutral-100" />
-              </div>
+          <div className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
+            <Skeleton className="h-5 w-40 rounded-md bg-neutral-100" />
+            <Skeleton className="mt-2 h-4 w-64 max-w-full rounded-md bg-neutral-100" />
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2].map((i) => (
+                <Skeleton key={i} className="h-60 w-full rounded-2xl bg-neutral-100" />
+              ))}
             </div>
-          ))}
+          </div>
+          <div className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
+            <Skeleton className="h-5 w-24 rounded-md bg-neutral-100" />
+            <Skeleton className="mt-2 h-4 w-56 max-w-full rounded-md bg-neutral-100" />
+            <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
+                >
+                  <Skeleton className="h-48 w-full rounded-none bg-neutral-100 md:h-52" />
+                  <div className="space-y-3 p-4">
+                    <Skeleton className="h-6 w-[85%] max-w-[16rem] rounded-md bg-neutral-100" />
+                    <Skeleton className="h-4 w-24 rounded-md bg-neutral-100" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </PageShell>
     );
@@ -869,60 +943,10 @@ const HotSheets = ({
               Try again
             </Button>
           </div>
-        ) : agentHotSheetsView === "mine" ? (
-          personalHotSheets.length === 0 ? (
-            <div className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-sm md:p-12">
-              <Bell className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
-              <h3 className="mb-2 text-lg font-semibold text-neutral-900">No personal hot sheets yet</h3>
-              <p className="mx-auto max-w-md text-sm text-neutral-600">
-                Save a search from listing results with your name checked, or use{" "}
-                <span className="font-medium text-neutral-800">Create Hot Sheet</span> without attaching a buyer.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 bg-white md:grid-cols-2 lg:grid-cols-3">
-              {personalHotSheets.map((sheet) => (
-                <BuyerHotSheetPreviewCard
-                  key={sheet.id}
-                  variant="dashboard"
-                  photoUrls={sheet.photos}
-                  title={sheet.name}
-                  preferWideTitle
-                  onClick={() => navigate(`/hot-sheets/${sheet.id}/review`)}
-                  onKeyDown={(e) => {
-                    if (e.key !== "Enter" && e.key !== " ") return;
-                    e.preventDefault();
-                    navigate(`/hot-sheets/${sheet.id}/review`);
-                  }}
-                />
-              ))}
-            </div>
-          )
-        ) : collections.length === 0 ? (
-          <div className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-sm md:p-12">
-            <Bell className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
-            <h3 className="mb-2 text-lg font-semibold text-neutral-900">No buyer hot sheets yet</h3>
-            <p className="mx-auto max-w-md text-sm text-neutral-600">
-              Create your first hot sheet to start curating listings for your buyers—use{" "}
-              <span className="font-medium text-neutral-800">Create Hot Sheet</span> at the top of this page.
-            </p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 bg-white md:grid-cols-2 lg:grid-cols-3">
-            {collections.map((collection) => (
-              <BuyerCollectionCard
-                key={collection.clientId}
-                clientName={collection.clientName}
-                hotSheetCount={collection.hotSheets.length}
-                photos={collection.photos}
-                onClick={() => handleCardClick(collection)}
-                onFavoritesClick={
-                  isAgentMode && collection.supportsBuyerFavorites
-                    ? () => navigate(`/agent/buyers/${collection.clientId}/favorites`)
-                    : undefined
-                }
-              />
-            ))}
+          <div className="space-y-6">
+            {renderMyHotSheetsSection()}
+            {renderBuyersSection()}
           </div>
         )}
       </PageShell>
