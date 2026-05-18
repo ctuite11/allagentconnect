@@ -511,24 +511,19 @@ function MyListingsView({
                 <button
                   type="button"
                   className={cn(
-                    "group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium shadow-none outline-none transition-[color,background-color,border-color,box-shadow] duration-150",
-                    sortKey === "date"
-                      ? [
-                          "border-neutral-200 bg-white text-zinc-600",
-                          "hover:border-neutral-300 hover:bg-neutral-50 hover:text-zinc-900",
-                          "data-[state=open]:border-zinc-900 data-[state=open]:bg-neutral-50 data-[state=open]:text-zinc-900 data-[state=open]:shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
-                        ]
-                      : [
-                          "border-zinc-900 bg-neutral-50 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
-                          "hover:border-zinc-800 hover:bg-neutral-100 hover:text-zinc-950",
-                          "data-[state=open]:border-zinc-900 data-[state=open]:bg-neutral-100",
-                        ],
+                    "group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium shadow-none outline-none transition-colors duration-150",
+                    "border-neutral-200 bg-white text-zinc-600",
+                    "hover:border-neutral-300 hover:bg-neutral-50 hover:text-zinc-900",
+                    sortKey !== "date" && "border-zinc-900 bg-neutral-50 text-zinc-900",
+                    sortKey !== "date" && "hover:border-zinc-900 hover:bg-neutral-100 hover:text-zinc-900",
+                    "data-[state=open]:border-zinc-900 data-[state=open]:bg-neutral-50 data-[state=open]:text-zinc-900",
+                    "data-[state=open]:hover:border-zinc-900 data-[state=open]:hover:bg-neutral-100",
                     "focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
                   )}
                 >
                   Sort
                   <ChevronDown
-                    className="h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform duration-150 group-data-[state=open]:rotate-180 group-data-[state=open]:text-zinc-700"
+                    className="h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform duration-150 group-hover:text-zinc-700 group-data-[state=open]:rotate-180 group-data-[state=open]:text-zinc-900"
                     aria-hidden
                   />
                 </button>
