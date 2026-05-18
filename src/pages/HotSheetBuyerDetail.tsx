@@ -8,6 +8,7 @@ import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDia
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
 import { buyerCollectionCardRoot, buyerImageMosaicGrid, buyerSectionCard } from "@/lib/buyerUi";
+import { formatBuyerDisplayName } from "@/lib/buyerProfile";
 import {
   EMPTY_BUYER_ACTIVITY_METRICS,
   fetchBuyerActivityMetrics,
@@ -449,6 +450,7 @@ const HotSheetBuyerDetail = () => {
   const displayName = buyer
     ? `${buyer.firstName} ${buyer.lastName}`.trim() || buyer.email || "Unknown Buyer"
     : "Unknown Buyer";
+  const buyerMetadataName = formatBuyerDisplayName(displayName);
 
   return (
     <div className="bg-white pt-4 px-6 pb-6">
@@ -577,8 +579,9 @@ const HotSheetBuyerDetail = () => {
                 </div>
 
                 <div className="bg-white px-3 pt-2.5 pb-3">
-                  <p className="truncate text-sm font-normal leading-snug text-neutral-600">
-                    Hot Sheet Name: <span className="font-semibold text-neutral-900">{hs.name}</span>
+                  <p className="truncate text-[13px] leading-snug" title={buyerMetadataName}>
+                    <span className="text-neutral-500">Buyer Name: </span>
+                    <span className="font-medium text-neutral-800">{buyerMetadataName}</span>
                   </p>
                   <p className="mt-0.5 text-xs text-neutral-500">
                     {hs.createdAt
