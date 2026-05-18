@@ -92,9 +92,20 @@ export type ShareListingsDialogProps = {
   recipients?: Recipient[];
   onAddRecipient?: (recipient: Recipient) => void;
   onRemoveRecipient?: (index: number) => void;
+
+  /** Overrides default dialog title (e.g. hot sheet share). */
+  shareTitle?: string;
+  /** Overrides default dialog description. */
+  shareDescription?: string;
+  /** Overrides default personal-message suggestion chips. */
+  messageChips?: string[];
+  /** Hot-sheet preview uses layers icon and omits listing stats. */
+  previewVariant?: "listing" | "hot-sheet";
+  /** Overrides footer primary button label (default: Share / Share (n)). */
+  submitButtonLabel?: string;
 };
 
-const MESSAGE_CHIPS = [
+const DEFAULT_MESSAGE_CHIPS = [
   "Thought this might be a great fit for you.",
   "Want to schedule a quick showing?",
   "Happy to answer any questions.",
@@ -138,6 +149,11 @@ export function ShareListingsDialog({
   recipients = [],
   onAddRecipient,
   onRemoveRecipient,
+  shareTitle,
+  shareDescription,
+  messageChips = DEFAULT_MESSAGE_CHIPS,
+  previewVariant = "listing",
+  submitButtonLabel,
 }: ShareListingsDialogProps) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [showSavePrompt, setShowSavePrompt] = React.useState(false);
@@ -181,10 +197,11 @@ export function ShareListingsDialog({
         <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-4 sm:px-5 sm:py-4">
           <DialogHeader className="space-y-1 pr-8">
             <DialogTitle className="text-base font-semibold tracking-tight text-neutral-900 sm:text-[17px]">
-              Share Listing{selectedCount === 1 ? "" : "s"}
+              {shareTitle ?? `Share Listing${selectedCount === 1 ? "" : "s"}`}
             </DialogTitle>
             <DialogDescription className="text-sm leading-snug text-neutral-600">
-              Send {selectedCount === 1 ? "this listing" : `${selectedCount} listings`} to a contact via email.
+              {shareDescription ??
+                `Send ${selectedCount === 1 ? "this listing" : `${selectedCount} listings`} to a contact via email.`}
             </DialogDescription>
             {/* Show added recipients below subtitle */}
             {(recipients.length > 0 || recipientName.trim()) && (
@@ -214,7 +231,11 @@ export function ShareListingsDialog({
           {selectedCount === 1 && listingPreview ? (
             <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <div className="mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <Home className="h-4 w-4 text-neutral-500" />
+                {previewVariant === "hot-sheet" ? (
+                  <Layers className="h-4 w-4 text-neutral-500" />
+                ) : (
+                  <Home className="h-4 w-4 text-neutral-500" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium text-neutral-900">{listingPreview.address}</div>
@@ -223,14 +244,18 @@ export function ShareListingsDialog({
                     {listingPreview.cityStateZip}
                   </div>
                 )}
-                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-600">
-                  {listingPreview.price && <span className="font-semibold text-neutral-900">{listingPreview.price}</span>}
-                  {typeof listingPreview.beds === "number" && <span>{listingPreview.beds} bd</span>}
-                  {typeof listingPreview.baths === "number" && <span>{listingPreview.baths} ba</span>}
-                  {typeof listingPreview.sqft === "number" && (
-                    <span>{listingPreview.sqft.toLocaleString()} sf</span>
-                  )}
-                </div>
+                {previewVariant === "listing" ? (
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-600">
+                    {listingPreview.price && <span className="font-semibold text-neutral-900">{listingPreview.price}</span>}
+                    {typeof listingPreview.beds === "number" && <span>{listingPreview.beds} bd</span>}
+                    {typeof listingPreview.baths === "number" && <span>{listingPreview.baths} ba</span>}
+                    {typeof listingPreview.sqft === "number" && (
+                      <span>{listingPreview.sqft.toLocaleString()} sf</span>
+                    )}
+                  </div>
+                ) : listingPreview.price ? (
+                  <div className="mt-1.5 text-xs font-medium text-neutral-600">{listingPreview.price}</div>
+                ) : null}
               </div>
             </div>
           ) : selectedCount > 1 ? (
@@ -506,7 +531,7 @@ export function ShareListingsDialog({
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              {MESSAGE_CHIPS.map((t) => {
+              {messageChips.map((t) => {
                 const chipOn = selectedChips.has(t);
                 return (
                   <Button
@@ -563,7 +588,11 @@ export function ShareListingsDialog({
               className="h-9 min-w-[8.5rem] rounded-lg px-4 text-[13px] font-medium disabled:opacity-50"
             >
               <Send className="mr-2 h-3.5 w-3.5 shrink-0" aria-hidden />
-              <span>{submitting ? "Sending…" : `Share${selectedCount === 1 ? "" : ` (${selectedCount})`}`}</span>
+              <span>
+                {submitting
+                  ? "Sending…"
+                  : (submitButtonLabel ?? `Share${selectedCount === 1 ? "" : ` (${selectedCount})`}`)}
+              </span>
             </Button>
           </div>
         </div>

@@ -1,0 +1,276 @@
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { getHotSheetReviewShareUrl } from "@/lib/getPublicUrl";
+import { buildHotSheetShareEmailHtml } from "@/lib/buildHotSheetShareEmailHtml";
+import {
+  ShareListingsDialog,
+  type ContactSearchResult,
+  type ListingPreview,
+  type Recipient,
+} from "@/components/share/ShareListingsDialog";
+
+const HOT_SHEET_MESSAGE_CHIPS = [
+  "Here are listings that match your search criteria.",
+  "Let me know which properties you'd like to tour.",
+  "Happy to adjust filters if needed.",
+];
+
+type Client = ContactSearchResult;
+
+type PersonalHotSheetShareEmailDialogProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  hotSheetId: string;
+  title: string;
+  description?: string;
+};
+
+export function PersonalHotSheetShareEmailDialog({
+  open,
+  onOpenChange,
+  hotSheetId,
+  title,
+  description = "",
+}: PersonalHotSheetShareEmailDialogProps) {
+  const [sending, setSending] = useState(false);
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [agentName, setAgentName] = useState("");
+  const [agentEmail, setAgentEmail] = useState("");
+  const [agentPhone, setAgentPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientResults, setClientResults] = useState<Client[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const clientSearchRef = useRef<HTMLDivElement>(null);
+
+  const listingPreview: ListingPreview = {
+    address: title,
+    cityStateZip: description || undefined,
+    price: "Review link included in email",
+  };
+
+  useEffect(() => {
+    if (open) {
+      void loadAgentProfile();
+    } else {
+      setRecipientName("");
+      setRecipientEmail("");
+      setMessage("");
+      setClientSearch("");
+      setClientResults([]);
+      setShowClientDropdown(false);
+      setShowManualEntry(false);
+      setRecipients([]);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clientSearchRef.current && !clientSearchRef.current.contains(event.target as Node)) {
+        setShowClientDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const searchClients = async () => {
+      if (!clientSearch.trim() || clientSearch.length < 2) {
+        setClientResults([]);
+        setShowClientDropdown(false);
+        return;
+      }
+
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from("clients")
+          .select("*")
+          .eq("agent_id", user.id)
+          .or(
+            `first_name.ilike.%${clientSearch}%,last_name.ilike.%${clientSearch}%,email.ilike.%${clientSearch}%`,
+          )
+          .order("first_name")
+          .limit(5);
+
+        if (error) throw error;
+        const results = data || [];
+        setClientResults(results);
+        setShowClientDropdown(results.length > 0);
+      } catch (error) {
+        console.error("Error searching clients:", error);
+      }
+    };
+
+    const debounce = setTimeout(searchClients, 300);
+    return () => clearTimeout(debounce);
+  }, [clientSearch]);
+
+  const loadAgentProfile = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("agent_profiles")
+        .select("first_name, last_name, email, phone, cell_phone")
+        .eq("id", user.id)
+        .single();
+
+      if (profile) {
+        setAgentName(`${profile.first_name} ${profile.last_name}`);
+        setAgentEmail(profile.email);
+        setAgentPhone(profile.cell_phone || profile.phone || "");
+      }
+    } catch (error) {
+      console.error("Error loading agent profile:", error);
+    }
+  };
+
+  const handleSaveContact = async (name: string, email: string) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const nameParts = name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      const { error } = await supabase.from("clients").insert({
+        agent_id: user.id,
+        first_name: firstName,
+        last_name: lastName,
+        email: email.trim(),
+      });
+
+      if (error) throw error;
+      toast.success(`${name} saved to contacts`);
+    } catch (error) {
+      console.error("Error saving contact:", error);
+      toast.error("Failed to save contact");
+    }
+  };
+
+  const handleSelectClient = (client: Client) => {
+    setRecipientName(`${client.first_name} ${client.last_name}`.trim() || client.email);
+    setRecipientEmail(client.email);
+    setClientSearch(`${client.first_name} ${client.last_name}`.trim() || client.email);
+    setShowClientDropdown(false);
+    setShowManualEntry(false);
+  };
+
+  const collectRecipients = (): Recipient[] => {
+    const all = [...recipients];
+    if (recipientEmail.trim() && recipientName.trim()) {
+      const email = recipientEmail.trim().toLowerCase();
+      if (!all.some((r) => r.email.toLowerCase() === email)) {
+        all.push({ name: recipientName.trim(), email: recipientEmail.trim() });
+      }
+    }
+    return all;
+  };
+
+  const handleShare = async () => {
+    const allRecipients = collectRecipients();
+    if (allRecipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Session expired. Please sign in again.");
+
+      const reviewUrl = getHotSheetReviewShareUrl(hotSheetId);
+      const composedMessageHtml = buildHotSheetShareEmailHtml({
+        userMessage: message,
+        reviewUrl,
+        title,
+        description,
+      });
+
+      await invokeEdgeFunction("send-bulk-email", {
+        recipients: allRecipients,
+        subject: `Hot Sheet: ${title}`,
+        message: composedMessageHtml,
+        agentId: user.id,
+        agentEmail: agentEmail.trim(),
+        sendAsGroup: false,
+      });
+
+      const names = allRecipients.map((r) => r.name).join(", ");
+      toast.success(`Hot sheet shared with ${names}`);
+      onOpenChange(false);
+    } catch (error: unknown) {
+      console.error("Error sharing hot sheet:", error);
+      const messageText = error instanceof Error ? error.message : "Failed to share hot sheet";
+      toast.error(messageText);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const canSubmit = Boolean(
+    agentName.trim() && agentEmail.trim() && (recipientEmail.trim() || recipients.length > 0),
+  );
+
+  return (
+    <div ref={clientSearchRef}>
+      <ShareListingsDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        selectedCount={1}
+        listingPreview={listingPreview}
+        contactQuery={clientSearch}
+        setContactQuery={setClientSearch}
+        contactResults={clientResults}
+        showContactDropdown={showClientDropdown}
+        onSelectContact={handleSelectClient}
+        manualMode={showManualEntry}
+        setManualMode={setShowManualEntry}
+        recipientName={recipientName}
+        setRecipientName={setRecipientName}
+        recipientEmail={recipientEmail}
+        setRecipientEmail={setRecipientEmail}
+        senderName={agentName}
+        setSenderName={setAgentName}
+        senderEmail={agentEmail}
+        setSenderEmail={setAgentEmail}
+        senderPhone={agentPhone}
+        setSenderPhone={setAgentPhone}
+        message={message}
+        setMessage={setMessage}
+        canSubmit={canSubmit}
+        submitting={sending}
+        onSubmit={() => void handleShare()}
+        onSaveContact={handleSaveContact}
+        recipients={recipients}
+        onAddRecipient={(recipient) => setRecipients((prev) => [...prev, recipient])}
+        onRemoveRecipient={(index) => setRecipients((prev) => prev.filter((_, i) => i !== index))}
+        shareTitle="Share Hot Sheet"
+        shareDescription="Send this hot sheet review link and summary to a contact via email."
+        messageChips={HOT_SHEET_MESSAGE_CHIPS}
+        previewVariant="hot-sheet"
+        submitButtonLabel="Send email"
+      />
+    </div>
+  );
+}
