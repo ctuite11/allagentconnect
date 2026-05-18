@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { X, Search, UserPlus, Users, Filter, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -48,9 +49,14 @@ interface SaveToHotSheetDialogProps {
   };
 }
 
+const AAC_GREEN_CHECKBOX =
+  "border-neutral-300 data-[state=checked]:border-[#50C878] data-[state=checked]:bg-[#50C878] data-[state=checked]:text-white";
+
 const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentSearch }: SaveToHotSheetDialogProps) => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notifyAgent, setNotifyAgent] = useState(true);
+  const [agentDisplayName, setAgentDisplayName] = useState("");
   
   // Client selection state
   const [selectedClients, setSelectedClients] = useState<Client[]>([]);
@@ -87,10 +93,44 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
     }
   }, [open, currentSearch]);
 
+  // Load agent display name for personal-search checkbox
+  useEffect(() => {
+    if (!open) return;
+
+    const loadAgentProfile = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from("agent_profiles")
+          .select("first_name, last_name, email")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile) {
+          const formatted =
+            [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim() ||
+            profile.email ||
+            "Me";
+          setAgentDisplayName(formatted);
+        }
+      } catch (error) {
+        console.error("Error loading agent profile:", error);
+      }
+    };
+
+    void loadAgentProfile();
+  }, [open]);
+
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setName("");
+      setNotifyAgent(true);
+      setAgentDisplayName("");
       setSelectedClients([]);
       setClientSearchQuery("");
       setClientSearchResults([]);
@@ -264,7 +304,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
           criteria,
           is_active: true,
           notify_client_email: selectedClients.length > 0,
-          notify_agent_email: true,
+          notify_agent_email: notifyAgent,
         })
         .select()
         .single();
@@ -393,20 +433,42 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
 
           <Separator />
 
+          <div className="flex items-start gap-2.5 rounded-lg border border-neutral-200 bg-neutral-50/60 px-3 py-2.5">
+            <Checkbox
+              id="notify-agent-personal-search"
+              checked={notifyAgent}
+              onCheckedChange={(checked) => setNotifyAgent(checked === true)}
+              className={`mt-0.5 ${AAC_GREEN_CHECKBOX}`}
+            />
+            <Label
+              htmlFor="notify-agent-personal-search"
+              className="cursor-pointer text-[13px] leading-snug text-neutral-800"
+            >
+              <span className="font-medium text-neutral-900">{agentDisplayName || "Me"}</span>
+              <span className="text-neutral-600">
+                {" "}
+                — include on this hot sheet for my personal search
+              </span>
+            </Label>
+          </div>
+
+          <Separator />
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
                 <Users className="h-4 w-4 text-emerald-600" />
                 Contacts
+                <span className="text-xs font-normal text-neutral-500">(optional)</span>
               </Label>
               {selectedClients.length > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {selectedClients.length} contact{selectedClients.length !== 1 ? 's' : ''}
+                  {selectedClients.length} contact{selectedClients.length !== 1 ? "s" : ""}
                 </Badge>
               )}
             </div>
             <p className="text-sm text-neutral-600">
-              Attach one or more contacts to track interest for this hotsheet.
+              Add a contact to send invites and track interest — not required to save this hot sheet.
             </p>
 
             {/* Selected Clients */}
@@ -598,7 +660,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
           <Button
             onClick={handleSave}
             disabled={loading || !name.trim()}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2"
           >
             {loading ? "Saving..." : "Save Hotsheet"}
           </Button>
