@@ -218,6 +218,7 @@ export function PersonalHotSheetShareEmailDialog({
       const composedMessageHtml = buildHotSheetShareEmailHtml({
         userMessage: message,
         listings: listingsForEmail,
+        agentFirstName: agentFirstName || agentName,
       });
 
       await invokeEdgeFunction("send-bulk-email", {

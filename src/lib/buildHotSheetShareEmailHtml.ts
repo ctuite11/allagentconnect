@@ -15,6 +15,9 @@ export type ListingShareEmailListing = {
   photos?: unknown;
 };
 
+const AAC_MONOGRAM_LOGO_URL =
+  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg";
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -90,14 +93,31 @@ export function buildPersonalListingShareEmailSubject(
     : `${name} shared listings with you`;
 }
 
+function buildPersonalMessageBlock(userMessage: string): string {
+  const trimmed = userMessage.trim();
+  if (!trimmed) return "";
+  const safe = escapeHtml(trimmed).replace(/\n/g, "<br>");
+  return [
+    `<div style="margin:0 0 20px;padding:14px 16px;background:#f8fafc;border-left:3px solid #0E56F5;border-radius:6px;">`,
+    `<p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#0E56F5;text-transform:uppercase;letter-spacing:0.04em;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Personal Message</p>`,
+    `<p style="margin:0;font-size:14px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${safe}</p>`,
+    `</div>`,
+  ].join("");
+}
+
 /** HTML body for personal hot sheet → listing share emails (send-bulk-email). */
 export function buildHotSheetShareEmailHtml(params: {
   userMessage: string;
   listings: ListingShareEmailListing[];
+  agentFirstName: string;
 }): string {
-  const { userMessage, listings } = params;
+  const { userMessage, listings, agentFirstName } = params;
+  const listingCount = listings.length;
+  const introHeadline = buildPersonalListingShareEmailSubject(agentFirstName, listingCount);
+  const safeIntroHeadline = escapeHtml(introHeadline);
 
   const listingCardsHtml = listings.map(buildListingShareEmailCard).join("");
+  const personalMessageBlock = buildPersonalMessageBlock(userMessage);
 
   const plainTextFallback = listings
     .map((listing) => {
@@ -108,27 +128,36 @@ export function buildHotSheetShareEmailHtml(params: {
     })
     .join("\n");
 
-  const messageBlock = userMessage.trim()
-    ? `<p style="margin:0;font-size:14px;line-height:1.7;color:#0f172a;white-space:pre-wrap;">${escapeHtml(userMessage.trim())}</p>`
-    : "";
-
-  const aacNavy = "#0A1A2F";
-  const aacGreen = "#059669";
-  const aacLogoUrl = `${getPublicOrigin()}/favicons/aac/favicon-32x32.png`;
+  const headerNavy = "#111317";
+  const headerGreen = "#50c878";
+  const footerNavy = "#0A1A2F";
+  const footerGreen = "#059669";
+  const headerLogoUrl = AAC_MONOGRAM_LOGO_URL;
+  const footerLogoUrl = `${getPublicOrigin()}/favicons/aac/favicon-32x32.png`;
 
   return [
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f7fb;padding:18px 0;">`,
-    `<tr><td align="center">`,
-    `<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:640px;max-width:100%;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">`,
-    `<tr><td style="padding:24px 28px 10px;">`,
-    messageBlock,
-    messageBlock ? `<div style="margin-top:16px;">${listingCardsHtml}</div>` : listingCardsHtml,
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;background-color:#ffffff;">`,
+    `<tr><td align="center" style="padding:24px 12px 32px;">`,
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:680px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">`,
+    `<tr><td align="center" style="background-color:${headerNavy};border-radius:12px 12px 0 0;padding:32px 28px 0;">`,
+    `<img src="${escapeHtml(headerLogoUrl)}" width="40" height="40" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />`,
+    `<p style="margin:12px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">All Agent Connect</p>`,
+    `<p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.75);">${safeIntroHeadline}</p>`,
+    `<div style="width:48px;height:2px;background-color:${headerGreen};margin:16px auto 0;border-radius:1px;"></div>`,
+    `<div style="height:24px;line-height:24px;font-size:0;">&nbsp;</div>`,
+    `</td></tr>`,
+    `<tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;">`,
+    `<div style="padding:28px 32px 24px;">`,
+    `<h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${safeIntroHeadline}</h2>`,
+    personalMessageBlock,
+    `<div style="margin-top:${personalMessageBlock ? "4px" : "0"};">${listingCardsHtml}</div>`,
     `<p style="margin:20px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.5;color:#64748b;">`,
     `If a listing is no longer available, your agent can share updated options.`,
     `</p>`,
+    `</div>`,
     `</td></tr>`,
-    `<tr><td align="center" style="background-color:${aacNavy};border-top:2px solid ${aacGreen};border-radius:0 0 12px 12px;padding:22px 28px 20px;">`,
-    `<img src="${escapeHtml(aacLogoUrl)}" width="24" height="24" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />`,
+    `<tr><td align="center" style="background-color:${footerNavy};border-top:2px solid ${footerGreen};border-radius:0 0 12px 12px;padding:22px 28px 20px;">`,
+    `<img src="${escapeHtml(footerLogoUrl)}" width="24" height="24" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />`,
     `<p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);">All Agent Connect</p>`,
     `<p style="margin:0 0 6px;font-size:12px;">`,
     `<a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>`,
