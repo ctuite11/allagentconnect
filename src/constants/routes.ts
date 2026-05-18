@@ -9,6 +9,8 @@ export const ROUTES = {
   // Root pages (no back button)
   HOME: '/',
   SUCCESS_HUB: '/agent-dashboard',
+  /** Legacy alias; redirects to SUCCESS_HUB. Use as Add Listing `from` when entering from Success Hub. */
+  SUCCESS_HUB_RETURN: '/success-hub',
   LISTING_SEARCH: '/listing-search',
   MY_LISTINGS: '/agent/listings',
   HOT_SHEETS: '/hot-sheets',
