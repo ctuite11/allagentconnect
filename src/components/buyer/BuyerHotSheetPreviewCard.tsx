@@ -230,8 +230,13 @@ export function BuyerHotSheetPreviewCard({
           <HotSheetDashboardCollage photoUrls={photoUrls} />
         </div>
         <div className={`${buyerDashboardHotFavTileBody} flex-1`}>
-          <p className="line-clamp-1 text-[16px] font-medium leading-snug tracking-tight text-neutral-900">{title}</p>
-          {subtitle ? <p className="text-[12px] font-normal leading-tight text-neutral-500 tabular-nums">{subtitle}</p> : null}
+          <p className="truncate text-[13px] leading-snug" title={title.trim() || "Untitled hot sheet"}>
+            <span className="text-neutral-500">Hot Sheet Name: </span>
+            <span className="font-medium text-neutral-800">{title.trim() || "Untitled hot sheet"}</span>
+          </p>
+          {subtitle ? (
+            <p className="text-[12px] font-normal leading-tight text-neutral-500 tabular-nums">{subtitle}</p>
+          ) : null}
         </div>
       </article>
     </div>
