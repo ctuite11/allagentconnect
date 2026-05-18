@@ -1,5 +1,7 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Home } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
@@ -143,6 +145,7 @@ class SuccessHubErrorBoundary extends React.Component<
 }
 
 function SuccessHubDashboardBody() {
+  const navigate = useNavigate();
   const {
     summary,
     loading,
@@ -152,6 +155,9 @@ function SuccessHubDashboardBody() {
     communications,
     refetch,
   } = useSuccessHubData();
+
+  const goToAddListing = () =>
+    navigate(ROUTES.ADD_LISTING, { state: { from: ROUTES.SUCCESS_HUB_RETURN } });
 
   const safeBuyers = buyers ?? [];
   const safeListings = listings ?? [];
@@ -237,9 +243,7 @@ function SuccessHubDashboardBody() {
               title="My listings"
               description="Properties you represent on AAC."
               actionLabel="Add listing"
-              onAction={() => {
-                window.location.href = "/agent/listings/new";
-              }}
+              onAction={goToAddListing}
               leading={<Home className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />}
             />
             <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-4 text-center">
@@ -251,9 +255,7 @@ function SuccessHubDashboardBody() {
                 type="button"
                 size="sm"
                 className="mt-3 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40"
-                onClick={() => {
-                  window.location.href = "/agent/listings/new";
-                }}
+                onClick={goToAddListing}
               >
                 Add Listing
               </Button>

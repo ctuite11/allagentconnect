@@ -212,11 +212,26 @@ function commissionFlatFeeDisplay(digits: string): string {
   return n.toLocaleString("en-US");
 }
 
+function resolveAddListingReturnTo(
+  location: ReturnType<typeof useLocation>,
+  searchParams: URLSearchParams,
+): string {
+  const stateFrom = (location.state as { from?: string } | null)?.from;
+  if (stateFrom) return stateFrom;
+  const paramFrom = searchParams.get("from");
+  if (paramFrom?.startsWith("/")) return paramFrom;
+  return ROUTES.MY_LISTINGS;
+}
+
 const AddListing = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id: listingId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
+  const addListingBackTo = useMemo(
+    () => resolveAddListingReturnTo(location, searchParams),
+    [location, searchParams],
+  );
   const initialStatus = searchParams.get("status") || "new";
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -2710,12 +2725,7 @@ const AddListing = () => {
         });
       } else {
         toast.success("Listing changes saved!");
-        const returnTo = location.state?.from;
-        if (returnTo) {
-          navigate(returnTo);
-        } else {
-          navigate("/agent/listings");
-        }
+        navigate(addListingBackTo);
       }
     } catch (error: any) {
       console.error("[handleSaveChanges] Error:", error);
@@ -3087,13 +3097,7 @@ const AddListing = () => {
         setDraftId(null);
       }
 
-      // Navigate back to origin or My Listings
-      const returnTo = location.state?.from;
-      if (returnTo) {
-        navigate(returnTo);
-      } else {
-        navigate(ROUTES.MY_LISTINGS);
-      }
+      navigate(addListingBackTo);
     } catch (error: any) {
       console.error("Error creating listing:", error);
       if (error instanceof z.ZodError) {
@@ -3147,7 +3151,7 @@ const AddListing = () => {
           <AgentPageHeader
             title={listingId ? "Edit listing" : "Add listing"}
             subtitle="Hello — bonjour — hola. Set pricing and location, add media and disclosures, then publish. Use Save Draft if you step away; open Dashboard from the Menu for your account."
-            backTo={(location.state as { from?: string } | undefined)?.from || ROUTES.MY_LISTINGS}
+            backTo={addListingBackTo}
             actions={
               user?.email ? (
                 <span className="max-w-[14rem] truncate text-xs text-neutral-500 sm:max-w-xs" title={user.email}>

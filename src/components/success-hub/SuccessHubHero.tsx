@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { Home, MessageSquare, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 
 type SuccessHubHeroProps = {
@@ -37,9 +38,9 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
               type="button"
               size="sm"
               className="h-9 gap-1.5 rounded-full bg-[#0E56F5] px-4 text-white shadow-sm hover:bg-[#0B46CC]"
-              onClick={() => {
-                window.location.href = "/agent/listings/new";
-              }}
+              onClick={() =>
+                navigate(ROUTES.ADD_LISTING, { state: { from: ROUTES.SUCCESS_HUB_RETURN } })
+              }
             >
               <Home className="h-4 w-4 shrink-0 text-white" aria-hidden />
               Add listing
