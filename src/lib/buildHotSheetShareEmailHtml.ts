@@ -1,37 +1,142 @@
+import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
+import { getListingPublicUrl, getPublicOrigin } from "@/lib/getPublicUrl";
+
+export type ListingShareEmailListing = {
+  id: string;
+  address: string;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  price?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  square_feet?: number | null;
+  property_type?: string | null;
+  photos?: unknown;
+};
+
 function escapeHtml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
+function formatPrice(price?: number | null): string {
+  if (price == null || !Number.isFinite(price) || price <= 0) return "Price upon request";
+  return `$${Math.round(price).toLocaleString()}`;
+}
+
+function buildListingShareEmailCard(listing: ListingShareEmailListing): string {
+  const listingUrl = getListingPublicUrl(listing.id);
+  const safeUrl = escapeHtml(listingUrl);
+  const price = escapeHtml(formatPrice(listing.price));
+  const address = escapeHtml(listing.address || "Address unavailable");
+  const cityStateZip = escapeHtml(
+    `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim().replace(/^,\s*|,\s*$/g, ""),
+  );
+  const photoUrl = getPrimaryPhotoUrl(listing.photos ?? []);
+  const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
+
+  const meta: string[] = [];
+  if (listing.bedrooms != null) meta.push(`${listing.bedrooms} bd`);
+  if (listing.bathrooms != null) meta.push(`${listing.bathrooms} ba`);
+  if (listing.square_feet != null) meta.push(`${Number(listing.square_feet).toLocaleString()} sf`);
+  const propertyType = (listing.property_type ?? "")
+    .toString()
+    .replace(/_/g, " ")
+    .trim();
+  const metaLine = meta.length
+    ? `<div style="margin-top:8px;font-size:13px;color:#6b7280;line-height:1.35;">${escapeHtml(meta.join(" · "))}${propertyType ? ` · ${escapeHtml(propertyType)}` : ""}</div>`
+    : propertyType
+      ? `<div style="margin-top:8px;font-size:13px;color:#6b7280;line-height:1.35;">${escapeHtml(propertyType)}</div>`
+      : "";
+
+  const aacPrimaryCta = "#0E56F5";
+  const sharePhotoH = 150;
+  const shareImgColW = 240;
+
+  return [
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
+    `<tr>`,
+    `<td width="${shareImgColW}" style="width:${shareImgColW}px;vertical-align:top;background:#f3f4f6;padding:0;">`,
+    safePhoto
+      ? `<a href="${safeUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" width="${shareImgColW}" height="${sharePhotoH}" style="display:block;width:${shareImgColW}px;max-width:100%;height:${sharePhotoH}px;object-fit:cover;object-position:center;border:0;line-height:0;font-size:0;" /></a>`
+      : `<div style="box-sizing:border-box;width:${shareImgColW}px;height:${sharePhotoH}px;line-height:${sharePhotoH}px;text-align:center;background:#f3f4f6;color:#6b7280;font-size:12px;overflow:hidden;">Photo unavailable</div>`,
+    `</td>`,
+    `<td style="padding:16px 18px;vertical-align:top;">`,
+    `<div style="font-size:22px;font-weight:700;color:#111827;line-height:1.2;">${price}</div>`,
+    `<div style="margin-top:8px;font-size:15px;font-weight:600;color:#111827;line-height:1.35;">${address}</div>`,
+    cityStateZip
+      ? `<div style="margin-top:4px;font-size:13px;color:#6b7280;line-height:1.35;">${cityStateZip}</div>`
+      : "",
+    metaLine,
+    `<div style="margin-top:16px;"><a href="${safeUrl}" style="display:inline-block;background-color:${aacPrimaryCta};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;">View listing</a></div>`,
+    `</td>`,
+    `</tr>`,
+    `</table>`,
+  ].join("");
+}
+
+export function buildPersonalListingShareEmailSubject(
+  agentFirstName: string,
+  listingCount: number,
+): string {
+  const name = agentFirstName.trim() || "Your agent";
+  return listingCount === 1
+    ? `${name} shared a listing with you`
+    : `${name} shared listings with you`;
+}
+
+/** HTML body for personal hot sheet → listing share emails (send-bulk-email). */
 export function buildHotSheetShareEmailHtml(params: {
   userMessage: string;
-  reviewUrl: string;
-  title: string;
-  description?: string;
+  listings: ListingShareEmailListing[];
 }): string {
-  const { userMessage, reviewUrl, title, description } = params;
-  const safeUrl = escapeHtml(reviewUrl);
-  const safeTitle = escapeHtml(title);
+  const { userMessage, listings } = params;
+
+  const listingCardsHtml = listings.map(buildListingShareEmailCard).join("");
+
+  const plainTextFallback = listings
+    .map((listing) => {
+      const listingUrl = getListingPublicUrl(listing.id);
+      const price = formatPrice(listing.price);
+      const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
+      return `- ${address} - ${price} - ${listingUrl}`;
+    })
+    .join("\n");
 
   const messageBlock = userMessage.trim()
-    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">${escapeHtml(userMessage.trim()).replace(/\n/g, "<br>")}</p>`
+    ? `<p style="margin:0;font-size:14px;line-height:1.7;color:#0f172a;white-space:pre-wrap;">${escapeHtml(userMessage.trim())}</p>`
     : "";
 
-  const descriptionLine = description?.trim()
-    ? `<p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.4;">${escapeHtml(description.trim())}</p>`
-    : "";
+  const aacNavy = "#0A1A2F";
+  const aacGreen = "#059669";
+  const aacLogoUrl = `${getPublicOrigin()}/favicons/aac/favicon-32x32.png`;
 
-  const card = [
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:8px 0;background:#ffffff;">`,
-    `<tr><td style="padding:18px 20px;">`,
-    `<p style="margin:0;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#64748b;">Hot Sheet</p>`,
-    `<p style="margin:6px 0 0;font-size:17px;font-weight:600;color:#111827;line-height:1.3;">${safeTitle}</p>`,
-    descriptionLine,
-    `<div style="margin-top:16px;">`,
-    `<a href="${safeUrl}" style="display:inline-block;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border-radius:8px;">View matches</a>`,
-    `</div>`,
+  return [
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f7fb;padding:18px 0;">`,
+    `<tr><td align="center">`,
+    `<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:640px;max-width:100%;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">`,
+    `<tr><td style="padding:24px 28px 10px;">`,
+    messageBlock,
+    messageBlock ? `<div style="margin-top:16px;">${listingCardsHtml}</div>` : listingCardsHtml,
+    `<p style="margin:20px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.5;color:#64748b;">`,
+    `If a listing is no longer available, your agent can share updated options.`,
+    `</p>`,
+    `</td></tr>`,
+    `<tr><td align="center" style="background-color:${aacNavy};border-top:2px solid ${aacGreen};border-radius:0 0 12px 12px;padding:22px 28px 20px;">`,
+    `<img src="${escapeHtml(aacLogoUrl)}" width="24" height="24" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />`,
+    `<p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);">All Agent Connect</p>`,
+    `<p style="margin:0 0 6px;font-size:12px;">`,
+    `<a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>`,
+    `</p>`,
+    `</td></tr>`,
+    `</table>`,
+    `<!-- plain-text-fallback: ${escapeHtml(plainTextFallback)} -->`,
     `</td></tr>`,
     `</table>`,
   ].join("");
-
-  return `<div>${messageBlock}${card}</div>`;
 }

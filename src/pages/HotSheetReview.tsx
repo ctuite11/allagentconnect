@@ -1203,12 +1203,17 @@ const HotSheetReview = () => {
                     selectedListingPreviews={listings
                       .filter((listing) => selectedListings.has(listing.id))
                       .map((listing) => ({
+                        id: listing.id,
                         address: listing.address,
-                        cityStateZip: `${listing.city}, ${listing.state} ${listing.zip_code}`,
-                        price: listing.price ? `$${listing.price.toLocaleString()}` : undefined,
-                        beds: listing.bedrooms ?? undefined,
-                        baths: listing.bathrooms ?? undefined,
-                        sqft: listing.square_feet ?? undefined,
+                        city: listing.city,
+                        state: listing.state,
+                        zip_code: listing.zip_code,
+                        price: listing.price,
+                        bedrooms: listing.bedrooms,
+                        bathrooms: listing.bathrooms,
+                        square_feet: listing.square_feet,
+                        property_type: listing.property_type,
+                        photos: listing.photos,
                       }))}
                   />
                 ) : null}

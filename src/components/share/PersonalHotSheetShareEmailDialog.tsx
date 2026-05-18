@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
-import { getHotSheetReviewShareUrl } from "@/lib/getPublicUrl";
-import { buildHotSheetShareEmailHtml } from "@/lib/buildHotSheetShareEmailHtml";
+import {
+  buildHotSheetShareEmailHtml,
+  buildPersonalListingShareEmailSubject,
+  type ListingShareEmailListing,
+} from "@/lib/buildHotSheetShareEmailHtml";
 import {
   ShareListingsDialog,
   type ContactSearchResult,
@@ -19,7 +22,7 @@ const HOT_SHEET_MESSAGE_CHIPS = [
 
 type Client = ContactSearchResult;
 
-export type PersonalHotSheetShareListingPreview = ListingPreview;
+export type PersonalHotSheetShareListingPreview = ListingShareEmailListing;
 
 type PersonalHotSheetShareEmailDialogProps = {
   open: boolean;
@@ -44,6 +47,7 @@ export function PersonalHotSheetShareEmailDialog({
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [agentName, setAgentName] = useState("");
+  const [agentFirstName, setAgentFirstName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [agentPhone, setAgentPhone] = useState("");
   const [message, setMessage] = useState("");
@@ -56,19 +60,24 @@ export function PersonalHotSheetShareEmailDialog({
   const selectedCount = selectedListingIds.length;
   const singleListingPreview =
     selectedCount === 1 ? selectedListingPreviews[0] : undefined;
+  const toDialogPreview = (listing: ListingShareEmailListing): ListingPreview => ({
+    address: listing.address,
+    cityStateZip: `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`
+      .trim()
+      .replace(/^,\s*|,\s*$/g, ""),
+    price: listing.price != null && listing.price > 0 ? `$${listing.price.toLocaleString()}` : undefined,
+    beds: listing.bedrooms ?? undefined,
+    baths: listing.bathrooms ?? undefined,
+    sqft: listing.square_feet ?? undefined,
+  });
+
   const listingPreview: ListingPreview | undefined =
-    selectedCount === 1
-      ? singleListingPreview ?? {
-          address: title,
-          cityStateZip: description || undefined,
-          price: "Review link included in email",
-        }
-      : undefined;
+    selectedCount === 1 && singleListingPreview ? toDialogPreview(singleListingPreview) : undefined;
   const shareDescription =
     selectedCount === 1
-      ? "Send this selected listing and the review link to a contact via email."
-      : `Send ${selectedCount} selected listings and the review link to a contact via email.`;
-  const previewVariant = selectedCount === 1 && singleListingPreview ? "listing" : "hot-sheet";
+      ? "Send this selected listing to a contact via email."
+      : `Send ${selectedCount} selected listings to a contact via email.`;
+  const previewVariant = selectedCount === 1 && singleListingPreview ? "listing" : "listing";
 
   useEffect(() => {
     if (open) {
@@ -136,7 +145,8 @@ export function PersonalHotSheetShareEmailDialog({
         .single();
 
       if (profile) {
-        setAgentName(`${profile.first_name} ${profile.last_name}`);
+        setAgentFirstName(profile.first_name?.trim() || "");
+        setAgentName(`${profile.first_name} ${profile.last_name}`.trim());
         setAgentEmail(profile.email);
         setAgentPhone(profile.cell_phone || profile.phone || "");
       }
@@ -201,20 +211,18 @@ export function PersonalHotSheetShareEmailDialog({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Session expired. Please sign in again.");
 
-      const reviewUrl = getHotSheetReviewShareUrl(hotSheetId);
+      const listingsForEmail = selectedListingIds
+        .map((listingId) => selectedListingPreviews.find((listing) => listing.id === listingId))
+        .filter((listing): listing is ListingShareEmailListing => Boolean(listing));
+
       const composedMessageHtml = buildHotSheetShareEmailHtml({
         userMessage: message,
-        reviewUrl,
-        title,
-        description,
+        listings: listingsForEmail,
       });
 
       await invokeEdgeFunction("send-bulk-email", {
         recipients: allRecipients,
-        subject:
-          selectedCount === 1
-            ? `Hot Sheet: ${title}`
-            : `Hot Sheet: ${title} (${selectedCount} listings)`,
+        subject: buildPersonalListingShareEmailSubject(agentFirstName || agentName, selectedCount),
         message: composedMessageHtml,
         agentId: user.id,
         agentEmail: agentEmail.trim(),
@@ -226,7 +234,7 @@ export function PersonalHotSheetShareEmailDialog({
       onOpenChange(false);
     } catch (error: unknown) {
       console.error("Error sharing hot sheet:", error);
-      const messageText = error instanceof Error ? error.message : "Failed to share hot sheet";
+      const messageText = error instanceof Error ? error.message : "Failed to share listing(s)";
       toast.error(messageText);
     } finally {
       setSending(false);
