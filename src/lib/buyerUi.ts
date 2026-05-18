@@ -95,11 +95,8 @@ export const buyerPreviewSectionMarketContent =
 
 export const buyerPreviewGrid = "grid grid-cols-3 gap-4";
 
-/**
- * Buyer dashboard Hot Sheets column — up to 2 tiles; 1-col when beside Favorites (lg+), 2-col when section is full width.
- */
-export const buyerDashboardHotSheetsPreviewGrid =
-  "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1";
+/** Buyer dashboard Hot Sheets column — 2-up only (max 2 cards), not 3-across strip. */
+export const buyerDashboardHotSheetsPreviewGrid = "grid grid-cols-2 gap-4";
 
 export const buyerPreviewSectionHeaderRow =
   "flex items-baseline justify-between gap-2";
