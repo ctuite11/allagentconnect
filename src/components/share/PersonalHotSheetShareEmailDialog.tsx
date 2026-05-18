@@ -19,12 +19,16 @@ const HOT_SHEET_MESSAGE_CHIPS = [
 
 type Client = ContactSearchResult;
 
+export type PersonalHotSheetShareListingPreview = ListingPreview;
+
 type PersonalHotSheetShareEmailDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   hotSheetId: string;
   title: string;
   description?: string;
+  selectedListingIds: string[];
+  selectedListingPreviews?: PersonalHotSheetShareListingPreview[];
 };
 
 export function PersonalHotSheetShareEmailDialog({
@@ -33,6 +37,8 @@ export function PersonalHotSheetShareEmailDialog({
   hotSheetId,
   title,
   description = "",
+  selectedListingIds,
+  selectedListingPreviews = [],
 }: PersonalHotSheetShareEmailDialogProps) {
   const [sending, setSending] = useState(false);
   const [recipientName, setRecipientName] = useState("");
@@ -48,11 +54,22 @@ export function PersonalHotSheetShareEmailDialog({
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
-  const listingPreview: ListingPreview = {
-    address: title,
-    cityStateZip: description || undefined,
-    price: "Review link included in email",
-  };
+  const selectedCount = selectedListingIds.length;
+  const singleListingPreview =
+    selectedCount === 1 ? selectedListingPreviews[0] : undefined;
+  const listingPreview: ListingPreview | undefined =
+    selectedCount === 1
+      ? singleListingPreview ?? {
+          address: title,
+          cityStateZip: description || undefined,
+          price: "Review link included in email",
+        }
+      : undefined;
+  const shareDescription =
+    selectedCount === 1
+      ? "Send this selected listing and the review link to a contact via email."
+      : `Send ${selectedCount} selected listings and the review link to a contact via email.`;
+  const previewVariant = selectedCount === 1 && singleListingPreview ? "listing" : "hot-sheet";
 
   useEffect(() => {
     if (open) {
@@ -186,6 +203,11 @@ export function PersonalHotSheetShareEmailDialog({
   };
 
   const handleShare = async () => {
+    if (selectedListingIds.length === 0) {
+      toast.error("Select at least one listing to share");
+      return;
+    }
+
     const allRecipients = collectRecipients();
     if (allRecipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
       toast.error("Please fill in all required fields");
@@ -209,7 +231,10 @@ export function PersonalHotSheetShareEmailDialog({
 
       await invokeEdgeFunction("send-bulk-email", {
         recipients: allRecipients,
-        subject: `Hot Sheet: ${title}`,
+        subject:
+          selectedCount === 1
+            ? `Hot Sheet: ${title}`
+            : `Hot Sheet: ${title} (${selectedCount} listings)`,
         message: composedMessageHtml,
         agentId: user.id,
         agentEmail: agentEmail.trim(),
@@ -229,7 +254,10 @@ export function PersonalHotSheetShareEmailDialog({
   };
 
   const canSubmit = Boolean(
-    agentName.trim() && agentEmail.trim() && (recipientEmail.trim() || recipients.length > 0),
+    selectedListingIds.length > 0 &&
+      agentName.trim() &&
+      agentEmail.trim() &&
+      (recipientEmail.trim() || recipients.length > 0),
   );
 
   return (
@@ -237,7 +265,7 @@ export function PersonalHotSheetShareEmailDialog({
       <ShareListingsDialog
         open={open}
         onOpenChange={onOpenChange}
-        selectedCount={1}
+        selectedCount={Math.max(selectedCount, 1)}
         listingPreview={listingPreview}
         contactQuery={clientSearch}
         setContactQuery={setClientSearch}
@@ -266,9 +294,9 @@ export function PersonalHotSheetShareEmailDialog({
         onAddRecipient={(recipient) => setRecipients((prev) => [...prev, recipient])}
         onRemoveRecipient={(index) => setRecipients((prev) => prev.filter((_, i) => i !== index))}
         shareTitle="Share Hot Sheet"
-        shareDescription="Send this hot sheet review link and summary to a contact via email."
+        shareDescription={shareDescription}
         messageChips={HOT_SHEET_MESSAGE_CHIPS}
-        previewVariant="hot-sheet"
+        previewVariant={previewVariant}
         submitButtonLabel="Send email"
       />
     </div>

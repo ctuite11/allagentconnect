@@ -1199,11 +1199,17 @@ const HotSheetReview = () => {
                   <PersonalHotSheetShareActions
                     hotSheetId={id}
                     title={hotSheet.name}
-                    description={
-                      listings.length > 0
-                        ? `${listings.length} matching listing${listings.length === 1 ? "" : "s"} on All Agent Connect`
-                        : "Hot sheet matches on All Agent Connect"
-                    }
+                    selectedListingIds={Array.from(selectedListings)}
+                    selectedListingPreviews={listings
+                      .filter((listing) => selectedListings.has(listing.id))
+                      .map((listing) => ({
+                        address: listing.address,
+                        cityStateZip: `${listing.city}, ${listing.state} ${listing.zip_code}`,
+                        price: listing.price ? `$${listing.price.toLocaleString()}` : undefined,
+                        beds: listing.bedrooms ?? undefined,
+                        baths: listing.bathrooms ?? undefined,
+                        sqft: listing.square_feet ?? undefined,
+                      }))}
                   />
                 ) : null}
                 <Select value={sortBy} onValueChange={setSortBy}>
