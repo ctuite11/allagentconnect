@@ -18,7 +18,6 @@ import { Seo } from "@/components/Seo";
 import {
   buyerSectionDesc as buyerSectionDescClass,
   buyerSectionTitle as buyerSectionTitleClass,
-  buyerDashboardHotSheetsPreviewGrid,
   buyerPageMain,
   buyerPageStack,
 } from "@/lib/buyerUi";
@@ -55,6 +54,21 @@ interface AgentPersonalHotSheet {
 
 const AAC_PRIMARY_BTN =
   "border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2";
+
+/** Agent `/agent/hot-sheets` — shared grid for My Hot Sheets + Buyer Hot Sheets cards. */
+const AGENT_HOT_SHEETS_CARD_GRID = "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3";
+
+function AgentHotSheetCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <Skeleton className="h-48 w-full rounded-none bg-neutral-100 md:h-52" />
+      <div className="space-y-3 p-4">
+        <Skeleton className="h-4 w-[85%] max-w-[16rem] rounded-md bg-neutral-100" />
+        <Skeleton className="h-4 w-24 rounded-md bg-neutral-100" />
+      </div>
+    </div>
+  );
+}
 
 const getInitials = (first?: string, last?: string): string => {
   const f = (first || "")[0]?.toUpperCase() || "";
@@ -795,22 +809,16 @@ const HotSheets = ({
             </p>
           </div>
         ) : (
-          <div
-            className={`${buyerDashboardHotSheetsPreviewGrid} md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0`}
-          >
+          <div className={AGENT_HOT_SHEETS_CARD_GRID}>
             {personalHotSheets.map((sheet) => (
-              <BuyerHotSheetPreviewCard
+              <BuyerCollectionCard
                 key={sheet.id}
-                variant="dashboard"
-                photoUrls={sheet.photos}
-                title={sheet.name}
-                preferWideTitle
+                clientName={sheet.name}
+                hotSheetCount={1}
+                photos={sheet.photos}
+                nameLabel="Hot Sheet Name"
+                titleCaseName={false}
                 onClick={() => openPersonalHotSheet(sheet.id)}
-                onKeyDown={(e) => {
-                  if (e.key !== "Enter" && e.key !== " ") return;
-                  e.preventDefault();
-                  openPersonalHotSheet(sheet.id);
-                }}
               />
             ))}
           </div>
@@ -823,7 +831,7 @@ const HotSheets = ({
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`} aria-labelledby="agent-buyer-hot-sheets-heading">
       <div className="space-y-1">
         <h2 id="agent-buyer-hot-sheets-heading" className={DASH_SECTION_TITLE}>
-          Buyers
+          Buyer Hot Sheets
         </h2>
         <p className={DASH_SECTION_DESC}>Hot sheets linked to your buyers.</p>
       </div>
@@ -838,7 +846,7 @@ const HotSheets = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className={AGENT_HOT_SHEETS_CARD_GRID}>
             {collections.map((collection) => (
               <BuyerCollectionCard
                 key={collection.clientId}
@@ -886,27 +894,18 @@ const HotSheets = ({
           <div className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
             <Skeleton className="h-5 w-40 rounded-md bg-neutral-100" />
             <Skeleton className="mt-2 h-4 w-64 max-w-full rounded-md bg-neutral-100" />
-            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={`mt-5 ${AGENT_HOT_SHEETS_CARD_GRID}`}>
               {[1, 2].map((i) => (
-                <Skeleton key={i} className="h-60 w-full rounded-2xl bg-neutral-100" />
+                <AgentHotSheetCardSkeleton key={i} />
               ))}
             </div>
           </div>
           <div className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
-            <Skeleton className="h-5 w-24 rounded-md bg-neutral-100" />
+            <Skeleton className="h-5 w-36 rounded-md bg-neutral-100" />
             <Skeleton className="mt-2 h-4 w-56 max-w-full rounded-md bg-neutral-100" />
-            <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className={`mt-5 ${AGENT_HOT_SHEETS_CARD_GRID}`}>
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
-                >
-                  <Skeleton className="h-48 w-full rounded-none bg-neutral-100 md:h-52" />
-                  <div className="space-y-3 p-4">
-                    <Skeleton className="h-6 w-[85%] max-w-[16rem] rounded-md bg-neutral-100" />
-                    <Skeleton className="h-4 w-24 rounded-md bg-neutral-100" />
-                  </div>
-                </div>
+                <AgentHotSheetCardSkeleton key={i} />
               ))}
             </div>
           </div>
