@@ -43,6 +43,23 @@ export async function upsertBuyerProfile(fields: BuyerProfileFields): Promise<{ 
   return { error: error ?? null };
 }
 
+function titleCaseToken(term: string): string {
+  const t = term.trim();
+  if (!t) return "";
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+}
+
+/** Title-case each name part so `brody tuite` → `Brody Tuite`. */
+export function formatBuyerDisplayName(raw: string): string {
+  const formatted = raw
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(titleCaseToken)
+    .join(" ");
+  return formatted || "Unnamed Client";
+}
+
 export function displayNameFromProfile(
   firstName: string | null | undefined,
   lastName: string | null | undefined,
@@ -65,4 +82,13 @@ export function profileInitials(
   const email = emailFallback?.trim();
   if (email) return email[0]!.toUpperCase();
   return "?";
+}
+
+export function formatBuyerDisplayName(value: string | null | undefined): string {
+  return (value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
 }
