@@ -168,6 +168,9 @@ const agentMirrorHeaderIcon = "text-neutral-400";
 const agentMirrorStatValue =
   "mt-2 text-lg font-semibold tracking-tight text-neutral-900 tabular-nums sm:text-xl";
 
+/** Buyer `/client/dashboard` Hot Sheets preview — max 2 tiles, full section width (`@/lib/buyerUi`). */
+const buyerDashboardHotSheetsPreviewGridClass = buyerDashboardHotSheetsPreviewGrid;
+
 function getPrimaryPhotoUrl(photos: unknown): string {
   if (!photos) return "/placeholder.svg";
 
@@ -623,7 +626,13 @@ export function ClientDashboardView({
           </section>
 
           <section className="space-y-6 md:space-y-7">
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+            <div
+              className={
+                variant === "buyer"
+                  ? "flex flex-col gap-5 lg:gap-6"
+                  : "grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6"
+              }
+            >
               <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
                   <CardHeader className={previewSectionHeaderClass}>
@@ -655,7 +664,9 @@ export function ClientDashboardView({
                     {hotSheets.length > 0 ? (
                       <div
                         className={
-                          variant === "buyer" ? buyerDashboardHotSheetsPreviewGrid : previewGridClass
+                          variant === "buyer"
+                            ? `${buyerDashboardHotSheetsPreviewGridClass} [&>*]:min-w-0`
+                            : previewGridClass
                         }
                       >
                         {hotSheets.slice(0, variant === "buyer" ? 2 : 3).map((sheet) => {
@@ -663,6 +674,7 @@ export function ClientDashboardView({
                           return (
                             <BuyerHotSheetPreviewCard
                               key={sheet.id}
+                              variant="dashboard"
                               photoUrls={hotSheetPreviewPhotosById[sheet.id] || []}
                               title={sheet.name}
                               subtitle={`${hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches`}
