@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,7 +61,6 @@ export function BulkShareListingsDialog({
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const clientSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -114,18 +113,6 @@ export function BulkShareListingsDialog({
   const handleRemoveRecipient = (index: number) => {
     setRecipients(prev => prev.filter((_, i) => i !== index));
   };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (clientSearchRef.current && !clientSearchRef.current.contains(event.target as Node)) {
-        setShowClientDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Search clients
   useEffect(() => {
@@ -207,16 +194,20 @@ export function BulkShareListingsDialog({
     }
   };
 
-  const handleSelectClient = (client: Client) => {
-    setRecipientName(`${client.first_name} ${client.last_name}`);
-    setRecipientEmail(client.email);
-    setClientSearch(`${client.first_name} ${client.last_name}`);
-    setShowClientDropdown(false);
-    setShowManualEntry(false);
+  const collectRecipients = (): Recipient[] => {
+    const all = [...recipients];
+    if (recipientEmail.trim() && recipientName.trim()) {
+      const email = recipientEmail.trim().toLowerCase();
+      if (!all.some((r) => r.email.toLowerCase() === email)) {
+        all.push({ name: recipientName.trim(), email: recipientEmail.trim() });
+      }
+    }
+    return all;
   };
 
   const handleShare = async () => {
-    if (!recipientName || !recipientEmail || !agentName || !agentEmail) {
+    const allRecipients = collectRecipients();
+    if (allRecipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -224,28 +215,29 @@ export function BulkShareListingsDialog({
     setSending(true);
     try {
       const formattedPhone = agentPhone ? formatPhoneNumber(agentPhone) : "";
-      
-      const { error } = await supabase.functions.invoke("send-bulk-listing-share", {
-        body: {
-          listingIds,
-          recipientName,
-          recipientEmail,
-          agentName,
-          agentEmail,
-          agentPhone: formattedPhone,
-          message,
-        },
-      });
-
-      if (error) throw error;
-
-      // Track the share for each listing
       const { trackShare } = await import("@/lib/trackShare");
-      await Promise.all(
-        listingIds.map(listingId => trackShare(listingId, 'email_bulk', recipientEmail))
-      );
 
-      toast.success(`Successfully shared ${listingCount} listing${listingCount > 1 ? 's' : ''}`);
+      for (const recipient of allRecipients) {
+        const { error } = await supabase.functions.invoke("send-bulk-listing-share", {
+          body: {
+            listingIds,
+            recipientName: recipient.name,
+            recipientEmail: recipient.email,
+            agentName,
+            agentEmail,
+            agentPhone: formattedPhone,
+            message,
+          },
+        });
+
+        if (error) throw error;
+
+        await Promise.all(
+          listingIds.map((listingId) => trackShare(listingId, "email_bulk", recipient.email)),
+        );
+      }
+
+      toast.success(`Successfully shared ${listingCount} listing${listingCount > 1 ? "s" : ""}`);
       setOpen(false);
       onSuccessfulShare?.();
     } catch (error) {
@@ -287,7 +279,7 @@ export function BulkShareListingsDialog({
         setContactQuery={setClientSearch}
         contactResults={clientResults}
         showContactDropdown={showClientDropdown}
-        onSelectContact={handleSelectClient}
+        onDismissContactDropdown={() => setShowClientDropdown(false)}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
         recipientName={recipientName}

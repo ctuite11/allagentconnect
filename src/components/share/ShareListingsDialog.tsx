@@ -59,6 +59,8 @@ export type ShareListingsDialogProps = {
   contactResults?: ContactSearchResult[];
   showContactDropdown?: boolean;
   onSelectContact?: (contact: ContactSearchResult) => void;
+  /** Closes the contact search dropdown (e.g. click outside the search field). */
+  onDismissContactDropdown?: () => void;
 
   // Manual mode
   manualMode: boolean;
@@ -123,6 +125,7 @@ export function ShareListingsDialog({
   contactResults = [],
   showContactDropdown = false,
   onSelectContact,
+  onDismissContactDropdown,
 
   manualMode,
   setManualMode,
@@ -158,6 +161,64 @@ export function ShareListingsDialog({
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [showSavePrompt, setShowSavePrompt] = React.useState(false);
   const [lastSavedEmail, setLastSavedEmail] = React.useState<string>("");
+  const contactSearchRef = React.useRef<HTMLDivElement>(null);
+
+  const contactDisplayName = (contact: ContactSearchResult) =>
+    `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || contact.email;
+
+  const isDuplicateRecipientEmail = (email: string) => {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return true;
+    return (
+      recipients.some((r) => r.email.trim().toLowerCase() === normalized) ||
+      recipientEmail.trim().toLowerCase() === normalized
+    );
+  };
+
+  const tryAddRecipient = (name: string, email: string): boolean => {
+    if (!onAddRecipient) return false;
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    if (!trimmedName || !trimmedEmail || isDuplicateRecipientEmail(trimmedEmail)) return false;
+    onAddRecipient({ name: trimmedName, email: trimmedEmail });
+    return true;
+  };
+
+  const clearPendingRecipientFields = () => {
+    setRecipientName("");
+    setRecipientEmail("");
+    setShowSavePrompt(false);
+    setContactQuery("");
+    setManualMode(false);
+    onDismissContactDropdown?.();
+  };
+
+  const handleContactSelect = (contact: ContactSearchResult) => {
+    const email = contact.email?.trim();
+    if (!email) return;
+
+    const name = contactDisplayName(contact);
+
+    if (onAddRecipient) {
+      if (tryAddRecipient(name, email)) {
+        clearPendingRecipientFields();
+      } else {
+        setContactQuery("");
+        onDismissContactDropdown?.();
+      }
+      return;
+    }
+
+    onSelectContact?.(contact);
+    setContactQuery("");
+    onDismissContactDropdown?.();
+  };
+
+  const handleManualAddRecipient = () => {
+    if (tryAddRecipient(recipientName, recipientEmail)) {
+      clearPendingRecipientFields();
+    }
+  };
 
   // Reset save prompt when recipient changes
   React.useEffect(() => {
@@ -165,6 +226,20 @@ export function ShareListingsDialog({
       setShowSavePrompt(false);
     }
   }, [recipientEmail, lastSavedEmail]);
+
+  // Dismiss contact dropdown when clicking outside the search area (ref must live inside portaled dialog).
+  React.useEffect(() => {
+    if (!open || !showContactDropdown || !onDismissContactDropdown) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (contactSearchRef.current?.contains(target)) return;
+      onDismissContactDropdown();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open, showContactDropdown, onDismissContactDropdown]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -308,7 +383,7 @@ export function ShareListingsDialog({
               {recipients.length > 0 ? "Add another contact" : "Search contact"}
             </div>
 
-            <div className="relative">
+            <div ref={contactSearchRef} className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
               <Input
                 value={contactQuery}
@@ -320,12 +395,12 @@ export function ShareListingsDialog({
               {showContactDropdown && contactResults.length > 0 && (
                 <div className="absolute z-30 mt-1.5 max-h-52 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
                   {contactResults.map((contact) => {
-                    const fullName = `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || contact.email;
+                    const fullName = contactDisplayName(contact);
                     return (
                       <button
                         key={contact.id}
                         type="button"
-                        onClick={() => onSelectContact?.(contact)}
+                        onClick={() => handleContactSelect(contact)}
                         className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
                       >
                         <div className="min-w-0 pr-2">
@@ -445,12 +520,7 @@ export function ShareListingsDialog({
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        onAddRecipient({ name: recipientName.trim(), email: recipientEmail.trim() });
-                        setRecipientName("");
-                        setRecipientEmail("");
-                        setShowSavePrompt(false);
-                      }}
+                      onClick={handleManualAddRecipient}
                       className="h-8 rounded-lg border-neutral-200 text-[13px] font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-neutral-300 hover:bg-neutral-50"
                     >
                       <Plus className="mr-2 h-3.5 w-3.5" />

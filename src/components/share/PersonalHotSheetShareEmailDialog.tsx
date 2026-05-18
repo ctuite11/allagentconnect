@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
@@ -52,7 +52,6 @@ export function PersonalHotSheetShareEmailDialog({
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const clientSearchRef = useRef<HTMLDivElement>(null);
 
   const selectedCount = selectedListingIds.length;
   const singleListingPreview =
@@ -85,17 +84,6 @@ export function PersonalHotSheetShareEmailDialog({
       setRecipients([]);
     }
   }, [open]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (clientSearchRef.current && !clientSearchRef.current.contains(event.target as Node)) {
-        setShowClientDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     const searchClients = async () => {
@@ -183,14 +171,6 @@ export function PersonalHotSheetShareEmailDialog({
     }
   };
 
-  const handleSelectClient = (client: Client) => {
-    setRecipientName(`${client.first_name} ${client.last_name}`.trim() || client.email);
-    setRecipientEmail(client.email);
-    setClientSearch(`${client.first_name} ${client.last_name}`.trim() || client.email);
-    setShowClientDropdown(false);
-    setShowManualEntry(false);
-  };
-
   const collectRecipients = (): Recipient[] => {
     const all = [...recipients];
     if (recipientEmail.trim() && recipientName.trim()) {
@@ -261,8 +241,7 @@ export function PersonalHotSheetShareEmailDialog({
   );
 
   return (
-    <div ref={clientSearchRef}>
-      <ShareListingsDialog
+    <ShareListingsDialog
         open={open}
         onOpenChange={onOpenChange}
         selectedCount={Math.max(selectedCount, 1)}
@@ -271,7 +250,7 @@ export function PersonalHotSheetShareEmailDialog({
         setContactQuery={setClientSearch}
         contactResults={clientResults}
         showContactDropdown={showClientDropdown}
-        onSelectContact={handleSelectClient}
+        onDismissContactDropdown={() => setShowClientDropdown(false)}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
         recipientName={recipientName}
@@ -299,6 +278,5 @@ export function PersonalHotSheetShareEmailDialog({
         previewVariant={previewVariant}
         submitButtonLabel="Send email"
       />
-    </div>
   );
 }
