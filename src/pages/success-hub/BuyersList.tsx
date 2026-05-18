@@ -316,7 +316,7 @@ export default function BuyersList() {
         <div className="mb-4">
           <Link
             to="/agent-dashboard"
-            className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-neutral-900 no-underline transition-colors hover:bg-neutral-100/90 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-900 no-underline transition-colors hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
             title="Return to Success Hub dashboard"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
