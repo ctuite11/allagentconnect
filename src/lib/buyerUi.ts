@@ -95,6 +95,9 @@ export const buyerPreviewSectionMarketContent =
 
 export const buyerPreviewGrid = "grid grid-cols-3 gap-4";
 
+/** Buyer dashboard Hot Sheets strip — 1–2 wider preview tiles */
+export const buyerDashboardHotSheetsPreviewGrid = "grid grid-cols-1 gap-4 sm:grid-cols-2";
+
 export const buyerPreviewSectionHeaderRow =
   "flex items-baseline justify-between gap-2";
 

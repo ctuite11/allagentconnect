@@ -106,6 +106,8 @@ export interface BuyerHotSheetPreviewCardProps {
   onFavoritesClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   /** Buyer self-service — compact delete control (stops card navigation). */
   onDeleteClick?: (e: MouseEvent<HTMLButtonElement>) => void;
+  /** Buyer dashboard 2-up grid — allow title to wrap to two lines instead of truncating. */
+  preferWideTitle?: boolean;
 }
 
 /**
@@ -123,6 +125,7 @@ export function BuyerHotSheetPreviewCard({
   onKeyDown,
   onFavoritesClick,
   onDeleteClick,
+  preferWideTitle = false,
 }: BuyerHotSheetPreviewCardProps) {
   const isHotSheetsPage = variant === "hotSheetsPage";
 
@@ -230,7 +233,10 @@ export function BuyerHotSheetPreviewCard({
           <HotSheetDashboardCollage photoUrls={photoUrls} />
         </div>
         <div className={`${buyerDashboardHotFavTileBody} flex-1`}>
-          <p className="truncate text-[13px] leading-snug" title={title.trim() || "Untitled hot sheet"}>
+          <p
+            className={`min-w-0 text-[13px] leading-snug ${preferWideTitle ? "line-clamp-2" : "truncate"}`}
+            title={title.trim() || "Untitled hot sheet"}
+          >
             <span className="text-neutral-500">Hot Sheet Name: </span>
             <span className="font-medium text-neutral-800">{title.trim() || "Untitled hot sheet"}</span>
           </p>

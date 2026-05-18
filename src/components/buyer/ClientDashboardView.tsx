@@ -20,6 +20,7 @@ import {
   buyerMarketListingTileMediaWrap as listingPreviewMediaWrap,
   buyerPreviewCardInteractive as dashboardPreviewTileInteractive,
   buyerPreviewGrid as previewGridClass,
+  buyerDashboardHotSheetsPreviewGrid,
   buyerPreviewSectionContent as previewSectionContentClass,
   buyerPreviewSectionHeader as previewSectionHeaderClass,
   buyerPreviewSectionHeaderRow as previewSectionHeaderRowClass,
@@ -652,8 +653,12 @@ export function ClientDashboardView({
                   </CardHeader>
                   <CardContent className={previewSectionContentClass}>
                     {hotSheets.length > 0 ? (
-                      <div className={previewGridClass}>
-                        {hotSheets.slice(0, 3).map((sheet) => {
+                      <div
+                        className={
+                          variant === "buyer" ? buyerDashboardHotSheetsPreviewGrid : previewGridClass
+                        }
+                      >
+                        {hotSheets.slice(0, variant === "buyer" ? 2 : 3).map((sheet) => {
                           const viewPath = getHotSheetCardPath(sheet.id);
                           return (
                             <BuyerHotSheetPreviewCard
@@ -661,6 +666,7 @@ export function ClientDashboardView({
                               photoUrls={hotSheetPreviewPhotosById[sheet.id] || []}
                               title={sheet.name}
                               subtitle={`${hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches`}
+                              preferWideTitle={variant === "buyer"}
                               onClick={() => navigate(viewPath)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter" && e.key !== " ") return;
