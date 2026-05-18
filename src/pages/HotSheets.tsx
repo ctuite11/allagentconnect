@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Bell, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Bell, ChevronLeft, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
@@ -186,6 +186,19 @@ const HotSheets = ({
     "Withdrawn",
     "Private",
   ];
+
+  const renderAgentBackLink = () =>
+    isAgentMode ? (
+      <button
+        type="button"
+        onClick={() => navigate("/success-hub")}
+        className="group -ml-1 mb-4 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-[13px] font-medium text-neutral-600 transition-colors duration-200 hover:text-neutral-900"
+        title="Return to Success Hub"
+      >
+        <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-neutral-900" aria-hidden />
+        Back
+      </button>
+    ) : null;
 
   const renderHotSheetsHero = () => {
     const showHeroCreate = buyerMode || (!loading && !!user);
@@ -888,6 +901,7 @@ const HotSheets = ({
           canonical="https://allagentconnect.com/agent/hot-sheets"
           noindex
         />
+        {renderAgentBackLink()}
         <div className="mb-5">{renderHotSheetsHero()}</div>
         <div className="space-y-6" role="status" aria-live="polite" aria-busy="true">
           <span className="sr-only">Loading hot sheets…</span>
@@ -923,6 +937,7 @@ const HotSheets = ({
         noindex
       />
       <PageShell className="pb-8">
+        {renderAgentBackLink()}
         <div className="mb-5">
           {renderHotSheetsHero()}
         </div>
