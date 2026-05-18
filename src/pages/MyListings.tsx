@@ -542,8 +542,8 @@ function MyListingsView({
                     className={cn(
                       "shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium outline-none transition-colors",
                       on
-                        ? "border-zinc-900 bg-white text-zinc-900 shadow-none"
-                        : "border-neutral-200 bg-white text-zinc-600 hover:border-neutral-300 hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
+                        ? "border-zinc-900 bg-white text-zinc-900 shadow-none hover:bg-zinc-100"
+                        : "border-neutral-200 bg-white text-zinc-600 hover:border-neutral-300 hover:bg-zinc-200 hover:text-zinc-900 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
                       on && "focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2"
                     )}
                   >
