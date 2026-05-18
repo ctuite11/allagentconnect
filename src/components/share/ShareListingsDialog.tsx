@@ -314,20 +314,6 @@ export function ShareListingsDialog({
               {shareDescription ??
                 `Send ${selectedCount === 1 ? "this listing" : `${selectedCount} listings`} to a contact via email.`}
             </DialogDescription>
-            {/* Show added recipients below subtitle */}
-            {(recipients.length > 0 || recipientName.trim()) && (
-              <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[13px]">
-                <span className="text-neutral-500">To:</span>
-                {recipients.map((r, idx) => (
-                  <span key={idx} className="font-medium text-neutral-900">
-                    {r.name}{idx < recipients.length - 1 || recipientName.trim() ? "," : ""}
-                  </span>
-                ))}
-                {recipientName.trim() && (
-                  <span className="font-medium text-neutral-900">{recipientName.trim()}</span>
-                )}
-              </div>
-            )}
           </DialogHeader>
         </div>
 
@@ -383,46 +369,6 @@ export function ShareListingsDialog({
             </div>
           ) : null}
 
-          {/* Added Recipients */}
-          {recipients.length > 0 && (
-            <section className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                Recipients ({recipients.length})
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {recipients.map((r, idx) => {
-                  const isHighlighted =
-                    highlightedRecipientEmail != null &&
-                    r.email.trim().toLowerCase() === highlightedRecipientEmail;
-                  return (
-                    <div
-                      key={idx}
-                      className={cn(
-                        "flex items-center gap-2 rounded-full border px-2.5 py-1 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-300",
-                        isHighlighted
-                          ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
-                          : "border-neutral-200 bg-white",
-                      )}
-                    >
-                      <span className="truncate text-neutral-900">{r.name}</span>
-                      <span className="max-w-[10rem] truncate text-xs text-neutral-500">({r.email})</span>
-                      {onRemoveRecipient && (
-                        <button
-                          type="button"
-                          onClick={() => onRemoveRecipient(idx)}
-                          className="-mr-0.5 ml-0.5 rounded-full p-1 transition-colors hover:bg-neutral-100"
-                          aria-label={`Remove ${r.name}`}
-                        >
-                          <X className="h-3 w-3 text-neutral-500" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
           {/* Contact Search */}
           <section className="space-y-3">
             <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">
@@ -465,27 +411,72 @@ export function ShareListingsDialog({
               )}
             </div>
 
-            {contactAddFeedback && (
-              <div
-                role="status"
-                aria-live="polite"
-                className={cn(
-                  "flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] leading-snug",
-                  contactAddFeedback === "added"
-                    ? "border-emerald-200/90 bg-emerald-50/70 text-emerald-900"
-                    : "border-neutral-200 bg-neutral-50 text-neutral-700",
+            {(contactAddFeedback || recipients.length > 0) && (
+              <div className="space-y-2.5 rounded-lg border border-neutral-100 bg-neutral-50/40 px-3 py-2.5">
+                {contactAddFeedback && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className={cn(
+                      "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[13px] leading-snug",
+                      contactAddFeedback === "added"
+                        ? "border-emerald-200/90 bg-emerald-50/80 text-emerald-900"
+                        : "border-neutral-200 bg-white text-neutral-700",
+                    )}
+                  >
+                    <Check
+                      className={cn(
+                        "h-3.5 w-3.5 shrink-0",
+                        contactAddFeedback === "added" ? "text-emerald-600" : "text-neutral-500",
+                      )}
+                      aria-hidden
+                    />
+                    <span>
+                      {contactAddFeedback === "added" ? "Contact added" : "Contact already added"}
+                    </span>
+                  </div>
                 )}
-              >
-                <Check
-                  className={cn(
-                    "h-3.5 w-3.5 shrink-0",
-                    contactAddFeedback === "added" ? "text-emerald-600" : "text-neutral-500",
-                  )}
-                  aria-hidden
-                />
-                <span>
-                  {contactAddFeedback === "added" ? "Contact added" : "Contact already added"}
-                </span>
+
+                {recipients.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                      Recipients ({recipients.length})
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {recipients.map((r, idx) => {
+                        const isHighlighted =
+                          highlightedRecipientEmail != null &&
+                          r.email.trim().toLowerCase() === highlightedRecipientEmail;
+                        return (
+                          <div
+                            key={idx}
+                            className={cn(
+                              "flex items-center gap-2 rounded-full border px-2.5 py-1 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-300",
+                              isHighlighted
+                                ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
+                                : "border-neutral-200 bg-white",
+                            )}
+                          >
+                            <span className="truncate text-neutral-900">{r.name}</span>
+                            <span className="max-w-[10rem] truncate text-xs text-neutral-500">
+                              ({r.email})
+                            </span>
+                            {onRemoveRecipient && (
+                              <button
+                                type="button"
+                                onClick={() => onRemoveRecipient(idx)}
+                                className="-mr-0.5 ml-0.5 rounded-full p-1 transition-colors hover:bg-neutral-100"
+                                aria-label={`Remove ${r.name}`}
+                              >
+                                <X className="h-3 w-3 text-neutral-500" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
