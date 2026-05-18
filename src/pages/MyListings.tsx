@@ -219,7 +219,7 @@ function MyListingsSortPill({
             "my-listings-sort-pill group inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium shadow-none outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
             pillActive
               ? "border-zinc-900 bg-zinc-100 text-zinc-900 hover:border-zinc-900 hover:bg-zinc-200"
-              : "border-neutral-200 bg-white text-zinc-600 hover:border-neutral-300 hover:bg-zinc-100 hover:text-zinc-900",
+              : "border-neutral-200 bg-white text-zinc-600 hover:border-neutral-300 hover:bg-zinc-200 hover:text-zinc-900",
           )}
         >
           Sort
