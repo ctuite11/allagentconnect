@@ -8,8 +8,8 @@ import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDia
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
 import {
-  buyerDashboardHotFavTile,
-  buyerDashboardHotSheetsPreviewGrid,
+  buyerCollectionCardRoot,
+  buyerImageMosaicGrid,
   buyerSectionCard,
 } from "@/lib/buyerUi";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
@@ -49,6 +49,9 @@ interface LinkedHotSheet {
   /** Pending-only: safe to offer agent delete (RPC re-validates). */
   canDeletePending: boolean;
 }
+
+/** Matches agent main Hot Sheets card grid (`HotSheets.tsx` buyer/personal sections). */
+const BUYER_HOT_SHEET_DETAIL_GRID = "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3";
 
 function CriteriaPills({ criteria }: { criteria: any }) {
   if (!criteria) return null;
@@ -420,15 +423,18 @@ const HotSheetBuyerDetail = () => {
             <div className="h-[4.5rem] rounded-xl border border-neutral-200 bg-neutral-50/80" />
             <div className="h-8 w-40 animate-pulse rounded-md bg-neutral-100" />
           </div>
-          <div className={buyerDashboardHotSheetsPreviewGrid}>
+          <div className={BUYER_HOT_SHEET_DETAIL_GRID}>
             {[1, 2].map((i) => (
-              <div key={i} className={`${buyerDashboardHotFavTile} animate-pulse overflow-hidden`}>
-                <div className="h-40 w-full bg-neutral-100" />
-                <div className="space-y-2 px-3 py-3">
+              <article
+                key={i}
+                className={`${buyerCollectionCardRoot} flex min-h-[19rem] animate-pulse flex-col overflow-hidden md:min-h-[20rem]`}
+              >
+                <div className={`${buyerImageMosaicGrid} bg-neutral-100`} />
+                <div className="space-y-2 px-4 py-3">
                   <div className="h-4 w-2/3 rounded bg-neutral-200" />
                   <div className="h-3 w-1/2 rounded bg-neutral-100" />
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
@@ -524,7 +530,7 @@ const HotSheetBuyerDetail = () => {
             <p className="text-sm text-neutral-500">No hot sheets linked to this buyer.</p>
           </div>
         ) : (
-          <div className={`mt-8 ${buyerDashboardHotSheetsPreviewGrid} [&>*]:min-w-0`}>
+          <div className={`mt-8 ${BUYER_HOT_SHEET_DETAIL_GRID} [&>*]:min-w-0`}>
             {hotSheets.map((hs) => (
               <BuyerHotSheetPreviewCard
                 key={hs.id}

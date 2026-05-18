@@ -9,7 +9,6 @@ import {
   buyerDashboardHotSheetMediaWrap,
   buyerImageMosaicCell,
   buyerImageMosaicGrid,
-  buyerPreviewCardInteractive,
 } from "@/lib/buyerUi";
 
 const mosaicImg = "absolute inset-0 h-full w-full object-cover";
@@ -145,6 +144,7 @@ export function BuyerHotSheetPreviewCard({
   const titleClass = preferWideTitle ? "line-clamp-2" : "truncate";
 
   if (isAgentDetail) {
+    const p = [photoUrls[0], photoUrls[1], photoUrls[2], photoUrls[3]];
     const createdLabel = createdAt
       ? `Created ${new Date(createdAt).toLocaleDateString(undefined, {
           month: "short",
@@ -152,8 +152,6 @@ export function BuyerHotSheetPreviewCard({
           year: "numeric",
         })}`
       : null;
-
-    const agentTileClass = `${buyerPreviewCardInteractive} flex flex-col`;
 
     return (
       <div className="relative h-full min-h-0">
@@ -188,26 +186,28 @@ export function BuyerHotSheetPreviewCard({
         <article
           role="button"
           tabIndex={0}
-          className={agentTileClass}
+          className={`${buyerCollectionCardRoot} flex min-h-[19rem] flex-col outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 md:min-h-[20rem]`}
           onClick={onClick}
           onKeyDown={onKeyDown}
         >
-          <div className={buyerDashboardHotSheetMediaWrap}>
-            <HotSheetDashboardCollage photoUrls={photoUrls} />
+          <div className={buyerImageMosaicGrid}>
+            <HotSheetPagePhotoCell src={p[0]} />
+            <HotSheetPagePhotoCell src={p[1]} />
+            <HotSheetPagePhotoCell src={p[2]} />
+            <HotSheetPagePhotoCell src={p[3]} />
           </div>
-          <div className={`${buyerDashboardHotFavTileBody} flex h-auto min-h-20 flex-1 flex-col gap-1`}>
-            <p className={`min-w-0 text-[13px] leading-snug ${titleClass}`} title={hotSheetDisplayName}>
-              <span className="text-neutral-500">Hot Sheet Name: </span>
-              <span className="font-medium text-neutral-800">{hotSheetDisplayName}</span>
-            </p>
-            {subtitle ? (
-              <p className="text-[12px] font-normal leading-tight text-neutral-500 tabular-nums">{subtitle}</p>
-            ) : null}
+
+          <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
+            <div className="min-w-0 shrink-0">
+              <p className={`min-w-0 text-[13px] leading-snug ${titleClass}`} title={hotSheetDisplayName}>
+                <span className="text-neutral-500">Hot Sheet Name: </span>
+                <span className="font-medium text-neutral-800">{hotSheetDisplayName}</span>
+              </p>
             {createdLabel ? (
-              <p className="text-[11px] leading-snug text-neutral-500">{createdLabel}</p>
+              <p className="mt-1 text-[11px] leading-snug text-neutral-500">{createdLabel}</p>
             ) : null}
             {invitePending ? (
-              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
                   <Clock className="h-3 w-3 shrink-0 text-neutral-500" aria-hidden strokeWidth={2} />
                   Pending Invite
@@ -232,28 +232,36 @@ export function BuyerHotSheetPreviewCard({
                 ) : null}
               </div>
             ) : null}
-            <div className="mt-auto flex items-center justify-end gap-3 border-t border-neutral-100 pt-2">
-              <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
-                <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
-                <span>View</span>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                {subtitle ? (
+                  <p className="text-sm text-neutral-600 tabular-nums">{subtitle}</p>
+                ) : (
+                  <span />
+                )}
+                <div className="flex shrink-0 items-center gap-3">
+                  <div className="pointer-events-none flex items-center gap-1 text-sm font-medium text-[#0E56F5]">
+                    <Eye className="h-4 w-4 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+                    <span>View</span>
+                  </div>
+                  {onFavoritesClick ? (
+                    <button
+                      type="button"
+                      className="pointer-events-auto inline-flex items-center gap-1 text-sm font-medium text-neutral-700 transition-colors hover:text-neutral-900"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFavoritesClick(e);
+                      }}
+                    >
+                      <Heart
+                        className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      <span>Favorites</span>
+                    </button>
+                  ) : null}
+                </div>
               </div>
-              {onFavoritesClick ? (
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-neutral-700 transition-colors hover:text-neutral-900"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onFavoritesClick(e);
-                  }}
-                >
-                  <Heart
-                    className="h-4 w-4 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                  <span>Favorites</span>
-                </button>
-              ) : null}
             </div>
           </div>
         </article>
