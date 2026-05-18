@@ -230,7 +230,7 @@ export default function BuyerAccount() {
           if (label === "Favorites") navigate(`/agent/buyers/${buyerId}/favorites`);
           if (label === "New Matches") navigate("/search");
           if (label === "Unread Messages") navigate("/agent/messages");
-          if (label === "Hot Sheets") navigate("/agent/hot-sheets");
+          if (label === "Hot Sheets") navigate(`/hot-sheets/buyer/${buyerId}`);
         }}
         dashboardPaths={{
           hotSheetsViewAll: "/agent/hot-sheets",
