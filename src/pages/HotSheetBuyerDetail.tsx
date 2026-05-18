@@ -7,7 +7,12 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
-import { buyerCollectionCardRoot, buyerImageMosaicGrid, buyerSectionCard } from "@/lib/buyerUi";
+import {
+  buyerCollectionCardRoot,
+  buyerDashboardHotSheetsPreviewGrid,
+  buyerImageMosaicGrid,
+  buyerSectionCard,
+} from "@/lib/buyerUi";
 import { formatBuyerDisplayName } from "@/lib/buyerProfile";
 import {
   EMPTY_BUYER_ACTIVITY_METRICS,
@@ -431,8 +436,8 @@ const HotSheetBuyerDetail = () => {
             <div className="h-[4.5rem] rounded-xl border border-neutral-200 bg-neutral-50/80" />
             <div className="h-8 w-40 animate-pulse rounded-md bg-neutral-100" />
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
-            {[1, 2, 3, 4].map((i) => (
+          <div className={buyerDashboardHotSheetsPreviewGrid}>
+            {[1, 2].map((i) => (
               <div key={i} className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50/80">
                 <div className="aspect-[4/3] bg-neutral-100" />
                 <div className="space-y-2 p-3">
@@ -537,7 +542,7 @@ const HotSheetBuyerDetail = () => {
             <p className="text-sm text-neutral-500">No hot sheets linked to this buyer.</p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
+          <div className={`mt-8 ${buyerDashboardHotSheetsPreviewGrid}`}>
             {hotSheets.map((hs) => (
               <div
                 key={hs.id}
