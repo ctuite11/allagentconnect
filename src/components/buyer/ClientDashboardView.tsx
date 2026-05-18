@@ -626,13 +626,7 @@ export function ClientDashboardView({
           </section>
 
           <section className="space-y-6 md:space-y-7">
-            <div
-              className={
-                variant === "buyer"
-                  ? "flex flex-col gap-5 lg:gap-6"
-                  : "grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6"
-              }
-            >
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
               <div className={`${aacCardShell} overflow-visible`}>
                 <div className="rounded-none bg-transparent">
                   <CardHeader className={previewSectionHeaderClass}>
