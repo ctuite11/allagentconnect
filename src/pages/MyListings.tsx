@@ -166,7 +166,7 @@ function MyListingsSkeleton() {
               <Skeleton key={i} className="h-9 w-[76px] shrink-0 rounded-full bg-neutral-100" />
             ))}
           </div>
-          <Skeleton className="h-9 w-[88px] shrink-0 self-end rounded-lg bg-neutral-100 lg:self-auto" />
+          <Skeleton className="h-9 w-[72px] shrink-0 self-end rounded-full bg-neutral-100 lg:self-auto" />
         </div>
       </div>
       <div className="mt-2 space-y-4">
@@ -189,6 +189,65 @@ function MyListingsSkeleton() {
         ))}
       </div>
     </AgentAacPage>
+  );
+}
+
+type MyListingsSortKey = "date" | "dom" | "price" | "status";
+
+/** My Listings toolbar sort control — keep styles on this render path only. */
+function MyListingsSortPill({
+  sortKey,
+  onSortKeyChange,
+}: {
+  sortKey: MyListingsSortKey;
+  onSortKeyChange: (key: MyListingsSortKey) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pillActive = menuOpen || sortKey !== "date";
+
+  return (
+    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          id="my-listings-sort-pill"
+          aria-label="Sort listings"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          data-active={pillActive ? "true" : "false"}
+          className={cn(
+            "my-listings-sort-pill group inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium shadow-none outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
+            pillActive
+              ? "border-zinc-900 bg-zinc-100 text-zinc-900 hover:border-zinc-900 hover:bg-zinc-200"
+              : "border-neutral-200 bg-white text-zinc-600 hover:border-neutral-300 hover:bg-zinc-100 hover:text-zinc-900",
+          )}
+        >
+          Sort
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform duration-150",
+              menuOpen && "rotate-180 text-zinc-900",
+              !menuOpen && "group-hover:text-zinc-700",
+            )}
+            aria-hidden
+          />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44 rounded-xl border border-neutral-200 bg-white shadow-md">
+        <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => onSortKeyChange("date")}>
+          Date (newest){sortKey === "date" ? " ✓" : ""}
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => onSortKeyChange("dom")}>
+          Days on market{sortKey === "dom" ? " ✓" : ""}
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => onSortKeyChange("price")}>
+          Price{sortKey === "price" ? " ✓" : ""}
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => onSortKeyChange("status")}>
+          Status{sortKey === "status" ? " ✓" : ""}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -354,7 +413,7 @@ function MyListingsView({
     }
   };
 
-  const [sortKey, setSortKey] = useState<"date" | "dom" | "price" | "status">("date");
+  const [sortKey, setSortKey] = useState<MyListingsSortKey>("date");
 
   const filteredListings = useMemo(() => {
     // Default (no status pills): show live/pipeline inventory only — never mix drafts in.
@@ -506,35 +565,7 @@ function MyListingsView({
               </button>
             ) : null}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    "group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium shadow-none outline-none transition-colors duration-150",
-                    "border-neutral-200 bg-white text-zinc-600",
-                    "hover:border-neutral-300 hover:bg-neutral-50 hover:text-zinc-900",
-                    sortKey !== "date" && "border-zinc-900 bg-neutral-50 text-zinc-900",
-                    sortKey !== "date" && "hover:border-zinc-900 hover:bg-neutral-100 hover:text-zinc-900",
-                    "data-[state=open]:border-zinc-900 data-[state=open]:bg-neutral-50 data-[state=open]:text-zinc-900",
-                    "data-[state=open]:hover:border-zinc-900 data-[state=open]:hover:bg-neutral-100",
-                    "focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
-                  )}
-                >
-                  Sort
-                  <ChevronDown
-                    className="h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform duration-150 group-hover:text-zinc-700 group-data-[state=open]:rotate-180 group-data-[state=open]:text-zinc-900"
-                    aria-hidden
-                  />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44 rounded-xl border border-neutral-200 bg-white shadow-md">
-                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("date")}>Date (newest){sortKey === "date" ? " ✓" : ""}</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("dom")}>Days on market{sortKey === "dom" ? " ✓" : ""}</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("price")}>Price{sortKey === "price" ? " ✓" : ""}</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-[13px]" onClick={() => setSortKey("status")}>Status{sortKey === "status" ? " ✓" : ""}</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <MyListingsSortPill sortKey={sortKey} onSortKeyChange={setSortKey} />
           </div>
         </div>
       </div>
