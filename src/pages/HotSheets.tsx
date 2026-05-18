@@ -46,6 +46,14 @@ interface BuyerCollection {
   supportsBuyerFavorites: boolean;
 }
 
+interface AgentPersonalHotSheet {
+  id: string;
+  name: string;
+  photos: string[];
+}
+
+type AgentHotSheetsView = "buyers" | "mine";
+
 const getInitials = (first?: string, last?: string): string => {
   const f = (first || "")[0]?.toUpperCase() || "";
   const l = (last || "")[0]?.toUpperCase() || "";
@@ -120,6 +128,8 @@ const HotSheets = ({
   const navigate = useNavigate();
   const { user: authSessionUser, loading: authRoleLoading } = useAuthRole();
   const [collections, setCollections] = useState<BuyerCollection[]>([]);
+  const [personalHotSheets, setPersonalHotSheets] = useState<AgentPersonalHotSheet[]>([]);
+  const [agentHotSheetsView, setAgentHotSheetsView] = useState<AgentHotSheetsView>("buyers");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -166,17 +176,49 @@ const HotSheets = ({
     const showHeroCreate = buyerMode || (!loading && !!user);
 
     const heroCreateButton = showHeroCreate ? (
-      <Button
-        type="button"
-        size="sm"
-        className="w-fit shrink-0"
-        onClick={() =>
-          buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
-        }
-      >
-        <Plus className="mr-1.5 h-3.5 w-3.5" />
-        Create Hot Sheet
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        {!buyerMode ? (
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant={agentHotSheetsView === "buyers" ? "default" : "outline"}
+              className={
+                agentHotSheetsView === "buyers"
+                  ? "shrink-0 border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
+                  : "shrink-0 border-neutral-200 bg-white text-neutral-800 shadow-sm hover:bg-neutral-50"
+              }
+              onClick={() => setAgentHotSheetsView("buyers")}
+            >
+              Buyers
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={agentHotSheetsView === "mine" ? "default" : "outline"}
+              className={
+                agentHotSheetsView === "mine"
+                  ? "shrink-0 border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
+                  : "shrink-0 border-neutral-200 bg-white text-neutral-800 shadow-sm hover:bg-neutral-50"
+              }
+              onClick={() => setAgentHotSheetsView("mine")}
+            >
+              My Hot Sheets
+            </Button>
+          </>
+        ) : null}
+        <Button
+          type="button"
+          size="sm"
+          className="w-fit shrink-0 border border-[#0B46CC]/20 bg-[#0E56F5] text-white shadow-sm hover:bg-[#0B46CC]"
+          onClick={() =>
+            buyerMode ? navigate("/hot-sheets/new") : setCreateDialogOpen(true)
+          }
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Create Hot Sheet
+        </Button>
+      </div>
     ) : null;
 
     return (
@@ -575,6 +617,7 @@ const HotSheets = ({
 
       if (!sheets.length) {
         setCollections([]);
+        setPersonalHotSheets([]);
         return;
       }
 
@@ -605,8 +648,9 @@ const HotSheets = ({
         }
       }
 
-      // 3. Group by client
+      // 3. Personal (no CRM contact) vs buyer-linked sheets
       const clientMap = new Map<string, BuyerCollection>();
+      const personal: AgentPersonalHotSheet[] = [];
 
       for (const sheet of sheets) {
         const clients = (sheet.hot_sheet_clients || []).map((hsc) => {
@@ -625,59 +669,46 @@ const HotSheets = ({
         const sheetPhotos: string[] = photosPerSheet.get(sheet.id) || [];
 
         if (clients.length === 0) {
-          // Hot sheet with no client — use criteria name or sheet name
-          const key = `__no_client_${sheet.id}`;
-          const criteriaFirstName =
-            typeof sheet.criteria?.clientFirstName === "string" ? sheet.criteria.clientFirstName : undefined;
-          const criteriaLastName =
-            typeof sheet.criteria?.clientLastName === "string" ? sheet.criteria.clientLastName : undefined;
-          clientMap.set(key, {
-            clientId: sheet.id,
-            clientName: criteriaFirstName
-              ? [criteriaFirstName, criteriaLastName].filter(Boolean).join(" ")
-              : sheet.name,
-            clientInitials: getInitials(criteriaFirstName, criteriaLastName),
-            hotSheets: [{ id: sheet.id, name: sheet.name }],
-            photos: sheetPhotos,
-            collaborators: collabInitials,
-            supportsBuyerFavorites: false,
-          });
-        } else {
-          for (const client of clients) {
-            const existing = clientMap.get(client.id);
-            if (existing) {
-              existing.hotSheets.push({ id: sheet.id, name: sheet.name });
-              // Merge photos up to 4
-              for (const ph of sheetPhotos) {
-                if (existing.photos.length < 4 && !existing.photos.includes(ph)) {
-                  existing.photos.push(ph);
-                }
+          personal.push({ id: sheet.id, name: sheet.name, photos: sheetPhotos });
+          continue;
+        }
+
+        for (const client of clients) {
+          const existing = clientMap.get(client.id);
+          if (existing) {
+            existing.hotSheets.push({ id: sheet.id, name: sheet.name });
+            // Merge photos up to 4
+            for (const ph of sheetPhotos) {
+              if (existing.photos.length < 4 && !existing.photos.includes(ph)) {
+                existing.photos.push(ph);
               }
-              // Merge collaborators
-              for (const ci of collabInitials) {
-                if (!existing.collaborators.includes(ci)) existing.collaborators.push(ci);
-              }
-            } else {
-              clientMap.set(client.id, {
-                clientId: client.id,
-                clientName: [client.first_name, client.last_name].filter(Boolean).join(" ") || "Unnamed Client",
-                clientInitials: getInitials(client.first_name, client.last_name),
-                hotSheets: [{ id: sheet.id, name: sheet.name }],
-                photos: sheetPhotos,
-                collaborators: collabInitials,
-                supportsBuyerFavorites: true,
-              });
             }
+            // Merge collaborators
+            for (const ci of collabInitials) {
+              if (!existing.collaborators.includes(ci)) existing.collaborators.push(ci);
+            }
+          } else {
+            clientMap.set(client.id, {
+              clientId: client.id,
+              clientName: [client.first_name, client.last_name].filter(Boolean).join(" ") || "Unnamed Client",
+              clientInitials: getInitials(client.first_name, client.last_name),
+              hotSheets: [{ id: sheet.id, name: sheet.name }],
+              photos: sheetPhotos,
+              collaborators: collabInitials,
+              supportsBuyerFavorites: true,
+            });
           }
         }
       }
 
       setCollections(Array.from(clientMap.values()));
+      setPersonalHotSheets(personal);
     } catch (error) {
       console.error("Error fetching hot sheets:", error);
       toast.error("Failed to load hot sheets");
       setAgentLoadError(true);
       setCollections([]);
+      setPersonalHotSheets([]);
       setRawHotSheets([]);
     } finally {
       setLoading(false);
@@ -838,6 +869,35 @@ const HotSheets = ({
               Try again
             </Button>
           </div>
+        ) : agentHotSheetsView === "mine" ? (
+          personalHotSheets.length === 0 ? (
+            <div className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-sm md:p-12">
+              <Bell className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
+              <h3 className="mb-2 text-lg font-semibold text-neutral-900">No personal hot sheets yet</h3>
+              <p className="mx-auto max-w-md text-sm text-neutral-600">
+                Save a search from listing results with your name checked, or use{" "}
+                <span className="font-medium text-neutral-800">Create Hot Sheet</span> without attaching a buyer.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 bg-white md:grid-cols-2 lg:grid-cols-3">
+              {personalHotSheets.map((sheet) => (
+                <BuyerHotSheetPreviewCard
+                  key={sheet.id}
+                  variant="dashboard"
+                  photoUrls={sheet.photos}
+                  title={sheet.name}
+                  preferWideTitle
+                  onClick={() => navigate(`/hot-sheets/${sheet.id}/review`)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" && e.key !== " ") return;
+                    e.preventDefault();
+                    navigate(`/hot-sheets/${sheet.id}/review`);
+                  }}
+                />
+              ))}
+            </div>
+          )
         ) : collections.length === 0 ? (
           <div className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-sm md:p-12">
             <Bell className="mx-auto mb-4 h-14 w-14 text-neutral-300" />

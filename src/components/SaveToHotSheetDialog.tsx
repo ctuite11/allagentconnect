@@ -305,6 +305,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
           is_active: true,
           notify_client_email: selectedClients.length > 0,
           notify_agent_email: notifyAgent,
+          notification_schedule: "immediately",
         })
         .select()
         .single();
@@ -442,13 +443,9 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
             />
             <Label
               htmlFor="notify-agent-personal-search"
-              className="cursor-pointer text-[13px] leading-snug text-neutral-800"
+              className="cursor-pointer text-[13px] font-medium leading-snug text-neutral-900"
             >
-              <span className="font-medium text-neutral-900">{agentDisplayName || "Me"}</span>
-              <span className="text-neutral-600">
-                {" "}
-                — include on this hot sheet for my personal search
-              </span>
+              {agentDisplayName || "Me"}
             </Label>
           </div>
 
