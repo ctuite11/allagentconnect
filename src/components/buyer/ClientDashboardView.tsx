@@ -657,13 +657,9 @@ export function ClientDashboardView({
                   <CardContent className={previewSectionContentClass}>
                     {hotSheets.length > 0 ? (
                       <div
-                        className={
-                          variant === "buyer"
-                            ? `${buyerDashboardHotSheetsPreviewGridClass} [&>*]:min-w-0`
-                            : previewGridClass
-                        }
+                        className={`${buyerDashboardHotSheetsPreviewGridClass} [&>*]:min-w-0`}
                       >
-                        {hotSheets.slice(0, variant === "buyer" ? 2 : 3).map((sheet) => {
+                        {hotSheets.slice(0, 2).map((sheet) => {
                           const viewPath = getHotSheetCardPath(sheet.id);
                           return (
                             <BuyerHotSheetPreviewCard
@@ -672,7 +668,7 @@ export function ClientDashboardView({
                               photoUrls={hotSheetPreviewPhotosById[sheet.id] || []}
                               title={sheet.name}
                               subtitle={`${hotSheetPreviewMatchCountsById[sheet.id] ?? 0} matches`}
-                              preferWideTitle={variant === "buyer"}
+                              preferWideTitle
                               onClick={() => navigate(viewPath)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter" && e.key !== " ") return;
