@@ -20,3 +20,8 @@ export const getListingPublicUrl = (listingId: string): string => {
 export const getListingShareUrl = (listingId: string): string => {
   return `${getPublicOrigin()}/property/${listingId}`;
 };
+
+/** Agent hot sheet review page — shareable link for personal (My Hot Sheets) results. */
+export const getHotSheetReviewShareUrl = (hotSheetId: string): string => {
+  return `${getPublicOrigin()}/hot-sheets/${hotSheetId}/review`;
+};

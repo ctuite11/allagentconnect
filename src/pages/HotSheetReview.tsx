@@ -59,6 +59,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
+import { PersonalHotSheetShareActions } from "@/components/share/PersonalHotSheetShareActions";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
 interface ReviewRecipient {
@@ -166,6 +167,9 @@ const HotSheetReview = () => {
       reviewRecipients.every((r) => r.inviteAccepted || r.buyerLinked),
     [reviewRecipients],
   );
+
+  /** My Hot Sheets — no CRM buyers linked (criteria-only personal saves). */
+  const isPersonalHotSheet = clientCount === 0 && reviewRecipients.length === 0;
 
   useEffect(() => {
     setConversationRecipientBuyerId(null);
@@ -1191,6 +1195,17 @@ const HotSheetReview = () => {
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-2 px-1 sm:justify-end sm:px-0.5">
+                {isPersonalHotSheet && id && hotSheet ? (
+                  <PersonalHotSheetShareActions
+                    hotSheetId={id}
+                    title={hotSheet.name}
+                    description={
+                      listings.length > 0
+                        ? `${listings.length} matching listing${listings.length === 1 ? "" : "s"} on All Agent Connect`
+                        : "Hot sheet matches on All Agent Connect"
+                    }
+                  />
+                ) : null}
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="h-8 w-full rounded-md border-neutral-200 bg-white text-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300 focus-visible:ring-neutral-300/40 focus-visible:ring-offset-2 sm:w-[200px]">
                     <SelectValue />
