@@ -83,12 +83,3 @@ export function profileInitials(
   if (email) return email[0]!.toUpperCase();
   return "?";
 }
-
-export function formatBuyerDisplayName(value: string | null | undefined): string {
-  return (value || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(" ");
-}
