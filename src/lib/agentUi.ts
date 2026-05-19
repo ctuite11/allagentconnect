@@ -26,16 +26,18 @@ export const agentPageSubtitleClass =
   "text-sm leading-snug text-neutral-500";
 
 /**
- * AAC page intro spacing — use via `AacPageIntro` / `AgentPageHeader` (`withTopPadding` when first in shell).
+ * AAC page vertical rhythm — shell vs intro (see `AgentContentInsetProvider` in AppShell).
  *
  * | Token | Class | px | Role |
  * |-------|-------|-----|------|
- * | `agentPageTopPaddingClass` | `pt-8` | 32 | Top of content → Back |
+ * | `agentPageShellTopClass` | `pt-8` | 32 | AppShell scroll column top inset (`buyerPageMain` rhythm) |
+ * | `agentPageTopPaddingClass` | `pt-8` | 32 | Intro top inset when shell does not provide it |
  * | `agentPageBackNavSpacingClass` | `mb-4` | 16 | Back → title |
  * | (in `AacPageIntro`) | `space-y-1` | 4 | Title → subtitle |
  * | `agentPageIntroSpacingClass` | `mb-5 md:mb-6` | 20 / 24 | Intro block → page body |
  */
-export const agentPageTopPaddingClass = "pt-8";
+export const agentPageShellTopClass = "pt-8";
+export const agentPageTopPaddingClass = agentPageShellTopClass;
 export const agentPageBackNavSpacingClass = "mb-4";
 export const agentPageIntroSpacingClass = "mb-5 md:mb-6";
 

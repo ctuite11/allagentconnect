@@ -27,7 +27,7 @@ export default function ListingPerformance() {
 
   if (!listing) {
     return (
-      <PageShell className="pt-0">
+      <PageShell>
         <PageHeader withTopPadding title="Listing Not Found" backTo="/success-hub/listings" />
         <p className="text-muted-foreground">No listing found with that ID.</p>
       </PageShell>
@@ -35,7 +35,7 @@ export default function ListingPerformance() {
   }
 
   return (
-    <PageShell className="pt-0 pb-10">
+    <PageShell className="pb-10">
       <PageHeader withTopPadding title={listing.address} backTo="/success-hub/listings" />
 
       {/* ── Top row ────────────────────────────────────── */}

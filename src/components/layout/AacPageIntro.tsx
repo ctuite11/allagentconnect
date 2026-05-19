@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useAgentContentShellInset } from "@/components/layout/AgentContentInsetContext";
 import { cn } from "@/lib/utils";
 import {
   agentPageBackNavSpacingClass,
@@ -38,14 +39,16 @@ export function AacPageIntro({
   titleClassName,
   withTopPadding = true,
 }: AacPageIntroProps) {
+  const shellProvidesTopInset = useAgentContentShellInset();
   const hasTitleBlock = Boolean(title || subtitle);
+  const applyIntroTopPadding = withTopPadding && !shellProvidesTopInset;
 
   return (
     <header
       className={cn(
         agentPageIntroSpacingClass,
         className,
-        withTopPadding && agentPageTopPaddingClass,
+        applyIntroTopPadding && agentPageTopPaddingClass,
       )}
     >
       {back ? <div className={agentPageBackNavSpacingClass}>{back}</div> : null}

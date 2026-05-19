@@ -570,7 +570,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
         canonical="https://allagentconnect.com/agent-profile-editor"
         noindex
       />
-      <PageShell className="pt-0 pb-32">
+      <PageShell className="pb-32">
         <div className="flex items-start justify-between gap-4">
           <PageHeader
             withTopPadding

@@ -119,6 +119,7 @@ function MessagingWorkspaceContent({
             {!buyerMode ? (
               <AgentPageHeader
                 withTopPadding
+                backTo="/agent-dashboard"
                 title="Messages"
                 subtitle="Conversation threads with clients and colleagues — same rhythm as inbox cards on Success Hub."
                 className="shrink-0"

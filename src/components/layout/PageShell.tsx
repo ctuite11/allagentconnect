@@ -1,4 +1,5 @@
 import React from "react";
+import { useAgentContentShellInset } from "@/components/layout/AgentContentInsetContext";
 import { cn } from "@/lib/utils";
 
 type PageShellProps = {
@@ -13,8 +14,10 @@ type PageShellProps = {
  * - default white canvas; callers may override via className
  */
 export function PageShell({ children, className = "" }: PageShellProps) {
+  const shellProvidesTopInset = useAgentContentShellInset();
+
   return (
-    <main className={cn("bg-[#FFFFFF] pt-6 px-6 pb-6", className)}>
+    <main className={cn("bg-[#FFFFFF] px-6 pb-6", !shellProvidesTopInset && "pt-6", className)}>
       <div className="mx-auto w-full max-w-6xl">{children}</div>
     </main>
   );

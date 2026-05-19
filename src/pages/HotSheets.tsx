@@ -890,7 +890,7 @@ const HotSheets = ({
 
   if (loading) {
     return (
-      <PageShell className="pt-0 pb-8">
+      <PageShell className="pb-8">
         <Seo
           title="Hot Sheets | All Agent Connect"
           description="Review saved listing feeds, curated market opportunities, and client-focused inventory updates."
@@ -932,7 +932,7 @@ const HotSheets = ({
         canonical="https://allagentconnect.com/agent/hot-sheets"
         noindex
       />
-      <PageShell className="pt-0 pb-8">
+      <PageShell className="pb-8">
         {renderAgentBackLink()}
         <div className="mb-5 md:mb-6">
           {renderHotSheetsHero()}
