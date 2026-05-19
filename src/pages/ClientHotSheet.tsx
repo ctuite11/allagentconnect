@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -695,14 +696,9 @@ const ClientHotSheet = () => {
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Back to Dashboard */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate("/client/dashboard")}
-          >
-            ← Back to Dashboard
-          </Button>
+          <AacBackButton type="button" className="mb-4" onClick={() => navigate("/client/dashboard")}>
+            Back to Dashboard
+          </AacBackButton>
 
           {/* Agent Banner */}
           {agentProfile && (

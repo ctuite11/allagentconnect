@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -451,14 +452,14 @@ const ConsumerPropertyDetail = () => {
             stateFrom === "/client/favorites" ||
             stateFrom === "/favorites";
           const backLabel = fromFavorites
-            ? "← Back to Favorites"
+            ? "Back to Favorites"
             : stateFrom === "/client/search"
-              ? "← Back to Results"
+              ? "Back to Results"
               : stateFrom
-                ? "← Back"
-                : "← Back to Search";
+                ? "Back"
+                : "Back to Search";
           return (
-            <button
+            <AacBackButton
               type="button"
               onClick={() => {
                 const p = new URLSearchParams(location.search);
@@ -474,11 +475,10 @@ const ConsumerPropertyDetail = () => {
                 const lastSearch = sessionStorage.getItem("buyer_last_search_url");
                 navigate(lastSearch || "/browse");
               }}
-              className="-ml-1.5 inline-flex items-center rounded-md px-1.5 py-1.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
               aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
             >
               {backLabel}
-            </button>
+            </AacBackButton>
           );
         })()}
       </div>

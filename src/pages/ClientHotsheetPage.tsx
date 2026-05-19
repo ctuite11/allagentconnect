@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { ArrowLeft, MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -681,16 +682,15 @@ const ClientHotsheetPage = () => {
       <main className={`flex-1 ${buyerPageMain}`}>
         <div>
           <header className="mb-4">
-            <button
+            <AacBackButton
               type="button"
               onClick={() => navigate(isBuyerHotSheetByIdRoute ? "/hot-sheets" : "/client/dashboard")}
-              className="group -ml-1 mb-3 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-[13px] font-medium text-neutral-600 transition-colors duration-200 hover:text-neutral-900"
+              className="mb-3 max-w-full py-0.5 text-left"
             >
-              <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-neutral-900" aria-hidden />
               <span className="min-w-0 truncate">
                 {isBuyerHotSheetByIdRoute ? "Back to Hot Sheets" : "Back to Your Account"}
               </span>
-            </button>
+            </AacBackButton>
 
             <div className="flex flex-col gap-1 border-b border-neutral-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
               <div className="min-w-0">

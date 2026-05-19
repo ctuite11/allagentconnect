@@ -6,7 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, MapPin, ChevronDown, ArrowLeft, Pencil, Heart } from "lucide-react";
+import { Send, MapPin, ChevronDown, Pencil, Heart } from "lucide-react";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -1061,7 +1062,7 @@ const HotSheetReview = () => {
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
           {/* Back link + page title */}
           <header className="mb-4">
-            <button
+            <AacBackButton
               type="button"
               onClick={() => {
                 const preferBuyerFrom =
@@ -1072,11 +1073,10 @@ const HotSheetReview = () => {
                   !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
                 navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
               }}
-              className="group -ml-1 mb-3 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-[13px] font-medium text-neutral-600 transition-colors duration-200 hover:text-neutral-900"
+              className="mb-3 max-w-full py-0.5 text-left"
             >
-              <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-neutral-900" aria-hidden />
               <span className="min-w-0 truncate">{backLinkLabel}</span>
-            </button>
+            </AacBackButton>
             <div className="flex flex-col gap-1 border-b border-neutral-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
               <div className="min-w-0">
                 <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">

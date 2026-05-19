@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ChevronLeft } from "lucide-react";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import {
   HotSheetCriteriaBuilder,
   type HotSheetCriteriaFormValue,
@@ -120,14 +120,9 @@ export default function ClientCreateHotsheetNew() {
   return (
     <PageShell>
       <div className="max-w-3xl mx-auto pb-20">
-        <button
-          type="button"
-          onClick={() => navigate("/hot-sheets")}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800"
-        >
-          <ChevronLeft className="h-4 w-4" />
+        <AacBackButton type="button" className="mb-4" onClick={() => navigate("/hot-sheets")}>
           Back to Hot Sheets
-        </button>
+        </AacBackButton>
 
         <div className={`${aacStyles.card} shadow-[0_10px_28px_rgba(15,23,42,0.07)]`}>
           <h2 className={aacStyles.sectionH2}>Create New Hot Sheet</h2>

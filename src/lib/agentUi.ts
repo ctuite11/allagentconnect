@@ -24,3 +24,5 @@ export const agentPageTitleClass =
 /** Subtitle under page title */
 export const agentPageSubtitleClass =
   "text-sm leading-snug text-neutral-500";
+
+export { aacBackLinkClass, aacBackIconButtonClass } from "@/components/layout/AacBackLink";

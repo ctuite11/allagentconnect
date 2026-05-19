@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import {
-  ArrowLeft,
   Star,
   Quote,
   Phone,
@@ -243,14 +243,13 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       />
       {/* Back nav */}
       <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
-        <button
+        <AacBackButton
           type="button"
           onClick={() => navigate(publicMode ? "/our-agents" : "/our-members")}
-          className="-ml-1 inline-flex items-center gap-1.5 rounded-md py-1 pl-1 pr-2 text-[13px] text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
+          className="text-[13px]"
         >
-          <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
           {publicMode ? "Back to agents" : "Back to network"}
-        </button>
+        </AacBackButton>
       </div>
 
       {/* Hero */}

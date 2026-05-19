@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
 import { agentPageSubtitleClass, agentPageTitleClass } from "@/lib/agentUi";
 
 export type AgentPageHeaderProps = {
@@ -32,7 +33,7 @@ export function AgentPageHeader({
           <button
             type="button"
             onClick={() => navigate(backTo)}
-            className="-ml-1 mb-0.5 inline-flex items-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100/90 hover:text-zinc-700"
+            className={cn(aacBackIconButtonClass, "-ml-1 mb-0.5 rounded-md p-1")}
             aria-label="Go back"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />

@@ -7,7 +7,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { UserX, Search, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { UserX, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { AacBackLink } from "@/components/layout/AacBackLink";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -279,13 +280,7 @@ export default function AdminConsumers() {
       <div className="container mx-auto py-8 px-4 max-w-6xl">
         {/* Back nav */}
         <div className="mb-4">
-          <Link
-            to="/admin/approvals"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Agents
-          </Link>
+          <AacBackLink to="/admin/approvals">Back to Agents</AacBackLink>
         </div>
 
         <PageHeader

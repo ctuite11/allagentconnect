@@ -4,7 +4,8 @@ import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight, UserPlus } from "lucide-react";
+import { ChevronRight, UserPlus } from "lucide-react";
+import { AacBackLink } from "@/components/layout/AacBackLink";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
@@ -314,14 +315,9 @@ export default function BuyersList() {
 
       <AgentAacPage className="pb-12">
         <div className="mb-4">
-          <Link
-            to="/agent-dashboard"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-900 no-underline transition-colors hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-            title="Return to Success Hub dashboard"
-          >
-            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
+          <AacBackLink to="/agent-dashboard" title="Return to Success Hub dashboard">
             Back
-          </Link>
+          </AacBackLink>
         </div>
         <AgentPageHeader
           title="My Buyers"

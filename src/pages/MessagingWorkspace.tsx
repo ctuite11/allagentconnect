@@ -10,6 +10,7 @@ import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { buyerMessagingPanel } from "@/lib/buyerUi";
 
@@ -123,15 +124,13 @@ function MessagingWorkspaceContent({
             ) : null}
             {buyerMode ? (
               <div className="mb-4 shrink-0 md:mb-5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mb-4 gap-2 text-zinc-500 hover:bg-zinc-100/90 hover:text-zinc-900"
+                <AacBackButton
                   type="button"
+                  className="mb-4"
                   onClick={() => navigate("/client/dashboard")}
                 >
-                  ← Back to Dashboard
-                </Button>
+                  Back to Dashboard
+                </AacBackButton>
                 <div className="space-y-1">
                   <h1 className="text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl">Messages</h1>
                   <p className="text-[13px] leading-snug text-zinc-500">

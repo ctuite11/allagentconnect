@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Clock, Plus, Search, RefreshCw } from "lucide-react";
+import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
+import { cn } from "@/lib/utils";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -453,7 +455,7 @@ const HotSheetBuyerDetail = () => {
           <button
             type="button"
             onClick={() => navigate(backTo)}
-            className="-ml-1.5 rounded-md p-1.5 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+            className={cn(aacBackIconButtonClass, "-ml-1.5 rounded-md p-1.5")}
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2} />

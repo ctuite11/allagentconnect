@@ -15,6 +15,8 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Heart, ArrowLeft, MapPin } from "lucide-react";
+import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
+import { cn } from "@/lib/utils";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 
@@ -85,7 +87,7 @@ const agentHotSheetStickyHeader = (navigate: NavigateFunction) => (
           <button
             type="button"
             onClick={() => navigate("/agent-dashboard")}
-            className="-ml-1 rounded-md p-1 text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
+            className={cn(aacBackIconButtonClass, "-ml-1 rounded-md p-1")}
             aria-label="Back to agent dashboard"
           >
             <ArrowLeft className="h-[17px] w-[17px] shrink-0" aria-hidden />

@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Bell, ChevronLeft, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Bell, ChevronLeft } from "lucide-react";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
@@ -189,15 +190,14 @@ const HotSheets = ({
 
   const renderAgentBackLink = () =>
     isAgentMode ? (
-      <button
+      <AacBackButton
         type="button"
         onClick={() => navigate("/success-hub")}
-        className="group -ml-1 mb-4 inline-flex max-w-full items-center gap-1.5 py-0.5 text-left text-[13px] font-medium text-neutral-600 transition-colors duration-200 hover:text-neutral-900"
+        className="mb-4 max-w-full py-0.5 text-left"
         title="Return to Success Hub"
       >
-        <ArrowLeft className="h-4 w-4 shrink-0 transition-colors group-hover:text-neutral-900" aria-hidden />
         Back
-      </button>
+      </AacBackButton>
     ) : null;
 
   const renderHotSheetsHero = () => {
@@ -446,14 +446,9 @@ const HotSheets = ({
         />
         <div className={`${buyerPageMain} pb-20`}>
           <div className={buyerPageStack}>
-              <button
-                type="button"
-                onClick={() => navigate("/client/dashboard")}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
-              >
-                <ChevronLeft className="h-4 w-4" />
+              <AacBackButton type="button" onClick={() => navigate("/client/dashboard")}>
                 Back to Dashboard
-              </button>
+              </AacBackButton>
 
               {renderHotSheetsHero()}
 

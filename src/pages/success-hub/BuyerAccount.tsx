@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import { AacBackLink } from "@/components/layout/AacBackLink";
+
+const BUYERS_LIST_PATH = "/success-hub/buyers";
 import { Button } from "@/components/ui/button";
 import { SingleClientEmailDialog } from "@/components/SingleClientEmailDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -156,7 +159,7 @@ export default function BuyerAccount() {
               Buyer not found or you don&apos;t have access.
             </p>
             <Button variant="outline" size="sm" className="mt-5 border-neutral-200 shadow-sm" asChild>
-              <Link to="/agent/buyers">Back to buyers</Link>
+              <AacBackLink to={BUYERS_LIST_PATH}>Back to buyers</AacBackLink>
             </Button>
           </AgentSectionCard>
         </AgentAacPage>
@@ -241,12 +244,9 @@ export default function BuyerAccount() {
         topBanner={
           <div className="bg-white px-6 py-3 md:px-8">
             <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2">
-              <Button variant="ghost" size="sm" asChild className="-ml-1 h-9 gap-1 text-[#0E56F5] hover:bg-[#0E56F5]/10 hover:text-[#0B46CC]">
-                <Link to="/agent/buyers" title="Return to buyers list">
-                  <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
-                  Back to buyers
-                </Link>
-              </Button>
+              <AacBackLink to={BUYERS_LIST_PATH} title="Return to buyers list">
+                Back to buyers
+              </AacBackLink>
             </div>
           </div>
         }

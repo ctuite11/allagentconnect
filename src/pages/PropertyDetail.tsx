@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useNavigationType } from "react-ro
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -734,27 +735,27 @@ const PropertyDetail = () => {
               stateFrom === "/client/favorites" ||
               stateFrom === "/favorites";
             const label = fromFavorites
-              ? "← Back to Favorites"
+              ? "Back to Favorites"
               : stateFrom === "/client/search"
-                ? "← Back to Results"
+                ? "Back to Results"
                 : stateFrom?.startsWith("/listing-results")
-                  ? "← Back to Results"
+                  ? "Back to Results"
                   : typeof stateFrom === "string" && isSafeInternalReturnPath(stateFrom)
-                    ? "← Back"
+                    ? "Back"
                     : isAgent || isAdmin
-                      ? "← Back"
+                      ? "Back"
                       : isBuyer
-                        ? "← Back to Dashboard"
-                        : "← Back to Browse";
+                        ? "Back to Dashboard"
+                        : "Back to Browse";
             return (
-          <button
+          <AacBackButton
             type="button"
             onClick={handlePropertyDetailBack}
-            className="inline-flex items-center gap-2 text-[13px] font-medium text-neutral-500 underline-offset-4 transition-colors hover:text-neutral-800 hover:underline focus-visible:outline-none focus-visible:ring-0 focus-visible:underline focus-visible:text-neutral-900"
+            className="text-[13px]"
             aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
           >
-            <span>{label}</span>
-          </button>
+            {label}
+          </AacBackButton>
             );
           })()}
         </div>

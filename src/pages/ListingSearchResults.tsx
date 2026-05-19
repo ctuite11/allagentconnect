@@ -13,6 +13,7 @@ import PropertyMap from "@/components/PropertyMap";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, ListChecks, Check, FileSpreadsheet } from "lucide-react";
+import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
@@ -324,7 +325,7 @@ const ListingSearchResults = () => {
         <button
           type="button"
           onClick={handleBackToSearch}
-          className="-ml-1 rounded-md p-1 text-neutral-600 transition-colors duration-200 hover:bg-neutral-50 hover:text-neutral-900"
+          className={cn(aacBackIconButtonClass, "-ml-1 rounded-md p-1")}
           aria-label="Go back"
         >
           <ArrowLeft className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" />
