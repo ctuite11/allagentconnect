@@ -280,7 +280,7 @@ export default function AdminConsumers() {
       <div className="container mx-auto py-8 px-4 max-w-6xl">
         {/* Back nav */}
         <div className="mb-4">
-          <AacBackLink to="/admin/approvals">Back to Agents</AacBackLink>
+          <AacBackLink to="/admin/approvals" />
         </div>
 
         <PageHeader

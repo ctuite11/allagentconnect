@@ -294,9 +294,7 @@ export default function AgentClientFavorites() {
     >
       <div className="mx-auto w-full max-w-6xl px-4 pt-5 md:px-6">
         <div className="mb-6 border-b border-neutral-200 pb-5">
-          <AacBackButton type="button" onClick={handleBack} className="mb-2">
-            {crmClientId ? "Back to Buyer" : "Back to Clients"}
-          </AacBackButton>
+          <AacBackButton type="button" onClick={handleBack} className="mb-2" />
           <h1 className="text-xl font-semibold tracking-tight text-neutral-950 sm:text-2xl">Favorites</h1>
           {error ? (
             <p className="mt-1 text-sm text-red-600" role="alert">

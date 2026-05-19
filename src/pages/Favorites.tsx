@@ -42,7 +42,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, MapPin, Heart } from "lucide-react";
-import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { toast } from "sonner";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
@@ -923,14 +923,11 @@ const Favorites = ({
       <div className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex min-w-0 items-center gap-2">
-            <button
+            <AacBackButton
               type="button"
               onClick={() => navigate("/client/dashboard")}
-              className={cn(aacBackIconButtonClass, "-ml-1 rounded-md p-1")}
-              aria-label="Back to Dashboard"
-            >
-              <ArrowLeft className="h-[17px] w-[17px] shrink-0" aria-hidden />
-            </button>
+              className="-ml-1 shrink-0 text-[13px]"
+            />
             <div className="min-w-0 space-y-0.5">
               <h1 className="text-sm font-semibold tracking-tight text-neutral-900">Saved homes</h1>
               <p className="text-[13px] leading-snug text-neutral-500">Listings you’ve saved across AAC.</p>
@@ -946,14 +943,11 @@ const Favorites = ({
       <div className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex min-w-0 items-center gap-2">
-            <button
+            <AacBackButton
               type="button"
               onClick={() => navigate("/agent-dashboard")}
-              className={cn(aacBackIconButtonClass, "-ml-1 rounded-md p-1")}
-              aria-label="Back to agent dashboard"
-            >
-              <ArrowLeft className="h-[17px] w-[17px] shrink-0" aria-hidden />
-            </button>
+              className="-ml-1 shrink-0 text-[13px]"
+            />
             <div className="min-w-0 space-y-0.5">
               <h1 className="text-sm font-semibold tracking-tight text-neutral-900">Favorite listings</h1>
               <p className="text-[13px] leading-snug text-neutral-500">

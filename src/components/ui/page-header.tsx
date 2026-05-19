@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
+import { aacBackLinkClass } from "@/components/layout/AacBackLink";
 
 interface PageHeaderProps {
   /** Page title */
@@ -66,12 +66,9 @@ export function PageHeader({
       <div className={cn("flex items-center", compactBack ? "gap-1.5" : "gap-2")}>
         {/* Inline chevron-left back button - only shown when backTo is provided */}
         {backTo && (
-          <button
-            onClick={handleBack}
-            className={cn(aacBackIconButtonClass, "-ml-1 shrink-0 rounded-md p-1", compactBack && "p-0.5")}
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-4 w-4" />
+          <button type="button" onClick={handleBack} className={cn(aacBackLinkClass, "-ml-1 shrink-0")}>
+            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
+            Back
           </button>
         )}
         

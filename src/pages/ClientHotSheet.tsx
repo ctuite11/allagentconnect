@@ -696,9 +696,7 @@ const ClientHotSheet = () => {
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Back to Dashboard */}
-          <AacBackButton type="button" className="mb-4" onClick={() => navigate("/client/dashboard")}>
-            Back to Dashboard
-          </AacBackButton>
+          <AacBackButton type="button" className="mb-4" onClick={() => navigate("/client/dashboard")} />
 
           {/* Agent Banner */}
           {agentProfile && (

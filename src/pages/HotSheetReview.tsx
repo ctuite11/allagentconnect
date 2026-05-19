@@ -1052,11 +1052,6 @@ const HotSheetReview = () => {
   const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
   const maySendDashboardInviteToSomeRecipients =
     !isSharedWorkspace && reviewRecipients.some((r) => r.sendDashboardInvite);
-  const backLinkLabel =
-    (typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")) || buyerContextClientId
-      ? "Back to buyer's hot sheets"
-      : "Back to hot sheets";
-
   return (
       <div className="min-h-[50vh] bg-white pt-4 px-4 pb-10 sm:px-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
@@ -1074,9 +1069,7 @@ const HotSheetReview = () => {
                 navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
               }}
               className="mb-3 max-w-full py-0.5 text-left"
-            >
-              <span className="min-w-0 truncate">{backLinkLabel}</span>
-            </AacBackButton>
+            />
             <div className="flex flex-col gap-1 border-b border-neutral-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
               <div className="min-w-0">
                 <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">

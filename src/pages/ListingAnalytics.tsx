@@ -10,8 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp, Eye, Heart, Mail, Calendar, Users, BarChart3, Clock, RefreshCw, Share2 } from "lucide-react";
-import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
-import { cn } from "@/lib/utils";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
@@ -281,14 +280,11 @@ const ListingAnalytics = () => {
       <div className="min-h-screen bg-background pt-20">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <button
+          <AacBackButton
             type="button"
             onClick={() => navigate("/agent/listings")}
-            className={cn(aacBackIconButtonClass, "-ml-1.5 rounded-md p-1.5")}
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+            className="-ml-1.5 shrink-0"
+          />
           <div className="flex-1">
             <PageTitle icon={<BarChart3 className="h-8 w-8" />}>
               Listing Analytics

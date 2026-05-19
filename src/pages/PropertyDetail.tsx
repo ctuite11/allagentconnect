@@ -727,37 +727,7 @@ const PropertyDetail = () => {
 
         {/* Back Button Row */}
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
-          {(() => {
-            const params = new URLSearchParams(location.search);
-            const stateFrom = (location.state as { from?: string } | null)?.from;
-            const fromFavorites =
-              params.get("from") === "favorites" ||
-              stateFrom === "/client/favorites" ||
-              stateFrom === "/favorites";
-            const label = fromFavorites
-              ? "Back to Favorites"
-              : stateFrom === "/client/search"
-                ? "Back to Results"
-                : stateFrom?.startsWith("/listing-results")
-                  ? "Back to Results"
-                  : typeof stateFrom === "string" && isSafeInternalReturnPath(stateFrom)
-                    ? "Back"
-                    : isAgent || isAdmin
-                      ? "Back"
-                      : isBuyer
-                        ? "Back to Dashboard"
-                        : "Back to Browse";
-            return (
-          <AacBackButton
-            type="button"
-            onClick={handlePropertyDetailBack}
-            className="text-[13px]"
-            aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
-          >
-            {label}
-          </AacBackButton>
-            );
-          })()}
+          <AacBackButton type="button" onClick={handlePropertyDetailBack} className="text-[13px]" />
         </div>
 
         {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}

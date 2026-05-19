@@ -159,7 +159,7 @@ export default function BuyerAccount() {
               Buyer not found or you don&apos;t have access.
             </p>
             <Button variant="outline" size="sm" className="mt-5 border-neutral-200 shadow-sm" asChild>
-              <AacBackLink to={BUYERS_LIST_PATH}>Back to buyers</AacBackLink>
+              <AacBackLink to={BUYERS_LIST_PATH} />
             </Button>
           </AgentSectionCard>
         </AgentAacPage>
@@ -244,9 +244,7 @@ export default function BuyerAccount() {
         topBanner={
           <div className="bg-white px-6 py-3 md:px-8">
             <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2">
-              <AacBackLink to={BUYERS_LIST_PATH} title="Return to buyers list">
-                Back to buyers
-              </AacBackLink>
+              <AacBackLink to={BUYERS_LIST_PATH} title="Return to buyers list" />
             </div>
           </div>
         }

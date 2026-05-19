@@ -195,9 +195,7 @@ const HotSheets = ({
         onClick={() => navigate("/success-hub")}
         className="mb-4 max-w-full py-0.5 text-left"
         title="Return to Success Hub"
-      >
-        Back
-      </AacBackButton>
+      />
     ) : null;
 
   const renderHotSheetsHero = () => {
@@ -446,9 +444,7 @@ const HotSheets = ({
         />
         <div className={`${buyerPageMain} pb-20`}>
           <div className={buyerPageStack}>
-              <AacBackButton type="button" onClick={() => navigate("/client/dashboard")}>
-                Back to Dashboard
-              </AacBackButton>
+              <AacBackButton type="button" onClick={() => navigate("/client/dashboard")} />
 
               {renderHotSheetsHero()}
 

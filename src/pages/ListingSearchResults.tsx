@@ -13,7 +13,7 @@ import PropertyMap from "@/components/PropertyMap";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, ListChecks, Check, FileSpreadsheet } from "lucide-react";
-import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
@@ -322,14 +322,11 @@ const ListingSearchResults = () => {
   const renderToolbarTitleRow = () => (
     <div className="flex items-center py-2 sm:py-2.5">
       <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
-        <button
+        <AacBackButton
           type="button"
           onClick={handleBackToSearch}
-          className={cn(aacBackIconButtonClass, "-ml-1 rounded-md p-1")}
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" />
-        </button>
+          className="-ml-1 shrink-0 text-[13px]"
+        />
         <h1 className="text-[13px] font-semibold tracking-tight text-neutral-900 sm:text-sm">Edit search</h1>
       </div>
     </div>

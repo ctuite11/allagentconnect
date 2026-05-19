@@ -68,9 +68,7 @@ export default function IDXPropertyDetail() {
   if (isLoading) {
     return (
       <PageShell>
-        <AacBackButton type="button" className="mb-4" onClick={handleBack}>
-          Back to Search
-        </AacBackButton>
+        <AacBackButton type="button" className="mb-4" onClick={handleBack} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <Skeleton className="aspect-[16/10] rounded-2xl" />
@@ -89,9 +87,7 @@ export default function IDXPropertyDetail() {
   if (error || !listing) {
     return (
       <PageShell>
-        <AacBackButton type="button" className="mb-4" onClick={handleBack}>
-          Back to Search
-        </AacBackButton>
+        <AacBackButton type="button" className="mb-4" onClick={handleBack} />
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
           <p className="text-neutral-700 font-medium mb-2">
@@ -122,9 +118,7 @@ export default function IDXPropertyDetail() {
   return (
     <PageShell>
       {/* Back button */}
-      <AacBackButton type="button" className="mb-4" onClick={handleBack}>
-        Back to Search
-      </AacBackButton>
+      <AacBackButton type="button" className="mb-4" onClick={handleBack} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content */}

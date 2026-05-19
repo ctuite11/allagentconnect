@@ -444,43 +444,24 @@ const ConsumerPropertyDetail = () => {
 
       {/* Back Button Row */}
       <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
-        {(() => {
-          const searchParams = new URLSearchParams(location.search);
-          const stateFrom = (location.state as { from?: string } | null)?.from;
-          const fromFavorites =
-            searchParams.get("from") === "favorites" ||
-            stateFrom === "/client/favorites" ||
-            stateFrom === "/favorites";
-          const backLabel = fromFavorites
-            ? "Back to Favorites"
-            : stateFrom === "/client/search"
-              ? "Back to Results"
-              : stateFrom
-                ? "Back"
-                : "Back to Search";
-          return (
-            <AacBackButton
-              type="button"
-              onClick={() => {
-                const p = new URLSearchParams(location.search);
-                const st = (location.state as { from?: string } | null)?.from;
-                if (p.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
-                  navigate("/favorites");
-                  return;
-                }
-                if (st) {
-                  navigate(st);
-                  return;
-                }
-                const lastSearch = sessionStorage.getItem("buyer_last_search_url");
-                navigate(lastSearch || "/browse");
-              }}
-              aria-label={fromFavorites ? "Back to Favorites" : "Go back"}
-            >
-              {backLabel}
-            </AacBackButton>
-          );
-        })()}
+        <AacBackButton
+          type="button"
+          onClick={() => {
+            const p = new URLSearchParams(location.search);
+            const st = (location.state as { from?: string } | null)?.from;
+            if (p.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
+              navigate("/favorites");
+              return;
+            }
+            if (st) {
+              navigate(st);
+              return;
+            }
+            const lastSearch = sessionStorage.getItem("buyer_last_search_url");
+            navigate(lastSearch || "/browse");
+          }}
+          className="text-[13px]"
+        />
       </div>
 
       <div className="flex-1">

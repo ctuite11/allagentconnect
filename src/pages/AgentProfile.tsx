@@ -247,9 +247,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           type="button"
           onClick={() => navigate(publicMode ? "/our-agents" : "/our-members")}
           className="text-[13px]"
-        >
-          {publicMode ? "Back to agents" : "Back to network"}
-        </AacBackButton>
+        />
       </div>
 
       {/* Hero */}

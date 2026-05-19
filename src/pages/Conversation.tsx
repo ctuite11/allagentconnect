@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Send, User, Building2 } from "lucide-react";
-import { aacBackIconButtonClass } from "@/components/layout/AacBackLink";
+import { AacBackButton } from "@/components/layout/AacBackLink";
 import { useConversation } from "@/hooks/useConversation";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
@@ -125,14 +125,11 @@ export default function Conversation() {
         {/* Header */}
         <div className="py-4 px-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
-            <button
+            <AacBackButton
               type="button"
               onClick={() => from ? navigate(from) : navigate("/messages")}
-              className={cn(aacBackIconButtonClass, "rounded-lg p-2")}
-              aria-label="Go back"
-            >
-              <ArrowLeft className="h-5 w-5 shrink-0" strokeWidth={2} />
-            </button>
+              className="shrink-0 text-[13px]"
+            />
             <div
               className={cn(
                 "flex items-center gap-3",

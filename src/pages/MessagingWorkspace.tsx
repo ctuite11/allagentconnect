@@ -128,9 +128,7 @@ function MessagingWorkspaceContent({
                   type="button"
                   className="mb-4"
                   onClick={() => navigate("/client/dashboard")}
-                >
-                  Back to Dashboard
-                </AacBackButton>
+                />
                 <div className="space-y-1">
                   <h1 className="text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl">Messages</h1>
                   <p className="text-[13px] leading-snug text-zinc-500">

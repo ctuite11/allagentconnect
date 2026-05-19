@@ -315,9 +315,7 @@ export default function BuyersList() {
 
       <AgentAacPage className="pb-12">
         <div className="mb-4">
-          <AacBackLink to="/agent-dashboard" title="Return to Success Hub dashboard">
-            Back
-          </AacBackLink>
+          <AacBackLink to="/agent-dashboard" title="Return to Success Hub dashboard" />
         </div>
         <AgentPageHeader
           title="My Buyers"

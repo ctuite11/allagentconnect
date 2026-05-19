@@ -120,9 +120,7 @@ export default function ClientCreateHotsheetNew() {
   return (
     <PageShell>
       <div className="max-w-3xl mx-auto pb-20">
-        <AacBackButton type="button" className="mb-4" onClick={() => navigate("/hot-sheets")}>
-          Back to Hot Sheets
-        </AacBackButton>
+        <AacBackButton type="button" className="mb-4" onClick={() => navigate("/hot-sheets")} />
 
         <div className={`${aacStyles.card} shadow-[0_10px_28px_rgba(15,23,42,0.07)]`}>
           <h2 className={aacStyles.sectionH2}>Create New Hot Sheet</h2>

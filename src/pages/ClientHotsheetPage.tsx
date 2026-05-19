@@ -686,11 +686,7 @@ const ClientHotsheetPage = () => {
               type="button"
               onClick={() => navigate(isBuyerHotSheetByIdRoute ? "/hot-sheets" : "/client/dashboard")}
               className="mb-3 max-w-full py-0.5 text-left"
-            >
-              <span className="min-w-0 truncate">
-                {isBuyerHotSheetByIdRoute ? "Back to Hot Sheets" : "Back to Your Account"}
-              </span>
-            </AacBackButton>
+            />
 
             <div className="flex flex-col gap-1 border-b border-neutral-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
               <div className="min-w-0">
