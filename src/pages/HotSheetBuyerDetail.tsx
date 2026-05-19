@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, Plus, Search, RefreshCw } from "lucide-react";
+import { Clock, Plus, Search, RefreshCw } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
-import { cn } from "@/lib/utils";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -450,15 +449,11 @@ const HotSheetBuyerDetail = () => {
   return (
     <div className="bg-white pt-4 px-6 pb-6">
       <div className="mx-auto w-full max-w-[88rem] min-w-0">
-        {/* Header — back + title only (matches mockup) */}
-        <div className="mb-2 flex items-center gap-2">
-          <AacBackButton
-            type="button"
-            onClick={() => navigate(backTo)}
-            className="-ml-1.5 shrink-0 text-[13px]"
-          />
-          <h1 className="truncate text-sm font-semibold tracking-tight text-neutral-900">Hot sheets</h1>
-        </div>
+        {/* Header — Back only in nav control; page title below */}
+        <header className="mb-4 space-y-1">
+          <AacBackButton type="button" onClick={() => navigate(backTo)} />
+          <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">Hot sheets</h1>
+        </header>
 
         {/* Buyer card + New Hot Sheet (grouped — CTA directly under card, left-aligned) */}
         {buyer && relationshipStatus && (
