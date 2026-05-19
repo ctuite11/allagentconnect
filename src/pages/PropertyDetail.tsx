@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { AacBackButton } from "@/components/layout/AacBackLink";
-import AACMonogram from "@/components/ui/AACMonogram";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +54,13 @@ import {
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { buildDisplayAddress, cn } from "@/lib/utils";
+
+const listingDetailPrimaryCtaClass =
+  "bg-[#0E56F5] text-white hover:bg-[#0B46CC] focus-visible:ring-[#0E56F5]/35";
+const listingDetailActiveMediaTabClass =
+  "border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC] hover:text-white";
+const listingDetailOutlineCtaClass =
+  "border-[#0E56F5]/30 text-[#0E56F5] hover:bg-[#0E56F5]/5 hover:text-[#0B46CC]";
 import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
@@ -710,21 +716,6 @@ const PropertyDetail = () => {
 
 
       <main className="flex-1">
-        {/* Slim brand strip — neutral (listing detail premium shell) */}
-        <div className="w-full border-b border-neutral-200 bg-white">
-          <div className="mx-auto max-w-6xl px-4 py-2.5 sm:py-3">
-            <div className="flex items-center gap-2">
-              <AACMonogram className="h-6 w-6 text-neutral-700 sm:h-7 sm:w-7" />
-              <span
-                className="text-[14px] font-semibold tracking-tight text-neutral-900 sm:text-[15px]"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              >
-                Direct Connect MLS
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* Back Button Row */}
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
           <AacBackButton type="button" onClick={handlePropertyDetailBack} className="text-[13px]" />
@@ -892,7 +883,7 @@ const PropertyDetail = () => {
                   className={cn(
                     "h-8 rounded-lg px-3 text-[13px] font-medium shadow-none",
                     activeMediaTab === 'photos'
-                      ? "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-900 hover:text-white"
+                      ? listingDetailActiveMediaTabClass
                       : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
                   )}
                 >
@@ -907,7 +898,7 @@ const PropertyDetail = () => {
                     className={cn(
                       "h-8 rounded-lg px-3 text-[13px] font-medium shadow-none",
                       activeMediaTab === 'video'
-                        ? "border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-900 hover:text-white"
+                        ? listingDetailActiveMediaTabClass
                         : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
                     )}
                   >
@@ -991,7 +982,10 @@ const PropertyDetail = () => {
 
                   <Button
                     size="sm"
-                    className="h-9 w-full bg-neutral-900 text-[13px] font-medium text-white hover:bg-neutral-800"
+                    className={cn(
+                      "h-9 w-full text-[13px] font-medium shadow-none",
+                      listingDetailPrimaryCtaClass,
+                    )}
                     onClick={() => setContactDialogOpen(true)}
                   >
                     Contact Agent
@@ -1002,13 +996,19 @@ const PropertyDetail = () => {
                     listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
                     triggerLabel="Request a Showing"
                     triggerVariant="outline"
-                    triggerClassName="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                    triggerClassName={cn(
+                      "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                      isAgentView ? listingDetailOutlineCtaClass : "border-neutral-200 hover:bg-neutral-50",
+                    )}
                   />
 
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                    className={cn(
+                      "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                      isAgentView ? listingDetailOutlineCtaClass : "border-neutral-200 hover:bg-neutral-50",
+                    )}
                     onClick={() => setContactDialogOpen(true)}
                   >
                     Ask a Question
@@ -1018,7 +1018,10 @@ const PropertyDetail = () => {
                     listingId={listing.id}
                     size="sm"
                     variant="outline"
-                    className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                    className={cn(
+                      "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                      isAgentView ? listingDetailOutlineCtaClass : "border-neutral-200 hover:bg-neutral-50",
+                    )}
                     labels={{
                       signIn: "Sign In to Save Home",
                       default: "Save Home",
@@ -1164,7 +1167,10 @@ const PropertyDetail = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
-                      className="h-8 w-full justify-start gap-2 rounded-lg border-neutral-200 text-[13px] shadow-none hover:bg-neutral-50"
+                      className={cn(
+                        "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
                     >
                       <Edit2 className="h-3.5 w-3.5" />
                       Edit Listing
@@ -1173,7 +1179,10 @@ const PropertyDetail = () => {
                       variant="outline"
                       size="sm"
                       onClick={handlePreviewClientView}
-                      className="h-8 w-full justify-start gap-2 rounded-lg border-neutral-200 text-[13px] shadow-none hover:bg-neutral-50"
+                      className={cn(
+                        "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
                     >
                       <Eye className="h-3.5 w-3.5" />
                       Preview Client View
@@ -1185,7 +1194,10 @@ const PropertyDetail = () => {
                         const el = document.getElementById('agent-tools-section');
                         el?.scrollIntoView({ behavior: 'smooth' });
                       }}
-                      className="h-8 w-full justify-start gap-2 rounded-lg border-neutral-200 text-[13px] shadow-none hover:bg-neutral-50"
+                      className={cn(
+                        "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
                     >
                       <Activity className="h-3.5 w-3.5" />
                       View Agent Tools
