@@ -131,11 +131,14 @@ interface HotSheet {
   client_id?: string | null;
 }
 
+/** Agent Hot Sheets list — canonical back target from review/results. */
+const AGENT_HOT_SHEETS_PATH = "/agent/hot-sheets";
+
 const HotSheetReview = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
-  const originFrom = (location.state as any)?.from as string | undefined;
+  const originFrom = (location.state as { from?: string } | null)?.from;
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
@@ -172,6 +175,17 @@ const HotSheetReview = () => {
 
   /** My Hot Sheets — no CRM buyers linked (criteria-only personal saves). */
   const isPersonalHotSheet = clientCount === 0 && reviewRecipients.length === 0;
+
+  const handleAgentHotSheetReviewBack = () => {
+    const preferBuyerFrom =
+      typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
+        ? originFrom
+        : null;
+    const buyerBack = buyerContextClientId
+      ? `/hot-sheets/buyer/${buyerContextClientId}`
+      : null;
+    navigate(preferBuyerFrom || buyerBack || AGENT_HOT_SHEETS_PATH);
+  };
 
   useEffect(() => {
     setConversationRecipientBuyerId(null);
@@ -1041,7 +1055,7 @@ const HotSheetReview = () => {
             type="button"
             variant="outline"
             className="mt-6 h-9 rounded-md border-neutral-200 px-4 text-xs font-medium shadow-sm transition-colors duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
-            onClick={() => navigate("/hot-sheets")}
+            onClick={handleAgentHotSheetReviewBack}
           >
             Back to Hot Sheets
           </Button>
@@ -1059,22 +1073,7 @@ const HotSheetReview = () => {
           <AacPageIntro
             withTopPadding
             className="border-b border-neutral-200 pb-4"
-            back={
-              <AacBackButton
-                type="button"
-                onClick={() => {
-                  const preferBuyerFrom =
-                    typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
-                      ? originFrom
-                      : null;
-                  const buyerBack =
-                    !originFrom && buyerContextClientId
-                      ? `/hot-sheets/buyer/${buyerContextClientId}`
-                      : null;
-                  navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
-                }}
-              />
-            }
+            back={<AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />}
             title={isSharedWorkspace ? "Buyer activity" : "Review matches"}
             titleClassName="text-lg sm:text-xl"
             subtitle={
@@ -1321,7 +1320,7 @@ const HotSheetReview = () => {
                     type="button"
                     variant="outline"
                     className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
-                    onClick={() => navigate("/hot-sheets")}
+                    onClick={handleAgentHotSheetReviewBack}
                   >
                     All hot sheets
                   </Button>
