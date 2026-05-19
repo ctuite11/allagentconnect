@@ -24,7 +24,7 @@ export type AacPageIntroProps = {
  * Standard AAC page chrome: top inset → Back → title → subtitle.
  *
  * Spacing (agentUi tokens):
- * - `pt-5` — page top inset below app header
+ * - `pt-8` — page top inset below app chrome (matches former `buyerPageMain` top rhythm)
  * - `mb-4` — Back → title
  * - `space-y-1` — title → subtitle
  * - `mb-5 md:mb-6` — intro block → page content
@@ -44,8 +44,8 @@ export function AacPageIntro({
     <header
       className={cn(
         agentPageIntroSpacingClass,
-        withTopPadding && agentPageTopPaddingClass,
         className,
+        withTopPadding && agentPageTopPaddingClass,
       )}
     >
       {back ? <div className={agentPageBackNavSpacingClass}>{back}</div> : null}
