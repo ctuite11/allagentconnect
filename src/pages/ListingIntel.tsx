@@ -133,9 +133,9 @@ const ListingIntel = () => {
   return (
     <AgentAacPage className="pb-12">
       <AgentPageHeader
+        withTopPadding
         title="Listing Intel"
         subtitle="Filter and find potential buyers for your listings"
-        className="mb-8"
       />
 
       {/* Filters */}

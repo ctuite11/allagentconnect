@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { aacBackLinkClass } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
+import {
+  agentPageIntroSpacingClass,
+  agentPageSubtitleClass,
+  agentPageTitleClass,
+} from "@/lib/agentUi";
 
 interface PageHeaderProps {
   /** Page title */
@@ -13,43 +19,36 @@ interface PageHeaderProps {
   subtitle?: string;
   /** Optional class names for the subtitle paragraph */
   subtitleClassName?: string;
-  /** 
+  /**
    * Explicit parent route to navigate to on back click.
-   * If provided, shows back button and navigates to this route.
-   * If not provided, no back button is shown (root page behavior).
+   * If provided, shows Back control above the title (canonical AAC intro stack).
    */
   backTo?: string;
   /** Optional className for container */
   className?: string;
   /** Optional right-side actions */
   actions?: ReactNode;
-  /** Optional icon to display before title */
+  /** Optional icon to display before title (title-only layout; not combined with back) */
   icon?: ReactNode;
-  /** Softer/smaller back control for compact detail headers */
+  /** @deprecated Back is always above the title when `backTo` is set. */
   compactBack?: boolean;
+  /** Standard top inset when this is the first block in the page shell. */
+  withTopPadding?: boolean;
 }
 
 /**
- * Standardized page header with optional inline chevron-left back button.
- * 
- * Back Button Rules:
- * - Root pages (Success Hub, My Listings, Hot Sheets list, etc.): NO back button
- * - Child/Detail pages: Show inline chevron back to parent route
- * 
- * Navigation Behavior:
- * - Prefers explicit parent route navigation (backTo prop)
- * - Falls back to browser history if backTo not provided but back still needed
+ * Page header — delegates to {@link AacPageIntro} when `backTo` is set.
  */
-export function PageHeader({ 
-  title, 
+export function PageHeader({
+  title,
   titleClassName,
   subtitle,
   subtitleClassName,
-  backTo, 
+  backTo,
   className,
   actions,
   icon,
-  compactBack = false,
+  withTopPadding = false,
 }: PageHeaderProps) {
   const navigate = useNavigate();
 
@@ -61,38 +60,47 @@ export function PageHeader({
     }
   };
 
-  return (
-    <div className={cn("mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4", className)}>
-      <div className={cn("flex items-center", compactBack ? "gap-1.5" : "gap-2")}>
-        {/* Inline chevron-left back button - only shown when backTo is provided */}
-        {backTo && (
-          <button type="button" onClick={handleBack} className={cn(aacBackLinkClass, "-ml-1 shrink-0")}>
+  if (backTo) {
+    return (
+      <AacPageIntro
+        withTopPadding={withTopPadding}
+        className={className}
+        title={title}
+        subtitle={subtitle}
+        titleClassName={titleClassName}
+        actions={actions}
+        back={
+          <button type="button" onClick={handleBack} className={aacBackLinkClass} aria-label="Go back">
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2} />
             Back
           </button>
-        )}
-        
-        <div className="flex flex-col">
-          <h1 className={cn(
-            "text-xl font-semibold text-zinc-900 tracking-tight",
-            titleClassName,
-            icon && "flex items-center gap-3"
-          )}>
+        }
+      />
+    );
+  }
+
+  return (
+    <header className={cn(agentPageIntroSpacingClass, className)}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0 space-y-1">
+          <h1
+            className={cn(
+              agentPageTitleClass,
+              titleClassName,
+              icon && "flex items-center gap-3",
+            )}
+          >
             {icon}
             {title}
           </h1>
-          {subtitle && (
-            <p className={cn("text-sm mt-0.5 text-zinc-500", subtitleClassName)}>{subtitle}</p>
-          )}
+          {subtitle ? (
+            <p className={cn(agentPageSubtitleClass, subtitleClassName)}>{subtitle}</p>
+          ) : null}
         </div>
+        {actions ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:mt-0.5">{actions}</div>
+        ) : null}
       </div>
-
-      {/* Right-side actions */}
-      {actions && (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:mt-0.5">
-          {actions}
-        </div>
-      )}
-    </div>
+    </header>
   );
 }

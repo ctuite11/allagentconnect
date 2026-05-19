@@ -87,7 +87,7 @@ export default function AgentSettings() {
       />
       <AgentAacPage className="max-w-2xl pb-12">
         <AgentPageHeader
-          className="mb-8"
+          withTopPadding
           title="Settings"
           subtitle="Manage your subscription and account security."
         />

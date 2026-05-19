@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
-import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, UserPlus } from "lucide-react";
@@ -314,13 +314,11 @@ export default function BuyersList() {
       />
 
       <AgentAacPage className="pb-12">
-        <div className="mb-4">
-          <AacBackLink to="/agent-dashboard" title="Return to Success Hub dashboard" />
-        </div>
-        <AgentPageHeader
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackLink to="/agent-dashboard" title="Return to Success Hub dashboard" />}
           title="My Buyers"
           subtitle="Manage buyer hot sheets, favorites, invites, and activity."
-          className="mb-5"
         />
 
         <div className="mb-4 flex flex-wrap items-center gap-2">

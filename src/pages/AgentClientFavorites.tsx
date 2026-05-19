@@ -21,6 +21,7 @@ import {
 } from "@/lib/listingConversationThread";
 import { cn } from "@/lib/utils";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { useAuthRole } from "@/hooks/useAuthRole";
 
 /**
@@ -292,16 +293,17 @@ export default function AgentClientFavorites() {
       className="bg-white pb-12"
       data-build-marker="agent-client-favorites-comments-v2"
     >
-      <div className="mx-auto w-full max-w-6xl px-4 pt-5 md:px-6">
-        <div className="mb-6 border-b border-neutral-200 pb-5">
-          <AacBackButton type="button" onClick={handleBack} className="mb-2" />
-          <h1 className="text-xl font-semibold tracking-tight text-neutral-950 sm:text-2xl">Favorites</h1>
-          {error ? (
-            <p className="mt-1 text-sm text-red-600" role="alert">
-              {error}
-            </p>
-          ) : null}
-        </div>
+      <div className="mx-auto w-full max-w-6xl">
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={handleBack} />}
+          title="Favorites"
+        />
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         {!loading && !error ? (
           <div

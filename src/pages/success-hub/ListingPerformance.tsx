@@ -27,16 +27,16 @@ export default function ListingPerformance() {
 
   if (!listing) {
     return (
-      <PageShell>
-        <PageHeader title="Listing Not Found" backTo="/success-hub/listings" />
+      <PageShell className="pt-0">
+        <PageHeader withTopPadding title="Listing Not Found" backTo="/success-hub/listings" />
         <p className="text-muted-foreground">No listing found with that ID.</p>
       </PageShell>
     );
   }
 
   return (
-    <PageShell className="pb-10">
-      <PageHeader title={listing.address} backTo="/success-hub/listings" />
+    <PageShell className="pt-0 pb-10">
+      <PageHeader withTopPadding title={listing.address} backTo="/success-hub/listings" />
 
       {/* ── Top row ────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-4 mb-8">

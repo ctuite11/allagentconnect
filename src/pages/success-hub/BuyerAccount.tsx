@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
 import { AacBackLink } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 
 const BUYERS_LIST_PATH = "/success-hub/buyers";
 import { Button } from "@/components/ui/button";
@@ -242,9 +243,12 @@ export default function BuyerAccount() {
           favoritesEmptySearch: "/search",
         }}
         topBanner={
-          <div className="bg-white px-6 py-3 md:px-8">
-            <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2">
-              <AacBackLink to={BUYERS_LIST_PATH} title="Return to buyers list" />
+          <div className="bg-white px-6 md:px-8">
+            <div className="mx-auto max-w-7xl">
+              <AacPageIntro
+                withTopPadding
+                back={<AacBackLink to={BUYERS_LIST_PATH} title="Return to buyers list" />}
+              />
             </div>
           </div>
         }

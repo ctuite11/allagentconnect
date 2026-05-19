@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Bell, ChevronLeft } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
@@ -190,11 +191,15 @@ const HotSheets = ({
 
   const renderAgentBackLink = () =>
     isAgentMode ? (
-      <AacBackButton
-        type="button"
-        onClick={() => navigate("/success-hub")}
-        className="mb-4 max-w-full py-0.5 text-left"
-        title="Return to Success Hub"
+      <AacPageIntro
+        withTopPadding
+        back={
+          <AacBackButton
+            type="button"
+            onClick={() => navigate("/success-hub")}
+            title="Return to Success Hub"
+          />
+        }
       />
     ) : null;
 
@@ -885,7 +890,7 @@ const HotSheets = ({
 
   if (loading) {
     return (
-      <PageShell className="pb-8">
+      <PageShell className="pt-0 pb-8">
         <Seo
           title="Hot Sheets | All Agent Connect"
           description="Review saved listing feeds, curated market opportunities, and client-focused inventory updates."
@@ -893,7 +898,7 @@ const HotSheets = ({
           noindex
         />
         {renderAgentBackLink()}
-        <div className="mb-5">{renderHotSheetsHero()}</div>
+        <div className="mb-5 md:mb-6">{renderHotSheetsHero()}</div>
         <div className="space-y-6" role="status" aria-live="polite" aria-busy="true">
           <span className="sr-only">Loading hot sheets…</span>
           <div className={`${AAC_CARD_SHELL} p-5 md:p-6`}>
@@ -927,9 +932,9 @@ const HotSheets = ({
         canonical="https://allagentconnect.com/agent/hot-sheets"
         noindex
       />
-      <PageShell className="pb-8">
+      <PageShell className="pt-0 pb-8">
         {renderAgentBackLink()}
-        <div className="mb-5">
+        <div className="mb-5 md:mb-6">
           {renderHotSheetsHero()}
         </div>
 

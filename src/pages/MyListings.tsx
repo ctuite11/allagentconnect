@@ -5,6 +5,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AacBackLink } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { CardSurface } from "@/components/ui/CardSurface";
@@ -152,11 +153,14 @@ function formatAddressWithUnit(listing: Listing): string {
 
 const SUCCESS_HUB_PATH = "/agent-dashboard";
 
-function MyListingsBackNav() {
+function MyListingsPageIntro({ subtitle }: { subtitle?: string }) {
   return (
-    <div className="mb-4">
-      <AacBackLink to={SUCCESS_HUB_PATH} title="Return to Success Hub" />
-    </div>
+    <AacPageIntro
+      withTopPadding
+      back={<AacBackLink to={SUCCESS_HUB_PATH} title="Return to Success Hub" />}
+      title="My Listings"
+      subtitle={subtitle}
+    />
   );
 }
 
@@ -165,7 +169,7 @@ function MyListingsSkeleton() {
   return (
     <AgentAacPage className="pb-12" aria-busy="true" role="status">
       <span className="sr-only">Loading your listings…</span>
-      <MyListingsBackNav />
+      <MyListingsPageIntro subtitle="Manage your active, pending, and past listings from one place." />
       <div className="mb-6 space-y-3">
         <Skeleton className="h-9 w-[min(220px,85%)] rounded-md bg-neutral-100" />
         <Skeleton className="h-4 max-w-xl rounded-md bg-neutral-100" />
@@ -505,25 +509,6 @@ function MyListingsView({
 
   return (
     <>
-      <MyListingsBackNav />
-      {/* Header */}
-      <AgentPageHeader
-        className="mb-5 md:mb-6"
-        title="My Listings"
-        subtitle="Manage your active, pending, and past listings from one place."
-        actions={
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onNewListing("new")}
-            className="h-9 gap-1.5 rounded-lg border-neutral-200 bg-white px-3.5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50/90 focus-visible:ring-zinc-300"
-          >
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            New listing
-          </Button>
-        }
-      />
-
       {/* Compact toolbar: search + status filters + sort (white shell, subtle shadow) */}
       <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
@@ -1367,8 +1352,7 @@ const MyListings = () => {
       <>
         <Seo title="My Listings" />
         <AgentAacPage className="pb-12">
-        <MyListingsBackNav />
-        <AgentPageHeader title="My Listings" subtitle="Publish on AAC — off-market through active." className="mb-5 md:mb-6" />
+        <MyListingsPageIntro subtitle="Publish on AAC — off-market through active." />
         <AgentSectionCard className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-14">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200 bg-white shadow-sm">
             <Plus className="h-8 w-8 text-zinc-400" strokeWidth={1.5} aria-hidden />
@@ -1396,6 +1380,23 @@ const MyListings = () => {
     <>
       <Seo title="My Listings" />
       <AgentAacPage className="pb-12">
+      <AacPageIntro
+        withTopPadding
+        back={<AacBackLink to={SUCCESS_HUB_PATH} title="Return to Success Hub" />}
+        title="My Listings"
+        subtitle="Manage your active, pending, and past listings from one place."
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleNewListing("new")}
+            className="h-9 gap-1.5 rounded-lg border-neutral-200 bg-white px-3.5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50/90 focus-visible:ring-zinc-300"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            New listing
+          </Button>
+        }
+      />
       <MyListingsView
         listings={listings}
         onEdit={handleEdit}

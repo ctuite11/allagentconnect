@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/layout/PageShell";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -126,8 +127,11 @@ export default function IDXListingDetailBeta() {
 
   if (isLoading) {
     return (
-      <PageShell>
-        <AacBackButton type="button" className="mb-4" onClick={handleBack} />
+      <PageShell className="pt-0 pb-6">
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={handleBack} />}
+        />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <Skeleton className="aspect-[16/10] rounded-2xl" />
@@ -145,8 +149,11 @@ export default function IDXListingDetailBeta() {
 
   if (error) {
     return (
-      <PageShell>
-        <AacBackButton type="button" className="mb-4" onClick={handleBack} />
+      <PageShell className="pt-0 pb-6">
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={handleBack} />}
+        />
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
           <p className="text-neutral-700 font-medium mb-2">
@@ -165,8 +172,11 @@ export default function IDXListingDetailBeta() {
 
   if (listing === null) {
     return (
-      <PageShell>
-        <AacBackButton type="button" className="mb-4" onClick={handleBack} />
+      <PageShell className="pt-0 pb-6">
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={handleBack} />}
+        />
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
           <p className="text-neutral-700 font-medium mb-2">
@@ -254,9 +264,12 @@ export default function IDXListingDetailBeta() {
   };
 
   return (
-    <PageShell>
+    <PageShell className="pt-0 pb-6">
       {/* Back button */}
-      <AacBackButton type="button" className="mb-4" onClick={handleBack} />
+      <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={handleBack} />}
+        />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content */}

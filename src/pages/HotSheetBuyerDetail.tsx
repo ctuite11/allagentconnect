@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, Plus, Search, RefreshCw } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
@@ -414,7 +415,7 @@ const HotSheetBuyerDetail = () => {
 
   if (loading) {
     return (
-      <div className="bg-white pt-4 px-6 pb-6">
+      <div className="bg-white px-6 pb-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
           <div className="mb-2 flex animate-pulse items-center gap-2">
             <div className="h-9 w-9 rounded-md bg-neutral-100" />
@@ -447,13 +448,13 @@ const HotSheetBuyerDetail = () => {
     ? `${buyer.firstName} ${buyer.lastName}`.trim() || buyer.email || "Unknown Buyer"
     : "Unknown Buyer";
   return (
-    <div className="bg-white pt-4 px-6 pb-6">
+    <div className="bg-white px-6 pb-6">
       <div className="mx-auto w-full max-w-[88rem] min-w-0">
-        {/* Header — Back only in nav control; page title below */}
-        <header className="mb-4 space-y-1">
-          <AacBackButton type="button" onClick={() => navigate(backTo)} />
-          <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">Hot sheets</h1>
-        </header>
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={() => navigate(backTo)} />}
+          title="Hot sheets"
+        />
 
         {/* Buyer card + New Hot Sheet (grouped — CTA directly under card, left-aligned) */}
         {buyer && relationshipStatus && (

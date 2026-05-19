@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, ListChecks, Check, FileSpreadsheet } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Button } from "@/components/ui/button";
 import { FilterState, initialFilters } from "@/components/listing-search/ListingSearchFilters";
@@ -320,16 +321,12 @@ const ListingSearchResults = () => {
   };
 
   const renderToolbarTitleRow = () => (
-    <div className="flex items-center py-2 sm:py-2.5">
-      <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
-        <AacBackButton
-          type="button"
-          onClick={handleBackToSearch}
-          className="-ml-1 shrink-0 text-[13px]"
-        />
-        <h1 className="text-[13px] font-semibold tracking-tight text-neutral-900 sm:text-sm">Edit search</h1>
-      </div>
-    </div>
+    <AacPageIntro
+      withTopPadding
+      back={<AacBackButton type="button" onClick={handleBackToSearch} />}
+      title="Edit search"
+      titleClassName="text-[13px] sm:text-sm"
+    />
   );
 
   /** Top strip in results container: Results on left, View + Sort on right. */
@@ -488,7 +485,7 @@ const ListingSearchResults = () => {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pt-4 sm:pt-5">
+    <div className="flex min-h-screen flex-col bg-white">
       <main className="flex-1">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-5">
           {!showMapSplit && (

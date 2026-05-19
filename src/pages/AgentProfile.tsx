@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import {
   Star,
   Quote,
@@ -241,12 +242,15 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           ...(agent.bio ? { description: agent.bio.substring(0, 200) } : {}),
         }}
       />
-      {/* Back nav */}
-      <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
-        <AacBackButton
-          type="button"
-          onClick={() => navigate(publicMode ? "/our-agents" : "/our-members")}
-          className="text-[13px]"
+      <div className="mx-auto max-w-6xl px-5 md:px-8">
+        <AacPageIntro
+          withTopPadding
+          back={
+            <AacBackButton
+              type="button"
+              onClick={() => navigate(publicMode ? "/our-agents" : "/our-members")}
+            />
+          }
         />
       </div>
 

@@ -43,6 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, MapPin, Heart } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { toast } from "sonner";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
@@ -940,25 +941,16 @@ const Favorites = ({
 
   const genericFavoritesStickyHeader = (
     <header className="sticky top-14 z-40 border-b border-neutral-200/90 bg-white">
-      <div className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
-        <div className="flex min-w-0 flex-col gap-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <AacBackButton
-              type="button"
-              onClick={() => navigate("/agent-dashboard")}
-              className="-ml-1 shrink-0 text-[13px]"
-            />
-            <div className="min-w-0 space-y-0.5">
-              <h1 className="text-sm font-semibold tracking-tight text-neutral-900">Favorite listings</h1>
-              <p className="text-[13px] leading-snug text-neutral-500">
-                Your account favorites — map, refine, share, or remove selections.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7">
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={() => navigate("/agent-dashboard")} />}
+          title="Favorite listings"
+          subtitle="Your account favorites — map, refine, share, or remove selections."
+        />
       </div>
     </header>
-  );
+  )
 
   if (loading) {
     const headerEl = buyerMode ? buyerStickyHeader : genericFavoritesStickyHeader;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PageTitle } from "@/components/ui/page-title";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
@@ -277,23 +277,14 @@ const ListingAnalytics = () => {
   return (
     <>
       <Seo title="Listing Analytics" />
-      <div className="min-h-screen bg-background pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <AacBackButton
-            type="button"
-            onClick={() => navigate("/agent/listings")}
-            className="-ml-1.5 shrink-0"
-          />
-          <div className="flex-1">
-            <PageTitle icon={<BarChart3 className="h-8 w-8" />}>
-              Listing Analytics
-            </PageTitle>
-            <p className="text-muted-foreground mt-2">
-              Track performance and engagement metrics for your listings
-            </p>
-          </div>
-        </div>
+      <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 pb-8">
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={() => navigate("/agent/listings")} />}
+          title="Listing Analytics"
+          subtitle="Track performance and engagement metrics for your listings"
+        />
 
         {/* Listing Selector and Time Range */}
         <div className="flex gap-4 mb-6">

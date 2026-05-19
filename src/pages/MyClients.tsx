@@ -656,9 +656,9 @@ const MyClients = () => {
         <AgentAacPage className="pb-12" role="status" aria-live="polite" aria-busy="true">
           <span className="sr-only">Loading contacts…</span>
           <AgentPageHeader
+            withTopPadding
             title="My Contacts"
             subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
-            className="mb-5"
           />
           <div className="mb-5 flex flex-wrap gap-2">
             <Skeleton className="h-9 w-32 rounded-lg bg-neutral-100" />
@@ -698,9 +698,9 @@ const MyClients = () => {
         />
         <AgentAacPage className="pb-12">
           <AgentPageHeader
+            withTopPadding
             title="My Contacts"
             subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
-            className="mb-5"
           />
           <AgentSectionCard className="border border-neutral-200 p-8 shadow-sm">
             <div className="space-y-4 text-center">
@@ -733,9 +733,9 @@ const MyClients = () => {
       />
       <AgentAacPage className="pb-12">
         <AgentPageHeader
+          withTopPadding
           title="My Contacts"
           subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
-          className="mb-5"
         />
 
           {/* Action Buttons - Primary left, utilities right */}

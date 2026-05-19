@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, MapPin, ChevronDown, Pencil, Heart } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -1053,38 +1054,41 @@ const HotSheetReview = () => {
   const maySendDashboardInviteToSomeRecipients =
     !isSharedWorkspace && reviewRecipients.some((r) => r.sendDashboardInvite);
   return (
-      <div className="min-h-[50vh] bg-white pt-4 px-4 pb-10 sm:px-6">
+      <div className="min-h-[50vh] bg-white px-4 pb-10 sm:px-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
-          {/* Back link + page title */}
-          <header className="mb-4">
-            <AacBackButton
-              type="button"
-              onClick={() => {
-                const preferBuyerFrom =
-                  typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
-                    ? originFrom
-                    : null;
-                const buyerBack =
-                  !originFrom && buyerContextClientId ? `/hot-sheets/buyer/${buyerContextClientId}` : null;
-                navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
-              }}
-              className="mb-3 max-w-full py-0.5 text-left"
-            />
-            <div className="flex flex-col gap-1 border-b border-neutral-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-              <div className="min-w-0">
-                <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
-                  {isSharedWorkspace ? "Buyer activity" : "Review matches"}
-                </h1>
-                <p className="mt-1.5 text-[13px] leading-snug sm:text-[14px]" title={hotSheet.name}>
-                  <span className="text-neutral-500">Hot Sheet Name: </span>
-                  <span className="font-semibold text-neutral-900">{hotSheet.name}</span>
-                </p>
-              </div>
-              <span className="shrink-0 text-[11px] font-medium tabular-nums text-neutral-400 sm:mb-0.5">
+          <AacPageIntro
+            withTopPadding
+            className="border-b border-neutral-200 pb-4"
+            back={
+              <AacBackButton
+                type="button"
+                onClick={() => {
+                  const preferBuyerFrom =
+                    typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
+                      ? originFrom
+                      : null;
+                  const buyerBack =
+                    !originFrom && buyerContextClientId
+                      ? `/hot-sheets/buyer/${buyerContextClientId}`
+                      : null;
+                  navigate(preferBuyerFrom || buyerBack || originFrom || "/hot-sheets");
+                }}
+              />
+            }
+            title={isSharedWorkspace ? "Buyer activity" : "Review matches"}
+            titleClassName="text-lg sm:text-xl"
+            subtitle={
+              <>
+                <span className="text-neutral-500">Hot Sheet Name: </span>
+                <span className="font-semibold text-neutral-900">{hotSheet.name}</span>
+              </>
+            }
+            actions={
+              <span className="text-[11px] font-medium tabular-nums text-neutral-400">
                 {id ? formatHotSheetRef(id) : ""}
               </span>
-            </div>
-          </header>
+            }
+          />
 
           {/* Buyer recipients strip */}
           {!isSharedWorkspace && reviewRecipients.length > 0 && (

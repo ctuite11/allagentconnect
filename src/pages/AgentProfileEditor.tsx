@@ -570,10 +570,11 @@ setHeaderBackgroundType(profile.header_background_type || "color");
         canonical="https://allagentconnect.com/agent-profile-editor"
         noindex
       />
-      <PageShell className="pb-32">
-        {/* Header with inline back button */}
-        <div className="flex items-center justify-between mb-8">
+      <PageShell className="pt-0 pb-32">
+        <div className="flex items-start justify-between gap-4">
           <PageHeader
+            withTopPadding
+            className="min-w-0 flex-1"
             title="Edit Profile"
             subtitle="Customize how you appear to clients"
             backTo="/agent-dashboard"

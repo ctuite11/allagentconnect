@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { buyerPageMain, buyerPageStack } from "@/lib/buyerUi";
+import { buyerPageStack } from "@/lib/buyerUi";
 
 type AgentAacPageProps = HTMLAttributes<HTMLElement> & {
   children: ReactNode;
@@ -13,7 +13,14 @@ type AgentAacPageProps = HTMLAttributes<HTMLElement> & {
  */
 export function AgentAacPage({ children, className, ...rest }: AgentAacPageProps) {
   return (
-    <main className={cn(buyerPageMain, buyerPageStack, "bg-white", className)} {...rest}>
+    <main
+      className={cn(
+        "mx-auto w-full max-w-7xl bg-white px-6 pb-12 md:px-8",
+        buyerPageStack,
+        className,
+      )}
+      {...rest}
+    >
       {children}
     </main>
   );

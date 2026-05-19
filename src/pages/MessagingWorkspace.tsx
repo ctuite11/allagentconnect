@@ -12,6 +12,7 @@ import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { buyerMessagingPanel } from "@/lib/buyerUi";
 
 interface MessagingWorkspaceProps {
@@ -113,29 +114,26 @@ function MessagingWorkspaceContent({
             : "flex min-h-0 flex-1 flex-col bg-[#FFFFFF]"
         }
       >
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-4 pb-10 pt-5 sm:px-6 md:px-8 md:pt-6">
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-4 pb-10 sm:px-6 md:px-8">
           <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col">
             {!buyerMode ? (
               <AgentPageHeader
+                withTopPadding
                 title="Messages"
                 subtitle="Conversation threads with clients and colleagues — same rhythm as inbox cards on Success Hub."
-                className="mb-4 shrink-0 md:mb-5"
+                className="shrink-0"
               />
             ) : null}
             {buyerMode ? (
-              <div className="mb-4 shrink-0 md:mb-5">
-                <AacBackButton
-                  type="button"
-                  className="mb-4"
-                  onClick={() => navigate("/client/dashboard")}
-                />
-                <div className="space-y-1">
-                  <h1 className="text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl">Messages</h1>
-                  <p className="text-[13px] leading-snug text-zinc-500">
-                    Stay in touch with your agent and keep everything about your home search in one place.
-                  </p>
-                </div>
-              </div>
+              <AacPageIntro
+                withTopPadding
+                className="shrink-0"
+                back={
+                  <AacBackButton type="button" onClick={() => navigate("/client/dashboard")} />
+                }
+                title="Messages"
+                subtitle="Stay in touch with your agent and keep everything about your home search in one place."
+              />
             ) : null}
 
             <div

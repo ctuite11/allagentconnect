@@ -25,4 +25,18 @@ export const agentPageTitleClass =
 export const agentPageSubtitleClass =
   "text-sm leading-snug text-neutral-500";
 
+/**
+ * AAC page intro spacing — use via `AacPageIntro` / `AgentPageHeader` (`withTopPadding` when first in shell).
+ *
+ * | Token | Class | px | Role |
+ * |-------|-------|-----|------|
+ * | `agentPageTopPaddingClass` | `pt-5` | 20 | Top of content → Back |
+ * | `agentPageBackNavSpacingClass` | `mb-4` | 16 | Back → title |
+ * | (in `AacPageIntro`) | `space-y-1` | 4 | Title → subtitle |
+ * | `agentPageIntroSpacingClass` | `mb-5 md:mb-6` | 20 / 24 | Intro block → page body |
+ */
+export const agentPageTopPaddingClass = "pt-5";
+export const agentPageBackNavSpacingClass = "mb-4";
+export const agentPageIntroSpacingClass = "mb-5 md:mb-6";
+
 export { aacBackLinkClass, aacBackIconButtonClass } from "@/components/layout/AacBackLink";

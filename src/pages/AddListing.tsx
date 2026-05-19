@@ -3115,7 +3115,7 @@ const AddListing = () => {
     return (
       <>
         <Seo title="Add Listing" />
-        <div className="min-h-0 bg-white pb-10 pt-5" aria-busy="true" role="status">
+        <div className="min-h-0 bg-white pb-10" aria-busy="true" role="status">
           <span className="sr-only">
             {isLoadingListing ? "Loading listing data…" : "Preparing listing form…"}
           </span>
@@ -3145,10 +3145,11 @@ const AddListing = () => {
   return (
     <>
       <Seo title="Add Listing" />
-      <div className="min-h-0 bg-white pb-10 pt-5">
-      <div className="container mx-auto px-4 py-6">
+      <div className="min-h-0 bg-white pb-10">
+      <div className="container mx-auto px-4 pb-6">
         <div className="max-w-5xl mx-auto">
           <AgentPageHeader
+            withTopPadding
             title={listingId ? "Edit listing" : "Add listing"}
             subtitle="Hello — bonjour — hola. Set pricing and location, add media and disclosures, then publish. Use Save Draft if you step away; open Dashboard from the Menu for your account."
             backTo={addListingBackTo}

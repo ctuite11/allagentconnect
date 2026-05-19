@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -717,8 +718,11 @@ const PropertyDetail = () => {
 
       <main className="flex-1">
         {/* Back Button Row */}
-        <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
-          <AacBackButton type="button" onClick={handlePropertyDetailBack} className="text-[13px]" />
+        <div className="mx-auto max-w-6xl px-4">
+          <AacPageIntro
+            withTopPadding
+            back={<AacBackButton type="button" onClick={handlePropertyDetailBack} />}
+          />
         </div>
 
         {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
