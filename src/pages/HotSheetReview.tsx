@@ -1388,21 +1388,40 @@ const HotSheetReview = () => {
                     void (async () => {
                       let buyerAuthId = getConversationBuyerUserId();
                       if (!buyerAuthId) {
-                        // Mirror AgentClientFavorites: clients.email → profiles.email → profiles.id.
-                        const candidateCrmIds = [
+                        // Prefer recipients already loaded on the page (their email + any pre-resolved
+                        // authUserId), then fall back to the hot-sheet's primary CRM id.
+                        type Candidate = {
+                          crmId: string;
+                          email: string;
+                          firstName: string;
+                          lastName: string;
+                          displayName: string;
+                          authUserId?: string;
+                        };
+                        const candidates: Candidate[] = [];
+                        const seen = new Set<string>();
+                        const pushCandidate = (c: Candidate) => {
+                          if (!c.crmId || seen.has(c.crmId)) return;
+                          seen.add(c.crmId);
+                          candidates.push(c);
+                        };
+                        for (const r of reviewRecipients) {
+                          const [fn, ...rest] = (r.displayName || "").split(/\s+/);
+                          pushCandidate({
+                            crmId: r.clientId,
+                            email: (r.email || "").trim(),
+                            firstName: fn || "",
+                            lastName: rest.join(" "),
+                            displayName: r.displayName || r.email || "",
+                            authUserId: r.authUserId,
+                          });
+                        }
+                        const extraCrmIds = [
                           buyerContextClientId,
                           typeof hotSheet?.client_id === "string" ? hotSheet.client_id : null,
-                          ...reviewRecipients.map((r) => r.clientId),
                         ].filter((v): v is string => typeof v === "string" && v.length > 0);
-                        const uniqueCrmIds = [...new Set(candidateCrmIds)];
-
-                        let lastTargetCrmId: string | null = null;
-                        let lastEmail = "";
-                        let lastFirstName = "";
-                        let lastLastName = "";
-                        let lastDisplayName = "";
-
-                        for (const crmId of uniqueCrmIds) {
+                        for (const crmId of extraCrmIds) {
+                          if (seen.has(crmId)) continue;
                           const { data: clientRow } = await supabase
                             .from("clients")
                             .select("email, first_name, last_name")
@@ -1414,23 +1433,78 @@ const HotSheetReview = () => {
                             typeof clientRow?.first_name === "string" ? clientRow.first_name : "";
                           const lastName =
                             typeof clientRow?.last_name === "string" ? clientRow.last_name : "";
-                          const recipient = reviewRecipients.find((r) => r.clientId === crmId);
-                          const displayName =
-                            recipient?.displayName?.trim() ||
-                            `${firstName} ${lastName}`.trim() ||
-                            email;
+                          pushCandidate({
+                            crmId,
+                            email,
+                            firstName,
+                            lastName,
+                            displayName: `${firstName} ${lastName}`.trim() || email,
+                          });
+                        }
 
-                          if (email) {
-                            lastTargetCrmId = crmId;
-                            lastEmail = email;
-                            lastFirstName = firstName;
-                            lastLastName = lastName;
-                            lastDisplayName = displayName;
+                        let lastTargetCrmId: string | null = null;
+                        let lastEmail = "";
+                        let lastFirstName = "";
+                        let lastLastName = "";
+                        let lastDisplayName = "";
 
-                            const authId = await resolveBuyerAuthUserId({ email });
+                        // 1) Use any pre-resolved authUserId from recipients.
+                        for (const c of candidates) {
+                          if (c.authUserId) {
+                            buyerAuthId = c.authUserId;
+                            applyConversationBuyerUserId(c.authUserId);
+                            break;
+                          }
+                        }
+
+                        // 2) Email → profiles lookup (Favorites pattern).
+                        if (!buyerAuthId) {
+                          for (const c of candidates) {
+                            if (!c.email) continue;
+                            lastTargetCrmId = c.crmId;
+                            lastEmail = c.email;
+                            lastFirstName = c.firstName;
+                            lastLastName = c.lastName;
+                            lastDisplayName = c.displayName || c.email;
+                            const authId = await resolveBuyerAuthUserId({ email: c.email });
                             if (authId) {
                               buyerAuthId = authId;
                               applyConversationBuyerUserId(authId);
+                              break;
+                            }
+                          }
+                        }
+
+                        // 3) Accepted share_tokens fallback (buyer's profile email may differ from CRM email).
+                        if (!buyerAuthId && agentUserId) {
+                          const crmIds = candidates.map((c) => c.crmId);
+                          const emails = candidates
+                            .map((c) => c.email.toLowerCase())
+                            .filter(Boolean);
+                          const { data: tokenRows } = await supabase
+                            .from("share_tokens")
+                            .select("accepted_by_user_id, payload, accepted_at, revoked_at")
+                            .eq("agent_id", agentUserId)
+                            .not("accepted_by_user_id", "is", null)
+                            .not("accepted_at", "is", null)
+                            .is("revoked_at", null);
+                          for (const row of tokenRows ?? []) {
+                            const payload =
+                              (row as { payload?: { client_id?: string; client_email?: string } | null })
+                                .payload ?? null;
+                            const tCid = typeof payload?.client_id === "string" ? payload.client_id : "";
+                            const tEm =
+                              typeof payload?.client_email === "string"
+                                ? payload.client_email.toLowerCase()
+                                : "";
+                            const matches =
+                              (tCid && crmIds.includes(tCid)) || (tEm && emails.includes(tEm));
+                            if (!matches) continue;
+                            const authId = (row as { accepted_by_user_id?: string | null })
+                              .accepted_by_user_id;
+                            if (authId) {
+                              buyerAuthId = String(authId);
+                              applyConversationBuyerUserId(buyerAuthId);
                               break;
                             }
                           }
