@@ -9,11 +9,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
-import {
-  buyerCollectionCardRoot,
-  buyerImageMosaicGrid,
-  buyerSectionCard,
-} from "@/lib/buyerUi";
+import { buyerSectionCard } from "@/lib/buyerUi";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
 import {
   EMPTY_BUYER_ACTIVITY_METRICS,
@@ -54,6 +50,9 @@ interface LinkedHotSheet {
 
 /** Matches agent main Hot Sheets card grid (`HotSheets.tsx` buyer/personal sections). */
 const BUYER_HOT_SHEET_DETAIL_GRID = "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3";
+
+/** Avoid flashing skeletons on fast loads; only show loading copy after this delay. */
+const BUYER_HOT_SHEETS_LOADING_UI_DELAY_MS = 280;
 
 function CriteriaPills({ criteria }: { criteria: any }) {
   if (!criteria) return null;
@@ -132,6 +131,7 @@ const HotSheetBuyerDetail = () => {
       ? "/agent/hot-sheets"
       : fromState ?? (clientId ? `/agent/buyers/${clientId}` : "/agent/hot-sheets");
   const [loading, setLoading] = useState(true);
+  const [showSlowLoadingUi, setShowSlowLoadingUi] = useState(false);
   const [buyer, setBuyer] = useState<BuyerInfo | null>(null);
   const [relationshipStatus, setRelationshipStatus] = useState<"active" | "pending" | null>(null);
   const [hotSheets, setHotSheets] = useState<LinkedHotSheet[]>([]);
@@ -146,6 +146,18 @@ const HotSheetBuyerDetail = () => {
   useEffect(() => {
     if (clientId) fetchBuyerData();
   }, [clientId]);
+
+  useEffect(() => {
+    if (!loading) {
+      setShowSlowLoadingUi(false);
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setShowSlowLoadingUi(true),
+      BUYER_HOT_SHEETS_LOADING_UI_DELAY_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [loading]);
 
   const handleResendInvite = async (hs: LinkedHotSheet) => {
     if (!buyer?.email || !clientId) {
@@ -421,28 +433,16 @@ const HotSheetBuyerDetail = () => {
     return (
       <div className="bg-white px-6 pb-6">
         <div className="mx-auto w-full max-w-[88rem] min-w-0">
-          <div className="mb-2 flex animate-pulse items-center gap-2">
-            <div className="h-9 w-9 rounded-md bg-neutral-100" />
-            <div className="h-4 w-28 rounded bg-neutral-100" />
-          </div>
-          <div className="mb-3 space-y-2">
-            <div className="h-[4.5rem] rounded-xl border border-neutral-200 bg-neutral-50/80" />
-            <div className="h-8 w-40 animate-pulse rounded-md bg-neutral-100" />
-          </div>
-          <div className={BUYER_HOT_SHEET_DETAIL_GRID}>
-            {[1, 2].map((i) => (
-              <article
-                key={i}
-                className={`${buyerCollectionCardRoot} flex min-h-[19rem] animate-pulse flex-col overflow-hidden md:min-h-[20rem]`}
-              >
-                <div className={`${buyerImageMosaicGrid} bg-neutral-100`} />
-                <div className="space-y-2 px-4 py-3">
-                  <div className="h-4 w-2/3 rounded bg-neutral-200" />
-                  <div className="h-3 w-1/2 rounded bg-neutral-100" />
-                </div>
-              </article>
-            ))}
-          </div>
+          <AacPageIntro
+            withTopPadding
+            back={<AacBackButton type="button" onClick={() => navigate(backTo)} />}
+            title="Hot sheets"
+          />
+          {showSlowLoadingUi ? (
+            <p className="mt-8 text-sm text-neutral-500" aria-live="polite">
+              Loading hot sheets…
+            </p>
+          ) : null}
         </div>
       </div>
     );
