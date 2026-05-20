@@ -186,6 +186,19 @@ const HotSheetReview = () => {
   /** Buyer hot-sheet saves — read-only hearts on shared workspace cards */
   const [buyerHotSheetFavoriteIds, setBuyerHotSheetFavoriteIds] = useState<Set<string>>(new Set());
 
+  /** Invite-buyer dialog (shown when comment is clicked but no buyer auth user exists). */
+  type InviteBuyerTarget = {
+    crmClientId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    mode: "invite" | "resend";
+  };
+  const [inviteBuyerDialogOpen, setInviteBuyerDialogOpen] = useState(false);
+  const [inviteBuyerTarget, setInviteBuyerTarget] = useState<InviteBuyerTarget | null>(null);
+  const [inviteBuyerSending, setInviteBuyerSending] = useState(false);
+
   const isSharedWorkspace = useMemo(
     () =>
       reviewRecipients.length > 0 &&
