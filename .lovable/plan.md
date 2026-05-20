@@ -1,60 +1,41 @@
-## Problem
+# Align Hot Sheet Review chat-open with Favorites buyer resolution
 
-For Hot Sheet Review comments, even when the buyer has accepted the invite and has a CRM email/phone, the comment click hits the "no contact info — add email before inviting" branch.
+## Why
+On `AgentClientFavorites`, opening a listing discussion **always works** because the page resolves the buyer with a single, direct lookup:
 
-Root cause is in `src/lib/resolveHotSheetReviewConversationBuyer.ts`:
+```
+clients.id  →  clients.email  →  profiles.email  →  profiles.id   (= buyer auth uid)
+```
 
-- All resolution paths (share_tokens, client_agent_relationships, email→profiles) end up routed through `profileIdExists(authId)` or `resolveBuyerAuthUserId({ email })`.
-- Both depend on the agent being able to `SELECT` from `public.profiles` for a **different user**.
-- Current `profiles` RLS (verified in DB):
-  - `profiles_select_own` / `Users can view their own profile`: `auth.uid() = id`
-  - No policy lets an agent read a buyer's profile row.
-- So `profileIdExists` returns false for any buyer auth id, `resolveBuyerAuthUserId` returns null for any buyer email, and the resolver collapses to "no buyer auth user → invite flow → no email" path.
+That's it — no `share_tokens`, no `client_agent_relationships`, no `buyer_workspace_invites`. The RLS on `profiles` already permits this `email →  id` read for the agent (Favorites proves it).
 
-This also explains why the dialog then surfaces the "no email" error even though the CRM client has one — the `clients` table read happens in the **same** unresolved branch and the buyer's CRM row is found via a different code path (`reviewRecipients`) that already had the email; control flow just never reaches there for some configurations.
+In `HotSheetReview.onOpenChat`, the same buyer would resolve fine with that one query, but instead we run a multi-stage chain (`resolveBuyerAuthForHotSheet` → share_tokens → workspace_invites → relationships → CRM email). When the early stages each return `null` (RLS-gated tables, payload mismatches, etc.) we fall through to a final branch that fires:
 
-## Goal
+> "This buyer has no contact info — add an email before inviting."
 
-Make buyer auth resolution succeed without requiring the agent to read `public.profiles` for another user. Trust the auth ids returned by tables the agent legitimately has access to.
+…even though the buyer has an email AND has accepted the invite. Favorites would have resolved them on the first try.
 
-## Scope
+## What to change
 
-`src/lib/resolveHotSheetReviewConversationBuyer.ts` only. No schema migrations, no RLS changes, no UI changes, no edge functions.
+**File:** `src/pages/HotSheetReview.tsx` — only the `onOpenChat` handler around lines 1387–1465.
 
-## Changes — `src/lib/resolveHotSheetReviewConversationBuyer.ts`
+Replace the multi-step resolver chain with the Favorites pattern, in this order:
 
-1. **Remove the `profileIdExists` gate** from:
-   - `resolveBuyerAuthFromAcceptedShareTokens` (line ~86)
-   - The accepted-share-tokens loop in `resolveHotSheetReviewConversationBuyer` (line ~243)
-   - The `client_agent_relationships` loop (line ~222)
+1. If `getConversationBuyerUserId()` already returns an id, use it (unchanged).
+2. Build the candidate CRM client id list (same as today: `buyerContextClientId`, `hotSheet.client_id`, then any `reviewRecipients[].clientId`).
+3. For each candidate CRM id, in order:
+   - Read `clients.email` for that id.
+   - If email present, call `resolveBuyerAuthUserId({ email })` (the exact function Favorites uses).
+   - First non-null result wins → `applyConversationBuyerUserId(...)` and open the chat.
+4. Only if **every** candidate has no email (or no matching `profiles` row) do we fall through to the existing Invite/Resend dialog branch.
 
-   Trust the `accepted_by_user_id` / `client_id` values returned by these agent-owned tables. They are already validated at write time (FKs to `auth.users`).
+Drop the call to `resolveBuyerAuthForHotSheet` from this handler. The initial-load resolver at line 537 (`resolveHotSheetReviewConversationBuyer`) stays as-is — it pre-populates `conversationBuyerUserId` for the common case; this change only fixes the on-demand fallback when that pre-pop returned `null`.
 
-2. **Delete the now-unused `profileIdExists` helper.**
+## What stays the same
+- No DB changes, no RLS changes.
+- `resolveHotSheetReviewConversationBuyer` (page-load resolver) is untouched.
+- The Invite/Resend dialog still fires when there genuinely is no email anywhere.
+- No styling, layout, or other UI changes.
 
-3. **Replace `resolveBuyerAuthFromCrmClientId` email-only path with a wider net.** New order, all using tables the agent can read:
-   1. `share_tokens` (agent-owned) — accepted_by_user_id where payload.client_id matches.
-   2. `client_agent_relationships` (agent-owned) — `client_id` where `crm_client_id` matches, `status='active'`.
-   3. **NEW:** `buyer_workspace_invites` — `accepted_by_user_id` (or equivalent column) where `buyer_email` matches the CRM client email, `accepted_at IS NOT NULL`. Confirm exact column names against the table before the read; if the table is unreadable by the agent, skip silently.
-   4. Last-ditch: `resolveBuyerAuthUserId({ email })` (kept as a soft fallback for when admin/service contexts call this).
-
-4. **`resolveBuyerAuthForHotSheet`** keeps its existing shape (`{ authUserId, hasAnyInvite, hasPendingInvite }`). After the new chain returns null, the "any/pending invite" probe stays as-is (still queries `share_tokens` for the agent — accessible).
-
-5. **Diagnostic log unchanged** in dev mode so future regressions are visible in the existing `[HotSheetReview] conversation buyer resolution` payload.
-
-## Out of scope (do NOT touch)
-
-- `src/pages/HotSheetReview.tsx` flow, dialogs, or toasts.
-- `src/lib/resolveBuyerAuthUserId.ts` signature.
-- RLS migrations on `profiles`.
-- Invite, email, or conversation_messages logic.
-
-## Verification
-
-1. `npm run build`.
-2. In the live preview as the agent, click Comment on the listing card for the accepted buyer; the ListingConversationSheet should open instead of the invite/contact-info dialog.
-
-## Technical notes
-
-- The DB has been confirmed: profiles RLS is owner-only (`auth.uid() = id`). `share_tokens.agent_id = auth.uid()` and `client_agent_relationships.agent_id = auth.uid()` are readable by the agent, so values returned from those tables are safe to trust without re-validating against `profiles`.
-- `buyer_workspace_invites` column names (`accepted_by_user_id` vs another) must be checked before the read is added; if absent, omit step 3.3 rather than fabricate columns.
+## Expected outcome
+Clicking the comment button on a Hot Sheet Review listing card behaves identically to clicking it on the Favorites page: the buyer is resolved by email-to-profile and the conversation sheet opens. The misleading "no contact info" toast no longer fires for buyers who actually have an email.
