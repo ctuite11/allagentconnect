@@ -117,7 +117,10 @@ export async function fetchBuyerNewHotSheetMatches(
     }
   }
 
-  let listings = filterVisibleListings([...listingById.values()], agentUserId);
+  let listings = filterVisibleListings(
+    [...listingById.values()] as Array<BuyerNewHotSheetMatchRow & { status: string; agent_id: string }>,
+    agentUserId,
+  ) as unknown as BuyerNewHotSheetMatchRow[];
 
   listings = [...listings].sort((a, b) => {
     const da = a.list_date ?? a.created_at ?? "";

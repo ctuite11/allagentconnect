@@ -1,4 +1,7 @@
-import { listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
+import {
+  listingEffectiveNumericPrice,
+  type ListingPriceFields,
+} from "@/lib/formatListingPriceDisplay";
 
 /** Minimal listing row for agent split map/list results surfaces. */
 export type AgentSplitListing = Record<string, unknown> & {
@@ -32,8 +35,8 @@ export function sortAgentSplitListings<T extends AgentSplitListing>(
 
   if (sortColumn === "price") {
     return rows.sort((a, b) => {
-      const ea = listingEffectiveNumericPrice(a);
-      const eb = listingEffectiveNumericPrice(b);
+      const ea = listingEffectiveNumericPrice(a as unknown as ListingPriceFields);
+      const eb = listingEffectiveNumericPrice(b as unknown as ListingPriceFields);
       const aMissing = ea == null;
       const bMissing = eb == null;
       if (aMissing && bMissing) return 0;

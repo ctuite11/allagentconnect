@@ -81,7 +81,7 @@ async function fetchListingEnrichmentForFavorites(
           last_name: ap.last_name,
         }
       : undefined;
-    out[row.id] = {
+    out[row.id] = ({
       listing_number: row.listing_number != null ? String(row.listing_number) : undefined,
       zip_code: row.zip_code ?? "",
       square_feet: row.square_feet ?? null,
@@ -98,7 +98,7 @@ async function fetchListingEnrichmentForFavorites(
       listing_type: row.listing_type ?? undefined,
       price_range_min: row.price_range_min ?? null,
       price_range_max: row.price_range_max ?? null,
-    };
+    }) as unknown as Partial<ListingCardModel>;
   }
   return out;
 }
@@ -114,7 +114,7 @@ function buildFavoriteSplitListings(
       ...base,
       ...extra,
       id: row.listing_id,
-      list_date: extra.list_date ?? base.created_at ?? null,
+      list_date: (extra as { list_date?: string | null }).list_date ?? base.created_at ?? null,
     } as AgentSplitListing;
   });
 }
@@ -250,8 +250,8 @@ export default function AgentClientFavorites() {
           buyerUserId,
           crmClientId,
         });
-        if (!result.ok) {
-          toast.error(result.message);
+        if (result.ok === false) {
+          toast.error((result as { message: string }).message);
           return;
         }
         setFavorites((prev) => prev.filter((f) => f.id !== favoriteRow.id));
