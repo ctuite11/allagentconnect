@@ -30,12 +30,7 @@ import {
   mergeListingThreadMessages,
   type ListingCardThreadMessage,
 } from "@/lib/listingConversationThread";
-import {
-  fetchActiveRelationshipsForCrmClients,
-  resolveBuyerAuthFromCrmClientId,
-  resolveHotSheetReviewConversationBuyer,
-  type HotSheetConversationBuyerDebug,
-} from "@/lib/resolveHotSheetReviewConversationBuyer";
+import { fetchActiveRelationshipsForCrmClients } from "@/lib/resolveHotSheetReviewConversationBuyer";
 import { resolveBuyerAuthUserId } from "@/lib/resolveBuyerAuthUserId";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
@@ -175,10 +170,8 @@ const HotSheetReview = () => {
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
-  /** Buyer auth user id for listing `ListingConversationSheet` (profiles id, not CRM clients.id). */
-  const [conversationRecipientBuyerId, setConversationRecipientBuyerId] = useState<string | null>(null);
-  const conversationRecipientBuyerIdRef = useRef<string | null>(null);
-  const conversationBuyerDebugRef = useRef<HotSheetConversationBuyerDebug | null>(null);
+  /** Favorites-style buyer auth user id for listing `ListingConversationSheet`. */
+  const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
   /** CRM buyer id to return to buyer hot sheet list when applicable */
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
@@ -197,6 +190,7 @@ const HotSheetReview = () => {
   };
   const [inviteBuyerDialogOpen, setInviteBuyerDialogOpen] = useState(false);
   const [inviteBuyerTarget, setInviteBuyerTarget] = useState<InviteBuyerTarget | null>(null);
+  const [commentBuyerTarget, setCommentBuyerTarget] = useState<InviteBuyerTarget | null>(null);
   const [inviteBuyerSending, setInviteBuyerSending] = useState(false);
 
   const isSharedWorkspace = useMemo(
@@ -221,7 +215,8 @@ const HotSheetReview = () => {
   };
 
   useEffect(() => {
-    setConversationRecipientBuyerId(null);
+    setBuyerUserId(null);
+    setCommentBuyerTarget(null);
     setBuyerContextClientId(null);
     setReviewRecipients([]);
     setRemovedListingsOpen(false);
@@ -278,27 +273,14 @@ const HotSheetReview = () => {
     });
   }, []);
 
-  const applyConversationBuyerUserId = useCallback((buyerUserId: string | null) => {
-    conversationRecipientBuyerIdRef.current = buyerUserId;
-    setConversationRecipientBuyerId(buyerUserId);
-  }, []);
-
-  /** Favorites-style: ref + state + any linked recipient auth id. */
-  const getConversationBuyerUserId = useCallback((): string | null => {
-    if (conversationRecipientBuyerIdRef.current) return conversationRecipientBuyerIdRef.current;
-    if (conversationRecipientBuyerId) return conversationRecipientBuyerId;
-    const fromRecipient = reviewRecipients.find((r) => r.authUserId)?.authUserId;
-    return fromRecipient ?? null;
-  }, [conversationRecipientBuyerId, reviewRecipients]);
-
   const fetchHotSheetAndListings = async () => {
     let workspaceIsShared = false;
     try {
       setLoading(true);
       setReviewRecipients([]);
       setBuyerHotSheetFavoriteIds(new Set());
-      applyConversationBuyerUserId(null);
-      conversationBuyerDebugRef.current = null;
+      setBuyerUserId(null);
+      setCommentBuyerTarget(null);
 
       // Resolve current agent identity
       const { data: { user } } = await supabase.auth.getUser();
@@ -391,7 +373,7 @@ const HotSheetReview = () => {
 
             const { data: stRows, error: stErr } = await supabase
               .from("share_tokens")
-              .select("id, token, payload, accepted_at, created_at")
+              .select("id, token, payload, accepted_at, accepted_by_user_id, revoked_at, created_at")
               .eq("agent_id", user.id);
 
             if (stErr) throw stErr;
@@ -442,6 +424,12 @@ const HotSheetReview = () => {
                 .filter((r) => r.status === "active" && r.client_id != null && r.crm_client_id != null)
                 .map((r) => String(r.crm_client_id)),
             );
+            const authUserIdByCrmClientId = new Map<string, string>();
+            for (const r of relationshipRows) {
+              if (r.status === "active" && r.crm_client_id && r.client_id) {
+                authUserIdByCrmClientId.set(String(r.crm_client_id), String(r.client_id));
+              }
+            }
 
             const tokensByClientId = new Map<string, any[]>();
             const tokensByEmail = new Map<string, any[]>();
@@ -449,11 +437,15 @@ const HotSheetReview = () => {
             for (const t of tokensForThisHotSheet) {
               const cid = (t as any)?.payload?.client_id ?? null;
               const email = (t as any)?.payload?.client_email ?? null;
+              const acceptedAuthId = (t as any)?.accepted_by_user_id ?? null;
               if (cid) {
                 const key = String(cid);
                 const arr = tokensByClientId.get(key) ?? [];
                 arr.push(t);
                 tokensByClientId.set(key, arr);
+                if ((t as any)?.accepted_at && acceptedAuthId) {
+                  authUserIdByCrmClientId.set(key, String(acceptedAuthId));
+                }
               }
               if (email) {
                 const key = String(email).toLowerCase();
@@ -534,25 +526,38 @@ const HotSheetReview = () => {
               });
             }
 
-            const conversationResolution = await resolveHotSheetReviewConversationBuyer({
-              agentUserId: user.id,
-              hotSheetId: String(hotSheetData.id),
-              hotSheetCrmClientId: hotSheetCrmClientId,
-              linkedCrmClientIds: clientIds,
-              recipients: built.map((r) => ({
-                clientId: r.clientId,
-                email: r.email,
-                buyerLinked: r.buyerLinked,
-                inviteAccepted: r.inviteAccepted,
-              })),
-            });
-            conversationBuyerDebugRef.current = conversationResolution.debug;
-            for (const recipient of built) {
-              const authUserId = conversationResolution.authUserIdByCrmClientId.get(recipient.clientId);
-              if (authUserId) recipient.authUserId = authUserId;
+            const orderedRecipients = [
+              ...built.filter((r) => r.clientId === primaryCrmClientId),
+              ...built.filter((r) => r.clientId !== primaryCrmClientId && (r.buyerLinked || r.inviteAccepted)),
+              ...built.filter((r) => r.clientId !== primaryCrmClientId && !r.buyerLinked && !r.inviteAccepted),
+            ];
+
+            for (const recipient of orderedRecipients) {
+              let authUserId = authUserIdByCrmClientId.get(recipient.clientId) ?? null;
+              if (!authUserId && recipient.email.trim()) {
+                authUserId = await resolveBuyerAuthUserId({ email: recipient.email });
+                if (authUserId) authUserIdByCrmClientId.set(recipient.clientId, authUserId);
+              }
+              if (authUserId) {
+                recipient.authUserId = authUserId;
+                if (!buyerAuthForConversationSync) buyerAuthForConversationSync = authUserId;
+              }
             }
-            buyerAuthForConversationSync = conversationResolution.conversationBuyerUserId;
-            applyConversationBuyerUserId(conversationResolution.conversationBuyerUserId);
+
+            setBuyerUserId(buyerAuthForConversationSync);
+            const firstContact = orderedRecipients.find((r) => r.email.trim());
+            setCommentBuyerTarget(
+              firstContact
+                ? {
+                    crmClientId: firstContact.clientId,
+                    email: firstContact.email.trim(),
+                    firstName: firstContact.displayName.split(/\s+/)[0] ?? "",
+                    lastName: firstContact.displayName.split(/\s+/).slice(1).join(" "),
+                    displayName: firstContact.displayName || firstContact.email,
+                    mode: firstContact.resendTokenId ? "resend" : "invite",
+                  }
+                : null,
+            );
 
             workspaceIsShared =
               built.length > 0 && built.every((r) => r.inviteAccepted || r.buyerLinked);
@@ -574,12 +579,32 @@ const HotSheetReview = () => {
       }
 
       if (!buyerAuthForConversationSync && primaryCrmClientId) {
-        const fromPrimaryCrm = await resolveBuyerAuthFromCrmClientId(primaryCrmClientId);
-        if (fromPrimaryCrm) {
-          buyerAuthForConversationSync = fromPrimaryCrm;
-          applyConversationBuyerUserId(fromPrimaryCrm);
+        const { data: clientRow } = await supabase
+          .from("clients")
+          .select("email, first_name, last_name")
+          .eq("id", primaryCrmClientId)
+          .maybeSingle();
+        const email = typeof clientRow?.email === "string" ? clientRow.email.trim() : "";
+        const firstName = typeof clientRow?.first_name === "string" ? clientRow.first_name : "";
+        const lastName = typeof clientRow?.last_name === "string" ? clientRow.last_name : "";
+        if (email) {
+          const authId = await resolveBuyerAuthUserId({ email });
+          if (authId) {
+            buyerAuthForConversationSync = authId;
+            setBuyerUserId(authId);
+          }
+          setCommentBuyerTarget({
+            crmClientId: primaryCrmClientId,
+            email,
+            firstName,
+            lastName,
+            displayName: `${firstName} ${lastName}`.trim() || email,
+            mode: "invite",
+          });
         }
       }
+
+      if (!buyerAuthForConversationSync) setBuyerUserId(null);
 
       // Build query using unified search utility
       const criteria = hotSheetData.criteria as any;
@@ -1385,151 +1410,17 @@ const HotSheetReview = () => {
                   chatMessages={messagesMap[row.id] || []}
                   onNewMessage={handleNewMessage}
                   onOpenChat={() => {
-                    void (async () => {
-                      let buyerAuthId = getConversationBuyerUserId();
-                      if (!buyerAuthId) {
-                        // Prefer recipients already loaded on the page (their email + any pre-resolved
-                        // authUserId), then fall back to the hot-sheet's primary CRM id.
-                        type Candidate = {
-                          crmId: string;
-                          email: string;
-                          firstName: string;
-                          lastName: string;
-                          displayName: string;
-                          authUserId?: string;
-                        };
-                        const candidates: Candidate[] = [];
-                        const seen = new Set<string>();
-                        const pushCandidate = (c: Candidate) => {
-                          if (!c.crmId || seen.has(c.crmId)) return;
-                          seen.add(c.crmId);
-                          candidates.push(c);
-                        };
-                        for (const r of reviewRecipients) {
-                          const [fn, ...rest] = (r.displayName || "").split(/\s+/);
-                          pushCandidate({
-                            crmId: r.clientId,
-                            email: (r.email || "").trim(),
-                            firstName: fn || "",
-                            lastName: rest.join(" "),
-                            displayName: r.displayName || r.email || "",
-                            authUserId: r.authUserId,
-                          });
-                        }
-                        const extraCrmIds = [
-                          buyerContextClientId,
-                          typeof hotSheet?.client_id === "string" ? hotSheet.client_id : null,
-                        ].filter((v): v is string => typeof v === "string" && v.length > 0);
-                        for (const crmId of extraCrmIds) {
-                          if (seen.has(crmId)) continue;
-                          const { data: clientRow } = await supabase
-                            .from("clients")
-                            .select("email, first_name, last_name")
-                            .eq("id", crmId)
-                            .maybeSingle();
-                          const email =
-                            typeof clientRow?.email === "string" ? clientRow.email.trim() : "";
-                          const firstName =
-                            typeof clientRow?.first_name === "string" ? clientRow.first_name : "";
-                          const lastName =
-                            typeof clientRow?.last_name === "string" ? clientRow.last_name : "";
-                          pushCandidate({
-                            crmId,
-                            email,
-                            firstName,
-                            lastName,
-                            displayName: `${firstName} ${lastName}`.trim() || email,
-                          });
-                        }
-
-                        let lastTargetCrmId: string | null = null;
-                        let lastEmail = "";
-                        let lastFirstName = "";
-                        let lastLastName = "";
-                        let lastDisplayName = "";
-
-                        // 1) Use any pre-resolved authUserId from recipients.
-                        for (const c of candidates) {
-                          if (c.authUserId) {
-                            buyerAuthId = c.authUserId;
-                            applyConversationBuyerUserId(c.authUserId);
-                            break;
-                          }
-                        }
-
-                        // 2) Email → profiles lookup (Favorites pattern).
-                        if (!buyerAuthId) {
-                          for (const c of candidates) {
-                            if (!c.email) continue;
-                            lastTargetCrmId = c.crmId;
-                            lastEmail = c.email;
-                            lastFirstName = c.firstName;
-                            lastLastName = c.lastName;
-                            lastDisplayName = c.displayName || c.email;
-                            const authId = await resolveBuyerAuthUserId({ email: c.email });
-                            if (authId) {
-                              buyerAuthId = authId;
-                              applyConversationBuyerUserId(authId);
-                              break;
-                            }
-                          }
-                        }
-
-                        // 3) Accepted share_tokens fallback (buyer's profile email may differ from CRM email).
-                        if (!buyerAuthId && agentUserId) {
-                          const crmIds = candidates.map((c) => c.crmId);
-                          const emails = candidates
-                            .map((c) => c.email.toLowerCase())
-                            .filter(Boolean);
-                          const { data: tokenRows } = await supabase
-                            .from("share_tokens")
-                            .select("accepted_by_user_id, payload, accepted_at, revoked_at")
-                            .eq("agent_id", agentUserId)
-                            .not("accepted_by_user_id", "is", null)
-                            .not("accepted_at", "is", null)
-                            .is("revoked_at", null);
-                          for (const row of tokenRows ?? []) {
-                            const payload =
-                              (row as { payload?: { client_id?: string; client_email?: string } | null })
-                                .payload ?? null;
-                            const tCid = typeof payload?.client_id === "string" ? payload.client_id : "";
-                            const tEm =
-                              typeof payload?.client_email === "string"
-                                ? payload.client_email.toLowerCase()
-                                : "";
-                            const matches =
-                              (tCid && crmIds.includes(tCid)) || (tEm && emails.includes(tEm));
-                            if (!matches) continue;
-                            const authId = (row as { accepted_by_user_id?: string | null })
-                              .accepted_by_user_id;
-                            if (authId) {
-                              buyerAuthId = String(authId);
-                              applyConversationBuyerUserId(buyerAuthId);
-                              break;
-                            }
-                          }
-                        }
-
-                        if (!buyerAuthId) {
-                          if (!lastTargetCrmId || !lastEmail) {
-                            toast.error("This buyer has no contact info — add an email before inviting.");
-                            return;
-                          }
-                          setInviteBuyerTarget({
-                            crmClientId: lastTargetCrmId,
-                            email: lastEmail,
-                            firstName: lastFirstName,
-                            lastName: lastLastName,
-                            displayName: lastDisplayName || lastEmail,
-                            mode: "invite",
-                          });
-                          setInviteBuyerDialogOpen(true);
-                          return;
-                        }
+                    if (!agentUserId || !buyerUserId) {
+                      if (!commentBuyerTarget?.email) {
+                        toast.error("This buyer has no contact info — add an email before inviting.");
+                        return;
                       }
-                      setChatListingId(row.id);
-                      setChatDrawerOpen(true);
-                    })();
+                      setInviteBuyerTarget(commentBuyerTarget);
+                      setInviteBuyerDialogOpen(true);
+                      return;
+                    }
+                    setChatListingId(row.id);
+                    setChatDrawerOpen(true);
                   }}
                   hotSheetId={id ?? undefined}
                   hideCompactFavorite={isSharedWorkspace}
@@ -1545,7 +1436,7 @@ const HotSheetReview = () => {
 
         </div>
 
-      {chatListingId && getConversationBuyerUserId() ? (
+      {chatListingId && buyerUserId ? (
         <ListingConversationSheet
           open={chatDrawerOpen}
           onOpenChange={(open) => {
@@ -1553,7 +1444,7 @@ const HotSheetReview = () => {
             if (!open) setChatListingId(null);
           }}
           listingId={chatListingId}
-          otherUserId={getConversationBuyerUserId()}
+          otherUserId={buyerUserId}
           hotSheetId={id ?? null}
           hotSheetAgentUserId={agentUserId}
           threadTitle={
@@ -1562,12 +1453,11 @@ const HotSheetReview = () => {
               : "Listing discussion"
           }
           onInboxInvalidate={() => {
-            const buyerAuthId = getConversationBuyerUserId();
-            if (!agentUserId || !buyerAuthId || !chatListingId) return;
+            if (!agentUserId || !buyerUserId || !chatListingId) return;
             void fetchListingConversationMessagesMap(
               [chatListingId],
               agentUserId,
-              buyerAuthId,
+              buyerUserId,
               agentUserId,
             ).then((convoMap) => {
               setMessagesMap((prev) => mergeListingThreadMessages(convoMap, { [chatListingId]: prev[chatListingId] ?? [] }));
