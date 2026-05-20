@@ -840,6 +840,7 @@ export function ClientDashboardView({
                           <BulkShareListingsDialog
                             listingIds={[...buyerMarketSelectedIds]}
                             listingCount={buyerMarketSelectedIds.size}
+                            senderProfileSource="buyer"
                             triggerVariant="outline"
                             triggerClassName="h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600"
                             triggerLabel={`Share selected (${buyerMarketSelectedIds.size})`}

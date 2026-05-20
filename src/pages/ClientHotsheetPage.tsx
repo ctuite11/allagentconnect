@@ -870,6 +870,7 @@ const ClientHotsheetPage = () => {
                   <BulkShareListingsDialog
                     listingIds={Array.from(selectedListingIds)}
                     listingCount={selectedListingIds.size}
+                    senderProfileSource="buyer"
                     triggerVariant="outline"
                     triggerClassName={cn(
                       BUYER_HOT_SHEET_ACTION_BTN,

@@ -5,11 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient } from "@/components/share/ShareListingsDialog";
+import { fetchBuyerSenderProfile } from "@/lib/buyerProfile";
 import { cn } from "@/lib/utils";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
   listingCount: number;
+  /** `buyer` loads `profiles` for the signed-in buyer; default `agent` uses `agent_profiles`. */
+  senderProfileSource?: "agent" | "buyer";
   /** Merged onto the toolbar trigger for density alignment (e.g. agent search results). */
   triggerClassName?: string;
   /** Use `outline` for neutral AAC toolbars (e.g. listing results); default fills primary. */
@@ -46,6 +49,7 @@ export function BulkShareListingsDialog({
   triggerVariant = "default",
   onSuccessfulShare,
   triggerLabel,
+  senderProfileSource = "agent",
 }: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -64,7 +68,7 @@ export function BulkShareListingsDialog({
 
   useEffect(() => {
     if (open) {
-      loadAgentProfile();
+      void (senderProfileSource === "buyer" ? loadBuyerProfile() : loadAgentProfile());
       loadListingPreview();
     } else {
       // Reset form when closing
@@ -78,7 +82,19 @@ export function BulkShareListingsDialog({
       setListingPreview(undefined);
       setRecipients([]);
     }
-  }, [open, listingIds]);
+  }, [open, listingIds, senderProfileSource]);
+
+  const loadBuyerProfile = async () => {
+    try {
+      const sender = await fetchBuyerSenderProfile();
+      if (!sender) return;
+      setAgentName(sender.name);
+      setAgentEmail(sender.email);
+      setAgentPhone(sender.phone);
+    } catch (error) {
+      console.error("Error loading buyer profile:", error);
+    }
+  };
 
   const handleSaveContact = async (name: string, email: string) => {
     try {
@@ -297,7 +313,7 @@ export function BulkShareListingsDialog({
         canSubmit={canSubmit}
         submitting={sending}
         onSubmit={handleShare}
-        onSaveContact={handleSaveContact}
+        onSaveContact={senderProfileSource === "agent" ? handleSaveContact : undefined}
         recipients={recipients}
         onAddRecipient={handleAddRecipient}
         onRemoveRecipient={handleRemoveRecipient}
