@@ -4282,10 +4282,6 @@ export type Database = {
           zip_code: string
         }[]
       }
-      remove_client_favorite_for_agent: {
-        Args: { p_favorite_id: string; p_buyer_user_id: string; p_crm_client_id?: string }
-        Returns: undefined
-      }
       get_listing_interest_signals: {
         Args: { p_agent_id: string; p_listing_ids: string[] }
         Returns: {
