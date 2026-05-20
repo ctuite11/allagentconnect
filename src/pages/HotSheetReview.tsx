@@ -34,8 +34,10 @@ import {
   fetchActiveRelationshipsForCrmClients,
   resolveBuyerAuthFromCrmClientId,
   resolveHotSheetReviewConversationBuyer,
+  resolveBuyerAuthForHotSheet,
   type HotSheetConversationBuyerDebug,
 } from "@/lib/resolveHotSheetReviewConversationBuyer";
+import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 
