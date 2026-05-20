@@ -232,7 +232,7 @@ export default function BuyerAccount() {
         onStatTileNavigate={(label) => {
           if (!buyerId) return;
           if (label === "Favorites") navigate(`/agent/buyers/${buyerId}/favorites`);
-          if (label === "New Matches") navigate("/search");
+          if (label === "New Matches") navigate(`/agent/buyers/${buyerId}/new-matches`);
           if (label === "Unread Messages") navigate("/agent/messages");
           if (label === "Hot Sheets") navigate(`/hot-sheets/buyer/${buyerId}`);
         }}

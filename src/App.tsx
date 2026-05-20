@@ -55,6 +55,7 @@ import ClientHotSheet from "./pages/ClientHotSheet";
 import ClientHotsheetPage from "./pages/ClientHotsheetPage";
 import ClientInvitationSetup from "./pages/ClientInvitationSetup";
 import AgentClientFavorites from "./pages/AgentClientFavorites";
+import AgentBuyerNewMatches from "./pages/AgentBuyerNewMatches";
 import ListingAnalytics from "./pages/ListingAnalytics";
 import MarketInsights from "./pages/MarketInsights";
 import VendorDashboard from "./pages/VendorDashboard";
@@ -330,6 +331,10 @@ const App = () => (
                   <Route
                     path="/agent/buyers/:buyerId/favorites"
                     element={<RouteGuard requireRole="agent"><AgentClientFavorites /></RouteGuard>}
+                  />
+                  <Route
+                    path="/agent/buyers/:buyerId/new-matches"
+                    element={<RouteGuard requireRole="agent"><AgentBuyerNewMatches /></RouteGuard>}
                   />
                   <Route path="/agent/buyers/:buyerId" element={<RouteGuard requireRole="agent"><BuyerAccount /></RouteGuard>} />
                   <Route path="/success-hub/buyers" element={<LegacySuccessHubBuyersToAgentBuyers />} />
