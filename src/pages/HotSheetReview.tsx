@@ -321,6 +321,28 @@ const HotSheetReview = () => {
               : relList[0];
           buyerAuthForConversationSync = chosen?.client_id ?? null;
           setBuyerContextClientId((chosen?.crm_client_id as string | null) ?? fallbackCrmClientId);
+
+          if (!buyerAuthForConversationSync) {
+            const crmForProfile =
+              (typeof primaryCrm === "string" && primaryCrm) || fallbackCrmClientId || [...crmIds][0];
+            if (crmForProfile) {
+              const { data: clientEmailRow } = await supabase
+                .from("clients")
+                .select("email")
+                .eq("id", crmForProfile)
+                .maybeSingle();
+              const email =
+                typeof clientEmailRow?.email === "string" ? clientEmailRow.email.trim() : "";
+              if (email) {
+                const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("id")
+                  .eq("email", email)
+                  .maybeSingle();
+                buyerAuthForConversationSync = profile?.id ?? null;
+              }
+            }
+          }
         } else {
           setBuyerContextClientId(fallbackCrmClientId);
         }
@@ -1343,11 +1365,16 @@ const HotSheetReview = () => {
                   viewMode="compact"
                   showActions={false}
                   showCompactComments
+                  compactListedByMessageSeparator
                   onSelect={helpers.onSelect ? () => helpers.onSelect!(row.id) : undefined}
                   isSelected={helpers.isSelected}
                   chatMessages={messagesMap[row.id] || []}
                   onNewMessage={handleNewMessage}
                   onOpenChat={() => {
+                    if (!conversationRecipientBuyerId) {
+                      toast.error("This buyer needs a workspace account before you can comment.");
+                      return;
+                    }
                     setChatListingId(row.id);
                     setChatDrawerOpen(true);
                   }}

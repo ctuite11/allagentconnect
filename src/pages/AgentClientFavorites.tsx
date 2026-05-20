@@ -3,7 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AgentSplitResultsSurface } from "@/components/listing-search/AgentSplitResultsSurface";
+import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
+import {
+  fetchListingConversationPreviewMap,
+  type ListingCardThreadMessage,
+} from "@/lib/listingConversationThread";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import {
   mapAgentClientFavoriteRpcToListingCard,
   type AgentClientFavoriteRpcRow,
@@ -124,6 +130,7 @@ export default function AgentClientFavorites() {
   /** CRM `clients.id` — Success Hub uses `buyerId`; legacy route uses `clientId`. */
   const crmClientId = buyerId ?? clientId ?? "";
   const navigate = useNavigate();
+  const { user: authUser } = useAuthRole();
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<AgentClientFavoriteRpcRow[]>([]);
   const [listingEnrich, setListingEnrich] = useState<Record<string, Partial<ListingCardModel>>>({});
@@ -131,6 +138,10 @@ export default function AgentClientFavorites() {
   const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [removingFavoriteId, setRemovingFavoriteId] = useState<string | null>(null);
+  const [messagesMap, setMessagesMap] = useState<Record<string, ListingCardThreadMessage[]>>({});
+  const [discussionOpen, setDiscussionOpen] = useState(false);
+  const [discussionListingId, setDiscussionListingId] = useState<string | null>(null);
+  const [discussionTitle, setDiscussionTitle] = useState("");
 
   const resultsFromPath = crmClientId
     ? `/agent/buyers/${crmClientId}/favorites`
@@ -159,6 +170,7 @@ export default function AgentClientFavorites() {
       setError(null);
       setListingEnrich({});
       setBuyerUserId(null);
+      setMessagesMap({});
 
       const {
         data: { user },
@@ -218,6 +230,14 @@ export default function AgentClientFavorites() {
       const listingIds = [...new Set(rows.map((r) => r.listing_id).filter(Boolean))];
       const enrich = await fetchListingEnrichmentForFavorites(listingIds);
       setListingEnrich(enrich);
+
+      const previewMap = await fetchListingConversationPreviewMap(
+        listingIds,
+        user.id,
+        buyerAuthId,
+        user.id,
+      );
+      setMessagesMap(previewMap);
     } catch (err) {
       console.error(err);
       setError("Failed to load favorites");
@@ -266,7 +286,44 @@ export default function AgentClientFavorites() {
     [buyerUserId, crmClientId, removingFavoriteId],
   );
 
+  const refreshDiscussionPreview = useCallback(async () => {
+    if (!discussionListingId || !buyerUserId || !authUser?.id) return;
+    const previewMap = await fetchListingConversationPreviewMap(
+      [discussionListingId],
+      authUser.id,
+      buyerUserId,
+      authUser.id,
+    );
+    setMessagesMap((prev) => ({
+      ...prev,
+      [discussionListingId]: previewMap[discussionListingId] ?? [],
+    }));
+  }, [discussionListingId, buyerUserId, authUser?.id]);
+
+  const openListingDiscussion = useCallback(
+    (listingId: string) => {
+      if (!authUser?.id || !buyerUserId) {
+        toast.error("Unable to open discussion.");
+        return;
+      }
+
+      const favoriteRow = favorites.find((r) => r.listing_id === listingId);
+      const mapped = favoriteRow ? mapAgentClientFavoriteRpcToListingCard(favoriteRow) : null;
+      const merged = mapped ? { ...mapped, ...(listingEnrich[listingId] ?? {}) } : null;
+      const title =
+        merged && (merged.address || merged.city)
+          ? [merged.address, merged.city].filter(Boolean).join(", ").trim()
+          : "Listing discussion";
+
+      setDiscussionListingId(listingId);
+      setDiscussionTitle(title);
+      setDiscussionOpen(true);
+    },
+    [authUser?.id, buyerUserId, favorites, listingEnrich],
+  );
+
   return (
+    <>
     <AgentSplitResultsSurface
       listings={listings}
       loading={loading}
@@ -321,6 +378,10 @@ export default function AgentClientFavorites() {
             listing={listingRowForAgentSplitMapCompact(cardListing)}
             hideCompactFavorite
             compactSavedHeartOverlay
+            compactListedByMessageSeparator
+            showCompactComments
+            chatMessages={messagesMap[listing.id] ?? []}
+            onOpenChat={() => openListingDiscussion(listing.id)}
             onCompactSavedHeartClick={
               favoriteRow
                 ? () => {
@@ -335,5 +396,25 @@ export default function AgentClientFavorites() {
         );
       }}
     />
+
+      {buyerUserId ? (
+        <ListingConversationSheet
+          open={discussionOpen}
+          onOpenChange={(open) => {
+            setDiscussionOpen(open);
+            if (!open) {
+              setDiscussionListingId(null);
+              setDiscussionTitle("");
+            }
+          }}
+          listingId={discussionListingId}
+          otherUserId={buyerUserId}
+          threadTitle={discussionTitle}
+          onInboxInvalidate={() => {
+            void refreshDiscussionPreview();
+          }}
+        />
+      ) : null}
+    </>
   );
 }
