@@ -4347,6 +4347,14 @@ export type Database = {
         Returns: Json
       }
       rate_limits_cleanup: { Args: never; Returns: undefined }
+      remove_client_favorite_for_agent: {
+        Args: {
+          p_buyer_user_id: string
+          p_crm_client_id?: string
+          p_favorite_id: string
+        }
+        Returns: undefined
+      }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
     }
     Enums: {
