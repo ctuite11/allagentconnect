@@ -31,7 +31,6 @@ import {
   type ListingCardThreadMessage,
 } from "@/lib/listingConversationThread";
 import { fetchActiveRelationshipsForCrmClients } from "@/lib/resolveHotSheetReviewConversationBuyer";
-import { resolveBuyerAuthUserId } from "@/lib/resolveBuyerAuthUserId";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
