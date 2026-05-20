@@ -526,25 +526,38 @@ const HotSheetReview = () => {
               });
             }
 
-            const conversationResolution = await resolveHotSheetReviewConversationBuyer({
-              agentUserId: user.id,
-              hotSheetId: String(hotSheetData.id),
-              hotSheetCrmClientId: hotSheetCrmClientId,
-              linkedCrmClientIds: clientIds,
-              recipients: built.map((r) => ({
-                clientId: r.clientId,
-                email: r.email,
-                buyerLinked: r.buyerLinked,
-                inviteAccepted: r.inviteAccepted,
-              })),
-            });
-            conversationBuyerDebugRef.current = conversationResolution.debug;
-            for (const recipient of built) {
-              const authUserId = conversationResolution.authUserIdByCrmClientId.get(recipient.clientId);
-              if (authUserId) recipient.authUserId = authUserId;
+            const orderedRecipients = [
+              ...built.filter((r) => r.clientId === primaryCrmClientId),
+              ...built.filter((r) => r.clientId !== primaryCrmClientId && (r.buyerLinked || r.inviteAccepted)),
+              ...built.filter((r) => r.clientId !== primaryCrmClientId && !r.buyerLinked && !r.inviteAccepted),
+            ];
+
+            for (const recipient of orderedRecipients) {
+              let authUserId = authUserIdByCrmClientId.get(recipient.clientId) ?? null;
+              if (!authUserId && recipient.email.trim()) {
+                authUserId = await resolveBuyerAuthUserId({ email: recipient.email });
+                if (authUserId) authUserIdByCrmClientId.set(recipient.clientId, authUserId);
+              }
+              if (authUserId) {
+                recipient.authUserId = authUserId;
+                if (!buyerAuthForConversationSync) buyerAuthForConversationSync = authUserId;
+              }
             }
-            buyerAuthForConversationSync = conversationResolution.conversationBuyerUserId;
-            applyConversationBuyerUserId(conversationResolution.conversationBuyerUserId);
+
+            setBuyerUserId(buyerAuthForConversationSync);
+            const firstContact = orderedRecipients.find((r) => r.email.trim());
+            setCommentBuyerTarget(
+              firstContact
+                ? {
+                    crmClientId: firstContact.clientId,
+                    email: firstContact.email.trim(),
+                    firstName: firstContact.displayName.split(/\s+/)[0] ?? "",
+                    lastName: firstContact.displayName.split(/\s+/).slice(1).join(" "),
+                    displayName: firstContact.displayName || firstContact.email,
+                    mode: firstContact.resendTokenId ? "resend" : "invite",
+                  }
+                : null,
+            );
 
             workspaceIsShared =
               built.length > 0 && built.every((r) => r.inviteAccepted || r.buyerLinked);
@@ -565,13 +578,7 @@ const HotSheetReview = () => {
         setReviewRecipients([]);
       }
 
-      if (!buyerAuthForConversationSync && primaryCrmClientId) {
-        const fromPrimaryCrm = await resolveBuyerAuthFromCrmClientId(primaryCrmClientId);
-        if (fromPrimaryCrm) {
-          buyerAuthForConversationSync = fromPrimaryCrm;
-          applyConversationBuyerUserId(fromPrimaryCrm);
-        }
-      }
+      if (!buyerAuthForConversationSync) setBuyerUserId(null);
 
       // Build query using unified search utility
       const criteria = hotSheetData.criteria as any;
