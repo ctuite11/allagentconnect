@@ -313,6 +313,7 @@ const HotSheetReview = () => {
       if (!hscErr) setClientCount(hscCount ?? 0);
 
       let buyerAuthForConversationSync: string | null = null;
+      let commentBuyerTargetAlreadySet = false;
       const hotSheetCrmClientId =
         hotSheetData && typeof hotSheetData.client_id === "string" ? hotSheetData.client_id : null;
       let primaryCrmClientId: string | null = hotSheetCrmClientId;
