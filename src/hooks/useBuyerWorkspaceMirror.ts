@@ -63,23 +63,7 @@ interface MarketListing {
   };
 }
 
-/**
- * Buyer auth UUID for `favorites.user_id` / RPC — same as `AgentClientFavorites`:
- * resolve from `profiles` using the CRM client's email.
- * Do not use `clients.agent_user_id` here: it is legacy/mis-set (e.g. agent id on insert) and is not authoritative.
- */
-async function resolveBuyerAuthUserId(client: { email: string }): Promise<string | null> {
-  const email = client.email?.trim();
-  if (!email) return null;
-  const { data: exact } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
-  if (exact?.id) return String(exact.id);
-  const { data: loose } = await supabase
-    .from("profiles")
-    .select("id")
-    .ilike("email", email.toLowerCase())
-    .maybeSingle();
-  return loose?.id ? String(loose.id) : null;
-}
+import { resolveBuyerAuthUserId } from "@/lib/resolveBuyerAuthUserId";
 
 /** CRM row for dialogs and messaging — same fields as `useBuyerDashboard` client. */
 export interface BuyerMirrorClient {

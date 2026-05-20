@@ -30,6 +30,7 @@ import {
   mergeListingThreadMessages,
   type ListingCardThreadMessage,
 } from "@/lib/listingConversationThread";
+import { resolveBuyerAuthUserId } from "@/lib/resolveBuyerAuthUserId";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 
@@ -255,6 +256,15 @@ const HotSheetReview = () => {
     });
   }, []);
 
+  /** Same resolution order as buyer workspace / favorites — state plus linked recipients. */
+  const getConversationBuyerUserId = useCallback((): string | null => {
+    if (conversationRecipientBuyerId) return conversationRecipientBuyerId;
+    const fromRecipient = reviewRecipients.find(
+      (r) => r.authUserId && (r.buyerLinked || r.inviteAccepted),
+    )?.authUserId;
+    return fromRecipient ?? null;
+  }, [conversationRecipientBuyerId, reviewRecipients]);
+
   const fetchHotSheetAndListings = async () => {
     let workspaceIsShared = false;
     try {
@@ -307,24 +317,41 @@ const HotSheetReview = () => {
         }
         if (hotSheetData.client_id) crmIds.add(hotSheetData.client_id);
         if (crmIds.size > 0) {
-          const { data: relRows } = await supabase
-            .from("client_agent_relationships")
-            .select("client_id, crm_client_id")
-            .eq("agent_id", user.id)
-            .eq("status", "active")
-            .in("crm_client_id", [...crmIds]);
+          const crmIdList = [...crmIds];
+          const relationshipOrFilter = crmIdList
+            .flatMap((crmId) => [`crm_client_id.eq.${crmId}`, `client_id.eq.${crmId}`])
+            .join(",");
+          const { data: relRows } = relationshipOrFilter
+            ? await supabase
+                .from("client_agent_relationships")
+                .select("client_id, crm_client_id, status")
+                .eq("agent_id", user.id)
+                .eq("status", "active")
+                .or(relationshipOrFilter)
+            : { data: [] as { client_id: string | null; crm_client_id: string | null; status: string }[] };
           const relList = relRows ?? [];
           const primaryCrm = hotSheetData.client_id;
           const chosen =
             primaryCrm && relList.some((r) => r.crm_client_id === primaryCrm)
               ? relList.find((r) => r.crm_client_id === primaryCrm)
               : relList[0];
-          buyerAuthForConversationSync = chosen?.client_id ?? null;
-          setBuyerContextClientId((chosen?.crm_client_id as string | null) ?? fallbackCrmClientId);
+          const chosenCrmId =
+            (chosen?.crm_client_id as string | null) ??
+            (typeof primaryCrm === "string" && primaryCrm ? primaryCrm : null) ??
+            fallbackCrmClientId;
+          setBuyerContextClientId(chosenCrmId);
+
+          if (
+            chosen?.client_id &&
+            chosen.crm_client_id &&
+            String(chosen.client_id) !== String(chosen.crm_client_id)
+          ) {
+            buyerAuthForConversationSync = String(chosen.client_id);
+          }
 
           if (!buyerAuthForConversationSync) {
             const crmForProfile =
-              (typeof primaryCrm === "string" && primaryCrm) || fallbackCrmClientId || [...crmIds][0];
+              chosenCrmId || fallbackCrmClientId || crmIdList[0] || null;
             if (crmForProfile) {
               const { data: clientEmailRow } = await supabase
                 .from("clients")
@@ -334,12 +361,7 @@ const HotSheetReview = () => {
               const email =
                 typeof clientEmailRow?.email === "string" ? clientEmailRow.email.trim() : "";
               if (email) {
-                const { data: profile } = await supabase
-                  .from("profiles")
-                  .select("id")
-                  .eq("email", email)
-                  .maybeSingle();
-                buyerAuthForConversationSync = profile?.id ?? null;
+                buyerAuthForConversationSync = await resolveBuyerAuthUserId({ email });
               }
             }
           }
@@ -349,7 +371,6 @@ const HotSheetReview = () => {
       } else {
         setBuyerContextClientId(null);
       }
-      setConversationRecipientBuyerId(buyerAuthForConversationSync);
 
       // Check if invites already sent: ALL eligible clients have an email_enqueued/invite_resent event
       if (hotSheetData && user) {
@@ -548,6 +569,33 @@ const HotSheetReview = () => {
                 authUserId: authUserIdByCrmId.get(cid),
               });
             }
+
+            for (const recipient of built) {
+              if (recipient.authUserId || (!recipient.buyerLinked && !recipient.inviteAccepted)) continue;
+              if (!recipient.email.trim()) continue;
+              const resolved = await resolveBuyerAuthUserId({ email: recipient.email });
+              if (resolved) recipient.authUserId = resolved;
+            }
+
+            let resolvedConversationBuyerId = buyerAuthForConversationSync;
+            const fromRecipient = built.find(
+              (r) => r.authUserId && (r.buyerLinked || r.inviteAccepted),
+            )?.authUserId;
+            if (fromRecipient) resolvedConversationBuyerId = fromRecipient;
+            if (!resolvedConversationBuyerId) {
+              for (const recipient of built) {
+                if (!recipient.buyerLinked && !recipient.inviteAccepted) continue;
+                if (!recipient.email.trim()) continue;
+                const resolved = await resolveBuyerAuthUserId({ email: recipient.email });
+                if (resolved) {
+                  resolvedConversationBuyerId = resolved;
+                  break;
+                }
+              }
+            }
+            buyerAuthForConversationSync = resolvedConversationBuyerId;
+            setConversationRecipientBuyerId(resolvedConversationBuyerId);
+
             workspaceIsShared =
               built.length > 0 && built.every((r) => r.inviteAccepted || r.buyerLinked);
             setReviewRecipients(built);
@@ -565,6 +613,10 @@ const HotSheetReview = () => {
         }
       } else {
         setReviewRecipients([]);
+      }
+
+      if (buyerAuthForConversationSync) {
+        setConversationRecipientBuyerId(buyerAuthForConversationSync);
       }
 
       // Build query using unified search utility
@@ -1371,9 +1423,13 @@ const HotSheetReview = () => {
                   chatMessages={messagesMap[row.id] || []}
                   onNewMessage={handleNewMessage}
                   onOpenChat={() => {
-                    if (!conversationRecipientBuyerId) {
+                    const buyerAuthId = getConversationBuyerUserId();
+                    if (!buyerAuthId) {
                       toast.error("This buyer needs a workspace account before you can comment.");
                       return;
+                    }
+                    if (!conversationRecipientBuyerId) {
+                      setConversationRecipientBuyerId(buyerAuthId);
                     }
                     setChatListingId(row.id);
                     setChatDrawerOpen(true);
@@ -1392,7 +1448,7 @@ const HotSheetReview = () => {
 
         </div>
 
-      {chatListingId && conversationRecipientBuyerId ? (
+      {chatListingId && getConversationBuyerUserId() ? (
         <ListingConversationSheet
           open={chatDrawerOpen}
           onOpenChange={(open) => {
@@ -1400,7 +1456,7 @@ const HotSheetReview = () => {
             if (!open) setChatListingId(null);
           }}
           listingId={chatListingId}
-          otherUserId={conversationRecipientBuyerId}
+          otherUserId={getConversationBuyerUserId()}
           hotSheetId={id ?? null}
           hotSheetAgentUserId={agentUserId}
           threadTitle={
@@ -1409,11 +1465,12 @@ const HotSheetReview = () => {
               : "Listing discussion"
           }
           onInboxInvalidate={() => {
-            if (!agentUserId || !conversationRecipientBuyerId || !chatListingId) return;
+            const buyerAuthId = getConversationBuyerUserId();
+            if (!agentUserId || !buyerAuthId || !chatListingId) return;
             void fetchListingConversationMessagesMap(
               [chatListingId],
               agentUserId,
-              conversationRecipientBuyerId,
+              buyerAuthId,
               agentUserId,
             ).then((convoMap) => {
               setMessagesMap((prev) => mergeListingThreadMessages(convoMap, { [chatListingId]: prev[chatListingId] ?? [] }));
