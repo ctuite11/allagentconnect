@@ -578,6 +578,32 @@ const HotSheetReview = () => {
         setReviewRecipients([]);
       }
 
+      if (!buyerAuthForConversationSync && primaryCrmClientId) {
+        const { data: clientRow } = await supabase
+          .from("clients")
+          .select("email, first_name, last_name")
+          .eq("id", primaryCrmClientId)
+          .maybeSingle();
+        const email = typeof clientRow?.email === "string" ? clientRow.email.trim() : "";
+        const firstName = typeof clientRow?.first_name === "string" ? clientRow.first_name : "";
+        const lastName = typeof clientRow?.last_name === "string" ? clientRow.last_name : "";
+        if (email) {
+          const authId = await resolveBuyerAuthUserId({ email });
+          if (authId) {
+            buyerAuthForConversationSync = authId;
+            setBuyerUserId(authId);
+          }
+          setCommentBuyerTarget({
+            crmClientId: primaryCrmClientId,
+            email,
+            firstName,
+            lastName,
+            displayName: `${firstName} ${lastName}`.trim() || email,
+            mode: "invite",
+          });
+        }
+      }
+
       if (!buyerAuthForConversationSync) setBuyerUserId(null);
 
       // Build query using unified search utility
