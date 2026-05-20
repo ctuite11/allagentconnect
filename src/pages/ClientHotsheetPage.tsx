@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { ListChecks, MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+import { cn } from "@/lib/utils";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
@@ -140,7 +142,37 @@ const ClientHotsheetPage = () => {
   const [listingChatListingId, setListingChatListingId] = useState<string | null>(null);
   const [deleteHotSheetOpen, setDeleteHotSheetOpen] = useState(false);
   const [deleteHotSheetBusy, setDeleteHotSheetBusy] = useState(false);
+  const [selectedListingIds, setSelectedListingIds] = useState<Set<string>>(new Set());
   const hidePublicFooter = isBuyerHotSheetByIdRoute || Boolean(currentUser);
+
+  const toggleListingSelection = useCallback((id: string) => {
+    setSelectedListingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAllListings = useCallback(() => {
+    if (selectedListingIds.size === listings.length && listings.length > 0) {
+      setSelectedListingIds(new Set());
+    } else {
+      setSelectedListingIds(new Set(listings.map((l) => l.id)));
+    }
+  }, [listings, selectedListingIds.size]);
+
+  const clearListingSelection = useCallback(() => {
+    setSelectedListingIds(new Set());
+  }, []);
+
+  useEffect(() => {
+    const validIds = new Set(listings.map((l) => l.id));
+    setSelectedListingIds((prev) => {
+      const next = new Set([...prev].filter((id) => validIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [listings]);
 
   const handleListingChatMessage = useCallback((msg: ListingCardThreadMessage) => {
     setListingChatByListingId((prev) => {
@@ -804,8 +836,50 @@ const ClientHotsheetPage = () => {
                 <span className="text-[13px] font-semibold tracking-tight text-neutral-900">
                   Matches <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
                 </span>
+                {isBuyerHotSheetByIdRoute && listings.length > 0 && selectedListingIds.size > 0 ? (
+                  <span className="text-[12px] tabular-nums text-neutral-500">
+                    ({selectedListingIds.size} selected)
+                  </span>
+                ) : null}
               </div>
-              {isBuyerHotSheetByIdRoute ? (
+              {isBuyerHotSheetByIdRoute && listings.length > 0 ? (
+                <div
+                  className="flex flex-wrap items-center gap-2 px-1 sm:px-0.5"
+                  aria-label="Result actions"
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAllListings}
+                    className={BUYER_HOT_SHEET_ACTION_BTN}
+                  >
+                    <ListChecks className="mr-1 h-3 w-3 shrink-0 text-neutral-600" aria-hidden />
+                    {selectedListingIds.size === listings.length ? "Deselect all" : "Select all"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={selectedListingIds.size === 0}
+                    onClick={clearListingSelection}
+                    className={cn(BUYER_HOT_SHEET_ACTION_BTN, "disabled:opacity-50")}
+                  >
+                    Clear selection
+                  </Button>
+                  <BulkShareListingsDialog
+                    listingIds={Array.from(selectedListingIds)}
+                    listingCount={selectedListingIds.size}
+                    triggerVariant="outline"
+                    triggerClassName={cn(
+                      BUYER_HOT_SHEET_ACTION_BTN,
+                      "[&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600",
+                    )}
+                    triggerLabel="Share selected"
+                    onSuccessfulShare={clearListingSelection}
+                  />
+                </div>
+              ) : isBuyerHotSheetByIdRoute ? (
                 <p className="px-1 text-[12px] leading-snug text-neutral-500 sm:px-0.5">
                   Results update as new listings match your saved criteria.
                 </p>
@@ -838,6 +912,13 @@ const ClientHotsheetPage = () => {
                     setListingChatListingId(listing.id);
                     setListingChatOpen(true);
                   }}
+                  {...(isBuyerHotSheetByIdRoute
+                    ? {
+                        onSelect: toggleListingSelection,
+                        isSelected: selectedListingIds.has(listing.id),
+                        compactSelectionAccent: "aacGreen" as const,
+                      }
+                    : {})}
                 />
               ))}
             </div>

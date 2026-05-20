@@ -335,7 +335,9 @@ export function ClientDashboardView({
         <div className="space-y-6 md:space-y-7">
           <section
             className={
-              variant === "agent" ? agentMirrorHeroShell : `${aacCardShell} p-4 md:p-5 lg:p-6`
+              variant === "agent"
+                ? agentMirrorHeroShell
+                : `${aacCardShell} overflow-visible p-4 md:p-5 lg:p-6`
             }
           >
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
@@ -552,22 +554,24 @@ export function ClientDashboardView({
                         ) : null}
                       </div>
                     </div>
-                    <div className="flex w-full max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-2 sm:gap-3">
+                    <div className="flex w-full max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-2 overflow-visible pr-1 sm:gap-3 sm:pr-2">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="relative h-8 shrink-0 whitespace-nowrap rounded-full border-neutral-200 bg-white px-2.5 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-3 sm:text-[13px]"
+                        className="h-8 shrink-0 whitespace-nowrap rounded-full border-neutral-200 bg-white pl-2.5 pr-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-3.5 sm:text-[13px]"
                         aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
                         onClick={goMessagesIcon}
                       >
-                        <MessageSquare className="mr-1.5 h-4 w-4 shrink-0 text-[#0E56F5] sm:mr-2" aria-hidden />
+                        <span className="relative mr-1.5 inline-flex shrink-0 sm:mr-2">
+                          <MessageSquare className="h-4 w-4 text-[#0E56F5]" aria-hidden />
+                          {unreadCount > 0 ? (
+                            <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-neutral-900 px-1 text-[10px] font-semibold leading-none text-white shadow-sm">
+                              {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                          ) : null}
+                        </span>
                         Message
-                        {unreadCount > 0 ? (
-                          <span className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full border border-white bg-neutral-900 px-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
-                            {unreadCount > 9 ? "9+" : unreadCount}
-                          </span>
-                        ) : null}
                       </Button>
                       {showBuyerSelfServiceChrome ? (
                         <Button

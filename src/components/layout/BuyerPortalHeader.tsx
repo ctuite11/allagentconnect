@@ -33,8 +33,8 @@ export function BuyerPortalHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/96 shadow-[0_1px_0_rgba(15,23,42,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/90">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center">
+    <header className="sticky top-0 z-50 w-full overflow-visible bg-white/96 shadow-[0_1px_0_rgba(15,23,42,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/90">
+      <div className="mx-auto flex h-14 max-w-6xl items-center overflow-visible px-4 pr-6 sm:px-6">
         <button
           onClick={() => navigate("/client/dashboard")}
           className="flex min-w-0 flex-shrink-0 items-center gap-2.5 text-left"
@@ -55,7 +55,7 @@ export function BuyerPortalHeader() {
           </div>
         </button>
 
-        <nav className="ml-auto hidden sm:flex items-center gap-1">
+        <nav className="ml-auto hidden items-center gap-1 overflow-visible sm:flex">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -70,19 +70,21 @@ export function BuyerPortalHeader() {
             >
               {({ isActive }) =>
                 to === "/messages" ? (
-                  <span className="relative inline-flex items-center gap-1.5">
-                    <Icon
-                      className={`h-4 w-4 flex-shrink-0 ${
-                        isActive ? "text-[#0E56F5]" : "text-zinc-500"
-                      }`}
-                    />
+                  <>
+                    <span className="relative inline-flex shrink-0">
+                      <Icon
+                        className={`h-4 w-4 flex-shrink-0 ${
+                          isActive ? "text-[#0E56F5]" : "text-zinc-500"
+                        }`}
+                      />
+                      {unreadCount > 0 ? (
+                        <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold leading-none text-white">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      ) : null}
+                    </span>
                     {label}
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold flex items-center justify-center leading-none pointer-events-none">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </span>
-                    )}
-                  </span>
+                  </>
                 ) : (
                   <>
                     <Icon

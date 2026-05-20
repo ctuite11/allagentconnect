@@ -739,7 +739,14 @@ const ListingCard = ({
       (Boolean(onSelect) || showFavoriteChrome || !compactSavedHeartOverlay);
 
     return <Card
-        className="flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-sm transition-[box-shadow,border-color] hover:border-zinc-200 hover:shadow-md"
+        className={cn(
+          "flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md",
+          isSelected
+            ? compactSelectionAccent === "aacGreen"
+              ? "border-[#16A34A]/55 ring-1 ring-[#16A34A]/15 shadow-[0_2px_8px_rgba(22,163,74,0.08)]"
+              : "border-neutral-300 ring-1 ring-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            : "border-zinc-200/90 hover:border-zinc-200",
+        )}
         onClick={openListingDetail}
       >
         <div className="relative group flex-shrink-0">
