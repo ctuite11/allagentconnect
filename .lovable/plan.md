@@ -1,68 +1,60 @@
+## Problem
+
+For Hot Sheet Review comments, even when the buyer has accepted the invite and has a CRM email/phone, the comment click hits the "no contact info — add email before inviting" branch.
+
+Root cause is in `src/lib/resolveHotSheetReviewConversationBuyer.ts`:
+
+- All resolution paths (share_tokens, client_agent_relationships, email→profiles) end up routed through `profileIdExists(authId)` or `resolveBuyerAuthUserId({ email })`.
+- Both depend on the agent being able to `SELECT` from `public.profiles` for a **different user**.
+- Current `profiles` RLS (verified in DB):
+  - `profiles_select_own` / `Users can view their own profile`: `auth.uid() = id`
+  - No policy lets an agent read a buyer's profile row.
+- So `profileIdExists` returns false for any buyer auth id, `resolveBuyerAuthUserId` returns null for any buyer email, and the resolver collapses to "no buyer auth user → invite flow → no email" path.
+
+This also explains why the dialog then surfaces the "no email" error even though the CRM client has one — the `clients` table read happens in the **same** unresolved branch and the buyer's CRM row is found via a different code path (`reviewRecipients`) that already had the email; control flow just never reaches there for some configurations.
+
 ## Goal
 
-Make Hot Sheet Review listing comments work for any buyer that has a real workspace/auth account (even when their `profiles.email` differs from `crm_clients.email`), and replace the dead-end toast with an actionable "Invite / Resend invite" affordance when the buyer truly has no workspace account.
+Make buyer auth resolution succeed without requiring the agent to read `public.profiles` for another user. Trust the auth ids returned by tables the agent legitimately has access to.
 
-Scope is limited to Hot Sheet Review listing comment flow. Schema, email logic, and card visuals are untouched.
+## Scope
 
----
+`src/lib/resolveHotSheetReviewConversationBuyer.ts` only. No schema migrations, no RLS changes, no UI changes, no edge functions.
 
-## Changes
+## Changes — `src/lib/resolveHotSheetReviewConversationBuyer.ts`
 
-### 1. Strengthen buyer auth resolution (option #3)
+1. **Remove the `profileIdExists` gate** from:
+   - `resolveBuyerAuthFromAcceptedShareTokens` (line ~86)
+   - The accepted-share-tokens loop in `resolveHotSheetReviewConversationBuyer` (line ~243)
+   - The `client_agent_relationships` loop (line ~222)
 
-**File:** `src/lib/resolveHotSheetReviewConversationBuyer.ts`
+   Trust the `accepted_by_user_id` / `client_id` values returned by these agent-owned tables. They are already validated at write time (FKs to `auth.users`).
 
-Extend `resolveHotSheetReviewConversationBuyer` to try additional resolution sources before falling back to the CRM-email → `profiles` lookup. Order:
+2. **Delete the now-unused `profileIdExists` helper.**
 
-1. `client_agent_relationships.client_id` for the agent + CRM client (verified, already used).
-2. **NEW:** `share_tokens.accepted_by_user_id` where the token's payload `client_id` matches one of the CRM client ids, the token is `accepted_at IS NOT NULL`, and `agent_id` matches the current agent.
-3. **NEW:** `hot_sheet_clients` row for this hot sheet — if it carries an accepted buyer auth id (via the share_tokens join above) reuse it.
-4. CRM email → `profiles.id` (existing fallback, exact + ilike).
-5. Validate any candidate id with `profiles` existence check before accepting (already in place for relationship path; apply to new paths too).
+3. **Replace `resolveBuyerAuthFromCrmClientId` email-only path with a wider net.** New order, all using tables the agent can read:
+   1. `share_tokens` (agent-owned) — accepted_by_user_id where payload.client_id matches.
+   2. `client_agent_relationships` (agent-owned) — `client_id` where `crm_client_id` matches, `status='active'`.
+   3. **NEW:** `buyer_workspace_invites` — `accepted_by_user_id` (or equivalent column) where `buyer_email` matches the CRM client email, `accepted_at IS NOT NULL`. Confirm exact column names against the table before the read; if the table is unreadable by the agent, skip silently.
+   4. Last-ditch: `resolveBuyerAuthUserId({ email })` (kept as a soft fallback for when admin/service contexts call this).
 
-Also export a thin helper `resolveBuyerAuthForHotSheet({ agentUserId, hotSheetId, hotSheetCrmClientId, recipients })` that the comment click handler can call on-demand without re-running the full debug pipeline.
+4. **`resolveBuyerAuthForHotSheet`** keeps its existing shape (`{ authUserId, hasAnyInvite, hasPendingInvite }`). After the new chain returns null, the "any/pending invite" probe stays as-is (still queries `share_tokens` for the agent — accessible).
 
-`resolveBuyerAuthFromCrmClientId` keeps its current behavior; the click handler will additionally invoke the new helper when it returns null.
+5. **Diagnostic log unchanged** in dev mode so future regressions are visible in the existing `[HotSheetReview] conversation buyer resolution` payload.
 
-### 2. Replace dead-end toast with actionable invite UI (option #1)
+## Out of scope (do NOT touch)
 
-**File:** `src/pages/HotSheetReview.tsx`
+- `src/pages/HotSheetReview.tsx` flow, dialogs, or toasts.
+- `src/lib/resolveBuyerAuthUserId.ts` signature.
+- RLS migrations on `profiles`.
+- Invite, email, or conversation_messages logic.
 
-In the compact `ListingCard.onOpenChat`:
+## Verification
 
-- If `getConversationBuyerUserId()` is null, run the strengthened resolver (step 1) once more.
-- If still null:
-  - **Do not** open `ListingConversationSheet`.
-  - Open a small new `AlertDialog` ("Invite buyer to workspace") that:
-    - Shows the buyer name + email (from `reviewRecipients` / `hotSheet.client_id` lookup).
-    - Primary action label is **Invite buyer** when no token has been accepted, or **Resend invite** when an invite already exists but is unaccepted (decided from `reviewRecipients[].inviteAccepted` / `buyerLinked`).
-    - Calls existing `enqueueBuyerWorkspaceInvite` (`src/lib/enqueueBuyerWorkspaceInvite.ts`) with the resolved agent id + buyer.
-    - On success: toast "Invite sent to <email>", close dialog. (No queue-kick changes; reuse whatever the helper already does — we are not changing email logic.)
-    - On error: toast the returned `error` string.
-- Existing toast `"This buyer needs a workspace account before you can comment."` is removed in favor of this dialog.
-
-If `getConversationBuyerUserId()` is non-null, behavior is unchanged — `ListingConversationSheet` opens against `conversation_messages` exactly as today.
-
-### 3. Build verification
-
-Run `npm run build` after changes and fix anything the new code breaks (only files we touched).
-
----
-
-## Out of scope (explicitly not changing)
-
-- `conversation_messages` schema or any messaging table.
-- Email templates, queue, or notification logic.
-- Agent-only / internal-note comments (deferred).
-- ListingCard visual design beyond wiring `onOpenChat` to the new dialog when unresolved.
-- Buyer Account / Favorites pages.
-- Migrations.
-
----
+1. `npm run build`.
+2. In the live preview as the agent, click Comment on the listing card for the accepted buyer; the ListingConversationSheet should open instead of the invite/contact-info dialog.
 
 ## Technical notes
 
-- `share_tokens` is already read elsewhere with anon RLS that lets the agent see their own tokens — query filters on `agent_id = agentUserId` to stay within existing policy.
-- Helper returns `{ authUserId, hasPendingInvite, hasAnyInvite }` so the dialog can choose Invite vs Resend label without an extra query.
-- Dialog component lives inline in `HotSheetReview.tsx` next to the existing `confirmInviteOpen` dialog to match local patterns. State: `inviteBuyerDialogOpen`, `inviteBuyerTarget`, `inviteBuyerSending`.
-- Agent display name passed to `enqueueBuyerWorkspaceInvite` reuses existing `agentDisplayName` state already set in `fetchHotSheetAndListings`.
+- The DB has been confirmed: profiles RLS is owner-only (`auth.uid() = id`). `share_tokens.agent_id = auth.uid()` and `client_agent_relationships.agent_id = auth.uid()` are readable by the agent, so values returned from those tables are safe to trust without re-validating against `profiles`.
+- `buyer_workspace_invites` column names (`accepted_by_user_id` vs another) must be checked before the read is added; if absent, omit step 3.3 rather than fabricate columns.
