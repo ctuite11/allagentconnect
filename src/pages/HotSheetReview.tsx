@@ -1410,7 +1410,7 @@ const HotSheetReview = () => {
 
         </div>
 
-      {chatListingId && getConversationBuyerUserId() ? (
+      {chatListingId && buyerUserId ? (
         <ListingConversationSheet
           open={chatDrawerOpen}
           onOpenChange={(open) => {
@@ -1418,7 +1418,7 @@ const HotSheetReview = () => {
             if (!open) setChatListingId(null);
           }}
           listingId={chatListingId}
-          otherUserId={getConversationBuyerUserId()}
+          otherUserId={buyerUserId}
           hotSheetId={id ?? null}
           hotSheetAgentUserId={agentUserId}
           threadTitle={
@@ -1427,12 +1427,11 @@ const HotSheetReview = () => {
               : "Listing discussion"
           }
           onInboxInvalidate={() => {
-            const buyerAuthId = getConversationBuyerUserId();
-            if (!agentUserId || !buyerAuthId || !chatListingId) return;
+            if (!agentUserId || !buyerUserId || !chatListingId) return;
             void fetchListingConversationMessagesMap(
               [chatListingId],
               agentUserId,
-              buyerAuthId,
+              buyerUserId,
               agentUserId,
             ).then((convoMap) => {
               setMessagesMap((prev) => mergeListingThreadMessages(convoMap, { [chatListingId]: prev[chatListingId] ?? [] }));
