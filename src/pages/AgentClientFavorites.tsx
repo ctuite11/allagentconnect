@@ -1,34 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { AgentAacPage } from "@/components/layout/AgentAacPage";
-import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
-import { BuyerRowStatusPill, type BuyerRowStatusInput } from "@/components/agent/BuyerRowStatusPill";
-import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
-import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
+import { AgentSplitResultsSurface } from "@/components/listing-search/AgentSplitResultsSurface";
 import {
   mapAgentClientFavoriteRpcToListingCard,
   type AgentClientFavoriteRpcRow,
   type ListingCardModel,
 } from "@/components/success-hub/listingCardAdapter";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { ListingConversationSheet } from "@/components/messaging/ListingConversationSheet";
-import {
-  fetchListingConversationPreviewMap,
-  type ListingCardThreadMessage,
-} from "@/lib/listingConversationThread";
-import { cn } from "@/lib/utils";
-import { AacBackButton } from "@/components/layout/AacBackLink";
-import { AacPageIntro } from "@/components/layout/AacPageIntro";
-import { useAuthRole } from "@/hooks/useAuthRole";
-
-/**
- * Compact card preview shape expected by `ListingCard` — sourced here from `conversation_messages` only
- * (not `hot_sheet_comments`). `hot_sheet_id` is an unused legacy field on the card type.
- */
-type ListingCardThreadPreview = ListingCardThreadMessage;
+import type { AgentSplitListing } from "@/lib/agentSplitResults";
 
 function titleCaseToken(term: string): string {
   const t = term.trim();
@@ -48,7 +28,9 @@ async function fetchListingEnrichmentForFavorites(
   if (listingIds.length === 0) return {};
   const { data: rows, error } = await supabase
     .from("listings")
-    .select("id, listing_number, zip_code, square_feet, property_type, created_at, status, agent_id")
+    .select(
+      "id, listing_number, zip_code, square_feet, property_type, created_at, status, agent_id, latitude, longitude, list_date, unit_number, neighborhood, listing_type, price_range_min, price_range_max",
+    )
     .in("id", listingIds);
   if (error || !rows?.length) return {};
 
@@ -78,6 +60,14 @@ async function fetchListingEnrichmentForFavorites(
     created_at?: string;
     status?: string;
     agent_id?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    list_date?: string | null;
+    unit_number?: string | null;
+    neighborhood?: string | null;
+    listing_type?: string | null;
+    price_range_min?: number | null;
+    price_range_max?: number | null;
   }[]) {
     const ap = row.agent_id ? byAgent.get(row.agent_id) : undefined;
     const agent_profile: ListedByAgentProfile | undefined = ap
@@ -97,9 +87,33 @@ async function fetchListingEnrichmentForFavorites(
       status: typeof row.status === "string" ? row.status : undefined,
       agent_id: row.agent_id ?? "",
       agent_profile,
+      latitude: row.latitude ?? null,
+      longitude: row.longitude ?? null,
+      list_date: row.list_date ?? null,
+      unit_number: row.unit_number ?? undefined,
+      neighborhood: row.neighborhood?.trim() || undefined,
+      listing_type: row.listing_type ?? undefined,
+      price_range_min: row.price_range_min ?? null,
+      price_range_max: row.price_range_max ?? null,
     };
   }
   return out;
+}
+
+function buildFavoriteSplitListings(
+  rows: AgentClientFavoriteRpcRow[],
+  enrich: Record<string, Partial<ListingCardModel>>,
+): AgentSplitListing[] {
+  return rows.map((row) => {
+    const base = mapAgentClientFavoriteRpcToListingCard(row);
+    const extra = enrich[row.listing_id] ?? {};
+    return {
+      ...base,
+      ...extra,
+      id: row.listing_id,
+      list_date: extra.list_date ?? base.created_at ?? null,
+    } as AgentSplitListing;
+  });
 }
 
 export default function AgentClientFavorites() {
@@ -107,23 +121,16 @@ export default function AgentClientFavorites() {
   /** CRM `clients.id` — Success Hub uses `buyerId`; legacy route uses `clientId`. */
   const crmClientId = buyerId ?? clientId ?? "";
   const navigate = useNavigate();
-  const { user: authUser } = useAuthRole();
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<AgentClientFavoriteRpcRow[]>([]);
   const [listingEnrich, setListingEnrich] = useState<Record<string, Partial<ListingCardModel>>>({});
   const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [clientPhone, setClientPhone] = useState<string | null>(null);
-  const [buyerPill, setBuyerPill] = useState<BuyerRowStatusInput>({
-    status: "active",
-    buyerWorkspaceLinked: false,
-  });
-  const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
-  const [messagesMap, setMessagesMap] = useState<Record<string, ListingCardThreadPreview[]>>({});
-  const [discussionOpen, setDiscussionOpen] = useState(false);
-  const [discussionListingId, setDiscussionListingId] = useState<string | null>(null);
-  const [discussionTitle, setDiscussionTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const backTo = crmClientId ? `/agent/buyers/${crmClientId}` : "/agent/buyers";
+  const resultsFromPath = crmClientId
+    ? `/agent/buyers/${crmClientId}/favorites`
+    : "/agent/buyers";
 
   useEffect(() => {
     if (!crmClientId) {
@@ -139,8 +146,6 @@ export default function AgentClientFavorites() {
       setLoading(true);
       setError(null);
       setListingEnrich({});
-      setMessagesMap({});
-      setBuyerUserId(null);
 
       const {
         data: { user },
@@ -166,29 +171,6 @@ export default function AgentClientFavorites() {
       const fn = typeof clientRow.first_name === "string" ? clientRow.first_name : "";
       const ln = typeof clientRow.last_name === "string" ? clientRow.last_name : "";
       setClientName(formatFavoritesClientDisplayName(fn, ln));
-      setClientEmail(String(clientRow.email ?? ""));
-      setClientPhone(typeof clientRow.phone === "string" ? clientRow.phone : null);
-
-      const { data: relRows } = await supabase
-        .from("client_agent_relationships")
-        .select("client_id, crm_client_id, status")
-        .eq("agent_id", user.id);
-
-      const rel = (relRows ?? []).find(
-        (r: { client_id?: string | null; crm_client_id?: string | null }) =>
-          String(r.crm_client_id ?? "") === id || String(r.client_id ?? "") === id,
-      ) as { client_id?: string | null; crm_client_id?: string | null; status?: string } | undefined;
-
-      if (rel) {
-        const buyerWorkspaceLinked =
-          String(rel.status) === "active" && rel.client_id != null && String(rel.client_id).trim() !== "";
-        setBuyerPill({
-          status: String(rel.status ?? "active"),
-          buyerWorkspaceLinked,
-        });
-      } else {
-        setBuyerPill({ status: "active", buyerWorkspaceLinked: false });
-      }
 
       const { data: profile } = await supabase.from("profiles").select("id").eq("email", clientRow.email).maybeSingle();
 
@@ -199,7 +181,6 @@ export default function AgentClientFavorites() {
       }
 
       const buyerAuthId = String(profile.id);
-      setBuyerUserId(buyerAuthId);
 
       const { data, error: rpcError } = await supabase.rpc("get_client_favorites_for_agent", {
         p_buyer_user_id: buyerAuthId,
@@ -223,14 +204,6 @@ export default function AgentClientFavorites() {
       const listingIds = [...new Set(rows.map((r) => r.listing_id).filter(Boolean))];
       const enrich = await fetchListingEnrichmentForFavorites(listingIds);
       setListingEnrich(enrich);
-
-      const previewMap = await fetchListingConversationPreviewMap(
-        listingIds,
-        user.id,
-        buyerAuthId,
-        user.id,
-      );
-      setMessagesMap(previewMap);
     } catch (err) {
       console.error(err);
       setError("Failed to load favorites");
@@ -239,46 +212,10 @@ export default function AgentClientFavorites() {
     }
   };
 
-  const refreshDiscussionPreview = useCallback(async () => {
-    if (!discussionListingId || !buyerUserId) return;
-    const agentId = authUser?.id;
-    if (!agentId) return;
-    const previewMap = await fetchListingConversationPreviewMap(
-      [discussionListingId],
-      agentId,
-      buyerUserId,
-      agentId,
-    );
-    setMessagesMap((prev) => ({
-      ...prev,
-      [discussionListingId]: previewMap[discussionListingId] ?? [],
-    }));
-  }, [discussionListingId, buyerUserId, authUser?.id]);
-
-  const openListingDiscussion = useCallback(
-    (listingId: string) => {
-      if (!authUser?.id || !buyerUserId) {
-        toast.error("Unable to open discussion.");
-        return;
-      }
-
-      const row = favorites.find((r) => r.listing_id === listingId);
-      const mapped = row ? mapAgentClientFavoriteRpcToListingCard(row) : null;
-      const merged = mapped ? { ...mapped, ...(listingEnrich[listingId] ?? {}) } : null;
-      const title =
-        merged && (merged.address || merged.city)
-          ? [merged.address, merged.city].filter(Boolean).join(", ").trim()
-          : "Listing discussion";
-
-      setDiscussionListingId(listingId);
-      setDiscussionTitle(title);
-      setDiscussionOpen(true);
-    },
-    [authUser?.id, buyerUserId, favorites, listingEnrich],
+  const listings = useMemo(
+    () => buildFavoriteSplitListings(favorites, listingEnrich),
+    [favorites, listingEnrich],
   );
-
-  const count = favorites.length;
-  const listingsLabel = `${count} listing${count === 1 ? "" : "s"}`;
 
   const handleBack = () => {
     if (crmClientId) {
@@ -289,93 +226,23 @@ export default function AgentClientFavorites() {
   };
 
   return (
-    <AgentAacPage
-      className="bg-white pb-12"
-      data-build-marker="agent-client-favorites-comments-v2"
-    >
-      <div className="mx-auto w-full max-w-6xl">
-        <AacPageIntro
-          withTopPadding
-          back={<AacBackButton type="button" onClick={handleBack} />}
-          title="Favorites"
-        />
-        {error ? (
-          <p className="text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        {!loading && !error ? (
-          <div
-            className={cn(
-              "mb-6 rounded-xl border border-neutral-200 bg-white p-4 pl-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-5",
-            )}
-          >
-            <AgentBuyerActivityHeaderCard
-              displayName={clientName || "Buyer"}
-              email={clientEmail}
-              phone={clientPhone}
-              crmClientId={crmClientId}
-              metricsToolbarTintIcons
-              hotSheetMetricUseFlame
-              hideMetricsToolbarTopRule={true}
-              metricsToolbarNewMatchesSparklePlus={true}
-              avatarClassName="bg-neutral-200 text-neutral-800"
-              className="rounded-none border-0 bg-transparent px-0 py-0 shadow-none"
-              trailing={<BuyerRowStatusPill buyer={buyerPill} />}
-            />
-          </div>
-        ) : null}
-
-        {loading ? (
-          <AacMonogramLoader variant="section" message="Loading…" className="min-h-[28vh]" />
-        ) : error ? null : count > 0 ? (
-          <>
-            <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-neutral-200 pb-4">
-              <h2 className="text-sm font-semibold text-neutral-950">Favorites</h2>
-              <span className="text-sm text-neutral-500">{listingsLabel}</span>
-            </div>
-            <div className={SUCCESS_HUB_LISTINGS_GRID}>
-              {favorites.map((row) => (
-                <SuccessHubListingCard
-                  key={row.listing_id}
-                  compactSavedHeartOverlay
-                  compactListedByMessageSeparator
-                  showCompactComments
-                  chatMessages={messagesMap[row.listing_id] || []}
-                  onOpenChat={() => openListingDiscussion(row.listing_id)}
-                  hideCompactFavorite
-                  listing={{
-                    ...mapAgentClientFavoriteRpcToListingCard(row),
-                    ...(listingEnrich[row.listing_id] ?? {}),
-                  }}
-                />
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="py-14 text-center text-sm text-neutral-500">No favorites yet.</p>
-        )}
-      </div>
-
-      {buyerUserId ? (
-        <ListingConversationSheet
-          open={discussionOpen}
-          onOpenChange={(open) => {
-            setDiscussionOpen(open);
-            if (!open) {
-              setDiscussionListingId(null);
-              setDiscussionTitle("");
-            }
-          }}
-          listingId={discussionListingId}
-          otherUserId={buyerUserId}
-          threadTitle={discussionTitle}
-          onInboxInvalidate={() => {
-            void refreshDiscussionPreview();
-          }}
-        />
-      ) : null}
-    </AgentAacPage>
+    <AgentSplitResultsSurface
+      listings={listings}
+      loading={loading}
+      loadError={error}
+      emptyMessage="No favorites yet."
+      title={clientName ? `Favorites — ${clientName}` : "Favorites"}
+      subtitle="Listings this buyer has saved to favorites."
+      onBack={handleBack}
+      resultsFromPath={resultsFromPath}
+      showSaveToHotSheet
+      saveToHotSheetCriteria={{}}
+      loadingMessage="Loading favorites…"
+      toolbarAriaLabel="Buyer favorites toolbar"
+      seo={{
+        title: "Buyer favorites | All Agent Connect",
+        description: "View listings your buyer has favorited.",
+      }}
+    />
   );
 }
