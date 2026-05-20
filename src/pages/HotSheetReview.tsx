@@ -547,6 +547,7 @@ const HotSheetReview = () => {
 
             setBuyerUserId(buyerAuthForConversationSync);
             const firstContact = orderedRecipients.find((r) => r.email.trim());
+            if (firstContact) commentBuyerTargetAlreadySet = true;
             setCommentBuyerTarget(
               firstContact
                 ? {
