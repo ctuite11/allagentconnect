@@ -373,7 +373,7 @@ export function AgentSplitResultsSurface({
     }
     return (
       <ListingCard
-        listing={listingRowForAgentSplitMapCompact(listing)}
+        listing={listingRowForAgentSplitMapCompact(listing) as unknown as React.ComponentProps<typeof ListingCard>["listing"]}
         viewMode="compact"
         showActions={false}
         agentInfo={null}
@@ -405,7 +405,7 @@ export function AgentSplitResultsSurface({
           <section className="h-[48dvh] min-h-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:h-[52dvh] lg:sticky lg:top-[5.5rem] lg:h-full lg:min-h-0 lg:self-start">
             <div className="h-full">
               <PropertyMap
-                listings={displayedListings}
+                listings={displayedListings as unknown as React.ComponentProps<typeof PropertyMap>["listings"]}
                 onListingClick={(listingId) =>
                   navigate(`/property/${listingId}`, {
                     state: { from: resultsFromPath },
@@ -435,12 +435,12 @@ export function AgentSplitResultsSurface({
         </div>
       ) : (
         <ListingResultsTable
-          listings={displayedListings}
+          listings={displayedListings as unknown as React.ComponentProps<typeof ListingResultsTable>["listings"]}
           loading={false}
           sortColumn={sortColumn}
           sortDirection={sortDirection}
           onSort={handleSort}
-          onRowClick={handleRowClick}
+          onRowClick={handleRowClick as unknown as React.ComponentProps<typeof ListingResultsTable>["onRowClick"]}
           selectedRows={selectionEnabled ? selectedRows : new Set()}
           onToggleSelect={selectionEnabled ? toggleRowSelection : () => {}}
           fromPath={resultsFromPath}
