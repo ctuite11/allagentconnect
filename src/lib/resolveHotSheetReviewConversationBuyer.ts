@@ -224,6 +224,28 @@ export async function resolveHotSheetReviewConversationBuyer(opts: {
     }
   }
 
+  // NEW: accepted share_tokens path (catches buyers whose profile email
+  // differs from the CRM email — relationship row may not yet be populated).
+  const unresolvedCrmIds = crmClientIds.filter((c) => !authUserIdByCrmClientId.has(c));
+  if (unresolvedCrmIds.length > 0) {
+    const { data: tokenRows } = await supabase
+      .from("share_tokens")
+      .select("accepted_by_user_id, payload, accepted_at, revoked_at")
+      .eq("agent_id", opts.agentUserId)
+      .not("accepted_by_user_id", "is", null)
+      .not("accepted_at", "is", null)
+      .is("revoked_at", null);
+    for (const row of tokenRows ?? []) {
+      const payload = (row as { payload?: { client_id?: string } | null }).payload ?? null;
+      const tokenClientId = typeof payload?.client_id === "string" ? payload.client_id : "";
+      if (!tokenClientId || !unresolvedCrmIds.includes(tokenClientId)) continue;
+      const authId = (row as { accepted_by_user_id?: string | null }).accepted_by_user_id;
+      if (authId && (await profileIdExists(String(authId)))) {
+        authUserIdByCrmClientId.set(tokenClientId, String(authId));
+      }
+    }
+  }
+
   for (const recipient of opts.recipients) {
     if (!recipient.buyerLinked && !recipient.inviteAccepted) continue;
     if (authUserIdByCrmClientId.has(recipient.clientId)) continue;
