@@ -373,7 +373,7 @@ const HotSheetReview = () => {
 
             const { data: stRows, error: stErr } = await supabase
               .from("share_tokens")
-              .select("id, token, payload, accepted_at, created_at")
+              .select("id, token, payload, accepted_at, accepted_by_user_id, revoked_at, created_at")
               .eq("agent_id", user.id);
 
             if (stErr) throw stErr;
@@ -424,6 +424,12 @@ const HotSheetReview = () => {
                 .filter((r) => r.status === "active" && r.client_id != null && r.crm_client_id != null)
                 .map((r) => String(r.crm_client_id)),
             );
+            const authUserIdByCrmClientId = new Map<string, string>();
+            for (const r of relationshipRows) {
+              if (r.status === "active" && r.crm_client_id && r.client_id) {
+                authUserIdByCrmClientId.set(String(r.crm_client_id), String(r.client_id));
+              }
+            }
 
             const tokensByClientId = new Map<string, any[]>();
             const tokensByEmail = new Map<string, any[]>();
@@ -431,11 +437,15 @@ const HotSheetReview = () => {
             for (const t of tokensForThisHotSheet) {
               const cid = (t as any)?.payload?.client_id ?? null;
               const email = (t as any)?.payload?.client_email ?? null;
+              const acceptedAuthId = (t as any)?.accepted_by_user_id ?? null;
               if (cid) {
                 const key = String(cid);
                 const arr = tokensByClientId.get(key) ?? [];
                 arr.push(t);
                 tokensByClientId.set(key, arr);
+                if ((t as any)?.accepted_at && acceptedAuthId) {
+                  authUserIdByCrmClientId.set(key, String(acceptedAuthId));
+                }
               }
               if (email) {
                 const key = String(email).toLowerCase();
