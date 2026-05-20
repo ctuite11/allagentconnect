@@ -532,12 +532,13 @@ const HotSheetReview = () => {
               ...built.filter((r) => r.clientId !== primaryCrmClientId && !r.buyerLinked && !r.inviteAccepted),
             ];
 
+            // Resolve buyer auth user id ONLY from agent-readable authoritative sources
+            // (active client_agent_relationships + accepted share_tokens). Do NOT fall
+            // back to profiles.email lookups — RLS hides foreign profile rows from the
+            // agent's browser session, which produces false negatives for buyers who
+            // actually have accounts. See .lovable/plan.md.
             for (const recipient of orderedRecipients) {
-              let authUserId = authUserIdByCrmClientId.get(recipient.clientId) ?? null;
-              if (!authUserId && recipient.email.trim()) {
-                authUserId = await resolveBuyerAuthUserId({ email: recipient.email });
-                if (authUserId) authUserIdByCrmClientId.set(recipient.clientId, authUserId);
-              }
+              const authUserId = authUserIdByCrmClientId.get(recipient.clientId) ?? null;
               if (authUserId) {
                 recipient.authUserId = authUserId;
                 if (!buyerAuthForConversationSync) buyerAuthForConversationSync = authUserId;
@@ -578,7 +579,7 @@ const HotSheetReview = () => {
         setReviewRecipients([]);
       }
 
-      if (!buyerAuthForConversationSync && primaryCrmClientId) {
+      if (!commentBuyerTargetAlreadySet && primaryCrmClientId) {
         const { data: clientRow } = await supabase
           .from("clients")
           .select("email, first_name, last_name")
@@ -588,11 +589,6 @@ const HotSheetReview = () => {
         const firstName = typeof clientRow?.first_name === "string" ? clientRow.first_name : "";
         const lastName = typeof clientRow?.last_name === "string" ? clientRow.last_name : "";
         if (email) {
-          const authId = await resolveBuyerAuthUserId({ email });
-          if (authId) {
-            buyerAuthForConversationSync = authId;
-            setBuyerUserId(authId);
-          }
           setCommentBuyerTarget({
             crmClientId: primaryCrmClientId,
             email,
