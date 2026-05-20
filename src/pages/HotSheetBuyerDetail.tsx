@@ -126,7 +126,11 @@ const HotSheetBuyerDetail = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const backTo = (location.state as any)?.from || "/agent/hot-sheets";
+  const fromState = (location.state as { from?: string } | null)?.from;
+  const backTo =
+    fromState === "/agent/hot-sheets" || fromState === "/hot-sheets"
+      ? "/agent/hot-sheets"
+      : fromState ?? (clientId ? `/agent/buyers/${clientId}` : "/agent/hot-sheets");
   const [loading, setLoading] = useState(true);
   const [buyer, setBuyer] = useState<BuyerInfo | null>(null);
   const [relationshipStatus, setRelationshipStatus] = useState<"active" | "pending" | null>(null);
