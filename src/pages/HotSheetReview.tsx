@@ -1557,6 +1557,76 @@ const HotSheetReview = () => {
         />
       )}
 
+      <AlertDialog
+        open={inviteBuyerDialogOpen}
+        onOpenChange={(open) => {
+          if (!inviteBuyerSending) setInviteBuyerDialogOpen(open);
+          if (!open) setInviteBuyerTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {inviteBuyerTarget?.mode === "resend" ? "Resend buyer invite" : "Invite buyer to workspace"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {inviteBuyerTarget ? (
+                <>
+                  {inviteBuyerTarget.displayName} ({inviteBuyerTarget.email}) doesn&apos;t have a workspace account yet,
+                  so comments can&apos;t be exchanged on this listing. {inviteBuyerTarget.mode === "resend"
+                    ? "Resend their invite so they can accept and start commenting."
+                    : "Send them an invite so they can accept and start commenting."}
+                </>
+              ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:justify-end">
+            <AlertDialogCancel
+              className="h-8 rounded-md px-3 text-xs font-medium mt-0"
+              disabled={inviteBuyerSending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="h-8 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#0B46CC]"
+              disabled={inviteBuyerSending || !inviteBuyerTarget || !agentUserId}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!inviteBuyerTarget || !agentUserId) return;
+                void (async () => {
+                  setInviteBuyerSending(true);
+                  const res = await enqueueBuyerWorkspaceInvite({
+                    supabase,
+                    agentUserId,
+                    buyer: {
+                      id: inviteBuyerTarget.crmClientId,
+                      email: inviteBuyerTarget.email,
+                      firstName: inviteBuyerTarget.firstName,
+                      lastName: inviteBuyerTarget.lastName,
+                    },
+                    inviterDisplayName: agentDisplayName,
+                  });
+                  setInviteBuyerSending(false);
+                  if (res.ok) {
+                    toast.success(`Invite sent to ${inviteBuyerTarget.email}`);
+                    setInviteBuyerDialogOpen(false);
+                    setInviteBuyerTarget(null);
+                  } else {
+                    toast.error(res.error || "Could not send invite.");
+                  }
+                })();
+              }}
+            >
+              {inviteBuyerSending
+                ? "Sending…"
+                : inviteBuyerTarget?.mode === "resend"
+                  ? "Resend invite"
+                  : "Invite buyer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 };
