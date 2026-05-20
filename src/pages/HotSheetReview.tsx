@@ -1336,7 +1336,7 @@ const HotSheetReview = () => {
               </Card>
             }
             renderListingCard={(listing, helpers) => {
-              const row = listing as Listing;
+              const row = listing as unknown as Listing;
               return (
                 <ListingCard
                   listing={row}
