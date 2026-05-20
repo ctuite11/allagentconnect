@@ -34,8 +34,10 @@ import {
   fetchActiveRelationshipsForCrmClients,
   resolveBuyerAuthFromCrmClientId,
   resolveHotSheetReviewConversationBuyer,
+  resolveBuyerAuthForHotSheet,
   type HotSheetConversationBuyerDebug,
 } from "@/lib/resolveHotSheetReviewConversationBuyer";
+import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 
@@ -183,6 +185,19 @@ const HotSheetReview = () => {
   const [removedListingsOpen, setRemovedListingsOpen] = useState(false);
   /** Buyer hot-sheet saves — read-only hearts on shared workspace cards */
   const [buyerHotSheetFavoriteIds, setBuyerHotSheetFavoriteIds] = useState<Set<string>>(new Set());
+
+  /** Invite-buyer dialog (shown when comment is clicked but no buyer auth user exists). */
+  type InviteBuyerTarget = {
+    crmClientId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    mode: "invite" | "resend";
+  };
+  const [inviteBuyerDialogOpen, setInviteBuyerDialogOpen] = useState(false);
+  const [inviteBuyerTarget, setInviteBuyerTarget] = useState<InviteBuyerTarget | null>(null);
+  const [inviteBuyerSending, setInviteBuyerSending] = useState(false);
 
   const isSharedWorkspace = useMemo(
     () =>
@@ -1384,27 +1399,65 @@ const HotSheetReview = () => {
                         }
                       }
                       if (!buyerAuthId) {
-                        console.warn(
-                          "[HotSheetReview] conversation buyer unresolved",
-                          {
-                            hotSheetId: hotSheet?.id ?? id ?? null,
-                            hotSheetClientId: hotSheet?.client_id ?? null,
-                            buyerContextClientId,
-                            conversationRecipientBuyerId,
-                            conversationRecipientBuyerIdRef: conversationRecipientBuyerIdRef.current,
-                            getConversationBuyerUserId: getConversationBuyerUserId(),
-                            reviewRecipients: reviewRecipients.map((r) => ({
-                              crmClientId: r.clientId,
-                              authUserId: r.authUserId,
-                              buyerLinked: r.buyerLinked,
-                              inviteAccepted: r.inviteAccepted,
-                              email: r.email,
-                            })),
-                            resolutionDebug: conversationBuyerDebugRef.current,
-                          },
-                        );
-                        toast.error("This buyer needs a workspace account before you can comment.");
-                        return;
+                        // Strengthened on-demand resolver (share_tokens.accepted_by_user_id + email fallback).
+                        const candidateCrmIds = [
+                          buyerContextClientId,
+                          typeof hotSheet?.client_id === "string" ? hotSheet.client_id : null,
+                          ...reviewRecipients.map((r) => r.clientId),
+                        ];
+                        if (agentUserId) {
+                          const resolved = await resolveBuyerAuthForHotSheet({
+                            agentUserId,
+                            crmClientIds: candidateCrmIds,
+                          });
+                          if (resolved.authUserId) {
+                            buyerAuthId = resolved.authUserId;
+                            applyConversationBuyerUserId(buyerAuthId);
+                          } else {
+                            // No auth user — surface actionable Invite / Resend dialog.
+                            const targetCrmId =
+                              candidateCrmIds.find((v): v is string => typeof v === "string" && v.length > 0) ?? null;
+                            const recipient = reviewRecipients.find((r) => r.clientId === targetCrmId)
+                              ?? reviewRecipients[0]
+                              ?? null;
+                            let email = recipient?.email ?? "";
+                            let displayName = recipient?.displayName ?? "";
+                            let firstName = "";
+                            let lastName = "";
+                            if (targetCrmId) {
+                              const { data: clientRow } = await supabase
+                                .from("clients")
+                                .select("email, first_name, last_name")
+                                .eq("id", targetCrmId)
+                                .maybeSingle();
+                              if (clientRow) {
+                                email = email || (typeof clientRow.email === "string" ? clientRow.email : "");
+                                firstName = typeof clientRow.first_name === "string" ? clientRow.first_name : "";
+                                lastName = typeof clientRow.last_name === "string" ? clientRow.last_name : "";
+                                if (!displayName) {
+                                  displayName = `${firstName} ${lastName}`.trim() || email;
+                                }
+                              }
+                            }
+                            if (!targetCrmId || !email) {
+                              toast.error("This buyer has no contact info — add an email before inviting.");
+                              return;
+                            }
+                            setInviteBuyerTarget({
+                              crmClientId: targetCrmId,
+                              email,
+                              firstName,
+                              lastName,
+                              displayName: displayName || email,
+                              mode: resolved.hasPendingInvite ? "resend" : "invite",
+                            });
+                            setInviteBuyerDialogOpen(true);
+                            return;
+                          }
+                        } else {
+                          toast.error("Could not identify the agent account.");
+                          return;
+                        }
                       }
                       setChatListingId(row.id);
                       setChatDrawerOpen(true);
@@ -1503,6 +1556,76 @@ const HotSheetReview = () => {
           onUpdate={fetchHotSheetAndListings}
         />
       )}
+
+      <AlertDialog
+        open={inviteBuyerDialogOpen}
+        onOpenChange={(open) => {
+          if (!inviteBuyerSending) setInviteBuyerDialogOpen(open);
+          if (!open) setInviteBuyerTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {inviteBuyerTarget?.mode === "resend" ? "Resend buyer invite" : "Invite buyer to workspace"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {inviteBuyerTarget ? (
+                <>
+                  {inviteBuyerTarget.displayName} ({inviteBuyerTarget.email}) doesn&apos;t have a workspace account yet,
+                  so comments can&apos;t be exchanged on this listing. {inviteBuyerTarget.mode === "resend"
+                    ? "Resend their invite so they can accept and start commenting."
+                    : "Send them an invite so they can accept and start commenting."}
+                </>
+              ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:justify-end">
+            <AlertDialogCancel
+              className="h-8 rounded-md px-3 text-xs font-medium mt-0"
+              disabled={inviteBuyerSending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="h-8 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#0B46CC]"
+              disabled={inviteBuyerSending || !inviteBuyerTarget || !agentUserId}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!inviteBuyerTarget || !agentUserId) return;
+                void (async () => {
+                  setInviteBuyerSending(true);
+                  const res = await enqueueBuyerWorkspaceInvite({
+                    supabase,
+                    agentUserId,
+                    buyer: {
+                      id: inviteBuyerTarget.crmClientId,
+                      email: inviteBuyerTarget.email,
+                      firstName: inviteBuyerTarget.firstName,
+                      lastName: inviteBuyerTarget.lastName,
+                    },
+                    inviterDisplayName: agentDisplayName,
+                  });
+                  setInviteBuyerSending(false);
+                  if (res.ok) {
+                    toast.success(`Invite sent to ${inviteBuyerTarget.email}`);
+                    setInviteBuyerDialogOpen(false);
+                    setInviteBuyerTarget(null);
+                  } else {
+                    toast.error(res.error || "Could not send invite.");
+                  }
+                })();
+              }}
+            >
+              {inviteBuyerSending
+                ? "Sending…"
+                : inviteBuyerTarget?.mode === "resend"
+                  ? "Resend invite"
+                  : "Invite buyer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
