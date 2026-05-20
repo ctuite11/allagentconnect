@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -20,6 +20,12 @@ import {
   type AgentSplitListing,
 } from "@/lib/agentSplitResults";
 
+export type AgentSplitResultsListingRenderHelpers = {
+  isSelected: boolean;
+  onSelect?: (id: string) => void;
+  resultsFromPath: string;
+};
+
 export type AgentSplitResultsSurfaceProps = {
   listings: AgentSplitListing[];
   loading: boolean;
@@ -35,6 +41,25 @@ export type AgentSplitResultsSurfaceProps = {
   loadingMessage?: string;
   toolbarAriaLabel?: string;
   seo?: { title: string; description: string };
+  /** `embedded` omits full-page chrome (e.g. Hot Sheet Review header lives outside). */
+  variant?: "page" | "embedded";
+  /** Parent renders page intro; surface shows results toolbar strips only. */
+  hidePageIntro?: boolean;
+  selectionEnabled?: boolean;
+  selectedRows?: Set<string>;
+  onSelectedRowsChange?: (next: Set<string>) => void;
+  /** Overrides default select-all (e.g. restore full listing set on deselect). */
+  onSelectAll?: () => void;
+  /** Overrides filter-only keep-selected (e.g. prune hot sheet listing set). */
+  onKeepSelected?: () => void;
+  toolbarActionsExtra?: ReactNode;
+  beforeResults?: ReactNode;
+  emptyState?: ReactNode;
+  renderListingCard?: (
+    listing: AgentSplitListing,
+    helpers: AgentSplitResultsListingRenderHelpers,
+  ) => ReactElement;
+  containerClassName?: string;
 };
 
 /**
@@ -56,14 +81,29 @@ export function AgentSplitResultsSurface({
   loadingMessage = "Loading results…",
   toolbarAriaLabel = "Agent listing results",
   seo,
+  variant = "page",
+  hidePageIntro = false,
+  selectionEnabled = true,
+  selectedRows: selectedRowsProp,
+  onSelectedRowsChange,
+  onSelectAll,
+  onKeepSelected,
+  toolbarActionsExtra,
+  beforeResults,
+  emptyState,
+  renderListingCard,
+  containerClassName,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState("list_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [internalSelectedRows, setInternalSelectedRows] = useState<Set<string>>(new Set());
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [resultsView, setResultsView] = useState<"map" | "list">("map");
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
+
+  const selectedRows = selectedRowsProp ?? internalSelectedRows;
+  const setSelectedRows = onSelectedRowsChange ?? setInternalSelectedRows;
 
   const sortedListings = useMemo(
     () => sortAgentSplitListings(listings, sortColumn, sortDirection),
@@ -78,6 +118,10 @@ export function AgentSplitResultsSurface({
     resultsView === "map" && !loading && !loadError && displayedListings.length > 0;
 
   const toggleSelectAll = () => {
+    if (onSelectAll) {
+      onSelectAll();
+      return;
+    }
     if (selectedRows.size === displayedListings.length && displayedListings.length > 0) {
       setSelectedRows(new Set());
     } else {
@@ -85,14 +129,21 @@ export function AgentSplitResultsSurface({
     }
   };
 
+  const handleKeepSelectedClick = () => {
+    if (onKeepSelected) {
+      onKeepSelected();
+      return;
+    }
+    setShowSelectedOnly(!showSelectedOnly);
+  };
+
   const toggleRowSelection = (id: string, e?: React.SyntheticEvent) => {
+    if (!selectionEnabled) return;
     e?.stopPropagation?.();
-    setSelectedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    const next = new Set(selectedRows);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedRows(next);
   };
 
   const handleSort = (column: string) => {
@@ -215,22 +266,27 @@ export function AgentSplitResultsSurface({
           aria-label="Result actions"
         >
           <div className="flex min-w-0 w-full min-[520px]:w-auto min-[520px]:flex-1 flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
-              <ListChecks className={actionIconClass} />
-              {selectedRows.size === displayedListings.length && displayedListings.length > 0
-                ? "Deselect All"
-                : "Select All"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={selectedRows.size === 0 && !showSelectedOnly}
-              onClick={() => setShowSelectedOnly(!showSelectedOnly)}
-              className={cn(actionBtnClass, "disabled:opacity-50")}
-            >
-              <Check className={actionIconClass} />
-              {showSelectedOnly ? "Show All" : "Keep Selected"}
-            </Button>
+            {selectionEnabled ? (
+              <>
+                <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
+                  <ListChecks className={actionIconClass} />
+                  {selectedRows.size === displayedListings.length && displayedListings.length > 0
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={selectedRows.size === 0 && !showSelectedOnly && !onKeepSelected}
+                  onClick={handleKeepSelectedClick}
+                  className={cn(actionBtnClass, "disabled:opacity-50")}
+                >
+                  <Check className={actionIconClass} />
+                  {showSelectedOnly && !onKeepSelected ? "Show All" : "Keep Selected"}
+                </Button>
+              </>
+            ) : null}
+            {toolbarActionsExtra}
             {showSaveToHotSheet ? (
               <Button
                 variant="outline"
@@ -277,28 +333,153 @@ export function AgentSplitResultsSurface({
     );
   };
 
-  const renderToolbar = () => (
+  const renderToolbarStrips = () => (
     <>
-      <AacPageIntro
-        withTopPadding
-        back={<AacBackButton type="button" onClick={onBack} />}
-        title={title}
-        subtitle={subtitle}
-        titleClassName={titleClassName}
-      />
-      <div className="border-t border-neutral-100 pt-2">{renderResultsTopStrip("page")}</div>
+            <div className="border-t border-neutral-100 pt-2">{renderResultsTopStrip("page")}</div>
       <div className="border-t border-neutral-100 pb-2 pt-2">{renderResultsActionsRow("page")}</div>
     </>
   );
 
+  const renderToolbar = () => {
+    if (hidePageIntro) return renderToolbarStrips();
+    return (
+      <>
+        <AacPageIntro
+          withTopPadding
+          back={<AacBackButton type="button" onClick={onBack} />}
+          title={title}
+          subtitle={subtitle}
+          titleClassName={titleClassName}
+        />
+        {renderToolbarStrips()}
+      </>
+    );
+  };
+
+  const renderListingNode = (listing: AgentSplitListing) => {
+    const helpers: AgentSplitResultsListingRenderHelpers = {
+      isSelected: selectedRows.has(listing.id),
+      onSelect: selectionEnabled ? toggleRowSelection : undefined,
+      resultsFromPath,
+    };
+    if (renderListingCard) {
+      return renderListingCard(listing, helpers);
+    }
+    return (
+      <ListingCard
+        listing={listingRowForAgentSplitMapCompact(listing)}
+        viewMode="compact"
+        showActions={false}
+        agentInfo={null}
+        showCompactComments={false}
+        hideCompactFavorite
+        isHotSheetFavorite={false}
+        compactDetailNavigateState={{ from: resultsFromPath }}
+        onSelect={helpers.onSelect}
+        isSelected={helpers.isSelected}
+      />
+    );
+  };
+
+  const resultsBody = (
+    <section className="bg-transparent pb-6 pt-0">
+      {beforeResults}
+      {loading ? (
+        <AacMonogramLoader variant="section" message={loadingMessage} className="min-h-[40vh]" />
+      ) : loadError ? (
+        <p className="py-16 text-center text-sm text-red-600" role="alert">
+          {loadError}
+        </p>
+      ) : displayedListings.length === 0 ? (
+        emptyState ?? (
+          <p className="py-16 text-center text-sm text-neutral-500">{emptyMessage}</p>
+        )
+      ) : showMapSplit ? (
+                <div className="mt-3 flex h-auto min-h-0 flex-col-reverse gap-3 sm:mt-4 sm:gap-4 lg:grid lg:h-[calc(100dvh-7.25rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+          <section className="h-[48dvh] min-h-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:h-[52dvh] lg:sticky lg:top-[5.5rem] lg:h-full lg:min-h-0 lg:self-start">
+            <div className="h-full">
+              <PropertyMap
+                listings={displayedListings}
+                onListingClick={(listingId) =>
+                  navigate(`/property/${listingId}`, {
+                    state: { from: resultsFromPath },
+                  })
+                }
+              />
+            </div>
+          </section>
+
+          <section className="flex h-auto min-h-0 max-lg:min-h-[48vh] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:h-full lg:min-h-0">
+            <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
+              {renderResultsTopStrip("column")}
+            </div>
+            <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
+              {renderResultsActionsRow("column")}
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
+              <div className="px-3 py-3 sm:px-5 sm:py-4">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
+                  {displayedListings.map((listing) => (
+                                        <div key={listing.id}>{renderListingNode(listing)}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : (
+        <ListingResultsTable
+          listings={displayedListings}
+          loading={false}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+          onRowClick={handleRowClick}
+          selectedRows={selectionEnabled ? selectedRows : new Set()}
+          onToggleSelect={selectionEnabled ? toggleRowSelection : () => {}}
+          fromPath={resultsFromPath}
+        />
+      )}
+    </section>
+  );
+
+  const saveDialog = showSaveToHotSheet ? (
+    <SaveToHotSheetDialog
+      open={hotSheetDialogOpen}
+      onOpenChange={setHotSheetDialogOpen}
+      currentSearch={saveToHotSheetCriteria ?? {}}
+      selectedListingIds={Array.from(selectedRows)}
+    />
+  ) : null;
+
+  const containerClass = cn(
+    "mx-auto w-full",
+    containerClassName ?? "max-w-[1400px] px-4 sm:px-5",
+  );
+
+  if (variant === "embedded") {
+    return (
+      <>
+        {saveDialog}
+        {!showMapSplit && !loading && !loadError && displayedListings.length > 0 ? (
+          <div
+            className="sticky top-0 z-20 -mx-1 border-b border-neutral-200 bg-white px-1 sm:-mx-0 sm:px-0"
+            aria-label={toolbarAriaLabel}
+          >
+            {renderToolbar()}
+          </div>
+        ) : null}
+        <div className={containerClass}>{resultsBody}</div>
+      </>
+    );
+  }
+
   return (
     <>
-      {seo ? (
-        <Seo title={seo.title} description={seo.description} noindex />
-      ) : null}
+      {seo ? <Seo title={seo.title} description={seo.description} noindex /> : null}
       <div className="flex min-h-screen flex-col bg-white">
         <main className="flex-1">
-          <div className="mx-auto max-w-[1400px] px-4 sm:px-5">
+          <div className={containerClass}>
             {!showMapSplit ? (
               <div
                 className="sticky top-0 z-20 border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
@@ -306,7 +487,7 @@ export function AgentSplitResultsSurface({
               >
                 {renderToolbar()}
               </div>
-            ) : (
+            ) : !hidePageIntro ? (
               <div
                 className="border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
                 aria-label={toolbarAriaLabel}
@@ -319,85 +500,10 @@ export function AgentSplitResultsSurface({
                   titleClassName={titleClassName}
                 />
               </div>
-            )}
-
-            {showSaveToHotSheet ? (
-              <SaveToHotSheetDialog
-                open={hotSheetDialogOpen}
-                onOpenChange={setHotSheetDialogOpen}
-                currentSearch={saveToHotSheetCriteria ?? {}}
-                selectedListingIds={Array.from(selectedRows)}
-              />
             ) : null}
 
-            <section className="bg-transparent pb-6 pt-0">
-              {loading ? (
-                <AacMonogramLoader variant="section" message={loadingMessage} className="min-h-[40vh]" />
-              ) : loadError ? (
-                <p className="py-16 text-center text-sm text-red-600" role="alert">
-                  {loadError}
-                </p>
-              ) : displayedListings.length === 0 ? (
-                <p className="py-16 text-center text-sm text-neutral-500">{emptyMessage}</p>
-              ) : showMapSplit ? (
-                <div className="mt-3 flex h-auto min-h-0 flex-col-reverse gap-3 sm:mt-4 sm:gap-4 lg:grid lg:h-[calc(100dvh-7.25rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
-                  <section className="h-[48dvh] min-h-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:h-[52dvh] lg:sticky lg:top-[5.5rem] lg:h-full lg:min-h-0 lg:self-start">
-                    <div className="h-full">
-                      <PropertyMap
-                        listings={displayedListings}
-                        onListingClick={(listingId) =>
-                          navigate(`/property/${listingId}`, {
-                            state: { from: resultsFromPath },
-                          })
-                        }
-                      />
-                    </div>
-                  </section>
-
-                  <section className="flex h-auto min-h-0 max-lg:min-h-[48vh] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:h-full lg:min-h-0">
-                    <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
-                      {renderResultsTopStrip("column")}
-                    </div>
-                    <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
-                      {renderResultsActionsRow("column")}
-                    </div>
-                    <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
-                      <div className="px-3 py-3 sm:px-5 sm:py-4">
-                        <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
-                          {displayedListings.map((listing) => (
-                            <ListingCard
-                              key={listing.id}
-                              listing={listingRowForAgentSplitMapCompact(listing)}
-                              viewMode="compact"
-                              showActions={false}
-                              agentInfo={null}
-                              showCompactComments={false}
-                              hideCompactFavorite
-                              isHotSheetFavorite={false}
-                              compactDetailNavigateState={{ from: resultsFromPath }}
-                              onSelect={(id) => toggleRowSelection(id)}
-                              isSelected={selectedRows.has(listing.id)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              ) : (
-                <ListingResultsTable
-                  listings={displayedListings}
-                  loading={false}
-                  sortColumn={sortColumn}
-                  sortDirection={sortDirection}
-                  onSort={handleSort}
-                  onRowClick={handleRowClick}
-                  selectedRows={selectedRows}
-                  onToggleSelect={toggleRowSelection}
-                  fromPath={resultsFromPath}
-                />
-              )}
-            </section>
+            {saveDialog}
+            {resultsBody}
           </div>
         </main>
       </div>

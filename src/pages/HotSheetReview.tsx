@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AgentSplitResultsSurface } from "@/components/listing-search/AgentSplitResultsSurface";
+import type { AgentSplitListing } from "@/lib/agentSplitResults";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, MapPin, ChevronDown, Pencil, Heart } from "lucide-react";
@@ -119,8 +119,19 @@ interface Listing {
   photos: any;
   attom_data?: any;
   created_at: string;
+  list_date?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   status: string;
   agent_profile?: ListedByAgentProfile;
+}
+
+function hotSheetListingToSplitRow(listing: Listing): AgentSplitListing {
+  return {
+    ...listing,
+    id: listing.id,
+    list_date: listing.list_date ?? listing.created_at,
+  };
 }
 
 interface HotSheet {
@@ -149,7 +160,6 @@ const HotSheetReview = () => {
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [messagesMap, setMessagesMap] = useState<Record<string, ListingCardThreadMessage[]>>({});
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState("newest");
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [chatListingId, setChatListingId] = useState<string | null>(null);
   const [confirmInviteOpen, setConfirmInviteOpen] = useState(false);
@@ -653,20 +663,9 @@ const HotSheetReview = () => {
     };
   }, [id, isSharedWorkspace]);
 
-  const sortedListings = [...listings].sort((a, b) => {
-    switch (sortBy) {
-      case "newest":
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case "oldest":
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      case "price-high":
-        return b.price - a.price;
-      case "price-low":
-        return a.price - b.price;
-      default:
-        return 0;
-    }
-  });
+  const splitListings = useMemo(() => listings.map(hotSheetListingToSplitRow), [listings]);
+
+  const resultsFromPath = id ? `/hot-sheets/${id}/review` : "/agent/hot-sheets";
 
   const toggleListing = (listingId: string) => {
     const newSelected = new Set(selectedListings);
@@ -1150,47 +1149,27 @@ const HotSheetReview = () => {
             </div>
           </div>
 
-          {/* Results + controls */}
-          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 sm:px-0.5">
-                <span className="text-[13px] font-semibold tracking-tight text-neutral-900">
-                  Matches <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
-                </span>
-                {!isSharedWorkspace && (
-                  <>
-                    <div className="hidden h-4 w-px bg-neutral-200 sm:block" />
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Checkbox
-                        id="select-all"
-                        checked={selectedListings.size === listings.length && listings.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                        className="border-zinc-300 data-[state=checked]:border-[#16A34A] data-[state=checked]:bg-[#16A34A] data-[state=checked]:text-white data-[state=indeterminate]:border-[#16A34A] data-[state=indeterminate]:bg-[#16A34A] data-[state=indeterminate]:text-white"
-                      />
-                      <label htmlFor="select-all" className="cursor-pointer text-[13px] font-medium text-neutral-800">
-                        {selectedListings.size === listings.length && listings.length > 0
-                          ? `Unselect All (${listings.length} listings)`
-                          : `Select All (${listings.length} listings)`}
-                      </label>
-                    </div>
-                    {selectedListings.size > 0 && (
-                      <>
-                        <div className="h-4 w-px bg-neutral-200" />
-                        <span className="tabular-nums text-[13px] font-medium text-neutral-700">{selectedListings.size} selected</span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90"
-                          onClick={handleKeepSelected}
-                        >
-                          Keep Selected
-                        </Button>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2 px-1 sm:justify-end sm:px-0.5">
+          <AgentSplitResultsSurface
+            variant="embedded"
+            hidePageIntro
+            listings={splitListings}
+            loading={false}
+            loadError={null}
+            emptyMessage="No listings match yet."
+            title="Results"
+            onBack={handleAgentHotSheetReviewBack}
+            resultsFromPath={resultsFromPath}
+            showSaveToHotSheet={false}
+            saveToHotSheetCriteria={hotSheet.criteria ?? {}}
+            selectionEnabled={!isSharedWorkspace}
+            selectedRows={selectedListings}
+            onSelectedRowsChange={setSelectedListings}
+            onSelectAll={toggleSelectAll}
+            onKeepSelected={!isSharedWorkspace ? handleKeepSelected : undefined}
+            containerClassName="min-w-0 px-0"
+            toolbarAriaLabel="Hot sheet results"
+            toolbarActionsExtra={
+              <>
                 {isPersonalHotSheet && id && hotSheet ? (
                   <PersonalHotSheetShareActions
                     hotSheetId={id}
@@ -1213,17 +1192,6 @@ const HotSheetReview = () => {
                       }))}
                   />
                 ) : null}
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-8 w-full rounded-md border-neutral-200 bg-white text-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300 focus-visible:ring-neutral-300/40 focus-visible:ring-offset-2 sm:w-[200px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest to Oldest</SelectItem>
-                    <SelectItem value="oldest">Oldest to Newest</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  </SelectContent>
-                </Select>
                 {buyerContextClientId ? (
                   <Button
                     type="button"
@@ -1264,8 +1232,7 @@ const HotSheetReview = () => {
                             (r) => !r.inviteAccepted && !r.buyerLinked,
                           );
                           if (pendingRecipients.length === 0) return "Send Listings";
-                          const allAlreadyInvited =
-                            pendingRecipients.every((r) => !!r.resendTokenId);
+                          const allAlreadyInvited = pendingRecipients.every((r) => !!r.resendTokenId);
                           return allAlreadyInvited ? "Resend Invite" : "Send Listings with Invite";
                         })()}
                   </Button>
@@ -1293,43 +1260,10 @@ const HotSheetReview = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : null}
-              </div>
-            </div>
-          </div>
-
-          {listings.length === 0 ? (
-            <Card className="rounded-xl border border-neutral-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-10">
-              <div className="mx-auto max-w-md space-y-4 text-center">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                  <MapPin className="h-4 w-4 text-neutral-400" aria-hidden />
-                </div>
-                <p className="text-sm font-semibold text-neutral-900">No listings match yet</p>
-                <p className="text-[13px] leading-relaxed text-neutral-500">
-                  Broaden location, status, price, or property type in Search criteria—or open your Hot Sheets list.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
-                    onClick={() => setEditCriteriaOpen(true)}
-                  >
-                    Adjust criteria
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
-                    onClick={handleAgentHotSheetReviewBack}
-                  >
-                    All hot sheets
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ) : (
-            <>
-              {!isSharedWorkspace && removedListings.length > 0 && (
+              </>
+            }
+            beforeResults={
+              !isSharedWorkspace && removedListings.length > 0 ? (
                 <Collapsible
                   open={removedListingsOpen}
                   onOpenChange={setRemovedListingsOpen}
@@ -1337,7 +1271,10 @@ const HotSheetReview = () => {
                 >
                   <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium text-neutral-800 transition-colors duration-200 hover:bg-neutral-50/80">
                     <ChevronDown
-                      className={cn("h-4 w-4 shrink-0 text-neutral-500 transition-transform", removedListingsOpen && "rotate-180")}
+                      className={cn(
+                        "h-4 w-4 shrink-0 text-neutral-500 transition-transform",
+                        removedListingsOpen && "rotate-180",
+                      )}
                     />
                     Removed listings ({removedListings.length})
                     <span className="truncate font-normal text-neutral-500">— restore if removed by mistake</span>
@@ -1365,34 +1302,67 @@ const HotSheetReview = () => {
                     </ul>
                   </CollapsibleContent>
                 </Collapsible>
-              )}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
-                {sortedListings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    viewMode="compact"
-                    showActions={false}
-                    showCompactComments
-                    onSelect={isSharedWorkspace ? undefined : toggleListing}
-                    isSelected={isSharedWorkspace ? false : selectedListings.has(listing.id)}
-                    chatMessages={messagesMap[listing.id] || []}
-                    onNewMessage={handleNewMessage}
-                    onOpenChat={() => {
-                      setChatListingId(listing.id);
-                      setChatDrawerOpen(true);
-                    }}
-                    hotSheetId={id ?? undefined}
-                    hideCompactFavorite={isSharedWorkspace}
-                    isHotSheetFavorite={
-                      isSharedWorkspace ? buyerHotSheetFavoriteIds.has(listing.id) : undefined
-                    }
-                    compactSelectionAccent="aacGreen"
-                  />
-                ))}
-              </div>
-            </>
-          )}
+              ) : null
+            }
+            emptyState={
+              <Card className="rounded-xl border border-neutral-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-10">
+                <div className="mx-auto max-w-md space-y-4 text-center">
+                                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                    <MapPin className="h-4 w-4 text-neutral-400" aria-hidden />
+                  </div>
+                  <p className="text-sm font-semibold text-neutral-900">No listings match yet</p>
+                  <p className="text-[13px] leading-relaxed text-neutral-500">
+                    Broaden location, status, price, or property type in Search criteria—or open your Hot Sheets list.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
+                      onClick={() => setEditCriteriaOpen(true)}
+                    >
+                      Adjust criteria
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
+                      onClick={handleAgentHotSheetReviewBack}
+                    >
+                      All hot sheets
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            }
+            renderListingCard={(listing, helpers) => {
+              const row = listing as Listing;
+              return (
+                <ListingCard
+                  listing={row}
+                  viewMode="compact"
+                  showActions={false}
+                  showCompactComments
+                  onSelect={helpers.onSelect ? () => helpers.onSelect!(row.id) : undefined}
+                  isSelected={helpers.isSelected}
+                  chatMessages={messagesMap[row.id] || []}
+                  onNewMessage={handleNewMessage}
+                  onOpenChat={() => {
+                    setChatListingId(row.id);
+                    setChatDrawerOpen(true);
+                  }}
+                  hotSheetId={id ?? undefined}
+                  hideCompactFavorite={isSharedWorkspace}
+                  isHotSheetFavorite={
+                    isSharedWorkspace ? buyerHotSheetFavoriteIds.has(row.id) : undefined
+                  }
+                  compactSelectionAccent="aacGreen"
+                  compactDetailNavigateState={{ from: resultsFromPath }}
+                />
+              );
+            }}
+          />
+
         </div>
 
       {chatListingId && conversationRecipientBuyerId ? (
