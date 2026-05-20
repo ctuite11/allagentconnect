@@ -60,6 +60,8 @@ export type AgentSplitResultsSurfaceProps = {
     helpers: AgentSplitResultsListingRenderHelpers,
   ) => ReactElement;
   containerClassName?: string;
+  /** When false, hides Map/List toggle and keeps map + card grid only. */
+  allowListView?: boolean;
 };
 
 /**
@@ -93,6 +95,7 @@ export function AgentSplitResultsSurface({
   emptyState,
   renderListingCard,
   containerClassName,
+  allowListView = true,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState("list_date");
@@ -100,6 +103,8 @@ export function AgentSplitResultsSurface({
   const [internalSelectedRows, setInternalSelectedRows] = useState<Set<string>>(new Set());
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [resultsView, setResultsView] = useState<"map" | "list">("map");
+
+  const effectiveResultsView = allowListView ? resultsView : "map";
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
 
   const selectedRows = selectedRowsProp ?? internalSelectedRows;
@@ -115,7 +120,7 @@ export function AgentSplitResultsSurface({
     : sortedListings;
 
   const showMapSplit =
-    resultsView === "map" && !loading && !loadError && displayedListings.length > 0;
+    effectiveResultsView === "map" && !loading && !loadError && displayedListings.length > 0;
 
   const toggleSelectAll = () => {
     if (onSelectAll) {
@@ -190,7 +195,8 @@ export function AgentSplitResultsSurface({
     const toggleWrapClass = compact
       ? "inline-flex rounded-md border border-neutral-200 bg-white p-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
       : "inline-flex rounded-lg border border-neutral-200 bg-white p-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
-    const showViewToggle = !loading && !loadError && displayedListings.length > 0;
+    const showViewToggle =
+      allowListView && !loading && !loadError && displayedListings.length > 0;
 
     return (
       <div className="w-full">
@@ -216,7 +222,7 @@ export function AgentSplitResultsSurface({
                     onClick={() => setResultsView("map")}
                     className={cn(
                       toggleBtnClass,
-                      resultsView === "map"
+                      effectiveResultsView === "map"
                         ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
                         : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
                     )}
@@ -228,7 +234,7 @@ export function AgentSplitResultsSurface({
                     onClick={() => setResultsView("list")}
                     className={cn(
                       toggleBtnClass,
-                      resultsView === "list"
+                      effectiveResultsView === "list"
                         ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
                         : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
                     )}

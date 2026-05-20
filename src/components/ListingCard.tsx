@@ -158,6 +158,8 @@ interface ListingCardProps {
    * Omit the empty top chrome row when there is no selection checkbox and no interactive favorite chrome.
    */
   compactSavedHeartOverlay?: boolean;
+  /** Agent buyer favorites: unheart removes the buyer's saved listing. */
+  onCompactSavedHeartClick?: () => void;
   /**
    * When true with compact comments, draws a neutral rule between “Listed by” and the comment row.
    * Use only on agent client favorites — omit elsewhere.
@@ -189,6 +191,7 @@ const ListingCard = ({
   hideCompactFavorite = false,
   compactSelectionAccent = "default",
   compactSavedHeartOverlay = false,
+  onCompactSavedHeartClick,
   compactListedByMessageSeparator = false,
 }: ListingCardProps) => {
   const navigate = useNavigate();
@@ -853,13 +856,31 @@ const ListingCard = ({
               <div className="h-full w-full bg-zinc-50" aria-hidden />
             )}
             {compactSavedHeartOverlay ? (
-              <div className="pointer-events-none absolute right-2 top-2 z-20" aria-hidden>
-                <Heart
-                  className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
-                  strokeWidth={2.25}
-                  aria-hidden
-                />
-              </div>
+              onCompactSavedHeartClick ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCompactSavedHeartClick();
+                  }}
+                  className="absolute right-2 top-2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white/35"
+                  aria-label="Remove from favorites"
+                >
+                  <Heart
+                    className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
+                    strokeWidth={2.25}
+                    aria-hidden
+                  />
+                </button>
+              ) : (
+                <div className="pointer-events-none absolute right-2 top-2 z-20" aria-hidden>
+                  <Heart
+                    className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
+                    strokeWidth={2.25}
+                    aria-hidden
+                  />
+                </div>
+              )
             ) : null}
           </div>
           

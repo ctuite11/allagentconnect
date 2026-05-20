@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AgentSplitResultsSurface } from "@/components/listing-search/AgentSplitResultsSurface";
+import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
 import {
   mapAgentClientFavoriteRpcToListingCard,
   type AgentClientFavoriteRpcRow,
   type ListingCardModel,
 } from "@/components/success-hub/listingCardAdapter";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import type { AgentSplitListing } from "@/lib/agentSplitResults";
+import { listingRowForAgentSplitMapCompact, type AgentSplitListing } from "@/lib/agentSplitResults";
+import { removeBuyerFavoriteForAgent } from "@/lib/removeBuyerFavoriteForAgent";
 
 function titleCaseToken(term: string): string {
   const t = term.trim();
@@ -125,12 +128,21 @@ export default function AgentClientFavorites() {
   const [favorites, setFavorites] = useState<AgentClientFavoriteRpcRow[]>([]);
   const [listingEnrich, setListingEnrich] = useState<Record<string, Partial<ListingCardModel>>>({});
   const [clientName, setClientName] = useState("");
+  const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [removingFavoriteId, setRemovingFavoriteId] = useState<string | null>(null);
 
-  const backTo = crmClientId ? `/agent/buyers/${crmClientId}` : "/agent/buyers";
   const resultsFromPath = crmClientId
     ? `/agent/buyers/${crmClientId}/favorites`
     : "/agent/buyers";
+
+  const favoriteByListingId = useMemo(() => {
+    const map = new Map<string, AgentClientFavoriteRpcRow>();
+    for (const row of favorites) {
+      map.set(row.listing_id, row);
+    }
+    return map;
+  }, [favorites]);
 
   useEffect(() => {
     if (!crmClientId) {
@@ -146,6 +158,7 @@ export default function AgentClientFavorites() {
       setLoading(true);
       setError(null);
       setListingEnrich({});
+      setBuyerUserId(null);
 
       const {
         data: { user },
@@ -181,6 +194,7 @@ export default function AgentClientFavorites() {
       }
 
       const buyerAuthId = String(profile.id);
+      setBuyerUserId(buyerAuthId);
 
       const { data, error: rpcError } = await supabase.rpc("get_client_favorites_for_agent", {
         p_buyer_user_id: buyerAuthId,
@@ -225,23 +239,100 @@ export default function AgentClientFavorites() {
     navigate("/my-clients");
   };
 
+  const handleRemoveFavorite = useCallback(
+    async (favoriteRow: AgentClientFavoriteRpcRow) => {
+      if (!buyerUserId || !crmClientId || removingFavoriteId) return;
+
+      setRemovingFavoriteId(favoriteRow.id);
+      try {
+        const result = await removeBuyerFavoriteForAgent(supabase, {
+          favoriteId: favoriteRow.id,
+          buyerUserId,
+          crmClientId,
+        });
+        if (!result.ok) {
+          toast.error(result.message);
+          return;
+        }
+        setFavorites((prev) => prev.filter((f) => f.id !== favoriteRow.id));
+        toast.success("Removed from favorites");
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to remove from favorites");
+      } finally {
+        setRemovingFavoriteId(null);
+      }
+    },
+    [buyerUserId, crmClientId, removingFavoriteId],
+  );
+
   return (
     <AgentSplitResultsSurface
       listings={listings}
       loading={loading}
       loadError={error}
       emptyMessage="No favorites yet."
-      title={clientName ? `Favorites — ${clientName}` : "Favorites"}
-      subtitle="Listings this buyer has saved to favorites."
+      title="Favorites"
+      subtitle={
+        clientName
+          ? `Listings ${clientName} has saved to favorites.`
+          : "Listings this buyer has saved to favorites."
+      }
       onBack={handleBack}
       resultsFromPath={resultsFromPath}
-      showSaveToHotSheet
-      saveToHotSheetCriteria={{}}
+      showSaveToHotSheet={false}
+      allowListView={false}
       loadingMessage="Loading favorites…"
       toolbarAriaLabel="Buyer favorites toolbar"
       seo={{
         title: "Buyer favorites | All Agent Connect",
         description: "View listings your buyer has favorited.",
+      }}
+      renderListingCard={(listing, helpers) => {
+        const favoriteRow = favoriteByListingId.get(listing.id);
+        const cardListing = {
+          ...mapAgentClientFavoriteRpcToListingCard(
+            favoriteRow ?? {
+              id: listing.id,
+              listing_id: listing.id,
+              address: String(listing.address ?? ""),
+              city: String(listing.city ?? ""),
+              state: String(listing.state ?? ""),
+              zip_code: String(listing.zip_code ?? ""),
+              price: Number(listing.price ?? 0),
+              bedrooms: typeof listing.bedrooms === "number" ? listing.bedrooms : null,
+              bathrooms:
+                listing.bathrooms == null
+                  ? null
+                  : Number(listing.bathrooms),
+              square_feet: typeof listing.square_feet === "number" ? listing.square_feet : null,
+              property_type:
+                typeof listing.property_type === "string" ? listing.property_type : null,
+              photos: listing.photos,
+              created_at:
+                typeof listing.created_at === "string" ? listing.created_at : null,
+            },
+          ),
+          ...(listingEnrich[listing.id] ?? {}),
+        };
+
+        return (
+          <SuccessHubListingCard
+            listing={listingRowForAgentSplitMapCompact(cardListing)}
+            hideCompactFavorite
+            compactSavedHeartOverlay
+            onCompactSavedHeartClick={
+              favoriteRow
+                ? () => {
+                    void handleRemoveFavorite(favoriteRow);
+                  }
+                : undefined
+            }
+            compactDetailNavigateState={{ from: resultsFromPath }}
+            onSelect={helpers.onSelect}
+            isSelected={helpers.isSelected}
+          />
+        );
       }}
     />
   );

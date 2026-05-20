@@ -7,6 +7,7 @@ export type ListingCardModel = ComponentProps<typeof ListingCard>["listing"];
 
 /** Row shape from RPC `get_client_favorites_for_agent` (joined listing fields). */
 export type AgentClientFavoriteRpcRow = {
+  id: string;
   listing_id: string;
   address: string | null;
   city: string | null;
