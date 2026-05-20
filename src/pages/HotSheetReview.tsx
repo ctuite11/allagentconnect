@@ -30,12 +30,7 @@ import {
   mergeListingThreadMessages,
   type ListingCardThreadMessage,
 } from "@/lib/listingConversationThread";
-import {
-  fetchActiveRelationshipsForCrmClients,
-  resolveBuyerAuthFromCrmClientId,
-  resolveHotSheetReviewConversationBuyer,
-  type HotSheetConversationBuyerDebug,
-} from "@/lib/resolveHotSheetReviewConversationBuyer";
+import { fetchActiveRelationshipsForCrmClients } from "@/lib/resolveHotSheetReviewConversationBuyer";
 import { resolveBuyerAuthUserId } from "@/lib/resolveBuyerAuthUserId";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
@@ -175,10 +170,8 @@ const HotSheetReview = () => {
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
-  /** Buyer auth user id for listing `ListingConversationSheet` (profiles id, not CRM clients.id). */
-  const [conversationRecipientBuyerId, setConversationRecipientBuyerId] = useState<string | null>(null);
-  const conversationRecipientBuyerIdRef = useRef<string | null>(null);
-  const conversationBuyerDebugRef = useRef<HotSheetConversationBuyerDebug | null>(null);
+  /** Favorites-style buyer auth user id for listing `ListingConversationSheet`. */
+  const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
   /** CRM buyer id to return to buyer hot sheet list when applicable */
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
@@ -197,6 +190,7 @@ const HotSheetReview = () => {
   };
   const [inviteBuyerDialogOpen, setInviteBuyerDialogOpen] = useState(false);
   const [inviteBuyerTarget, setInviteBuyerTarget] = useState<InviteBuyerTarget | null>(null);
+  const [commentBuyerTarget, setCommentBuyerTarget] = useState<InviteBuyerTarget | null>(null);
   const [inviteBuyerSending, setInviteBuyerSending] = useState(false);
 
   const isSharedWorkspace = useMemo(
@@ -221,7 +215,8 @@ const HotSheetReview = () => {
   };
 
   useEffect(() => {
-    setConversationRecipientBuyerId(null);
+    setBuyerUserId(null);
+    setCommentBuyerTarget(null);
     setBuyerContextClientId(null);
     setReviewRecipients([]);
     setRemovedListingsOpen(false);
@@ -278,27 +273,14 @@ const HotSheetReview = () => {
     });
   }, []);
 
-  const applyConversationBuyerUserId = useCallback((buyerUserId: string | null) => {
-    conversationRecipientBuyerIdRef.current = buyerUserId;
-    setConversationRecipientBuyerId(buyerUserId);
-  }, []);
-
-  /** Favorites-style: ref + state + any linked recipient auth id. */
-  const getConversationBuyerUserId = useCallback((): string | null => {
-    if (conversationRecipientBuyerIdRef.current) return conversationRecipientBuyerIdRef.current;
-    if (conversationRecipientBuyerId) return conversationRecipientBuyerId;
-    const fromRecipient = reviewRecipients.find((r) => r.authUserId)?.authUserId;
-    return fromRecipient ?? null;
-  }, [conversationRecipientBuyerId, reviewRecipients]);
-
   const fetchHotSheetAndListings = async () => {
     let workspaceIsShared = false;
     try {
       setLoading(true);
       setReviewRecipients([]);
       setBuyerHotSheetFavoriteIds(new Set());
-      applyConversationBuyerUserId(null);
-      conversationBuyerDebugRef.current = null;
+      setBuyerUserId(null);
+      setCommentBuyerTarget(null);
 
       // Resolve current agent identity
       const { data: { user } } = await supabase.auth.getUser();
