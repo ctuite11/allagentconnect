@@ -34,9 +34,9 @@ import {
   fetchActiveRelationshipsForCrmClients,
   resolveBuyerAuthFromCrmClientId,
   resolveHotSheetReviewConversationBuyer,
-  resolveBuyerAuthForHotSheet,
   type HotSheetConversationBuyerDebug,
 } from "@/lib/resolveHotSheetReviewConversationBuyer";
+import { resolveBuyerAuthUserId } from "@/lib/resolveBuyerAuthUserId";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
@@ -1388,74 +1388,68 @@ const HotSheetReview = () => {
                     void (async () => {
                       let buyerAuthId = getConversationBuyerUserId();
                       if (!buyerAuthId) {
-                        const crmForLookup =
-                          buyerContextClientId ??
-                          (typeof hotSheet?.client_id === "string" ? hotSheet.client_id : null) ??
-                          reviewRecipients.find((r) => r.buyerLinked || r.inviteAccepted)?.clientId ??
-                          null;
-                        if (crmForLookup) {
-                          buyerAuthId = await resolveBuyerAuthFromCrmClientId(crmForLookup);
-                          if (buyerAuthId) applyConversationBuyerUserId(buyerAuthId);
-                        }
-                      }
-                      if (!buyerAuthId) {
-                        // Strengthened on-demand resolver (share_tokens.accepted_by_user_id + email fallback).
+                        // Mirror AgentClientFavorites: clients.email → profiles.email → profiles.id.
                         const candidateCrmIds = [
                           buyerContextClientId,
                           typeof hotSheet?.client_id === "string" ? hotSheet.client_id : null,
                           ...reviewRecipients.map((r) => r.clientId),
-                        ];
-                        if (agentUserId) {
-                          const resolved = await resolveBuyerAuthForHotSheet({
-                            agentUserId,
-                            crmClientIds: candidateCrmIds,
-                          });
-                          if (resolved.authUserId) {
-                            buyerAuthId = resolved.authUserId;
-                            applyConversationBuyerUserId(buyerAuthId);
-                          } else {
-                            // No auth user — surface actionable Invite / Resend dialog.
-                            const targetCrmId =
-                              candidateCrmIds.find((v): v is string => typeof v === "string" && v.length > 0) ?? null;
-                            const recipient = reviewRecipients.find((r) => r.clientId === targetCrmId)
-                              ?? reviewRecipients[0]
-                              ?? null;
-                            let email = recipient?.email ?? "";
-                            let displayName = recipient?.displayName ?? "";
-                            let firstName = "";
-                            let lastName = "";
-                            if (targetCrmId) {
-                              const { data: clientRow } = await supabase
-                                .from("clients")
-                                .select("email, first_name, last_name")
-                                .eq("id", targetCrmId)
-                                .maybeSingle();
-                              if (clientRow) {
-                                email = email || (typeof clientRow.email === "string" ? clientRow.email : "");
-                                firstName = typeof clientRow.first_name === "string" ? clientRow.first_name : "";
-                                lastName = typeof clientRow.last_name === "string" ? clientRow.last_name : "";
-                                if (!displayName) {
-                                  displayName = `${firstName} ${lastName}`.trim() || email;
-                                }
-                              }
+                        ].filter((v): v is string => typeof v === "string" && v.length > 0);
+                        const uniqueCrmIds = [...new Set(candidateCrmIds)];
+
+                        let lastTargetCrmId: string | null = null;
+                        let lastEmail = "";
+                        let lastFirstName = "";
+                        let lastLastName = "";
+                        let lastDisplayName = "";
+
+                        for (const crmId of uniqueCrmIds) {
+                          const { data: clientRow } = await supabase
+                            .from("clients")
+                            .select("email, first_name, last_name")
+                            .eq("id", crmId)
+                            .maybeSingle();
+                          const email =
+                            typeof clientRow?.email === "string" ? clientRow.email.trim() : "";
+                          const firstName =
+                            typeof clientRow?.first_name === "string" ? clientRow.first_name : "";
+                          const lastName =
+                            typeof clientRow?.last_name === "string" ? clientRow.last_name : "";
+                          const recipient = reviewRecipients.find((r) => r.clientId === crmId);
+                          const displayName =
+                            recipient?.displayName?.trim() ||
+                            `${firstName} ${lastName}`.trim() ||
+                            email;
+
+                          if (email) {
+                            lastTargetCrmId = crmId;
+                            lastEmail = email;
+                            lastFirstName = firstName;
+                            lastLastName = lastName;
+                            lastDisplayName = displayName;
+
+                            const authId = await resolveBuyerAuthUserId({ email });
+                            if (authId) {
+                              buyerAuthId = authId;
+                              applyConversationBuyerUserId(authId);
+                              break;
                             }
-                            if (!targetCrmId || !email) {
-                              toast.error("This buyer has no contact info — add an email before inviting.");
-                              return;
-                            }
-                            setInviteBuyerTarget({
-                              crmClientId: targetCrmId,
-                              email,
-                              firstName,
-                              lastName,
-                              displayName: displayName || email,
-                              mode: resolved.hasPendingInvite ? "resend" : "invite",
-                            });
-                            setInviteBuyerDialogOpen(true);
+                          }
+                        }
+
+                        if (!buyerAuthId) {
+                          if (!lastTargetCrmId || !lastEmail) {
+                            toast.error("This buyer has no contact info — add an email before inviting.");
                             return;
                           }
-                        } else {
-                          toast.error("Could not identify the agent account.");
+                          setInviteBuyerTarget({
+                            crmClientId: lastTargetCrmId,
+                            email: lastEmail,
+                            firstName: lastFirstName,
+                            lastName: lastLastName,
+                            displayName: lastDisplayName || lastEmail,
+                            mode: "invite",
+                          });
+                          setInviteBuyerDialogOpen(true);
                           return;
                         }
                       }
