@@ -56,6 +56,91 @@ async function profileIdExists(userId: string): Promise<boolean> {
   return Boolean(data?.id);
 }
 
+/**
+ * Lookup `share_tokens.accepted_by_user_id` for any accepted, non-revoked invite
+ * issued by this agent whose payload `client_id` is in the given CRM ids.
+ * Returns the first matching auth user id (validated against `profiles`).
+ */
+export async function resolveBuyerAuthFromAcceptedShareTokens(
+  agentUserId: string,
+  crmClientIds: string[],
+): Promise<string | null> {
+  const ids = crmClientIds.map((c) => c?.trim()).filter(Boolean);
+  if (!agentUserId || ids.length === 0) return null;
+  const { data, error } = await supabase
+    .from("share_tokens")
+    .select("accepted_by_user_id, payload, accepted_at, revoked_at")
+    .eq("agent_id", agentUserId)
+    .not("accepted_by_user_id", "is", null)
+    .not("accepted_at", "is", null)
+    .is("revoked_at", null);
+  if (error) {
+    console.warn("[HotSheetReview] share_tokens lookup:", error.message);
+    return null;
+  }
+  for (const row of data ?? []) {
+    const payload = (row as { payload?: { client_id?: string } | null }).payload ?? null;
+    const tokenClientId = typeof payload?.client_id === "string" ? payload.client_id : "";
+    if (!tokenClientId || !ids.includes(tokenClientId)) continue;
+    const authId = (row as { accepted_by_user_id?: string | null }).accepted_by_user_id;
+    if (authId && (await profileIdExists(String(authId)))) {
+      return String(authId);
+    }
+  }
+  return null;
+}
+
+/**
+ * On-demand resolver for the comment click handler. Tries (in order):
+ *  1. share_tokens.accepted_by_user_id for agent + CRM ids,
+ *  2. CRM email → profiles fallback for each CRM id.
+ * Also returns invite metadata so the UI can label Invite vs Resend.
+ */
+export async function resolveBuyerAuthForHotSheet(opts: {
+  agentUserId: string;
+  crmClientIds: Array<string | null | undefined>;
+}): Promise<{
+  authUserId: string | null;
+  hasAnyInvite: boolean;
+  hasPendingInvite: boolean;
+}> {
+  const crmIds = [
+    ...new Set(opts.crmClientIds.filter((v): v is string => typeof v === "string" && v.trim().length > 0)),
+  ];
+  if (!opts.agentUserId || crmIds.length === 0) {
+    return { authUserId: null, hasAnyInvite: false, hasPendingInvite: false };
+  }
+
+  const fromAccepted = await resolveBuyerAuthFromAcceptedShareTokens(opts.agentUserId, crmIds);
+  if (fromAccepted) {
+    return { authUserId: fromAccepted, hasAnyInvite: true, hasPendingInvite: false };
+  }
+
+  for (const crmId of crmIds) {
+    const fromEmail = await resolveBuyerAuthFromCrmClientId(crmId);
+    if (fromEmail) {
+      return { authUserId: fromEmail, hasAnyInvite: true, hasPendingInvite: false };
+    }
+  }
+
+  // No auth user. Check whether any invite exists (accepted or not) to decide Invite vs Resend.
+  const { data: tokenRows } = await supabase
+    .from("share_tokens")
+    .select("accepted_at, revoked_at, payload")
+    .eq("agent_id", opts.agentUserId)
+    .is("revoked_at", null);
+  let hasAnyInvite = false;
+  let hasPendingInvite = false;
+  for (const row of tokenRows ?? []) {
+    const payload = (row as { payload?: { client_id?: string } | null }).payload ?? null;
+    const tokenClientId = typeof payload?.client_id === "string" ? payload.client_id : "";
+    if (!tokenClientId || !crmIds.includes(tokenClientId)) continue;
+    hasAnyInvite = true;
+    if (!(row as { accepted_at?: string | null }).accepted_at) hasPendingInvite = true;
+  }
+  return { authUserId: null, hasAnyInvite, hasPendingInvite };
+}
+
 function buildRelationshipOrFilter(crmClientIds: string[]): string {
   return crmClientIds
     .flatMap((crmId) => [`crm_client_id.eq.${crmId}`, `client_id.eq.${crmId}`])
