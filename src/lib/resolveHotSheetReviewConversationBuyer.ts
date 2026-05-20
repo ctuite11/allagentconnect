@@ -37,7 +37,11 @@ type RelationshipRow = {
   status: string;
 };
 
-/** Same path as `AgentClientFavorites`: CRM row email → `profiles.id`. */
+/**
+ * Same path as `AgentClientFavorites`: CRM row email → `profiles.id`.
+ * NOTE: `profiles` RLS is owner-only, so this only resolves when the agent IS the buyer
+ * (rare). Kept as a soft fallback for admin/service contexts.
+ */
 export async function resolveBuyerAuthFromCrmClientId(crmClientId: string): Promise<string | null> {
   const id = crmClientId.trim();
   if (!id) return null;
@@ -49,11 +53,6 @@ export async function resolveBuyerAuthFromCrmClientId(crmClientId: string): Prom
   const email = typeof clientRow?.email === "string" ? clientRow.email.trim() : "";
   if (!email) return null;
   return resolveBuyerAuthUserId({ email });
-}
-
-async function profileIdExists(userId: string): Promise<boolean> {
-  const { data } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
-  return Boolean(data?.id);
 }
 
 /**
@@ -83,9 +82,49 @@ export async function resolveBuyerAuthFromAcceptedShareTokens(
     const tokenClientId = typeof payload?.client_id === "string" ? payload.client_id : "";
     if (!tokenClientId || !ids.includes(tokenClientId)) continue;
     const authId = (row as { accepted_by_user_id?: string | null }).accepted_by_user_id;
-    if (authId && (await profileIdExists(String(authId)))) {
+    if (authId) {
+      // Trust the FK to auth.users — don't gate on profiles RLS (owner-only).
       return String(authId);
     }
+  }
+  return null;
+}
+
+/**
+ * Lookup `buyer_workspace_invites.(accepted_by_user_id|buyer_user_id)` for accepted invites
+ * whose `buyer_email` matches any of the given CRM clients' emails.
+ */
+export async function resolveBuyerAuthFromAcceptedWorkspaceInvites(
+  agentUserId: string,
+  crmClientIds: string[],
+): Promise<string | null> {
+  const ids = crmClientIds.map((c) => c?.trim()).filter(Boolean);
+  if (!agentUserId || ids.length === 0) return null;
+
+  const { data: clientRows } = await supabase
+    .from("clients")
+    .select("id, email")
+    .in("id", ids);
+  const emails = (clientRows ?? [])
+    .map((r: { email?: string | null }) => (typeof r.email === "string" ? r.email.trim().toLowerCase() : ""))
+    .filter(Boolean);
+  if (emails.length === 0) return null;
+
+  const { data, error } = await supabase
+    .from("buyer_workspace_invites")
+    .select("accepted_by_user_id, buyer_user_id, buyer_email, accepted_at")
+    .in("buyer_email", emails)
+    .not("accepted_at", "is", null);
+  if (error) {
+    console.warn("[HotSheetReview] buyer_workspace_invites lookup:", error.message);
+    return null;
+  }
+  for (const row of data ?? []) {
+    const authId =
+      (row as { accepted_by_user_id?: string | null }).accepted_by_user_id ??
+      (row as { buyer_user_id?: string | null }).buyer_user_id ??
+      null;
+    if (authId) return String(authId);
   }
   return null;
 }
@@ -114,6 +153,17 @@ export async function resolveBuyerAuthForHotSheet(opts: {
   const fromAccepted = await resolveBuyerAuthFromAcceptedShareTokens(opts.agentUserId, crmIds);
   if (fromAccepted) {
     return { authUserId: fromAccepted, hasAnyInvite: true, hasPendingInvite: false };
+  }
+
+  const fromWorkspaceInvite = await resolveBuyerAuthFromAcceptedWorkspaceInvites(opts.agentUserId, crmIds);
+  if (fromWorkspaceInvite) {
+    return { authUserId: fromWorkspaceInvite, hasAnyInvite: true, hasPendingInvite: false };
+  }
+
+  // client_agent_relationships (agent-owned) — client_id is the buyer auth uid.
+  const rels = await fetchActiveRelationshipsForCrmClients(opts.agentUserId, crmIds);
+  for (const rel of rels) {
+    if (rel.client_id) return { authUserId: String(rel.client_id), hasAnyInvite: true, hasPendingInvite: false };
   }
 
   for (const crmId of crmIds) {
@@ -219,9 +269,7 @@ export async function resolveHotSheetReviewConversationBuyer(opts: {
     const crmId = row.crm_client_id ? String(row.crm_client_id) : "";
     const relAuthId = row.client_id ? String(row.client_id) : "";
     if (!crmId || !relAuthId) continue;
-    if (await profileIdExists(relAuthId)) {
-      authUserIdByCrmClientId.set(crmId, relAuthId);
-    }
+    authUserIdByCrmClientId.set(crmId, relAuthId);
   }
 
   // NEW: accepted share_tokens path (catches buyers whose profile email
@@ -240,7 +288,7 @@ export async function resolveHotSheetReviewConversationBuyer(opts: {
       const tokenClientId = typeof payload?.client_id === "string" ? payload.client_id : "";
       if (!tokenClientId || !unresolvedCrmIds.includes(tokenClientId)) continue;
       const authId = (row as { accepted_by_user_id?: string | null }).accepted_by_user_id;
-      if (authId && (await profileIdExists(String(authId)))) {
+      if (authId) {
         authUserIdByCrmClientId.set(tokenClientId, String(authId));
       }
     }
