@@ -26,6 +26,10 @@ import DcmlsBadge from "@/components/DcmlsBadge";
 import { resolveListedByAttribution } from "@/lib/listingListedBy";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
 import { buildDisplayAddress, cn, listingCardStreetHeading } from "@/lib/utils";
+import {
+  listingSelectionCheckboxClass,
+  listingSelectionSearchCardSelected,
+} from "@/lib/listingSelectionStyles";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -249,7 +253,7 @@ export const SearchListingCard = ({
         className={cn(
           "relative hidden cursor-pointer overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-200 ease-out will-change-[box-shadow,border-color,transform] md:block",
           isSelected
-            ? "border-neutral-400 ring-1 ring-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            ? listingSelectionSearchCardSelected
             : "hover:-translate-y-px hover:border-neutral-300 hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)]",
         )}
         onClick={handleCardClick}
@@ -264,8 +268,8 @@ export const SearchListingCard = ({
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
                   className={cn(
-                    "absolute left-2.5 top-2.5 z-10 flex h-5 w-5 items-center justify-center rounded border shadow-sm transition-colors",
-                    isSelected ? "border-neutral-900 bg-neutral-900" : "border-neutral-300 bg-white",
+                    "absolute left-2.5 top-2.5 z-10",
+                    listingSelectionCheckboxClass(isSelected),
                   )}
                   aria-label="Select listing"
                 >
@@ -468,8 +472,8 @@ export const SearchListingCard = ({
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
                   className={cn(
-                    "absolute left-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded border shadow-sm transition-colors",
-                    isSelected ? "border-neutral-900 bg-neutral-900" : "border-neutral-300 bg-white",
+                    "absolute left-2 top-2 z-10",
+                    listingSelectionCheckboxClass(isSelected),
                   )}
                   aria-label="Select listing"
                 >

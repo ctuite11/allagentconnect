@@ -48,6 +48,7 @@ import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDispl
 import { clientDashboardStatIconClass } from "@/lib/navIconColors";
 import FavoriteButton from "@/components/FavoriteButton";
 import { cn, resolveListingUnitNumber, type ListingAddressUnitSource } from "@/lib/utils";
+import { listingSelectionCheckboxClass } from "@/lib/listingSelectionStyles";
 
 export interface ClientDashboardAgentInfo {
   id: string;
@@ -907,12 +908,7 @@ export function ClientDashboardView({
                                             toggleBuyerMarketSelection(listing.id);
                                           }
                                         }}
-                                        className={cn(
-                                          "flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors",
-                                          isMarketSelected
-                                            ? "border-[#16A34A] bg-[#16A34A]"
-                                            : "border-zinc-300 bg-white",
-                                        )}
+                                        className={listingSelectionCheckboxClass(isMarketSelected)}
                                         title="Keep in shortlist for this visit"
                                         aria-label={
                                           isMarketSelected

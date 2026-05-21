@@ -24,6 +24,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { buildDisplayAddress, cn, listingCardStreetHeading, propertyTypeToEnum } from "@/lib/utils";
+import {
+  listingSelectionCardCompactSelected,
+  listingSelectionCardGridSelected,
+  listingSelectionCheckboxClass,
+} from "@/lib/listingSelectionStyles";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
@@ -153,7 +158,7 @@ interface ListingCardProps {
   hideCompactFavorite?: boolean;
   /** Omit FavoriteButton hover tooltip (e.g. hot sheet matches — toast only). */
   hideFavoriteTooltip?: boolean;
-  /** Compact `onSelect` checkbox checked colors; `aacGreen` = Success Hub market activity (#16A34A). */
+  /** @deprecated All accents use shared softer emerald via `listingSelectionStyles`. */
   compactSelectionAccent?: "default" | "aacGreen";
   /**
    * Agent viewing buyer-saved favorites: solid red heart on the photo only (no toolbar chip / no FavoriteButton box).
@@ -192,7 +197,7 @@ const ListingCard = ({
   compactDetailNavigateState,
   hideCompactFavorite = false,
   hideFavoriteTooltip = false,
-  compactSelectionAccent = "default",
+  compactSelectionAccent: _compactSelectionAccent = "default",
   compactSavedHeartOverlay = false,
   onCompactSavedHeartClick,
   compactListedByMessageSeparator = false,
@@ -748,11 +753,7 @@ const ListingCard = ({
     return <Card
         className={cn(
           "flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md",
-          isSelected
-            ? compactSelectionAccent === "aacGreen"
-              ? "border-[#16A34A]/55 ring-1 ring-[#16A34A]/15 shadow-[0_2px_8px_rgba(22,163,74,0.08)]"
-              : "border-neutral-300 ring-1 ring-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
-            : "border-zinc-200/90 hover:border-zinc-200",
+          isSelected ? listingSelectionCardCompactSelected : "border-zinc-200/90 hover:border-zinc-200",
         )}
         onClick={openListingDetail}
       >
@@ -782,14 +783,7 @@ const ListingCard = ({
                         onSelect(listing.id);
                       }
                     }}
-                    className={cn(
-                      "flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors",
-                      isSelected
-                        ? compactSelectionAccent === "aacGreen"
-                          ? "border-[#16A34A] bg-[#16A34A]"
-                          : "border-neutral-900 bg-neutral-900"
-                        : "border-zinc-300 bg-white",
-                    )}
+                    className={listingSelectionCheckboxClass(isSelected)}
                     title="Keep in shortlist for this visit"
                     aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
                   >
@@ -1408,7 +1402,7 @@ const ListingCard = ({
     <Card
       className={cn(
         "cursor-pointer overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-[box-shadow,border-color] hover:border-neutral-300 hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)]",
-        isSelected && "border-neutral-400 ring-1 ring-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
+        isSelected && listingSelectionCardGridSelected,
       )}
       onClick={() => navigate(`/property/${listing.id}`)}
     >
@@ -1446,9 +1440,7 @@ const ListingCard = ({
                   onSelect(listing.id);
                 }
               }}
-              className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-[2px] border shadow-sm transition-colors ${
-                isSelected ? "border-neutral-900 bg-neutral-900" : "border-zinc-300 bg-white"
-              }`}
+              className={listingSelectionCheckboxClass(isSelected)}
               title="Keep in shortlist for this visit"
               aria-label={isSelected ? "Remove from shortlist" : "Add to shortlist for this visit"}
             >
