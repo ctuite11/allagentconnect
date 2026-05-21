@@ -38,21 +38,21 @@ export function AgentSplitResultsSelectionActions({
   children,
   className,
 }: AgentSplitResultsSelectionActionsProps) {
+  const safeSelectedRows = selectedRows instanceof Set ? selectedRows : new Set<string>();
+
   const listingIdsForShare = useMemo(
-    () => displayedListingIds.filter((id) => selectedRows.has(id)),
-    [displayedListingIds, selectedRows],
+    () => displayedListingIds.filter((id) => safeSelectedRows.has(id)),
+    [displayedListingIds, safeSelectedRows],
   );
 
   const visibleSelectionState = useMemo(() => {
     const n = displayedListingIds.length;
     if (n === 0) return { allVisible: false, someVisible: false, noneVisible: true };
-    const selected = displayedListingIds.filter((id) => selectedRows.has(id)).length;
+    const selected = displayedListingIds.filter((id) => safeSelectedRows.has(id)).length;
     if (selected === 0) return { allVisible: false, someVisible: false, noneVisible: true };
     if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
     return { allVisible: false, someVisible: true, noneVisible: false };
-  }, [displayedListingIds, selectedRows]);
-
-  if (displayedListingIds.length === 0) return null;
+  }, [displayedListingIds, safeSelectedRows]);
 
   const shareDialog =
     listingIdsForShare.length > 0 ? (
@@ -66,8 +66,9 @@ export function AgentSplitResultsSelectionActions({
       />
     ) : null;
 
-  return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+  const selectionPills =
+    displayedListingIds.length === 0 ? null : (
+      <>
       {visibleSelectionState.allVisible && (
         <>
           <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onUnselectAllVisible}>
@@ -123,6 +124,12 @@ export function AgentSplitResultsSelectionActions({
           Show all
         </Button>
       )}
+      </>
+    );
+
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      {selectionPills}
       {children}
     </div>
   );

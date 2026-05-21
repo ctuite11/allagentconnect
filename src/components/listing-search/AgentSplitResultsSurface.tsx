@@ -109,6 +109,7 @@ export function AgentSplitResultsSurface({
 
   const selectedRows = selectedRowsProp ?? internalSelectedRows;
   const setSelectedRows = onSelectedRowsChange ?? setInternalSelectedRows;
+  const safeSelectedRows = selectedRows instanceof Set ? selectedRows : new Set<string>();
 
   const sortedListings = useMemo(
     () => sortAgentSplitListings(listings, sortColumn, sortDirection),
@@ -116,7 +117,7 @@ export function AgentSplitResultsSurface({
   );
 
   const displayedListings = showSelectedOnly
-    ? sortedListings.filter((l) => selectedRows.has(l.id))
+    ? sortedListings.filter((l) => safeSelectedRows.has(l.id))
     : sortedListings;
 
   const displayedListingIds = useMemo(
@@ -124,31 +125,62 @@ export function AgentSplitResultsSurface({
     [displayedListings],
   );
 
+  const applySelectedRows = useCallback(
+    (updater: (prev: Set<string>) => Set<string>) => {
+      setSelectedRows(updater(safeSelectedRows));
+    },
+    [safeSelectedRows, setSelectedRows],
+  );
+
   const addAllVisible = useCallback(() => {
-    setSelectedRows((prev) => {
+    applySelectedRows((prev) => {
       const next = new Set(prev);
       displayedListings.forEach((l) => next.add(l.id));
       return next;
     });
-  }, [displayedListings, setSelectedRows]);
+  }, [displayedListings, applySelectedRows]);
 
   const unselectAllVisible = useCallback(() => {
-    setSelectedRows((prev) => {
+    applySelectedRows((prev) => {
       const next = new Set(prev);
       displayedListings.forEach((l) => next.delete(l.id));
       return next;
     });
-  }, [displayedListings, setSelectedRows]);
+  }, [displayedListings, applySelectedRows]);
 
   const clearShareSelection = useCallback(() => {
-    setSelectedRows((prev) => {
+    applySelectedRows((prev) => {
       const next = new Set(prev);
       displayedListingIds.forEach((id) => {
         if (prev.has(id)) next.delete(id);
       });
       return next;
     });
-  }, [displayedListingIds, setSelectedRows]);
+  }, [displayedListingIds, applySelectedRows]);
+
+  const handleAddAllVisible = useCallback(() => {
+    if (onSelectAll) {
+      if (safeSelectedRows.size === 0) {
+        onSelectAll();
+      } else if (safeSelectedRows.size < displayedListings.length) {
+        setSelectedRows(new Set(displayedListings.map((l) => l.id)));
+      }
+      return;
+    }
+    addAllVisible();
+  }, [onSelectAll, safeSelectedRows.size, displayedListings, addAllVisible, setSelectedRows]);
+
+  const handleUnselectAllVisible = useCallback(() => {
+    if (
+      onSelectAll &&
+      safeSelectedRows.size === displayedListings.length &&
+      displayedListings.length > 0
+    ) {
+      onSelectAll();
+      return;
+    }
+    unselectAllVisible();
+  }, [onSelectAll, safeSelectedRows.size, displayedListings.length, unselectAllVisible]);
 
   const showMapSplit =
     effectiveResultsView === "map" && !loading && !loadError && displayedListings.length > 0;
@@ -156,7 +188,7 @@ export function AgentSplitResultsSurface({
   const toggleRowSelection = (id: string, e?: React.SyntheticEvent) => {
     if (!selectionEnabled) return;
     e?.stopPropagation?.();
-    const next = new Set(selectedRows);
+    const next = new Set(safeSelectedRows);
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setSelectedRows(next);
@@ -280,30 +312,6 @@ export function AgentSplitResultsSurface({
     );
   };
 
-  const handleAddAllVisible = useCallback(() => {
-    if (onSelectAll) {
-      if (selectedRows.size === 0) {
-        onSelectAll();
-      } else if (selectedRows.size < displayedListings.length) {
-        setSelectedRows(new Set(displayedListings.map((l) => l.id)));
-      }
-      return;
-    }
-    addAllVisible();
-  }, [onSelectAll, selectedRows.size, displayedListings, addAllVisible, setSelectedRows]);
-
-  const handleUnselectAllVisible = useCallback(() => {
-    if (
-      onSelectAll &&
-      selectedRows.size === displayedListings.length &&
-      displayedListings.length > 0
-    ) {
-      onSelectAll();
-      return;
-    }
-    unselectAllVisible();
-  }, [onSelectAll, selectedRows.size, displayedListings.length, unselectAllVisible]);
-
   const renderResultsActionsRow = () => {
     const saveHotSheetBtn =
       showSaveToHotSheet ? (
@@ -331,7 +339,7 @@ export function AgentSplitResultsSurface({
         {selectionEnabled ? (
           <AgentSplitResultsSelectionActions
             displayedListingIds={displayedListingIds}
-            selectedRows={selectedRows}
+            selectedRows={safeSelectedRows}
             showSelectedOnly={showSelectedOnly && !onKeepSelected}
             onAddAllVisible={handleAddAllVisible}
             onUnselectAllVisible={handleUnselectAllVisible}
@@ -378,7 +386,7 @@ export function AgentSplitResultsSurface({
 
   const renderListingNode = (listing: AgentSplitListing) => {
     const helpers: AgentSplitResultsListingRenderHelpers = {
-      isSelected: selectedRows.has(listing.id),
+      isSelected: safeSelectedRows.has(listing.id),
       onSelect: selectionEnabled ? toggleRowSelection : undefined,
       resultsFromPath,
     };
@@ -455,7 +463,7 @@ export function AgentSplitResultsSurface({
           sortDirection={sortDirection}
           onSort={handleSort}
           onRowClick={handleRowClick as unknown as React.ComponentProps<typeof ListingResultsTable>["onRowClick"]}
-          selectedRows={selectionEnabled ? selectedRows : new Set()}
+          selectedRows={selectionEnabled ? safeSelectedRows : new Set()}
           onToggleSelect={selectionEnabled ? toggleRowSelection : () => {}}
           fromPath={resultsFromPath}
         />
@@ -468,7 +476,7 @@ export function AgentSplitResultsSurface({
       open={hotSheetDialogOpen}
       onOpenChange={setHotSheetDialogOpen}
       currentSearch={saveToHotSheetCriteria ?? {}}
-      selectedListingIds={Array.from(selectedRows)}
+      selectedListingIds={Array.from(safeSelectedRows)}
     />
   ) : null;
 

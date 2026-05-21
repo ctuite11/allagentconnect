@@ -79,7 +79,8 @@ const ListingSearchResults = () => {
 
   // Command bar state (lifted from ListingResultsTable)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  
+  const safeSelectedRows = selectedRows instanceof Set ? selectedRows : new Set<string>();
+
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
   /** Default split map + cards (same shell as consumer browse); list = full-width stacked cards. */
@@ -87,7 +88,7 @@ const ListingSearchResults = () => {
 
   // Displayed listings based on selected-only filter
   const displayedListings = showSelectedOnly
-    ? listings.filter((l) => selectedRows.has(l.id))
+    ? listings.filter((l) => safeSelectedRows.has(l.id))
     : listings;
 
   const displayedListingIds = useMemo(
@@ -95,31 +96,38 @@ const ListingSearchResults = () => {
     [displayedListings],
   );
 
+  const applySelectedRows = useCallback(
+    (updater: (prev: Set<string>) => Set<string>) => {
+      setSelectedRows(updater(safeSelectedRows));
+    },
+    [safeSelectedRows],
+  );
+
   const addAllVisible = useCallback(() => {
-    setSelectedRows((prev) => {
+    applySelectedRows((prev) => {
       const next = new Set(prev);
       displayedListings.forEach((l) => next.add(l.id));
       return next;
     });
-  }, [displayedListings]);
+  }, [displayedListings, applySelectedRows]);
 
   const unselectAllVisible = useCallback(() => {
-    setSelectedRows((prev) => {
+    applySelectedRows((prev) => {
       const next = new Set(prev);
       displayedListings.forEach((l) => next.delete(l.id));
       return next;
     });
-  }, [displayedListings]);
+  }, [displayedListings, applySelectedRows]);
 
   const clearShareSelection = useCallback(() => {
-    setSelectedRows((prev) => {
+    applySelectedRows((prev) => {
       const next = new Set(prev);
       displayedListingIds.forEach((id) => {
         if (prev.has(id)) next.delete(id);
       });
       return next;
     });
-  }, [displayedListingIds]);
+  }, [displayedListingIds, applySelectedRows]);
 
   const toggleRowSelection = (id: string, e?: React.SyntheticEvent) => {
     e?.stopPropagation?.();
@@ -436,7 +444,7 @@ const ListingSearchResults = () => {
         size="sm"
         className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
         onClick={() => {
-          if (selectedRows.size === 0) {
+          if (safeSelectedRows.size === 0) {
             toast.error("You haven't selected any properties", {
               description: "Select one or more properties from the results to save a hotsheet.",
             });
@@ -453,7 +461,7 @@ const ListingSearchResults = () => {
       <div className="w-full" aria-label="Result actions">
         <AgentSplitResultsSelectionActions
           displayedListingIds={displayedListingIds}
-          selectedRows={selectedRows}
+          selectedRows={safeSelectedRows}
           showSelectedOnly={showSelectedOnly}
           onAddAllVisible={addAllVisible}
           onUnselectAllVisible={unselectAllVisible}
@@ -504,7 +512,7 @@ const ListingSearchResults = () => {
             open={hotSheetDialogOpen}
             onOpenChange={setHotSheetDialogOpen}
             currentSearch={buildHotSheetCriteria()}
-            selectedListingIds={Array.from(selectedRows)}
+            selectedListingIds={Array.from(safeSelectedRows)}
           />
 
           <section className="bg-transparent pb-6 pt-0">
@@ -547,7 +555,7 @@ const ListingSearchResults = () => {
                               from: `/listing-results${search}`,
                             }}
                             onSelect={(id) => toggleRowSelection(id)}
-                            isSelected={selectedRows.has(listing.id)}
+                            isSelected={safeSelectedRows.has(listing.id)}
                           />
                         ))}
                       </div>
@@ -563,7 +571,7 @@ const ListingSearchResults = () => {
                 sortDirection={sortDirection}
                 onSort={handleSort}
                 onRowClick={handleRowClick}
-                selectedRows={selectedRows}
+                selectedRows={safeSelectedRows}
                 onToggleSelect={toggleRowSelection}
                 fromPath={`/listing-results${window.location.search}`}
               />
