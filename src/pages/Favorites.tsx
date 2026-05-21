@@ -51,7 +51,10 @@ import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 
 /** Buyer Favorites shell — wide split layout; padding aligned with other buyer portal pages. */
 const BUYER_FAVORITES_MAIN =
-  "mx-auto w-full max-w-[1800px] flex-1 px-6 pt-4 pb-3 md:px-8";
+  "mx-auto flex w-full min-h-0 max-w-[1800px] flex-1 flex-col px-6 pt-4 pb-3 md:px-8";
+
+/** Fits below global agent banner + BuyerShell top nav (split map/list scroll). */
+const BUYER_FAVORITES_VIEWPORT = "flex h-[calc(100dvh-5.5rem)] min-h-0 flex-col bg-white";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -987,13 +990,13 @@ const Favorites = ({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-white">
+      <div className={buyerMode ? BUYER_FAVORITES_VIEWPORT : "flex min-h-screen flex-col bg-white"}>
         {!buyerMode ? genericFavoritesStickyHeader : null}
         <main className={buyerMode ? BUYER_FAVORITES_MAIN : "mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7"}>
           {buyerMode ? buyerFavoritesPageHeader : null}
-          <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+          <div className="flex min-h-0 flex-1 flex-col-reverse gap-4 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)]">
             <section
-              className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}
+              className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full lg:min-h-0`}
               aria-busy="true"
             >
               <div className="flex h-full flex-col gap-2 p-4">
@@ -1001,11 +1004,11 @@ const Favorites = ({
                 <Skeleton className="min-h-[12rem] flex-1 rounded-lg bg-neutral-100" />
               </div>
             </section>
-            <section className={`${buyerFavoritesSplitPane} flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:h-full`}>
+            <section className={`${buyerFavoritesSplitPane} flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:min-h-0 lg:h-full`}>
               <div className="shrink-0 border-b border-neutral-200 px-4 py-2.5 sm:px-5">
                 <Skeleton className="h-5 w-32 rounded-md bg-neutral-100" />
               </div>
-              <div className="min-h-0 flex-1 space-y-3 p-4 sm:p-5 lg:overflow-hidden">
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <Skeleton className="h-7 w-20 rounded-md bg-neutral-100" />
                   <Skeleton className="h-7 w-24 rounded-md bg-neutral-100" />
@@ -1031,7 +1034,7 @@ const Favorites = ({
 
   if (buyerMode) {
     return (
-      <div className="flex min-h-screen flex-col bg-white">
+      <div className={favorites.length === 0 && !loading ? "flex min-h-0 flex-1 flex-col bg-white" : BUYER_FAVORITES_VIEWPORT}>
         {favorites.length === 0 ? (
           <main className={BUYER_FAVORITES_MAIN}>
             {buyerFavoritesPageHeader}
@@ -1051,9 +1054,9 @@ const Favorites = ({
         ) : (
           <main className={BUYER_FAVORITES_MAIN}>
             {buyerFavoritesPageHeader}
-            <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+            <div className="flex min-h-0 flex-1 flex-col-reverse gap-4 lg:grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)]">
               <section
-                className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:sticky lg:top-[6.05rem] lg:h-full lg:min-h-0`}
+                className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:sticky lg:top-4 lg:h-full lg:min-h-0 lg:self-start`}
               >
                 {displayListingRecords.length > 0 ? (
                   <div className="h-full">
@@ -1077,7 +1080,7 @@ const Favorites = ({
                 )}
               </section>
 
-              <section className={`${buyerFavoritesSplitPane} flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:h-full`}>
+              <section className={`${buyerFavoritesSplitPane} flex h-auto min-h-0 max-lg:min-h-[50vh] flex-col lg:min-h-0 lg:h-full lg:max-h-full`}>
                 <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-2.5 sm:px-5">
                   <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between">
                     <p className="text-sm font-semibold tabular-nums text-neutral-900">
@@ -1099,7 +1102,7 @@ const Favorites = ({
                 </div>
 
                 <div
-                  className="min-h-0 flex-1 px-4 py-3 sm:px-5 [&_input]:focus-visible:border-neutral-900 [&_input]:focus-visible:ring-1 [&_input]:focus-visible:ring-neutral-300/80 [&_input]:shadow-none [&_textarea]:focus-visible:border-neutral-900 [&_textarea]:focus-visible:ring-1 [&_textarea]:focus-visible:ring-neutral-300/80"
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5 [&_input]:focus-visible:border-neutral-900 [&_input]:focus-visible:ring-1 [&_input]:focus-visible:ring-neutral-300/80 [&_input]:shadow-none [&_textarea]:focus-visible:border-neutral-900 [&_textarea]:focus-visible:ring-1 [&_textarea]:focus-visible:ring-neutral-300/80"
                   aria-label="Saved listings"
                   role="region"
                 >
