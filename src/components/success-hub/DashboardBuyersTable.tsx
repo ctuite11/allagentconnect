@@ -1,6 +1,11 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Flame, Heart, Users } from "lucide-react";
+import { SingleClientEmailDialog } from "@/components/SingleClientEmailDialog";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
+
+type BuyerRow = SuccessHubSummary["buyers"][number];
 
 /** Matches `BuyersList`: buyer workspace uses `clients.id` in URL (`/agent/buyers/:id`). */
 function buyerAccountPath(clientId: string) {
@@ -11,7 +16,7 @@ interface DashboardBuyersTableProps {
   buyers: SuccessHubSummary["buyers"];
 }
 
-function displayName(b: SuccessHubSummary["buyers"][number]) {
+function displayName(b: BuyerRow) {
   const n = [b.first_name, b.last_name]
     .filter((x): x is string => typeof x === "string" && Boolean(x.trim()))
     .map((x) => x.trim())
@@ -23,16 +28,63 @@ function displayName(b: SuccessHubSummary["buyers"][number]) {
   return "Buyer";
 }
 
-function formatPhone(phone: string | null) {
-  if (!phone) return "—";
-  return phone;
+function displayPhone(phone: string | null | undefined): string {
+  const formatted = formatPhoneNumber(phone);
+  return formatted || "—";
+}
+
+function buyerEmail(b: BuyerRow): string {
+  return typeof b.email === "string" ? b.email.trim() : "";
+}
+
+function BuyerEmailLink({
+  buyer,
+  onOpenCompose,
+}: {
+  buyer: BuyerRow;
+  onOpenCompose: () => void;
+}) {
+  const email = buyerEmail(buyer);
+  if (!email) {
+    return <span className="text-[12px] text-neutral-600">—</span>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenCompose();
+      }}
+      className="max-w-full truncate text-left text-[12px] font-medium text-[#0E56F5] underline-offset-2 transition-colors hover:text-[#0B46CC] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-1"
+      title="Send email through All Agent Connect"
+      aria-label={`Send email to ${email}`}
+    >
+      {email}
+    </button>
+  );
 }
 
 export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
   const navigate = useNavigate();
+  const [emailCompose, setEmailCompose] = useState<{
+    clientId: string;
+    email: string;
+    name: string;
+  } | null>(null);
 
   const openBuyer = (clientId: string) => {
     navigate(buyerAccountPath(clientId));
+  };
+
+  const openEmailCompose = (buyer: BuyerRow) => {
+    const email = buyerEmail(buyer);
+    if (!email) return;
+    setEmailCompose({
+      clientId: buyer.id,
+      email,
+      name: displayName(buyer),
+    });
   };
 
   return (
@@ -67,15 +119,24 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
               <ul className="divide-y divide-zinc-100">
                 {buyers.map((b) => (
                   <li key={b.id}>
-                    <button
-                      type="button"
+                    <div
+                      role="button"
+                      tabIndex={0}
                       className="w-full cursor-pointer px-3 py-2 text-left transition-colors duration-150 hover:bg-neutral-50/90 active:bg-neutral-50"
                       onClick={() => openBuyer(b.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openBuyer(b.id);
+                        }
+                      }}
                     >
                       <span className="block truncate text-[13px] font-medium text-neutral-900">{displayName(b)}</span>
                       <div className="mt-0.5 space-y-0.5 text-[12px] text-neutral-500">
-                        <p className="truncate">{formatPhone(b.phone)}</p>
-                        <p className="truncate">{typeof b.email === "string" && b.email.trim() ? b.email.trim() : "—"}</p>
+                        <p className="truncate tabular-nums">{displayPhone(b.phone)}</p>
+                        <div className="min-w-0">
+                          <BuyerEmailLink buyer={b} onOpenCompose={() => openEmailCompose(b)} />
+                        </div>
                         <p className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] text-neutral-600">
                           <span className="inline-flex items-center gap-0.5">
                             <Flame className="h-3 w-3 text-red-600" aria-hidden />
@@ -135,11 +196,11 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                       <td className="max-w-[9rem] truncate px-2.5 py-1.5 text-[13px] font-medium text-neutral-900">
                         {displayName(b)}
                       </td>
-                      <td className="max-w-[6rem] whitespace-nowrap px-2.5 py-1.5 text-[12px] text-neutral-600">
-                        {formatPhone(b.phone)}
+                      <td className="max-w-[6rem] whitespace-nowrap px-2.5 py-1.5 text-[12px] tabular-nums text-neutral-600">
+                        {displayPhone(b.phone)}
                       </td>
-                      <td className="max-w-[14rem] truncate px-2.5 py-1.5 text-[12px] text-neutral-600">
-                        {typeof b.email === "string" && b.email.trim() ? b.email.trim() : "—"}
+                      <td className="max-w-[14rem] px-2.5 py-1.5" onClick={(e) => e.stopPropagation()}>
+                        <BuyerEmailLink buyer={b} onOpenCompose={() => openEmailCompose(b)} />
                       </td>
                       <td className="px-1.5 py-1.5 text-center text-[12px] tabular-nums text-neutral-600">
                         {b.hotSheetCount}
@@ -155,6 +216,18 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
           </>
         )}
       </div>
+
+      {emailCompose ? (
+        <SingleClientEmailDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setEmailCompose(null);
+          }}
+          clientId={emailCompose.clientId}
+          recipientEmail={emailCompose.email}
+          recipientName={emailCompose.name}
+        />
+      ) : null}
     </div>
   );
 }
