@@ -151,6 +151,8 @@ interface ListingCardProps {
   compactDetailNavigateState?: Record<string, unknown>;
   /** Agent MLS search / workflow: hide consumer favorite heart on compact cards only. */
   hideCompactFavorite?: boolean;
+  /** Omit FavoriteButton hover tooltip (e.g. hot sheet matches — toast only). */
+  hideFavoriteTooltip?: boolean;
   /** Compact `onSelect` checkbox checked colors; `aacGreen` = Success Hub market activity (#16A34A). */
   compactSelectionAccent?: "default" | "aacGreen";
   /**
@@ -189,6 +191,7 @@ const ListingCard = ({
   compactAgentOwned = false,
   compactDetailNavigateState,
   hideCompactFavorite = false,
+  hideFavoriteTooltip = false,
   compactSelectionAccent = "default",
   compactSavedHeartOverlay = false,
   onCompactSavedHeartClick,
@@ -721,6 +724,10 @@ const ListingCard = ({
     const compactIdLabel = formatListingIdLabel(listing);
 
     const hasCommentThread = Boolean((chatMessages && chatMessages.length > 0) || clientComment);
+    const compactCommentIconClass = cn(
+      "h-3.5 w-3.5 shrink-0",
+      hasCommentThread ? "text-[#0E56F5]" : "mt-0.5 text-neutral-400",
+    );
     const legacyCommentRowSignals = Boolean(onOpenChat || hasCommentThread || agentInfo);
     /** `onOpenChat` alone enables the compact comment row (e.g. agent favorites → conversation Sheet) — no `hotSheetId` required. */
     const buyerCommentRowSignals = Boolean(
@@ -808,7 +815,14 @@ const ListingCard = ({
                       <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
                     </span>
                   )}
-                  {!hideCompactFavorite && <FavoriteButton listingId={listing.id} size="icon" photoIcon />}
+                  {!hideCompactFavorite && (
+                    <FavoriteButton
+                      listingId={listing.id}
+                      size="icon"
+                      photoIcon
+                      hideTooltip={hideFavoriteTooltip}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -1014,7 +1028,7 @@ const ListingCard = ({
                         onOpenChat?.();
                       }}
                     >
-                      <MessageSquare className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden />
+                      <MessageSquare className={compactCommentIconClass} aria-hidden />
                       <span className="min-w-0 truncate">
                         <span className="font-medium text-neutral-600">
                           {chatMessages[chatMessages.length - 1].sender_role === "agent" ? "Agent" : "You"}:
@@ -1055,7 +1069,7 @@ const ListingCard = ({
                         onOpenChat?.();
                       }}
                     >
-                      <MessageSquare className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden />
+                      <MessageSquare className={compactCommentIconClass} aria-hidden />
                       <span className="min-w-0 truncate italic">{clientComment}</span>
                     </button>
                   ) : (

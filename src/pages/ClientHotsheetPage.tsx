@@ -906,6 +906,7 @@ const ClientHotsheetPage = () => {
                   viewMode="compact"
                   showActions={false}
                   showCompactComments
+                  hideFavoriteTooltip
                   hotSheetId={hotSheet?.id}
                   chatMessages={listingChatByListingId[listing.id] ?? []}
                   onNewMessage={handleListingChatMessage}
