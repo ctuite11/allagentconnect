@@ -15,6 +15,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import { Heart, ArrowLeft, MapPin } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
@@ -143,6 +144,7 @@ function MyFavoritesLoadingShell({ navigate }: { navigate: NavigateFunction }) {
 
 const MyFavorites = () => {
   const navigate = useNavigate();
+  const { user: authUser, loading: authLoading } = useAuthRole();
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState<Listing[]>([]);
   const [profileByAgentId, setProfileByAgentId] = useState<Map<string, ListedByAgentProfile>>(() => new Map());
@@ -162,23 +164,18 @@ const MyFavorites = () => {
   }, []);
 
   useEffect(() => {
-    void fetchFavorites();
-  }, []);
+    // Auth gating owned by RouteGuard — wait for global auth before querying.
+    if (authLoading) return;
+    if (!authUser) return;
+    void fetchFavorites(authUser.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, authUser?.id]);
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = async (userId: string) => {
     try {
       setLoading(true);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please sign in to view favorites");
-        navigate("/auth");
-        return;
-      }
-
-      const { data: hotSheets } = await supabase.from("hot_sheets").select("id, name").eq("user_id", user.id);
+      const { data: hotSheets } = await supabase.from("hot_sheets").select("id, name").eq("user_id", userId);
 
       if (!hotSheets?.length) {
         setListings([]);
@@ -375,7 +372,7 @@ const MyFavorites = () => {
 
       toast.success(`Removed ${selectedListings.size} from favorites`);
       setSelectedListings(new Set());
-      void fetchFavorites();
+      if (authUser) void fetchFavorites(authUser.id);
     } catch (error: unknown) {
       console.error("Error deleting listings:", error);
       toast.error("Failed to remove selections");
