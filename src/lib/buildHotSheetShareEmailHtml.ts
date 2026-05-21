@@ -1,5 +1,6 @@
 import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
 import { getListingPublicUrl, getPublicOrigin } from "@/lib/getPublicUrl";
+import { listingCardStreetHeading, type ListingAddressUnitSource } from "@/lib/utils";
 
 export type ListingShareEmailListing = {
   id: string;
@@ -7,6 +8,8 @@ export type ListingShareEmailListing = {
   city?: string | null;
   state?: string | null;
   zip_code?: string | null;
+  unit_number?: string | null;
+  condo_details?: unknown;
   price?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
@@ -14,6 +17,24 @@ export type ListingShareEmailListing = {
   property_type?: string | null;
   photos?: unknown;
 };
+
+/** Street + unit for email card address lines (keeps unit injection in sync with in-app cards). */
+export function formatListingShareEmailStreetLine(
+  listing: Pick<
+    ListingShareEmailListing,
+    "address" | "city" | "state" | "zip_code" | "unit_number" | "condo_details"
+  >,
+): string {
+  const row: ListingAddressUnitSource = {
+    address: listing.address || "",
+    city: listing.city || "",
+    state: listing.state || "",
+    zip_code: listing.zip_code || "",
+    unit_number: listing.unit_number,
+    condo_details: listing.condo_details,
+  };
+  return listingCardStreetHeading(row) || listing.address || "Address unavailable";
+}
 
 const AAC_MONOGRAM_LOGO_URL =
   "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg";
@@ -36,7 +57,7 @@ function buildListingShareEmailCard(listing: ListingShareEmailListing): string {
   const listingUrl = getListingPublicUrl(listing.id);
   const safeUrl = escapeHtml(listingUrl);
   const price = escapeHtml(formatPrice(listing.price));
-  const address = escapeHtml(listing.address || "Address unavailable");
+  const address = escapeHtml(formatListingShareEmailStreetLine(listing));
   const cityStateZip = escapeHtml(
     `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim().replace(/^,\s*|,\s*$/g, ""),
   );
@@ -123,7 +144,11 @@ export function buildHotSheetShareEmailHtml(params: {
     .map((listing) => {
       const listingUrl = getListingPublicUrl(listing.id);
       const price = formatPrice(listing.price);
-      const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
+      const street = formatListingShareEmailStreetLine(listing);
+      const cityStateZip = `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`
+        .trim()
+        .replace(/^,\s*|,\s*$/g, "");
+      const address = [street, cityStateZip].filter(Boolean).join(", ");
       return `- ${address} - ${price} - ${listingUrl}`;
     })
     .join("\n");
