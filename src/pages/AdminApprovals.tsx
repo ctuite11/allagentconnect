@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { checkIsAdminRole } from "@/lib/auth/roles";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -89,9 +89,7 @@ type SortDirection = "asc" | "desc";
 
 export default function AdminApprovals() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [isChecking, setIsChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, loading: authLoading, isAdmin } = useAuthRole();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -143,26 +141,6 @@ export default function AdminApprovals() {
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
-
-  // Check admin role using has_role RPC - loading → allow → deny pattern
-  useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-
-      if (!userId) {
-        setUser(null);
-        setIsAdmin(false);
-        setIsChecking(false);
-        return;
-      }
-
-      setUser({ id: userId, email: session?.user?.email });
-      const ok = await checkIsAdminRole(userId);
-      setIsAdmin(ok);
-      setIsChecking(false);
-    })();
-  }, []);
 
   // Fetch all agents via edge function (bypasses RLS issues)
   const fetchAgents = async () => {
@@ -246,10 +224,10 @@ export default function AdminApprovals() {
   };
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchAgents();
+    if (!authLoading && isAdmin) {
+      void fetchAgents();
     }
-  }, [isAdmin]);
+  }, [authLoading, isAdmin]);
 
   // DIAGNOSTIC: Log when agents state changes and update debug panel
   useEffect(() => {
@@ -539,7 +517,7 @@ export default function AdminApprovals() {
     }
   };
 
-  if (isChecking) {
+  if (authLoading) {
     return (
       <>
         <Seo
@@ -554,8 +532,17 @@ export default function AdminApprovals() {
   }
 
   if (!user) {
-    navigate("/auth");
-    return null;
+    return (
+      <>
+        <Seo
+          title="Admin | All Agent Connect"
+          description="Review approvals, manage access, and oversee administrative workflows inside All Agent Connect."
+          canonical="https://allagentconnect.com/admin/approvals"
+          noindex
+        />
+        <Navigate to="/auth" replace />
+      </>
+    );
   }
 
   if (!isAdmin) {

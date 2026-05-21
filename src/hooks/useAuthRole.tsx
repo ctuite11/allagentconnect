@@ -68,16 +68,19 @@ function useAuthRoleStore(): AuthRoleState {
   useEffect(() => {
     async function initialLoad() {
       const {
-        data: { user },
+        data: { session },
         error,
-      } = await supabase.auth.getUser();
+      } = await supabase.auth.getSession();
 
-      if (error || !user) {
-        try {
-          await supabase.auth.signOut();
-        } catch (e) {
-          console.warn("[AUTH] signOut failed during stale session cleanup:", e);
-        }
+      if (error) {
+        console.warn("[AUTH] getSession failed on bootstrap; leaving session for onAuthStateChange:", error);
+        setLoading(false);
+        initialLoadDone.current = true;
+        return;
+      }
+
+      const sessionUser = session?.user ?? null;
+      if (!sessionUser) {
         setUser(null);
         setRole(null);
         setIsAdmin(false);
@@ -87,8 +90,8 @@ function useAuthRoleStore(): AuthRoleState {
         return;
       }
 
-      setUser(user);
-      await loadRoleForUser(user.id);
+      setUser(sessionUser);
+      await loadRoleForUser(sessionUser.id);
       setLoading(false);
       initialLoadDone.current = true;
     }
