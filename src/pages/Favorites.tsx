@@ -48,6 +48,10 @@ import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { toast } from "sonner";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
+
+/** Buyer Favorites shell — wide split layout; padding aligned with other buyer portal pages. */
+const BUYER_FAVORITES_MAIN =
+  "mx-auto w-full max-w-[1800px] flex-1 px-6 pt-4 pb-3 md:px-8";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -955,22 +959,15 @@ const Favorites = ({
     }
   };
 
-  const buyerStickyHeader = (
-    <header className="sticky top-14 z-40 border-b border-neutral-200/90 bg-white">
-      <div className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
-        <div className="flex min-w-0 flex-col gap-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <AacBackButton
-              type="button"
-              onClick={() => navigate("/client/dashboard")}
-              className="-ml-1 shrink-0 text-[13px]"
-            />
-            <div className="min-w-0 space-y-0.5">
-              <h1 className="text-sm font-semibold tracking-tight text-neutral-900">Saved homes</h1>
-              <p className="text-[13px] leading-snug text-neutral-500">Listings you’ve saved across AAC.</p>
-            </div>
-          </div>
-        </div>
+  const buyerFavoritesPageHeader = (
+    <header className="mb-4">
+      <AacBackButton
+        type="button"
+        onClick={() => navigate("/client/dashboard")}
+        className="mb-3 max-w-full py-0.5 text-left"
+      />
+      <div className="border-b border-neutral-200 pb-4">
+        <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">Favorites</h1>
       </div>
     </header>
   );
@@ -989,11 +986,11 @@ const Favorites = ({
   )
 
   if (loading) {
-    const headerEl = buyerMode ? buyerStickyHeader : genericFavoritesStickyHeader;
     return (
       <div className="flex min-h-screen flex-col bg-white">
-        {headerEl}
-        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7">
+        {!buyerMode ? genericFavoritesStickyHeader : null}
+        <main className={buyerMode ? BUYER_FAVORITES_MAIN : "mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7"}>
+          {buyerMode ? buyerFavoritesPageHeader : null}
           <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
             <section
               className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}
@@ -1035,10 +1032,10 @@ const Favorites = ({
   if (buyerMode) {
     return (
       <div className="flex min-h-screen flex-col bg-white">
-        {buyerStickyHeader}
-
         {favorites.length === 0 ? (
-          <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-5 py-10 md:max-w-xl md:px-7">
+          <main className={BUYER_FAVORITES_MAIN}>
+            {buyerFavoritesPageHeader}
+            <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center py-6">
             <Card className="rounded-2xl border border-neutral-200/90 bg-white p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-10">
               <Heart className="mx-auto mb-4 h-12 w-12 text-neutral-300" aria-hidden />
               <h3 className="mb-2 text-base font-semibold tracking-tight text-neutral-900">No saved homes yet</h3>
@@ -1049,9 +1046,11 @@ const Favorites = ({
                 Browse listings
               </Button>
             </Card>
+            </div>
           </main>
         ) : (
-          <main className="mx-auto w-full max-w-[1800px] px-5 py-3 md:px-7">
+          <main className={BUYER_FAVORITES_MAIN}>
+            {buyerFavoritesPageHeader}
             <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
               <section
                 className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:sticky lg:top-[6.05rem] lg:h-full lg:min-h-0`}
