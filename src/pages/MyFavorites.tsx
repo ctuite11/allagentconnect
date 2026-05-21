@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
 import ListingCard from "@/components/ListingCard";
 import PropertyMap from "@/components/PropertyMap";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,9 @@ interface Listing {
 
 /** Default map when pins lack coords (matches buyer favorites). */
 const BOSTON_DEFAULT_MAP_CENTER = { lat: 42.3601, lng: -71.0589 } as const;
+
+const FAVORITES_SHARE_TRIGGER_CLASS =
+  "h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 disabled:pointer-events-none disabled:opacity-40 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600";
 
 function parseOptionalCoord(v: unknown): number | null {
   if (v == null) return null;
@@ -143,6 +147,7 @@ const MyFavorites = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [profileByAgentId, setProfileByAgentId] = useState<Map<string, ListedByAgentProfile>>(() => new Map());
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
+  const [showKeptOnly, setShowKeptOnly] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
@@ -257,29 +262,90 @@ const MyFavorites = () => {
     }
   }, [listings, sortBy]);
 
-  const mapPins = useMemo(() => listingsToMapPins(sortedListings), [sortedListings]);
+  const displayListings = useMemo(() => {
+    if (!showKeptOnly) return sortedListings;
+    return sortedListings.filter((l) => selectedListings.has(l.id));
+  }, [showKeptOnly, sortedListings, selectedListings]);
+
+  const listingIdsForShare = useMemo(
+    () => displayListings.filter((l) => selectedListings.has(l.id)).map((l) => l.id),
+    [displayListings, selectedListings],
+  );
+
+  const mapPins = useMemo(() => listingsToMapPins(displayListings), [displayListings]);
+
+  const hasSelectedForActions = useMemo(
+    () => listings.some((l) => selectedListings.has(l.id)),
+    [listings, selectedListings],
+  );
+
+  const visibleSelectionState = useMemo(() => {
+    const n = displayListings.length;
+    if (n === 0) return { allVisible: false, someVisible: false, noneVisible: true };
+    const selected = displayListings.filter((l) => selectedListings.has(l.id)).length;
+    if (selected === 0) return { allVisible: false, someVisible: false, noneVisible: true };
+    if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
+    return { allVisible: false, someVisible: true, noneVisible: false };
+  }, [displayListings, selectedListings]);
 
   useEffect(() => {
     if (!selectedListingId) return;
-    if (!sortedListings.some((l) => l.id === selectedListingId)) setSelectedListingId(null);
-  }, [sortedListings, selectedListingId]);
+    if (!displayListings.some((l) => l.id === selectedListingId)) setSelectedListingId(null);
+  }, [displayListings, selectedListingId]);
 
-  const toggleListing = (listingId: string) => {
+  useEffect(() => {
+    if (showKeptOnly && selectedListings.size === 0) {
+      setShowKeptOnly(false);
+    }
+  }, [showKeptOnly, selectedListings.size]);
+
+  useEffect(() => {
+    const keep = new Set(listings.map((l) => l.id));
+    setSelectedListings((prev) => {
+      let next: Set<string> | null = null;
+      for (const id of prev) {
+        if (!keep.has(id)) {
+          if (!next) next = new Set(prev);
+          next.delete(id);
+        }
+      }
+      return next ?? prev;
+    });
+  }, [listings]);
+
+  const toggleListing = useCallback((listingId: string) => {
     setSelectedListings((prev) => {
       const next = new Set(prev);
       if (next.has(listingId)) next.delete(listingId);
       else next.add(listingId);
       return next;
     });
-  };
+  }, []);
 
-  const toggleSelectAll = () => {
-    if (selectedListings.size === listings.length && listings.length > 0) {
-      setSelectedListings(new Set());
-    } else {
-      setSelectedListings(new Set(listings.map((l) => l.id)));
-    }
-  };
+  const addAllVisible = useCallback(() => {
+    setSelectedListings((prev) => {
+      const next = new Set(prev);
+      displayListings.forEach((l) => next.add(l.id));
+      return next;
+    });
+  }, [displayListings]);
+
+  const unselectAllVisible = useCallback(() => {
+    setSelectedListings((prev) => {
+      const next = new Set(prev);
+      displayListings.forEach((l) => next.delete(l.id));
+      return next;
+    });
+  }, [displayListings]);
+
+  const clearShareSelection = useCallback(() => {
+    const sharedSet = new Set(listingIdsForShare);
+    setSelectedListings((prev) => {
+      const next = new Set(prev);
+      sharedSet.forEach((id) => next.delete(id));
+      return next;
+    });
+  }, [listingIdsForShare]);
 
   const handleBulkDelete = async () => {
     if (selectedListings.size === 0) {
@@ -373,7 +439,7 @@ const MyFavorites = () => {
               <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-2.5 sm:px-5">
                 <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between">
                   <p className="text-sm font-semibold tabular-nums text-neutral-900">
-                    Results: {sortedListings.length.toLocaleString()}
+                    Results: {displayListings.length.toLocaleString()}
                   </p>
                   <div className="w-full min-w-0 min-[520px]:w-auto min-[520px]:max-w-[13rem]">
                     <Select value={sortBy} onValueChange={setSortBy}>
@@ -391,35 +457,118 @@ const MyFavorites = () => {
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1 px-4 py-3 sm:px-5 lg:overflow-y-auto">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
-                    onClick={toggleSelectAll}
-                  >
-                    {selectedListings.size === listings.length && listings.length > 0 ? "Unselect all" : "Select all"}
-                  </Button>
-                  <span className="text-[13px] text-neutral-500">
-                    {selectedListings.size > 0 ? `${selectedListings.size} selected` : null}
-                  </span>
-                  {selectedListings.size > 0 ? (
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
+                {displayListings.length > 0 && (
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    {visibleSelectionState.allVisible && (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                          onClick={unselectAllVisible}
+                        >
+                          Unselect all
+                        </Button>
+                        <BulkShareListingsDialog
+                          listingIds={listingIdsForShare}
+                          listingCount={listingIdsForShare.length}
+                          senderProfileSource="agent"
+                          triggerVariant="outline"
+                          triggerClassName={FAVORITES_SHARE_TRIGGER_CLASS}
+                          triggerLabel={`Share selected (${listingIdsForShare.length})`}
+                          onSuccessfulShare={clearShareSelection}
+                        />
+                      </>
+                    )}
+                    {visibleSelectionState.someVisible && (
+                      <>
+                        {!showKeptOnly && (
+                          <>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                              onClick={addAllVisible}
+                            >
+                              Select all
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                              onClick={() => setShowKeptOnly(true)}
+                            >
+                              Keep selected only
+                            </Button>
+                          </>
+                        )}
+                        <BulkShareListingsDialog
+                          listingIds={listingIdsForShare}
+                          listingCount={listingIdsForShare.length}
+                          senderProfileSource="agent"
+                          triggerVariant="outline"
+                          triggerClassName={FAVORITES_SHARE_TRIGGER_CLASS}
+                          triggerLabel={`Share selected (${listingIdsForShare.length})`}
+                          onSuccessfulShare={clearShareSelection}
+                        />
+                      </>
+                    )}
+                    {visibleSelectionState.noneVisible && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                        onClick={addAllVisible}
+                        disabled={displayListings.length === 0}
+                      >
+                        Select all
+                      </Button>
+                    )}
+                    {showKeptOnly && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-7 rounded-md px-2.5 text-xs font-medium"
+                        onClick={() => setShowKeptOnly(false)}
+                      >
+                        Show all
+                      </Button>
+                    )}
+                    {hasSelectedForActions && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 rounded-md border-red-200 bg-white px-2.5 text-xs font-medium text-red-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-red-50"
+                        onClick={handleBulkDelete}
+                      >
+                        Remove selected
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {showKeptOnly && displayListings.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-neutral-200/90 bg-white px-4 py-10 text-center">
+                    <p className="text-[13px] text-neutral-600">No homes match your current selection filter.</p>
                     <Button
                       type="button"
-                      size="sm"
                       variant="outline"
-                      className="h-7 rounded-md border-red-200 bg-white px-2.5 text-xs font-medium text-red-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-red-50"
-                      onClick={handleBulkDelete}
+                      className="mt-3 border-neutral-200"
+                      size="sm"
+                      onClick={() => setShowKeptOnly(false)}
                     >
-                      Remove selected
+                      Show all homes
                     </Button>
-                  ) : null}
-                </div>
-
+                  </div>
+                ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {sortedListings.map((listing) => {
+                  {displayListings.map((listing) => {
                   const supplemental = listing.agent_id ? profileByAgentId.get(listing.agent_id) ?? null : null;
                   return (
                     <div
@@ -464,6 +613,7 @@ const MyFavorites = () => {
                   );
                   })}
                 </div>
+                )}
               </div>
             </section>
           </div>
