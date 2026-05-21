@@ -46,7 +46,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 text-[15px] font-semibold leading-snug text-neutral-900">
-            <MessageSquare className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden />
+            <MessageSquare className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
             Messages
           </h3>
           {(compact || inboxPreview) && (
@@ -56,7 +56,7 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
         <button
           type="button"
           onClick={() => navigate("/messages")}
-          className="shrink-0 rounded-sm text-sm font-medium text-[#0E56F5] underline-offset-2 transition-colors hover:text-[#0B46CC] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+          className="shrink-0 rounded-sm border-0 bg-transparent p-0 text-sm font-medium text-black underline-offset-2 shadow-none transition-colors hover:text-black hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
         >
           View all →
         </button>

@@ -40,7 +40,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 text-[15px] font-semibold text-neutral-900">
-            <Users className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+            <Users className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
             Buyers
           </h3>
           <p className="mt-0.5 text-xs leading-snug text-neutral-500">
@@ -50,7 +50,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
         <button
           type="button"
           onClick={() => navigate("/agent/buyers")}
-          className="shrink-0 rounded-sm text-sm font-medium text-indigo-600 underline-offset-2 transition-colors hover:text-indigo-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+          className="shrink-0 rounded-sm border-0 bg-transparent p-0 text-sm font-medium text-black underline-offset-2 shadow-none transition-colors hover:text-black hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
         >
           View all →
         </button>

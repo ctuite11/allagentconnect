@@ -222,7 +222,7 @@ function SuccessHubDashboardBody() {
                 onClick={() => {
                   window.location.href = "/agent/listings";
                 }}
-                className="shrink-0 rounded-sm text-sm font-medium text-emerald-700 underline-offset-2 transition-colors hover:text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+                className="shrink-0 rounded-sm border-0 bg-transparent p-0 text-sm font-medium text-black underline-offset-2 shadow-none transition-colors hover:text-black hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
               >
                 View all →
               </button>
