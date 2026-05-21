@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import { ArrowLeft, MapPin, Heart } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
@@ -163,6 +164,7 @@ const Favorites = ({
   isBuyerMode = false,
 }: FavoritesProps) => {
   const navigate = useNavigate();
+  const { user: authUser, loading: authLoading } = useAuthRole();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -305,8 +307,16 @@ const Favorites = ({
   }, [buyerMode, favoritesDrawerHotSheetId]);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    // Auth gating is owned by RouteGuard + global useAuthRole — never call navigate("/auth") here.
+    if (authLoading) return;
+    if (!authUser) {
+      // RouteGuard will redirect; leave loading state in place to avoid flashing empty UI.
+      return;
+    }
+    setUser(authUser);
+    void fetchFavorites(authUser.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, authUser?.id]);
 
   useEffect(() => {
     if (favorites.length === 0) {
@@ -350,17 +360,6 @@ const Favorites = ({
       cancelled = true;
     };
   }, [buyerMode, favorites]);
-
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error(buyerMode ? "Please sign in to view your saved homes" : "Please sign in to view favorites");
-      navigate("/auth");
-      return;
-    }
-    setUser(user);
-    fetchFavorites(user.id);
-  };
 
   const fetchFavorites = async (userId: string) => {
     try {
