@@ -25,6 +25,7 @@ import {
 import { format } from "date-fns";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
+import { formatListingPropertyTypeLabel } from "@/lib/format";
 import { cn, listingCardStreetHeading } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -352,7 +353,9 @@ export function ListingCardShell({
               <ListingStatusBadge status={listing.status} size={statusSize} />
             </div>
             {listing.property_type && (
-              <div className="text-xs text-muted-foreground">{listing.property_type}</div>
+              <div className="truncate text-xs text-muted-foreground">
+                {formatListingPropertyTypeLabel(listing.property_type)}
+              </div>
             )}
           </div>
 

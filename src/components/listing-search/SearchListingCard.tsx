@@ -31,6 +31,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { resolveBrokerageAttribution, resolveListedByAttribution } from "@/lib/listingListedBy";
 import { ListingCardAttributionStrip } from "@/components/listing/ListingCardAttributionStrip";
+import { ListingCardPropertyTypeLine } from "@/components/listing/ListingCardPropertyTypeLine";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
 import { buildDisplayAddress, cn, listingCardStreetHeading } from "@/lib/utils";
 import {
@@ -544,7 +545,14 @@ export const SearchListingCard = ({
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="min-h-[2.25rem] break-words text-sm font-semibold leading-tight text-foreground">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0">
+                <span className="text-base font-bold text-neutral-900">{displayPrice}</span>
+                {pricePerSqFt ? (
+                  <span className="text-xs text-neutral-600">${pricePerSqFt}/sqft</span>
+                ) : null}
+              </div>
+              <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
+              <h3 className="mt-1 min-h-[2.25rem] break-words text-sm font-semibold leading-tight text-foreground">
                 {listingCardStreetHeading(listing)}
               </h3>
               <div className="mt-0.5 flex items-center text-xs text-neutral-600">
@@ -569,10 +577,8 @@ export const SearchListingCard = ({
             </div>
           </div>
 
-          <div className="mt-4 border-t border-neutral-100 pt-3">
+          <div className="mt-3 border-t border-neutral-100 pt-2.5">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-base font-bold text-neutral-900">{displayPrice}</span>
-              {pricePerSqFt && <span className="text-xs text-neutral-600">${pricePerSqFt}/sqft</span>}
               <span className="flex items-center gap-1 text-sm text-neutral-600">
                 <Bed className="h-3.5 w-3.5" /> {listing.bedrooms ?? "-"}
               </span>

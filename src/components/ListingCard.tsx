@@ -44,6 +44,7 @@ import {
   type ListedBySource,
 } from "@/lib/listingListedBy";
 import { ListingCardAttributionStrip } from "@/components/listing/ListingCardAttributionStrip";
+import { ListingCardPropertyTypeLine } from "@/components/listing/ListingCardPropertyTypeLine";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 /** Normalize MLS photos (array, JSON string, single URL string) for compact/grid photo helpers. */
@@ -851,14 +852,7 @@ const ListingCard = ({
               )}
             </div>
           ) : null}
-          {/* Property/neighborhood overlays — omitted on agent-owned Success Hub grids (cleaner AAC tile). */}
-          {!compactAgentOwned && listing.property_type && (
-            <div className="absolute bottom-2 left-2 z-10">
-              <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-2.5 py-1 text-xs font-medium shadow-md backdrop-blur-sm">
-                {listing.property_type}
-              </span>
-            </div>
-          )}
+          {/* Neighborhood overlay — property type lives in content stack below price. */}
           {!compactAgentOwned && (listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
             <div className="absolute bottom-2 right-2 z-10">
               <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-2.5 py-1 text-xs font-medium shadow-md backdrop-blur-sm">
@@ -970,7 +964,15 @@ const ListingCard = ({
             ) : null}
           </div>
 
-          <div className="flex min-w-0 cursor-pointer items-start gap-1.5" onClick={openListingDetail}>
+          <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
+
+          <div
+            className={cn(
+              "flex min-w-0 cursor-pointer items-start gap-1.5",
+              listing.property_type ? "mt-1" : undefined,
+            )}
+            onClick={openListingDetail}
+          >
             <MapPin className="mt-1 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
             <p className="min-h-[2.25rem] min-w-0 flex-1 break-words text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
           </div>
@@ -1524,46 +1526,33 @@ const ListingCard = ({
           </>
         )}
         
-        {/* Property Type Pill - Bottom Right Corner */}
-        {listing.property_type && (
-          <Badge 
-            variant="secondary" 
-            className="absolute bottom-2 right-2 text-xs bg-black/70 text-white border-0 hover:bg-black/70"
-          >
-            {listing.property_type}
-          </Badge>
-        )}
       </div>
 
       <CardContent className="p-3">
-        {/* Address & Price Section - Two Column Grid */}
-        <div className="grid grid-cols-[1fr_auto] gap-x-3 mb-3">
-          {/* Left Column - Address */}
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-start gap-1.5">
+        {/* Price → property type → address */}
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-lg font-bold text-neutral-900">{displayPrice}</div>
+            <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
+            <div
+              className={cn(
+                "flex min-w-0 items-start gap-1.5",
+                listing.property_type ? "mt-1" : "mt-1.5",
+              )}
+            >
               <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
               <h3 className="min-h-[2.25rem] min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
                 {listingCardStreetHeading(listing)}
               </h3>
             </div>
-            <p className="text-xs text-muted-foreground pl-5 mt-0.5">
-              {/* Show neighborhood if available, then city - convert to Title Case */}
+            <p className="mt-0.5 pl-5 text-xs text-muted-foreground">
               {listing.neighborhood ? `${listing.neighborhood.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}, ` : ''}
               {listing.city?.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}, {listing.state?.toUpperCase()} {listing.zip_code}
             </p>
           </div>
-          
-          {/* Right Column - Price (stacked, right-aligned) */}
-          <div className="text-right flex-shrink-0">
-            <div className="text-lg font-bold text-neutral-900">
-              {displayPrice}
-            </div>
-            {pricePerSqft && (
-              <div className="mt-0.5 text-xs text-neutral-600">
-                ${pricePerSqft}/sqft
-              </div>
-            )}
-          </div>
+          {pricePerSqft ? (
+            <div className="shrink-0 text-right text-xs text-neutral-600">${pricePerSqft}/sqft</div>
+          ) : null}
         </div>
 
         {/* Beds, Baths, SqFt */}
